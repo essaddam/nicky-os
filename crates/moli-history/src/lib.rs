@@ -7,6 +7,7 @@
 //! read-only SQL over a simple view, so any agent can ask its own questions
 //! (« combien de fois la porte s'est ouverte cette semaine ? »).
 
+pub mod rollup;
 mod store;
 
 use std::path::PathBuf;

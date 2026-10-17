@@ -22,6 +22,13 @@
   Moli (questions sur le passé), le nœud d'automatisme… (les automatismes lisent l'état
   courant, pas l'historique).
 - Ordre de grandeur : ~2,5 Mo pour environ 70 appareils sur 30 jours.
+- Résumés horaires (`rollup.rs`, calcul pur, pas encore branché) : une heure UTC par
+  statistique, selon l'opération choisie pour le point (moyenne pondérée par la durée avec
+  min et max, somme de consommations, comptage, durée par état), avec `covered_ms`, le
+  nombre de changements, la dernière valeur (ancrage de l'heure suivante), la qualité et
+  l'origine ; regroupement en jours et mois locaux (journées de 23 ou 25 h). `Null` = non
+  couvert, une valeur n'est crue que pendant une fraîcheur réglable, une heure vide n'a pas
+  d'agrégat (≠ zéro). Fuseaux dont minuit ne tombe pas sur une heure UTC pleine : refusés.
 
 ## Croissance visible (`/api/system`, page Système)
 

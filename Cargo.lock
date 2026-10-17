@@ -1309,6 +1309,7 @@ name = "moli-history"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "jiff",
  "moli-core",
  "moli-runtime",
  "rusqlite",
