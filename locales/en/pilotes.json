@@ -449,5 +449,8 @@
   "pilotes.nuki.inconnue": "lock unknown to the bridge (not read yet?)",
   "pilotes.nuki.jeton_manquant": "bridge API token missing: enable the bridge's HTTP API in the Nuki app, then printf %s \"$TOKEN\" | moli-os secrets set {instance} {key}",
   "pilotes.nuki.jeton_refuse": "the bridge refuses access ({status}): check that the HTTP API is enabled, that the bridge's and Moli's clocks agree (within a minute), and the token: printf %s \"$TOKEN\" | moli-os secrets set {instance} {key}",
-  "pilotes.nuki.injoignable": "Nuki bridge unreachable ({cause})"
+  "pilotes.nuki.injoignable": "Nuki bridge unreachable ({cause})",
+  "pilotes.nuki.observee": "Seen by the bridge",
+  "pilotes.nuki.trop_tard": "too late: the order was not sent to the bridge",
+  "pilotes.nuki.trop_de_serrures": "more than {max} locks: {name} ignored"
 }

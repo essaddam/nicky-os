@@ -66,6 +66,25 @@ pub struct Last {
     pub keypad_battery_critical: Option<bool>,
     #[serde(default)]
     pub doorsensor_state: Option<u8>,
+    /// When the bridge last heard from the lock: what the values are worth.
+    #[serde(default)]
+    pub timestamp: Option<String>,
+}
+
+/// Longest date the bridge may send (`2018-10-03T06:49:00+00:00`, with room).
+const MAX_DATE: usize = 40;
+
+/// When the bridge last heard from the lock, in UTC (`2018-10-03T06:49:00Z`),
+/// or `Null` when it does not say or says something that is not a date.
+#[must_use]
+pub fn observed(last: &Last) -> Value {
+    last.timestamp
+        .as_deref()
+        .filter(|t| t.len() <= MAX_DATE)
+        .and_then(|t| t.parse::<jiff::Timestamp>().ok())
+        .map_or(Value::Null, |t| {
+            Value::from(t.strftime("%Y-%m-%dT%H:%M:%SZ").to_string().as_str())
+        })
 }
 
 /// A lock Moli drives.
@@ -175,6 +194,14 @@ pub fn points(last: Option<&Last>) -> Vec<PointSpec> {
             READ,
             Semantic::BatteryLow,
         ),
+        // The values are the bridge's memory: this says how old it is.
+        spec(
+            "observed",
+            moli_i18n::tr!("pilotes.nuki.observee"),
+            Kind::Text,
+            READ,
+            Semantic::Other,
+        ),
     ];
     let Some(last) = last else { return points };
     if last.battery_charge_state.is_some() {
@@ -244,6 +271,7 @@ pub fn values(last: &Last) -> Vec<(&'static str, Value)> {
             "battery_low",
             last.battery_critical.map_or(Value::Null, Value::Bool),
         ),
+        ("observed", observed(last)),
     ];
     if let Some(pct) = last.battery_charge_state {
         values.push(("battery", Value::Int(i64::from(pct.min(100)))));
@@ -331,6 +359,7 @@ mod tests {
                 "state",
                 "unlatch",
                 "battery_low",
+                "observed",
                 "battery",
                 "charging",
                 "door",
@@ -344,6 +373,7 @@ mod tests {
         assert_eq!(get("battery"), Some(Value::Int(82)));
         assert_eq!(get("battery_low"), Some(Value::Bool(false)));
         assert_eq!(get("door"), Some(Value::Bool(true)));
+        assert_eq!(get("observed"), Some(Value::from("2026-01-01T08:00:00Z")));
         // The older lock: no battery level, no door sensor (deactivated).
         let (old, last) = &locks[1];
         assert_eq!(old.model, "Smart Lock");
@@ -351,7 +381,10 @@ mod tests {
             .iter()
             .map(|p| p.key.to_string())
             .collect();
-        assert_eq!(keys, ["locked", "state", "unlatch", "battery_low"]);
+        assert_eq!(
+            keys,
+            ["locked", "state", "unlatch", "battery_low", "observed"]
+        );
         let v = values(last.as_ref().unwrap());
         assert!(v.contains(&("locked", Value::Bool(false))));
         assert!(v.contains(&("state", Value::from("unlatched"))));
@@ -391,6 +424,25 @@ mod tests {
         };
         assert!(values(&blocked).contains(&("locked", Value::Null)));
         assert!(values(&blocked).contains(&("battery", Value::Int(100))));
+    }
+
+    #[test]
+    fn the_age_of_what_the_bridge_says_is_kept() {
+        let at = |t: &str| {
+            observed(&Last {
+                timestamp: Some(t.into()),
+                ..Last::default()
+            })
+        };
+        // Any offset, said in UTC.
+        assert_eq!(
+            at("2026-03-29T03:30:00+02:00"),
+            Value::from("2026-03-29T01:30:00Z")
+        );
+        // Not a date, or too long to be one: unknown, never now.
+        assert_eq!(at("hier"), Value::Null);
+        assert_eq!(at(&"9".repeat(500)), Value::Null);
+        assert_eq!(observed(&Last::default()), Value::Null);
     }
 
     fn locks_of(json: &str) -> Vec<Lock> {

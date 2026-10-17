@@ -4,7 +4,7 @@
   locale du pont. Une serrure = un appareil `<instance>:<numéro Nuki en hexadécimal>`.
 - Points : `locked` (binaire, lecture et écriture, sémantique `lock` : vrai = verrouillée),
   `state` (énumération des états Nuki), `unlatch` (écriture seule, sémantique `lock` : tire le
-  pêne), `battery_low` ; selon ce que la serrure rapporte : `battery` (%), `charging`, `door`
+  pêne), `battery_low`, `observed` (dernière fois que le pont a entendu la serrure) ; selon ce que la serrure rapporte : `battery` (%), `charging`, `door`
   (capteur de porte, contact : vrai = fermée), `keypad_battery_low`.
 - **Garde** : un point de sémantique `lock` qui ouvre (déverrouiller, tirer le pêne) est retenu
   pour un humain **quelle que soit la pièce**, pour un agent comme pour le dashboard sans code
@@ -28,6 +28,9 @@
 - Le modèle affiché selon `deviceType` (0, 3, 4) ; un type inconnu est ignoré, jamais deviné.
 - `nowait=1` sur `/lockAction` : l'ordre est accepté par le pont, l'état réel arrive par la
   lecture suivante (toutes les 3 s pendant 30 s après un ordre).
+- « En ligne » = le pont répond et connaît un état de la serrure ; ce n'est **pas** une
+  confirmation récente de la serrure elle-même : c'est ce que dit `observed`. Les valeurs ne
+  sont republiées que quand le pont a vu du nouveau.
 
 ## Reste
 

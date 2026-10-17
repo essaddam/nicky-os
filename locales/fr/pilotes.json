@@ -449,5 +449,8 @@
   "pilotes.nuki.inconnue": "serrure inconnue du pont (pas encore lue ?)",
   "pilotes.nuki.jeton_manquant": "jeton de l'API du pont manquant : activer l'API HTTP du pont dans l'appli Nuki, puis printf %s \"$JETON\" | moli-os secrets set {instance} {key}",
   "pilotes.nuki.jeton_refuse": "le pont refuse l'accès ({status}) : vérifier que l'API HTTP est activée, que l'horloge du pont et celle de Moli sont à l'heure (une minute d'écart au plus), et le jeton : printf %s \"$JETON\" | moli-os secrets set {instance} {key}",
-  "pilotes.nuki.injoignable": "pont Nuki injoignable ({cause})"
+  "pilotes.nuki.injoignable": "pont Nuki injoignable ({cause})",
+  "pilotes.nuki.observee": "Vue par le pont",
+  "pilotes.nuki.trop_tard": "trop tard : l'ordre n'a pas été envoyé au pont",
+  "pilotes.nuki.trop_de_serrures": "plus de {max} serrures : {name} ignorée"
 }
