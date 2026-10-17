@@ -6,7 +6,12 @@
 //! charts (raw, or bucketed when long) and — the agent-native part —
 //! read-only SQL over a simple view, so any agent can ask its own questions
 //! (« combien de fois la porte s'est ouverte cette semaine ? »).
+//!
+//! What is recorded and for how long follows a policy (`policy`): a
+//! longer duration applies at once, a shorter one deletes nothing until a
+//! person (PIN session) has seen what it would delete and validated it.
 
+mod policy;
 mod store;
 
 use std::path::PathBuf;
@@ -14,14 +19,17 @@ use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use moli_core::{Event, PointId, Value, now_ms};
+use moli_core::{Event, Origin, PointId, Value, now_ms};
 use moli_runtime::Hub;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
+pub use policy::{
+    Family, Filter, HistoryRules, Keep, PointKeep, Retention, StorageConfig, family, glob,
+};
 pub use store::{Bucket, HistoryError, Series, SqlResult, Store};
 
 const BATCH_EVERY: Duration = Duration::from_secs(2);
@@ -33,6 +41,16 @@ const PENDING_MAX: usize = 4 * BATCH_MAX;
 /// How long the last 24 hours' volume is reused before it is counted again.
 const VOLUME_TTL: Duration = Duration::from_secs(60);
 const DAY_MS: u64 = 86_400_000;
+/// Rows one purge statement deletes at most…
+const PRUNE_LOT: usize = 5_000;
+/// …and the breath the writer is given between two of them.
+const PRUNE_PAUSE: Duration = Duration::from_millis(2);
+/// The last validated retention, next to the database.
+pub const POLICY_FILE: &str = "history-policy.json";
+/// How long an announced reduction may be validated.
+const REDUCTION_TTL_MS: u64 = 15 * 60_000;
+/// Points listed with an announced reduction.
+const REDUCTION_TOP: usize = 10;
 
 type Row = (PointId, Value, u64);
 
@@ -42,7 +60,10 @@ type Batch = (Vec<Row>, bool);
 #[derive(Clone, Debug)]
 pub struct Options {
     pub path: PathBuf,
-    pub retention_days: u32,
+    /// Points not written (`[storage.history]`).
+    pub filter: Filter,
+    /// The configured durations (`StorageConfig::compile`).
+    pub retention: Retention,
 }
 
 /// Cheap handle used by the surfaces to read history.
@@ -50,6 +71,193 @@ pub struct Options {
 pub struct History {
     store: Arc<Store>,
     counters: Arc<Counters>,
+    policy: Arc<Policy>,
+}
+
+/// What is configured, what a person last validated, and where it is kept.
+#[derive(Debug)]
+struct Policy {
+    /// To know each point's family (absent: every point's is unknown).
+    hub: Option<Hub>,
+    filter: Filter,
+    configured: Retention,
+    validated: Mutex<Validated>,
+    /// `data/history-policy.json` (absent: kept in memory only).
+    file: Option<PathBuf>,
+    /// The file is to be written at the next pass (none yet).
+    unsaved: std::sync::atomic::AtomicBool,
+    /// One pass at a time: the timer's, a validation's.
+    passes: tokio::sync::Mutex<()>,
+}
+
+/// The last durations validated, persisted in `data/`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Validated {
+    pub retention: Retention,
+    /// When (ms since the epoch; 0: never).
+    pub at: u64,
+    /// Who validated; `None`: adopted from the configuration, as it
+    /// deleted nothing more than the previous one.
+    pub by: Option<String>,
+}
+
+/// A shorter duration waiting for a person: what it would delete.
+#[derive(Clone, Debug, Serialize)]
+pub struct Reduction {
+    /// When it was counted: validating applies it as of that instant.
+    pub at: u64,
+    /// The policy shown; a validation for another one is refused.
+    pub fingerprint: String,
+    pub points: usize,
+    pub rows: u64,
+    /// The oldest row concerned, and the latest instant before which rows go.
+    pub from: Option<u64>,
+    pub to: Option<u64>,
+    /// The points losing the most rows, most first.
+    pub top: Vec<Reduced>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Reduced {
+    pub point: String,
+    pub family: Option<Family>,
+    pub from_days: u32,
+    pub to_days: u32,
+    pub rows: u64,
+}
+
+/// What the history keeps (`GET /api/history/retention`).
+#[derive(Clone, Debug, Serialize)]
+pub struct Policies {
+    pub filter: Filter,
+    pub configured: Retention,
+    pub validated: Validated,
+    pub reduction: Option<Reduction>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum PolicyError {
+    /// Only a person (PIN session) validates: never an agent.
+    #[error("only a person validates a reduction")]
+    HumanOnly,
+    #[error("no reduction is waiting")]
+    Nothing,
+    #[error("the reduction shown is no longer the one waiting")]
+    Changed,
+    #[error("the reduction shown is too old: count it again")]
+    Expired,
+    #[error(transparent)]
+    Store(#[from] HistoryError),
+}
+
+/// One point at a pass: how long it is kept now, how long it would be once
+/// the configuration is validated, and whether that deletes anything kept.
+struct Due {
+    id: i64,
+    point: String,
+    family: Option<Family>,
+    keep_days: u32,
+    after_days: u32,
+    reduced: bool,
+}
+
+fn cutoff(now: u64, days: u32) -> u64 {
+    now.saturating_sub(u64::from(days) * DAY_MS)
+}
+
+impl Policy {
+    fn new(hub: Option<Hub>, filter: Filter, configured: Retention, file: Option<PathBuf>) -> Self {
+        let unknown = |retention| Validated {
+            retention,
+            at: 0,
+            by: None,
+        };
+        let (validated, unsaved) = match file.as_deref().map(std::fs::read) {
+            Some(Ok(bytes)) => match serde_json::from_slice::<Validated>(&bytes) {
+                Ok(v) => (v, false),
+                // Nobody knows what was validated: nothing is deleted
+                // until a person validates the configuration.
+                Err(e) => {
+                    tracing::warn!(error = %e, "{POLICY_FILE} unreadable: no purge until a person validates");
+                    (unknown(Retention::uniform(policy::MAX_DAYS)), true)
+                }
+            },
+            // A first start: what Moli kept before any policy.
+            _ => (unknown(Retention::uniform(configured.days)), true),
+        };
+        Self {
+            hub,
+            filter,
+            configured,
+            validated: Mutex::new(validated),
+            file,
+            unsaved: unsaved.into(),
+            passes: tokio::sync::Mutex::new(()),
+        }
+    }
+
+    fn family_of(&self, point: &str) -> Option<Family> {
+        let point = PointId::from(point);
+        let (device, key) = point.split()?;
+        let (device, _) = self.hub.as_ref()?.describe(&device)?;
+        device.point(key).map(Family::of)
+    }
+
+    fn due(&self, points: Vec<(i64, String)>) -> Vec<Due> {
+        let validated = store::lock(&self.validated).retention.clone();
+        points
+            .into_iter()
+            .map(|(id, point)| {
+                let family = self.family_of(&point);
+                let (mut keep_days, mut after_days, mut reduced) = (0, 0, false);
+                for &f in policy::candidates(family) {
+                    let (c, v) = (self.configured.days(&point, f), validated.days(&point, f));
+                    keep_days = keep_days.max(c.max(v));
+                    after_days = after_days.max(c);
+                    reduced |= c < v;
+                }
+                Due {
+                    id,
+                    point,
+                    family,
+                    keep_days,
+                    after_days,
+                    reduced,
+                }
+            })
+            .collect()
+    }
+
+    fn fingerprint(&self) -> String {
+        use std::hash::{Hash, Hasher};
+        let validated = store::lock(&self.validated).retention.clone();
+        let mut h = std::hash::DefaultHasher::new();
+        serde_json::to_string(&(&self.configured, &validated))
+            .unwrap_or_default()
+            .hash(&mut h);
+        format!("{:016x}", h.finish())
+    }
+
+    /// Validates `retention` and writes it down (nothing changes if it
+    /// cannot be written).
+    fn adopt(&self, by: Option<String>) -> Result<(), HistoryError> {
+        let next = Validated {
+            retention: self.configured.clone(),
+            at: now_ms(),
+            by,
+        };
+        if let Some(file) = &self.file {
+            let tmp = file.with_extension("json.tmp");
+            let json = serde_json::to_vec_pretty(&next)
+                .map_err(|e| HistoryError::Internal(e.to_string()))?;
+            std::fs::write(&tmp, json)
+                .and_then(|()| std::fs::rename(&tmp, file))
+                .map_err(|e| HistoryError::Internal(format!("{}: {e}", file.display())))?;
+        }
+        *store::lock(&self.validated) = next;
+        self.unsaved.store(false, Relaxed);
+        Ok(())
+    }
 }
 
 /// What the recorder, the writer and the pruning did since start.
@@ -112,30 +320,178 @@ impl History {
         cancel: CancellationToken,
     ) -> Result<(Self, JoinHandle<()>), HistoryError> {
         let store = Arc::new(Store::open(&options.path)?);
-        let counters = Arc::new(Counters::default());
+        let file = options.path.parent().map(|d| d.join(POLICY_FILE));
+        let history = Self::with_policy(
+            store,
+            Policy::new(
+                Some(hub.clone()),
+                options.filter.clone(),
+                options.retention.clone(),
+                file,
+            ),
+        );
         let (batches, queue) = mpsc::channel::<Batch>(WRITER_QUEUE);
-        let writer = tokio::spawn(write_loop(Arc::clone(&store), queue, Arc::clone(&counters)));
-        tokio::spawn(prune_loop(
-            Arc::clone(&store),
-            options.retention_days,
-            Arc::clone(&counters),
-            cancel.clone(),
+        let writer = tokio::spawn(write_loop(
+            Arc::clone(&history.store),
+            queue,
+            Arc::clone(&history.counters),
         ));
+        tokio::spawn(prune_loop(history.clone(), cancel.clone()));
         let source = hub_events(hub);
-        let recording = Arc::clone(&counters);
+        let recording = Arc::clone(&history.counters);
+        let filter = options.filter.clone();
         let recorder = tokio::spawn(async move {
-            record(source, batches, &recording, cancel).await;
+            record(source, batches, &recording, &filter, cancel).await;
             let _ = writer.await;
         });
-        Ok((Self { store, counters }, recorder))
+        Ok((history, recorder))
     }
 
+    /// A history to read (no recording, no purge), kept 30 days.
     #[must_use]
     pub fn from_store(store: Arc<Store>) -> Self {
+        Self::with_policy(
+            store,
+            Policy::new(None, Filter::default(), Retention::uniform(30), None),
+        )
+    }
+
+    fn with_policy(store: Arc<Store>, policy: Policy) -> Self {
         Self {
             store,
             counters: Arc::default(),
+            policy: Arc::new(policy),
         }
+    }
+
+    async fn due(&self) -> Result<Vec<Due>, HistoryError> {
+        let store = Arc::clone(&self.store);
+        let points = blocking(move || store.points()).await?;
+        Ok(self.policy.due(points))
+    }
+
+    /// One retention pass as of `now`: each point loses what is older than
+    /// its duration, the longer of the configured and the validated one. A
+    /// configuration that deletes nothing more than the validated one is
+    /// adopted by itself (an increase applies at once).
+    async fn prune_pass(&self, now: u64) -> Result<usize, HistoryError> {
+        let _one = self.policy.passes.lock().await;
+        let started = Instant::now();
+        let due = self.due().await?;
+        let policy = &self.policy;
+        let changed = store::lock(&policy.validated).retention != policy.configured;
+        if !due.iter().any(|d| d.reduced) && (changed || policy.unsaved.load(Relaxed)) {
+            let policy = Arc::clone(policy);
+            blocking(move || policy.adopt(None)).await?;
+        }
+        let plan: Vec<_> = due
+            .iter()
+            .map(|d| (d.id, cutoff(now, d.keep_days)))
+            .collect();
+        let store = Arc::clone(&self.store);
+        let rows =
+            blocking(move || store.prune(&plan, PRUNE_LOT, || std::thread::sleep(PRUNE_PAUSE)))
+                .await?;
+        *store::lock(&self.counters.last_prune) = Some(Prune {
+            at: now_ms(),
+            ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
+            rows,
+        });
+        Ok(rows)
+    }
+
+    /// The policy, and the reduction waiting for a person, counted now.
+    pub async fn policies(&self) -> Result<Policies, HistoryError> {
+        let now = now_ms();
+        let due = self.due().await?;
+        let reduction = if due.iter().any(|d| d.reduced) {
+            Some(self.reduction(now, due).await?)
+        } else {
+            None
+        };
+        Ok(Policies {
+            filter: self.policy.filter.clone(),
+            configured: self.policy.configured.clone(),
+            validated: store::lock(&self.policy.validated).clone(),
+            reduction,
+        })
+    }
+
+    /// What validating would delete as of `now`: exactly what the pass
+    /// that follows a validation deletes from the points it shortens.
+    async fn reduction(&self, now: u64, due: Vec<Due>) -> Result<Reduction, HistoryError> {
+        let fingerprint = self.policy.fingerprint();
+        let store = Arc::clone(&self.store);
+        blocking(move || {
+            let mut top = Vec::new();
+            let (mut rows, mut from, mut to) = (0, None::<u64>, None::<u64>);
+            for d in due.into_iter().filter(|d| d.after_days < d.keep_days) {
+                let at = cutoff(now, d.after_days);
+                let (n, oldest) = store.doomed(d.id, at)?;
+                if n == 0 {
+                    continue;
+                }
+                rows += n;
+                from = match (from, oldest) {
+                    (Some(a), Some(b)) => Some(a.min(b)),
+                    (a, b) => a.or(b),
+                };
+                to = to.max(Some(at));
+                top.push(Reduced {
+                    point: d.point,
+                    family: d.family,
+                    from_days: d.keep_days,
+                    to_days: d.after_days,
+                    rows: n,
+                });
+            }
+            top.sort_by(|a, b| b.rows.cmp(&a.rows).then_with(|| a.point.cmp(&b.point)));
+            let points = top.len();
+            top.truncate(REDUCTION_TOP);
+            Ok(Reduction {
+                at: now,
+                fingerprint,
+                points,
+                rows,
+                from,
+                to,
+                top,
+            })
+        })
+        .await
+    }
+
+    /// A person validates the reduction counted at `at` (`fingerprint`, as
+    /// shown): it becomes the validated policy, and is applied as of `at`,
+    /// deleting what was announced. Never an agent: `origin` must be a
+    /// person with a PIN session (`Origin::Ui`). Returns the rows deleted.
+    pub async fn validate(
+        &self,
+        at: u64,
+        fingerprint: &str,
+        origin: Origin,
+        by: Option<String>,
+    ) -> Result<usize, PolicyError> {
+        if origin != Origin::Ui {
+            return Err(PolicyError::HumanOnly);
+        }
+        let now = now_ms();
+        if at > now || now - at > REDUCTION_TTL_MS {
+            return Err(PolicyError::Expired);
+        }
+        {
+            let _one = self.policy.passes.lock().await;
+            if !self.due().await?.iter().any(|d| d.reduced) {
+                return Err(PolicyError::Nothing);
+            }
+            if self.policy.fingerprint() != fingerprint {
+                return Err(PolicyError::Changed);
+            }
+            let policy = Arc::clone(&self.policy);
+            blocking(move || policy.adopt(by)).await?;
+        }
+        tracing::info!("history retention reduction validated");
+        Ok(self.prune_pass(at).await?)
     }
 
     /// The counters always; the volume when it can be counted (otherwise
@@ -224,7 +580,7 @@ fn hub_events(hub: &Hub) -> HubEvents {
     }
 }
 
-fn current_state(hub: &Hub) -> Vec<Row> {
+fn current_state(hub: &Hub, filter: &Filter) -> Vec<Row> {
     hub.snapshot()
         .devices
         .iter()
@@ -237,16 +593,22 @@ fn current_state(hub: &Hub) -> Vec<Row> {
                 )
             })
         })
+        .filter(|(point, _, _)| filter.records(point.as_str()))
         .collect()
 }
 
+/// Excluded points are not written; the energy has its own subscription to
+/// the bus and sees every reading.
 async fn record(
     mut source: HubEvents,
     batches: mpsc::Sender<Batch>,
     counters: &Counters,
+    filter: &Filter,
     cancel: CancellationToken,
 ) {
-    let _ = batches.send((current_state(&source.hub), true)).await;
+    let _ = batches
+        .send((current_state(&source.hub, filter), true))
+        .await;
     let mut batch = Vec::new();
     let mut flush = tokio::time::interval(BATCH_EVERY);
     loop {
@@ -254,6 +616,9 @@ async fn record(
             () = cancel.cancelled() => break,
             event = source.events.recv() => match event {
                 Ok(Event::State { point, value, ts }) => {
+                    if !filter.records(point.as_str()) {
+                        continue;
+                    }
                     batch.push((point, value, ts));
                     if batch.len() >= BATCH_MAX {
                         hand_over(&batches, &mut batch, counters);
@@ -264,7 +629,7 @@ async fn record(
                     // Changes were missed; at least the present is recorded.
                     tracing::warn!(missed, "history recorder lagged, re-recording the current state");
                     hand_over(&batches, &mut batch, counters);
-                    if let Err(e) = batches.try_send((current_state(&source.hub), true)) {
+                    if let Err(e) = batches.try_send((current_state(&source.hub, filter), true)) {
                         let (rows, _) = e.into_inner();
                         counters.rows_dropped.fetch_add(rows.len() as u64, Relaxed);
                     }
@@ -348,33 +713,16 @@ async fn write_loop(store: Arc<Store>, mut queue: mpsc::Receiver<Batch>, counter
     }
 }
 
-async fn prune_loop(
-    store: Arc<Store>,
-    retention_days: u32,
-    counters: Arc<Counters>,
-    cancel: CancellationToken,
-) {
+async fn prune_loop(history: History, cancel: CancellationToken) {
     let mut tick = tokio::time::interval(RETENTION_EVERY);
     loop {
         tokio::select! {
             () = cancel.cancelled() => break,
             _ = tick.tick() => {}
         }
-        let cutoff = now_ms().saturating_sub(u64::from(retention_days) * 86_400_000);
-        let store = Arc::clone(&store);
-        let started = Instant::now();
-        match blocking(move || store.prune(cutoff)).await {
-            Ok(rows) => {
-                let ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
-                *store::lock(&counters.last_prune) = Some(Prune {
-                    at: now_ms(),
-                    ms,
-                    rows,
-                });
-                if rows > 0 {
-                    tracing::info!(removed = rows, ms, "history pruned");
-                }
-            }
+        match history.prune_pass(now_ms()).await {
+            Ok(0) => {}
+            Ok(rows) => tracing::info!(removed = rows, "history pruned"),
             Err(e) => tracing::warn!(error = %e, "history pruning failed"),
         }
     }
@@ -498,6 +846,239 @@ mod tests {
             "unknown, never zero: {json}"
         );
         assert_eq!(json["batches_written"], 3);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    const D: u64 = DAY_MS;
+
+    /// A history over `rows` (point, days ago), its validated retention
+    /// filed (`None`: a first start), `configured` read from `moli.toml`.
+    fn guarded(
+        name: &str,
+        rows: &[(&str, u64)],
+        validated: Option<Retention>,
+        configured: Retention,
+    ) -> (History, PathBuf, u64) {
+        let dir =
+            std::env::temp_dir().join(format!("moli-history-policy-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let store = Arc::new(Store::open(&dir.join("history.db")).unwrap());
+        let now = now_ms();
+        let rows: Vec<Row> = rows
+            .iter()
+            .map(|(p, ago)| (PointId::from(*p), Value::Int(1), now - ago))
+            .collect();
+        store.insert(&rows, false).unwrap();
+        let file = dir.join(POLICY_FILE);
+        if let Some(retention) = validated {
+            let v = Validated {
+                retention,
+                at: 1,
+                by: Some("someone".into()),
+            };
+            std::fs::write(&file, serde_json::to_vec(&v).unwrap()).unwrap();
+        }
+        let policy = Policy::new(None, Filter::default(), configured, Some(file));
+        (History::with_policy(store, policy), dir, now)
+    }
+
+    fn kept(history: &History) -> Vec<Vec<serde_json::Value>> {
+        history
+            .store
+            .query_sql("SELECT point, ts FROM history ORDER BY point, ts", 1_000)
+            .unwrap()
+            .rows
+    }
+
+    fn validated(dir: &std::path::Path) -> Validated {
+        serde_json::from_slice(&std::fs::read(dir.join(POLICY_FILE)).unwrap()).unwrap()
+    }
+
+    #[tokio::test]
+    async fn without_a_new_configuration_the_purge_is_the_one_before() {
+        let rows = [
+            ("d/x", 40 * D),
+            ("d/x", 35 * D),
+            ("d/x", 10 * D),
+            ("d/y", 31 * D),
+            ("d/y", D),
+            ("d/stable", 100 * D),
+        ];
+        let (filter, retention) = StorageConfig::default().compile(30).unwrap();
+        assert!(filter.records("d/x"));
+        let (history, dir, now) = guarded("default", &rows, None, retention);
+        // The same rows, purged by the statement Moli ran before.
+        let (before, before_dir, then) =
+            guarded("default-before", &rows, None, Retention::uniform(30));
+        let conn = rusqlite::Connection::open(before_dir.join("history.db")).unwrap();
+        conn.execute(
+            "DELETE FROM samples WHERE ts < ?1
+             AND ts < (SELECT MAX(s.ts) FROM samples s
+                       WHERE s.point_id = samples.point_id AND s.ts < ?1)",
+            [i64::try_from(cutoff(then, 30)).unwrap()],
+        )
+        .unwrap();
+
+        assert_eq!(history.prune_pass(now).await.unwrap(), 1);
+        // Rows as (point, age): the two stores were filled a moment apart.
+        let aged = |h: &History, at: u64| -> Vec<(String, u64)> {
+            kept(h)
+                .iter()
+                .map(|r| {
+                    (
+                        r[0].as_str().unwrap().to_owned(),
+                        at - r[1].as_u64().unwrap(),
+                    )
+                })
+                .collect()
+        };
+        assert_eq!(aged(&history, now), aged(&before, then));
+        let policies = history.policies().await.unwrap();
+        assert!(policies.reduction.is_none());
+        assert_eq!(validated(&dir).retention, Retention::uniform(30));
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(before_dir);
+    }
+
+    #[tokio::test]
+    async fn a_longer_duration_applies_at_once() {
+        let rows = [("d/x", 25 * D), ("d/x", 20 * D), ("d/x", 5 * D)];
+        let (history, dir, now) = guarded(
+            "longer",
+            &rows,
+            Some(Retention::uniform(10)),
+            Retention::uniform(30),
+        );
+        assert_eq!(history.prune_pass(now).await.unwrap(), 0);
+        assert_eq!(kept(&history).len(), 3);
+        assert!(history.policies().await.unwrap().reduction.is_none());
+        let v = validated(&dir);
+        assert_eq!((v.retention, v.by), (Retention::uniform(30), None));
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[tokio::test]
+    async fn a_reduction_waits_for_a_person_then_deletes_exactly_what_was_announced() {
+        let rows = [
+            ("d/x", 25 * D),
+            ("d/x", 20 * D),
+            ("d/x", 15 * D),
+            ("d/x", 5 * D),
+            ("d/y", 2 * D),
+        ];
+        let (history, dir, now) = guarded(
+            "shorter",
+            &rows,
+            Some(Retention::uniform(30)),
+            Retention::uniform(10),
+        );
+        assert_eq!(
+            history.prune_pass(now).await.unwrap(),
+            0,
+            "nothing goes yet"
+        );
+        assert_eq!(kept(&history).len(), 5);
+
+        let reduction = history.policies().await.unwrap().reduction.unwrap();
+        // 25 and 20 days go; 15 stays, the value a chart at 10 days starts from.
+        assert_eq!((reduction.points, reduction.rows), (1, 2));
+        assert_eq!(reduction.from, Some(now - 25 * D));
+        let top = &reduction.top[0];
+        assert_eq!(
+            (top.point.as_str(), top.from_days, top.to_days),
+            ("d/x", 30, 10)
+        );
+
+        // No agent validates, whatever it declares.
+        for origin in [
+            Origin::Api,
+            Origin::Mcp,
+            Origin::Cli,
+            Origin::Assistant,
+            Origin::Household,
+            Origin::Automation,
+            Origin::System,
+        ] {
+            let refused = history
+                .validate(reduction.at, &reduction.fingerprint, origin, None)
+                .await;
+            assert!(matches!(refused, Err(PolicyError::HumanOnly)), "{origin:?}");
+        }
+        let changed = history
+            .validate(reduction.at, "another", Origin::Ui, None)
+            .await;
+        assert!(matches!(changed, Err(PolicyError::Changed)));
+        let stale = history
+            .validate(
+                reduction.at - REDUCTION_TTL_MS - 1,
+                &reduction.fingerprint,
+                Origin::Ui,
+                None,
+            )
+            .await;
+        assert!(matches!(stale, Err(PolicyError::Expired)));
+        assert_eq!(kept(&history).len(), 5, "still nothing deleted");
+        assert_eq!(validated(&dir).retention, Retention::uniform(30));
+
+        let removed = history
+            .validate(
+                reduction.at,
+                &reduction.fingerprint,
+                Origin::Ui,
+                Some("a person".into()),
+            )
+            .await
+            .unwrap();
+        assert_eq!(removed as u64, reduction.rows);
+        let ts = |r: &Vec<serde_json::Value>| r[1].as_u64().unwrap();
+        let left: Vec<u64> = kept(&history).iter().map(ts).collect();
+        assert_eq!(left, vec![now - 15 * D, now - 5 * D, now - 2 * D]);
+        let v = validated(&dir);
+        assert_eq!(
+            (v.retention, v.by.as_deref()),
+            (Retention::uniform(10), Some("a person"))
+        );
+        assert!(history.policies().await.unwrap().reduction.is_none());
+        let again = history
+            .validate(reduction.at, &reduction.fingerprint, Origin::Ui, None)
+            .await;
+        assert!(matches!(again, Err(PolicyError::Nothing)));
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[tokio::test]
+    async fn a_point_whose_family_is_unknown_keeps_the_longest_duration() {
+        // Right after a start, devices are not published yet: a diagnostic
+        // duration of 3 days must not reach a point that may be climate.
+        let rows = [("d/x", 20 * D), ("d/x", 10 * D), ("d/x", 5 * D)];
+        let mut configured = Retention::uniform(30);
+        configured.families.insert(Family::Diagnostic, 3);
+        let (history, dir, now) =
+            guarded("unknown", &rows, Some(Retention::uniform(30)), configured);
+        assert_eq!(history.prune_pass(now).await.unwrap(), 0);
+        assert!(history.policies().await.unwrap().reduction.is_some());
+        assert_eq!(
+            validated(&dir).retention,
+            Retention::uniform(30),
+            "not adopted"
+        );
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[tokio::test]
+    async fn an_unreadable_validation_deletes_nothing() {
+        let rows = [("d/x", 400 * D), ("d/x", 300 * D), ("d/x", 5 * D)];
+        let (history, dir, now) = guarded("unreadable", &rows, None, Retention::uniform(30));
+        std::fs::write(dir.join(POLICY_FILE), b"{ broken").unwrap();
+        let policy = Policy::new(
+            None,
+            Filter::default(),
+            Retention::uniform(30),
+            Some(dir.join(POLICY_FILE)),
+        );
+        let history = History::with_policy(Arc::clone(&history.store), policy);
+        assert_eq!(history.prune_pass(now).await.unwrap(), 0);
+        assert!(history.policies().await.unwrap().reduction.is_some());
         let _ = std::fs::remove_dir_all(dir);
     }
 

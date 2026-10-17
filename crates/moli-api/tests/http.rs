@@ -306,6 +306,35 @@ async fn system_says_when_the_history_cannot_be_counted() {
 }
 
 #[tokio::test]
+async fn only_a_person_validates_a_history_reduction() {
+    let dir = std::env::temp_dir().join(format!("moli-api-retention-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let store = Arc::new(moli_history::Store::open(&dir.join("history.db")).unwrap());
+    let options = moli_api::Options {
+        history: Some(moli_history::History::from_store(store)),
+        ..moli_api::Options::default()
+    };
+    let addr = serve(&Hub::new(HubOptions::default()).unwrap(), &options).await;
+    let (status, body) = request(&addr, "GET", "/api/history/retention", None).await;
+    assert_eq!(status, 200, "{body}");
+    let policies: Json = serde_json::from_str(&body).unwrap();
+    assert_eq!(policies["configured"]["days"], 30);
+    assert!(policies["reduction"].is_null(), "{policies}");
+    // Without a PIN session, whatever it says it is: refused, before anything.
+    let validate = json!({ "at": moli_core::now_ms(), "fingerprint": "x" });
+    let (status, body) = request_with(
+        &addr,
+        "POST",
+        "/api/history/retention/validate",
+        Some(&validate),
+        "x-moli-origin: ui\r\n",
+    )
+    .await;
+    assert_eq!(status, 403, "{body}");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[tokio::test]
 async fn history_over_rest_and_mcp() {
     let dir = std::env::temp_dir().join(format!("moli-api-history-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);

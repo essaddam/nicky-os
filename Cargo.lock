@@ -1310,6 +1310,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "moli-core",
+ "moli-energy",
+ "moli-i18n",
  "moli-runtime",
  "rusqlite",
  "serde",
@@ -1317,6 +1319,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-util",
+ "toml",
  "tracing",
 ]
 

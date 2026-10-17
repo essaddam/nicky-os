@@ -54,6 +54,10 @@ pub struct Config {
     /// Automations: the house's position (sunrise, sunset) and time zone.
     #[serde(default)]
     pub automations: moli_automation::Config,
+    /// What the history records and keeps, by family and by point (absent:
+    /// everything, `[server] history_days` days).
+    #[serde(default)]
+    pub storage: moli_history::StorageConfig,
 }
 
 /// Where and when agents need a human's approval. Edited by humans only:
@@ -119,7 +123,8 @@ pub struct Server {
     /// (DNS-rebinding guard on every surface).
     #[serde(default)]
     pub allowed_hosts: Vec<String>,
-    /// Days of history kept (0 = no history).
+    /// Days of history kept (0 = no history): the general setting, that
+    /// `[storage.policy.<family>]` and `[[storage.point]]` refine.
     #[serde(default = "default_history_days")]
     pub history_days: u32,
     /// The Cloudflare Access application in front of the tunnel (absent:
@@ -324,6 +329,9 @@ impl Config {
                 .map_err(|e| anyhow::anyhow!("[energy] {e}"))?;
         }
         moli_lights::check(&self.fixtures).map_err(|e| anyhow::anyhow!("[[fixture]] {e}"))?;
+        self.storage
+            .compile(self.server.history_days)
+            .map_err(anyhow::Error::msg)?;
         Ok(())
     }
 }
@@ -362,5 +370,14 @@ mod tests {
         )
         .unwrap();
         assert!(config.check().is_err());
+    }
+
+    #[test]
+    fn storage_rules_are_checked() {
+        let config: Config = toml::from_str("[storage.policy.climat]\ndays = 90").unwrap();
+        let err = config.check().unwrap_err().to_string();
+        assert!(err.contains("[storage.policy.climat]"), "{err}");
+        let config: Config = toml::from_str("[storage.policy.climate]\ndays = 90").unwrap();
+        config.check().unwrap();
     }
 }

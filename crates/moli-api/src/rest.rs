@@ -626,6 +626,75 @@ pub(crate) async fn history(
     }
 }
 
+/// What the history keeps, and the reduction waiting for a person (counted
+/// now: the volume and the period it would delete).
+pub(crate) async fn retention(Extension(Recorded(history)): Extension<Recorded>) -> Response {
+    let Some(history) = history else {
+        return error(
+            StatusCode::NOT_FOUND,
+            &moli_i18n::tr!("serveur.historique.desactive"),
+        );
+    };
+    match history.policies().await {
+        Ok(policies) => Json(policies).into_response(),
+        Err(e) => error(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+    }
+}
+
+#[derive(Deserialize)]
+pub(crate) struct ValidateBody {
+    /// The reduction the person saw (`reduction.at`, `reduction.fingerprint`).
+    at: u64,
+    fingerprint: String,
+}
+
+/// A person validates the reduction shown: what was announced is deleted.
+/// A human session (PIN) is required, even from a trusted dashboard, as for
+/// approvals: an agent never shortens what the house keeps.
+pub(crate) async fn validate_retention(
+    Extension(Recorded(history)): Extension<Recorded>,
+    Extension(humans): Humans,
+    caller: Caller,
+    headers: HeaderMap,
+    Json(body): Json<ValidateBody>,
+) -> Response {
+    use moli_history::PolicyError;
+    let Some(history) = history else {
+        return error(
+            StatusCode::NOT_FOUND,
+            &moli_i18n::tr!("serveur.historique.desactive"),
+        );
+    };
+    let origin = if humans.is_human(&headers, &caller.key) {
+        Origin::Ui
+    } else {
+        Origin::Api
+    };
+    match history
+        .validate(body.at, &body.fingerprint, origin, Some(caller.describe()))
+        .await
+    {
+        Ok(removed) => Json(json!({ "ok": true, "removed": removed })).into_response(),
+        Err(PolicyError::HumanOnly) => error(
+            StatusCode::FORBIDDEN,
+            &moli_i18n::tr!("serveur.historique.reduction_humain"),
+        ),
+        Err(PolicyError::Nothing) => error(
+            StatusCode::CONFLICT,
+            &moli_i18n::tr!("serveur.historique.reduction_aucune"),
+        ),
+        Err(PolicyError::Changed) => error(
+            StatusCode::CONFLICT,
+            &moli_i18n::tr!("serveur.historique.reduction_changee"),
+        ),
+        Err(PolicyError::Expired) => error(
+            StatusCode::GONE,
+            &moli_i18n::tr!("serveur.historique.reduction_perimee"),
+        ),
+        Err(PolicyError::Store(e)) => error(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()),
+    }
+}
+
 /// Hours → ms, clamped to [1 min, 1 year].
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 pub(crate) fn window_ms(hours: f64) -> u64 {

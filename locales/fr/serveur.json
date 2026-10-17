@@ -109,6 +109,14 @@
 
   "serveur.config.depart_ecrite": "première mise en route : configuration de départ écrite",
   "serveur.config.depart_non_ecrite": "configuration de départ non écrite : réglages par défaut, en mémoire",
+  "serveur.config.stockage_jours": "{ou} : days doit être compris entre 1 et {max}",
+  "serveur.config.stockage_motif_vide": "{ou} : un motif ne peut pas être vide",
+  "serveur.config.stockage_famille_inconnue": "{ou} : famille inconnue (familles : {familles})",
+  "serveur.historique.reduction_humain": "seule une personne (code) valide une réduction de l'historique",
+  "serveur.historique.reduction_aucune": "aucune réduction de l'historique n'attend de validation",
+  "serveur.historique.reduction_changee": "la réduction affichée n'est plus celle qui attend : affiche-la de nouveau",
+  "serveur.historique.reduction_perimee": "le décompte affiché est trop ancien : affiche-le de nouveau",
+  "serveur.historique.desactive": "l'historique est désactivé",
 
   "serveur.energie.lecture_seule": "lecture seule",
   "serveur.energie.appareil": "Énergie",

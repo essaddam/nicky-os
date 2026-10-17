@@ -834,7 +834,8 @@ fn housekeeping(hub: &Hub, cancel: &CancellationToken) -> tokio::task::JoinHandl
     })
 }
 
-/// History: every change, kept `history_days` days (0 disables it).
+/// History: every change, kept by its policy (`[storage]`; `history_days`
+/// days without one, 0 disables it).
 fn start_history(
     config: &Config,
     hub: &Hub,
@@ -843,9 +844,14 @@ fn start_history(
     if config.server.history_days == 0 {
         return Ok(None);
     }
+    let (filter, retention) = config
+        .storage
+        .compile(config.server.history_days)
+        .map_err(anyhow::Error::msg)?;
     let options = moli_history::Options {
         path: config.server.data_dir.join("history.db"),
-        retention_days: config.server.history_days,
+        filter,
+        retention,
     };
     let started = moli_history::History::start(hub, &options, cancel.clone())
         .context("cannot open the history database")?;

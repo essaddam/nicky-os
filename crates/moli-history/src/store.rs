@@ -229,17 +229,62 @@ impl Store {
         Ok(())
     }
 
-    /// Deletes samples older than `cutoff_ms`, except each point's last one
-    /// before it: a chart starting at the cutoff still knows its first value,
-    /// and a value stable for months is still known. Returns how many.
-    pub fn prune(&self, cutoff_ms: u64) -> Result<usize, HistoryError> {
-        // The anchor is found through the primary key (point_id, ts).
-        Ok(lock(&self.writer).execute(
-            "DELETE FROM samples WHERE ts < ?1
-             AND ts < (SELECT MAX(s.ts) FROM samples s
-                       WHERE s.point_id = samples.point_id AND s.ts < ?1)",
-            [ts(cutoff_ms)],
-        )?)
+    /// Every recorded point: (id, point).
+    pub fn points(&self) -> Result<Vec<(i64, String)>, HistoryError> {
+        let conn = lock(&self.reader);
+        let mut stmt = conn.prepare("SELECT id, point FROM points")?;
+        let rows = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<Result<_, _>>()?;
+        Ok(rows)
+    }
+
+    /// For each (point id, cutoff), deletes the samples older than the
+    /// cutoff, except the point's last one before it: a chart starting at
+    /// the cutoff still knows its first value, and a value stable for months
+    /// is still known. At most `lot` rows per statement, the writer released
+    /// in between (`between` runs then): the recorder's batches pass between
+    /// two lots. Returns how many.
+    pub fn prune(
+        &self,
+        plan: &[(i64, u64)],
+        lot: usize,
+        mut between: impl FnMut(),
+    ) -> Result<usize, HistoryError> {
+        let lot = lot.max(1);
+        let limit = i64::try_from(lot).unwrap_or(i64::MAX);
+        let mut removed = 0;
+        for &(id, cutoff) in plan {
+            loop {
+                // Through the primary key (point_id, ts) only; portable SQL
+                // (no DELETE … LIMIT).
+                let n = lock(&self.writer).execute(
+                    "DELETE FROM samples WHERE point_id = ?1 AND ts IN (
+                        SELECT ts FROM samples WHERE point_id = ?1 AND ts < (
+                            SELECT MAX(ts) FROM samples WHERE point_id = ?1 AND ts < ?2)
+                        ORDER BY ts LIMIT ?3)",
+                    params![id, ts(cutoff), limit],
+                )?;
+                removed += n;
+                if n < lot {
+                    break;
+                }
+                between();
+            }
+        }
+        Ok(removed)
+    }
+
+    /// What `prune` would delete for this point at this cutoff: (rows, the
+    /// oldest one's time).
+    pub fn doomed(&self, id: i64, cutoff: u64) -> Result<(u64, Option<u64>), HistoryError> {
+        let (rows, oldest): (i64, Option<i64>) = lock(&self.reader).query_row(
+            "SELECT COUNT(*), MIN(ts) FROM samples WHERE point_id = ?1 AND ts < (
+                SELECT MAX(ts) FROM samples WHERE point_id = ?1 AND ts < ?2)",
+            params![id, ts(cutoff)],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )?;
+        Ok((u64::try_from(rows).unwrap_or(0), oldest.map(ms)))
     }
 
     pub fn series(
@@ -448,6 +493,17 @@ mod tests {
         PointId::from(s)
     }
 
+    /// Every point pruned at the same cutoff, in lots of 2.
+    fn prune_all(store: &Store, cutoff: u64) -> usize {
+        let plan: Vec<_> = store
+            .points()
+            .unwrap()
+            .into_iter()
+            .map(|(id, _)| (id, cutoff))
+            .collect();
+        store.prune(&plan, 2, || {}).unwrap()
+    }
+
     #[test]
     fn values_round_trip_exactly() {
         let (store, dir) = store("types");
@@ -557,7 +613,7 @@ mod tests {
             (p("d/stable"), Value::Int(7), 1_000),
         ];
         store.insert(&rows, false).unwrap();
-        assert_eq!(store.prune(5_000).unwrap(), 1);
+        assert_eq!(prune_all(&store, 5_000), 1);
         // 2 s stays: the value the window starts from.
         assert_eq!(store.series("d/x", 0, 10_000, 10).unwrap().total, 2);
         // A value that never changed is still known, however old.
@@ -575,10 +631,45 @@ mod tests {
             (p("d/x"), Value::Int(6), 6_000),
         ];
         store.insert(&rows, false).unwrap();
-        assert_eq!(store.prune(5_000).unwrap(), 0);
+        assert_eq!(prune_all(&store, 5_000), 0);
         // A chart starting at the cutoff still knows where the curve was.
         let s = store.series("d/x", 5_000, 10_000, 10).unwrap();
         assert_eq!(s.before, Some((1_000, Value::Int(1))));
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn pruning_goes_by_lots_and_writes_pass_in_between() {
+        let (store, dir) = store("prune-lots");
+        let old: Vec<_> = (0..100u64)
+            .map(|i| (p("d/x"), Value::Int(1), 1_000 + i))
+            .collect();
+        store.insert(&old, false).unwrap();
+        let (id, _) = store.points().unwrap()[0].clone();
+        // What the purge will delete: every old row but the anchor.
+        assert_eq!(store.doomed(id, 50_000).unwrap(), (99, Some(1_000)));
+        let mut lots = 0;
+        let removed = store
+            .prune(&[(id, 50_000)], 10, || {
+                // The writer is free: a recorder's batch goes in now.
+                lots += 1;
+                assert!(store.writer.try_lock().is_ok(), "writer held between lots");
+                store
+                    .insert(
+                        &[(p("d/live"), Value::Int(lots), 60_000 + lots.unsigned_abs())],
+                        false,
+                    )
+                    .unwrap();
+            })
+            .unwrap();
+        assert_eq!(removed, 99);
+        assert_eq!(lots, 9, "99 rows in lots of 10: 9 full lots, then the rest");
+        assert_eq!(store.series("d/live", 0, 100_000, 100).unwrap().total, 9);
+        assert_eq!(
+            store.series("d/x", 0, 100_000, 100).unwrap().raw,
+            vec![(1_099, Value::Int(1))]
+        );
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }
