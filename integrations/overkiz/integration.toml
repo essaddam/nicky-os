@@ -1,0 +1,43 @@
+[integration]
+id = "overkiz"
+name = "Somfy TaHoma et Connectivity Kit (API Overkiz)"
+brands = ["Somfy"]
+# The classes seen in the reference homes (`controllableName`); anything
+# else the box knows is ignored.
+models = [
+  "rts:RollerShutterRTSComponent",
+  "rts:GateOpenerRTSComponent",
+  "ogp:Gate",
+  "ogp:Light",
+  "ogp:Outlet",
+]
+transport = "https"
+driver = "overkiz"
+crate = "moli-overkiz"
+
+[discovery]
+# No discovery: the instance gives the box's address (local), or nothing
+# (cloud: the Somfy Europe server is fixed in the driver).
+mdns = []
+ssdp = []
+ports = [8443]
+
+[needs]
+# Local: `token` (developer mode), given by a human; `cert_sha256` is
+# written by the driver at first contact. Cloud: `username` and `password`
+# of the Somfy account, given by a human.
+secrets = ["token", "username", "password"]
+vars = []
+# `host` only with transport = "local".
+options = ["transport", "host"]
+
+[origin]
+reused = "aucun code repris : API locale officielle Somfy (OpenAPI du mode développeur), authentification cloud et codes d'erreur d'après pyoverkiz (MIT), sémantique RTS d'après l'intégration overkiz de HA"
+author = "agent"
+
+# Replayed by the crate's tests (crates/moli-overkiz/src/model.rs).
+[[fixture]]
+file = "fixtures/setup-devices.json"
+
+[[fixture]]
+file = "fixtures/events.json"

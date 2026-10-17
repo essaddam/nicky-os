@@ -1,0 +1,13 @@
+[
+  { "name": "ExecutionRegisteredEvent", "timestamp": 1700000001000, "execId": "11111111-2222-3333-4444-555555555555", "label": "Moli", "actions": [] },
+  { "name": "ExecutionStateChangedEvent", "timestamp": 1700000001100, "execId": "11111111-2222-3333-4444-555555555555", "oldState": "INITIALIZED", "newState": "IN_PROGRESS", "ownerKey": "1234-5678-9012", "type": 1, "subType": 1, "timeToNextState": 0 },
+  { "name": "ExecutionStateChangedEvent", "timestamp": 1700000001900, "execId": "11111111-2222-3333-4444-555555555555", "oldState": "IN_PROGRESS", "newState": "COMPLETED", "ownerKey": "1234-5678-9012", "type": 1, "subType": 1, "timeToNextState": -1 },
+  { "name": "DeviceStateChangedEvent", "timestamp": 1700000002000, "deviceURL": "ogp://1234-5678-9012/00000003", "deviceStates": [
+    { "name": "core:OnOffState", "type": 3, "value": "off" },
+    { "name": "core:LightIntensityState", "type": 1, "value": 0 }
+  ] },
+  { "name": "DeviceAvailableEvent", "timestamp": 1700000003000, "deviceURL": "rts://1234-5678-9012/16700002" },
+  { "name": "ExecutionStateChangedEvent", "timestamp": 1700000004000, "execId": "66666666-7777-8888-9999-000000000000", "oldState": "IN_PROGRESS", "newState": "FAILED", "failureType": "NONEXEC_OTHER", "failureTypeCode": 1, "ownerKey": "1234-5678-9012", "type": 1, "subType": 1, "timeToNextState": -1 },
+  { "name": "RefreshAllDevicesStatesCompletedEvent", "timestamp": 1700000005000, "gatewayId": "1234-5678-9012" },
+  { "name": "DeviceCreatedEvent", "timestamp": 1700000006000, "deviceURL": "ogp://1234-5678-9012/00000005" }
+]

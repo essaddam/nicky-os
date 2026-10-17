@@ -329,6 +329,57 @@ name = "Bambu A1"              # optionnel
 - **Pas fait** : lancer une impression (le plateau doit être libre : un humain sur place), la caméra (le flux du U1 ne répond pas en HTTP local), le flux en direct par websocket (le relevé toutes les 5 s suffit).
 - **Tests** : réponses réelles du U1 (`integrations/klipper/fixtures/u1.json`) → forme, points, valeurs ; estimation du temps restant ; Klipper arrêté ; ordres → requêtes.
 
+## `overkiz` : Somfy TaHoma et Connectivity Kit (`crates/moli-overkiz`)
+
+- **Couvre** : seulement les classes vues dans les maisons de référence : volets et portail
+  Somfy **RTS** (`rts:RollerShutterRTSComponent`, `rts:GateOpenerRTSComponent`), portail,
+  lumière et prise **OGP** d'un Connectivity Kit (`ogp:Gate`, `ogp:Light`, `ogp:Outlet`). Le
+  reste de ce que la box connaît est ignoré (journalisé une fois par chargement).
+- **Protocole** : API Overkiz, par l'une de deux routes. `transport = "local"` : API locale
+  officielle d'une TaHoma en mode développeur, HTTPS 8443, certificat épinglé au premier
+  contact, jeton porteur. `transport = "cloud"` : serveur Somfy Europe (`ha101-1.overkiz.com`,
+  adresse fixée dans le pilote), session OAuth du compte Somfy (`accounts.somfy.com`). Le
+  Connectivity Kit n'a pas d'API locale.
+- **Configuration** :
+
+```toml
+[[driver]]
+id = "volets"
+kind = "overkiz"
+[driver.options]
+transport = "local"         # ou "cloud" (sans host)
+host = "192.168.1.x"        # local seulement
+# port = 8443
+```
+
+- **Secrets** : local : `token` (humain), `cert_sha256` (écrit par le pilote avant tout envoi
+  du jeton) ; cloud : `username`, `password` (humain). Manquants ou refusés : statut `waiting`
+  qui dit la commande à lancer.
+- **Points** : volet et portail : `control` (`open`, `stop`, `my` = position favorite du moteur,
+  `close`, selon ce que l'appareil déclare), **écriture seule** : un moteur RTS ne dit jamais
+  où il est, Moli n'affiche aucune position supposée ; portail OGP : `opening` (`open`,
+  `closed`, `pedestrian`, `unknown`) en lecture s'il l'annonce. Lumière : `on`, `brightness`
+  (%). Prise : `on`. Disponibilité de chaque appareil (champ `available`, événements).
+- **Identité** : `deviceURL` de la box (`rts://<box>/<adresse>`), stable.
+- **Ordres** : `POST /exec/apply`, **une seule fois** (jamais rejoué, ni par `moli-net` ni
+  après une reconnexion), dans l'échéance du hub. Suivi par les événements d'exécution :
+  « fait » à `COMPLETED`, l'échec et sa cause à `FAILED`, « accepté » si la box travaille
+  encore quand le hub cesse d'attendre (un échec ensuite est dit à la maison) ; liaison perdue :
+  « envoyé, non confirmé ». La logique est pure et testée (`src/follow.rs`).
+- **Événements** : auditeur enregistré avant le chargement, relevé toutes les 10 s (local) ou
+  30 s (cloud), chaque seconde (2 s cloud) pendant un suivi ; expiré : réenregistré et tout
+  rechargé ; appareils ajoutés ou retirés, box revenue : rechargement ; box hors ligne
+  (`GatewayDownEvent`) : ses appareils hors ligne.
+- **Pièges** : quota, file d'exécution pleine, maintenance : pause de 60 s, l'ordre reçoit
+  « box occupée ». La session cloud survit aux redémarrages du pilote (Somfy bloque les comptes
+  qui se reconnectent trop) et se renouvelle 2 min avant sa fin ; une session refusée deux fois
+  de suite devient « identifiants refusés ». Réponses bornées à 2 Mio, noms à 64 caractères,
+  identifiants de la box vérifiés avant d'entrer dans un chemin.
+- **Tests** : `src/model.rs` sur `integrations/overkiz/fixtures/` (reconstruites d'après la
+  spécification, identifiants fictifs) : classes publiées, aucun état RTS, ordres, événements,
+  refus ; `src/follow.rs` : réponse unique, « accepté » puis échec dit, rien de rejoué ;
+  `src/api.rs` : session Somfy, formulaire, identifiants.
+
 ## `tapo` : ampoules et prises TP-Link Tapo (`crates/moli-tapo`)
 
 - **Couvre** : marche/arrêt, luminosité, température de couleur, couleur.
@@ -482,6 +533,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
 | `bambu` | `moli-bambu` | MQTT TLS 8883, épinglé | lumière, `control` (humain pour un agent) | pas encore (cible : Bambu Lab A1) |
 | `moonraker` | `moli-moonraker` | HTTP local 7125 | lumière, `control` (humain pour un agent) | Snapmaker U1 |
+| `overkiz` | `moli-overkiz` | API Overkiz : HTTPS local 8443 épinglé, ou cloud Somfy (OAuth) | oui : volets, portails (`open`, `stop`, `my`, `close`), lumière, prise | pas encore (cible : TaHoma en local, Connectivity Kit en cloud) |
 | `tapo` | `moli-tapo` | HTTP 80 + KLAP v2 | oui : tout | pas encore (cible : Tapo L530) |
 | `igd` | `moli-igd` | UPnP IGD (SSDP + SOAP) | non | Livebox |
 | `ipp` | `moli-ipp` | IPP 2.0 HTTP 631 | identifier, annuler, imprimer (tableau de bord) | Canon MG3600 |

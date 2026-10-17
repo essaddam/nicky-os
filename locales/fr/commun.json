@@ -99,6 +99,7 @@
   "commun.capteur.pas_de_mesure": "Pas encore de mesure.",
   "commun.volet.ouvrir": "Ouvrir",
   "commun.volet.stop": "Stop",
+  "commun.volet.favori": "Favori",
   "commun.volet.fermer": "Fermer",
   "commun.volet.ouvert_a": "Ouvert à {pct} %",
   "commun.lampe.introuvable": "Introuvable",

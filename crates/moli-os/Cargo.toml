@@ -25,6 +25,7 @@ moli-bambu.workspace = true
 moli-esphome.workspace = true
 moli-alexa.workspace = true
 moli-moonraker.workspace = true
+moli-overkiz.workspace = true
 moli-frigate.workspace = true
 moli-philips.workspace = true
 moli-tapo.workspace = true

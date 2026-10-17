@@ -873,6 +873,7 @@ const KINDS: &[&str] = &[
     "telegram",
     "phones",
     "moonraker",
+    "overkiz",
     "ipp",
     "host",
     "profile",
@@ -1022,6 +1023,9 @@ fn build_driver(
         "moonraker" => Arc::new(moli_moonraker::Moonraker::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "overkiz" => Arc::new(moli_overkiz::Overkiz::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "ipp" => Arc::new(moli_ipp::Ipp::new(
             config.options.clone().try_into().with_context(context)?,
         )),

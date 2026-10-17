@@ -3,7 +3,7 @@
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from './Icon.svelte';
 
-  /** A shutter: open, stop, close (whatever the device offers). */
+  /** A shutter: open, stop, favourite, close (whatever the device offers). */
   let { id, name = null } = $props();
 
   const d = $derived(device(id));
@@ -14,6 +14,8 @@
   const BUTTONS = [
     ['open', 'commun.volet.ouvrir'],
     ['stop', 'commun.volet.stop'],
+    // The favourite position stored in the motor (Somfy « my »).
+    ['my', 'commun.volet.favori'],
     ['close', 'commun.volet.fermer'],
   ];
 </script>

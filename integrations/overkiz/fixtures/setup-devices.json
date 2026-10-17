@@ -1,0 +1,206 @@
+[
+  {
+    "creationTime": 1700000000000,
+    "deviceURL": "internal://1234-5678-9012/pod/0",
+    "label": "Box",
+    "controllableName": "internal:PodV3Component",
+    "subsystemId": 0,
+    "type": 1,
+    "available": true,
+    "enabled": true,
+    "synced": true,
+    "attributes": [],
+    "states": [{ "name": "core:NameState", "type": 3, "value": "Box" }],
+    "definition": {
+      "commands": [{ "commandName": "getName", "nparams": 0 }, { "commandName": "refreshPodMode", "nparams": 0 }],
+      "states": [{ "name": "core:NameState" }],
+      "widgetName": "Pod",
+      "uiClass": "Pod",
+      "type": "ACTUATOR"
+    }
+  },
+  {
+    "creationTime": 1700000000000,
+    "deviceURL": "rts://1234-5678-9012/16700001",
+    "label": "Volet 1",
+    "controllableName": "rts:RollerShutterRTSComponent",
+    "subsystemId": 0,
+    "type": 1,
+    "available": true,
+    "enabled": true,
+    "synced": true,
+    "attributes": [],
+    "states": [],
+    "definition": {
+      "commands": [
+        { "commandName": "close", "nparams": 1 },
+        { "commandName": "down", "nparams": 1 },
+        { "commandName": "identify", "nparams": 0 },
+        { "commandName": "my", "nparams": 1 },
+        { "commandName": "open", "nparams": 1 },
+        { "commandName": "startIdentify", "nparams": 0 },
+        { "commandName": "stop", "nparams": 1 },
+        { "commandName": "stopIdentify", "nparams": 0 },
+        { "commandName": "test", "nparams": 0 },
+        { "commandName": "up", "nparams": 1 }
+      ],
+      "states": [],
+      "widgetName": "UpDownRollerShutter",
+      "uiClass": "RollerShutter",
+      "type": "ACTUATOR"
+    }
+  },
+  {
+    "creationTime": 1700000000000,
+    "deviceURL": "rts://1234-5678-9012/16700002",
+    "label": "Volet 2",
+    "controllableName": "rts:RollerShutterRTSComponent",
+    "subsystemId": 0,
+    "type": 1,
+    "available": false,
+    "enabled": true,
+    "synced": true,
+    "attributes": [],
+    "states": [],
+    "definition": {
+      "commands": [
+        { "commandName": "close", "nparams": 1 },
+        { "commandName": "my", "nparams": 1 },
+        { "commandName": "open", "nparams": 1 },
+        { "commandName": "stop", "nparams": 1 }
+      ],
+      "states": [],
+      "widgetName": "UpDownRollerShutter",
+      "uiClass": "RollerShutter",
+      "type": "ACTUATOR"
+    }
+  },
+  {
+    "creationTime": 1700000000000,
+    "deviceURL": "rts://1234-5678-9012/16700003",
+    "label": "Ancien volet",
+    "controllableName": "rts:RollerShutterRTSComponent",
+    "subsystemId": 0,
+    "type": 1,
+    "available": true,
+    "enabled": false,
+    "synced": true,
+    "attributes": [],
+    "states": [],
+    "definition": {
+      "commands": [
+        { "commandName": "close", "nparams": 1 },
+        { "commandName": "open", "nparams": 1 },
+        { "commandName": "stop", "nparams": 1 }
+      ],
+      "states": [],
+      "widgetName": "UpDownRollerShutter",
+      "uiClass": "RollerShutter",
+      "type": "ACTUATOR"
+    }
+  },
+  {
+    "creationTime": 1700000000000,
+    "deviceURL": "rts://1234-5678-9012/16700004",
+    "label": "Portail",
+    "controllableName": "rts:GateOpenerRTSComponent",
+    "subsystemId": 0,
+    "type": 1,
+    "available": true,
+    "enabled": true,
+    "synced": true,
+    "attributes": [],
+    "states": [],
+    "definition": {
+      "commands": [
+        { "commandName": "close", "nparams": 1 },
+        { "commandName": "identify", "nparams": 0 },
+        { "commandName": "open", "nparams": 1 },
+        { "commandName": "stop", "nparams": 1 },
+        { "commandName": "test", "nparams": 0 }
+      ],
+      "states": [],
+      "widgetName": "OpenCloseGate",
+      "uiClass": "Gate",
+      "type": "ACTUATOR"
+    }
+  },
+  {
+    "creationTime": 1700000000000,
+    "deviceURL": "ogp://1234-5678-9012/00000001",
+    "label": "Portail",
+    "controllableName": "ogp:Gate",
+    "subsystemId": 0,
+    "type": 1,
+    "available": true,
+    "enabled": true,
+    "synced": true,
+    "attributes": [],
+    "states": [{ "name": "core:OpenClosedState", "type": 3, "value": "closed" }],
+    "definition": {
+      "commands": [
+        { "commandName": "close", "nparams": 0 },
+        { "commandName": "identify", "nparams": 0 },
+        { "commandName": "my", "nparams": 0 },
+        { "commandName": "open", "nparams": 0 },
+        { "commandName": "stop", "nparams": 0 }
+      ],
+      "states": [{ "name": "core:OpenClosedState" }],
+      "widgetName": "DynamicGate",
+      "uiClass": "Gate",
+      "type": "ACTUATOR"
+    }
+  },
+  {
+    "creationTime": 1700000000000,
+    "deviceURL": "ogp://1234-5678-9012/00000003",
+    "label": "Lumière",
+    "controllableName": "ogp:Light",
+    "subsystemId": 0,
+    "type": 1,
+    "available": true,
+    "enabled": true,
+    "synced": true,
+    "attributes": [],
+    "states": [
+      { "name": "core:OnOffState", "type": 3, "value": "on" },
+      { "name": "core:LightIntensityState", "type": 1, "value": 60 }
+    ],
+    "definition": {
+      "commands": [
+        { "commandName": "identify", "nparams": 0 },
+        { "commandName": "off", "nparams": 0 },
+        { "commandName": "on", "nparams": 0 },
+        { "commandName": "setIntensity", "nparams": 1 }
+      ],
+      "states": [{ "name": "core:OnOffState" }, { "name": "core:LightIntensityState" }],
+      "widgetName": "DynamicLight",
+      "uiClass": "Light",
+      "type": "ACTUATOR"
+    }
+  },
+  {
+    "creationTime": 1700000000000,
+    "deviceURL": "ogp://1234-5678-9012/00000004",
+    "label": "Prise",
+    "controllableName": "ogp:Outlet",
+    "subsystemId": 0,
+    "type": 1,
+    "available": true,
+    "enabled": true,
+    "synced": true,
+    "attributes": [],
+    "states": [{ "name": "core:OnOffState", "type": 3, "value": "off" }],
+    "definition": {
+      "commands": [
+        { "commandName": "identify", "nparams": 0 },
+        { "commandName": "off", "nparams": 0 },
+        { "commandName": "on", "nparams": 0 }
+      ],
+      "states": [{ "name": "core:OnOffState" }],
+      "widgetName": "DynamicOutlet",
+      "uiClass": "OnOff",
+      "type": "ACTUATOR"
+    }
+  }
+]

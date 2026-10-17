@@ -1471,6 +1471,7 @@ dependencies = [
  "moli-lights",
  "moli-moonraker",
  "moli-net",
+ "moli-overkiz",
  "moli-philips",
  "moli-phones",
  "moli-presence",
@@ -1491,6 +1492,24 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "moli-overkiz"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "http",
+ "http-body-util",
+ "moli-core",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "serde",
+ "serde_json",
+ "tokio",
+ "toml",
+ "tracing",
 ]
 
 [[package]]
