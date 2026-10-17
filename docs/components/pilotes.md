@@ -368,9 +368,10 @@ host = "192.168.1.x"        # local seulement
   « peut-être parti, non confirmé ». Toute attente réseau (relevés, ordres) tourne à côté de
   la boucle : un relevé ou un ordre lent ne retarde jamais une réponse. Les ordres partent
   **un à la fois, dans l'ordre reçu** (ouvrir puis stop n'arrivent jamais inversés), depuis une
-  file de 8 au plus (au-delà : refus immédiat) ; juste avant de partir, chacun est revérifié
-  (toujours attendu, box pas en pause, avant son instant limite absolu) : un ordre hors délai
-  reste à la maison (« non envoyé »), jamais envoyé en retard. En local, ordres et relevés ont
+  file de 8 au plus, et 16 appelants au plus en attente d'une réponse, confirmations comprises
+  (au-delà : refus immédiat) ; juste avant de partir, chacun est revérifié (appelant toujours
+  là, box pas en pause, avant son instant limite absolu) : un ordre hors délai ou dont
+  l'appelant a renoncé reste à la maison, jamais envoyé en retard. En local, ordres et relevés ont
   chacun leur connexion. La logique est pure et testée (`src/follow.rs`), la
   boucle aussi, contre une box simulée et le vrai hub (`src/tests.rs`).
 - **Événements** : auditeur enregistré avant le chargement, relevé toutes les 10 s (local) ou
@@ -386,7 +387,8 @@ host = "192.168.1.x"        # local seulement
   2 min avant sa fin ; un jeton de session refusé (« Invalid token », « Not such token ») la
   fait renouveler. Chaque session porte un numéro : un refus n'efface que la session qu'il
   vise (jamais sa remplaçante), et trois **sessions** refusées de suite (pas trois réponses)
-  deviennent « identifiants refusés » ; en local, c'est
+  deviennent « identifiants refusés » ; le verrou de la session ne couvre jamais le réseau (une
+  réponse reçue n'attend pas une connexion en cours ailleurs) ; en local, c'est
   un jeton révoqué. Stationné (jeton ou identifiants refusés, certificat changé) : appareils
   hors ligne. Un refus d'authentification n'est jamais cité (il peut recopier le jeton) : seul
   son code est montré, et tout mot de plus de 16 caractères d'un message de la box devient

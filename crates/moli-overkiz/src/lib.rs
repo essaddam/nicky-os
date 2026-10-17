@@ -61,6 +61,9 @@ const MAX_SESSION_REFUSALS: u32 = 3;
 /// Orders waiting for the box behind the one being sent; more are refused
 /// at once (the hub's own queue must not turn into unbounded work here).
 const MAX_WAITING: usize = 8;
+/// Callers waiting for an answer, orders sent or not: the bound of the
+/// whole path, confirmations included.
+const MAX_PENDING: usize = 16;
 
 /// Which road leads to the box.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -230,7 +233,7 @@ async fn drive(
         .filter(|r| r.kind == Refusal::Denied || (r.kind == Refusal::Session && !cloud));
     if let Some(Refused { message, .. }) = denied {
         let reason = if let Api::Cloud(cloud) = &*link.api {
-            cloud.forget().await;
+            cloud.forget();
             moli_i18n::tr!(
                 "pilotes.overkiz.identifiants_refuses",
                 cause = message,
@@ -600,7 +603,8 @@ impl Link {
             command.reply(Err(moli_i18n::tr!("pilotes.overkiz.point_non_ecrivable")));
             return;
         };
-        if self.queue.len() >= MAX_WAITING {
+        self.prune(now);
+        if self.queue.len() >= MAX_WAITING || self.tracker.awaiting() >= MAX_PENDING {
             command.reply(Err(moli_i18n::tr!("pilotes.overkiz.trop_d_ordres")));
             return;
         }
@@ -626,6 +630,15 @@ impl Link {
         });
     }
 
+    /// Forgets the callers that gave up: their orders not sent yet never
+    /// leave, and their places are free again.
+    fn prune(&mut self, now: Instant) {
+        let unsent = self.tracker.prune(CommandRequest::abandoned, now);
+        if !unsent.is_empty() {
+            self.queue.retain(|q| !unsent.contains(&q.key));
+        }
+    }
+
     /// Why no order may leave now, if so.
     fn paused(&self, now: Instant) -> Option<String> {
         let until = self.busy_until.filter(|until| now < *until)?;
@@ -640,6 +653,7 @@ impl Link {
     /// checked just before it leaves: still awaited, box not paused, still
     /// in time (an order past its instant stays home, never sent late).
     fn pump(&mut self, now: Instant) {
+        self.prune(now);
         while !self.writing {
             let Some(next) = self.queue.pop_front() else {
                 return;

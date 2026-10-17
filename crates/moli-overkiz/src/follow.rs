@@ -130,6 +130,29 @@ impl<W> Tracker<W> {
         self.pending.iter().any(|p| p.key == key)
     }
 
+    /// Callers still waiting for an answer, sent or not.
+    #[must_use]
+    pub fn awaiting(&self) -> usize {
+        self.pending.len()
+    }
+
+    /// The callers that gave up (`gone`): an order not sent yet is dropped
+    /// (it will never leave: its key is returned), one already sent is
+    /// still watched for a failure. Their places are free again.
+    pub fn prune(&mut self, gone: impl Fn(&W) -> bool, now: Instant) -> Vec<u64> {
+        let (left, kept): (Vec<_>, Vec<_>) = self.pending.drain(..).partition(|p| gone(&p.waiter));
+        self.pending = kept;
+        let mut unsent = Vec::new();
+        for p in left {
+            if p.sent {
+                self.follow(p.key, p.execution, p.about, now + FOLLOW_FOR);
+            } else {
+                unsent.push(p.key);
+            }
+        }
+        unsent
+    }
+
     /// Some order is still followed (fetch events more often).
     #[must_use]
     pub fn watching(&self) -> bool {
@@ -450,5 +473,24 @@ mod tests {
             Some(Outcome::Tell(about(), "NONEXEC_OTHER".into()))
         );
         assert!(!t.watching());
+    }
+
+    #[test]
+    fn a_caller_that_gave_up_frees_its_place() {
+        let now = Instant::now();
+        let mut t: Tracker<u32> = Tracker::default();
+        t.track(1, 1, about(), now + Duration::from_secs(4));
+        t.track(2, 2, about(), now + Duration::from_secs(4));
+        t.sending(1);
+        assert_eq!(t.awaiting(), 2);
+        // Both callers gave up: 2 never leaves, 1 (already sent) is watched.
+        assert_eq!(t.prune(|_| true, now), [2]);
+        assert_eq!(t.awaiting(), 0);
+        assert!(!t.waiting(2));
+        assert_eq!(t.taken(1, "x".into()), None);
+        assert_eq!(
+            t.moved("x", Execution::Failed, Some("NONEXEC_OTHER".into())),
+            Some(Outcome::Tell(about(), "NONEXEC_OTHER".into()))
+        );
     }
 }

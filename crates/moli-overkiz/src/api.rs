@@ -109,7 +109,11 @@ pub fn identifier(value: &Json) -> anyhow::Result<String> {
 /// a reason to log in again (Somfy bans accounts that log in too often).
 #[derive(Debug, Default)]
 pub struct Sessions {
-    slot: Mutex<Option<Session>>,
+    /// Held only to read or write it, never across the network: an answer
+    /// already received is never kept waiting behind a login.
+    slot: std::sync::Mutex<Option<Session>>,
+    /// One renewal at a time (the login itself, over the network).
+    renewal: Mutex<()>,
     /// Each session gets the next number: a refusal names the session it
     /// refused, and only that one is forgotten (never its replacement).
     generation: AtomicU64,
@@ -119,6 +123,33 @@ pub struct Sessions {
 }
 
 pub type SharedSession = Arc<Sessions>;
+
+impl Sessions {
+    fn slot(&self) -> std::sync::MutexGuard<'_, Option<Session>> {
+        self.slot
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    /// The current session, if still valid: its token and generation.
+    fn valid(&self) -> Option<(String, u64)> {
+        self.slot()
+            .as_ref()
+            .filter(|s| Instant::now() < s.renew_at)
+            .map(|s| (s.access.clone(), s.generation))
+    }
+}
+
+/// The HTTP exchange of the cloud, replaced in tests (nothing else is).
+#[cfg(test)]
+pub type Exchange = Arc<
+    dyn Fn(
+            Request<Full<Body>>,
+        ) -> std::pin::Pin<
+            Box<dyn std::future::Future<Output = anyhow::Result<(StatusCode, Body)>> + Send>,
+        > + Send
+        + Sync,
+>;
 
 pub struct Session {
     generation: u64,
@@ -285,6 +316,8 @@ pub struct Cloud {
     user: String,
     password: String,
     session: SharedSession,
+    #[cfg(test)]
+    exchange: Option<Exchange>,
 }
 
 impl std::fmt::Debug for Cloud {
@@ -320,20 +353,22 @@ impl Cloud {
             user,
             password,
             session,
+            #[cfg(test)]
+            exchange: None,
         }
     }
 
     /// Ends the session: the next call logs in again.
-    pub async fn forget(&self) {
-        *self.session.slot.lock().await = None;
+    pub fn forget(&self) {
+        *self.session.slot() = None;
     }
 
     /// What an answer says of the session generation `generation` it used:
     /// refused, that session (only) is forgotten and counted; accepted, the
     /// count starts again. A late answer about an older session changes
-    /// nothing.
-    async fn settle(&self, generation: u64, refused: bool) {
-        let mut slot = self.session.slot.lock().await;
+    /// nothing. Never waits for a login in progress.
+    fn settle(&self, generation: u64, refused: bool) {
+        let mut slot = self.session.slot();
         if slot.as_ref().is_none_or(|s| s.generation != generation) {
             return;
         }
@@ -346,15 +381,17 @@ impl Cloud {
     }
 
     /// A valid access token: the current one, renewed before it ends (by
-    /// its refresh token, else by logging in again).
+    /// its refresh token, else by logging in again), one renewal at a time.
     async fn access(&self) -> anyhow::Result<(String, u64)> {
-        let mut slot = self.session.slot.lock().await;
-        if let Some(session) = slot.as_ref()
-            && Instant::now() < session.renew_at
-        {
-            return Ok((session.access.clone(), session.generation));
+        if let Some(valid) = self.session.valid() {
+            return Ok(valid);
         }
-        let refresh = slot.as_ref().and_then(|s| s.refresh.clone());
+        let _renewal = self.session.renewal.lock().await;
+        // Renewed by another request meanwhile.
+        if let Some(valid) = self.session.valid() {
+            return Ok(valid);
+        }
+        let refresh = self.session.slot().as_ref().and_then(|s| s.refresh.clone());
         let renewed = match refresh {
             Some(refresh) => self
                 .token(&[("grant_type", "refresh_token"), ("refresh_token", &refresh)])
@@ -365,10 +402,10 @@ impl Cloud {
                 .ok(),
             None => None,
         };
-        let session = if let Some(session) = renewed {
+        let mut session = if let Some(session) = renewed {
             session
         } else {
-            *slot = None;
+            self.forget();
             self.token(&[
                 ("grant_type", "password"),
                 ("username", &self.user),
@@ -376,10 +413,9 @@ impl Cloud {
             ])
             .await?
         };
-        let mut session = session;
         session.generation = self.session.generation.fetch_add(1, SeqCst) + 1;
         let access = (session.access.clone(), session.generation);
-        *slot = Some(session);
+        *self.session.slot() = Some(session);
         Ok(access)
     }
 
@@ -404,6 +440,15 @@ impl Cloud {
         session(status, &body)
     }
 
+    async fn exchange(&self, request: Request<Full<Body>>) -> anyhow::Result<(StatusCode, Body)> {
+        #[cfg(test)]
+        if let Some(exchange) = &self.exchange {
+            return exchange(request).await;
+        }
+        // One connection per request, never retried by `web`.
+        moli_net::web(CLOUD_HOST, 443, true, request, CLOUD_LIMIT, MAX_ANSWER).await
+    }
+
     async fn call(
         &self,
         method: Method,
@@ -419,13 +464,11 @@ impl Cloud {
             .uri(format!("{CLOUD_ROOT}{path}"))
             .header("authorization", format!("Bearer {access}"));
         let request = build(builder, body)?;
-        // One connection per request, never retried by `web`.
-        let (status, body) =
-            moli_net::web(CLOUD_HOST, 443, true, request, CLOUD_LIMIT, MAX_ANSWER).await?;
+        let (status, body) = self.exchange(request).await?;
         let result = answer(status, &body);
         match &result {
-            Err(e) if refused(e) == Some(Refusal::Session) => self.settle(generation, true).await,
-            Ok(_) => self.settle(generation, false).await,
+            Err(e) if refused(e) == Some(Refusal::Session) => self.settle(generation, true),
+            Ok(_) => self.settle(generation, false),
             Err(_) => {}
         }
         result
@@ -533,40 +576,84 @@ mod tests {
     }
 
     fn installed(cloud: &Cloud, generation: u64) {
-        let mut slot = cloud.session.slot.try_lock().unwrap();
-        *slot = Some(Session {
+        *cloud.session.slot() = Some(Session {
             generation,
             access: format!("SYNTH-T{generation}"),
             refresh: None,
             renew_at: Instant::now() + Duration::from_secs(3600),
         });
+        cloud.session.generation.store(generation, SeqCst);
     }
 
-    /// Two requests leave with session 1; the first refusal forgets it, a
-    /// new session 2 is made; the second refusal (about 1) must not touch 2.
-    #[tokio::test]
-    async fn a_late_refusal_never_forgets_the_new_session() {
-        let cloud = Cloud::new(
+    fn current(cloud: &Cloud) -> Option<u64> {
+        cloud.session.slot().as_ref().map(|s| s.generation)
+    }
+
+    /// A cloud whose HTTP exchange answers `answer(path)`, each request
+    /// held until the test releases one permit.
+    fn held(
+        answer: fn(&str) -> (StatusCode, &'static [u8]),
+    ) -> (Cloud, Arc<tokio::sync::Semaphore>, Arc<AtomicU32>) {
+        let gate = Arc::new(tokio::sync::Semaphore::new(0));
+        let entered = Arc::new(AtomicU32::new(0));
+        let mut cloud = Cloud::new(
             "user@example.com".into(),
             "x".into(),
             SharedSession::default(),
         );
+        let (g, e) = (Arc::clone(&gate), Arc::clone(&entered));
+        cloud.exchange = Some(Arc::new(move |request: Request<Full<Body>>| {
+            let (gate, entered) = (Arc::clone(&g), Arc::clone(&e));
+            Box::pin(async move {
+                assert_eq!(request.headers()["authorization"], "Bearer SYNTH-T1");
+                entered.fetch_add(1, SeqCst);
+                gate.acquire().await?.forget();
+                let (status, body) = answer(request.uri().path());
+                Ok((status, Body::from_static(body)))
+            })
+        }));
         installed(&cloud, 1);
-        cloud.settle(1, true).await;
-        assert!(cloud.session.slot.lock().await.is_none());
+        (cloud, gate, entered)
+    }
+
+    async fn until(check: impl Fn() -> bool) {
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while !check() {
+                tokio::time::sleep(Duration::from_millis(2)).await;
+            }
+        })
+        .await
+        .expect("in time");
+    }
+
+    /// Two requests leave with session 1 (through the real `call`); the
+    /// first refusal forgets it, session 2 is made; the second refusal,
+    /// about 1, must not touch 2, and counts as the same refused session.
+    #[tokio::test]
+    async fn a_late_refusal_never_forgets_the_new_session() {
+        let (cloud, gate, entered) = held(|_| {
+            (
+                StatusCode::UNAUTHORIZED,
+                br#"{"errorCode":"UNSPECIFIED_ERROR","error":"Invalid token"}"#,
+            )
+        });
+        let cloud = Arc::new(cloud);
+        let mut calls = tokio::task::JoinSet::new();
+        for path in ["/first", "/late"] {
+            let cloud = Arc::clone(&cloud);
+            calls.spawn(async move { cloud.call(Method::GET, path, None, None).await });
+        }
+        until(|| entered.load(SeqCst) == 2).await;
+        gate.add_permits(1);
+        let one = calls.join_next().await.unwrap().unwrap();
+        assert_eq!(refused(&one.unwrap_err()), Some(Refusal::Session));
+        assert_eq!(current(&cloud), None, "session 1 forgotten");
         installed(&cloud, 2);
-        cloud.settle(1, true).await;
-        assert_eq!(
-            cloud
-                .session
-                .slot
-                .lock()
-                .await
-                .as_ref()
-                .map(|s| s.generation),
-            Some(2)
-        );
-        let api = Api::Cloud(cloud);
+        gate.add_permits(1);
+        let other = calls.join_next().await.unwrap().unwrap();
+        assert_eq!(refused(&other.unwrap_err()), Some(Refusal::Session));
+        assert_eq!(current(&cloud), Some(2), "the new session is kept");
+        let api = Api::Cloud(Arc::try_unwrap(cloud).ok().unwrap());
         assert_eq!(
             api.refused_sessions(),
             1,
@@ -575,11 +662,41 @@ mod tests {
         let Api::Cloud(cloud) = &api else {
             unreachable!()
         };
-        cloud.settle(2, false).await;
+        cloud.settle(2, false);
         assert_eq!(api.refused_sessions(), 0, "an accepted answer starts again");
-        cloud.settle(2, true).await;
+        cloud.settle(2, true);
         installed(cloud, 3);
-        cloud.settle(3, true).await;
+        cloud.settle(3, true);
         assert_eq!(api.refused_sessions(), 2, "two sessions refused in a row");
+    }
+
+    /// The box answered the order in time: a login in progress elsewhere
+    /// never holds that answer back.
+    #[tokio::test]
+    async fn an_answer_never_waits_for_a_login() {
+        let (cloud, gate, entered) = held(|_| (StatusCode::OK, br#"{"execId":"exec-1"}"#));
+        let api = Arc::new(Api::Cloud(cloud));
+        let Api::Cloud(inner) = &*api else {
+            unreachable!()
+        };
+        // Another request is renewing the session over the network.
+        let renewing = inner.session.renewal.lock().await;
+        let order = Order {
+            url: "ogp://1234-5678-9012/00000003".into(),
+            command: "on",
+            parameters: Vec::new(),
+        };
+        let deadline = std::time::Instant::now() + Duration::from_millis(300);
+        let sender = Arc::clone(&api);
+        let sent = tokio::spawn(async move { sender.apply(&order, deadline).await });
+        until(|| entered.load(SeqCst) == 1).await;
+        gate.add_permits(1);
+        let execution = tokio::time::timeout(Duration::from_millis(250), sent)
+            .await
+            .expect("answered before the deadline")
+            .unwrap()
+            .unwrap();
+        assert_eq!(execution, "exec-1");
+        drop(renewing);
     }
 }

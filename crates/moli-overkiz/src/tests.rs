@@ -215,6 +215,72 @@ async fn orders_in_flight_are_bounded() {
     );
 }
 
+/// The caller of the second order gives up while the first is on its way:
+/// the second never leaves.
+#[tokio::test]
+async fn an_order_whose_caller_gave_up_never_leaves() {
+    let fake = Fake {
+        ends: Some(("COMPLETED", None)),
+        ..fake()
+    };
+    fake.delays
+        .lock()
+        .unwrap()
+        .push_back(Duration::from_millis(300));
+    let (hub, fake) = start(fake).await;
+    let first = {
+        let hub = hub.clone();
+        tokio::spawn(async move { switch(&hub, true).await })
+    };
+    until(|| fake.applied.load(SeqCst) == 1).await;
+    let second = {
+        let hub = hub.clone();
+        tokio::spawn(async move { switch(&hub, false).await })
+    };
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    second.abort();
+    assert_eq!(first.await.unwrap(), Ok(()));
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    let arrived: Vec<String> = fake
+        .arrivals
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|(c, _)| c.clone())
+        .collect();
+    assert_eq!(arrived, ["on"]);
+}
+
+/// A box that takes orders at once but never confirms them: the callers
+/// waiting for a confirmation are bounded too, the rest refused at once.
+#[tokio::test]
+async fn callers_waiting_for_a_confirmation_are_bounded() {
+    let (hub, fake) = start(Fake {
+        slow_fetch: Some(Duration::from_secs(10)),
+        ..fake()
+    })
+    .await;
+    let mut callers = JoinSet::new();
+    for n in 0..48 {
+        let hub = hub.clone();
+        callers.spawn(async move { switch(&hub, n % 2 == 0).await });
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    let at = Instant::now();
+    let mut refused_at_once = 0;
+    while let Some(result) = callers.join_next().await {
+        if result.unwrap().is_err() && at.elapsed() < Duration::from_secs(1) {
+            refused_at_once += 1;
+        }
+    }
+    assert!(
+        fake.applied.load(SeqCst) <= MAX_PENDING,
+        "{}",
+        fake.applied.load(SeqCst)
+    );
+    assert!(refused_at_once >= 48 - MAX_PENDING, "{refused_at_once}");
+}
+
 /// A task that starts after the order's instant sends nothing; a box that
 /// is slow is left at that instant.
 #[tokio::test]
