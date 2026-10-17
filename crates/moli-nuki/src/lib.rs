@@ -15,7 +15,6 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::time::Duration;
 
-use anyhow::bail;
 use http::{Method, Request, StatusCode};
 use moli_core::{Device, DeviceId, PointSpec, Value};
 use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx};
@@ -84,6 +83,15 @@ impl std::fmt::Display for Failure {
     }
 }
 
+/// Whether a failed order may still have reached the bridge.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Sent {
+    /// Refused before leaving: nothing can have happened.
+    No,
+    /// Left (or may have): no answer is not a proof it did nothing.
+    Maybe,
+}
+
 struct Bridge<'a> {
     config: &'a Config,
     token: String,
@@ -91,8 +99,15 @@ struct Bridge<'a> {
 }
 
 impl Bridge<'_> {
-    /// One call; `query` without the authentication.
-    async fn get(&self, path: &str, query: &str) -> Result<Vec<u8>, Failure> {
+    /// One call; `query` without the authentication. `wanted` is asked
+    /// before each step up to the request leaving (see
+    /// [`moli_net::plain_if`]).
+    async fn get(
+        &self,
+        path: &str,
+        query: &str,
+        wanted: impl Fn() -> bool,
+    ) -> Result<Vec<u8>, Failure> {
         let mut rnr = [0u8; 2];
         self.rng
             .fill(&mut rnr)
@@ -105,10 +120,11 @@ impl Bridge<'_> {
         let request = Request::builder()
             .method(Method::GET)
             .uri(format!("{path}?{query}{sep}{auth}"));
-        let (status, body) = moli_net::plain(
+        let (status, body) = moli_net::plain_if(
             &self.config.host,
             self.config.port,
             moli_net::empty(request).map_err(Failure::Other)?,
+            wanted,
         )
         .await
         .map_err(Failure::Other)?;
@@ -123,48 +139,30 @@ impl Bridge<'_> {
     }
 
     async fn list(&self) -> Result<Vec<(Lock, Option<Last>)>, Failure> {
-        let body = self.get("/list", "").await?;
+        let body = self.get("/list", "", || true).await?;
         model::locks(&body).map_err(|e| Failure::Other(e.context("Nuki bridge: not a list")))
     }
 
-    async fn act(&self, lock: &Lock, action: u8) -> anyhow::Result<()> {
+    /// Sends a lock action while `wanted`. The error says whether it may
+    /// have left (then its effect is followed) or surely did not.
+    async fn act(
+        &self,
+        lock: &Lock,
+        action: u8,
+        wanted: impl Fn() -> bool,
+    ) -> Result<(), (String, Sent)> {
         let query = format!(
             "nukiId={}&deviceType={}&action={action}&nowait=1",
             lock.nuki_id, lock.device_type
         );
-        let body = self
-            .get("/lockAction", &query)
-            .await
-            .map_err(|e| anyhow::anyhow!("{e}"))?;
-        if !model::succeeded(&body) {
-            bail!(moli_i18n::tr!("pilotes.nuki.refuse"));
+        match self.get("/lockAction", &query, wanted).await {
+            Err(Failure::Other(e)) if e.is::<moli_net::NotSent>() => {
+                Err((moli_i18n::tr!("pilotes.nuki.trop_tard"), Sent::No))
+            }
+            Err(e) => Err((e.to_string(), Sent::Maybe)),
+            Ok(body) if model::succeeded(&body) => Ok(()),
+            Ok(_) => Err((moli_i18n::tr!("pilotes.nuki.refuse"), Sent::Maybe)),
         }
-        Ok(())
-    }
-}
-
-/// `work`, never polled again once `deadline` has passed or `gone` says
-/// its caller left (both checked before each step: connecting, sending):
-/// an order nobody waits for any more is never sent, and never retried.
-async fn before<T>(
-    deadline: std::time::Instant,
-    gone: impl Fn() -> bool,
-    work: impl Future<Output = anyhow::Result<T>>,
-) -> anyhow::Result<T> {
-    let late = || anyhow::anyhow!(moli_i18n::tr!("pilotes.nuki.trop_tard"));
-    let mut work = std::pin::pin!(work);
-    // The clock itself is read before every step: a timer has a granularity,
-    // the order must not slip through it.
-    let checked = std::future::poll_fn(|cx| {
-        if std::time::Instant::now() >= deadline || gone() {
-            return std::task::Poll::Ready(Err(late()));
-        }
-        work.as_mut().poll(cx)
-    });
-    tokio::select! {
-        biased;
-        () = sleep_until(Instant::from_std(deadline)) => Err(late()),
-        result = checked => result,
     }
 }
 
@@ -272,24 +270,27 @@ fn offline(ctx: &DriverCtx, known: &mut [Known]) {
     }
 }
 
+/// Carries out an order. Returns whether it may have reached the bridge:
+/// its effect is then followed closely, answered or not.
 async fn obey(bridge: &Bridge<'_>, known: &[Known], command: CommandRequest) -> bool {
     let Some(entry) = known.iter().find(|k| k.id == command.device.id) else {
         command.reply(Err(moli_i18n::tr!("pilotes.nuki.inconnue")));
         return false;
     };
-    let result = match model::action(&command.key, &command.value) {
-        Err(why) => Err(why),
-        Ok(action) => before(
-            command.deadline,
-            || command.abandoned(),
-            bridge.act(&entry.lock, action),
-        )
-        .await
-        .map_err(|e| e.to_string()),
+    let (result, sent) = match model::action(&command.key, &command.value) {
+        Err(why) => (Err(why), Sent::No),
+        // Its caller gone or its deadline past before it left: it never
+        // leaves. Once left, its answer is awaited and kept.
+        Ok(action) => match bridge
+            .act(&entry.lock, action, || !command.abandoned())
+            .await
+        {
+            Ok(()) => (Ok(()), Sent::Maybe),
+            Err((why, sent)) => (Err(why), sent),
+        },
     };
-    let done = result.is_ok();
     command.reply(result);
-    done
+    sent == Sent::Maybe
 }
 
 async fn run(config: &Config, ctx: &mut DriverCtx) -> anyhow::Result<()> {
@@ -362,6 +363,7 @@ async fn run(config: &Config, ctx: &mut DriverCtx) -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Arc;
 
     #[test]
     fn options_are_bounded_to_what_is_known() {
@@ -544,62 +546,138 @@ mod tests {
         assert!(admit(&mut admitted, &3));
     }
 
+    /// A bridge on the loopback: says when an order arrived, answers it
+    /// `{"success":true}` when told to.
+    async fn bridge_on_loopback() -> (u16, Arc<tokio::sync::Notify>, Arc<tokio::sync::Notify>) {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let got = Arc::new(tokio::sync::Notify::new());
+        let go = Arc::new(tokio::sync::Notify::new());
+        let (g, o) = (Arc::clone(&got), Arc::clone(&go));
+        tokio::spawn(async move {
+            while let Ok((mut socket, _)) = listener.accept().await {
+                let (g, o) = (Arc::clone(&g), Arc::clone(&o));
+                tokio::spawn(async move {
+                    let mut seen = Vec::new();
+                    let mut buf = [0u8; 2048];
+                    while let Ok(n) = socket.read(&mut buf).await {
+                        if n == 0 {
+                            return;
+                        }
+                        seen.extend_from_slice(&buf[..n]);
+                        if seen.windows(4).any(|w| w == b"\r\n\r\n") {
+                            g.notify_one();
+                            o.notified().await;
+                            let _ = socket
+                                .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 16\r\n\r\n{\"success\":true}")
+                                .await;
+                            return;
+                        }
+                    }
+                });
+            }
+        });
+        (port, got, go)
+    }
+
+    /// The real `obey`, on the orders the hub hands it, against `port`.
+    struct Obeys {
+        port: u16,
+        followed: tokio::sync::mpsc::UnboundedSender<bool>,
+    }
+
+    impl Driver for Obeys {
+        fn kind(&self) -> &'static str {
+            "nuki"
+        }
+
+        fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+            Box::pin(async move {
+                let config = Config {
+                    host: "127.0.0.1".into(),
+                    port: self.port,
+                };
+                let bridge = Bridge {
+                    config: &config,
+                    token: "123456".into(),
+                    rng: SystemRandom::new(),
+                };
+                let (mut known, mut admitted) = (Vec::new(), HashSet::new());
+                let list = br#"[{"nukiId":7,"deviceType":4,"lastKnownState":{"state":1}}]"#;
+                publish(ctx, &mut known, &mut admitted, model::locks(list).unwrap());
+                ctx.ready();
+                while let Some(command) = ctx.next_command().await {
+                    let followed = obey(&bridge, &known, command).await;
+                    let _ = self.followed.send(followed);
+                }
+                Ok(())
+            })
+        }
+    }
+
     #[tokio::test]
-    async fn an_order_past_its_deadline_is_never_sent() {
-        use std::sync::Arc;
-        use std::sync::atomic::{AtomicBool, Ordering};
-        let sent = Arc::new(AtomicBool::new(false));
-        // A slow connection (a saturated bridge): ready only after the deadline.
-        let slow = {
-            let sent = Arc::clone(&sent);
-            async move {
-                tokio::time::sleep(Duration::from_millis(80)).await;
-                sent.store(true, Ordering::SeqCst);
-                Ok(())
+    async fn an_answer_after_the_order_left_is_kept_even_if_the_caller_left() {
+        for approval in [false, true] {
+            for leaves in [false, true] {
+                let (port, got, go) = bridge_on_loopback().await;
+                let hub = moli_runtime::Hub::new(moli_runtime::HubOptions::default()).unwrap();
+                let (tx, mut followed) = tokio::sync::mpsc::unbounded_channel();
+                let cancel = tokio_util::sync::CancellationToken::new();
+                moli_runtime::spawn_driver(
+                    &hub,
+                    moli_core::InstanceId::from("serrure"),
+                    Arc::new(Obeys { port, followed: tx }),
+                    cancel.clone(),
+                );
+                let door = moli_core::PointId::from("serrure:7/locked");
+                while hub.state(&door).is_none() {
+                    tokio::time::sleep(Duration::from_millis(5)).await;
+                }
+                let call = if approval {
+                    let held = hub
+                        .command(&door, Value::Bool(false), moli_core::Origin::Mcp, None)
+                        .await;
+                    let Err(moli_runtime::CommandError::NeedsApproval { id, .. }) = held else {
+                        panic!("held: {held:?}");
+                    };
+                    let (hub, door) = (hub.clone(), door.clone());
+                    tokio::spawn(async move {
+                        let _ = hub
+                            .resolve_approval(id, &door, true, moli_core::Origin::Ui, None)
+                            .await;
+                    })
+                } else {
+                    let (hub, door) = (hub.clone(), door.clone());
+                    tokio::spawn(async move {
+                        let _ = hub
+                            .command(&door, Value::Bool(false), moli_core::Origin::Ui, None)
+                            .await;
+                    })
+                };
+                // The bridge has the whole request; then its caller may leave.
+                got.notified().await;
+                if leaves {
+                    call.abort();
+                    let _ = call.await;
+                }
+                go.notify_one();
+                let case = format!("approval={approval} leaves={leaves}");
+                assert!(followed.recv().await.unwrap(), "followed: {case}");
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                let lines: Vec<moli_core::Outcome> = hub
+                    .journal(50)
+                    .iter()
+                    .filter(|e| match &e.action {
+                        moli_core::Action::Command { .. } => !approval,
+                        moli_core::Action::Approval { .. } => approval,
+                        _ => false,
+                    })
+                    .map(|e| e.outcome.clone())
+                    .collect();
+                assert_eq!(lines, [moli_core::Outcome::Ok], "{case}");
+                cancel.cancel();
             }
-        };
-        let deadline = std::time::Instant::now() + Duration::from_millis(20);
-        assert!(before(deadline, || false, slow).await.is_err());
-        tokio::time::sleep(Duration::from_millis(150)).await;
-        assert!(!sent.load(Ordering::SeqCst), "sent after the deadline");
-        // Already past: not even started.
-        let started = Arc::new(AtomicBool::new(false));
-        let late = {
-            let started = Arc::clone(&started);
-            async move {
-                started.store(true, Ordering::SeqCst);
-                Ok(())
-            }
-        };
-        assert!(
-            before(std::time::Instant::now(), || false, late)
-                .await
-                .is_err()
-        );
-        assert!(!started.load(Ordering::SeqCst));
-        // In time: done.
-        let soon = std::time::Instant::now() + Duration::from_secs(5);
-        assert!(before(soon, || false, async { Ok(()) }).await.is_ok());
-        // The caller leaves while the connection waits: when it frees up,
-        // nothing is sent, long before the deadline.
-        let left = Arc::new(AtomicBool::new(false));
-        let sent = Arc::new(AtomicBool::new(false));
-        let blocked = {
-            let (left, sent) = (Arc::clone(&left), Arc::clone(&sent));
-            async move {
-                tokio::time::sleep(Duration::from_millis(20)).await;
-                left.store(true, Ordering::SeqCst);
-                // The connection frees up only after the caller left.
-                tokio::time::sleep(Duration::from_millis(20)).await;
-                sent.store(true, Ordering::SeqCst);
-                Ok(())
-            }
-        };
-        let gone = {
-            let left = Arc::clone(&left);
-            move || left.load(Ordering::SeqCst)
-        };
-        assert!(before(soon, gone, blocked).await.is_err());
-        assert!(!sent.load(Ordering::SeqCst), "sent after the caller left");
+        }
     }
 }

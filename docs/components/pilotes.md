@@ -52,8 +52,9 @@ est remis à l'appareil. Le hub attend 5 s au plus ; chaque ordre porte cette **
 personne n'attend plus, il n'atteint jamais le pilote (une lampe de chambre allumée des
 heures après « échec », c'est pire qu'un refus). Un pilote dont l'envoi peut attendre
 (connexion, file d'un pont) vérifie `CommandRequest::abandoned()` juste avant chaque étape qui
-envoie : échéance passée **ou appelant parti** = l'ordre ne part plus (exemple : `moli-nuki`,
-`before`). La confirmation arrive ensuite comme une
+envoie : échéance passée **ou appelant parti** = l'ordre ne part plus. Une fois parti, sa
+réponse est attendue et gardée (absence de réponse = non confirmé, pas « non envoyé »), sans
+rejeu. En HTTP : `moli_net::plain_if` (exemple : `moli-nuki`). La confirmation arrive ensuite comme une
 mise à jour d'état normale (Sonos et Tapo publient la valeur dès le succès).
 
 **Images.** Une caméra déclare une `SnapshotSource` (`crates/moli-runtime/src/media.rs`).
@@ -112,6 +113,7 @@ l'exige).
 | `legacy.rs` | webpki ne sait pas lire un certificat **X.509 v1** (station Reolink). Le certificat est accepté sur son empreinte ; la signature de la poignée de main est vérifiée à la main avec la clé RSA, P-256 ou P-384 extraite du DER. |
 | `public_tls()` | TLS vérifié contre les autorités publiques (liste Mozilla embarquée : l'image n'a pas de magasin système) |
 | `plain()` / `plain_with_headers()` | HTTP en clair, une connexion par requête (UPnP, API JSON locales), corps borné à 4 Mio |
+| `plain_if(…, wanted)` + `NotSent` | comme `plain`, pour un ordre : `wanted` est demandé avant de se connecter, une fois connecté et avant d'écrire ; non voulu = `NotSent` (rien n'est parti). Après l'écriture, la réponse est attendue quoi que dise `wanted` |
 | `web(host, port, tls, req, limit, max_body)` + `WebUrl::parse` | une requête vers une API web, délai global et taille de réponse bornés ; `WebUrl` n'accepte que `http(s)://` et refuse `user@host`. Utilisé par l'assistant et les webhooks des automatismes. |
 | `upnp` | `discover` (SSDP `M-SEARCH` vers 239.255.255.250:1900), `fetch` (description), `soap` (action), `control_url`, lecture XML minimale par nom de balise |
 
@@ -335,7 +337,7 @@ name = "Bambu A1"              # optionnel
 ## `nuki` : serrures Nuki (`crates/moli-nuki`)
 
 - **Couvre** : les serrures appairées à un **pont Nuki matériel** (Smart Lock 1.0/2.0/3.0, Smart Door). L'Opener (interphone) est ignoré. Paquet `integrations/nuki`.
-- **Protocole** : API HTTP locale du pont (port 8080), **jeton haché** (`ts`, `rnr`, `hash` = SHA-256 de `ts,rnr,jeton` : le jeton ne circule jamais ; le pont refuse une heure à plus d'une minute de la sienne). Lecture de `/list` (l'état gardé par le pont : interroger la serrure viderait ses piles) toutes les **30 s**, toutes les **3 s pendant 30 s** après un ordre. Ordres : `/lockAction` avec `nowait=1`, l'état réel suit à la lecture suivante ; l'échéance de l'ordre (5 s) est vérifiée avant chaque étape réseau : un ordre que personne n'attend plus n'est jamais envoyé, ni rejoué. Le pont ne sert **qu'une requête à la fois** (503 sinon) : le pilote n'en envoie jamais deux.
+- **Protocole** : API HTTP locale du pont (port 8080), **jeton haché** (`ts`, `rnr`, `hash` = SHA-256 de `ts,rnr,jeton` : le jeton ne circule jamais ; le pont refuse une heure à plus d'une minute de la sienne). Lecture de `/list` (l'état gardé par le pont : interroger la serrure viderait ses piles) toutes les **30 s**, toutes les **3 s pendant 30 s** après un ordre. Ordres : `/lockAction` avec `nowait=1`, l'état réel suit à la lecture suivante ; jusqu'à son émission, l'ordre n'est envoyé que s'il est encore attendu (échéance de 5 s non passée, appelant présent : `plain_if`) ; une fois émis, la réponse du pont est gardée et l'effet suivi de près, même si l'appelant est parti. Jamais de rejeu. Le pont ne sert **qu'une requête à la fois** (503 sinon) : le pilote n'en envoie jamais deux.
 - **Configuration** : `host`, `port` (8080).
 - **Secrets** : `token`, le jeton de l'API que montre l'appli Nuki. `moli-os secrets set <instance> token`.
 - **Points** : `locked` (sémantique `lock`, vrai = verrouillée ; une serrure qui bouge ou bloquée n'est pas « verrouillée »), `state` (`locked`, `unlocking`, `unlocked`, `locking`, `unlatched`, `unlocked_lock_n_go`, `unlatching`, `motor_blocked`, `uncalibrated`, `undefined`), `unlatch` (écriture seule, sémantique `lock` : tire le pêne), `battery_low`, `observed` (quand le pont a entendu la serrure pour la dernière fois, UTC : les valeurs sont la mémoire du pont, elles ne sont republiées que si le pont a vu du nouveau, leur heure ne ment donc pas sur leur fraîcheur), et selon la serrure `battery` (%), `charging`, `door` (contact, vrai = fermée), `keypad_battery_low`.
