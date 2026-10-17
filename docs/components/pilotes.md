@@ -371,7 +371,8 @@ host = "192.168.1.x"        # local seulement
   file de 8 au plus, et 16 appelants au plus en attente d'une réponse, confirmations comprises
   (au-delà : refus immédiat) ; juste avant de partir, chacun est revérifié (appelant toujours
   là, box pas en pause, avant son instant limite absolu) : un ordre hors délai ou dont
-  l'appelant a renoncé reste à la maison, jamais envoyé en retard. En local, ordres et relevés ont
+  l'appelant a renoncé reste à la maison, jamais envoyé en retard ; déjà parti, il reste suivi
+  (son échec éventuel est dit à la maison). En local, ordres et relevés ont
   chacun leur connexion. La logique est pure et testée (`src/follow.rs`), la
   boucle aussi, contre une box simulée et le vrai hub (`src/tests.rs`).
 - **Événements** : auditeur enregistré avant le chargement, relevé toutes les 10 s (local) ou

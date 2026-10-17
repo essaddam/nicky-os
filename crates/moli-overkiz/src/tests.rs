@@ -251,6 +251,41 @@ async fn an_order_whose_caller_gave_up_never_leaves() {
     assert_eq!(arrived, ["on"]);
 }
 
+/// The caller gives up while a fetch is on the network; that fetch brings
+/// the order's failure: the household hears it, exactly once.
+#[tokio::test]
+async fn a_failure_after_the_caller_gave_up_is_told() {
+    let (hub, fake) = start(Fake {
+        slow_fetch: Some(Duration::from_millis(700)),
+        ends: Some(("FAILED", Some("NONEXEC_OTHER"))),
+        ..fake()
+    })
+    .await;
+    let mut events = hub.subscribe();
+    until(|| fake.fetched.load(SeqCst) == 1).await;
+    let caller = {
+        let hub = hub.clone();
+        tokio::spawn(async move { switch(&hub, true).await })
+    };
+    until(|| fake.applied.load(SeqCst) == 1).await;
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    caller.abort();
+    assert!(caller.await.unwrap_err().is_cancelled());
+    until(|| fake.fetched.load(SeqCst) >= 2).await;
+    assert!(
+        fake.news.lock().unwrap().is_empty(),
+        "the failure was fetched"
+    );
+    let mut notices = Vec::new();
+    while let Ok(event) = events.try_recv() {
+        if let moli_core::Event::Notice { notice } = event {
+            notices.push(notice.message);
+        }
+    }
+    assert_eq!(notices.len(), 1, "{notices:?}");
+    assert!(notices[0].contains("NONEXEC_OTHER"), "{notices:?}");
+}
+
 /// A box that takes orders at once but never confirms them: the callers
 /// waiting for a confirmation are bounded too, the rest refused at once.
 #[tokio::test]

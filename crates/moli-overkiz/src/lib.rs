@@ -413,6 +413,10 @@ impl Link {
 
     fn done(&mut self, ctx: &DriverCtx, done: Done) -> anyhow::Result<()> {
         let now = Instant::now();
+        // A caller may have given up while this was on the network: its
+        // order, if sent, is watched before any outcome is applied, so a
+        // failure reaches the household instead of a closed channel.
+        self.prune(now);
         match done {
             Done::Read(kind, Ok((listener, answer))) => {
                 self.reading = false;
