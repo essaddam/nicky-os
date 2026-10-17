@@ -29,10 +29,12 @@ aucune logique d'appareil (c'est le rôle des [pilotes](pilotes.md)) et aucun LL
   reçoit un nouvel instantané au lieu de bloquer les autres (SSE).
 - **Commandes** : `hub.command(point, value, origin, actor)` → validation contre le
   `PointSpec` (lecture seule, valeur invalide : refus) → **garde** → envoi au pilote
-  (délai 5 s) → journal. La confirmation arrive ensuite comme un événement `state`. Une fois
-  l'ordre remis au pilote (commande directe ou demande libérée par un humain), l'attente de sa
-  réponse et la ligne du journal se font dans une tâche à part : un appelant qui abandonne
-  (client parti, tâche annulée) n'efface jamais la trace d'un ordre qui a pu agir.
+  (délai 5 s) → journal. La confirmation arrive ensuite comme un événement `state`. Un appelant
+  qui abandonne (client parti, tâche annulée) : si l'ordre attendait encore dans la file du
+  pilote, il est abandonné avec lui et ne s'exécute jamais ; si le pilote l'avait déjà pris, sa
+  réponse est attendue quand même et journalisée. Toujours une seule ligne (commande directe
+  comme demande libérée par un humain). La prise de l'ordre par le pilote et l'abandon sont
+  tranchés de façon atomique (`CommandRequest::claim`).
 - **Superviseur** : chaque pilote tourne dans sa tâche ; à chaque échec, sa file de commandes
   est vidée et ses appareils passent hors ligne ; un `panic` est capturé, relance avec
   attente croissante, statut exposé (`starting`, `running`, `waiting{reason}`, `backoff`,

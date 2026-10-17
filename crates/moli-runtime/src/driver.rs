@@ -3,6 +3,7 @@
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::time::Instant;
 
 use moli_core::{Device, DeviceId, DriverStatus, InstanceId, PointId, Value};
@@ -42,6 +43,28 @@ pub struct CommandRequest {
     /// lamp switched on hours after « failed » is worse than a refusal).
     pub deadline: Instant,
     pub(crate) reply: oneshot::Sender<Result<(), String>>,
+    /// Who has the order: still queued, taken by the driver, or given up by
+    /// its caller. Decided once, atomically (see [`Claim`]).
+    pub(crate) claim: Arc<AtomicU8>,
+}
+
+/// The states of [`CommandRequest::claim`]. An order is either taken by its
+/// driver or given up while queued, never both: a caller that leaves while
+/// its order waits cancels it, one that leaves after the driver took it
+/// still learns (and journals) the outcome.
+pub(crate) struct Claim;
+
+impl Claim {
+    pub(crate) const QUEUED: u8 = 0;
+    pub(crate) const TAKEN: u8 = 1;
+    pub(crate) const GIVEN_UP: u8 = 2;
+
+    /// Moves a queued order to `to`; false if it was already decided.
+    pub(crate) fn settle(claim: &AtomicU8, to: u8) -> bool {
+        claim
+            .compare_exchange(Self::QUEUED, to, Ordering::AcqRel, Ordering::Acquire)
+            .is_ok()
+    }
 }
 
 impl CommandRequest {
@@ -262,7 +285,7 @@ impl DriverCtx {
                 () = self.cancel.cancelled() => None,
                 cmd = self.commands.recv() => cmd,
             }?;
-            if !command.abandoned() {
+            if !command.abandoned() && Claim::settle(&command.claim, Claim::TAKEN) {
                 return Some(command);
             }
             tracing::warn!(instance = %self.instance, point = %command.point, "stale order dropped");

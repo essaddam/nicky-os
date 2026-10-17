@@ -220,6 +220,11 @@ fn publish(
             known.len() - 1
         });
         let entry = &mut known[index];
+        if entry.points != points {
+            // Points gone and back (a lock that said nothing for a while)
+            // come back empty: everything is published again.
+            entry.published.clear();
+        }
         if entry.points != points || entry.lock != lock {
             ctx.upsert_device(Device {
                 id: id.clone(),
@@ -426,6 +431,69 @@ mod tests {
                 Ok(())
             })
         }
+    }
+
+    /// A lock that reports its battery and door, then nothing, then the
+    /// same again: its points come back with their values.
+    struct Silence {
+        hub: moli_runtime::Hub,
+        report: std::sync::Mutex<Option<tokio::sync::oneshot::Sender<Vec<Option<Value>>>>>,
+    }
+
+    impl Driver for Silence {
+        fn kind(&self) -> &'static str {
+            "nuki"
+        }
+
+        fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+            Box::pin(async move {
+                let (mut known, mut admitted) = (Vec::new(), HashSet::new());
+                let full = br#"[{"nukiId":7,"deviceType":4,"lastKnownState":{"state":1,"batteryChargeState":80,"doorsensorState":2,"timestamp":"2026-01-01T08:00:00+00:00"}}]"#;
+                let silent = br#"[{"nukiId":7,"deviceType":4}]"#;
+                for body in [&full[..], &silent[..], &full[..], &full[..]] {
+                    publish(ctx, &mut known, &mut admitted, model::locks(body).unwrap());
+                }
+                let values = ["battery", "door", "observed"]
+                    .iter()
+                    .map(|k| {
+                        self.hub
+                            .state(&moli_core::PointId::from(format!("serrure:7/{k}")))
+                            .map(|s| s.value)
+                    })
+                    .collect();
+                if let Some(tx) = self.report.lock().unwrap().take() {
+                    let _ = tx.send(values);
+                }
+                ctx.cancelled().await;
+                Ok(())
+            })
+        }
+    }
+
+    #[tokio::test]
+    async fn points_that_come_back_come_back_with_their_values() {
+        let hub = moli_runtime::Hub::new(moli_runtime::HubOptions::default()).unwrap();
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let cancel = tokio_util::sync::CancellationToken::new();
+        moli_runtime::spawn_driver(
+            &hub,
+            moli_core::InstanceId::from("serrure"),
+            std::sync::Arc::new(Silence {
+                hub: hub.clone(),
+                report: std::sync::Mutex::new(Some(tx)),
+            }),
+            cancel.clone(),
+        );
+        let values = rx.await.unwrap();
+        cancel.cancel();
+        assert_eq!(
+            values,
+            [
+                Some(Value::Int(80)),
+                Some(Value::Bool(true)),
+                Some(Value::from("2026-01-01T08:00:00Z"))
+            ]
+        );
     }
 
     #[tokio::test]

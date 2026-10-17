@@ -1293,3 +1293,87 @@ async fn an_order_handed_to_a_driver_is_journaled_even_if_the_caller_gives_up() 
     assert_eq!(journaled(&hub, true), [Outcome::Ok]);
     cancel.cancel();
 }
+
+#[tokio::test]
+async fn an_order_given_up_while_queued_never_runs_and_is_journaled_once() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let cancel = CancellationToken::new();
+    spawn_driver(
+        &hub,
+        InstanceId::from("slow"),
+        Arc::new(SlowLock),
+        cancel.clone(),
+    );
+    wait_running(&hub).await;
+    let door = PointId::from("slow:door/locked");
+    // An agent's opening, held for a human.
+    let held = hub
+        .command(&door, Value::Bool(false), Origin::Mcp, None)
+        .await;
+    let Err(CommandError::NeedsApproval { id, .. }) = held else {
+        panic!("an agent opening is held: {held:?}");
+    };
+    // The driver is busy for 300 ms with a first order (it opens)...
+    let busy = {
+        let (hub, door) = (hub.clone(), door.clone());
+        tokio::spawn(async move {
+            hub.command(&door, Value::Bool(false), Origin::Ui, None)
+                .await
+        })
+    };
+    for _ in 0..100 {
+        if hub
+            .state(&door)
+            .is_some_and(|s| s.value == Value::Bool(false))
+        {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    // ...while a lock order and the release of the held opening wait in its
+    // queue; both callers give up.
+    let queued = [
+        {
+            let (hub, door) = (hub.clone(), door.clone());
+            tokio::spawn(async move {
+                let _ = hub
+                    .command(&door, Value::Bool(true), Origin::Ui, None)
+                    .await;
+            })
+        },
+        {
+            let (hub, door) = (hub.clone(), door.clone());
+            tokio::spawn(async move {
+                let _ = hub
+                    .resolve_approval(id, &door, true, Origin::Ui, None)
+                    .await;
+            })
+        },
+    ];
+    tokio::time::sleep(Duration::from_millis(30)).await;
+    for call in queued {
+        call.abort();
+        let _ = call.await;
+    }
+    busy.await.unwrap().unwrap();
+    tokio::time::sleep(Duration::from_millis(700)).await;
+    // The door stays as the first order left it: the given-up lock never ran.
+    assert_eq!(hub.state(&door).unwrap().value, Value::Bool(false));
+    let commands = journaled(&hub, false);
+    assert_eq!(commands.len(), 3, "held, run, given up: {commands:?}");
+    assert_eq!(commands.iter().filter(|o| **o == Outcome::Ok).count(), 1);
+    assert_eq!(
+        commands
+            .iter()
+            .filter(|o| matches!(o, Outcome::Err(_)))
+            .count(),
+        1,
+        "{commands:?}"
+    );
+    let approvals = journaled(&hub, true);
+    assert!(
+        matches!(approvals.as_slice(), [Outcome::Err(_)]),
+        "the release was given up, once: {approvals:?}"
+    );
+    cancel.cancel();
+}

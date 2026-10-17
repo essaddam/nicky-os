@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::{Duration, Instant};
 
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
 use crate::addresses::{self, KnownAddress};
-use crate::driver::CommandRequest;
+use crate::driver::{Claim, CommandRequest};
 use crate::guard::{GuardPolicy, GuardStatus, Verdict};
 use crate::journal_log::JournalLog;
 use crate::secrets::{self, MasterKey, SecretStore};
@@ -227,17 +227,66 @@ fn outcome_of(result: &Result<(), CommandError>) -> Outcome {
     }
 }
 
-/// Runs `work` to its end in its own task: the caller may give up waiting,
-/// the work (an order handed to a driver, then its journal line) goes on.
-/// `stopped`: the answer when the runtime itself is shutting down.
-async fn detached<T: Send + 'static>(
-    work: impl Future<Output = T> + Send + 'static,
-    stopped: impl FnOnce() -> T,
-) -> T {
-    match tokio::spawn(work).await {
-        Ok(result) => result,
-        Err(e) if e.is_panic() => std::panic::resume_unwind(e.into_panic()),
-        Err(_) => stopped(),
+/// Writes an order's journal line, once its outcome is known.
+type JournalLine = Box<dyn FnOnce(Outcome) + Send>;
+
+/// The driver's answer, until the deadline.
+async fn answer_of(
+    answer: &mut oneshot::Receiver<Result<(), String>>,
+    deadline: Instant,
+) -> Result<(), CommandError> {
+    match tokio::time::timeout_at(deadline.into(), answer).await {
+        Err(_) => Err(CommandError::Timeout),
+        Ok(Err(_)) => Err(CommandError::Driver("command dropped".into())),
+        Ok(Ok(result)) => result.map_err(CommandError::Driver),
+    }
+}
+
+/// An order in a driver's queue, and its journal line still to write. Its
+/// caller may give up (a client gone, a cancelled task): if the order was
+/// still queued, it is given up with it and never runs; if the driver had
+/// taken it, its outcome is still awaited and journaled. Either way, one
+/// line.
+struct Delivery {
+    answer: Option<oneshot::Receiver<Result<(), String>>>,
+    claim: Arc<AtomicU8>,
+    deadline: Instant,
+    journal: Option<JournalLine>,
+}
+
+impl Delivery {
+    async fn outcome(mut self) -> Result<(), CommandError> {
+        let result = match self.answer.as_mut() {
+            Some(answer) => answer_of(answer, self.deadline).await,
+            None => Err(CommandError::DriverUnavailable),
+        };
+        if let Some(journal) = self.journal.take() {
+            journal(outcome_of(&result));
+        }
+        result
+    }
+}
+
+impl Drop for Delivery {
+    fn drop(&mut self) {
+        let (Some(journal), Some(mut answer)) = (self.journal.take(), self.answer.take()) else {
+            return;
+        };
+        if Claim::settle(&self.claim, Claim::GIVEN_UP) {
+            drop(answer);
+            journal(Outcome::Err(moli_i18n::tr!("serveur.journal.abandonne")));
+            return;
+        }
+        // Taken by the driver: it may already have acted.
+        let deadline = self.deadline;
+        match tokio::runtime::Handle::try_current() {
+            Ok(runtime) => {
+                runtime.spawn(async move {
+                    journal(outcome_of(&answer_of(&mut answer, deadline).await));
+                });
+            }
+            Err(_) => journal(Outcome::Err(moli_i18n::tr!("serveur.journal.inconnu"))),
+        }
     }
 }
 
@@ -526,21 +575,19 @@ impl Hub {
             Err(e) => Err(e),
             Ok(prepared) => match self.verdict(point, Some(&value), origin) {
                 Verdict::Allow => {
-                    // Handed to the driver: from here on the order is
-                    // journaled with its real outcome even if the caller
-                    // gives up (a client gone, a cancelled task).
                     let hub = self.clone();
-                    let point = point.clone();
-                    return detached(
-                        async move {
-                            let result = hub.send(prepared).await;
-                            let action = Action::Command { point, value };
-                            hub.record(origin, actor, action, outcome_of(&result), started);
-                            result
-                        },
-                        || Err(CommandError::DriverUnavailable),
-                    )
-                    .await;
+                    let action = Action::Command {
+                        point: point.clone(),
+                        value,
+                    };
+                    return self
+                        .send(
+                            prepared,
+                            Box::new(move |outcome| {
+                                hub.record(origin, actor, action, outcome, started);
+                            }),
+                        )
+                        .await;
                 }
                 Verdict::Approval(reason) => {
                     let id = self.hold(point, &value, origin, actor.clone(), &reason);
@@ -823,19 +870,26 @@ impl Hub {
             );
             return Ok(());
         }
-        // Like a command: once handed to the driver, the decision and its
-        // outcome are journaled whatever becomes of the caller.
+        let prepared = match self.prepare(&request.point, &request.value) {
+            Ok(prepared) => prepared,
+            Err(e) => {
+                let outcome = Outcome::Err(e.to_string());
+                self.resolved(
+                    &request,
+                    Decision::Approved,
+                    origin,
+                    actor,
+                    outcome,
+                    started,
+                );
+                return Err(ApprovalError::Command(e));
+            }
+        };
+        // Like a command: one journal line, whatever becomes of the caller.
         let hub = self.clone();
-        detached(
-            async move {
-                let sent = match hub.prepare(&request.point, &request.value) {
-                    Ok(prepared) => hub.send(prepared).await,
-                    Err(e) => Err(e),
-                };
-                let (outcome, result) = match sent {
-                    Ok(()) => (Outcome::Ok, Ok(())),
-                    Err(e) => (Outcome::Err(e.to_string()), Err(ApprovalError::Command(e))),
-                };
+        self.send(
+            prepared,
+            Box::new(move |outcome| {
                 hub.resolved(
                     &request,
                     Decision::Approved,
@@ -844,11 +898,10 @@ impl Hub {
                     outcome,
                     started,
                 );
-                result
-            },
-            || Err(ApprovalError::Command(CommandError::DriverUnavailable)),
+            }),
         )
         .await
+        .map_err(ApprovalError::Command)
     }
 
     /// Drops held orders nobody decided on in time.
@@ -1196,8 +1249,9 @@ impl Hub {
         })
     }
 
-    /// Hands a prepared order to its driver and waits for the answer.
-    async fn send(&self, prepared: Prepared) -> Result<(), CommandError> {
+    /// Hands a prepared order to its driver, waits for the answer, and has
+    /// `journal` write its line (see [`Delivery`]).
+    async fn send(&self, prepared: Prepared, journal: JournalLine) -> Result<(), CommandError> {
         let Prepared {
             point,
             device,
@@ -1206,24 +1260,33 @@ impl Hub {
             commands,
         } = prepared;
         let (reply, answer) = oneshot::channel();
-        commands
-            .try_send(CommandRequest {
-                point,
-                device,
-                key,
-                value,
-                deadline: Instant::now() + self.0.opts.command_timeout,
-                reply,
-            })
-            .map_err(|e| match e {
+        let claim = Arc::new(AtomicU8::new(Claim::QUEUED));
+        let deadline = Instant::now() + self.0.opts.command_timeout;
+        let queued = commands.try_send(CommandRequest {
+            point,
+            device,
+            key,
+            value,
+            deadline,
+            reply,
+            claim: Arc::clone(&claim),
+        });
+        if let Err(e) = queued {
+            let error = match e {
                 mpsc::error::TrySendError::Full(_) => CommandError::Busy,
                 mpsc::error::TrySendError::Closed(_) => CommandError::DriverUnavailable,
-            })?;
-        match tokio::time::timeout(self.0.opts.command_timeout, answer).await {
-            Err(_) => Err(CommandError::Timeout),
-            Ok(Err(_)) => Err(CommandError::Driver("command dropped".into())),
-            Ok(Ok(result)) => result.map_err(CommandError::Driver),
+            };
+            journal(outcome_of(&Err(error.clone())));
+            return Err(error);
         }
+        Delivery {
+            answer: Some(answer),
+            claim,
+            deadline,
+            journal: Some(journal),
+        }
+        .outcome()
+        .await
     }
 
     fn record(
