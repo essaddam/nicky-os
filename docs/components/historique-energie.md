@@ -40,8 +40,8 @@ sémantique ni unité (un bouton, un texte → états ; un nombre → autre).
 | `climate` | température, humidité, pression, luminosité, ppm |
 | `energy` | compteurs (kWh, Wh) ; leurs heures vivent aussi dans `energy.db` |
 | `states` | marche/arrêt, contacts, présence, fuites, fumée, luminosité et couleur d'une lampe, boutons, textes |
-| `diagnostic` | signal, link quality, batterie, tension de pile (mV) |
-| `other` | le reste (un pourcentage sans sémantique, par exemple) |
+| `diagnostic` | signal, link quality, batterie, tension de pile (`voltage` en mV d'un appareil sur pile, ou un nom de batterie) |
+| `other` | le reste : un pourcentage sans sémantique, une mesure en mV qui n'est pas une pile (ORP d'une piscine) |
 
 L'association famille → agrégation (moyenne pondérée, somme, durées, comptage) n'est pas
 faite ici : le module de résumés n'est pas encore fusionné, elle revient à son ticket.
@@ -78,28 +78,33 @@ entre deux lots (2 ms) : les lots du recorder passent entre deux (test
 `pruning_goes_by_lots_and_writes_pass_in_between`). SQL portable (pas de `DELETE … LIMIT`),
 toujours par la clé primaire, ancrage conservé.
 
-**Garde des réductions.** La dernière politique validée est gardée dans
-`data/history-policy.json` (dans la sauvegarde). Chaque point est gardé la plus longue des
-deux durées, configurée et validée :
+**Garde des réductions** (`crates/moli-history/src/retention.rs`). Chaque point a un
+**plancher** dans `history.db` (table `retention`) : la durée pendant laquelle il est gardé
+jusqu'ici. Au premier démarrage, tous les points déjà enregistrés reçoivent `history_days`
+(Moli avant toute politique) ; un point apparu ensuite commence à sa durée configurée. Une
+passe garde chaque point la plus longue de son plancher et de sa durée configurée :
 
-- une durée **plus longue** s'applique tout de suite ; une configuration qui n'efface rien de
-  plus que la politique validée est adoptée d'elle-même (`by: null`) ;
-- une durée **plus courte** n'efface rien. `GET /api/history/retention` montre le volume
-  (`reduction.rows`, `points`) et la période (`from`, `to`) qu'elle supprimerait, avec les
-  points les plus touchés ; la page Système l'affiche dans « Stockage ». Une personne la valide
-  avec son code : `POST /api/history/retention/validate` `{ "at", "fingerprint" }` (session PIN
-  exigée, 403 sinon, même depuis un tableau de bord de confiance). La purge qui suit est faite
-  à l'instant `at` du décompte : elle supprime exactement ce qui était annoncé. Un décompte de
-  plus de 15 min, ou une politique changée depuis, est refusé (410, 409) ;
+- une durée **plus longue** s'applique tout de suite et **relève le plancher** aussitôt, même si
+  une autre réduction attend : la ramener ensuite est une réduction comme une autre ;
+- une durée **plus courte** n'efface rien. `GET /api/history/retention` compte, point par point,
+  ce qu'elle supprimerait (`reduction.rows`, `points`, période `from`–`to`, points les plus
+  touchés) et **garde ce plan** : points, familles, planchers, ancre et nombre de lignes de
+  chacun. La page Système l'affiche dans « Stockage ». Une personne le valide avec son code :
+  `POST /api/history/retention/validate` `{ "at", "fingerprint" }` (session PIN exigée, 403 sinon,
+  même depuis un tableau de bord de confiance). La validation applique **ce plan seul** : elle
+  abaisse les planchers de ses points et supprime leurs lignes antérieures à l'ancre comptée,
+  **jamais plus que le nombre annoncé** (une écriture arrivée entre-temps n'élargit rien). Les
+  autres points attendent leur passe ordinaire. Un décompte plus récent remplace celui affiché,
+  un plancher changé entre-temps refuse la validation (409), un décompte de plus de 15 min aussi
+  (410) : la page montre alors la nouvelle proposition et demande un nouveau clic ;
+- validation et passes prennent le même verrou, tenu du contrôle du plan jusqu'à la dernière
+  ligne supprimée : aucune passe ne s'intercale ;
 - un agent (`api`, `mcp`, `cli`, `assistant`) ne valide jamais : `History::validate` refuse
   toute origine autre qu'une personne avec code, et aucun outil MCP ne l'expose ;
 - un point dont l'appareil n'est pas (encore) publié, juste après un démarrage par exemple,
-  est gardé la plus longue durée de toutes les familles ;
-- `history-policy.json` illisible : plus aucune purge tant qu'une personne n'a pas validé.
-
-Limite connue : sur un changement mêlant une hausse et une baisse, la politique validée n'est
-pas mise à jour ; ramener plus tard la hausse à la valeur validée efface ce que la hausse avait
-gardé en plus (jamais ce que la politique validée garde).
+  est gardé la plus longue durée de toutes les familles et n'entre dans aucun plan ;
+- chaque validation est journalisée (`retention_log` : quand, qui, points, lignes) ; la
+  dernière est rendue par `GET /api/history/retention` (`last_validation`).
 
 **Échantillonnage des courbes bavardes : non fait.** Il n'est prévu que si le relevé de la
 maison montre des points à plus d'un changement par seconde. Ce relevé (mesure réelle après

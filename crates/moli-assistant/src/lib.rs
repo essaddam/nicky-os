@@ -2374,7 +2374,7 @@ mod tests {
                 false,
             )
             .unwrap();
-        let history = moli_history::History::from_store(Arc::new(store));
+        let history = moli_history::History::from_store(Arc::new(store)).unwrap();
         let moli = Assistant::new(hub, None, Some(history), None, Config::default()).unwrap();
         let hidden = [
             "latitude",

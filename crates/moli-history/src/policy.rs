@@ -56,18 +56,21 @@ impl Family {
 
     #[must_use]
     pub fn of(spec: &PointSpec) -> Self {
-        family(spec.semantic, spec.unit.as_ref(), &spec.kind)
+        family(spec.semantic, spec.unit.as_ref(), &spec.kind, &spec.key)
     }
 }
 
 /// A point's family: its meaning first, then its unit; the type only
-/// separates states from numbers when neither says anything.
+/// separates states from numbers when neither says anything. `key` only
+/// tells a battery's voltage from a measurement in the same unit (a pool's
+/// ORP is in millivolts too).
 #[must_use]
-pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind) -> Family {
+pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind, key: &str) -> Family {
     use Semantic as S;
+    let millivolts = unit == Some(&Unit::MilliVolt);
     match semantic {
-        // A battery's voltage is told in millivolts, the mains' in volts.
-        S::Voltage if unit == Some(&Unit::MilliVolt) => Family::Diagnostic,
+        S::Voltage | S::Other if battery_voltage(key, millivolts) => Family::Diagnostic,
+        S::Voltage if millivolts => Family::Other,
         S::Power | S::ApparentPower | S::Current | S::Voltage => Family::Power,
         S::Energy => Family::Energy,
         S::Temperature | S::Humidity | S::Pressure | S::Illuminance => Family::Climate,
@@ -87,7 +90,6 @@ pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind) -> Family {
             Some(Unit::Watt | Unit::VoltAmpere | Unit::Ampere | Unit::Volt) => Family::Power,
             Some(Unit::KiloWattHour | Unit::WattHour) => Family::Energy,
             Some(Unit::Celsius | Unit::HectoPascal | Unit::Lux | Unit::Ppm) => Family::Climate,
-            Some(Unit::MilliVolt) => Family::Diagnostic,
             Some(_) => Family::Other,
             None => match kind {
                 Kind::Numeric { .. } => Family::Other,
@@ -95,6 +97,13 @@ pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind) -> Family {
             },
         },
     }
+}
+
+/// A battery's voltage: named so (`battery_voltage`, `vbat`…), or the
+/// plain `voltage` of a battery device, told in millivolts (Zigbee2MQTT).
+fn battery_voltage(key: &str, millivolts: bool) -> bool {
+    let name = key.rsplit('.').next().unwrap_or(key).to_ascii_lowercase();
+    name.contains("batt") || name.contains("vbat") || (millivolts && name == "voltage")
 }
 
 /// `[storage]` in `moli.toml`.
@@ -257,16 +266,6 @@ impl Retention {
     }
 }
 
-/// The families a point may have: its own, or any while its device is not
-/// known (not yet published after a start, or gone).
-pub(crate) fn candidates(family: Option<Family>) -> &'static [Family] {
-    static ALL: [Family; 6] = Family::ALL;
-    match family {
-        Some(f) => std::slice::from_ref(&ALL[f as usize]),
-        None => &ALL,
-    }
-}
-
 /// `*` matches any run of characters, everything else itself.
 #[must_use]
 pub fn glob(pattern: &str, text: &str) -> bool {
@@ -300,16 +299,38 @@ mod tests {
 
     #[test]
     fn families_come_from_meaning_and_unit() {
-        let f = |s, u: Option<Unit>, k: &Kind| family(s, u.as_ref(), k);
+        let f = |s, u: Option<Unit>, k: &Kind| family(s, u.as_ref(), k, "value");
         assert_eq!(f(Semantic::Power, Some(Unit::Watt), &NUMBER), Family::Power);
         assert_eq!(f(Semantic::Current, None, &NUMBER), Family::Power);
         assert_eq!(
             f(Semantic::Voltage, Some(Unit::Volt), &NUMBER),
             Family::Power
         );
+        // Millivolts alone say nothing: a battery's voltage is named so…
+        let named = |s, key| family(s, Some(&Unit::MilliVolt), &NUMBER, key);
+        let z2m_battery = Semantic::infer("voltage", Some(&Unit::MilliVolt));
+        assert_eq!(named(z2m_battery, "voltage"), Family::Diagnostic);
         assert_eq!(
-            f(Semantic::Voltage, Some(Unit::MilliVolt), &NUMBER),
+            named(Semantic::Other, "battery_voltage"),
             Family::Diagnostic
+        );
+        assert_eq!(
+            family(
+                Semantic::Voltage,
+                Some(&Unit::Volt),
+                &NUMBER,
+                "battery_voltage"
+            ),
+            Family::Diagnostic
+        );
+        // …a pool's ORP, in millivolts too, is a measurement.
+        let orp = Semantic::infer("orp", Some(&Unit::MilliVolt));
+        assert_eq!(named(orp, "orp"), Family::Other);
+        assert_eq!(named(Semantic::Other, "orp"), Family::Other);
+        // The mains' voltage, in volts, is power.
+        assert_eq!(
+            family(Semantic::Voltage, Some(&Unit::Volt), &NUMBER, "voltage"),
+            Family::Power
         );
         assert_eq!(
             f(Semantic::Energy, Some(Unit::KiloWattHour), &NUMBER),

@@ -376,7 +376,7 @@
   "systeme.conservation.familles.other": "Autres",
   "systeme.conservation.regles_one": "{n} règle par point",
   "systeme.conservation.regles_other": "{n} règles par point",
-  "systeme.conservation.exclus": "Jamais écrits : {list}",
+  "systeme.conservation.exclus": "Plus écrits à partir de maintenant (ce qui est déjà enregistré reste) : {list}",
   "systeme.conservation.reduction_one": "Durée réduite en attente : {n} mesure de {points} point(s), du {from} au {to}, sera supprimée après ta validation. Rien n’est effacé avant.",
   "systeme.conservation.reduction_other": "Durée réduite en attente : {n} mesures de {points} point(s), du {from} au {to}, seront supprimées après ta validation. Rien n’est effacé avant.",
   "systeme.conservation.reduction_vide": "Durée réduite en attente : aucune mesure concernée pour l’instant. Rien n’est effacé avant ta validation.",
@@ -385,5 +385,7 @@
   "systeme.conservation.code": "Ton code est demandé : un agent ne peut pas valider.",
   "systeme.conservation.supprimees_one": "{n} mesure supprimée",
   "systeme.conservation.supprimees_other": "{n} mesures supprimées",
-  "systeme.conservation.erreur": "Validation impossible : {message}"
+  "systeme.conservation.erreur": "Validation impossible : {message}",
+  "systeme.conservation.inclus": "Sauf, toujours écrits : {list}",
+  "systeme.conservation.changee": "La proposition a changé depuis ton clic : vérifie la nouvelle, puis valide de nouveau. Rien n’a été supprimé."
 }

@@ -27,6 +27,21 @@ CREATE TABLE IF NOT EXISTS samples (
     PRIMARY KEY (point_id, ts)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS samples_ts ON samples(ts);
+-- How long each point has been kept so far, in days: a shorter duration
+-- waits for a person (see retention.rs).
+CREATE TABLE IF NOT EXISTS retention (
+    point_id INTEGER PRIMARY KEY REFERENCES points(id),
+    days     INTEGER NOT NULL
+);
+-- When the durations were set up (baseline) and each reduction a person
+-- validated.
+CREATE TABLE IF NOT EXISTS retention_log (
+    at     INTEGER NOT NULL,
+    kind   TEXT    NOT NULL,           -- baseline | validated
+    who    TEXT,
+    points INTEGER NOT NULL,
+    rows   INTEGER NOT NULL
+);
 -- What agents query: one row per recorded change.
 CREATE VIEW IF NOT EXISTS history AS
     SELECT p.point AS point, s.ts AS ts, s.kind AS kind, s.num AS num, s.txt AS txt
@@ -90,6 +105,32 @@ pub struct SqlResult {
     pub columns: Vec<String>,
     pub rows: Vec<Vec<Json>>,
     pub truncated: bool,
+}
+
+/// One point's purge: rows older than `anchor`, at most `max` of them.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cut {
+    pub id: i64,
+    pub anchor: u64,
+    pub max: u64,
+}
+
+/// What a purge would delete for a point.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct Doomed {
+    /// The sample kept: the last one before the cutoff.
+    pub anchor: u64,
+    pub rows: u64,
+    pub oldest: Option<u64>,
+}
+
+/// A reduction a person validated.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct Validation {
+    pub at: u64,
+    pub by: Option<String>,
+    pub points: u64,
+    pub rows: u64,
 }
 
 pub struct Store {
@@ -239,52 +280,165 @@ impl Store {
         Ok(rows)
     }
 
-    /// For each (point id, cutoff), deletes the samples older than the
-    /// cutoff, except the point's last one before it: a chart starting at
-    /// the cutoff still knows its first value, and a value stable for months
-    /// is still known. At most `lot` rows per statement, the writer released
-    /// in between (`between` runs then): the recorder's batches pass between
-    /// two lots. Returns how many.
+    /// The point's last sample before `cutoff`: the one a purge at that
+    /// cutoff keeps (a chart starting there still knows its first value, a
+    /// value stable for months is still known), everything older goes.
+    pub fn anchor(&self, id: i64, cutoff: u64) -> Result<Option<u64>, HistoryError> {
+        let at: Option<i64> = lock(&self.reader).query_row(
+            "SELECT MAX(ts) FROM samples WHERE point_id = ?1 AND ts < ?2",
+            params![id, ts(cutoff)],
+            |r| r.get(0),
+        )?;
+        Ok(at.map(ms))
+    }
+
+    /// What a purge at `cutoff` deletes for this point: the anchor, the rows
+    /// before it and the oldest one's time.
+    pub fn doomed(&self, id: i64, cutoff: u64) -> Result<Option<Doomed>, HistoryError> {
+        let Some(anchor) = self.anchor(id, cutoff)? else {
+            return Ok(None);
+        };
+        let (rows, oldest): (i64, Option<i64>) = lock(&self.reader).query_row(
+            "SELECT COUNT(*), MIN(ts) FROM samples WHERE point_id = ?1 AND ts < ?2",
+            params![id, ts(anchor)],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )?;
+        Ok(Some(Doomed {
+            anchor,
+            rows: u64::try_from(rows).unwrap_or(0),
+            oldest: oldest.map(ms),
+        }))
+    }
+
+    /// For each cut, deletes the point's samples older than its anchor, the
+    /// oldest first and never more than its `max`: an anchor fixed when the
+    /// purge was decided, so a write arriving meanwhile never widens it. At
+    /// most `lot` rows per statement, the writer released in between
+    /// (`between` runs then): the recorder's batches pass between two lots.
+    /// Returns how many.
     pub fn prune(
         &self,
-        plan: &[(i64, u64)],
+        cuts: &[Cut],
         lot: usize,
         mut between: impl FnMut(),
     ) -> Result<usize, HistoryError> {
-        let lot = lot.max(1);
-        let limit = i64::try_from(lot).unwrap_or(i64::MAX);
+        let lot = u64::try_from(lot.max(1)).unwrap_or(u64::MAX);
         let mut removed = 0;
-        for &(id, cutoff) in plan {
-            loop {
+        for cut in cuts {
+            let mut left = cut.max;
+            while left > 0 {
+                let limit = lot.min(left);
                 // Through the primary key (point_id, ts) only; portable SQL
                 // (no DELETE … LIMIT).
                 let n = lock(&self.writer).execute(
                     "DELETE FROM samples WHERE point_id = ?1 AND ts IN (
-                        SELECT ts FROM samples WHERE point_id = ?1 AND ts < (
-                            SELECT MAX(ts) FROM samples WHERE point_id = ?1 AND ts < ?2)
+                        SELECT ts FROM samples WHERE point_id = ?1 AND ts < ?2
                         ORDER BY ts LIMIT ?3)",
-                    params![id, ts(cutoff), limit],
+                    params![
+                        cut.id,
+                        ts(cut.anchor),
+                        i64::try_from(limit).unwrap_or(i64::MAX)
+                    ],
                 )?;
                 removed += n;
-                if n < lot {
+                left = left.saturating_sub(n as u64);
+                if (n as u64) < limit {
                     break;
                 }
-                between();
+                if left > 0 {
+                    between();
+                }
             }
         }
         Ok(removed)
     }
 
-    /// What `prune` would delete for this point at this cutoff: (rows, the
-    /// oldest one's time).
-    pub fn doomed(&self, id: i64, cutoff: u64) -> Result<(u64, Option<u64>), HistoryError> {
-        let (rows, oldest): (i64, Option<i64>) = lock(&self.reader).query_row(
-            "SELECT COUNT(*), MIN(ts) FROM samples WHERE point_id = ?1 AND ts < (
-                SELECT MAX(ts) FROM samples WHERE point_id = ?1 AND ts < ?2)",
-            params![id, ts(cutoff)],
-            |r| Ok((r.get(0)?, r.get(1)?)),
+    /// How long each point has been kept so far (point id → days); `None`
+    /// before the durations were ever set up.
+    pub fn floors(&self) -> Result<Option<HashMap<i64, u32>>, HistoryError> {
+        let conn = lock(&self.reader);
+        let set_up: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM retention_log WHERE kind = 'baseline')",
+            [],
+            |r| r.get(0),
         )?;
-        Ok((u64::try_from(rows).unwrap_or(0), oldest.map(ms)))
+        if !set_up {
+            return Ok(None);
+        }
+        let mut stmt = conn.prepare("SELECT point_id, days FROM retention")?;
+        let floors = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<Result<_, _>>()?;
+        Ok(Some(floors))
+    }
+
+    /// The first time: every point recorded so far was kept `days` days
+    /// (Moli before any policy).
+    pub fn set_up_floors(&self, days: u32, at: u64) -> Result<(), HistoryError> {
+        let mut conn = lock(&self.writer);
+        let tx = conn.transaction()?;
+        let points = tx.execute(
+            "INSERT OR IGNORE INTO retention(point_id, days) SELECT id, ?1 FROM points",
+            [days],
+        )?;
+        tx.execute(
+            "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'baseline', ?2, 0)",
+            params![ts(at), i64::try_from(points).unwrap_or(i64::MAX)],
+        )?;
+        tx.commit()?;
+        Ok(())
+    }
+
+    /// Records points' durations, and with `validated` (when, who, rows) the
+    /// person who validated them, in one transaction.
+    pub fn set_floors(
+        &self,
+        floors: &[(i64, u32)],
+        validated: Option<(u64, Option<&str>, u64)>,
+    ) -> Result<(), HistoryError> {
+        let mut conn = lock(&self.writer);
+        let tx = conn.transaction()?;
+        {
+            let mut set = tx.prepare(
+                "INSERT INTO retention(point_id, days) VALUES (?1, ?2)
+                 ON CONFLICT(point_id) DO UPDATE SET days = excluded.days",
+            )?;
+            for (id, days) in floors {
+                set.execute(params![id, days])?;
+            }
+        }
+        if let Some((at, who, rows)) = validated {
+            tx.execute(
+                "INSERT INTO retention_log(at, kind, who, points, rows) VALUES (?1, 'validated', ?2, ?3, ?4)",
+                params![
+                    ts(at),
+                    who,
+                    i64::try_from(floors.len()).unwrap_or(i64::MAX),
+                    i64::try_from(rows).unwrap_or(i64::MAX)
+                ],
+            )?;
+        }
+        tx.commit()?;
+        Ok(())
+    }
+
+    /// The last reduction a person validated: (when, who, points, rows).
+    pub fn last_validation(&self) -> Result<Option<Validation>, HistoryError> {
+        Ok(lock(&self.reader)
+            .query_row(
+                "SELECT at, who, points, rows FROM retention_log WHERE kind = 'validated'
+                 ORDER BY at DESC LIMIT 1",
+                [],
+                |r| {
+                    Ok(Validation {
+                        at: ms(r.get(0)?),
+                        by: r.get(1)?,
+                        points: u64::try_from(r.get::<_, i64>(2)?).unwrap_or(0),
+                        rows: u64::try_from(r.get::<_, i64>(3)?).unwrap_or(0),
+                    })
+                },
+            )
+            .optional()?)
     }
 
     pub fn series(
@@ -495,13 +649,20 @@ mod tests {
 
     /// Every point pruned at the same cutoff, in lots of 2.
     fn prune_all(store: &Store, cutoff: u64) -> usize {
-        let plan: Vec<_> = store
+        let cuts: Vec<_> = store
             .points()
             .unwrap()
             .into_iter()
-            .map(|(id, _)| (id, cutoff))
+            .filter_map(|(id, _)| {
+                let anchor = store.anchor(id, cutoff).unwrap()?;
+                Some(Cut {
+                    id,
+                    anchor,
+                    max: u64::MAX,
+                })
+            })
             .collect();
-        store.prune(&plan, 2, || {}).unwrap()
+        store.prune(&cuts, 2, || {}).unwrap()
     }
 
     #[test]
@@ -648,10 +809,19 @@ mod tests {
         store.insert(&old, false).unwrap();
         let (id, _) = store.points().unwrap()[0].clone();
         // What the purge will delete: every old row but the anchor.
-        assert_eq!(store.doomed(id, 50_000).unwrap(), (99, Some(1_000)));
+        let doomed = store.doomed(id, 50_000).unwrap().unwrap();
+        assert_eq!(
+            (doomed.anchor, doomed.rows, doomed.oldest),
+            (1_099, 99, Some(1_000))
+        );
+        let cut = Cut {
+            id,
+            anchor: doomed.anchor,
+            max: doomed.rows,
+        };
         let mut lots = 0;
         let removed = store
-            .prune(&[(id, 50_000)], 10, || {
+            .prune(&[cut], 10, || {
                 // The writer is free: a recorder's batch goes in now.
                 lots += 1;
                 assert!(store.writer.try_lock().is_ok(), "writer held between lots");
@@ -669,6 +839,46 @@ mod tests {
         assert_eq!(
             store.series("d/x", 0, 100_000, 100).unwrap().raw,
             vec![(1_099, Value::Int(1))]
+        );
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_write_between_lots_never_widens_the_purge() {
+        let (store, dir) = store("prune-fixed");
+        let rows: Vec<_> = (0..=20u64).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        store.insert(&rows, false).unwrap();
+        let (id, _) = store.points().unwrap()[0].clone();
+        let doomed = store.doomed(id, 100).unwrap().unwrap();
+        assert_eq!((doomed.anchor, doomed.rows), (20, 20));
+        let cut = Cut {
+            id,
+            anchor: doomed.anchor,
+            max: doomed.rows,
+        };
+        let mut late = vec![(p("d/x"), Value::Int(2), 50), (p("d/x"), Value::Int(3), 2)];
+        let removed = store
+            .prune(&[cut], 5, || {
+                // An old reading restated between two lots: newer than the
+                // anchor, or older than what is left to delete.
+                if let Some(row) = late.pop() {
+                    store.insert(&[row], false).unwrap();
+                }
+            })
+            .unwrap();
+        assert_eq!(removed, 20, "exactly what was announced, never more");
+        let left: Vec<u64> = store
+            .series("d/x", 0, 1_000, 100)
+            .unwrap()
+            .raw
+            .iter()
+            .map(|(t, _)| *t)
+            .collect();
+        assert_eq!(
+            left,
+            vec![19, 20, 50],
+            "the anchor and the new reading stay"
         );
         drop(store);
         let _ = std::fs::remove_dir_all(dir);

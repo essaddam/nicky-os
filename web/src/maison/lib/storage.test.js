@@ -47,9 +47,9 @@ test('every line is worded in French and in English', () => {
 
 test('the retention says each duration, and what a reduction would delete', () => {
   const policies = {
-    filter: { exclude: ['z2m:*/linkquality'], include: [] },
+    filter: { exclude: ['z2m:*/linkquality'], include: ['z2m:bureau/linkquality'] },
     configured: { days: 30, families: { diagnostic: 3, climate: 90 }, points: [['z2m:cave/temperature', 365]] },
-    validated: { retention: { days: 30, families: {}, points: [] }, at: 1, by: null },
+    last_validation: null,
     reduction: { at: 5, fingerprint: 'f', points: 2, rows: 1200, from: 10, to: 20, top: [] },
   };
   const lines = retentionLines(policies, fmt);
@@ -59,11 +59,13 @@ test('the retention says each duration, and what a reduction would delete', () =
     'systeme.conservation.famille',
     'systeme.conservation.regles',
     'systeme.conservation.exclus',
+    'systeme.conservation.inclus',
     'systeme.conservation.reduction',
   ]);
+  assert.equal(lines[5].params.list, 'z2m:bureau/linkquality');
   assert.equal(lines[1].params.family.key, 'systeme.conservation.familles.climate');
-  assert.deepEqual(lines[5].params, { count: 1200, n: '1200', points: '2', from: '10', to: '20' });
-  assert.ok(lines[5].alert);
+  assert.deepEqual(lines[6].params, { count: 1200, n: '1200', points: '2', from: '10', to: '20' });
+  assert.ok(lines[6].alert);
   // Nothing configured: the general duration only, nothing waiting.
   const plain = retentionLines({ filter: { exclude: [], include: [] }, configured: { days: 30, families: {}, points: [] }, reduction: null }, fmt);
   assert.deepEqual(keys(plain), ['systeme.conservation.general']);
@@ -71,5 +73,6 @@ test('the retention says each duration, and what a reduction would delete', () =
   for (const lang of ['fr', 'en']) {
     const words = catalog(lang);
     for (const l of lines) assert.ok(words[l.key] ?? words[`${l.key}_other`], `${lang}: ${l.key}`);
+    assert.ok(words['systeme.conservation.changee'], `${lang}: changee`);
   }
 });

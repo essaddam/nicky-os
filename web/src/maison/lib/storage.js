@@ -46,6 +46,8 @@ export function retentionLines(policies, { num, when }) {
   }
   if (c.points?.length) lines.push({ key: 'systeme.conservation.regles', params: { count: c.points.length, n: num(c.points.length) } });
   if (p.filter?.exclude?.length) lines.push({ key: 'systeme.conservation.exclus', params: { list: p.filter.exclude.join(', ') } });
+  // Written all the same: `include` wins over `exclude`.
+  if (p.filter?.exclude?.length && p.filter?.include?.length) lines.push({ key: 'systeme.conservation.inclus', params: { list: p.filter.include.join(', ') } });
   const r = p.reduction;
   if (r) {
     lines.push(
