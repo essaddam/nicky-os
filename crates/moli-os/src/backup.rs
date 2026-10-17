@@ -19,7 +19,7 @@ use anyhow::{Context as _, bail};
 /// SQLite databases: copied through SQLite itself.
 const DATABASES: [&str; 2] = ["history.db", "energy.db"];
 /// Everything else worth keeping (missing ones are skipped).
-const FILES: [&str; 15] = [
+const FILES: [&str; 16] = [
     "moli.toml",
     "plan.json",
     "phones.json",
@@ -35,6 +35,7 @@ const FILES: [&str; 15] = [
     "trusted-profiles.toml",
     "perf.jsonl",
     "bench.json",
+    "assistant-exchanges.jsonl",
 ];
 
 pub fn backup(data_dir: &Path, dir: &Path) -> anyhow::Result<()> {
@@ -182,6 +183,7 @@ mod tests {
         )
         .unwrap();
         std::fs::write(data.join("labels.toml"), "x = 1\n").unwrap();
+        std::fs::write(data.join("assistant-exchanges.jsonl"), "{}\n").unwrap();
         std::fs::create_dir_all(data.join("plan")).unwrap();
         std::fs::write(data.join("plan").join("0123456789abcdef.png"), b"png").unwrap();
         std::fs::write(data.join("plan").join("notes.txt"), b"not a plan").unwrap();
@@ -198,6 +200,11 @@ mod tests {
         assert_eq!(
             std::fs::read_to_string(fresh.join("labels.toml")).unwrap(),
             "x = 1\n"
+        );
+        assert_eq!(
+            std::fs::read_to_string(fresh.join("assistant-exchanges.jsonl")).unwrap(),
+            "{}\n",
+            "Moli's exchanges come back"
         );
         assert_eq!(
             std::fs::read(fresh.join("plan").join("0123456789abcdef.png")).unwrap(),

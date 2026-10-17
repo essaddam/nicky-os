@@ -121,7 +121,7 @@
       case 'guard':
         return `${t('systeme.briques.faits.pieces', { count: f.protected_rooms?.length ?? 0 })}${f.quiet_hours?.active ? ` · ${t('systeme.briques.faits.calmes')}` : ''}`;
       case 'history':
-        return f.db_bytes ? t('systeme.format.mo', { value: (f.db_bytes / 1e6).toFixed(1) }) : t('systeme.briques.faits.arrete');
+        return f.db_bytes ? bytes(f.db_bytes + (f.wal_bytes ?? 0)) : t('systeme.briques.faits.arrete');
       case 'energy':
         return f.meters ? t('systeme.briques.faits.compteurs', { count: f.meters, kwh: Math.round(f.today_kwh ?? 0) }) : t('systeme.briques.faits.arrete');
       case 'automations':
@@ -144,6 +144,17 @@
   const ratio = (a, b) => (a && b ? Math.round(a / b) : null);
   const STATES = ['running', 'waiting', 'starting'];
   const statusText = (s) => (STATES.includes(s?.state) ? t(`systeme.page.statut.${s.state}`) : (s?.state ?? '?'));
+
+  // Storage: how the databases grow (history, energy), counted on demand.
+  const storage = $derived(sys?.bricks?.filter((b) => (b.id === 'history' || b.id === 'energy') && b.active) ?? []);
+  const bytes = (n) => (n == null ? '—' : n >= 1e9 ? t('systeme.format.go', { value: num(n / 1e9, 1) }) : t('systeme.format.mo', { value: num(n / 1e6, 1) }));
+  const when = (ms) => new Date(ms).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' });
+  const pointName = (point) => {
+    const at = point.lastIndexOf('/');
+    const d = hub.devices[point.slice(0, at)];
+    const name = d?.label?.name || d?.native_name;
+    return name ? `${name} · ${point.slice(at + 1)}` : point;
+  };
 
   function choose(kind, item) {
     chosen = { kind, item };
@@ -304,6 +315,39 @@
   {:else if !error}
     <p class="muted">{t('systeme.chargement')}</p>
   {/if}
+
+  {#if storage.length}
+    <section class="storage">
+      <div class="vs-head"><b>{t('systeme.stockage.titre')}</b><span class="muted">{t('systeme.stockage.aide')}</span></div>
+      {#if storage[0].facts.free_bytes != null}<p>{t('systeme.stockage.libre', { value: bytes(storage[0].facts.free_bytes) })}</p>{/if}
+      <div class="vs">
+        {#each storage as b (b.id)}
+          {@const f = b.facts}
+          <div>
+            <small>{b.name}</small>
+            <p><b class="num">{bytes((f.db_bytes ?? 0) + (f.wal_bytes ?? 0))}</b> <span class="muted">{t('systeme.stockage.fichiers', { db: bytes(f.db_bytes), wal: bytes(f.wal_bytes ?? 0) })}</span></p>
+            {#if f.rows_24h != null}<p>{t('systeme.stockage.lignes_24h', { count: f.rows_24h, n: num(f.rows_24h) })} <span class="muted">{t('systeme.stockage.cout', { ms: num(f.query_ms, 1) })}</span></p>{/if}
+            {#if b.id === 'history'}
+              <p>{t('systeme.stockage.lots', { ok: num(f.batches_written ?? 0), failed: num(f.batches_failed ?? 0) })}</p>
+              {#if f.rows_merged || f.rows_dropped}<p class="alert">{t('systeme.stockage.sature', { merged: num(f.rows_merged), dropped: num(f.rows_dropped) })}</p>{/if}
+              <p>{f.last_prune ? t('systeme.stockage.purge', { date: when(f.last_prune.at), n: num(f.last_prune.rows), ms: num(f.last_prune.ms) }) : t('systeme.stockage.purge_aucune')}</p>
+            {:else}
+              <p>{t('systeme.stockage.releves', { ok: num(f.writes_ok ?? 0), failed: num(f.writes_failed ?? 0) })}</p>
+            {/if}
+            {#if f.last_error}<p class="alert">{t('systeme.stockage.erreur', { date: when(f.last_error[0]), message: f.last_error[1] })}</p>{/if}
+            {#if f.top_24h?.length}
+              <small>{t('systeme.stockage.bavards')}</small>
+              <ol class="chatty">
+                {#each f.top_24h as [point, rows] (point)}
+                  <li title={point}><span>{pointName(point)}</span><span class="num muted">{num(rows)}</span></li>
+                {/each}
+              </ol>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    </section>
+  {/if}
 </div>
 
 <style>
@@ -351,6 +395,33 @@
     border-radius: var(--r-lg);
     background: var(--surface);
     box-shadow: var(--shadow);
+  }
+
+  .storage {
+    display: grid;
+    gap: 14px;
+    padding: 20px;
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    font-size: 13.5px;
+  }
+
+  .storage p {
+    margin: 0;
+  }
+
+  .chatty {
+    margin: 4px 0 0;
+    padding-left: 20px;
+  }
+
+  .chatty li span:first-child {
+    overflow-wrap: anywhere;
+  }
+
+  .chatty li .num {
+    margin-left: 8px;
   }
 
   .vs-head {

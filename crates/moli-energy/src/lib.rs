@@ -120,6 +120,17 @@ pub struct Summary {
     pub budget_point: Option<String>,
 }
 
+/// Readings written / not written since start, the last failure (when,
+/// what), the hour rows of the last 24 hours and what counting them cost.
+#[derive(Clone, Debug, Serialize)]
+pub struct Storage {
+    pub writes_ok: u64,
+    pub writes_failed: u64,
+    pub last_error: Option<(u64, String)>,
+    pub rows_24h: u64,
+    pub query_ms: f64,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct Report {
     pub step: Step,
@@ -279,6 +290,23 @@ impl Energy {
         }
         self.report(from, report::next(current, step, tz)?, step)
             .await
+    }
+
+    /// How `energy.db` grows and how its writes go (`/api/system`).
+    pub async fn storage(&self) -> Result<Storage, EnergyError> {
+        let store = Arc::clone(&self.inner.store);
+        let since = now_ms().saturating_sub(24 * 3_600_000);
+        let started = std::time::Instant::now();
+        let rows_24h = blocking(move || store.rows_since(since)).await?;
+        let query_ms = started.elapsed().as_secs_f64() * 1000.0;
+        let (writes_ok, writes_failed, last_error) = self.inner.store.writes();
+        Ok(Storage {
+            writes_ok,
+            writes_failed,
+            last_error,
+            rows_24h,
+            query_ms,
+        })
     }
 
     pub async fn report(&self, from: u64, to: u64, step: Step) -> Result<Report, EnergyError> {

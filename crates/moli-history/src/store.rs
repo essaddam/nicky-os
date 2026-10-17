@@ -108,7 +108,7 @@ impl std::fmt::Debug for Store {
     }
 }
 
-fn lock<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+pub(crate) fn lock<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     m.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
@@ -229,12 +229,15 @@ impl Store {
         Ok(())
     }
 
-    /// Deletes samples older than `cutoff_ms`, except the latest of each
-    /// point (a value stable for months must still be known). Returns how many.
+    /// Deletes samples older than `cutoff_ms`, except each point's last one
+    /// before it: a chart starting at the cutoff still knows its first value,
+    /// and a value stable for months is still known. Returns how many.
     pub fn prune(&self, cutoff_ms: u64) -> Result<usize, HistoryError> {
+        // The anchor is found through the primary key (point_id, ts).
         Ok(lock(&self.writer).execute(
             "DELETE FROM samples WHERE ts < ?1
-             AND ts < (SELECT MAX(s.ts) FROM samples s WHERE s.point_id = samples.point_id)",
+             AND ts < (SELECT MAX(s.ts) FROM samples s
+                       WHERE s.point_id = samples.point_id AND s.ts < ?1)",
             [ts(cutoff_ms)],
         )?)
     }
@@ -335,6 +338,32 @@ impl Store {
             series.truncated = true;
         }
         Ok(series)
+    }
+
+    /// Rows recorded since `since_ms`, and the `top` points that wrote the
+    /// most of them. One range of the primary key per point: no full scan
+    /// (a `GROUP BY point_id` over `ts >= ?` walks the whole table).
+    pub fn volume(
+        &self,
+        since_ms: u64,
+        top: usize,
+    ) -> Result<(u64, Vec<(String, u64)>), HistoryError> {
+        let conn = lock(&self.reader);
+        let mut stmt = conn.prepare(
+            "SELECT p.point,
+                    (SELECT COUNT(*) FROM samples s WHERE s.point_id = p.id AND s.ts >= ?1)
+             FROM points p",
+        )?;
+        let mut counts: Vec<(String, u64)> = stmt
+            .query_map([ts(since_ms)], |r| {
+                Ok((r.get(0)?, u64::try_from(r.get::<_, i64>(1)?).unwrap_or(0)))
+            })?
+            .collect::<Result<_, _>>()?;
+        let total = counts.iter().map(|(_, n)| n).sum();
+        counts.retain(|(_, n)| *n > 0);
+        counts.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+        counts.truncate(top);
+        Ok((total, counts))
     }
 
     /// Runs an agent's query: one read-only statement, bounded in time and rows.
@@ -523,15 +552,49 @@ mod tests {
         let (store, dir) = store("prune");
         let rows = [
             (p("d/x"), Value::Int(1), 1_000),
-            (p("d/x"), Value::Int(2), 9_000),
+            (p("d/x"), Value::Int(2), 2_000),
+            (p("d/x"), Value::Int(3), 9_000),
             (p("d/stable"), Value::Int(7), 1_000),
         ];
         store.insert(&rows, false).unwrap();
         assert_eq!(store.prune(5_000).unwrap(), 1);
-        assert_eq!(store.series("d/x", 0, 10_000, 10).unwrap().total, 1);
+        // 2 s stays: the value the window starts from.
+        assert_eq!(store.series("d/x", 0, 10_000, 10).unwrap().total, 2);
         // A value that never changed is still known, however old.
         let stable = store.series("d/stable", 6_000, 10_000, 10).unwrap();
         assert_eq!(stable.before, Some((1_000, Value::Int(7))));
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn prune_keeps_the_value_just_before_the_cutoff() {
+        let (store, dir) = store("prune-anchor");
+        let rows = [
+            (p("d/x"), Value::Int(1), 1_000),
+            (p("d/x"), Value::Int(6), 6_000),
+        ];
+        store.insert(&rows, false).unwrap();
+        assert_eq!(store.prune(5_000).unwrap(), 0);
+        // A chart starting at the cutoff still knows where the curve was.
+        let s = store.series("d/x", 5_000, 10_000, 10).unwrap();
+        assert_eq!(s.before, Some((1_000, Value::Int(1))));
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn volume_counts_recent_rows_and_the_chattiest_points() {
+        let (store, dir) = store("volume");
+        let mut rows: Vec<_> = (0..5u64)
+            .map(|i| (p("d/busy"), Value::Int(1), 10_000 + i))
+            .collect();
+        rows.push((p("d/calm"), Value::Int(1), 10_000));
+        rows.push((p("d/old"), Value::Int(1), 1_000));
+        store.insert(&rows, false).unwrap();
+        let (total, top) = store.volume(5_000, 1).unwrap();
+        assert_eq!(total, 6);
+        assert_eq!(top, vec![("d/busy".to_owned(), 5)]);
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }

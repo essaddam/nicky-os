@@ -35,12 +35,25 @@ pub(crate) async fn system(
             .map(|m| m.len())
     };
     let (drivers, cameras) = drivers(&snapshot);
+    let free_bytes = data_dir.as_deref().and_then(free_bytes);
+    // A database's size counts its journal (WAL): both live on the same disk.
+    let files = |db: &str| json!({ "db_bytes": size(db), "wal_bytes": size(&format!("{db}-wal")), "free_bytes": free_bytes });
 
+    let history_facts = match &history {
+        Some(h) => merged(files("history.db"), h.growth().await.ok()),
+        None => json!({}),
+    };
     let energy_facts = match &energy {
-        Some(e) => e.summary().await.map_or_else(
-            |_| json!({}),
-            |s| json!({ "meters": s.meters.len(), "today_kwh": s.today.total.kwh, "db_bytes": size("energy.db") }),
-        ),
+        Some(e) => {
+            let facts = e.summary().await.map_or_else(
+                |_| json!({}),
+                |s| json!({ "meters": s.meters.len(), "today_kwh": s.today.total.kwh }),
+            );
+            merged(
+                merged(facts, Some(files("energy.db"))),
+                e.storage().await.ok(),
+            )
+        }
         None => json!({}),
     };
     let automation_facts = autos.as_ref().map_or_else(
@@ -65,7 +78,7 @@ pub(crate) async fn system(
                 "pending_approvals": snapshot.approvals.len(),
             },
         },
-        { "id": "history", "name": moli_i18n::tr!("serveur.systeme.brique.history"), "active": history.is_some(), "facts": { "db_bytes": size("history.db") } },
+        { "id": "history", "name": moli_i18n::tr!("serveur.systeme.brique.history"), "active": history.is_some(), "facts": history_facts },
         { "id": "energy", "name": moli_i18n::tr!("serveur.systeme.brique.energy"), "active": energy.is_some(), "facts": energy_facts },
         { "id": "automations", "name": moli_i18n::tr!("serveur.systeme.brique.automations"), "active": autos.is_some(), "facts": automation_facts },
         {
@@ -91,6 +104,30 @@ pub(crate) async fn system(
         "coverage": read_bench(bench_path.as_deref()).await.map(|b| b["coverage"].clone()),
     }))
     .into_response()
+}
+
+/// `facts` with the fields of `more` (an object) added.
+fn merged(mut facts: Json, more: Option<impl serde::Serialize>) -> Json {
+    if let (Some(into), Some(Json::Object(from))) = (
+        facts.as_object_mut(),
+        more.and_then(|m| serde_json::to_value(m).ok()),
+    ) {
+        into.extend(from);
+    }
+    facts
+}
+
+/// Space left for the data folder (what an unprivileged writer may use).
+#[cfg(unix)]
+#[allow(clippy::useless_conversion)] // the field types differ between systems
+fn free_bytes(dir: &Path) -> Option<u64> {
+    let s = rustix::fs::statvfs(dir).ok()?;
+    Some(u64::from(s.f_bavail).saturating_mul(u64::from(s.f_frsize)))
+}
+
+#[cfg(not(unix))]
+fn free_bytes(_: &Path) -> Option<u64> {
+    None
 }
 
 /// Each driver with its devices, points, unreachable ones and cameras

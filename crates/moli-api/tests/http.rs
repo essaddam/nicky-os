@@ -276,7 +276,7 @@ async fn foreign_host_is_rejected_everywhere() {
 async fn history_over_rest_and_mcp() {
     let dir = std::env::temp_dir().join(format!("moli-api-history-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
-    let store = Arc::new(moli_history::Store::open(&dir.join("h.db")).unwrap());
+    let store = Arc::new(moli_history::Store::open(&dir.join("history.db")).unwrap());
     let now = moli_core::now_ms();
     store
         .insert(
@@ -290,6 +290,7 @@ async fn history_over_rest_and_mcp() {
     let hub = Hub::new(HubOptions::default()).unwrap();
     let options = moli_api::Options {
         history: Some(moli_history::History::from_store(store)),
+        bench_path: Some(dir.join("bench.json")),
         ..moli_api::Options::default()
     };
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -326,6 +327,20 @@ async fn history_over_rest_and_mcp() {
     );
     let (_, body) = request(&addr, "POST", "/mcp", Some(&write)).await;
     assert!(body.contains("read-only"), "{body}");
+
+    // How it grows: sizes, the last 24 hours, the chattiest points.
+    let (status, body) = request(&addr, "GET", "/api/system", None).await;
+    assert_eq!(status, 200, "{body}");
+    let system: Json = serde_json::from_str(&body).unwrap();
+    let facts = &system["bricks"][1]["facts"];
+    assert_eq!(system["bricks"][1]["id"], "history");
+    assert!(facts["db_bytes"].as_u64().unwrap() > 0, "{facts}");
+    assert_eq!(facts["rows_24h"], 2);
+    assert_eq!(facts["top_24h"], json!([["fake:lamp/state", 2]]));
+    assert_eq!(facts["batches_failed"], 0);
+    assert!(facts["query_ms"].is_number());
+    #[cfg(unix)]
+    assert!(facts["free_bytes"].as_u64().unwrap() > 0, "{facts}");
     let _ = std::fs::remove_dir_all(dir);
 }
 

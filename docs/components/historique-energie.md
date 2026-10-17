@@ -3,8 +3,15 @@
 ## Historique (`crates/moli-history`)
 
 - SQLite `data/history.db`, enregistrement **au changement** (le hub n'émet que les
-  changements), 30 jours (`retention_days`), la dernière valeur de chaque point jamais
-  purgée (une valeur stable a toujours une valeur « avant la fenêtre »).
+  changements), 30 jours (`retention_days`), purgé toutes les 6 h. La purge garde, pour
+  chaque point, le **dernier échantillon antérieur au seuil** : une courbe qui commence au
+  seuil connaît sa valeur de départ, et une valeur stable depuis des mois reste connue.
+- Le recorder lit le bus sans jamais l'attendre et passe des lots (2 s ou 1 000 changements)
+  à un rédacteur, par une file de 64 lots. **File pleine** : le lot en attente est gardé, dans
+  la limite de 4 000 lignes ; au-delà, chaque point n'y garde que son dernier changement
+  (`rows_merged`), et s'il reste plus de 2 000 points distincts, les plus anciens sont
+  abandonnés (`rows_dropped`). La mémoire reste bornée quoi qu'il arrive. L'énergie a son
+  propre abonné au bus : une saturation de l'historique ne la ralentit pas.
 - Lecture : `series(point, from, to, max_points)` → valeurs brutes, ou seaux (moyenne, min,
   max, nombre) quand il y en a trop.
 - Surfaces : `/api/history` (courbes du dashboard), outil MCP `history` (statistiques +
@@ -15,6 +22,23 @@
   Moli (questions sur le passé), le nœud d'automatisme… (les automatismes lisent l'état
   courant, pas l'historique).
 - Ordre de grandeur : ~2,5 Mo pour environ 70 appareils sur 30 jours.
+
+## Croissance visible (`/api/system`, page Système)
+
+Les briques `history` et `energy` de `/api/system` donnent, dans `facts` :
+
+- `db_bytes`, `wal_bytes` (journal), `free_bytes` (espace libre du dossier de données) ;
+- `rows_24h` : lignes écrites sur 24 h (énergie : heures de compteur touchées) et `query_ms`,
+  le coût de ce comptage ;
+- historique : `top_24h` (les 10 points les plus bavards sur 24 h, `[point, lignes]`),
+  `last_prune` (`at`, `ms`, `rows`), `batches_written` / `batches_failed`, `rows_merged` /
+  `rows_dropped` (saturation, ci-dessus), `last_error` (`[ms, message]`) ;
+- énergie : `writes_ok` / `writes_failed`, `last_error`.
+
+Tout est calculé à la demande, sans minuterie : les compteurs sont en mémoire depuis le
+démarrage, le volume sur 24 h est recompté au plus une fois par minute (une plage de clé
+primaire par point, jamais un parcours de toute la table : ~2 ms pour 100 000 lignes sur 24 h
+dans une base de 3 millions). La page Système les montre dans « Stockage ».
 
 ## Énergie (`crates/moli-energy`)
 

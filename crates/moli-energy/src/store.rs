@@ -7,6 +7,7 @@
 
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Mutex, PoisonError};
 
 use rusqlite::{Connection, OptionalExtension as _, params};
@@ -35,6 +36,15 @@ pub struct HourRow {
 #[derive(Debug)]
 pub struct Store {
     conn: Mutex<Connection>,
+    writes: Writes,
+}
+
+/// Readings written, and not, since start; the last failure (when, what).
+#[derive(Debug, Default)]
+struct Writes {
+    ok: AtomicU64,
+    failed: AtomicU64,
+    last_error: Mutex<Option<(u64, String)>>,
 }
 
 const SCHEMA: &str = "
@@ -87,6 +97,7 @@ impl Store {
         conn.execute_batch(SCHEMA)?;
         Ok(Self {
             conn: Mutex::new(conn),
+            writes: Writes::default(),
         })
     }
 
@@ -96,6 +107,7 @@ impl Store {
         conn.execute_batch(SCHEMA).unwrap();
         Self {
             conn: Mutex::new(conn),
+            writes: Writes::default(),
         }
     }
 
@@ -118,13 +130,53 @@ impl Store {
         Ok(rows.collect::<Result<_, _>>()?)
     }
 
-    /// Adds `slices` and sets the meter's last reading, atomically.
+    /// Adds `slices` and sets the meter's last reading, atomically. Counted.
     pub fn record(
         &self,
         meter: &str,
         last: Reading,
         slices: &[HourRow],
     ) -> Result<(), EnergyError> {
+        let result = self.write(meter, last, slices);
+        match &result {
+            Ok(()) => {
+                self.writes.ok.fetch_add(1, Relaxed);
+            }
+            Err(e) => {
+                self.writes.failed.fetch_add(1, Relaxed);
+                *self
+                    .writes
+                    .last_error
+                    .lock()
+                    .unwrap_or_else(PoisonError::into_inner) =
+                    Some((moli_core::now_ms(), e.to_string()));
+            }
+        }
+        result
+    }
+
+    /// (written, not written, last failure) since start.
+    pub fn writes(&self) -> (u64, u64, Option<(u64, String)>) {
+        let w = &self.writes;
+        let last = w
+            .last_error
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone();
+        (w.ok.load(Relaxed), w.failed.load(Relaxed), last)
+    }
+
+    /// Hour rows from `from` on (through the `hour` index).
+    pub fn rows_since(&self, from: u64) -> Result<u64, EnergyError> {
+        let n: i64 = self.conn().query_row(
+            "SELECT COUNT(*) FROM energy_hour WHERE hour >= ?1",
+            [ms(from)],
+            |r| r.get(0),
+        )?;
+        Ok(unms(n))
+    }
+
+    fn write(&self, meter: &str, last: Reading, slices: &[HourRow]) -> Result<(), EnergyError> {
         let mut conn = self.conn();
         let tx = conn.transaction()?;
         {
@@ -263,6 +315,8 @@ mod tests {
         );
         assert_eq!(store.first_hour().unwrap(), Some(0));
         assert_eq!(Store::memory().first_hour().unwrap(), None);
+        assert_eq!(store.writes(), (2, 0, None));
+        assert_eq!(store.rows_since(3_600_000).unwrap(), 1);
     }
 
     #[test]
