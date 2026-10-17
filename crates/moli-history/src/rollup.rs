@@ -131,6 +131,8 @@ pub enum RollupError {
     Mismatch,
     #[error("local {0} does not start on a whole UTC hour in this time zone")]
     OffHour(&'static str),
+    #[error("a sum exceeds the range of a 64-bit float")]
+    Overflow,
     #[error("time: {0}")]
     Time(String),
 }
@@ -181,7 +183,7 @@ pub fn hourly(
             cursor = sample.0;
             rest = &rest[1..];
         }
-        stats.push(acc.finish(hour, hour_end, carry.cloned(), rule.origin));
+        stats.push(acc.finish(hour, hour_end, carry.cloned(), rule.origin)?);
     }
     Ok(stats)
 }
@@ -194,7 +196,8 @@ struct Acc {
     /// Contributing events (sum, count).
     events: u64,
     total: f64,
-    weighted: f64,
+    /// Running mean, so value × duration never overflows.
+    mean: f64,
     min: f64,
     max: f64,
     durations: BTreeMap<String, u64>,
@@ -208,7 +211,7 @@ impl Acc {
             changes: 0,
             events: 0,
             total: 0.0,
-            weighted: 0.0,
+            mean: 0.0,
             min: f64::INFINITY,
             max: f64::NEG_INFINITY,
             durations: BTreeMap::new(),
@@ -228,8 +231,8 @@ impl Acc {
             Aggregation::TimeWeighted => {
                 let Some(x) = number(value) else { return };
                 #[allow(clippy::cast_precision_loss)] // ms in an hour: exact
-                let weight = held as f64;
-                self.weighted += x * weight;
+                let (w, held) = (self.covered as f64, held as f64);
+                self.mean = blend(self.mean, w, x, held);
                 self.min = self.min.min(x);
                 self.max = self.max.max(x);
             }
@@ -257,13 +260,20 @@ impl Acc {
         }
     }
 
-    fn finish(self, start: u64, end: u64, last: Option<(u64, Value)>, origin: Origin) -> Stat {
+    fn finish(
+        self,
+        start: u64,
+        end: u64,
+        last: Option<(u64, Value)>,
+        origin: Origin,
+    ) -> Result<Stat, RollupError> {
+        if !self.total.is_finite() {
+            return Err(RollupError::Overflow);
+        }
         let known = self.covered > 0;
         let aggregate = match self.aggregation {
-            #[allow(clippy::cast_precision_loss)]
             Aggregation::TimeWeighted if known => Some(Aggregate::TimeWeighted {
-                // Rounding may put the mean an ulp outside [min, max].
-                mean: (self.weighted / self.covered as f64).clamp(self.min, self.max),
+                mean: self.mean.clamp(self.min, self.max),
                 min: self.min,
                 max: self.max,
             }),
@@ -276,7 +286,7 @@ impl Acc {
             }),
             _ => None,
         };
-        Stat {
+        Ok(Stat {
             start,
             end,
             aggregate,
@@ -285,8 +295,17 @@ impl Acc {
             last,
             quality: quality(self.covered, end - start),
             origin,
-        }
+        })
     }
+}
+
+/// Mean of `a` weighing `wa` and `b` weighing `wb` (`wa + wb > 0`), as a
+/// convex combination: no product of a value by a weight, so finite values
+/// near the f64 limits neither overflow nor give NaN. Rounding may land an
+/// ulp outside the inputs: callers clamp to [min, max].
+fn blend(a: f64, wa: f64, b: f64, wb: f64) -> f64 {
+    let total = wa + wb;
+    a * (wa / total) + b * (wb / total)
 }
 
 fn number(value: &Value) -> Option<f64> {
@@ -331,13 +350,22 @@ impl Period {
 /// Contiguous hours (from [`hourly`]) merged into local days or months.
 /// Each result spans its whole calendar period (a day lasts 23 or 25 hours
 /// across a DST change); hours outside the input simply are not covered, so
-/// a partly-known day is [`Quality::Partial`].
+/// a partly-known day is [`Quality::Partial`]. All hours must summarise the
+/// same point under the same rule: aggregates of different kinds are refused.
 ///
 /// ponytail: hours are the base slice, so a zone whose midnight is not a
 /// whole UTC hour (UTC+05:30…) is refused rather than approximated; finer
 /// base slices if such a zone matters.
 pub fn group(hours: &[Stat], period: Period, tz: &TimeZone) -> Result<Vec<Stat>, RollupError> {
     let mut groups: Vec<Stat> = Vec::new();
+    let mut kinds = hours
+        .iter()
+        .filter_map(|h| h.aggregate.as_ref().map(std::mem::discriminant));
+    if let Some(kind) = kinds.next()
+        && kinds.any(|k| k != kind)
+    {
+        return Err(RollupError::Mismatch);
+    }
     for (i, hour) in hours.iter().enumerate() {
         if hour.end != hour.start + HOUR_MS || (i > 0 && hours[i - 1].end != hour.start) {
             return Err(RollupError::Mismatch);
@@ -374,13 +402,17 @@ fn merge(into: &mut Stat, hour: &Stat) -> Result<(), RollupError> {
             let (w1, w2) = (into.covered_ms as f64, hour.covered_ms as f64);
             let (min, max) = (min.min(lo), max.max(hi));
             Some(Aggregate::TimeWeighted {
-                mean: ((mean * w1 + m2 * w2) / (w1 + w2)).clamp(min, max),
+                mean: blend(mean, w1, m2, w2).clamp(min, max),
                 min,
                 max,
             })
         }
         (Some(Aggregate::Sum { total }), Some(Aggregate::Sum { total: t2 })) => {
-            Some(Aggregate::Sum { total: total + t2 })
+            let total = total + t2;
+            if !total.is_finite() {
+                return Err(RollupError::Overflow);
+            }
+            Some(Aggregate::Sum { total })
         }
         (Some(Aggregate::Count { events }), Some(Aggregate::Count { events: e2 })) => {
             Some(Aggregate::Count {
@@ -411,8 +443,11 @@ fn zoned(ms: u64, tz: &TimeZone) -> Result<Zoned, RollupError> {
         .map_err(|e| RollupError::Time(e.to_string()))
 }
 
-fn millis(z: &Zoned) -> u64 {
-    u64::try_from(z.timestamp().as_millisecond()).unwrap_or(0)
+/// Refused rather than clamped: a local period may start before the epoch
+/// (a day of UTC+01:00 holding 1970-01-01T00:00Z), which `u64` cannot carry.
+fn millis(z: &Zoned) -> Result<u64, RollupError> {
+    u64::try_from(z.timestamp().as_millisecond())
+        .map_err(|_| RollupError::Time("period starts before the Unix epoch".into()))
 }
 
 /// Start of the local period holding `ms` (same rule as the energy
@@ -424,7 +459,7 @@ fn floor(ms: u64, period: Period, tz: &TimeZone) -> Result<u64, RollupError> {
         Period::Month => z.first_of_month().and_then(|z| z.start_of_day()),
     }
     .map_err(|e| RollupError::Time(e.to_string()))?;
-    let start = millis(&start);
+    let start = millis(&start)?;
     if start.is_multiple_of(HOUR_MS) {
         Ok(start)
     } else {
@@ -439,7 +474,7 @@ fn next(start: u64, period: Period, tz: &TimeZone) -> Result<u64, RollupError> {
         Period::Month => z.checked_add(1.month()),
     }
     .map_err(|e| RollupError::Time(e.to_string()))?;
-    floor(millis(&later), period, tz)
+    floor(millis(&later)?, period, tz)
 }
 
 #[cfg(test)]
@@ -678,6 +713,59 @@ mod tests {
         ];
         assert_eq!(
             group(&gap, Period::Day, &TimeZone::UTC),
+            Err(RollupError::Mismatch)
+        );
+    }
+
+    #[test]
+    fn means_near_the_float_limits_neither_overflow_nor_turn_nan() {
+        let r = rule(Aggregation::TimeWeighted, None);
+        let close = |a: f64, b: f64| (a - b).abs() <= b.abs() * 1e-12;
+        let half = |a: f64, b: f64| [s(T0, a), s(T0 + 30 * MIN, b)];
+        let h = &hourly(&r, None, &half(1e308, 2e307), T0, T0 + HOUR_MS).unwrap()[0];
+        assert!(close(tw(h).0, 6e307), "{:?}", tw(h));
+        let h = &hourly(&r, None, &half(1e308, -1e308), T0, T0 + HOUR_MS).unwrap()[0];
+        assert_eq!(tw(h), (0.0, -1e308, 1e308));
+        // Each hour is fine alone; the day must not multiply by its weight.
+        let samples = [s(T0, 1e301), s(T0 + 12 * HOUR_MS, 2e301)];
+        let hours = hourly(&r, None, &samples, T0, T0 + 24 * HOUR_MS).unwrap();
+        let day = &group(&hours, Period::Day, &TimeZone::UTC).unwrap()[0];
+        assert!(close(tw(day).0, 1.5e301), "{:?}", tw(day));
+    }
+
+    #[test]
+    fn an_unrepresentable_sum_is_an_error_not_a_complete_hour() {
+        let r = rule(Aggregation::Sum, None);
+        let samples = [s(T0, 1e308), s(T0 + 1, 1e308)];
+        let hour = hourly(&r, None, &samples, T0, T0 + HOUR_MS);
+        assert_eq!(hour, Err(RollupError::Overflow));
+        let samples = [s(T0, 1e308), s(T0 + HOUR_MS, 1e308)];
+        let hours = hourly(&r, None, &samples, T0, T0 + 2 * HOUR_MS).unwrap();
+        let day = group(&hours, Period::Day, &TimeZone::UTC);
+        assert_eq!(day, Err(RollupError::Overflow));
+    }
+
+    #[test]
+    fn a_period_starting_before_the_epoch_is_refused_not_truncated() {
+        // 1970-01-01 in Paris (UTC+01:00) starts at -1 h.
+        let paris = TimeZone::get("Europe/Paris").unwrap();
+        let r = rule(Aggregation::TimeWeighted, None);
+        let hours = hourly(&r, None, &[s(0, 1.0)], 0, 23 * HOUR_MS).unwrap();
+        for period in [Period::Day, Period::Month] {
+            let refused = group(&hours, period, &paris);
+            assert!(matches!(refused, Err(RollupError::Time(_))), "{refused:?}");
+        }
+    }
+
+    #[test]
+    fn hours_of_different_rules_are_not_grouped() {
+        let count = rule(Aggregation::Count, None);
+        let sum = rule(Aggregation::Sum, None);
+        let before = hourly(&count, None, &[s(T0 - HOUR_MS, 1)], T0 - HOUR_MS, T0).unwrap();
+        let after = hourly(&sum, None, &[s(T0, 1.0)], T0, T0 + HOUR_MS).unwrap();
+        let mixed = [before, after].concat();
+        assert_eq!(
+            group(&mixed, Period::Day, &TimeZone::UTC),
             Err(RollupError::Mismatch)
         );
     }
