@@ -450,6 +450,8 @@
   "pilotes.overkiz.occupee": "the box is busy ({cause}): try again in a moment",
   "pilotes.overkiz.echec": "the order failed on the device ({cause})",
   "pilotes.overkiz.echec_tardif": "{device}: the order “{order}” failed ({cause})",
-  "pilotes.overkiz.confirmation_perdue": "order sent, but the link to the box dropped before it was confirmed",
-  "pilotes.overkiz.box_muette": "the box did not answer in time (the order is never sent again)"
+  "pilotes.overkiz.confirmation_perdue": "the order may have gone out, but the link to the box dropped before it was confirmed (it is never sent again)",
+  "pilotes.overkiz.box_muette": "the box did not answer in time (the order is never sent again)",
+  "pilotes.overkiz.pas_pret": "the box is not loaded yet: try again in a moment",
+  "pilotes.overkiz.en_pause": "the box is overloaded: Moli leaves it alone for {seconds} more s"
 }

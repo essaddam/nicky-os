@@ -450,6 +450,8 @@
   "pilotes.overkiz.occupee": "la box est occupée ({cause}) : réessayer dans un moment",
   "pilotes.overkiz.echec": "l'ordre a échoué sur l'appareil ({cause})",
   "pilotes.overkiz.echec_tardif": "{device} : l'ordre « {order} » a échoué ({cause})",
-  "pilotes.overkiz.confirmation_perdue": "ordre envoyé, mais la liaison avec la box s'est coupée avant sa confirmation",
-  "pilotes.overkiz.box_muette": "la box n'a pas répondu à temps (l'ordre n'est jamais renvoyé)"
+  "pilotes.overkiz.confirmation_perdue": "l'ordre est peut-être parti, mais la liaison avec la box s'est coupée avant sa confirmation (il n'est jamais renvoyé)",
+  "pilotes.overkiz.box_muette": "la box n'a pas répondu à temps (l'ordre n'est jamais renvoyé)",
+  "pilotes.overkiz.pas_pret": "la box n'est pas encore chargée : réessayer dans un instant",
+  "pilotes.overkiz.en_pause": "la box est saturée : Moli la laisse tranquille encore {seconds} s"
 }

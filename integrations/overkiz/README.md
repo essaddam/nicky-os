@@ -27,21 +27,26 @@ Pilote natif `moli-overkiz` : une box Somfy, par l'une de ses deux routes.
   cloud, jamais rejouée), dans l'échéance du hub. Il est suivi par les événements
   d'exécution : l'appelant entend « fait » (`COMPLETED`), l'échec (`FAILED` et sa cause), ou
   « accepté » si la box travaille encore quand le hub cesse d'attendre ; un échec après
-  « accepté » est dit à la maison (notice). Liaison perdue : l'appelant entend « envoyé, non
-  confirmé », rien n'est renvoyé.
-- Écoute : un auditeur d'événements enregistré avant le chargement, relevé toutes les 10 s
-  en local, 30 s dans le cloud, chaque seconde (2 s cloud) tant qu'une exécution est suivie ;
-  auditeur expiré : réenregistré et tout rechargé. Quota, file pleine, maintenance : pause de
-  60 s. Session cloud renouvelée 2 min avant sa fin, gardée à travers les redémarrages du
-  pilote (Somfy bloque les comptes qui se reconnectent trop) ; identifiants ou jeton refusés :
-  statut `waiting` qui dit quoi faire, sans réessayer en boucle.
+  « accepté » est dit à la maison (notice). Liaison perdue : l'appelant entend « peut-être
+  parti, non confirmé », rien n'est renvoyé. Relevés et ordres tournent à côté de la boucle :
+  aucune attente réseau ne retarde une réponse.
+- Écoute : un auditeur d'événements enregistré avant le chargement, relevé (une seule fois par
+  requête : il vide le tampon de la box) toutes les 10 s en local, 30 s dans le cloud, chaque
+  seconde (2 s cloud) tant qu'une exécution est suivie ; auditeur expiré : réenregistré et tout
+  rechargé ; une box hors ligne ne coupe que ses appareils. Quota, file pleine, maintenance :
+  pause de 60 s des relevés et des ordres. Session cloud renouvelée 2 min avant sa fin, gardée
+  à travers les redémarrages du pilote (Somfy bloque les comptes qui se reconnectent trop),
+  renouvelée si Somfy refuse son jeton (trois fois au plus) ; identifiants ou jeton local
+  refusés : statut `waiting` qui dit quoi faire, appareils hors ligne, sans réessayer en
+  boucle. Un refus d'authentification n'est jamais cité, seulement son code.
 - Entrées bornées : réponses 2 Mio, noms 64 caractères sans caractère de contrôle, messages
   d'erreur 120, identifiants vérifiés avant d'entrer dans un chemin.
 
 ## Deviné
 
 - Les fixtures sont **reconstruites** d'après la spécification et la forme des réponses de
-  pyoverkiz, avec des identifiants fictifs, pas capturées : aucun accès aux box avant le
+  pyoverkiz (dont `events-cloud.json` : nombres en texte, box hors ligne puis revenue), avec des
+  identifiants fictifs, pas capturées : aucun accès aux box avant le
   jalon humain H1. À remplacer par des captures réelles anonymisées à la qualification.
 - Les états du portail OGP (`core:OpenClosedState` et variantes) : déclarés si l'appareil les
   annonce, jamais supposés.

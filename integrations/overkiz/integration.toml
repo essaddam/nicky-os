@@ -41,3 +41,7 @@ file = "fixtures/setup-devices.json"
 
 [[fixture]]
 file = "fixtures/events.json"
+
+# Cloud form: numbers as text, a box going down and back.
+[[fixture]]
+file = "fixtures/events-cloud.json"

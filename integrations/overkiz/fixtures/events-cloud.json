@@ -1,0 +1,8 @@
+[
+  { "name": "DeviceStateChangedEvent", "timestamp": 1700000010000, "setupOID": "00000000-0000-0000-0000-000000000000", "deviceURL": "ogp://1234-5678-9012/00000003", "deviceStates": [
+    { "name": "core:OnOffState", "type": 3, "value": "on" },
+    { "name": "core:LightIntensityState", "type": 1, "value": "42" }
+  ] },
+  { "name": "GatewayDownEvent", "timestamp": 1700000011000, "setupOID": "00000000-0000-0000-0000-000000000000", "gatewayId": "1234-5678-9012" },
+  { "name": "GatewayAliveEvent", "timestamp": 1700000012000, "setupOID": "00000000-0000-0000-0000-000000000000", "gatewayId": "1234-5678-9012" }
+]

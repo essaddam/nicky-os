@@ -67,7 +67,16 @@ impl Order {
 #[derive(Debug, Default)]
 struct Entry {
     url: String,
+    /// The box it belongs to (an account may have several).
+    gateway: String,
     commands: Vec<String>,
+}
+
+/// The box a `deviceURL` belongs to: `rts://<gateway>/<address>`.
+#[must_use]
+pub fn gateway(url: &str) -> &str {
+    url.split_once("://")
+        .map_or("", |(_, rest)| rest.split('/').next().unwrap_or_default())
 }
 
 /// Moli device ↔ Overkiz `deviceURL`, and what each device accepts.
@@ -255,6 +264,7 @@ pub fn load(instance: &InstanceId, devices: &Json) -> Load {
             id,
             Entry {
                 url: url.to_owned(),
+                gateway: gateway(url).to_owned(),
                 commands,
             },
         );
@@ -277,7 +287,11 @@ pub fn decode(states: &[Json]) -> Vec<(&'static str, Value)> {
                     _ => None,
                 },
                 INTENSITY => {
-                    let level = value.as_f64().filter(|v| v.is_finite())?;
+                    // The cloud may send a number as text (`"42"`).
+                    let level = value
+                        .as_f64()
+                        .or_else(|| value.as_str()?.trim().parse().ok())
+                        .filter(|v: &f64| v.is_finite())?;
                     Some(("brightness", Value::Float(level.clamp(0.0, 100.0))))
                 }
                 n if OPENING_STATES.contains(&n) => {
@@ -300,8 +314,12 @@ impl Index {
         self.urls.get(url)
     }
 
-    pub fn devices(&self) -> impl Iterator<Item = &DeviceId> {
-        self.devices.keys()
+    /// The devices behind one box.
+    pub fn devices_on<'a>(&'a self, gateway: &'a str) -> impl Iterator<Item = &'a DeviceId> {
+        self.devices
+            .iter()
+            .filter(move |(_, e)| e.gateway == gateway)
+            .map(|(id, _)| id)
     }
 
     /// The order for a write already validated by the hub, if this device
@@ -363,7 +381,9 @@ pub enum Event {
         cause: Option<String>,
     },
     /// The box itself stopped answering its cloud.
-    GatewayDown,
+    GatewayDown {
+        gateway: String,
+    },
     /// Devices added, removed or renamed, or the box back: load again.
     Reload,
 }
@@ -403,7 +423,9 @@ pub fn events(answer: &Json) -> Vec<Event> {
                     },
                     cause: event["failureType"].as_str().map(|c| clean(c, MAX_CAUSE)),
                 },
-                "GatewayDownEvent" => Event::GatewayDown,
+                "GatewayDownEvent" => Event::GatewayDown {
+                    gateway: event["gatewayId"].as_str()?.to_owned(),
+                },
                 "DeviceCreatedEvent" | "DeviceRemovedEvent" | "DeviceUpdatedEvent"
                 | "GatewayAliveEvent" => Event::Reload,
                 _ => return None,
@@ -415,9 +437,11 @@ pub fn events(answer: &Json) -> Vec<Event> {
 /// Why the box (or the cloud) refused a request.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Refusal {
-    /// The session is over: log in again (cloud) — the request did not run.
+    /// The bearer this request carried is not (or no longer) valid: in the
+    /// cloud, log in again; a local token is revoked. The request did not run.
     Session,
-    /// The credentials or the token are wrong: a human must act.
+    /// The account itself is refused (credentials, ban, no access to the
+    /// box): a human must act.
     Denied,
     /// The event listener expired: register another one.
     Listener,
@@ -426,32 +450,72 @@ pub enum Refusal {
     Other,
 }
 
-/// What an Overkiz error answer (`{"errorCode", "error"}`) means, and its
-/// message, bounded.
+/// Longest run of letters and digits kept in a message from the network: a
+/// longer one may be a token, a key or a session id, never shown anywhere.
+const MAX_WORD: usize = 16;
+
+/// A message from the network, safe to show: bounded, cleaned, and every
+/// long word (a token the box may quote back) replaced by `…`.
+#[must_use]
+pub fn redact(text: &str) -> String {
+    let mut out = String::new();
+    let mut word = String::new();
+    let flush = |word: &mut String, out: &mut String| {
+        if word.chars().count() > MAX_WORD {
+            out.push('…');
+        } else {
+            out.push_str(word);
+        }
+        word.clear();
+    };
+    for c in clean(text, MAX_CAUSE * 4).chars() {
+        if c.is_alphanumeric() || "-_.:/+=".contains(c) {
+            word.push(c);
+        } else {
+            flush(&mut word, &mut out);
+            out.push(c);
+        }
+    }
+    flush(&mut word, &mut out);
+    out.chars().take(MAX_CAUSE).collect()
+}
+
+/// What an Overkiz error answer (`{"errorCode", "error"}`) means, and what
+/// may be said of it. An authentication refusal is named by its fixed code
+/// only: its text may quote the token it refuses.
 #[must_use]
 pub fn refusal(status: u16, body: &[u8]) -> (Refusal, String) {
     let json: Json = serde_json::from_slice(body).unwrap_or_default();
-    let code = json["errorCode"].as_str().unwrap_or_default();
-    let message = json["error"]
+    let code = json["errorCode"]
         .as_str()
-        .map(|m| clean(m, MAX_CAUSE))
-        .filter(|m| !m.is_empty())
-        .unwrap_or_else(|| format!("HTTP {status}"));
-    let says = |part: &str| message.to_lowercase().contains(&part.to_lowercase());
+        .filter(|c| {
+            !c.is_empty() && c.len() <= 40 && c.bytes().all(|b| b.is_ascii_uppercase() || b == b'_')
+        })
+        .unwrap_or_default();
+    let raw = json["error"].as_str().unwrap_or_default().to_lowercase();
+    let says = |part: &str| raw.contains(part);
     let kind = if [
         "too many attempts",
         "bad credentials",
         "no such user",
         "unknown user",
         "access denied to gateway",
-        "invalid token",
-        "no such token",
     ]
     .iter()
     .any(|p| says(p))
     {
         Refusal::Denied
-    } else if says("not authenticated") || says("missing authorization token") || status == 401 {
+    } else if [
+        "not authenticated",
+        "missing authorization token",
+        "invalid token",
+        "no such token",
+        "not such token",
+    ]
+    .iter()
+    .any(|p| says(p))
+        || status == 401
+    {
         Refusal::Session
     } else if says("event listener") {
         Refusal::Listener
@@ -466,6 +530,19 @@ pub fn refusal(status: u16, body: &[u8]) -> (Refusal, String) {
         Refusal::Busy
     } else {
         Refusal::Other
+    };
+    let fixed = || {
+        if code.is_empty() {
+            format!("HTTP {status}")
+        } else {
+            code.to_owned()
+        }
+    };
+    let message = match kind {
+        Refusal::Session | Refusal::Denied => fixed(),
+        _ => Some(redact(json["error"].as_str().unwrap_or_default()))
+            .filter(|m| !m.is_empty())
+            .unwrap_or_else(fixed),
     };
     (kind, message)
 }
@@ -753,8 +830,89 @@ mod tests {
         );
         let (_, message) = refusal(
             400,
-            body("X", &format!("{}\u{1b}", "a".repeat(500))).as_bytes(),
+            body("X", &format!("{}\u{1b}", "ab ".repeat(500))).as_bytes(),
         );
         assert_eq!(message.chars().count(), MAX_CAUSE);
+    }
+
+    /// The official refusals of a bearer quote it back (pyoverkiz fixtures
+    /// `invalid-token.json`, `not-such-token.json`, HTTP 400).
+    #[test]
+    fn a_refused_token_is_never_repeated() {
+        const MARK: &str = "synthetic-token-123";
+        for (code, error) in [
+            ("", "Invalid token : synthetic-token-123"),
+            (
+                "UNSPECIFIED_ERROR",
+                "Not such token with UUID: synthetic-token-123",
+            ),
+            (
+                "RESOURCE_ACCESS_DENIED",
+                "Not authenticated synthetic-token-123",
+            ),
+            (
+                "AUTHENTICATION_ERROR",
+                "Bad credentials synthetic-token-123",
+            ),
+        ] {
+            let body = json!({"errorCode": code, "error": error}).to_string();
+            let (kind, message) = refusal(400, body.as_bytes());
+            assert!(
+                matches!(kind, Refusal::Session | Refusal::Denied),
+                "{error}"
+            );
+            assert!(!message.contains(MARK), "{message}");
+            let shown = crate::api::Refused { kind, message }.to_string();
+            assert!(!shown.contains(MARK), "{shown}");
+        }
+        // The bearer refused is a session to renew, not a human's call…
+        let session = |e: &str| refusal(400, json!({"error": e}).to_string().as_bytes());
+        assert_eq!(session("Invalid token : x").0, Refusal::Session);
+        assert_eq!(session("Not such token with UUID: x").0, Refusal::Session);
+        assert_eq!(session("Invalid token : x").1, "HTTP 400");
+        // … and any other message loses its long words.
+        let (_, other) = refusal(
+            400,
+            json!({"errorCode": "X", "error": "No such command : 0123456789abcdef0123"})
+                .to_string()
+                .as_bytes(),
+        );
+        assert_eq!(other, "No such command : …");
+    }
+
+    #[test]
+    fn the_cloud_sends_numbers_as_text_and_names_its_boxes() {
+        let events = events(&fixture("events-cloud.json"));
+        assert_eq!(
+            events,
+            [
+                Event::States {
+                    url: "ogp://1234-5678-9012/00000003".into(),
+                    values: vec![
+                        ("on", Value::Bool(true)),
+                        ("brightness", Value::Float(42.0))
+                    ],
+                },
+                Event::GatewayDown {
+                    gateway: "1234-5678-9012".into(),
+                },
+                Event::Reload,
+            ]
+        );
+        assert!(decode(&[json!({"name": INTENSITY, "type": 1, "value": "NaN"})]).is_empty());
+        assert_eq!(
+            decode(&[json!({"name": INTENSITY, "type": 1, "value": " 250 "})]),
+            [("brightness", Value::Float(100.0))]
+        );
+    }
+
+    #[test]
+    fn devices_belong_to_their_box() {
+        assert_eq!(gateway("rts://1234-5678-9012/16700001"), "1234-5678-9012");
+        assert_eq!(gateway("internal://1234-5678-9012/pod/0"), "1234-5678-9012");
+        assert_eq!(gateway("nonsense"), "");
+        let load = loaded();
+        assert_eq!(load.index.devices_on("1234-5678-9012").count(), 6);
+        assert_eq!(load.index.devices_on("9999-9999-9999").count(), 0);
     }
 }

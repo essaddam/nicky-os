@@ -365,16 +365,27 @@ host = "192.168.1.x"        # local seulement
   après une reconnexion), dans l'échéance du hub. Suivi par les événements d'exécution :
   « fait » à `COMPLETED`, l'échec et sa cause à `FAILED`, « accepté » si la box travaille
   encore quand le hub cesse d'attendre (un échec ensuite est dit à la maison) ; liaison perdue :
-  « envoyé, non confirmé ». La logique est pure et testée (`src/follow.rs`).
+  « peut-être parti, non confirmé ». Toute attente réseau (relevés, ordres) tourne à côté de
+  la boucle : un relevé ou un ordre lent ne retarde jamais une réponse. En local, ordres et
+  relevés ont chacun leur connexion. La logique est pure et testée (`src/follow.rs`), la
+  boucle aussi, contre une box simulée et le vrai hub (`src/tests.rs`).
 - **Événements** : auditeur enregistré avant le chargement, relevé toutes les 10 s (local) ou
-  30 s (cloud), chaque seconde (2 s cloud) pendant un suivi ; expiré : réenregistré et tout
-  rechargé ; appareils ajoutés ou retirés, box revenue : rechargement ; box hors ligne
-  (`GatewayDownEvent`) : ses appareils hors ligne.
-- **Pièges** : quota, file d'exécution pleine, maintenance : pause de 60 s, l'ordre reçoit
-  « box occupée ». La session cloud survit aux redémarrages du pilote (Somfy bloque les comptes
-  qui se reconnectent trop) et se renouvelle 2 min avant sa fin ; une session refusée deux fois
-  de suite devient « identifiants refusés ». Réponses bornées à 2 Mio, noms à 64 caractères,
-  identifiants de la box vérifiés avant d'entrer dans un chemin.
+  30 s (cloud), chaque seconde (2 s cloud) pendant un suivi ; un relevé est envoyé **une seule
+  fois** (il vide le tampon de la box : une réponse perdue relancerait à vide) et sa perte
+  relance la liaison ; expiré : réenregistré et tout rechargé ; appareils ajoutés ou retirés,
+  box revenue : rechargement ; une box hors ligne (`GatewayDownEvent`) : seulement ses appareils
+  hors ligne (un même compte peut en avoir plusieurs). Les nombres du cloud envoyés en texte
+  (`"42"`) sont lus.
+- **Pièges** : quota, file d'exécution pleine, maintenance : pause de 60 s pour les relevés
+  **et** les ordres (refusés aussitôt pendant la pause). La session cloud survit aux
+  redémarrages du pilote (Somfy bloque les comptes qui se reconnectent trop) et se renouvelle
+  2 min avant sa fin ; un jeton de session refusé (« Invalid token », « Not such token ») la
+  fait renouveler, trois refus de suite deviennent « identifiants refusés » ; en local, c'est
+  un jeton révoqué. Stationné (jeton ou identifiants refusés, certificat changé) : appareils
+  hors ligne. Un refus d'authentification n'est jamais cité (il peut recopier le jeton) : seul
+  son code est montré, et tout mot de plus de 16 caractères d'un message de la box devient
+  `…`. Réponses bornées à 2 Mio, noms à 64 caractères, identifiants de la box vérifiés avant
+  d'entrer dans un chemin.
 - **Tests** : `src/model.rs` sur `integrations/overkiz/fixtures/` (reconstruites d'après la
   spécification, identifiants fictifs) : classes publiées, aucun état RTS, ordres, événements,
   refus ; `src/follow.rs` : réponse unique, « accepté » puis échec dit, rien de rejoué ;

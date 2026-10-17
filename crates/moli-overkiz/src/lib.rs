@@ -11,23 +11,29 @@
 //! after a reconnection) and followed: the caller hears « done » when the
 //! box says the execution completed, its failure when it failed, and, if
 //! the box is still at work when the hub stops waiting, « accepted »; a
-//! failure after that is told to the household. An RTS motor never says
-//! where it is: Moli never shows a position it does not know.
+//! failure after that is told to the household. Every wait on the network
+//! runs beside the driver's loop, so no slow fetch or slow order ever
+//! delays an answer past its deadline. An RTS motor never says where it is:
+//! Moli never shows a position it does not know.
 
 mod api;
+#[cfg(test)]
+mod fake;
 mod follow;
 mod model;
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use anyhow::bail;
+use anyhow::{Context as _, bail};
 use moli_core::DeviceId;
 use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx};
 use serde::Deserialize;
+use serde_json::Value as Json;
+use tokio::task::JoinSet;
 use tokio::time::sleep_until;
 
-use crate::follow::{About, Outcome, Tracker};
+use crate::follow::{About, Due, Outcome, Tracker};
 
 pub use api::{Api, Cloud, Local, Refused, SharedSession};
 pub use model::{Event, Execution, Index, Load, MOVES, Order, Refusal, SUPPORTED};
@@ -43,10 +49,14 @@ const IDLE_CLOUD: Duration = Duration::from_secs(30);
 /// While an execution is followed. Somfy asks for one fetch a second at most.
 const FOLLOW_LOCAL: Duration = Duration::from_secs(1);
 const FOLLOW_CLOUD: Duration = Duration::from_secs(2);
-/// Quota reached, queue full, maintenance: leave the box alone this long.
+/// Quota reached, queue full, maintenance: leave the box alone this long,
+/// reads and orders alike.
 const BUSY_PAUSE: Duration = Duration::from_secs(60);
 /// The caller is answered this long before the hub stops waiting.
 const REPLY_MARGIN: Duration = Duration::from_millis(400);
+/// Refused sessions in a row before a human is asked (the cloud bans
+/// accounts that log in too often).
+const MAX_SESSION_REFUSALS: u32 = 3;
 
 /// Which road leads to the box.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -108,8 +118,13 @@ impl Driver for Overkiz {
     }
 }
 
-/// Shows `reason` on every surface and idles until shutdown.
+/// Shows `reason` on every surface and idles until shutdown. Nothing is
+/// read any more: the devices are offline until a human acts and Moli
+/// restarts (the supervisor only does it when `run` returns).
 async fn park(ctx: &DriverCtx, reason: String) -> anyhow::Result<()> {
+    for id in ctx.devices() {
+        ctx.set_availability(&id, false);
+    }
     ctx.wait_for(reason);
     ctx.cancelled().await;
     Ok(())
@@ -157,39 +172,55 @@ async fn connect(driver: &Overkiz, ctx: &DriverCtx) -> anyhow::Result<Option<Api
             seen
         }
     };
-    Ok(Some(Api::Local(Local::new(host, port, pin, token)?)))
+    Ok(Some(Api::Local(Box::new(Local::new(
+        host, port, pin, token,
+    )?))))
 }
 
 async fn run(driver: &Overkiz, ctx: &mut DriverCtx) -> anyhow::Result<()> {
     let Some(api) = connect(driver, ctx).await? else {
         return Ok(());
     };
-    let cloud = matches!(api, Api::Cloud(_));
-    let (idle, follow) = if cloud {
+    let pace = if matches!(api, Api::Cloud(_)) {
         (IDLE_CLOUD, FOLLOW_CLOUD)
     } else {
         (IDLE_LOCAL, FOLLOW_LOCAL)
     };
-    let mut link = Link {
+    drive(
         api,
-        index: Index::default(),
-        listener: String::new(),
-        tracker: Tracker::default(),
-    };
-    let result = link.serve(ctx, idle, follow).await;
+        ctx,
+        pace,
+        driver.config.host.as_deref().unwrap_or_default(),
+    )
+    .await
+}
+
+/// Runs the link to the box until shutdown, a failure for the supervisor,
+/// or a refusal only a human can lift (then parked, devices offline).
+async fn drive(
+    api: Api,
+    ctx: &mut DriverCtx,
+    (idle, follow): (Duration, Duration),
+    host: &str,
+) -> anyhow::Result<()> {
+    let cloud = matches!(api, Api::Cloud(_));
+    let mut link = Link::new(api, idle, follow);
+    let result = link.serve(ctx).await;
+    // Whatever is still on its way is dropped here, never sent later.
+    link.jobs.abort_all();
     // Sent, never confirmed: say so rather than let the hub call it a crash.
     for command in link.tracker.abandon() {
         command.reply(Err(moli_i18n::tr!("pilotes.overkiz.confirmation_perdue")));
     }
     let Err(e) = result else { return Ok(()) };
     let instance = ctx.instance().to_string();
-    // A local box has no session to renew: « not authenticated » means its
-    // token was revoked, a human's call like a refused one.
+    // A local box has no session to renew: a refused bearer means its token
+    // was revoked, a human's call like a refused account.
     let denied = e
         .downcast_ref::<Refused>()
         .filter(|r| r.kind == Refusal::Denied || (r.kind == Refusal::Session && !cloud));
     if let Some(Refused { message, .. }) = denied {
-        let reason = if let Api::Cloud(cloud) = &link.api {
+        let reason = if let Api::Cloud(cloud) = &*link.api {
             cloud.forget().await;
             moli_i18n::tr!(
                 "pilotes.overkiz.identifiants_refuses",
@@ -206,7 +237,6 @@ async fn run(driver: &Overkiz, ctx: &mut DriverCtx) -> anyhow::Result<()> {
         return park(ctx, reason).await;
     }
     if format!("{e:#}").contains(moli_net::PIN_MISMATCH) {
-        let host = driver.config.host.clone().unwrap_or_default();
         let reason = moli_i18n::tr!(
             "pilotes.overkiz.certificat_change",
             host = host,
@@ -218,88 +248,252 @@ async fn run(driver: &Overkiz, ctx: &mut DriverCtx) -> anyhow::Result<()> {
     Err(e)
 }
 
+/// A read of the box, done beside the loop.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Read {
+    /// A new event listener, then every device (start, listener expired).
+    Sync,
+    /// Every device again (added, removed, renamed; a box back).
+    Load,
+    /// The events since the last fetch.
+    Fetch,
+}
+
+/// What a task beside the loop brings back.
+#[derive(Debug)]
+enum Done {
+    Read(Read, anyhow::Result<(Option<String>, Json)>),
+    /// The box's answer to order `key`: its execution, or why not.
+    Applied(u64, anyhow::Result<String>),
+}
+
+/// The box did not answer an order within its time: maybe sent, never resent.
+#[derive(Debug)]
+struct NoAnswer;
+
+impl std::fmt::Display for NoAnswer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("no answer in time")
+    }
+}
+
+impl std::error::Error for NoAnswer {}
+
 #[derive(Debug)]
 struct Link {
-    api: Api,
+    api: Arc<Api>,
+    idle: Duration,
+    follow: Duration,
     index: Index,
     listener: String,
     tracker: Tracker<CommandRequest>,
+    /// Network work in flight: one read at most, and the orders.
+    jobs: JoinSet<Done>,
+    reading: bool,
+    /// The next read and when (a failed one is tried again).
+    next: Read,
+    next_at: Instant,
+    /// Quota, full queue or maintenance: nothing goes to the box before.
+    busy_until: Option<Instant>,
+    synced: bool,
+    sessions_refused: u32,
+    orders: u64,
 }
 
 impl Link {
-    async fn serve(
-        &mut self,
-        ctx: &mut DriverCtx,
-        idle: Duration,
-        follow: Duration,
-    ) -> anyhow::Result<()> {
-        // Listen first, then load: nothing changes unseen in between.
-        self.register().await?;
-        self.reload(ctx).await?;
-        ctx.ready();
-        let mut next = Instant::now() + idle;
-        let mut sessions_refused = 0;
+    fn new(api: Api, idle: Duration, follow: Duration) -> Self {
+        Self {
+            api: Arc::new(api),
+            idle,
+            follow,
+            index: Index::default(),
+            listener: String::new(),
+            tracker: Tracker::default(),
+            jobs: JoinSet::new(),
+            reading: false,
+            next: Read::Sync,
+            next_at: Instant::now(),
+            busy_until: None,
+            synced: false,
+            sessions_refused: 0,
+            orders: 0,
+        }
+    }
+
+    fn busy(&self, now: Instant) -> bool {
+        self.busy_until.is_some_and(|until| now < until)
+    }
+
+    async fn serve(&mut self, ctx: &mut DriverCtx) -> anyhow::Result<()> {
         loop {
-            let wake = self.tracker.next_reply().map_or(next, |r| r.min(next));
-            tokio::select! {
-                () = sleep_until(wake.into()) => {
-                    if Instant::now() >= next {
-                        next = Instant::now() + match self.poll(ctx).await {
-                            Ok(()) => {
-                                sessions_refused = 0;
-                                if self.tracker.watching() { follow } else { idle }
-                            }
-                            Err(e) => match api::refused(&e) {
-                                Some(Refusal::Listener) => {
-                                    tracing::info!(instance = %ctx.instance(), "overkiz listener expired, registering again");
-                                    self.register().await?;
-                                    self.reload(ctx).await?;
-                                    idle
-                                }
-                                Some(Refusal::Busy) => {
-                                    tracing::warn!(instance = %ctx.instance(), error = %e, "overkiz busy, pausing");
-                                    BUSY_PAUSE
-                                }
-                                // The cloud ended the session: the next call logs in again,
-                                // once; a second refusal in a row is the supervisor's.
-                                Some(Refusal::Session) if matches!(self.api, Api::Cloud(_)) && sessions_refused == 0 => {
-                                    sessions_refused += 1;
-                                    follow
-                                }
-                                Some(Refusal::Session) => {
-                                    return Err(Refused { kind: Refusal::Denied, message: e.to_string() }.into());
-                                }
-                                _ => return Err(e),
-                            },
-                        };
-                    }
-                    // The box still at work when the hub stops waiting: « accepted ».
-                    for command in self.tracker.due(Instant::now()) {
-                        command.reply(Ok(()));
+            let now = Instant::now();
+            // Answers first: due callers never wait on anything.
+            for due in self.tracker.due(now) {
+                match due {
+                    Due::Accepted(command) => command.reply(Ok(())),
+                    Due::Unanswered(command) => {
+                        command.reply(Err(moli_i18n::tr!("pilotes.overkiz.box_muette")));
                     }
                 }
+            }
+            if !self.reading && now >= self.next_at && !self.busy(now) {
+                self.read();
+            }
+            let read_at =
+                (!self.reading).then(|| self.next_at.max(self.busy_until.unwrap_or(self.next_at)));
+            let wake = self.tracker.next_reply().into_iter().chain(read_at).min();
+            tokio::select! {
+                () = sleep(wake) => {}
+                Some(done) = self.jobs.join_next() => {
+                    let done = done.context("overkiz task")?;
+                    self.done(ctx, done)?;
+                }
                 command = ctx.next_command() => match command {
-                    Some(command) => {
-                        if self.order(command).await {
-                            next = next.min(Instant::now() + follow);
-                        }
-                    }
+                    Some(command) => self.order(command),
                     None => return Ok(()),
                 },
             }
         }
     }
 
-    async fn register(&mut self) -> anyhow::Result<()> {
-        let answer = self.api.post("/events/register").await?;
-        self.listener = api::identifier(&answer["id"])?;
+    /// Starts the next read beside the loop.
+    fn read(&mut self) {
+        let api = Arc::clone(&self.api);
+        let kind = self.next;
+        let listener = self.listener.clone();
+        self.reading = true;
+        self.jobs.spawn(async move {
+            let result: anyhow::Result<(Option<String>, Json)> = async {
+                match kind {
+                    Read::Sync => {
+                        let answer = api.post("/events/register").await?;
+                        let listener = api::identifier(&answer["id"])?;
+                        Ok((Some(listener), api.get("/setup/devices").await?))
+                    }
+                    Read::Load => Ok((None, api.get("/setup/devices").await?)),
+                    Read::Fetch => {
+                        Ok((None, api.post(&format!("/events/{listener}/fetch")).await?))
+                    }
+                }
+            }
+            .await;
+            Done::Read(kind, result)
+        });
+    }
+
+    fn done(&mut self, ctx: &DriverCtx, done: Done) -> anyhow::Result<()> {
+        let now = Instant::now();
+        match done {
+            Done::Read(kind, Ok((listener, answer))) => {
+                self.reading = false;
+                self.sessions_refused = 0;
+                if let Some(listener) = listener {
+                    self.listener = listener;
+                }
+                let reload = match kind {
+                    Read::Sync | Read::Load => {
+                        self.publish(ctx, &answer);
+                        if !self.synced {
+                            self.synced = true;
+                            ctx.ready();
+                        }
+                        false
+                    }
+                    Read::Fetch => self.events(ctx, &answer),
+                };
+                self.next = if reload { Read::Load } else { Read::Fetch };
+                self.next_at = if reload {
+                    now
+                } else if self.tracker.watching() {
+                    now + self.follow
+                } else {
+                    now + self.idle
+                };
+            }
+            Done::Read(kind, Err(e)) => {
+                self.reading = false;
+                self.next = kind;
+                self.next_at = now + self.follow;
+                match api::refused(&e) {
+                    Some(Refusal::Listener) => {
+                        tracing::info!(instance = %ctx.instance(), "overkiz listener expired, registering again");
+                        self.next = Read::Sync;
+                        self.next_at = now;
+                    }
+                    Some(Refusal::Busy | Refusal::Session) => self.refused(ctx, &e)?,
+                    // A fetch whose answer was lost may have taken events
+                    // with it: the link is no longer trusted (the callers
+                    // are told, nothing is resent).
+                    _ => return Err(e),
+                }
+            }
+            Done::Applied(key, Ok(execution)) => {
+                self.sessions_refused = 0;
+                if let Some(outcome) = self.tracker.taken(key, execution) {
+                    outcome_of(ctx, outcome);
+                }
+                // Follow it closely.
+                self.next_at = self.next_at.min(now + self.follow);
+            }
+            Done::Applied(key, Err(e)) => {
+                let message = if e.is::<NoAnswer>() {
+                    moli_i18n::tr!("pilotes.overkiz.box_muette")
+                } else {
+                    let cause = e.to_string();
+                    match api::refused(&e) {
+                        Some(Refusal::Busy) => {
+                            moli_i18n::tr!("pilotes.overkiz.occupee", cause = cause)
+                        }
+                        Some(_) => moli_i18n::tr!("pilotes.overkiz.refus", cause = cause),
+                        None => format!("{e:#}"),
+                    }
+                };
+                if let Some(command) = self.tracker.refused(key) {
+                    command.reply(Err(message));
+                }
+                match api::refused(&e) {
+                    Some(Refusal::Busy | Refusal::Session) => self.refused(ctx, &e)?,
+                    Some(Refusal::Denied) => return Err(e),
+                    _ => {}
+                }
+            }
+        }
         Ok(())
     }
 
-    /// Loads every device; publishes them, their values and availability.
-    async fn reload(&mut self, ctx: &DriverCtx) -> anyhow::Result<()> {
-        let answer = self.api.get("/setup/devices").await?;
-        let load = model::load(ctx.instance(), &answer);
+    /// A refusal the link survives: a pause, or a new session (bounded).
+    fn refused(&mut self, ctx: &DriverCtx, e: &anyhow::Error) -> anyhow::Result<()> {
+        match api::refused(e) {
+            Some(Refusal::Busy) => {
+                tracing::warn!(instance = %ctx.instance(), error = %e, "overkiz busy, pausing");
+                self.busy_until = Some(Instant::now() + BUSY_PAUSE);
+            }
+            // The cloud ended the session (forgotten by the transport): the
+            // next call logs in again, a few times at most.
+            Some(Refusal::Session) if matches!(*self.api, Api::Cloud(_)) => {
+                self.sessions_refused += 1;
+                if self.sessions_refused >= MAX_SESSION_REFUSALS {
+                    return Err(Refused {
+                        kind: Refusal::Denied,
+                        message: e.to_string(),
+                    }
+                    .into());
+                }
+            }
+            _ => {
+                return Err(Refused {
+                    kind: Refusal::Session,
+                    message: e.to_string(),
+                }
+                .into());
+            }
+        }
+        Ok(())
+    }
+
+    /// Publishes every device of a `/setup/devices` answer.
+    fn publish(&mut self, ctx: &DriverCtx, answer: &Json) {
+        let load = model::load(ctx.instance(), answer);
         let keep: Vec<&DeviceId> = load.devices.iter().map(|f| &f.device.id).collect();
         for id in ctx.devices() {
             if !keep.contains(&&id) {
@@ -325,16 +519,12 @@ impl Link {
         }
         self.index = load.index;
         tracing::info!(instance = %ctx.instance(), devices = count, "overkiz devices loaded");
-        Ok(())
     }
 
-    async fn poll(&mut self, ctx: &DriverCtx) -> anyhow::Result<()> {
-        let answer = self
-            .api
-            .post(&format!("/events/{}/fetch", self.listener))
-            .await?;
+    /// Applies fetched events. `true` when the devices must be loaded again.
+    fn events(&mut self, ctx: &DriverCtx, answer: &Json) -> bool {
         let mut reload = false;
-        for event in model::events(&answer) {
+        for event in model::events(answer) {
             match event {
                 Event::States { url, values } => {
                     if let Some(id) = self.index.device(&url) {
@@ -348,113 +538,94 @@ impl Link {
                         ctx.set_availability(id, online);
                     }
                 }
-                Event::GatewayDown => {
-                    for id in self.index.devices() {
+                Event::GatewayDown { gateway } => {
+                    for id in self.index.devices_on(&gateway) {
                         ctx.set_availability(id, false);
                     }
                 }
-                Event::Execution { id, state, cause } => self.executed(ctx, &id, state, cause),
+                Event::Execution { id, state, cause } => {
+                    if let Some(outcome) = self.tracker.moved(&id, state, cause) {
+                        outcome_of(ctx, outcome);
+                    }
+                }
                 Event::Reload => reload = true,
             }
         }
-        if reload {
-            self.reload(ctx).await?;
-        }
-        Ok(())
+        reload
     }
 
-    /// An execution moved: answer its caller, or tell the household.
-    fn executed(&mut self, ctx: &DriverCtx, id: &str, state: Execution, cause: Option<String>) {
-        match self.tracker.moved(id, state, cause) {
-            Some(Outcome::Answer(command, result)) => command.reply(
-                result.map_err(|cause| moli_i18n::tr!("pilotes.overkiz.echec", cause = cause)),
-            ),
-            Some(Outcome::Tell(about, cause)) => ctx.media_publisher().tell(
-                ctx.instance().as_str(),
-                moli_i18n::tr!(
-                    "pilotes.overkiz.echec_tardif",
-                    device = about.device,
-                    order = about.order,
-                    cause = cause
-                ),
-            ),
-            None => {}
+    /// Hands one order to the box, beside the loop.
+    fn order(&mut self, command: CommandRequest) {
+        let now = Instant::now();
+        if !self.synced {
+            command.reply(Err(moli_i18n::tr!("pilotes.overkiz.pas_pret")));
+            return;
         }
-    }
-
-    /// Hands one order to the box. `true` when it is now followed.
-    async fn order(&mut self, command: CommandRequest) -> bool {
+        if let Some(until) = self.busy_until.filter(|until| now < *until) {
+            let seconds = until.saturating_duration_since(now).as_secs().max(1);
+            command.reply(Err(moli_i18n::tr!(
+                "pilotes.overkiz.en_pause",
+                seconds = seconds
+            )));
+            return;
+        }
         let Some(order) = self
             .index
             .encode(&command.device.id, &command.key, &command.value)
         else {
             command.reply(Err(moli_i18n::tr!("pilotes.overkiz.point_non_ecrivable")));
-            return false;
+            return;
         };
         let reply_by = command
             .deadline
             .checked_sub(REPLY_MARGIN)
             .unwrap_or(command.deadline);
-        let budget = reply_by.saturating_duration_since(Instant::now());
+        // Past this, the order must not leave at all: it is dropped unsent.
+        let budget = reply_by.saturating_duration_since(now);
         if budget.is_zero() {
             command.reply(Err("expired".into()));
-            return false;
+            return;
         }
-        match tokio::time::timeout(budget, self.api.apply(&order)).await {
-            Ok(Ok(execution)) => {
-                let about = About {
-                    device: Arc::clone(&command.device.native_name),
-                    order: order.command,
-                };
-                self.tracker.track(execution, command, about, reply_by);
-                true
-            }
-            Ok(Err(e)) => {
-                let cause = e.to_string();
-                command.reply(Err(match api::refused(&e) {
-                    Some(Refusal::Busy) => moli_i18n::tr!("pilotes.overkiz.occupee", cause = cause),
-                    Some(_) => moli_i18n::tr!("pilotes.overkiz.refus", cause = cause),
-                    None => format!("{e:#}"),
-                }));
-                false
-            }
-            // Maybe sent: never sent again, the caller is told the truth.
-            Err(_) => {
-                command.reply(Err(moli_i18n::tr!("pilotes.overkiz.box_muette")));
-                false
-            }
-        }
+        self.orders += 1;
+        let key = self.orders;
+        let about = About {
+            device: Arc::clone(&command.device.native_name),
+            order: order.command,
+        };
+        self.tracker.track(key, command, about, reply_by);
+        let api = Arc::clone(&self.api);
+        self.jobs.spawn(async move {
+            let answer = tokio::time::timeout(budget, api.apply(&order))
+                .await
+                .unwrap_or_else(|_| Err(NoAnswer.into()));
+            Done::Applied(key, answer)
+        });
+    }
+}
+
+/// What an execution's end means for its caller or the household.
+fn outcome_of(ctx: &DriverCtx, outcome: Outcome<CommandRequest>) {
+    match outcome {
+        Outcome::Answer(command, result) => command
+            .reply(result.map_err(|cause| moli_i18n::tr!("pilotes.overkiz.echec", cause = cause))),
+        Outcome::Tell(about, cause) => ctx.media_publisher().tell(
+            ctx.instance().as_str(),
+            moli_i18n::tr!(
+                "pilotes.overkiz.echec_tardif",
+                device = about.device,
+                order = about.order,
+                cause = cause
+            ),
+        ),
+    }
+}
+
+async fn sleep(until: Option<Instant>) {
+    match until {
+        Some(until) => sleep_until(until.into()).await,
+        None => std::future::pending().await,
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn config(text: &str) -> anyhow::Result<Overkiz> {
-        Overkiz::new(toml::from_str(text)?)
-    }
-
-    #[test]
-    fn configurations() {
-        assert!(config("transport = \"local\"\nhost = \"192.168.1.x\"").is_ok());
-        assert_eq!(
-            config("transport = \"local\"\nhost = \"192.168.1.x\"")
-                .unwrap()
-                .config
-                .port,
-            8443
-        );
-        assert!(config("transport = \"cloud\"").is_ok());
-        assert!(
-            config("transport = \"local\"").is_err(),
-            "a box needs its address"
-        );
-        assert!(
-            config("transport = \"cloud\"\nhost = \"example.org\"").is_err(),
-            "the cloud's address is never configurable"
-        );
-        assert!(config("transport = \"radio\"").is_err());
-        assert!(config("transport = \"cloud\"\nurl = \"x\"").is_err());
-    }
-}
+mod tests;

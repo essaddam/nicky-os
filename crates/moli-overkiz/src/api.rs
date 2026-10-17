@@ -105,8 +105,11 @@ impl std::fmt::Debug for Session {
 /// One box, by one road.
 #[derive(Debug)]
 pub enum Api {
-    Local(Local),
+    Local(Box<Local>),
     Cloud(Cloud),
+    /// A box simulated in memory, for the driver's own tests.
+    #[cfg(test)]
+    Fake(std::sync::Arc<crate::fake::Fake>),
 }
 
 impl Api {
@@ -114,9 +117,11 @@ impl Api {
         self.call(Method::GET, path, None, false).await
     }
 
-    /// A request that may be sent twice without harm (register, fetch).
+    /// A `POST` without body, sent **once**: a fetch takes the events out
+    /// of the box's buffer, so a repeat after a lost answer would come back
+    /// empty and an execution's failure would vanish unseen.
     pub async fn post(&self, path: &str) -> anyhow::Result<Json> {
-        self.call(Method::POST, path, None, false).await
+        self.call(Method::POST, path, None, true).await
     }
 
     /// Hands an order to the box, **once**: never retried, whatever
@@ -139,6 +144,8 @@ impl Api {
         match self {
             Self::Local(local) => local.call(method, path, body, once).await,
             Self::Cloud(cloud) => cloud.call(method, path, body).await,
+            #[cfg(test)]
+            Self::Fake(fake) => fake.call(path, once).await,
         }
     }
 }
@@ -157,7 +164,10 @@ fn build(
 /// The box's local API: HTTPS on the LAN, its certificate pinned at first
 /// contact, a bearer token a human made (developer mode).
 pub struct Local {
-    http: PinnedHttps,
+    /// Fetches and loads, on their own connection…
+    reads: PinnedHttps,
+    /// … so an order never waits behind a slow fetch.
+    writes: PinnedHttps,
     token: String,
 }
 
@@ -165,7 +175,7 @@ impl std::fmt::Debug for Local {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Never the token: it opens every shutter of the house.
         f.debug_struct("Local")
-            .field("http", &self.http)
+            .field("http", &self.reads)
             .finish_non_exhaustive()
     }
 }
@@ -175,7 +185,8 @@ impl Local {
     /// ever leaves (see [`Local::first_contact`]).
     pub fn new(host: &str, port: u16, pin: String, token: String) -> anyhow::Result<Self> {
         Ok(Self {
-            http: PinnedHttps::new(host, port, Some(pin))?,
+            reads: PinnedHttps::new(host, port, Some(pin.clone()))?,
+            writes: PinnedHttps::new(host, port, Some(pin))?,
             token,
         })
     }
@@ -194,15 +205,19 @@ impl Local {
         body: Option<&Json>,
         once: bool,
     ) -> anyhow::Result<Json> {
-        let builder = self
-            .http
+        let http = if path == "/exec/apply" {
+            &self.writes
+        } else {
+            &self.reads
+        };
+        let builder = http
             .request(method, &format!("{LOCAL_ROOT}{path}"))
             .header("authorization", format!("Bearer {}", self.token));
         let request = build(builder, body)?;
         let (status, body) = if once {
-            self.http.send_once(request).await?
+            http.send_once(request).await?
         } else {
-            self.http.send(request).await?
+            http.send(request).await?
         };
         answer(status, &body)
     }
@@ -347,17 +362,26 @@ fn session(status: StatusCode, body: &[u8]) -> anyhow::Result<Session> {
             renew_at: Instant::now() + renew_in,
         });
     }
-    let message = json["message"]
+    let raw = json["message"]
         .as_str()
         .or_else(|| json["error_description"].as_str())
         .or_else(|| json["error"].as_str())
-        .map_or_else(|| format!("HTTP {status}"), |m| crate::model::clean(m, 120));
-    let kind = if message.contains("invalid") || status == StatusCode::UNAUTHORIZED {
+        .unwrap_or_default();
+    let refused = raw.to_lowercase().contains("invalid") || status == StatusCode::UNAUTHORIZED;
+    let kind = if refused {
         Refusal::Denied
     } else if status == StatusCode::TOO_MANY_REQUESTS || status.is_server_error() {
         Refusal::Busy
     } else {
         Refusal::Other
+    };
+    // An account refusal is named, never quoted (it may repeat what was sent).
+    let message = if refused {
+        format!("invalid_grant (HTTP {status})")
+    } else {
+        Some(crate::model::redact(raw))
+            .filter(|m| !m.is_empty())
+            .unwrap_or_else(|| format!("HTTP {status}"))
     };
     Err(Refused { kind, message }.into())
 }
