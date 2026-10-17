@@ -206,8 +206,8 @@ dimensionnement, pas un nouveau choix.
 | Tables `WITHOUT ROWID` (le schéma actuel) | **non** : Turso ouvre les fichiers actuels mais refuse `UPDATE` / `DELETE` et **lit faux** les plages de clé primaire (0 ligne au lieu de 200) | jamais de `WITHOUT ROWID` ; le rangement par clé passe par un rowid calculé (schéma ci-dessous) ; Turso n'ouvre jamais les fichiers actuels, ils sont copiés |
 | Transactions | tenu : validation, annulation, `SAVEPOINT` | — |
 | Lecteurs pendant une écriture | tenu : ils ne bloquent pas, ne voient rien de la transaction en cours et gardent leur instantané | un rédacteur, des lecteurs sur leurs connexions ; `BEGIN CONCURRENT` (MVCC) fonctionne mais reste expérimental : pas utilisé |
-| Durabilité | tenu : `synchronous = FULL` par défaut, WAL, point de contrôle `TRUNCATE` ; fsync comptés par validation sous `strace` | `FULL`, lots d'écriture bornés (≤ 100 ms ou 500 opérations) |
-| Cohérence après `kill -9` | tenu : ‹KILLS› arrêts brutaux pendant des transactions multi-tables et des points de contrôle ; rien d'annoncé validé n'est perdu, l'outbox reste contiguë, heures = totaux = état des compteurs, `integrity_check` correct ; SQLite relit aussi le fichier laissé par le crash | — |
+| Durabilité | tenu : `synchronous = FULL` par défaut, WAL, point de contrôle `TRUNCATE` ; sous `strace`, 200 validations font 213 fsync en `FULL`, 13 en `NORMAL` comme en `OFF` (ceux de la création du fichier) : seul `FULL` rend chaque validation durable | `FULL`, alors que les bases actuelles sont en `NORMAL` : une séquence déjà envoyée à l'archive ne doit jamais être perdue par le cœur, qui la réattribuerait à d'autres données ; lots d'écriture bornés (≤ 100 ms ou 500 opérations) pour borner le nombre de fsync |
+| Cohérence après `kill -9` | tenu : 31 arrêts brutaux pendant des transactions multi-tables et des points de contrôle ; rien d'annoncé validé n'est perdu, l'outbox reste contiguë, heures = totaux = état des compteurs, `integrity_check` correct ; SQLite relit aussi le fichier laissé par le crash | — |
 | Fichier compatible dans les deux sens | tenu : SQLite lit, modifie et vérifie un fichier écrit par Turso, que Turso relit ensuite | c'est la voie de secours : le schéma n'emploie rien que SQLite ne sache faire (ni MVCC, ni vecteur, ni plein texte) |
 | Autorisateur SQL | **absent** : ni autorisateur, ni limite de longueur, ni budget de temps dans la crate `turso` ; une connexion en lecture seule accepte `PRAGMA query_only = 0`, `PRAGMA journal_mode`, `BEGIN`, plusieurs instructions et 10 Mo de `zeroblob` | `history_sql` devient un outil structuré (plus bas) |
 | Un second processus | **refusé** en écriture (verrou exclusif) ; une ouverture en lecture seule voit les données validées | l'import en ligne de commande et la sauvegarde passent par le processus qui tourne |
@@ -237,7 +237,8 @@ archive_ack  (id = 1, durable_upto, published_upto, generation, at)
   exploratoire, annexe). Deux relevés d'un point à la même milliseconde : le second est
   ignoré (`ON CONFLICT (id) DO NOTHING`), comme aujourd'hui, et ne consomme pas de séquence.
 - **`energy_hour`** est rangée par heure puis par compteur (rowid = `heure · 1024 + compteur`) :
-  un graphique horaire est une plage, l'UPSERT additif de `moli-energy` une recherche de rowid.
+  un graphique horaire est une plage, l'UPSERT additif de `moli-energy` une recherche de rowid,
+  sans `RETURNING` : la clé est connue d'avance, l'outbox la reçoit telle quelle.
 - **`energy_total`** tient les totaux de jour et de mois civils locaux (plus bas).
 - **`meter_state`** : dernier relevé, `first_ts` (l'actuel `meter_first`), `imported_until`
   (marqueur d'import) ; son `id` sert de numéro de compteur.
@@ -324,10 +325,12 @@ tape plus de SQL.
 1. **Bascule** (C1), au démarrage, avant le hub : si `moli.db` manque et que `history.db` ou
    `energy.db` existe, copie dans `moli.db.tmp` (une séquence et une entrée d'outbox par
    ligne : l'archive reçoit l'historique existant ; totaux recalculés depuis les heures), fsync,
-   renommage. Les anciens fichiers ne sont plus jamais écrits. Mesure : ‹MIG›.
+   renommage. Les anciens fichiers ne sont plus jamais écrits. Mesure : 100 200 opérations
+   copiées en 7,4 s sur un CPU (séquences, outbox et totaux compris), soit quelques minutes
+   pour un historique de 30 jours : une seule fois, hub arrêté, progression au journal.
 2. **Retour arrière** : Moli arrêté, sur une **copie** des anciens fichiers, le SQL de
    `ROLLBACK_HISTORY` / `ROLLBACK_ENERGY` (SQLite seul, `ATTACH` du fichier Turso) y ajoute ce
-   qui a été écrit depuis ; puis l'ancienne version. Prouvé à l'identique ; ‹RB›.
+   qui a été écrit depuis ; puis l'ancienne version. Prouvé à l'identique ; 100 200 lignes en 0,11 s.
 3. **Période de retour arrière : 30 jours.** `rusqlite` reste lié (image de 35,7 Mo), les anciens
    fichiers sont gardés, aucune purge plus courte que la rétention actuelle (30 jours) ; les
    durées par famille s'appliquent ensuite, puis `rusqlite` et les anciens fichiers partent.

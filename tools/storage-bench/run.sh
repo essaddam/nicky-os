@@ -106,7 +106,7 @@ done
 
 i=1
 while [ "$i" -le "$repeat" ]; do
-    log "charge ×2, tour $i/$repeat…"
+    log "charge ×2, tour $i/${repeat}…"
     # Charge de l'hôte (les autres conteneurs comptent) : pour lire la dispersion.
     echo "tour $i : $(docker run --rm alpine:3.22 cat /proc/loadavg)" >>"$out/host-load.txt"
     run load /fixtures/shape.json /bench/hot.db >"$out/load-$i.jsonl"

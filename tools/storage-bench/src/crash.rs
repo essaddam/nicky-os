@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 use rusqlite::Connection as Sqlite;
 use serde_json::json;
 
-use crate::schema::{ENERGY_UPSERT, OP_ENERGY_HOUR, OP_SAMPLE, SAMPLE_INSERT, TARGET, TOTAL_UPSERT, key, local_day_month};
+use crate::schema::{ENERGY_UPSERT, OP_ENERGY_HOUR, OP_SAMPLE, SAMPLE_INSERT, TARGET, TOTAL_UPSERT, hour_key, key, local_day_month};
 use crate::util::{Lcg, R, block_on, emit, exec, file_size, ms, one, open, quantiles, real, remove_db, rows};
 
 const H: i64 = 3_600_000;
@@ -34,7 +34,8 @@ pub fn writer(path: &str, seed: u64) -> R<()> {
         for seq in next..next + k {
             if seq % 5 == 0 {
                 let (meter, hour) = (seq % 7, (seq / 100) * H);
-                let id = one(&c, ENERGY_UPSERT, (meter, hour, ENERGY_STEP, None::<f64>, seq))?;
+                block_on(c.execute(ENERGY_UPSERT, (meter, hour, ENERGY_STEP, None::<f64>, seq)))?;
+                let id = hour_key(meter, hour);
                 let (day, month) = local_day_month(hour, 2 * H);
                 block_on(c.execute(TOTAL_UPSERT, ("day", day, meter, ENERGY_STEP, None::<f64>)))?;
                 block_on(c.execute(TOTAL_UPSERT, ("month", month, meter, ENERGY_STEP, None::<f64>)))?;

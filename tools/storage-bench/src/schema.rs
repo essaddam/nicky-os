@@ -100,13 +100,13 @@ pub fn hour_key(meter: i64, hour: i64) -> i64 {
 }
 
 /// L'UPSERT de `moli-energy` sur la cible (le coût inconnu ne remplace pas un
-/// coût connu), qui rend le rowid pour l'outbox.
+/// coût connu). Sans `RETURNING` : le rowid de l'outbox est [`hour_key`],
+/// connu d'avance.
 pub const ENERGY_UPSERT: &str = "INSERT INTO energy_hour (id, meter_id, hour, kwh, cost, seq)
     VALUES ((?2 / 3600000) * 1024 + ?1, ?1, ?2, ?3, ?4, ?5)
     ON CONFLICT (id) DO UPDATE SET kwh = kwh + excluded.kwh,
         cost = CASE WHEN excluded.cost IS NULL THEN cost ELSE coalesce(cost, 0) + excluded.cost END,
-        seq = excluded.seq
-    RETURNING id";
+        seq = excluded.seq";
 
 /// Le même apport ajouté au total d'un jour ou d'un mois civil local.
 pub const TOTAL_UPSERT: &str = "INSERT INTO energy_total (span, start, meter_id, kwh, cost) VALUES (?1, ?2, ?3, ?4, ?5)

@@ -14,7 +14,7 @@ use turso::Value;
 
 use crate::schema::{
     ENERGY_CURRENT, ENERGY_RECORD_UPSERT, HISTORY_CURRENT, HISTORY_POINT_UPSERT, HISTORY_PRUNE,
-    HISTORY_SAMPLE_INSERT, OP_ENERGY_HOUR, OP_SAMPLE, ROLLBACK_ENERGY, ROLLBACK_HISTORY, SAMPLE_INSERT, TARGET, TOTAL_UPSERT, ENERGY_UPSERT, key, local_day_month,
+    HISTORY_SAMPLE_INSERT, OP_ENERGY_HOUR, OP_SAMPLE, ROLLBACK_ENERGY, ROLLBACK_HISTORY, SAMPLE_INSERT, TARGET, TOTAL_UPSERT, ENERGY_UPSERT, hour_key, key, local_day_month,
 };
 use crate::util::{R, block_on, connect, emit, exec, file_size, int, ms, one, open, real, remove_db, rows, Lcg};
 
@@ -850,7 +850,8 @@ pub fn migrate(history: &str, energy: &str, target: &str) -> R<i64> {
         }
         let (meter, hour, kwh, cost): (String, i64, f64, Option<f64>) = (r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?);
         let id = ids[meter.as_str()];
-        let row = one(&c, ENERGY_UPSERT, (id, hour, kwh, cost, seq))?;
+        block_on(c.execute(ENERGY_UPSERT, (id, hour, kwh, cost, seq)))?;
+        let row = hour_key(id, hour);
         let (day, month) = local_day_month(hour, OFFSET);
         block_on(c.execute(TOTAL_UPSERT, ("day", day, id, kwh, cost)))?;
         block_on(c.execute(TOTAL_UPSERT, ("month", month, id, kwh, cost)))?;

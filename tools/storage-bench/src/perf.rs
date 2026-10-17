@@ -180,7 +180,8 @@ pub fn load(s: &Shape, path: &str) -> R<()> {
                 exec(&c, "BEGIN")?;
             }
             let (kwh, cost) = energy_amount(hour, meter);
-            let id = one(&c, ENERGY_UPSERT, (i(meter), i(hour), kwh, cost, seq))?;
+            block_on(c.execute(ENERGY_UPSERT, (i(meter), i(hour), kwh, cost, seq)))?;
+            let id = hour_key(i(meter), i(hour));
             block_on(c.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_ENERGY_HOUR, id)))?;
             let (day, month) = local_day_month(i(hour), offset);
             for k in [("day", day, meter), ("month", month, meter)] {
@@ -581,7 +582,8 @@ pub fn burst(s: &Shape, path: &str, rate: u64) -> R<()> {
                         // Le chemin vivant : l'heure, puis le même apport sur
                         // les totaux du jour et du mois, dans la transaction.
                         let meter = i(seq as u64 % meters);
-                        let id = one(&w, ENERGY_UPSERT, (meter, hour, 0.001, Some(0.0002), seq))?;
+                        block_on(w.execute(ENERGY_UPSERT, (meter, hour, 0.001, Some(0.0002), seq)))?;
+                        let id = hour_key(meter, hour);
                         let (day, month) = local_day_month(hour, offset);
                         block_on(w.execute(TOTAL_UPSERT, ("day", day, meter, 0.001, Some(0.0002))))?;
                         block_on(w.execute(TOTAL_UPSERT, ("month", month, meter, 0.001, Some(0.0002))))?;
