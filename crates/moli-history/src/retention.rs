@@ -12,6 +12,8 @@
 //! a start, or gone) is kept its longest possible duration and never enters
 //! a plan.
 
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -51,6 +53,17 @@ pub(crate) struct Policy {
     shown: Mutex<Option<Plan>>,
     /// One at a time: a pass, a count, a validation.
     passes: tokio::sync::Mutex<()>,
+    raises: Raises,
+}
+
+/// Floors to raise for published devices: one per point, the highest
+/// asked, so bounded by the points there are; written by one task
+/// (`raise_loop`) and drained before the history stops.
+#[derive(Default)]
+struct Raises {
+    pending: Mutex<HashMap<String, u32>>,
+    wake: tokio::sync::Notify,
+    closed: AtomicBool,
 }
 
 impl std::fmt::Debug for Policy {
@@ -161,7 +174,30 @@ impl Policy {
             families,
             shown: Mutex::new(None),
             passes: tokio::sync::Mutex::new(()),
+            raises: Raises::default(),
         })
+    }
+
+    /// A device published, or read again after events were lost: what its
+    /// points' durations ask, their family now known, is queued to be kept
+    /// at once (only raised), whether their values are recorded or not.
+    pub(crate) fn published(&self, device: &Device) {
+        {
+            let mut pending = store::lock(&self.raises.pending);
+            for spec in &device.points {
+                let point = PointId::new(&device.id, &spec.key);
+                let days = self.configured.days(point.as_str(), Family::of(spec));
+                let queued = pending.entry(point.as_str().to_owned()).or_insert(0);
+                *queued = (*queued).max(days);
+            }
+        }
+        self.raises.wake.notify_one();
+    }
+
+    /// No more devices: `raise_loop` writes what is queued, then ends.
+    pub(crate) fn stop_raising(&self) {
+        self.raises.closed.store(true, SeqCst);
+        self.raises.wake.notify_one();
     }
 
     fn seen(&self, store: &Store) -> Result<Vec<Seen>, HistoryError> {
@@ -240,6 +276,7 @@ impl Policy {
                     oldest: 0,
                     anchor,
                     max: u64::MAX,
+                    floor: keep,
                 });
             }
         }
@@ -314,6 +351,7 @@ impl Policy {
                     oldest: d.oldest.unwrap_or(0),
                     anchor: d.anchor,
                     max: d.rows,
+                    floor: i.days,
                 })
             })
             .collect();
@@ -359,29 +397,45 @@ impl Plan {
     }
 }
 
-impl History {
-    /// A device was published: its points' families are known now, and
-    /// what their durations ask is kept at once (only raised), before any
-    /// write of theirs or the next pass.
-    pub(crate) async fn device_published(self, device: Arc<Device>) {
-        let (store, policy) = (Arc::clone(&self.store), Arc::clone(&self.policy));
-        let raised = blocking(move || {
-            let floors: Vec<(String, u32)> = device
-                .points
-                .iter()
-                .map(|spec| {
-                    let point = PointId::new(&device.id, &spec.key);
-                    let days = policy.configured.days(point.as_str(), Family::of(spec));
-                    (point.as_str().to_owned(), days)
-                })
-                .collect();
-            store.raise_named_floors(&floors)
-        });
-        if let Err(e) = raised.await {
+/// Writes the floors queued by `Policy::published`, a batch at a time,
+/// until `stop_raising` and everything queued is written.
+pub(crate) async fn raise_loop(store: Arc<Store>, policy: Arc<Policy>) {
+    let raises = &policy.raises;
+    loop {
+        let batch: Vec<(String, u32)> = std::mem::take(&mut *store::lock(&raises.pending))
+            .into_iter()
+            .collect();
+        if batch.is_empty() {
+            if raises.closed.load(SeqCst) {
+                if store::lock(&raises.pending).is_empty() {
+                    break;
+                }
+                continue;
+            }
+            raises.wake.notified().await;
+            continue;
+        }
+        let store = Arc::clone(&store);
+        let retry = batch.clone();
+        if let Err(e) = blocking(move || store.raise_named_floors(&batch)).await {
             tracing::warn!(error = %e, "history floors not raised");
+            if raises.closed.load(SeqCst) {
+                break;
+            }
+            // Kept for the next publication (no busy retry).
+            {
+                let mut pending = store::lock(&raises.pending);
+                for (point, days) in retry {
+                    let queued = pending.entry(point).or_insert(0);
+                    *queued = (*queued).max(days);
+                }
+            }
+            raises.wake.notified().await;
         }
     }
+}
 
+impl History {
     /// One retention pass as of `now` (see `Policy::pass`).
     pub(crate) async fn prune_pass(&self, now: u64) -> Result<usize, HistoryError> {
         let _one = self.policy.passes.lock().await;
@@ -451,7 +505,6 @@ impl History {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use std::path::PathBuf;
 
     use moli_core::Value;
@@ -852,7 +905,24 @@ mod tests {
         let history = bench.history(with(30, &[(Family::Climate, 90)], &[]));
         assert_eq!(history.prune_pass(bench.now).await.unwrap(), 0);
         assert_eq!(bench.floor("d/x"), Some(30));
-        let device = Device {
+        let device = device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius);
+        history.policy.published(&device);
+        history.policy.stop_raising();
+        raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy)).await;
+        assert_eq!(bench.floor("d/x"), Some(90));
+        let back = bench.history(with(30, &[], &[]));
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Climate);
+        assert_eq!(back.prune_pass(bench.now).await.unwrap(), 0);
+        let r = back.policies().await.unwrap().reduction.unwrap();
+        assert_eq!((r.top[0].from_days, r.top[0].to_days, r.rows), (90, 30, 1));
+    }
+
+    fn device(semantic: moli_core::Semantic, unit: moli_core::Unit) -> Device {
+        Device {
             id: moli_core::DeviceId::from("d"),
             instance: moli_core::InstanceId::from("d"),
             native_name: "d".into(),
@@ -870,21 +940,48 @@ mod tests {
                     step: None,
                 },
                 access: moli_core::Access::default(),
-                unit: Some(moli_core::Unit::Celsius),
-                semantic: moli_core::Semantic::Temperature,
+                unit: Some(unit),
+                semantic,
             }],
-        };
-        history.clone().device_published(Arc::new(device)).await;
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn raises_are_coalesced_bounded_and_drained() {
+        let bench = Bench::new("raises", &[("d/x", D)]);
+        let history = bench.history(with(
+            30,
+            &[(Family::Climate, 90), (Family::Diagnostic, 3)],
+            &[],
+        ));
+        let policy = &history.policy;
+        // 128 descriptions of one device, its point's meaning changing.
+        for i in 0..128 {
+            if i % 2 == 0 {
+                policy.published(&device(
+                    moli_core::Semantic::Temperature,
+                    moli_core::Unit::Celsius,
+                ));
+            } else {
+                policy.published(&device(
+                    moli_core::Semantic::Battery,
+                    moli_core::Unit::Percent,
+                ));
+            }
+        }
+        assert_eq!(
+            store::lock(&policy.raises.pending).clone(),
+            HashMap::from([("d/x".to_owned(), 90)]),
+            "one entry per point, the highest asked"
+        );
+        let raising = tokio::spawn(raise_loop(Arc::clone(&history.store), Arc::clone(policy)));
+        policy.stop_raising();
+        tokio::time::timeout(Duration::from_secs(5), raising)
+            .await
+            .expect("drained, then ended")
+            .unwrap();
+        assert!(store::lock(&policy.raises.pending).is_empty());
         assert_eq!(bench.floor("d/x"), Some(90));
-        let back = bench.history(with(30, &[], &[]));
-        bench
-            .known
-            .lock()
-            .unwrap()
-            .insert("d/x".into(), Family::Climate);
-        assert_eq!(back.prune_pass(bench.now).await.unwrap(), 0);
-        let r = back.policies().await.unwrap().reduction.unwrap();
-        assert_eq!((r.top[0].from_days, r.top[0].to_days, r.rows), (90, 30, 1));
     }
 
     #[tokio::test]

@@ -141,12 +141,19 @@ impl History {
             Arc::clone(&history.policy),
         ));
         tokio::spawn(prune_loop(history.clone(), cancel.clone()));
+        let raising = tokio::spawn(retention::raise_loop(
+            Arc::clone(&history.store),
+            Arc::clone(&history.policy),
+        ));
         let source = hub_events(hub);
         let recording = history.clone();
         let filter = options.filter.clone();
         let recorder = tokio::spawn(async move {
             record(source, batches, &recording, &filter, cancel).await;
+            // Everything queued is written before the handle resolves.
+            recording.policy.stop_raising();
             let _ = writer.await;
+            let _ = raising.await;
         });
         Ok((history, recorder))
     }
@@ -256,8 +263,16 @@ fn hub_events(hub: &Hub) -> HubEvents {
     }
 }
 
-fn current_state(hub: &Hub, filter: &Filter) -> Vec<Row> {
-    hub.snapshot()
+/// The present, read from the hub (at start, and after events were lost):
+/// every device's description is queued for its floors (whatever the
+/// filter, whether its points have a value or not), and the values of the
+/// points recorded are returned.
+fn present(hub: &Hub, filter: &Filter, policy: &retention::Policy) -> Vec<Row> {
+    let snapshot = hub.snapshot();
+    for d in &snapshot.devices {
+        policy.published(&d.device);
+    }
+    snapshot
         .devices
         .iter()
         .flat_map(|d| {
@@ -274,9 +289,8 @@ fn current_state(hub: &Hub, filter: &Filter) -> Vec<Row> {
 }
 
 /// Excluded points are not written; the energy has its own subscription to
-/// the bus and sees every reading.
-/// A device published keeps at once what its points' durations surely ask
-/// (`History::device_published`), without blocking the bus.
+/// the bus and sees every reading. A device published has its floors queued
+/// (`Policy::published`), without blocking the bus.
 async fn record(
     mut source: HubEvents,
     batches: mpsc::Sender<Batch>,
@@ -286,7 +300,7 @@ async fn record(
 ) {
     let counters = &*history.counters;
     let _ = batches
-        .send((current_state(&source.hub, filter), true))
+        .send((present(&source.hub, filter, &history.policy), true))
         .await;
     let mut batch = Vec::new();
     let mut flush = tokio::time::interval(BATCH_EVERY);
@@ -303,15 +317,14 @@ async fn record(
                         hand_over(&batches, &mut batch, counters);
                     }
                 }
-                Ok(Event::DeviceUpserted { device }) => {
-                    tokio::spawn(history.clone().device_published(device));
-                }
+                Ok(Event::DeviceUpserted { device }) => history.policy.published(&device),
                 Ok(_) => {}
                 Err(RecvError::Lagged(missed)) => {
                     // Changes were missed; at least the present is recorded.
                     tracing::warn!(missed, "history recorder lagged, re-recording the current state");
                     hand_over(&batches, &mut batch, counters);
-                    if let Err(e) = batches.try_send((current_state(&source.hub, filter), true)) {
+                    let present = present(&source.hub, filter, &history.policy);
+                    if let Err(e) = batches.try_send((present, true)) {
                         let (rows, _) = e.into_inner();
                         counters.rows_dropped.fetch_add(rows.len() as u64, Relaxed);
                     }
@@ -539,6 +552,93 @@ mod tests {
             "unknown, never zero: {json}"
         );
         assert_eq!(json["batches_written"], 3);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    /// A thermometer: its point is a temperature.
+    struct Thermometer;
+
+    impl moli_runtime::Driver for Thermometer {
+        fn kind(&self) -> &'static str {
+            "fake"
+        }
+
+        fn run<'a>(
+            &'a self,
+            ctx: &'a mut moli_runtime::DriverCtx,
+        ) -> moli_runtime::BoxFuture<'a, anyhow::Result<()>> {
+            Box::pin(async move {
+                let id = ctx.device_id("m");
+                ctx.upsert_device(moli_core::Device {
+                    id,
+                    instance: ctx.instance().clone(),
+                    native_name: "m".into(),
+                    manufacturer: None,
+                    model: None,
+                    description: None,
+                    native_room: None,
+                    members: Vec::new(),
+                    points: vec![moli_core::PointSpec {
+                        key: "t".into(),
+                        label: "t".into(),
+                        kind: moli_core::Kind::Numeric {
+                            min: None,
+                            max: None,
+                            step: None,
+                        },
+                        access: moli_core::Access::default(),
+                        unit: Some(moli_core::Unit::Celsius),
+                        semantic: moli_core::Semantic::Temperature,
+                    }],
+                });
+                ctx.ready();
+                std::future::pending::<()>().await;
+                Ok(())
+            })
+        }
+    }
+
+    #[tokio::test]
+    async fn the_present_read_again_raises_the_floors_of_excluded_points() {
+        // A point recorded before it was excluded, floor 30; its device's
+        // publication was lost in a lag. Reading the present again (as
+        // after a lag) keeps climate's 90 days, though nothing of it is
+        // written any more.
+        let hub = Hub::new(moli_runtime::HubOptions::default()).unwrap();
+        let drivers = CancellationToken::new();
+        moli_runtime::spawn_driver(
+            &hub,
+            moli_core::InstanceId::from("fake"),
+            Arc::new(Thermometer),
+            drivers.clone(),
+        );
+        while hub.stats().drivers_running == 0 {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        let dir = std::env::temp_dir().join(format!("moli-history-present-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let store = Arc::new(Store::open(&dir.join("history.db")).unwrap());
+        store
+            .insert(&[(PointId::from("fake:m/t"), Value::Float(20.0), 1)], false)
+            .unwrap();
+        let (filter, retention) = toml::from_str::<StorageConfig>(
+            "[history]\nexclude = [\"fake:*\"]\n[policy.climate]\ndays = 90",
+        )
+        .unwrap()
+        .compile(30)
+        .unwrap();
+        let policy = Arc::new(
+            retention::Policy::open(&store, filter.clone(), retention, Box::new(|_: &str| None))
+                .unwrap(),
+        );
+        let id = store.points().unwrap()[0].0;
+        assert_eq!(store.floors().unwrap().unwrap()[&id], 30);
+        let rows = present(&hub, &filter, &policy);
+        assert!(rows.is_empty(), "excluded: nothing to write");
+        policy.stop_raising();
+        retention::raise_loop(Arc::clone(&store), Arc::clone(&policy)).await;
+        assert_eq!(store.floors().unwrap().unwrap()[&id], 90);
+        drivers.cancel();
         let _ = std::fs::remove_dir_all(dir);
     }
 

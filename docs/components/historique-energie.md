@@ -74,7 +74,8 @@ et suit sa durée. L'énergie a son propre abonné au bus : un compteur exclu de
 reste compté exactement (test `an_excluded_point_is_not_written_and_its_energy_stays_exact`).
 
 **Purge par lots.** Point par point, au plus 5 000 lignes par requête, le rédacteur relâché
-entre deux lots (2 ms) : les lots du recorder passent entre deux (test
+entre deux lots (2 ms). Chaque lot vérifie, dans sa propre requête, que le plancher du point
+n'a pas été relevé au-dessus de celui qui a décidé la coupe ; s'il l'a été, plus rien ne part : les lots du recorder passent entre deux (test
 `pruning_goes_by_lots_and_writes_pass_in_between`). SQL portable (pas de `DELETE … LIMIT`),
 toujours par la clé primaire, ancrage conservé.
 
@@ -88,8 +89,11 @@ chaque point la plus longue de son plancher et de sa durée configurée :
 
 - une durée **plus longue** s'applique tout de suite et **relève le plancher** aussitôt, même si
   une autre réduction attend : la ramener ensuite est une réduction comme une autre. Le
-  plancher est relevé **dès la publication de son appareil** (`DeviceUpserted` sur le bus),
-  **à chaque écriture du point**, dans la transaction de ses lignes, et par chaque passe ; il n'est
+  plancher est relevé **dès la publication de son appareil** (`DeviceUpserted` sur le bus,
+  et relecture de toutes les descriptions du hub au démarrage et après une perte d'événements,
+  points exclus compris), **à chaque écriture du point**, dans la transaction de ses lignes, et
+  par chaque passe. Les hausses de publication passent par une file bornée (une entrée par
+  point, la plus haute demandée), écrite par une seule tâche et vidée avant l'arrêt. Il n'est
   jamais abaissé que par une validation. Appareil inconnu : seule la hausse certaine relève le
   plancher (la plus courte durée que pourrait lui donner une famille, donc toute règle propre
   au point), jamais une simple ambiguïté ;

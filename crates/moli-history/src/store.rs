@@ -121,13 +121,15 @@ pub struct Floors {
 }
 
 /// One point's purge: rows from `oldest` to just before `anchor`, at most
-/// `max` of them.
+/// `max` of them, while the point's floor is at most `floor` (the duration
+/// the cut was decided with: raised since, the cut no longer holds).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cut {
     pub id: i64,
     pub oldest: u64,
     pub anchor: u64,
     pub max: u64,
+    pub floor: u32,
 }
 
 /// What a purge would delete for a point.
@@ -373,7 +375,9 @@ impl Store {
     /// For each cut, deletes the point's samples from `oldest` to just
     /// before its anchor, the oldest first and never more than its `max`:
     /// bounds fixed when the purge was decided, so a write arriving
-    /// meanwhile never widens it. At
+    /// meanwhile never widens it. Each lot checks, in its own statement, that
+    /// the point's floor was not raised above the cut's: if it was, nothing
+    /// more goes. At
     /// most `lot` rows per statement, the writer released in between
     /// (`between` runs then): the recorder's batches pass between two lots.
     /// Returns how many.
@@ -394,12 +398,14 @@ impl Store {
                 let n = lock(&self.writer).execute(
                     "DELETE FROM samples WHERE point_id = ?1 AND ts IN (
                         SELECT ts FROM samples WHERE point_id = ?1 AND ts >= ?2 AND ts < ?3
+                        AND COALESCE((SELECT days FROM retention WHERE point_id = ?1), 0) <= ?5
                         ORDER BY ts LIMIT ?4)",
                     params![
                         cut.id,
                         ts(cut.oldest),
                         ts(cut.anchor),
-                        i64::try_from(limit).unwrap_or(i64::MAX)
+                        i64::try_from(limit).unwrap_or(i64::MAX),
+                        cut.floor
                     ],
                 )?;
                 removed += n;
@@ -755,6 +761,7 @@ mod tests {
                     oldest: 0,
                     anchor,
                     max: u64::MAX,
+                    floor: u32::MAX,
                 })
             })
             .collect();
@@ -915,6 +922,7 @@ mod tests {
             oldest: doomed.oldest.unwrap(),
             anchor: doomed.anchor,
             max: doomed.rows,
+            floor: u32::MAX,
         };
         let mut lots = 0;
         let removed = store
@@ -957,6 +965,7 @@ mod tests {
             oldest: 10,
             anchor: doomed.anchor,
             max: doomed.rows,
+            floor: u32::MAX,
         };
         // Old readings restated between two lots: newer than the anchor, and
         // older than the oldest row announced.
@@ -1007,6 +1016,39 @@ mod tests {
         let mut got: Vec<u32> = floors.values().copied().collect();
         got.sort_unstable();
         assert_eq!(got, vec![7, 90], "set once, at the first row");
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_raised_floor_stops_a_purge_even_between_lots() {
+        let (store, dir) = store("prune-raised");
+        store.set_up_floors(30, 1).unwrap();
+        let rows: Vec<_> = (0..=20u64).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        let floors = |_: &str| Floors {
+            first: 30,
+            certain: 30,
+        };
+        store.record(&rows, false, Some(&floors)).unwrap();
+        let (id, _) = store.points().unwrap()[0].clone();
+        let cut = Cut {
+            id,
+            oldest: 0,
+            anchor: 20,
+            max: u64::MAX,
+            floor: 30,
+        };
+        // Raised before the purge: nothing goes.
+        store.raise_named_floors(&[("d/x".into(), 90)]).unwrap();
+        assert_eq!(store.prune(&[cut], 5, || {}).unwrap(), 0);
+        // Raised between two lots: the first lot only.
+        let cut = Cut { floor: 90, ..cut };
+        let removed = store
+            .prune(&[cut], 5, || {
+                store.raise_named_floors(&[("d/x".into(), 120)]).unwrap();
+            })
+            .unwrap();
+        assert_eq!(removed, 5);
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }
