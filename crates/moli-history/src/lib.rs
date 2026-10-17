@@ -32,7 +32,7 @@ pub use policy::{
     Family, Filter, HistoryRules, Keep, PointKeep, Retention, StorageConfig, family, glob,
 };
 pub use retention::{Policies, PolicyError, Reduced, Reduction};
-pub use store::{Bucket, Cut, Doomed, HistoryError, Series, SqlResult, Store, Validation};
+pub use store::{Bucket, Cut, Doomed, Floors, HistoryError, Series, SqlResult, Store, Validation};
 
 const BATCH_EVERY: Duration = Duration::from_secs(2);
 const BATCH_MAX: usize = 1_000;
@@ -142,7 +142,7 @@ impl History {
         ));
         tokio::spawn(prune_loop(history.clone(), cancel.clone()));
         let source = hub_events(hub);
-        let recording = Arc::clone(&history.counters);
+        let recording = history.clone();
         let filter = options.filter.clone();
         let recorder = tokio::spawn(async move {
             record(source, batches, &recording, &filter, cancel).await;
@@ -275,13 +275,16 @@ fn current_state(hub: &Hub, filter: &Filter) -> Vec<Row> {
 
 /// Excluded points are not written; the energy has its own subscription to
 /// the bus and sees every reading.
+/// A device published keeps at once what its points' durations surely ask
+/// (`History::device_published`), without blocking the bus.
 async fn record(
     mut source: HubEvents,
     batches: mpsc::Sender<Batch>,
-    counters: &Counters,
+    history: &History,
     filter: &Filter,
     cancel: CancellationToken,
 ) {
+    let counters = &*history.counters;
     let _ = batches
         .send((current_state(&source.hub, filter), true))
         .await;
@@ -299,6 +302,9 @@ async fn record(
                     if batch.len() >= BATCH_MAX {
                         hand_over(&batches, &mut batch, counters);
                     }
+                }
+                Ok(Event::DeviceUpserted { device }) => {
+                    tokio::spawn(history.clone().device_published(device));
                 }
                 Ok(_) => {}
                 Err(RecvError::Lagged(missed)) => {
@@ -372,8 +378,8 @@ fn compact(batch: &mut Vec<Row>, counters: &Counters) {
     );
 }
 
-/// Writes the recorder's batches; a point's first row comes with its
-/// retention floor.
+/// Writes the recorder's batches, each point's retention floor kept up to
+/// date with its rows (`Store::record`).
 async fn write_loop(
     store: Arc<Store>,
     mut queue: mpsc::Receiver<Batch>,
@@ -384,8 +390,8 @@ async fn write_loop(
         let count = rows.len();
         let (store, policy) = (Arc::clone(&store), Arc::clone(&policy));
         let written = blocking(move || {
-            let first_floor = |point: &str| policy.first_floor(point);
-            store.record(&rows, restate, Some(&first_floor))
+            let floors = |point: &str| policy.floors(point);
+            store.record(&rows, restate, Some(&floors))
         });
         match written.await {
             Ok(()) => {

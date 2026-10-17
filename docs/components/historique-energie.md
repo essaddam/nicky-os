@@ -87,16 +87,20 @@ inconnu) : un arrêt avant la passe suivante ne le laisse jamais sans plancher. 
 chaque point la plus longue de son plancher et de sa durée configurée :
 
 - une durée **plus longue** s'applique tout de suite et **relève le plancher** aussitôt, même si
-  une autre réduction attend : la ramener ensuite est une réduction comme une autre. Appareil
-  inconnu : seule la hausse certaine relève le plancher (la plus courte durée que pourrait lui
-  donner une famille, donc toute règle propre au point), jamais une simple ambiguïté ;
+  une autre réduction attend : la ramener ensuite est une réduction comme une autre. Le
+  plancher est relevé **dès la publication de son appareil** (`DeviceUpserted` sur le bus),
+  **à chaque écriture du point**, dans la transaction de ses lignes, et par chaque passe ; il n'est
+  jamais abaissé que par une validation. Appareil inconnu : seule la hausse certaine relève le
+  plancher (la plus courte durée que pourrait lui donner une famille, donc toute règle propre
+  au point), jamais une simple ambiguïté ;
 - une durée **plus courte** n'efface rien. `GET /api/history/retention` compte, point par point,
   ce qu'elle supprimerait (`reduction.rows`, `points`, période `from`–`to`, points les plus
   touchés) et **garde ce plan** : points, familles, planchers, ancre et nombre de lignes de
   chacun. La page Système l'affiche dans « Stockage ». Une personne le valide avec son code :
   `POST /api/history/retention/validate` `{ "at", "fingerprint" }` (session PIN exigée, 403 sinon,
   même depuis un tableau de bord de confiance). La validation applique **ce plan seul** : elle
-  revérifie chaque point (plancher, famille, durée configurée), abaisse leurs planchers et
+  revérifie chaque point (plancher, famille, durée configurée), abaisse leurs planchers **seulement
+  s'ils valent encore ce qui a été compté** (tout ou rien, dans une transaction) et
   supprime leurs lignes **dans la période annoncée** (de la plus ancienne comptée jusqu'à
   l'ancre), **jamais plus que le nombre annoncé** : une écriture arrivée entre-temps n'élargit
   rien. Les autres points attendent leur passe ordinaire. Un décompte plus récent remplace

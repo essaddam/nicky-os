@@ -15,12 +15,12 @@
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use moli_core::{Origin, PointId, now_ms};
+use moli_core::{Device, Origin, PointId, now_ms};
 use moli_runtime::Hub;
 use serde::Serialize;
 
 use crate::policy::{Family, Filter, Retention};
-use crate::store::{self, Cut, Doomed, HistoryError, Store, Validation};
+use crate::store::{self, Cut, Doomed, Floors, HistoryError, Store, Validation};
 use crate::{DAY_MS, History, Prune, blocking};
 
 /// Rows one purge statement deletes at most…
@@ -205,9 +205,15 @@ impl Policy {
         }
     }
 
-    /// The floor a point gets with its first row (see `Store::record`).
-    pub(crate) fn first_floor(&self, point: &str) -> u32 {
-        self.configured(point, (self.families)(point))
+    /// A point's floors when one of its rows is written (see
+    /// `Store::record`): its longest duration if it is new, and what the
+    /// configuration surely asks, kept as soon as its family is known.
+    pub(crate) fn floors(&self, point: &str) -> Floors {
+        let family = (self.families)(point);
+        Floors {
+            first: self.configured(point, family),
+            certain: self.certain(point, family),
+        }
     }
 
     /// A pass as of `now`: floors raised to what the configuration surely
@@ -237,7 +243,7 @@ impl Policy {
                 });
             }
         }
-        store.set_floors(&raised, None)?;
+        store.raise_floors(&raised)?;
         store.prune(&cuts, PRUNE_LOT, || std::thread::sleep(PRUNE_PAUSE))
     }
 
@@ -293,8 +299,12 @@ impl Policy {
             .filter_map(|i| i.doomed)
             .map(|d| d.rows)
             .sum();
-        let floors: Vec<_> = plan.items.iter().map(|i| (i.id, i.days)).collect();
-        store.set_floors(&floors, Some((now_ms(), by, announced)))?;
+        // Lowered only from the floor counted: a write that raised one
+        // meanwhile (its family just published) refuses the whole plan.
+        let floors: Vec<_> = plan.items.iter().map(|i| (i.id, i.floor, i.days)).collect();
+        if !store.lower_floors(&floors, now_ms(), by, announced)? {
+            return Err(PolicyError::Changed);
+        }
         let cuts: Vec<_> = plan
             .items
             .iter()
@@ -350,6 +360,28 @@ impl Plan {
 }
 
 impl History {
+    /// A device was published: its points' families are known now, and
+    /// what their durations ask is kept at once (only raised), before any
+    /// write of theirs or the next pass.
+    pub(crate) async fn device_published(self, device: Arc<Device>) {
+        let (store, policy) = (Arc::clone(&self.store), Arc::clone(&self.policy));
+        let raised = blocking(move || {
+            let floors: Vec<(String, u32)> = device
+                .points
+                .iter()
+                .map(|spec| {
+                    let point = PointId::new(&device.id, &spec.key);
+                    let days = policy.configured.days(point.as_str(), Family::of(spec));
+                    (point.as_str().to_owned(), days)
+                })
+                .collect();
+            store.raise_named_floors(&floors)
+        });
+        if let Err(e) = raised.await {
+            tracing::warn!(error = %e, "history floors not raised");
+        }
+    }
+
     /// One retention pass as of `now` (see `Policy::pass`).
     pub(crate) async fn prune_pass(&self, now: u64) -> Result<usize, HistoryError> {
         let _one = self.policy.passes.lock().await;
@@ -483,8 +515,8 @@ mod tests {
                 .iter()
                 .map(|(p, ago)| (PointId::from(*p), Value::Int(1), self.now - ago))
                 .collect();
-            let first_floor = |point: &str| policy.first_floor(point);
-            self.store.record(&rows, false, Some(&first_floor)).unwrap();
+            let floors = |point: &str| policy.floors(point);
+            self.store.record(&rows, false, Some(&floors)).unwrap();
         }
 
         fn floor(&self, point: &str) -> Option<u32> {
@@ -782,6 +814,104 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_family_published_after_the_first_pass_keeps_its_increase() {
+        // Started before the drivers: the pass sees no device. The device is
+        // then published as climate (90 days) and a reading written; Moli
+        // stops before the next pass and comes back with 30 days.
+        let bench = Bench::new(
+            "published",
+            &[("d/x", 32 * D), ("d/x", 31 * D), ("d/x", 2 * D)],
+        );
+        bench.known.lock().unwrap().clear();
+        let history = bench.history(with(30, &[(Family::Climate, 90)], &[]));
+        assert_eq!(history.prune_pass(bench.now).await.unwrap(), 0);
+        assert_eq!(bench.floor("d/x"), Some(30), "an ambiguity raises nothing");
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Climate);
+        bench.record(&history, &[("d/x", 0)]);
+        assert_eq!(bench.floor("d/x"), Some(90), "kept with the reading");
+        let back = bench.history(with(30, &[], &[]));
+        assert_eq!(back.prune_pass(bench.now).await.unwrap(), 0);
+        assert_eq!(bench.left().len(), 4);
+        let r = back.policies().await.unwrap().reduction.unwrap();
+        assert_eq!((r.top[0].from_days, r.top[0].to_days, r.rows), (90, 30, 1));
+    }
+
+    #[tokio::test]
+    async fn a_published_device_keeps_its_increase_before_any_write() {
+        // Same start, but nothing of the point is written after its device
+        // is published: the publication alone keeps the 90 days.
+        let bench = Bench::new(
+            "publication",
+            &[("d/x", 32 * D), ("d/x", 31 * D), ("d/x", 2 * D)],
+        );
+        bench.known.lock().unwrap().clear();
+        let history = bench.history(with(30, &[(Family::Climate, 90)], &[]));
+        assert_eq!(history.prune_pass(bench.now).await.unwrap(), 0);
+        assert_eq!(bench.floor("d/x"), Some(30));
+        let device = Device {
+            id: moli_core::DeviceId::from("d"),
+            instance: moli_core::InstanceId::from("d"),
+            native_name: "d".into(),
+            manufacturer: None,
+            model: None,
+            description: None,
+            native_room: None,
+            members: Vec::new(),
+            points: vec![moli_core::PointSpec {
+                key: "x".into(),
+                label: "x".into(),
+                kind: moli_core::Kind::Numeric {
+                    min: None,
+                    max: None,
+                    step: None,
+                },
+                access: moli_core::Access::default(),
+                unit: Some(moli_core::Unit::Celsius),
+                semantic: moli_core::Semantic::Temperature,
+            }],
+        };
+        history.clone().device_published(Arc::new(device)).await;
+        assert_eq!(bench.floor("d/x"), Some(90));
+        let back = bench.history(with(30, &[], &[]));
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Climate);
+        assert_eq!(back.prune_pass(bench.now).await.unwrap(), 0);
+        let r = back.policies().await.unwrap().reduction.unwrap();
+        assert_eq!((r.top[0].from_days, r.top[0].to_days, r.rows), (90, 30, 1));
+    }
+
+    #[tokio::test]
+    async fn a_floor_raised_after_the_count_refuses_the_plan() {
+        let bench = Bench::new(
+            "raised",
+            &[("d/x", 20 * D), ("d/x", 10 * D), ("d/x", 5 * D)],
+        );
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Diagnostic);
+        let history = bench.history(with(30, &[(Family::Diagnostic, 3)], &[]));
+        let r = history.policies().await.unwrap().reduction.unwrap();
+        // A write raised the floor between the count and the validation.
+        let id = bench.store.points().unwrap()[0].0;
+        bench.store.raise_floors(&[(id, 60)]).unwrap();
+        let refused = history
+            .validate(r.at, &r.fingerprint, Origin::Ui, None)
+            .await;
+        assert!(matches!(refused, Err(PolicyError::Changed)), "{refused:?}");
+        assert_eq!(bench.left().len(), 3);
+        assert_eq!(bench.floor("d/x"), Some(60));
+    }
+
+    #[tokio::test]
     async fn an_ambiguous_family_raises_no_floor() {
         // A diagnostic point validated at 3 days, its device not published
         // yet after a restart: its floor stays 3, not climate's 90.
@@ -793,7 +923,12 @@ mod tests {
             &[],
         ));
         let id = bench.store.points().unwrap()[0].0;
-        bench.store.set_floors(&[(id, 3)], None).unwrap();
+        assert!(
+            bench
+                .store
+                .lower_floors(&[(id, 30, 3)], 1, None, 0)
+                .unwrap()
+        );
         history.prune_pass(bench.now).await.unwrap();
         assert_eq!(bench.floor("d/x"), Some(3));
     }

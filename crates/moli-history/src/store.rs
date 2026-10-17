@@ -48,6 +48,10 @@ CREATE VIEW IF NOT EXISTS history AS
     FROM samples s JOIN points p ON p.id = s.point_id;
 ";
 
+/// Sets a point's floor, or raises it: never lowers it.
+const RAISE_FLOOR: &str = "INSERT INTO retention(point_id, days) VALUES (?1, ?2)
+     ON CONFLICT(point_id) DO UPDATE SET days = excluded.days WHERE excluded.days > retention.days";
+
 /// Agents' SQL: time budget per query.
 const SQL_BUDGET: Duration = Duration::from_secs(2);
 /// Agents' SQL: largest string or blob any expression may build.
@@ -105,6 +109,15 @@ pub struct SqlResult {
     pub columns: Vec<String>,
     pub rows: Vec<Vec<Json>>,
     pub truncated: bool,
+}
+
+/// A point's floors when one of its rows is written (`Store::record`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Floors {
+    /// For a point recorded for the first time.
+    pub first: u32,
+    /// What the configuration surely asks for an existing one.
+    pub certain: u32,
 }
 
 /// One point's purge: rows from `oldest` to just before `anchor`, at most
@@ -241,52 +254,69 @@ impl Store {
         self.record(rows, restate, None)
     }
 
-    /// `insert`, and a point recorded for the first time gets its retention
-    /// floor (`first_floor`) in the same transaction: it never exists
-    /// without one, whatever happens before the next pass.
+    /// `insert`, keeping each point's retention floor up to date in the
+    /// same transaction (`floors`): a point recorded for the first time gets
+    /// its `first` floor, an existing one is raised to what the
+    /// configuration surely asks (`certain`), never lowered. A point never
+    /// exists without a floor, and an increase is kept as soon as a row of
+    /// the point is written, whatever happens before the next pass.
     pub fn record(
         &self,
         rows: &[(PointId, Value, u64)],
         restate: bool,
-        first_floor: Option<&dyn Fn(&str) -> u32>,
+        floors: Option<&dyn Fn(&str) -> Floors>,
     ) -> Result<(), HistoryError> {
         let mut conn = lock(&self.writer);
         let tx = conn.transaction()?;
+        // Ids created here are known to the cache only once committed: a
+        // rolled-back id may be handed to another point.
+        let mut fresh: HashMap<String, i64> = HashMap::new();
         {
-            let mut ids = lock(&self.ids);
+            let ids = lock(&self.ids);
             let mut create = tx.prepare(
                 "INSERT INTO points(point) VALUES (?1) ON CONFLICT(point) DO NOTHING RETURNING id",
             )?;
             let mut known = tx.prepare("SELECT id FROM points WHERE point = ?1")?;
-            let mut floor = tx.prepare(
-                "INSERT INTO retention(point_id, days) VALUES (?1, ?2)
-                 ON CONFLICT(point_id) DO NOTHING",
-            )?;
+            let mut raise = tx.prepare(RAISE_FLOOR)?;
             // Two changes in the same millisecond (two button presses…) are
             // two samples: a collision moves the later one by 1 ms.
             let mut sample = tx.prepare(
                 "INSERT INTO samples(point_id, ts, kind, num, txt) VALUES (?1, ?2, ?3, ?4, ?5)
                  ON CONFLICT(point_id, ts) DO NOTHING",
             )?;
+            let mut created = std::collections::HashSet::new();
+            let mut floored = std::collections::HashSet::new();
             for (point, value, at) in rows {
-                let id = if let Some(id) = ids.get(point.as_str()) {
+                let cached = ids
+                    .get(point.as_str())
+                    .or_else(|| fresh.get(point.as_str()));
+                let id = if let Some(id) = cached {
                     *id
                 } else {
-                    let created: Option<i64> = create
+                    let new: Option<i64> = create
                         .query_row([point.as_str()], |r| r.get(0))
                         .optional()?;
-                    let id = match created {
+                    let id = match new {
                         Some(id) => {
-                            if let Some(first_floor) = first_floor {
-                                floor.execute(params![id, first_floor(point.as_str())])?;
-                            }
+                            created.insert(id);
                             id
                         }
                         None => known.query_row([point.as_str()], |r| r.get(0))?,
                     };
-                    ids.insert(point.as_str().to_owned(), id);
+                    fresh.insert(point.as_str().to_owned(), id);
                     id
                 };
+                if let Some(floors) = floors
+                    && floored.insert(id)
+                {
+                    let f = floors(point.as_str());
+                    let days = if created.contains(&id) {
+                        f.first
+                    } else {
+                        f.certain
+                    };
+                    raise.execute(params![id, days])?;
+                }
                 let (kind, num, txt) = encode(value);
                 for at in (ts(*at)..).take(MAX_SAME_MS) {
                     if sample.execute(params![id, at, kind, num, txt])? == 1 || restate {
@@ -296,6 +326,7 @@ impl Store {
             }
         }
         tx.commit()?;
+        lock(&self.ids).extend(fresh);
         Ok(())
     }
 
@@ -420,37 +451,70 @@ impl Store {
         Ok(())
     }
 
-    /// Records points' durations, and with `validated` (when, who, rows) the
-    /// person who validated them, in one transaction.
-    pub fn set_floors(
-        &self,
-        floors: &[(i64, u32)],
-        validated: Option<(u64, Option<&str>, u64)>,
-    ) -> Result<(), HistoryError> {
+    /// Raises points' floors (a floor missing is set): never lowers one.
+    pub fn raise_floors(&self, floors: &[(i64, u32)]) -> Result<(), HistoryError> {
         let mut conn = lock(&self.writer);
         let tx = conn.transaction()?;
         {
-            let mut set = tx.prepare(
-                "INSERT INTO retention(point_id, days) VALUES (?1, ?2)
-                 ON CONFLICT(point_id) DO UPDATE SET days = excluded.days",
-            )?;
+            let mut raise = tx.prepare(RAISE_FLOOR)?;
             for (id, days) in floors {
-                set.execute(params![id, days])?;
+                raise.execute(params![id, days])?;
             }
-        }
-        if let Some((at, who, rows)) = validated {
-            tx.execute(
-                "INSERT INTO retention_log(at, kind, who, points, rows) VALUES (?1, 'validated', ?2, ?3, ?4)",
-                params![
-                    ts(at),
-                    who,
-                    i64::try_from(floors.len()).unwrap_or(i64::MAX),
-                    i64::try_from(rows).unwrap_or(i64::MAX)
-                ],
-            )?;
         }
         tx.commit()?;
         Ok(())
+    }
+
+    /// Raises the floors of points already recorded, by name (a point not
+    /// recorded yet gets its floor with its first row).
+    pub fn raise_named_floors(&self, floors: &[(String, u32)]) -> Result<(), HistoryError> {
+        let mut conn = lock(&self.writer);
+        let tx = conn.transaction()?;
+        {
+            let mut raise = tx.prepare(
+                "UPDATE retention SET days = ?2
+                 WHERE point_id = (SELECT id FROM points WHERE point = ?1) AND days < ?2",
+            )?;
+            for (point, days) in floors {
+                raise.execute(params![point, days])?;
+            }
+        }
+        tx.commit()?;
+        Ok(())
+    }
+
+    /// Lowers floors a person validated, each `(id, from, to)` only if it
+    /// is still `from`, and logs who did: all or nothing. `false` when one
+    /// changed meanwhile (nothing is written then).
+    pub fn lower_floors(
+        &self,
+        floors: &[(i64, u32, u32)],
+        at: u64,
+        who: Option<&str>,
+        rows: u64,
+    ) -> Result<bool, HistoryError> {
+        let mut conn = lock(&self.writer);
+        let tx = conn.transaction()?;
+        {
+            let mut lower =
+                tx.prepare("UPDATE retention SET days = ?3 WHERE point_id = ?1 AND days = ?2")?;
+            for (id, from, to) in floors {
+                if lower.execute(params![id, from, to])? != 1 {
+                    return Ok(false);
+                }
+            }
+        }
+        tx.execute(
+            "INSERT INTO retention_log(at, kind, who, points, rows) VALUES (?1, 'validated', ?2, ?3, ?4)",
+            params![
+                ts(at),
+                who,
+                i64::try_from(floors.len()).unwrap_or(i64::MAX),
+                i64::try_from(rows).unwrap_or(i64::MAX)
+            ],
+        )?;
+        tx.commit()?;
+        Ok(true)
     }
 
     /// The last reduction a person validated: (when, who, points, rows).
@@ -925,7 +989,10 @@ mod tests {
     fn a_point_gets_its_floor_with_its_first_row() {
         let (store, dir) = store("first-floor");
         store.set_up_floors(30, 1).unwrap();
-        let floor = |point: &str| if point == "d/a" { 7 } else { 90 };
+        let floor = |point: &str| {
+            let first = if point == "d/a" { 7 } else { 90 };
+            Floors { first, certain: 1 }
+        };
         store
             .record(&[(p("d/a"), Value::Int(1), 1)], false, Some(&floor))
             .unwrap();
@@ -940,6 +1007,66 @@ mod tests {
         let mut got: Vec<u32> = floors.values().copied().collect();
         got.sort_unstable();
         assert_eq!(got, vec![7, 90], "set once, at the first row");
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_rolled_back_point_never_lends_its_id() {
+        let (store, dir) = store("rollback");
+        store.set_up_floors(30, 1).unwrap();
+        let first = |point: &str| Floors {
+            first: match point {
+                "d/a" => 30,
+                "d/b" => 13,
+                _ => 1,
+            },
+            certain: 1,
+        };
+        // The second point's floor fails: the whole batch is rolled back.
+        let other = Connection::open(dir.join("history.db")).unwrap();
+        other
+            .execute_batch(
+                "CREATE TRIGGER boom BEFORE INSERT ON retention WHEN NEW.days = 13
+                 BEGIN SELECT RAISE(ABORT, 'boom'); END;",
+            )
+            .unwrap();
+        let failed = store.record(
+            &[
+                (p("d/a"), Value::Int(1), 111),
+                (p("d/b"), Value::Int(1), 222),
+            ],
+            false,
+            Some(&first),
+        );
+        assert!(failed.is_err());
+        other.execute_batch("DROP TRIGGER boom").unwrap();
+        // A new point may take the id the rolled-back one had…
+        store
+            .record(&[(p("d/c"), Value::Int(1), 333)], false, Some(&first))
+            .unwrap();
+        // …and the first point's next reading is still its own.
+        store
+            .record(&[(p("d/a"), Value::Int(2), 444)], false, Some(&first))
+            .unwrap();
+        let ts = |point: &str| -> Vec<u64> {
+            let s = store.series(point, 0, 1_000, 10).unwrap();
+            s.raw.iter().map(|(t, _)| *t).collect()
+        };
+        assert_eq!(ts("d/a"), vec![444]);
+        assert_eq!(ts("d/c"), vec![333]);
+        assert_eq!(ts("d/b"), Vec::<u64>::new());
+        let floors = store.floors().unwrap().unwrap();
+        let id = |point: &str| {
+            store
+                .points()
+                .unwrap()
+                .into_iter()
+                .find(|(_, p)| p == point)
+                .unwrap()
+                .0
+        };
+        assert_eq!((floors[&id("d/a")], floors[&id("d/c")]), (30, 1));
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }
