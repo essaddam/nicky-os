@@ -1154,3 +1154,142 @@ async fn oversized_orders_are_refused_and_journaled_without_their_bulk() {
         other => panic!("{other:?}"),
     }
 }
+
+/// A lock whose bolt turns at once but whose answer comes late: the order
+/// has its effect before the caller hears back.
+struct SlowLock;
+
+impl Driver for SlowLock {
+    fn kind(&self) -> &'static str {
+        "slow"
+    }
+
+    fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(async move {
+            let id = ctx.device_id("door");
+            ctx.upsert_device(Device {
+                id: id.clone(),
+                instance: ctx.instance().clone(),
+                native_name: "door".into(),
+                manufacturer: None,
+                model: None,
+                description: None,
+                native_room: None,
+                members: Vec::new(),
+                points: vec![spec("locked", Kind::Binary, true, Semantic::Lock)],
+            });
+            ctx.set_state(&id, "locked", Value::Bool(true));
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                ctx.set_state(&cmd.device.id, &cmd.key, cmd.value.clone());
+                tokio::time::sleep(Duration::from_millis(300)).await;
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+fn journaled(hub: &Hub, approval: bool) -> Vec<Outcome> {
+    hub.journal(200)
+        .iter()
+        .filter(|e| match &e.action {
+            Action::Command { point, .. } => !approval && point.as_str() == "slow:door/locked",
+            Action::Approval { point, .. } => approval && point.as_str() == "slow:door/locked",
+            _ => false,
+        })
+        .map(|e| e.outcome.clone())
+        .collect()
+}
+
+async fn opened_then_abandoned(hub: &Hub, call: tokio::task::JoinHandle<()>) {
+    let open = PointId::from("slow:door/locked");
+    for _ in 0..100 {
+        if hub
+            .state(&open)
+            .is_some_and(|s| s.value == Value::Bool(false))
+        {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    assert_eq!(
+        hub.state(&open).unwrap().value,
+        Value::Bool(false),
+        "the door opened"
+    );
+    // The caller gives up while the driver has not answered yet.
+    call.abort();
+    let _ = call.await;
+    tokio::time::sleep(Duration::from_millis(500)).await;
+}
+
+#[tokio::test]
+async fn an_order_handed_to_a_driver_is_journaled_even_if_the_caller_gives_up() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let cancel = CancellationToken::new();
+    spawn_driver(
+        &hub,
+        InstanceId::from("slow"),
+        Arc::new(SlowLock),
+        cancel.clone(),
+    );
+    wait_running(&hub).await;
+    let call = {
+        let hub = hub.clone();
+        tokio::spawn(async move {
+            let _ = hub
+                .command(
+                    &PointId::from("slow:door/locked"),
+                    Value::Bool(false),
+                    Origin::Ui,
+                    None,
+                )
+                .await;
+        })
+    };
+    opened_then_abandoned(&hub, call).await;
+    assert_eq!(
+        journaled(&hub, false),
+        [Outcome::Ok],
+        "one line, its real outcome"
+    );
+
+    // Same for an order a human releases.
+    hub.command(
+        &PointId::from("slow:door/locked"),
+        Value::Bool(true),
+        Origin::Ui,
+        None,
+    )
+    .await
+    .unwrap();
+    let held = hub
+        .command(
+            &PointId::from("slow:door/locked"),
+            Value::Bool(false),
+            Origin::Mcp,
+            None,
+        )
+        .await;
+    let Err(CommandError::NeedsApproval { id, .. }) = held else {
+        panic!("an agent opening is held: {held:?}");
+    };
+    let call = {
+        let hub = hub.clone();
+        tokio::spawn(async move {
+            let _ = hub
+                .resolve_approval(
+                    id,
+                    &PointId::from("slow:door/locked"),
+                    true,
+                    Origin::Ui,
+                    None,
+                )
+                .await;
+        })
+    };
+    opened_then_abandoned(&hub, call).await;
+    assert_eq!(journaled(&hub, true), [Outcome::Ok]);
+    cancel.cancel();
+}

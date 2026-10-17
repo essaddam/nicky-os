@@ -214,6 +214,33 @@ pub struct Snapshot {
     pub guard: GuardStatus,
 }
 
+/// How a command's result reads in the journal.
+fn outcome_of(result: &Result<(), CommandError>) -> Outcome {
+    match result {
+        Ok(()) => Outcome::Ok,
+        Err(CommandError::NeedsApproval { id, reason }) => Outcome::Pending(moli_i18n::tr!(
+            "serveur.garde.en_attente",
+            id = id,
+            reason = reason
+        )),
+        Err(e) => Outcome::Err(e.to_string()),
+    }
+}
+
+/// Runs `work` to its end in its own task: the caller may give up waiting,
+/// the work (an order handed to a driver, then its journal line) goes on.
+/// `stopped`: the answer when the runtime itself is shutting down.
+async fn detached<T: Send + 'static>(
+    work: impl Future<Output = T> + Send + 'static,
+    stopped: impl FnOnce() -> T,
+) -> T {
+    match tokio::spawn(work).await {
+        Ok(result) => result,
+        Err(e) if e.is_panic() => std::panic::resume_unwind(e.into_panic()),
+        Err(_) => stopped(),
+    }
+}
+
 /// Cheap, clonable handle to the hub.
 #[derive(Clone, Debug)]
 pub struct Hub(Arc<Inner>);
@@ -498,21 +525,30 @@ impl Hub {
         let result = match self.prepare(point, &value) {
             Err(e) => Err(e),
             Ok(prepared) => match self.verdict(point, Some(&value), origin) {
-                Verdict::Allow => self.send(prepared).await,
+                Verdict::Allow => {
+                    // Handed to the driver: from here on the order is
+                    // journaled with its real outcome even if the caller
+                    // gives up (a client gone, a cancelled task).
+                    let hub = self.clone();
+                    let point = point.clone();
+                    return detached(
+                        async move {
+                            let result = hub.send(prepared).await;
+                            let action = Action::Command { point, value };
+                            hub.record(origin, actor, action, outcome_of(&result), started);
+                            result
+                        },
+                        || Err(CommandError::DriverUnavailable),
+                    )
+                    .await;
+                }
                 Verdict::Approval(reason) => {
                     let id = self.hold(point, &value, origin, actor.clone(), &reason);
                     Err(CommandError::NeedsApproval { id, reason })
                 }
             },
         };
-        let outcome =
-            match &result {
-                Ok(()) => Outcome::Ok,
-                Err(CommandError::NeedsApproval { id, reason }) => Outcome::Pending(
-                    moli_i18n::tr!("serveur.garde.en_attente", id = id, reason = reason),
-                ),
-                Err(e) => Outcome::Err(e.to_string()),
-            };
+        let outcome = outcome_of(&result);
         self.record(
             origin,
             actor,
@@ -776,24 +812,43 @@ impl Hub {
             );
             return Err(ApprovalError::Expired);
         }
-        let (decision, outcome, result) = if approve {
-            let sent = match self.prepare(&request.point, &request.value) {
-                Ok(prepared) => self.send(prepared).await,
-                Err(e) => Err(e),
-            };
-            match sent {
-                Ok(()) => (Decision::Approved, Outcome::Ok, Ok(())),
-                Err(e) => (
+        if !approve {
+            self.resolved(
+                &request,
+                Decision::Denied,
+                origin,
+                actor,
+                Outcome::Ok,
+                started,
+            );
+            return Ok(());
+        }
+        // Like a command: once handed to the driver, the decision and its
+        // outcome are journaled whatever becomes of the caller.
+        let hub = self.clone();
+        detached(
+            async move {
+                let sent = match hub.prepare(&request.point, &request.value) {
+                    Ok(prepared) => hub.send(prepared).await,
+                    Err(e) => Err(e),
+                };
+                let (outcome, result) = match sent {
+                    Ok(()) => (Outcome::Ok, Ok(())),
+                    Err(e) => (Outcome::Err(e.to_string()), Err(ApprovalError::Command(e))),
+                };
+                hub.resolved(
+                    &request,
                     Decision::Approved,
-                    Outcome::Err(e.to_string()),
-                    Err(ApprovalError::Command(e)),
-                ),
-            }
-        } else {
-            (Decision::Denied, Outcome::Ok, Ok(()))
-        };
-        self.resolved(&request, decision, origin, actor, outcome, started);
-        result
+                    origin,
+                    actor,
+                    outcome,
+                    started,
+                );
+                result
+            },
+            || Err(ApprovalError::Command(CommandError::DriverUnavailable)),
+        )
+        .await
     }
 
     /// Drops held orders nobody decided on in time.
