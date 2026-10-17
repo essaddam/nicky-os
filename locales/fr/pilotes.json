@@ -453,5 +453,7 @@
   "pilotes.overkiz.confirmation_perdue": "l'ordre est peut-être parti, mais la liaison avec la box s'est coupée avant sa confirmation (il n'est jamais renvoyé)",
   "pilotes.overkiz.box_muette": "la box n'a pas répondu à temps (l'ordre n'est jamais renvoyé)",
   "pilotes.overkiz.pas_pret": "la box n'est pas encore chargée : réessayer dans un instant",
-  "pilotes.overkiz.en_pause": "la box est saturée : Moli la laisse tranquille encore {seconds} s"
+  "pilotes.overkiz.en_pause": "la box est saturée : Moli la laisse tranquille encore {seconds} s",
+  "pilotes.overkiz.non_envoye": "ordre non envoyé : la box n'a pas pu le prendre à temps (il ne partira pas plus tard)",
+  "pilotes.overkiz.trop_d_ordres": "trop d'ordres en attente pour la box : réessayer dans un instant"
 }

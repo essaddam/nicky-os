@@ -3,7 +3,7 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering::SeqCst};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::bail;
 use serde_json::{Value as Json, json};
@@ -22,6 +22,10 @@ pub struct Fake {
     /// Answers to the next fetches, before the executions' news.
     pub fetches: Mutex<VecDeque<Result<Json, Refusal>>>,
     pub news: Mutex<Vec<Json>>,
+    /// Before each order reaches the box (a slow connection), in turn.
+    pub delays: Mutex<VecDeque<Duration>>,
+    /// The orders as they reached the box: command, when.
+    pub arrivals: Mutex<Vec<(String, Instant)>>,
     pub applied: AtomicUsize,
     pub fetched: AtomicUsize,
     /// Requests that change the box but may be sent twice.
@@ -29,7 +33,7 @@ pub struct Fake {
 }
 
 impl Fake {
-    pub async fn call(&self, path: &str, once: bool) -> anyhow::Result<Json> {
+    pub async fn call(&self, path: &str, body: Option<&Json>, once: bool) -> anyhow::Result<Json> {
         if path != "/setup/devices" && !once {
             self.replayable.fetch_add(1, SeqCst);
         }
@@ -38,6 +42,20 @@ impl Fake {
             "/setup/devices" => Ok(self.setup.clone()),
             "/exec/apply" => {
                 let n = self.applied.fetch_add(1, SeqCst) + 1;
+                let delay = self.delays.lock().unwrap().pop_front();
+                if let Some(delay) = delay {
+                    tokio::time::sleep(delay).await;
+                }
+                let command = body.map_or_else(String::new, |b| {
+                    b["actions"][0]["commands"][0]["name"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_owned()
+                });
+                self.arrivals
+                    .lock()
+                    .unwrap()
+                    .push((command, Instant::now()));
                 if let Some(slow) = self.slow_apply {
                     tokio::time::sleep(slow).await;
                 }

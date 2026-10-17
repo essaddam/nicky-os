@@ -453,5 +453,7 @@
   "pilotes.overkiz.confirmation_perdue": "the order may have gone out, but the link to the box dropped before it was confirmed (it is never sent again)",
   "pilotes.overkiz.box_muette": "the box did not answer in time (the order is never sent again)",
   "pilotes.overkiz.pas_pret": "the box is not loaded yet: try again in a moment",
-  "pilotes.overkiz.en_pause": "the box is overloaded: Moli leaves it alone for {seconds} more s"
+  "pilotes.overkiz.en_pause": "the box is overloaded: Moli leaves it alone for {seconds} more s",
+  "pilotes.overkiz.non_envoye": "order not sent: the box could not take it in time (it will not leave later)",
+  "pilotes.overkiz.trop_d_ordres": "too many orders waiting for the box: try again in a moment"
 }

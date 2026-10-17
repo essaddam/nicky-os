@@ -6,6 +6,7 @@ use std::sync::atomic::Ordering::SeqCst;
 use moli_core::{InstanceId, Origin, PointId, Value};
 use moli_runtime::{Hub, HubOptions, spawn_driver};
 use serde_json::json;
+use tokio::task::JoinSet;
 
 use super::*;
 use crate::fake::Fake;
@@ -133,7 +134,7 @@ async fn a_slow_fetch_never_delays_the_answer() {
 }
 
 #[tokio::test]
-async fn a_slow_order_never_blocks_another_nor_comes_back() {
+async fn a_slow_order_holds_the_next_which_never_leaves_late() {
     let (hub, fake) = start(Fake {
         slow_apply: Some(Duration::from_secs(10)),
         ..fake()
@@ -144,7 +145,103 @@ async fn a_slow_order_never_blocks_another_nor_comes_back() {
     assert!(first.is_err() && second.is_err(), "{first:?} {second:?}");
     assert!(at.elapsed() < Duration::from_secs(5), "{:?}", at.elapsed());
     tokio::time::sleep(Duration::from_millis(300)).await;
-    assert_eq!(fake.applied.load(SeqCst), 2, "each sent once, never again");
+    assert_eq!(
+        fake.applied.load(SeqCst),
+        1,
+        "the second never left after its time"
+    );
+}
+
+/// `on` then `off`, the first over a slow connection: they reach the box
+/// in that order, whatever the transport.
+#[tokio::test]
+async fn orders_reach_the_box_in_the_order_given() {
+    let fake = Fake {
+        ends: Some(("COMPLETED", None)),
+        ..fake()
+    };
+    fake.delays
+        .lock()
+        .unwrap()
+        .push_back(Duration::from_millis(250));
+    let (hub, fake) = start(fake).await;
+    let first = {
+        let hub = hub.clone();
+        tokio::spawn(async move { switch(&hub, true).await })
+    };
+    until(|| fake.applied.load(SeqCst) == 1).await;
+    let second = switch(&hub, false).await;
+    assert_eq!(first.await.unwrap(), Ok(()));
+    assert_eq!(second, Ok(()));
+    let arrived: Vec<String> = fake
+        .arrivals
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|(c, _)| c.clone())
+        .collect();
+    assert_eq!(arrived, ["on", "off"]);
+}
+
+/// The hub's queue is not emptied into unbounded work: one order on its
+/// way, a few waiting, the rest refused at once.
+#[tokio::test]
+async fn orders_in_flight_are_bounded() {
+    let (hub, fake) = start(Fake {
+        slow_apply: Some(Duration::from_secs(10)),
+        ..fake()
+    })
+    .await;
+    let mut callers = JoinSet::new();
+    for n in 0..64 {
+        let hub = hub.clone();
+        callers.spawn(async move { switch(&hub, n % 2 == 0).await });
+    }
+    let at = Instant::now();
+    let mut refused_at_once = 0;
+    while let Some(result) = callers.join_next().await {
+        let error = result.unwrap().unwrap_err();
+        if at.elapsed() < Duration::from_secs(1) {
+            refused_at_once += 1;
+            assert!(!error.is_empty());
+        }
+    }
+    assert!(refused_at_once >= 64 - 1 - MAX_WAITING, "{refused_at_once}");
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert_eq!(
+        fake.applied.load(SeqCst),
+        1,
+        "one on its way, none sent late"
+    );
+}
+
+/// A task that starts after the order's instant sends nothing; a box that
+/// is slow is left at that instant.
+#[tokio::test]
+async fn an_order_never_leaves_after_its_instant() {
+    let fake = Arc::new(Fake {
+        slow_apply: Some(Duration::from_secs(10)),
+        ..fake()
+    });
+    let api = Api::Fake(Arc::clone(&fake));
+    let order = Order {
+        url: format!("ogp://{BOX}/00000003"),
+        command: "on",
+        parameters: Vec::new(),
+    };
+    let past = Instant::now()
+        .checked_sub(Duration::from_millis(100))
+        .unwrap();
+    let e = emit(&api, &order, past).await.unwrap_err();
+    assert!(e.is::<api::NotSent>(), "{e}");
+    assert_eq!(fake.applied.load(SeqCst), 0, "nothing sent");
+    let at = Instant::now();
+    let e = emit(&api, &order, at + Duration::from_millis(100))
+        .await
+        .unwrap_err();
+    assert!(e.is::<NoAnswer>(), "{e}");
+    assert!(at.elapsed() < Duration::from_millis(500));
+    assert_eq!(fake.applied.load(SeqCst), 1);
 }
 
 #[tokio::test]

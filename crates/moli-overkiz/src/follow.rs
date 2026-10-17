@@ -35,6 +35,8 @@ pub struct About {
 #[derive(Debug)]
 struct Pending<W> {
     key: u64,
+    /// Handed to the box (or on its way): never sent when `false`.
+    sent: bool,
     /// `None` while the box has not answered the order yet.
     execution: Option<String>,
     waiter: W,
@@ -76,6 +78,8 @@ pub enum Due<W> {
     Accepted(W),
     /// The box has not said whether it took the order.
     Unanswered(W),
+    /// The order never left (another one held the box): nothing to watch.
+    NotSent(W),
 }
 
 #[derive(Debug)]
@@ -100,15 +104,30 @@ fn result(failed: bool, cause: String) -> Result<(), String> {
 }
 
 impl<W> Tracker<W> {
-    /// An order is on its way to the box: `waiter` hears of it by `reply_by`.
+    /// An order waits for the box: `waiter` hears of it by `reply_by`.
     pub fn track(&mut self, key: u64, waiter: W, about: About, reply_by: Instant) {
         self.pending.push(Pending {
             key,
+            sent: false,
             execution: None,
             waiter,
             about,
             reply_by,
         });
+    }
+
+    /// Order `key` leaves for the box now.
+    pub fn sending(&mut self, key: u64) {
+        if let Some(p) = self.pending.iter_mut().find(|p| p.key == key) {
+            p.sent = true;
+        }
+    }
+
+    /// Order `key`'s caller still waits (an order nobody waits for any
+    /// more is never sent).
+    #[must_use]
+    pub fn waiting(&self, key: u64) -> bool {
+        self.pending.iter().any(|p| p.key == key)
     }
 
     /// Some order is still followed (fetch events more often).
@@ -199,9 +218,7 @@ impl<W> Tracker<W> {
         }
         // Maybe one of ours whose id has not arrived yet; otherwise another
         // application's: kept only while an answer from the box is awaited.
-        let awaited = self.pending.iter().any(|p| p.execution.is_none())
-            || self.followed.iter().any(|f| f.execution.is_none());
-        if awaited {
+        if self.awaiting_ids() {
             if self.early.len() >= MAX_FOLLOWED {
                 self.early.pop_front();
             }
@@ -214,17 +231,24 @@ impl<W> Tracker<W> {
         None
     }
 
-    /// The callers whose time is up; they stay watched for a while.
+    /// Some order's execution id is still to come from the box.
+    fn awaiting_ids(&self) -> bool {
+        self.pending.iter().any(|p| p.sent && p.execution.is_none())
+            || self.followed.iter().any(|f| f.execution.is_none())
+    }
+
+    /// The callers whose time is up; those whose order left stay watched.
     pub fn due(&mut self, now: Instant) -> Vec<Due<W>> {
         self.followed.retain(|f| f.until > now);
         let (due, waiting): (Vec<_>, Vec<_>) =
             self.pending.drain(..).partition(|p| p.reply_by <= now);
         self.pending = waiting;
-        if !self.watching() {
-            self.early.clear();
-        }
-        due.into_iter()
+        let answers = due
+            .into_iter()
             .map(|p| {
+                if !p.sent {
+                    return Due::NotSent(p.waiter);
+                }
                 let taken = p.execution.is_some();
                 self.follow(p.key, p.execution, p.about, now + FOLLOW_FOR);
                 if taken {
@@ -233,7 +257,12 @@ impl<W> Tracker<W> {
                     Due::Unanswered(p.waiter)
                 }
             })
-            .collect()
+            .collect();
+        // Only once the due are watched: an early end may be theirs.
+        if !self.awaiting_ids() {
+            self.early.clear();
+        }
+        answers
     }
 
     /// The link to the box is lost: every caller still waiting, to be told
@@ -260,6 +289,8 @@ mod tests {
         let mut t = Tracker::default();
         t.track(1, 1, about(), now + Duration::from_secs(4));
         t.track(2, 2, about(), now + Duration::from_secs(4));
+        t.sending(1);
+        t.sending(2);
         assert_eq!(t.taken(1, "a".into()), None);
         assert_eq!(t.taken(2, "b".into()), None);
         t
@@ -310,6 +341,7 @@ mod tests {
         let now = Instant::now();
         let mut t: Tracker<u32> = Tracker::default();
         t.track(7, 7, about(), now);
+        t.sending(7);
         assert_eq!(t.due(now), [Due::Unanswered(7)]);
         // It took the order after all, then failed: the household hears it.
         assert_eq!(t.taken(7, "x".into()), None);
@@ -319,6 +351,7 @@ mod tests {
         );
         // Or the box refused it: nothing more to watch.
         t.track(8, 8, about(), now);
+        t.sending(8);
         assert_eq!(t.due(now), [Due::Unanswered(8)]);
         assert_eq!(t.refused(8), None, "already answered");
         assert!(!t.watching());
@@ -331,6 +364,7 @@ mod tests {
         // Another application's execution, nothing awaited: forgotten.
         assert_eq!(t.moved("other", Execution::Completed, None), None);
         t.track(1, 1, about(), now + Duration::from_secs(4));
+        t.sending(1);
         assert_eq!(t.moved("e", Execution::Running, None), None);
         assert_eq!(t.moved("e", Execution::Completed, None), None);
         assert_eq!(t.taken(1, "e".into()), Some(Outcome::Answer(1, Ok(()))));
@@ -359,6 +393,7 @@ mod tests {
         let mut t: Tracker<u32> = Tracker::default();
         for n in 0..=u32::try_from(MAX_FOLLOWED).unwrap() {
             t.track(n.into(), n, about(), now);
+            t.sending(n.into());
             assert_eq!(t.taken(n.into(), n.to_string()), None);
         }
         assert_eq!(t.due(now).len(), MAX_FOLLOWED + 1);
@@ -377,11 +412,43 @@ mod tests {
         let now = Instant::now();
         let mut t = tracker(now);
         t.track(3, 3, about(), now);
+        t.sending(3);
         assert_eq!(t.due(now), [Due::Unanswered(3)]);
         let mut lost = t.abandon();
         lost.sort_unstable();
         assert_eq!(lost, [1, 2]);
         assert!(!t.watching());
         assert_eq!(t.moved("a", Execution::Completed, None), None);
+    }
+
+    #[test]
+    fn an_order_that_never_left_is_not_watched() {
+        let now = Instant::now();
+        let mut t: Tracker<u32> = Tracker::default();
+        t.track(4, 4, about(), now);
+        assert!(t.waiting(4));
+        assert_eq!(t.due(now), [Due::NotSent(4)]);
+        assert!(!t.waiting(4), "never sent after its time");
+        assert!(!t.watching());
+    }
+
+    /// The end arrives before the id, the caller's time runs out, then the
+    /// id arrives: the failure is still told.
+    #[test]
+    fn an_early_failure_survives_the_deadline() {
+        let now = Instant::now();
+        let mut t: Tracker<u32> = Tracker::default();
+        t.track(1, 1, about(), now);
+        t.sending(1);
+        assert_eq!(
+            t.moved("exec", Execution::Failed, Some("NONEXEC_OTHER".into())),
+            None
+        );
+        assert_eq!(t.due(now), [Due::Unanswered(1)]);
+        assert_eq!(
+            t.taken(1, "exec".into()),
+            Some(Outcome::Tell(about(), "NONEXEC_OTHER".into()))
+        );
+        assert!(!t.watching());
     }
 }

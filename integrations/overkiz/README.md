@@ -29,7 +29,8 @@ Pilote natif `moli-overkiz` : une box Somfy, par l'une de ses deux routes.
   « accepté » si la box travaille encore quand le hub cesse d'attendre ; un échec après
   « accepté » est dit à la maison (notice). Liaison perdue : l'appelant entend « peut-être
   parti, non confirmé », rien n'est renvoyé. Relevés et ordres tournent à côté de la boucle :
-  aucune attente réseau ne retarde une réponse.
+  aucune attente réseau ne retarde une réponse. Les ordres partent un à la fois, dans l'ordre
+  reçu, depuis une file bornée (8), et jamais après leur instant limite.
 - Écoute : un auditeur d'événements enregistré avant le chargement, relevé (une seule fois par
   requête : il vide le tampon de la box) toutes les 10 s en local, 30 s dans le cloud, chaque
   seconde (2 s cloud) tant qu'une exécution est suivie ; auditeur expiré : réenregistré et tout

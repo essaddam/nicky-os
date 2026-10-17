@@ -22,6 +22,7 @@ mod fake;
 mod follow;
 mod model;
 
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -57,6 +58,9 @@ const REPLY_MARGIN: Duration = Duration::from_millis(400);
 /// Refused sessions in a row before a human is asked (the cloud bans
 /// accounts that log in too often).
 const MAX_SESSION_REFUSALS: u32 = 3;
+/// Orders waiting for the box behind the one being sent; more are refused
+/// at once (the hub's own queue must not turn into unbounded work here).
+const MAX_WAITING: usize = 8;
 
 /// Which road leads to the box.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -208,6 +212,11 @@ async fn drive(
     let result = link.serve(ctx).await;
     // Whatever is still on its way is dropped here, never sent later.
     link.jobs.abort_all();
+    for queued in link.queue.drain(..) {
+        if let Some(command) = link.tracker.refused(queued.key) {
+            command.reply(Err(moli_i18n::tr!("pilotes.overkiz.non_envoye")));
+        }
+    }
     // Sent, never confirmed: say so rather than let the hub call it a crash.
     for command in link.tracker.abandon() {
         command.reply(Err(moli_i18n::tr!("pilotes.overkiz.confirmation_perdue")));
@@ -296,8 +305,21 @@ struct Link {
     /// Quota, full queue or maintenance: nothing goes to the box before.
     busy_until: Option<Instant>,
     synced: bool,
-    sessions_refused: u32,
+    /// Orders not sent yet, in the order the hub gave them: they leave one
+    /// at a time, so they reach the box in that order too.
+    queue: VecDeque<Queued>,
+    /// An order is being handed to the box.
+    writing: bool,
     orders: u64,
+}
+
+/// An order waiting for its turn.
+#[derive(Debug)]
+struct Queued {
+    key: u64,
+    order: Order,
+    /// The absolute instant past which it must not leave.
+    reply_by: Instant,
 }
 
 impl Link {
@@ -315,7 +337,8 @@ impl Link {
             next_at: Instant::now(),
             busy_until: None,
             synced: false,
-            sessions_refused: 0,
+            queue: VecDeque::new(),
+            writing: false,
             orders: 0,
         }
     }
@@ -334,8 +357,12 @@ impl Link {
                     Due::Unanswered(command) => {
                         command.reply(Err(moli_i18n::tr!("pilotes.overkiz.box_muette")));
                     }
+                    Due::NotSent(command) => {
+                        command.reply(Err(moli_i18n::tr!("pilotes.overkiz.non_envoye")));
+                    }
                 }
             }
+            self.pump(now);
             if !self.reading && now >= self.next_at && !self.busy(now) {
                 self.read();
             }
@@ -386,7 +413,6 @@ impl Link {
         match done {
             Done::Read(kind, Ok((listener, answer))) => {
                 self.reading = false;
-                self.sessions_refused = 0;
                 if let Some(listener) = listener {
                     self.listener = listener;
                 }
@@ -428,7 +454,7 @@ impl Link {
                 }
             }
             Done::Applied(key, Ok(execution)) => {
-                self.sessions_refused = 0;
+                self.writing = false;
                 if let Some(outcome) = self.tracker.taken(key, execution) {
                     outcome_of(ctx, outcome);
                 }
@@ -436,8 +462,11 @@ impl Link {
                 self.next_at = self.next_at.min(now + self.follow);
             }
             Done::Applied(key, Err(e)) => {
+                self.writing = false;
                 let message = if e.is::<NoAnswer>() {
                     moli_i18n::tr!("pilotes.overkiz.box_muette")
+                } else if e.is::<api::NotSent>() {
+                    moli_i18n::tr!("pilotes.overkiz.non_envoye")
                 } else {
                     let cause = e.to_string();
                     match api::refused(&e) {
@@ -471,8 +500,7 @@ impl Link {
             // The cloud ended the session (forgotten by the transport): the
             // next call logs in again, a few times at most.
             Some(Refusal::Session) if matches!(*self.api, Api::Cloud(_)) => {
-                self.sessions_refused += 1;
-                if self.sessions_refused >= MAX_SESSION_REFUSALS {
+                if self.api.refused_sessions() >= MAX_SESSION_REFUSALS {
                     return Err(Refused {
                         kind: Refusal::Denied,
                         message: e.to_string(),
@@ -554,19 +582,15 @@ impl Link {
         reload
     }
 
-    /// Hands one order to the box, beside the loop.
+    /// Takes an order from the hub: refused at once, or queued for the box.
     fn order(&mut self, command: CommandRequest) {
         let now = Instant::now();
         if !self.synced {
             command.reply(Err(moli_i18n::tr!("pilotes.overkiz.pas_pret")));
             return;
         }
-        if let Some(until) = self.busy_until.filter(|until| now < *until) {
-            let seconds = until.saturating_duration_since(now).as_secs().max(1);
-            command.reply(Err(moli_i18n::tr!(
-                "pilotes.overkiz.en_pause",
-                seconds = seconds
-            )));
+        if let Some(refusal) = self.paused(now) {
+            command.reply(Err(refusal));
             return;
         }
         let Some(order) = self
@@ -576,13 +600,15 @@ impl Link {
             command.reply(Err(moli_i18n::tr!("pilotes.overkiz.point_non_ecrivable")));
             return;
         };
+        if self.queue.len() >= MAX_WAITING {
+            command.reply(Err(moli_i18n::tr!("pilotes.overkiz.trop_d_ordres")));
+            return;
+        }
         let reply_by = command
             .deadline
             .checked_sub(REPLY_MARGIN)
             .unwrap_or(command.deadline);
-        // Past this, the order must not leave at all: it is dropped unsent.
-        let budget = reply_by.saturating_duration_since(now);
-        if budget.is_zero() {
+        if now >= reply_by {
             command.reply(Err("expired".into()));
             return;
         }
@@ -593,14 +619,66 @@ impl Link {
             order: order.command,
         };
         self.tracker.track(key, command, about, reply_by);
-        let api = Arc::clone(&self.api);
-        self.jobs.spawn(async move {
-            let answer = tokio::time::timeout(budget, api.apply(&order))
-                .await
-                .unwrap_or_else(|_| Err(NoAnswer.into()));
-            Done::Applied(key, answer)
+        self.queue.push_back(Queued {
+            key,
+            order,
+            reply_by,
         });
     }
+
+    /// Why no order may leave now, if so.
+    fn paused(&self, now: Instant) -> Option<String> {
+        let until = self.busy_until.filter(|until| now < *until)?;
+        let seconds = until.saturating_duration_since(now).as_secs().max(1);
+        Some(moli_i18n::tr!(
+            "pilotes.overkiz.en_pause",
+            seconds = seconds
+        ))
+    }
+
+    /// Sends the next order if none is on its way, oldest first. Each is
+    /// checked just before it leaves: still awaited, box not paused, still
+    /// in time (an order past its instant stays home, never sent late).
+    fn pump(&mut self, now: Instant) {
+        while !self.writing {
+            let Some(next) = self.queue.pop_front() else {
+                return;
+            };
+            if !self.tracker.waiting(next.key) {
+                continue; // its caller already heard « not sent »
+            }
+            if let Some(refusal) = self.paused(now) {
+                if let Some(command) = self.tracker.refused(next.key) {
+                    command.reply(Err(refusal));
+                }
+                continue;
+            }
+            if now >= next.reply_by {
+                if let Some(command) = self.tracker.refused(next.key) {
+                    command.reply(Err(moli_i18n::tr!("pilotes.overkiz.non_envoye")));
+                }
+                continue;
+            }
+            self.tracker.sending(next.key);
+            self.writing = true;
+            let api = Arc::clone(&self.api);
+            self.jobs.spawn(async move {
+                Done::Applied(next.key, emit(&api, &next.order, next.reply_by).await)
+            });
+        }
+    }
+}
+
+/// One order to the box, never after `deadline`: refused unsent if the
+/// task starts late, abandoned at that instant if the box is slow (maybe
+/// sent then, never sent again).
+async fn emit(api: &Api, order: &Order, deadline: Instant) -> anyhow::Result<String> {
+    if Instant::now() >= deadline {
+        return Err(api::NotSent.into());
+    }
+    tokio::time::timeout_at(deadline.into(), api.apply(order, deadline))
+        .await
+        .unwrap_or_else(|_| Err(NoAnswer.into()))
 }
 
 /// What an execution's end means for its caller or the household.

@@ -14,6 +14,8 @@ use http::{Method, Request, StatusCode};
 use http_body_util::Full;
 use moli_net::{Body, PinnedHttps};
 use serde_json::Value as Json;
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering::SeqCst};
+
 use tokio::sync::Mutex;
 use tokio::time::Instant;
 
@@ -39,6 +41,25 @@ const MAX_TOKEN_ANSWER: usize = 64 * 1024;
 const RENEW_EARLY: Duration = Duration::from_secs(120);
 /// Identifiers the box hands back and Moli puts in a path or matches.
 const MAX_ID: usize = 64;
+
+/// An order whose time ran out before it left: never sent.
+#[derive(Debug)]
+pub struct NotSent;
+
+impl std::fmt::Display for NotSent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("not sent: its time ran out")
+    }
+}
+
+impl std::error::Error for NotSent {}
+
+fn in_time(deadline: Option<std::time::Instant>) -> anyhow::Result<()> {
+    match deadline {
+        Some(deadline) if std::time::Instant::now() >= deadline => Err(NotSent.into()),
+        _ => Ok(()),
+    }
+}
 
 /// The box (or the cloud) said no.
 #[derive(Debug)]
@@ -86,9 +107,21 @@ pub fn identifier(value: &Json) -> anyhow::Result<String> {
 
 /// The cloud session, kept across restarts of the driver: a restart is not
 /// a reason to log in again (Somfy bans accounts that log in too often).
-pub type SharedSession = Arc<Mutex<Option<Session>>>;
+#[derive(Debug, Default)]
+pub struct Sessions {
+    slot: Mutex<Option<Session>>,
+    /// Each session gets the next number: a refusal names the session it
+    /// refused, and only that one is forgotten (never its replacement).
+    generation: AtomicU64,
+    /// Sessions refused in a row — sessions, not answers: several answers
+    /// refusing one session count once.
+    refused: AtomicU32,
+}
+
+pub type SharedSession = Arc<Sessions>;
 
 pub struct Session {
+    generation: u64,
     access: String,
     refresh: Option<String>,
     renew_at: Instant,
@@ -114,24 +147,46 @@ pub enum Api {
 
 impl Api {
     pub async fn get(&self, path: &str) -> anyhow::Result<Json> {
-        self.call(Method::GET, path, None, false).await
+        self.call(Method::GET, path, None, false, None).await
     }
 
     /// A `POST` without body, sent **once**: a fetch takes the events out
     /// of the box's buffer, so a repeat after a lost answer would come back
     /// empty and an execution's failure would vanish unseen.
     pub async fn post(&self, path: &str) -> anyhow::Result<Json> {
-        self.call(Method::POST, path, None, true).await
+        self.call(Method::POST, path, None, true, None).await
     }
 
     /// Hands an order to the box, **once**: never retried, whatever
-    /// happens (a gate opened twice is not the same as opened once).
+    /// happens (a gate opened twice is not the same as opened once), and
+    /// never after `deadline` (checked again after any wait for a session).
     /// Returns the execution's id, to follow it.
-    pub async fn apply(&self, order: &Order) -> anyhow::Result<String> {
+    pub async fn apply(
+        &self,
+        order: &Order,
+        deadline: std::time::Instant,
+    ) -> anyhow::Result<String> {
         let answer = self
-            .call(Method::POST, "/exec/apply", Some(&order.body()), true)
+            .call(
+                Method::POST,
+                "/exec/apply",
+                Some(&order.body()),
+                true,
+                Some(deadline),
+            )
             .await?;
         identifier(&answer["execId"])
+    }
+
+    /// Cloud sessions refused in a row (0 for a local box).
+    #[must_use]
+    pub fn refused_sessions(&self) -> u32 {
+        match self {
+            Self::Cloud(cloud) => cloud.session.refused.load(SeqCst),
+            Self::Local(_) => 0,
+            #[cfg(test)]
+            Self::Fake(_) => 0,
+        }
     }
 
     async fn call(
@@ -140,12 +195,14 @@ impl Api {
         path: &str,
         body: Option<&Json>,
         once: bool,
+        deadline: Option<std::time::Instant>,
     ) -> anyhow::Result<Json> {
+        in_time(deadline)?;
         match self {
             Self::Local(local) => local.call(method, path, body, once).await,
-            Self::Cloud(cloud) => cloud.call(method, path, body).await,
+            Self::Cloud(cloud) => cloud.call(method, path, body, deadline).await,
             #[cfg(test)]
-            Self::Fake(fake) => fake.call(path, once).await,
+            Self::Fake(fake) => fake.call(path, body, once).await,
         }
     }
 }
@@ -268,17 +325,34 @@ impl Cloud {
 
     /// Ends the session: the next call logs in again.
     pub async fn forget(&self) {
-        *self.session.lock().await = None;
+        *self.session.slot.lock().await = None;
+    }
+
+    /// What an answer says of the session generation `generation` it used:
+    /// refused, that session (only) is forgotten and counted; accepted, the
+    /// count starts again. A late answer about an older session changes
+    /// nothing.
+    async fn settle(&self, generation: u64, refused: bool) {
+        let mut slot = self.session.slot.lock().await;
+        if slot.as_ref().is_none_or(|s| s.generation != generation) {
+            return;
+        }
+        if refused {
+            *slot = None;
+            self.session.refused.fetch_add(1, SeqCst);
+        } else {
+            self.session.refused.store(0, SeqCst);
+        }
     }
 
     /// A valid access token: the current one, renewed before it ends (by
     /// its refresh token, else by logging in again).
-    async fn access(&self) -> anyhow::Result<String> {
-        let mut slot = self.session.lock().await;
+    async fn access(&self) -> anyhow::Result<(String, u64)> {
+        let mut slot = self.session.slot.lock().await;
         if let Some(session) = slot.as_ref()
             && Instant::now() < session.renew_at
         {
-            return Ok(session.access.clone());
+            return Ok((session.access.clone(), session.generation));
         }
         let refresh = slot.as_ref().and_then(|s| s.refresh.clone());
         let renewed = match refresh {
@@ -302,7 +376,9 @@ impl Cloud {
             ])
             .await?
         };
-        let access = session.access.clone();
+        let mut session = session;
+        session.generation = self.session.generation.fetch_add(1, SeqCst) + 1;
+        let access = (session.access.clone(), session.generation);
         *slot = Some(session);
         Ok(access)
     }
@@ -328,8 +404,16 @@ impl Cloud {
         session(status, &body)
     }
 
-    async fn call(&self, method: Method, path: &str, body: Option<&Json>) -> anyhow::Result<Json> {
-        let access = self.access().await?;
+    async fn call(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<&Json>,
+        deadline: Option<std::time::Instant>,
+    ) -> anyhow::Result<Json> {
+        let (access, generation) = self.access().await?;
+        // Logging in may have taken a while: an order out of time stays home.
+        in_time(deadline)?;
         let builder = Request::builder()
             .method(method)
             .uri(format!("{CLOUD_ROOT}{path}"))
@@ -339,10 +423,10 @@ impl Cloud {
         let (status, body) =
             moli_net::web(CLOUD_HOST, 443, true, request, CLOUD_LIMIT, MAX_ANSWER).await?;
         let result = answer(status, &body);
-        if let Err(e) = &result
-            && refused(e) == Some(Refusal::Session)
-        {
-            self.forget().await;
+        match &result {
+            Err(e) if refused(e) == Some(Refusal::Session) => self.settle(generation, true).await,
+            Ok(_) => self.settle(generation, false).await,
+            Err(_) => {}
         }
         result
     }
@@ -357,6 +441,7 @@ fn session(status: StatusCode, body: &[u8]) -> anyhow::Result<Session> {
             .saturating_sub(RENEW_EARLY)
             .max(Duration::from_secs(30));
         return Ok(Session {
+            generation: 0,
             access: access.to_owned(),
             refresh: json["refresh_token"].as_str().map(str::to_owned),
             renew_at: Instant::now() + renew_in,
@@ -445,5 +530,56 @@ mod tests {
         .unwrap_err();
         assert_eq!(refused(&e), Some(Refusal::Listener));
         assert_eq!(e.to_string(), "Invalid event listener id");
+    }
+
+    fn installed(cloud: &Cloud, generation: u64) {
+        let mut slot = cloud.session.slot.try_lock().unwrap();
+        *slot = Some(Session {
+            generation,
+            access: format!("SYNTH-T{generation}"),
+            refresh: None,
+            renew_at: Instant::now() + Duration::from_secs(3600),
+        });
+    }
+
+    /// Two requests leave with session 1; the first refusal forgets it, a
+    /// new session 2 is made; the second refusal (about 1) must not touch 2.
+    #[tokio::test]
+    async fn a_late_refusal_never_forgets_the_new_session() {
+        let cloud = Cloud::new(
+            "user@example.com".into(),
+            "x".into(),
+            SharedSession::default(),
+        );
+        installed(&cloud, 1);
+        cloud.settle(1, true).await;
+        assert!(cloud.session.slot.lock().await.is_none());
+        installed(&cloud, 2);
+        cloud.settle(1, true).await;
+        assert_eq!(
+            cloud
+                .session
+                .slot
+                .lock()
+                .await
+                .as_ref()
+                .map(|s| s.generation),
+            Some(2)
+        );
+        let api = Api::Cloud(cloud);
+        assert_eq!(
+            api.refused_sessions(),
+            1,
+            "one session refused, not two answers"
+        );
+        let Api::Cloud(cloud) = &api else {
+            unreachable!()
+        };
+        cloud.settle(2, false).await;
+        assert_eq!(api.refused_sessions(), 0, "an accepted answer starts again");
+        cloud.settle(2, true).await;
+        installed(cloud, 3);
+        cloud.settle(3, true).await;
+        assert_eq!(api.refused_sessions(), 2, "two sessions refused in a row");
     }
 }
