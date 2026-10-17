@@ -17,7 +17,7 @@ Assistant.
 |---|---|---|
 | Mémoire (mémoire **anonyme** du cgroup : tas et piles, aucun cache de fichiers ; **la même définition pour Moli et HA** ; le RSS de Moli est noté à côté) | ≤ 32 Mio (plafond conteneur 128) | HA : ~2,1 Gio. Rester sous 1/50. |
 | CPU **au repos** (compteur du cgroup sur 30 s, aucun client connecté) | ≤ 0,5 % | HA : 1,5–2,5 %. Rien ne tourne pour rien. Une mesure faite avec un dashboard ouvert est notée « en usage » (nombre de connexions) et n'est pas jugée contre ce budget. |
-| Image | ≤ 25 Mo | HA : 2,3 Go. |
+| Image | ≤ 40 Mo (25 jusqu'au 17 octobre 2026) | HA : 2,3 Go. Relevé par le propriétaire pour Turso (ADR D13) : le moteur ajoute 11,4 Mo et le binaire linux/arm64 mesuré passe de 23,1 à 34,4 Mo (35,7 pendant la période de retour arrière, où SQLite reste lié), symboles gardés. Réévalué à chaque montée de version de Turso. |
 | API, p95 | ≤ 25 ms (listes), ≤ 5 ms (santé) | Le dashboard doit répondre au doigt. |
 | Démarrage | ≤ 2 s jusqu'à « sain » | Un redémarrage ne doit rien coûter. |
 

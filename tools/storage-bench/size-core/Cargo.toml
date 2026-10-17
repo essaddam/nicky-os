@@ -1,0 +1,17 @@
+[package]
+name = "size-core"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Taille de turso_core seul, sans fonctions par défaut (crate à part : pas d'unification de fonctions avec `turso`)"
+
+[workspace]
+
+[dependencies]
+turso_core = { version = "=0.8.3", default-features = false, features = ["fs", "uuid", "json"] }
+
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+strip = "debuginfo"
