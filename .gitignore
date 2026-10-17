@@ -9,3 +9,4 @@ web/dist
 .agentsroom/fork-context-*.txt
 .agentsroom/transfer-context-*.txt
 .cursor/mcp.json
+/.worktrees/
