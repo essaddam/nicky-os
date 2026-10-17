@@ -57,6 +57,9 @@ pub struct Options {
     pub retention: Retention,
 }
 
+/// The recorder's handle (`History::start`).
+pub type Recorder = JoinHandle<Result<(), HistoryError>>;
+
 /// Cheap handle used by the surfaces to read history.
 #[derive(Clone, Debug)]
 pub struct History {
@@ -118,12 +121,14 @@ pub struct Growth {
 impl History {
     /// Opens the database and starts recording. Start it *before* the
     /// drivers: it subscribes first, then records the current state, so no
-    /// value is missed. The handle resolves once everything is flushed.
+    /// value is missed. The handle resolves once everything is flushed; in
+    /// error when retention floors could not be written (purges are then
+    /// suspended until a person validates them).
     pub fn start(
         hub: &Hub,
         options: &Options,
         cancel: CancellationToken,
-    ) -> Result<(Self, JoinHandle<()>), HistoryError> {
+    ) -> Result<(Self, Recorder), HistoryError> {
         let store = Arc::new(Store::open(&options.path)?);
         let hub_families = hub.clone();
         let policy = retention::Policy::open(
@@ -153,7 +158,9 @@ impl History {
             // Everything queued is written before the handle resolves.
             recording.policy.stop_raising();
             let _ = writer.await;
-            let _ = raising.await;
+            raising
+                .await
+                .map_err(|e| HistoryError::Internal(e.to_string()))?
         });
         Ok((history, recorder))
     }
@@ -628,16 +635,81 @@ mod tests {
         .compile(30)
         .unwrap();
         let policy = Arc::new(
-            retention::Policy::open(&store, filter.clone(), retention, Box::new(|_: &str| None))
-                .unwrap(),
+            retention::Policy::open(
+                &store,
+                filter.clone(),
+                retention,
+                Box::new({
+                    let hub = hub.clone();
+                    move |point: &str| retention::family_in(&hub, point)
+                }),
+            )
+            .unwrap(),
         );
         let id = store.points().unwrap()[0].0;
         assert_eq!(store.floors().unwrap().unwrap()[&id], 30);
         let rows = present(&hub, &filter, &policy);
         assert!(rows.is_empty(), "excluded: nothing to write");
         policy.stop_raising();
-        retention::raise_loop(Arc::clone(&store), Arc::clone(&policy)).await;
+        retention::raise_loop(Arc::clone(&store), Arc::clone(&policy))
+            .await
+            .unwrap();
         assert_eq!(store.floors().unwrap().unwrap()[&id], 90);
+        drivers.cancel();
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[tokio::test]
+    async fn the_handle_says_when_floors_could_not_be_written() {
+        let hub = Hub::new(moli_runtime::HubOptions::default()).unwrap();
+        let drivers = CancellationToken::new();
+        moli_runtime::spawn_driver(
+            &hub,
+            moli_core::InstanceId::from("fake"),
+            Arc::new(Thermometer),
+            drivers.clone(),
+        );
+        while hub.stats().drivers_running == 0 {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        let dir = std::env::temp_dir().join(format!("moli-history-handle-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let path = dir.join("history.db");
+        {
+            let store = Store::open(&path).unwrap();
+            store
+                .insert(&[(PointId::from("fake:m/t"), Value::Float(20.0), 1)], false)
+                .unwrap();
+            store.set_up_floors(30, 1).unwrap();
+        }
+        rusqlite::Connection::open(&path)
+            .unwrap()
+            .execute_batch(
+                "CREATE TRIGGER boom BEFORE UPDATE ON retention WHEN NEW.days = 90
+                 BEGIN SELECT RAISE(ABORT, 'boom'); END;",
+            )
+            .unwrap();
+        let (filter, retention) = toml::from_str::<StorageConfig>(
+            "[history]\nexclude = [\"fake:*\"]\n[policy.climate]\ndays = 90",
+        )
+        .unwrap()
+        .compile(30)
+        .unwrap();
+        let cancel = CancellationToken::new();
+        let options = Options {
+            path: path.clone(),
+            filter,
+            retention,
+        };
+        let (_history, recorder) = History::start(&hub, &options, cancel.clone()).unwrap();
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        cancel.cancel();
+        let ended = tokio::time::timeout(Duration::from_secs(10), recorder)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(ended.is_err(), "not a normal stop: {ended:?}");
+        assert!(Store::open(&path).unwrap().suspended().unwrap());
         drivers.cancel();
         let _ = std::fs::remove_dir_all(dir);
     }

@@ -50,10 +50,12 @@ export function retentionLines(policies, { num, when }) {
   if (p.filter?.exclude?.length && p.filter?.include?.length) lines.push({ key: 'systeme.conservation.inclus', params: { list: p.filter.include.join(', ') } });
   const r = p.reduction;
   if (r) {
+    // Suspended purges (a raise could not be written) resume once validated.
+    const [some, none] = r.resume ? ['reprise', 'reprise_vide'] : ['reduction', 'reduction_vide'];
     lines.push(
       r.rows
-        ? { key: 'systeme.conservation.reduction', params: { count: r.rows, n: num(r.rows), points: num(r.points), from: when(r.from), to: when(r.to) }, alert: true }
-        : { key: 'systeme.conservation.reduction_vide', alert: true },
+        ? { key: `systeme.conservation.${some}`, params: { count: r.rows, n: num(r.rows), points: num(r.points), from: when(r.from), to: when(r.to) }, alert: true }
+        : { key: `systeme.conservation.${none}`, alert: true },
     );
   }
   return lines;

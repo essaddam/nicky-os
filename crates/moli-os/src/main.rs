@@ -401,7 +401,7 @@ async fn serve(config: Config, boot: Instant) -> anyhow::Result<()> {
     let _ = saver.await;
     let _ = automating.await;
     if let Some(recorder) = recorder {
-        let _ = recorder.await; // flushes its last batch
+        stop_history(recorder).await;
     }
     if let Some(metering) = metering {
         let _ = metering.await; // files its queued readings
@@ -834,13 +834,20 @@ fn housekeeping(hub: &Hub, cancel: &CancellationToken) -> tokio::task::JoinHandl
     })
 }
 
+/// Waits for the history's last batch and the retention floors queued.
+async fn stop_history(recorder: moli_history::Recorder) {
+    if let Ok(Err(e)) = recorder.await {
+        tracing::error!(error = %e, "history stopped with floors not written: purges suspended");
+    }
+}
+
 /// History: every change, kept by its policy (`[storage]`; `history_days`
 /// days without one, 0 disables it).
 fn start_history(
     config: &Config,
     hub: &Hub,
     cancel: &CancellationToken,
-) -> anyhow::Result<Option<(moli_history::History, tokio::task::JoinHandle<()>)>> {
+) -> anyhow::Result<Option<(moli_history::History, moli_history::Recorder)>> {
     if config.server.history_days == 0 {
         return Ok(None);
     }

@@ -134,7 +134,7 @@ async fn an_excluded_point_is_not_written_and_its_energy_stays_exact() {
 
     // Everything recorded is flushed.
     cancel.cancel();
-    recorder.await.unwrap();
+    recorder.await.unwrap().unwrap();
     metering.await.unwrap();
     let day = 86_400_000;
     let now = moli_core::now_ms();

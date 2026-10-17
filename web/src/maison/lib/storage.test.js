@@ -66,6 +66,15 @@ test('the retention says each duration, and what a reduction would delete', () =
   assert.equal(lines[1].params.family.key, 'systeme.conservation.familles.climate');
   assert.deepEqual(lines[6].params, { count: 1200, n: '1200', points: '2', from: '10', to: '20' });
   assert.ok(lines[6].alert);
+  // Suspended purges: what resuming them deletes, in its own words.
+  const resume = retentionLines({ ...policies, reduction: { ...policies.reduction, resume: true } }, fmt);
+  assert.equal(resume.at(-1).key, 'systeme.conservation.reprise');
+  const resumeEmpty = retentionLines({ ...policies, reduction: { ...policies.reduction, resume: true, rows: 0 } }, fmt);
+  assert.equal(resumeEmpty.at(-1).key, 'systeme.conservation.reprise_vide');
+  for (const lang of ['fr', 'en']) {
+    const words = catalog(lang);
+    for (const key of ['systeme.conservation.reprise_other', 'systeme.conservation.reprise_vide']) assert.ok(words[key], `${lang}: ${key}`);
+  }
   // Nothing configured: the general duration only, nothing waiting.
   const plain = retentionLines({ filter: { exclude: [], include: [] }, configured: { days: 30, families: {}, points: [] }, reduction: null }, fmt);
   assert.deepEqual(keys(plain), ['systeme.conservation.general']);

@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS retention (
 -- validated.
 CREATE TABLE IF NOT EXISTS retention_log (
     at     INTEGER NOT NULL,
-    kind   TEXT    NOT NULL,           -- baseline | validated
+    kind   TEXT    NOT NULL,           -- baseline | validated | suspended | resumed
     who    TEXT,
     points INTEGER NOT NULL,
     rows   INTEGER NOT NULL
@@ -471,9 +471,16 @@ impl Store {
         Ok(())
     }
 
-    /// Raises the floors of points already recorded, by name (a point not
-    /// recorded yet gets its floor with its first row).
-    pub fn raise_named_floors(&self, floors: &[(String, u32)]) -> Result<(), HistoryError> {
+    /// Raises the floors of points already recorded, by name, each to
+    /// `days(point)` computed inside the transaction (from what is known
+    /// at that instant): a validation's lowering, which takes the writer
+    /// too, comes entirely before or after. A point not recorded yet gets
+    /// its floor with its first row.
+    pub fn raise_named_floors(
+        &self,
+        points: &[String],
+        days: &dyn Fn(&str) -> u32,
+    ) -> Result<(), HistoryError> {
         let mut conn = lock(&self.writer);
         let tx = conn.transaction()?;
         {
@@ -481,23 +488,48 @@ impl Store {
                 "UPDATE retention SET days = ?2
                  WHERE point_id = (SELECT id FROM points WHERE point = ?1) AND days < ?2",
             )?;
-            for (point, days) in floors {
-                raise.execute(params![point, days])?;
+            for point in points {
+                raise.execute(params![point, days(point)])?;
             }
         }
         tx.commit()?;
         Ok(())
     }
 
+    /// Purges are suspended until a person validates them again: a raise of
+    /// floors could not be written (`points` were waiting for it).
+    pub fn suspend(&self, at: u64, points: usize) -> Result<(), HistoryError> {
+        lock(&self.writer).execute(
+            "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'suspended', ?2, 0)",
+            params![ts(at), i64::try_from(points).unwrap_or(i64::MAX)],
+        )?;
+        Ok(())
+    }
+
+    /// Whether purges are suspended (a `suspended` not followed by `resumed`).
+    pub fn suspended(&self) -> Result<bool, HistoryError> {
+        let last: Option<String> = lock(&self.reader)
+            .query_row(
+                "SELECT kind FROM retention_log WHERE kind IN ('suspended', 'resumed')
+                 ORDER BY rowid DESC LIMIT 1",
+                [],
+                |r| r.get(0),
+            )
+            .optional()?;
+        Ok(last.as_deref() == Some("suspended"))
+    }
+
     /// Lowers floors a person validated, each `(id, from, to)` only if it
-    /// is still `from`, and logs who did: all or nothing. `false` when one
-    /// changed meanwhile (nothing is written then).
+    /// is still `from`, and logs who did (and, with `resume`, that purges
+    /// resume): all or nothing. `false` when one changed meanwhile (nothing
+    /// is written then).
     pub fn lower_floors(
         &self,
         floors: &[(i64, u32, u32)],
         at: u64,
         who: Option<&str>,
         rows: u64,
+        resume: bool,
     ) -> Result<bool, HistoryError> {
         let mut conn = lock(&self.writer);
         let tx = conn.transaction()?;
@@ -519,6 +551,12 @@ impl Store {
                 i64::try_from(rows).unwrap_or(i64::MAX)
             ],
         )?;
+        if resume {
+            tx.execute(
+                "INSERT INTO retention_log(at, kind, who, points, rows) VALUES (?1, 'resumed', ?2, 0, 0)",
+                params![ts(at), who],
+            )?;
+        }
         tx.commit()?;
         Ok(true)
     }
@@ -1039,13 +1077,13 @@ mod tests {
             floor: 30,
         };
         // Raised before the purge: nothing goes.
-        store.raise_named_floors(&[("d/x".into(), 90)]).unwrap();
+        store.raise_named_floors(&["d/x".into()], &|_| 90).unwrap();
         assert_eq!(store.prune(&[cut], 5, || {}).unwrap(), 0);
         // Raised between two lots: the first lot only.
         let cut = Cut { floor: 90, ..cut };
         let removed = store
             .prune(&[cut], 5, || {
-                store.raise_named_floors(&[("d/x".into(), 120)]).unwrap();
+                store.raise_named_floors(&["d/x".into()], &|_| 120).unwrap();
             })
             .unwrap();
         assert_eq!(removed, 5);

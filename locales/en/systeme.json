@@ -387,5 +387,8 @@
   "systeme.conservation.supprimees_other": "{n} readings deleted",
   "systeme.conservation.erreur": "Cannot validate: {message}",
   "systeme.conservation.inclus": "Except, still written: {list}",
-  "systeme.conservation.changee": "The proposal changed since your click: check the new one, then validate again. Nothing was deleted."
+  "systeme.conservation.changee": "The proposal changed since your click: check the new one, then validate again. Nothing was deleted.",
+  "systeme.conservation.reprise_one": "Purging suspended: a longer duration could not be recorded. Resuming will delete {n} reading from {points} point(s), from {from} to {to}. Nothing is erased before you validate.",
+  "systeme.conservation.reprise_other": "Purging suspended: a longer duration could not be recorded. Resuming will delete {n} readings from {points} point(s), from {from} to {to}. Nothing is erased before you validate.",
+  "systeme.conservation.reprise_vide": "Purging suspended: a longer duration could not be recorded. Resuming deletes nothing for now; validate to resume."
 }

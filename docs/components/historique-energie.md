@@ -92,8 +92,14 @@ chaque point la plus longue de son plancher et de sa durée configurée :
   plancher est relevé **dès la publication de son appareil** (`DeviceUpserted` sur le bus,
   et relecture de toutes les descriptions du hub au démarrage et après une perte d'événements,
   points exclus compris), **à chaque écriture du point**, dans la transaction de ses lignes, et
-  par chaque passe. Les hausses de publication passent par une file bornée (une entrée par
-  point, la plus haute demandée), écrite par une seule tâche et vidée avant l'arrêt. Il n'est
+  par chaque passe. Les publications mettent en file les points concernés (une entrée par
+  point), écrite par une seule tâche et vidée avant l'arrêt ; la durée de chacun est calculée
+  **au moment de l'écriture, dans sa transaction**, d'après ce que le hub en dit alors : une
+  publication ancienne ne défait jamais une réduction validée depuis. Une hausse impossible à
+  écrire (après 3 essais) **suspend les purges, durablement** (`retention_log`) : plus rien
+  n'est supprimé tant qu'une personne n'a pas vu ce que la reprise supprimerait, point par point
+  (`reduction.resume`), et validé avec son code ; le handle d'arrêt de l'historique le signale
+  en erreur. Il n'est
   jamais abaissé que par une validation. Appareil inconnu : seule la hausse certaine relève le
   plancher (la plus courte durée que pourrait lui donner une famille, donc toute règle propre
   au point), jamais une simple ambiguïté ;

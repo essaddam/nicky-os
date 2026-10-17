@@ -9,10 +9,15 @@
 //! plan; a person validates exactly that plan (`validate`), which lowers
 //! those floors and deletes those rows — no more — under the lock the
 //! passes take. A point whose device is not known (not published yet after
-//! a start, or gone) is kept its longest possible duration and never enters
-//! a plan.
+//! a start, or gone) is kept its longest possible duration and enters no
+//! reduction.
+//!
+//! Floors are raised as metadata becomes known (a device published, a row
+//! written, a pass), always from what is known at the instant of writing.
+//! If a raise cannot be written, purges are suspended — durably — until a
+//! person has seen what resuming them deletes and validated it.
 
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -29,6 +34,10 @@ use crate::{DAY_MS, History, Prune, blocking};
 const PRUNE_LOT: usize = 5_000;
 /// …and the breath the writer is given between two of them.
 const PRUNE_PAUSE: Duration = Duration::from_millis(2);
+/// Tries of a floors raise before purges are suspended…
+const RAISE_TRIES: u32 = 3;
+/// …waiting this long (doubled each time) between them.
+const RAISE_BACKOFF: Duration = Duration::from_millis(100);
 /// How long an announced reduction may be validated.
 const REDUCTION_TTL_MS: u64 = 15 * 60_000;
 /// Points listed with an announced reduction.
@@ -54,14 +63,17 @@ pub(crate) struct Policy {
     /// One at a time: a pass, a count, a validation.
     passes: tokio::sync::Mutex<()>,
     raises: Raises,
+    /// No purge until a person validates: a raise could not be written.
+    suspended: AtomicBool,
 }
 
-/// Floors to raise for published devices: one per point, the highest
-/// asked, so bounded by the points there are; written by one task
+/// Points whose metadata changed (a device published): their floors are
+/// to be raised from what is known when they are written. One entry per
+/// point, so bounded by the points there are; written by one task
 /// (`raise_loop`) and drained before the history stops.
 #[derive(Default)]
 struct Raises {
-    pending: Mutex<HashMap<String, u32>>,
+    pending: Mutex<HashSet<String>>,
     wake: tokio::sync::Notify,
     closed: AtomicBool,
 }
@@ -74,11 +86,14 @@ impl std::fmt::Debug for Policy {
     }
 }
 
-/// A reduction as shown: the points it shortens, each with what it deletes.
+/// A reduction as shown: the points it shortens, each with what it
+/// deletes; while purges are suspended, every point, with what resuming
+/// them deletes.
 #[derive(Clone, Debug)]
 struct Plan {
     at: u64,
     fingerprint: String,
+    resume: bool,
     items: Vec<Item>,
 }
 
@@ -86,11 +101,15 @@ struct Plan {
 struct Item {
     id: i64,
     point: String,
-    family: Family,
-    /// Kept so far…
+    family: Option<Family>,
+    /// Its configured duration when counted.
+    configured: u32,
+    /// Its floor so far…
     floor: u32,
-    /// …and from now on.
+    /// …and once validated.
     days: u32,
+    /// What it is purged at: rows before `doomed.anchor` go.
+    keep: u32,
     doomed: Option<Doomed>,
 }
 
@@ -103,6 +122,9 @@ pub struct Reduction {
     pub fingerprint: String,
     pub points: usize,
     pub rows: u64,
+    /// Purges are suspended (a raise could not be written): validating
+    /// resumes them, deleting what is counted here.
+    pub resume: bool,
     /// The oldest row concerned, and the latest instant before which rows go.
     pub from: Option<u64>,
     pub to: Option<u64>,
@@ -113,7 +135,7 @@ pub struct Reduction {
 #[derive(Clone, Debug, Serialize)]
 pub struct Reduced {
     pub point: String,
-    pub family: Family,
+    pub family: Option<Family>,
     pub from_days: u32,
     pub to_days: u32,
     pub rows: u64,
@@ -168,6 +190,10 @@ impl Policy {
         if store.floors()?.is_none() {
             store.set_up_floors(configured.days, now_ms())?;
         }
+        let suspended = store.suspended()?;
+        if suspended {
+            tracing::warn!("history purges suspended until a person validates them");
+        }
         Ok(Self {
             filter,
             configured,
@@ -175,20 +201,19 @@ impl Policy {
             shown: Mutex::new(None),
             passes: tokio::sync::Mutex::new(()),
             raises: Raises::default(),
+            suspended: AtomicBool::new(suspended),
         })
     }
 
-    /// A device published, or read again after events were lost: what its
-    /// points' durations ask, their family now known, is queued to be kept
-    /// at once (only raised), whether their values are recorded or not.
+    /// A device published, or read again after events were lost: its
+    /// points' floors are queued, to be raised (never lowered) from what is
+    /// known when they are written, whether their values are recorded or
+    /// not.
     pub(crate) fn published(&self, device: &Device) {
         {
             let mut pending = store::lock(&self.raises.pending);
             for spec in &device.points {
-                let point = PointId::new(&device.id, &spec.key);
-                let days = self.configured.days(point.as_str(), Family::of(spec));
-                let queued = pending.entry(point.as_str().to_owned()).or_insert(0);
-                *queued = (*queued).max(days);
+                pending.insert(PointId::new(&device.id, &spec.key).as_str().to_owned());
             }
         }
         self.raises.wake.notify_one();
@@ -281,53 +306,67 @@ impl Policy {
             }
         }
         store.raise_floors(&raised)?;
+        if self.suspended.load(SeqCst) {
+            return Ok(0);
+        }
         store.prune(&cuts, PRUNE_LOT, || std::thread::sleep(PRUNE_PAUSE))
     }
 
     /// The points whose configured duration is below their floor, and what
-    /// shortening each deletes as of `now`.
+    /// shortening each deletes as of `now`. While purges are suspended,
+    /// every point with a floor, with what resuming purges deletes of it.
     fn plan(&self, store: &Store, now: u64) -> Result<Option<Plan>, HistoryError> {
         use std::hash::{Hash, Hasher};
+        let resume = self.suspended.load(SeqCst);
         let mut items = Vec::new();
         for s in self.seen(store)? {
-            let (Some(family), Some(floor)) = (s.family, s.floor) else {
+            let Some(floor) = s.floor else { continue };
+            let configured = self.configured(&s.point, s.family);
+            let (days, keep) = if s.family.is_some() && configured < floor {
+                (configured, configured)
+            } else if resume {
+                (floor, floor.max(configured))
+            } else {
                 continue;
             };
-            let days = self.configured.days(&s.point, family);
-            if days < floor {
-                items.push(Item {
-                    doomed: store.doomed(s.id, cutoff(now, days))?,
-                    id: s.id,
-                    point: s.point,
-                    family,
-                    floor,
-                    days,
-                });
-            }
+            items.push(Item {
+                doomed: store.doomed(s.id, cutoff(now, keep))?,
+                id: s.id,
+                point: s.point,
+                family: s.family,
+                configured,
+                floor,
+                days,
+                keep,
+            });
         }
-        if items.is_empty() {
+        if items.is_empty() && !resume {
             return Ok(None);
         }
         let mut h = std::hash::DefaultHasher::new();
-        (now, &items).hash(&mut h);
+        (now, resume, &items).hash(&mut h);
         Ok(Some(Plan {
             at: now,
             fingerprint: format!("{:016x}", h.finish()),
+            resume,
             items,
         }))
     }
 
     /// Applies the plan shown, if each of its points still is what it was
     /// (floor, family, duration): their floors are lowered and exactly their
-    /// rows deleted, within the period announced. Returns how many.
+    /// rows deleted, within the period announced; a plan shown while purges
+    /// were suspended resumes them. Returns how many.
     fn apply(&self, store: &Store, plan: &Plan, by: Option<&str>) -> Result<usize, PolicyError> {
         // Each point as it was counted: its floor, its family, its duration.
         let floors = store.floors()?.unwrap_or_default();
-        if plan.items.iter().any(|i| {
-            floors.get(&i.id) != Some(&i.floor)
-                || (self.families)(&i.point) != Some(i.family)
-                || self.configured.days(&i.point, i.family) != i.days
-        }) {
+        if plan.resume != self.suspended.load(SeqCst)
+            || plan.items.iter().any(|i| {
+                floors.get(&i.id) != Some(&i.floor)
+                    || (self.families)(&i.point) != i.family
+                    || self.configured(&i.point, i.family) != i.configured
+            })
+        {
             return Err(PolicyError::Changed);
         }
         let announced = plan
@@ -339,8 +378,11 @@ impl Policy {
         // Lowered only from the floor counted: a write that raised one
         // meanwhile (its family just published) refuses the whole plan.
         let floors: Vec<_> = plan.items.iter().map(|i| (i.id, i.floor, i.days)).collect();
-        if !store.lower_floors(&floors, now_ms(), by, announced)? {
+        if !store.lower_floors(&floors, now_ms(), by, announced, plan.resume)? {
             return Err(PolicyError::Changed);
+        }
+        if plan.resume {
+            self.suspended.store(false, SeqCst);
         }
         let cuts: Vec<_> = plan
             .items
@@ -351,7 +393,7 @@ impl Policy {
                     oldest: d.oldest.unwrap_or(0),
                     anchor: d.anchor,
                     max: d.rows,
-                    floor: i.days,
+                    floor: i.keep,
                 })
             })
             .collect();
@@ -380,7 +422,7 @@ impl Plan {
         let from = doomed()
             .filter_map(|i| i.doomed.and_then(|d| d.oldest))
             .min();
-        let to = doomed().map(|i| cutoff(self.at, i.days)).max();
+        let to = doomed().map(|i| cutoff(self.at, i.keep)).max();
         top.sort_by(|a, b| b.rows.cmp(&a.rows).then_with(|| a.point.cmp(&b.point)));
         let rows = top.iter().map(|r| r.rows).sum();
         let points = top.len();
@@ -390,6 +432,7 @@ impl Plan {
             fingerprint: self.fingerprint.clone(),
             points,
             rows,
+            resume: self.resume,
             from,
             to,
             top,
@@ -397,41 +440,58 @@ impl Plan {
     }
 }
 
-/// Writes the floors queued by `Policy::published`, a batch at a time,
-/// until `stop_raising` and everything queued is written.
-pub(crate) async fn raise_loop(store: Arc<Store>, policy: Arc<Policy>) {
+/// Raises the floors of the points queued by `Policy::published`, a batch
+/// at a time, each from what is known when it is written, until
+/// `stop_raising` and everything queued is written. A batch that cannot be
+/// written after `RAISE_TRIES` tries stays queued and suspends purges,
+/// durably, until a person validates them; the loop then ends in error once
+/// stopped (the recorder's handle says so).
+pub(crate) async fn raise_loop(store: Arc<Store>, policy: Arc<Policy>) -> Result<(), HistoryError> {
     let raises = &policy.raises;
     loop {
-        let batch: Vec<(String, u32)> = std::mem::take(&mut *store::lock(&raises.pending))
+        let batch: Vec<String> = std::mem::take(&mut *store::lock(&raises.pending))
             .into_iter()
             .collect();
         if batch.is_empty() {
             if raises.closed.load(SeqCst) {
                 if store::lock(&raises.pending).is_empty() {
-                    break;
+                    return Ok(());
                 }
                 continue;
             }
             raises.wake.notified().await;
             continue;
         }
-        let store = Arc::clone(&store);
-        let retry = batch.clone();
-        if let Err(e) = blocking(move || store.raise_named_floors(&batch)).await {
-            tracing::warn!(error = %e, "history floors not raised");
-            if raises.closed.load(SeqCst) {
-                break;
-            }
-            // Kept for the next publication (no busy retry).
-            {
-                let mut pending = store::lock(&raises.pending);
-                for (point, days) in retry {
-                    let queued = pending.entry(point).or_insert(0);
-                    *queued = (*queued).max(days);
+        let mut tries = 0;
+        let failed = loop {
+            let (store, policy, points) = (Arc::clone(&store), Arc::clone(&policy), batch.clone());
+            let written = blocking(move || {
+                store.raise_named_floors(&points, &|point| policy.floors(point).certain)
+            })
+            .await;
+            match written {
+                Ok(()) => break None,
+                Err(e) if tries + 1 >= RAISE_TRIES => break Some(e),
+                Err(e) => {
+                    tracing::warn!(error = %e, "history floors not raised, trying again");
+                    tokio::time::sleep(RAISE_BACKOFF * 2u32.pow(tries)).await;
+                    tries += 1;
                 }
             }
-            raises.wake.notified().await;
+        };
+        let Some(e) = failed else { continue };
+        tracing::error!(error = %e, points = batch.len(), "history floors not raised: purges suspended until a person validates them");
+        store::lock(&raises.pending).extend(batch.iter().cloned());
+        policy.suspended.store(true, SeqCst);
+        let (log, at, n) = (Arc::clone(&store), now_ms(), batch.len());
+        if let Err(e) = blocking(move || log.suspend(at, n)).await {
+            tracing::error!(error = %e, "history suspension not written");
         }
+        if raises.closed.load(SeqCst) {
+            return Err(e);
+        }
+        // Tried again at the next publication (no busy retry).
+        raises.wake.notified().await;
     }
 }
 
@@ -505,6 +565,7 @@ impl History {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use std::path::PathBuf;
 
     use moli_core::Value;
@@ -905,17 +966,20 @@ mod tests {
         let history = bench.history(with(30, &[(Family::Climate, 90)], &[]));
         assert_eq!(history.prune_pass(bench.now).await.unwrap(), 0);
         assert_eq!(bench.floor("d/x"), Some(30));
+        // Published: the hub now describes it as a thermometer.
         let device = device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius);
-        history.policy.published(&device);
-        history.policy.stop_raising();
-        raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy)).await;
-        assert_eq!(bench.floor("d/x"), Some(90));
-        let back = bench.history(with(30, &[], &[]));
         bench
             .known
             .lock()
             .unwrap()
             .insert("d/x".into(), Family::Climate);
+        history.policy.published(&device);
+        history.policy.stop_raising();
+        raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy))
+            .await
+            .unwrap();
+        assert_eq!(bench.floor("d/x"), Some(90));
+        let back = bench.history(with(30, &[], &[]));
         assert_eq!(back.prune_pass(bench.now).await.unwrap(), 0);
         let r = back.policies().await.unwrap().reduction.unwrap();
         assert_eq!((r.top[0].from_days, r.top[0].to_days, r.rows), (90, 30, 1));
@@ -971,17 +1035,115 @@ mod tests {
         }
         assert_eq!(
             store::lock(&policy.raises.pending).clone(),
-            HashMap::from([("d/x".to_owned(), 90)]),
-            "one entry per point, the highest asked"
+            HashSet::from(["d/x".to_owned()]),
+            "one entry per point"
         );
+        // What it is now decides, when the floor is written.
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Climate);
         let raising = tokio::spawn(raise_loop(Arc::clone(&history.store), Arc::clone(policy)));
         policy.stop_raising();
         tokio::time::timeout(Duration::from_secs(5), raising)
             .await
             .expect("drained, then ended")
+            .unwrap()
             .unwrap();
         assert!(store::lock(&policy.raises.pending).is_empty());
         assert_eq!(bench.floor("d/x"), Some(90));
+    }
+
+    #[tokio::test]
+    async fn an_old_publication_never_undoes_a_validated_reduction() {
+        // Kept 90 days as climate; published as climate, then as a battery
+        // gauge, both still queued. A person validates 90 → 3; the queue
+        // written afterwards follows what the point is now.
+        let bench = Bench::new(
+            "old-publication",
+            &[("d/x", 20 * D), ("d/x", 10 * D), ("d/x", D)],
+        );
+        let history = bench.history(with(
+            30,
+            &[(Family::Climate, 90), (Family::Diagnostic, 3)],
+            &[],
+        ));
+        let id = bench.store.points().unwrap()[0].0;
+        bench.store.raise_floors(&[(id, 90)]).unwrap();
+        history.policy.published(&device(
+            moli_core::Semantic::Temperature,
+            moli_core::Unit::Celsius,
+        ));
+        history.policy.published(&device(
+            moli_core::Semantic::Battery,
+            moli_core::Unit::Percent,
+        ));
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Diagnostic);
+        let r = history.policies().await.unwrap().reduction.unwrap();
+        assert_eq!((r.top[0].from_days, r.top[0].to_days, r.rows), (90, 3, 1));
+        history
+            .validate(r.at, &r.fingerprint, Origin::Ui, None)
+            .await
+            .unwrap();
+        history.policy.stop_raising();
+        raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy))
+            .await
+            .unwrap();
+        assert_eq!(bench.floor("d/x"), Some(3), "the consent holds");
+        assert!(history.policies().await.unwrap().reduction.is_none());
+    }
+
+    #[tokio::test]
+    async fn a_raise_that_cannot_be_written_suspends_purges_until_a_person_resumes_them() {
+        let bench = Bench::new(
+            "raise-fails",
+            &[("d/x", 50 * D), ("d/x", 40 * D), ("d/x", 5 * D)],
+        );
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Climate);
+        let history = bench.history(with(30, &[(Family::Climate, 90)], &[]));
+        let db = rusqlite::Connection::open(bench.dir.join("history.db")).unwrap();
+        db.execute_batch(
+            "CREATE TRIGGER boom BEFORE UPDATE ON retention WHEN NEW.days = 90
+             BEGIN SELECT RAISE(ABORT, 'boom'); END;",
+        )
+        .unwrap();
+        history.policy.published(&device(
+            moli_core::Semantic::Temperature,
+            moli_core::Unit::Celsius,
+        ));
+        history.policy.stop_raising();
+        let failed = raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy)).await;
+        assert!(failed.is_err(), "the stop says it failed");
+        assert_eq!(bench.floor("d/x"), Some(30));
+        assert!(bench.store.suspended().unwrap(), "durably");
+        db.execute_batch("DROP TRIGGER boom").unwrap();
+
+        // Started again, the 90 days no longer configured: nothing goes
+        // until a person has seen what resuming deletes.
+        let back = bench.history(with(30, &[], &[]));
+        assert_eq!(back.prune_pass(bench.now).await.unwrap(), 0);
+        assert_eq!(bench.left().len(), 3);
+        let r = back.policies().await.unwrap().reduction.unwrap();
+        assert!(r.resume);
+        assert_eq!(r.rows, 1);
+        let refused = back.validate(r.at, &r.fingerprint, Origin::Api, None).await;
+        assert!(matches!(refused, Err(PolicyError::HumanOnly)));
+        let removed = back
+            .validate(r.at, &r.fingerprint, Origin::Ui, Some("a person".into()))
+            .await
+            .unwrap();
+        assert_eq!(removed, 1);
+        assert!(!bench.store.suspended().unwrap());
+        assert!(back.policies().await.unwrap().reduction.is_none());
     }
 
     #[tokio::test]
@@ -1023,7 +1185,7 @@ mod tests {
         assert!(
             bench
                 .store
-                .lower_floors(&[(id, 30, 3)], 1, None, 0)
+                .lower_floors(&[(id, 30, 3)], 1, None, 0, false)
                 .unwrap()
         );
         history.prune_pass(bench.now).await.unwrap();
