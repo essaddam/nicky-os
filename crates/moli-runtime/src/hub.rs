@@ -242,26 +242,58 @@ async fn answer_of(
     }
 }
 
-/// An order in a driver's queue, and its journal line still to write. Its
-/// caller may give up (a client gone, a cancelled task): if the order was
-/// still queued, it is given up with it and never runs; if the driver had
-/// taken it, its outcome is still awaited and journaled. Either way, one
-/// line.
-struct Delivery {
-    answer: Option<oneshot::Receiver<Result<(), String>>>,
-    claim: Arc<AtomicU8>,
+/// Waits for a taken order's answer and writes its journal line, once. If
+/// it is itself dropped first (its task cancelled, the runtime shutting
+/// down), the line is still written: the answer if it has come, otherwise
+/// « outcome unknown ».
+struct Observer {
+    answer: oneshot::Receiver<Result<(), String>>,
     deadline: Instant,
     journal: Option<JournalLine>,
 }
 
+impl Observer {
+    async fn finish(mut self) -> Result<(), CommandError> {
+        let result = answer_of(&mut self.answer, self.deadline).await;
+        self.write(outcome_of(&result));
+        result
+    }
+
+    fn write(&mut self, outcome: Outcome) {
+        if let Some(journal) = self.journal.take() {
+            journal(outcome);
+        }
+    }
+}
+
+impl Drop for Observer {
+    fn drop(&mut self) {
+        let outcome = match self.answer.try_recv() {
+            Ok(result) => outcome_of(&result.map_err(CommandError::Driver)),
+            Err(_) => Outcome::Err(moli_i18n::tr!("serveur.journal.inconnu")),
+        };
+        self.write(outcome);
+    }
+}
+
+/// An order in a driver's queue, and its journal line still to write. Its
+/// caller may give up (a client gone, a cancelled task): if the order was
+/// still queued, it is given up with it and never runs; if the driver had
+/// taken it, the driver sees the caller gone before sending it, and the
+/// outcome is still awaited and journaled. Either way, one line.
+struct Delivery {
+    observer: Option<Observer>,
+    claim: Arc<AtomicU8>,
+}
+
 impl Delivery {
     async fn outcome(mut self) -> Result<(), CommandError> {
-        let result = match self.answer.as_mut() {
-            Some(answer) => answer_of(answer, self.deadline).await,
-            None => Err(CommandError::DriverUnavailable),
+        let Some(observer) = self.observer.as_mut() else {
+            return Err(CommandError::DriverUnavailable);
         };
-        if let Some(journal) = self.journal.take() {
-            journal(outcome_of(&result));
+        let result = answer_of(&mut observer.answer, observer.deadline).await;
+        if let Some(mut observer) = self.observer.take() {
+            observer.write(outcome_of(&result));
         }
         result
     }
@@ -269,24 +301,20 @@ impl Delivery {
 
 impl Drop for Delivery {
     fn drop(&mut self) {
-        let (Some(journal), Some(mut answer)) = (self.journal.take(), self.answer.take()) else {
+        let Some(mut observer) = self.observer.take() else {
             return;
         };
         if Claim::settle(&self.claim, Claim::GIVEN_UP) {
-            drop(answer);
-            journal(Outcome::Err(moli_i18n::tr!("serveur.journal.abandonne")));
+            observer.write(Outcome::Err(moli_i18n::tr!("serveur.journal.abandonne")));
             return;
         }
-        // Taken by the driver: it may already have acted.
-        let deadline = self.deadline;
-        match tokio::runtime::Handle::try_current() {
-            Ok(runtime) => {
-                runtime.spawn(async move {
-                    journal(outcome_of(&answer_of(&mut answer, deadline).await));
-                });
-            }
-            Err(_) => journal(Outcome::Err(moli_i18n::tr!("serveur.journal.inconnu"))),
+        // Taken by the driver: not sent yet, it will see the caller gone;
+        // sent, it may already have acted. Its outcome is journaled.
+        Claim::leave(&self.claim);
+        if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+            runtime.spawn(observer.finish());
         }
+        // No runtime: the observer's drop writes what is known.
     }
 }
 
@@ -1280,10 +1308,12 @@ impl Hub {
             return Err(error);
         }
         Delivery {
-            answer: Some(answer),
+            observer: Some(Observer {
+                answer,
+                deadline,
+                journal: Some(journal),
+            }),
             claim,
-            deadline,
-            journal: Some(journal),
         }
         .outcome()
         .await

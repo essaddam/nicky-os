@@ -50,7 +50,10 @@ file de 64 par instance (pleine : `Busy`). Le pilote répond `reply(Ok|Err)` dè
 est remis à l'appareil. Le hub attend 5 s au plus ; chaque ordre porte cette **échéance**
 (`CommandRequest::deadline`) : `next_command()` refuse lui-même (`expired`) un ordre que
 personne n'attend plus, il n'atteint jamais le pilote (une lampe de chambre allumée des
-heures après « échec », c'est pire qu'un refus). La confirmation arrive ensuite comme une
+heures après « échec », c'est pire qu'un refus). Un pilote dont l'envoi peut attendre
+(connexion, file d'un pont) vérifie `CommandRequest::abandoned()` juste avant chaque étape qui
+envoie : échéance passée **ou appelant parti** = l'ordre ne part plus (exemple : `moli-nuki`,
+`before`). La confirmation arrive ensuite comme une
 mise à jour d'état normale (Sonos et Tapo publient la valeur dès le succès).
 
 **Images.** Une caméra déclare une `SnapshotSource` (`crates/moli-runtime/src/media.rs`).

@@ -31,10 +31,13 @@ aucune logique d'appareil (c'est le rôle des [pilotes](pilotes.md)) et aucun LL
   `PointSpec` (lecture seule, valeur invalide : refus) → **garde** → envoi au pilote
   (délai 5 s) → journal. La confirmation arrive ensuite comme un événement `state`. Un appelant
   qui abandonne (client parti, tâche annulée) : si l'ordre attendait encore dans la file du
-  pilote, il est abandonné avec lui et ne s'exécute jamais ; si le pilote l'avait déjà pris, sa
-  réponse est attendue quand même et journalisée. Toujours une seule ligne (commande directe
-  comme demande libérée par un humain). La prise de l'ordre par le pilote et l'abandon sont
-  tranchés de façon atomique (`CommandRequest::claim`).
+  pilote, il est abandonné avec lui et ne s'exécute jamais ; si le pilote l'avait déjà pris,
+  `CommandRequest::abandoned()` le lui dit jusqu'à l'envoi (un ordre pas encore parti ne part
+  plus), et la réponse est attendue quand même et journalisée. Si cette attente est elle-même
+  interrompue (arrêt du runtime), la ligne est écrite à sa destruction : la réponse si elle est
+  arrivée, sinon « résultat inconnu ». Toujours une seule ligne (commande directe comme demande
+  libérée par un humain). Prise et abandon sont tranchés de façon atomique
+  (`CommandRequest::claim`).
 - **Superviseur** : chaque pilote tourne dans sa tâche ; à chaque échec, sa file de commandes
   est vidée et ses appareils passent hors ligne ; un `panic` est capturé, relance avec
   attente croissante, statut exposé (`starting`, `running`, `waiting{reason}`, `backoff`,

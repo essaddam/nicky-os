@@ -1377,3 +1377,218 @@ async fn an_order_given_up_while_queued_never_runs_and_is_journaled_once() {
     );
     cancel.cancel();
 }
+
+/// A lock whose driver takes an order, waits (a connection still blocked),
+/// then checks it is still wanted right before sending.
+struct Careful {
+    taken: Arc<tokio::sync::Notify>,
+}
+
+fn door_device(ctx: &DriverCtx) -> moli_core::DeviceId {
+    let id = ctx.device_id("door");
+    ctx.upsert_device(Device {
+        id: id.clone(),
+        instance: ctx.instance().clone(),
+        native_name: "door".into(),
+        manufacturer: None,
+        model: None,
+        description: None,
+        native_room: None,
+        members: Vec::new(),
+        points: vec![spec("locked", Kind::Binary, true, Semantic::Lock)],
+    });
+    ctx.set_state(&id, "locked", Value::Bool(true));
+    ctx.ready();
+    id
+}
+
+impl Driver for Careful {
+    fn kind(&self) -> &'static str {
+        "slow"
+    }
+
+    fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(async move {
+            door_device(ctx);
+            while let Some(cmd) = ctx.next_command().await {
+                self.taken.notify_one();
+                tokio::time::sleep(Duration::from_millis(150)).await;
+                if cmd.abandoned() {
+                    cmd.reply(Err("not sent: caller gone".into()));
+                    continue;
+                }
+                ctx.set_state(&cmd.device.id, &cmd.key, cmd.value.clone());
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+#[tokio::test]
+async fn an_order_taken_but_not_sent_is_not_sent_once_its_caller_left() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let taken = Arc::new(tokio::sync::Notify::new());
+    let cancel = CancellationToken::new();
+    spawn_driver(
+        &hub,
+        InstanceId::from("slow"),
+        Arc::new(Careful {
+            taken: Arc::clone(&taken),
+        }),
+        cancel.clone(),
+    );
+    wait_running(&hub).await;
+    let door = PointId::from("slow:door/locked");
+    let held = hub
+        .command(&door, Value::Bool(false), Origin::Mcp, None)
+        .await;
+    let Err(CommandError::NeedsApproval { id, .. }) = held else {
+        panic!("an agent opening is held: {held:?}");
+    };
+    let calls = [
+        {
+            let (hub, door) = (hub.clone(), door.clone());
+            tokio::spawn(async move {
+                let _ = hub
+                    .command(&door, Value::Bool(false), Origin::Ui, None)
+                    .await;
+            })
+        },
+        {
+            let (hub, door) = (hub.clone(), door.clone());
+            tokio::spawn(async move {
+                let _ = hub
+                    .resolve_approval(id, &door, true, Origin::Ui, None)
+                    .await;
+            })
+        },
+    ];
+    for call in calls {
+        // Taken by the driver, not sent yet: the caller leaves.
+        taken.notified().await;
+        call.abort();
+        let _ = call.await;
+    }
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    assert_eq!(
+        hub.state(&door).unwrap().value,
+        Value::Bool(true),
+        "nothing opened"
+    );
+    let commands = journaled(&hub, false);
+    assert!(
+        matches!(commands.as_slice(), [Outcome::Err(_), Outcome::Pending(_)]),
+        "{commands:?}"
+    );
+    assert!(matches!(
+        journaled(&hub, true).as_slice(),
+        [Outcome::Err(_)]
+    ));
+    cancel.cancel();
+}
+
+/// Hands every order it takes to the test, after its effect.
+struct Handoff {
+    orders: std::sync::Mutex<std::sync::mpsc::Sender<moli_runtime::CommandRequest>>,
+}
+
+impl Driver for Handoff {
+    fn kind(&self) -> &'static str {
+        "slow"
+    }
+
+    fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(async move {
+            door_device(ctx);
+            while let Some(cmd) = ctx.next_command().await {
+                ctx.set_state(&cmd.device.id, &cmd.key, cmd.value.clone());
+                let _ = self.orders.lock().unwrap().send(cmd);
+            }
+            Ok(())
+        })
+    }
+}
+
+/// The door opened, its caller left, then the runtime stopped before the
+/// journal line was written: what the journal says.
+fn stopped_runtime(approval: bool, answered: bool) -> Vec<Outcome> {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let (tx, rx) = std::sync::mpsc::channel();
+    let hub = runtime.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        spawn_driver(
+            &hub,
+            InstanceId::from("slow"),
+            Arc::new(Handoff {
+                orders: std::sync::Mutex::new(tx),
+            }),
+            CancellationToken::new(),
+        );
+        wait_running(&hub).await;
+        let door = PointId::from("slow:door/locked");
+        let call = if approval {
+            let held = hub
+                .command(&door, Value::Bool(false), Origin::Mcp, None)
+                .await;
+            let Err(CommandError::NeedsApproval { id, .. }) = held else {
+                panic!("held: {held:?}");
+            };
+            let (hub, door) = (hub.clone(), door.clone());
+            tokio::spawn(async move {
+                let _ = hub
+                    .resolve_approval(id, &door, true, Origin::Ui, None)
+                    .await;
+            })
+        } else {
+            let (hub, door) = (hub.clone(), door.clone());
+            tokio::spawn(async move {
+                let _ = hub
+                    .command(&door, Value::Bool(false), Origin::Ui, None)
+                    .await;
+            })
+        };
+        while hub
+            .state(&door)
+            .is_none_or(|s| s.value != Value::Bool(false))
+        {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        call.abort();
+        let _ = call.await;
+        hub
+    });
+    // The driver's answer arrives (or not) while nothing runs any more.
+    let order = rx.recv().unwrap();
+    let kept = if answered {
+        order.reply(Ok(()));
+        None
+    } else {
+        Some(order)
+    };
+    runtime.shutdown_timeout(Duration::from_secs(1));
+    drop(kept);
+    journaled(&hub, approval)
+}
+
+#[test]
+fn an_order_that_ran_is_journaled_even_if_the_runtime_stops_first() {
+    for approval in [false, true] {
+        assert!(
+            matches!(
+                stopped_runtime(approval, true).as_slice(),
+                [.., Outcome::Ok]
+            ),
+            "answered, approval={approval}"
+        );
+        let unknown = stopped_runtime(approval, false);
+        let lines = unknown
+            .iter()
+            .filter(|o| matches!(o, Outcome::Err(_)))
+            .count();
+        assert_eq!(lines, 1, "not answered, approval={approval}: {unknown:?}");
+    }
+}

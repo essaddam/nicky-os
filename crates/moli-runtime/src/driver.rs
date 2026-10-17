@@ -50,14 +50,16 @@ pub struct CommandRequest {
 
 /// The states of [`CommandRequest::claim`]. An order is either taken by its
 /// driver or given up while queued, never both: a caller that leaves while
-/// its order waits cancels it, one that leaves after the driver took it
-/// still learns (and journals) the outcome.
+/// its order waits cancels it. One that leaves after the driver took it
+/// marks it `LEFT`: a driver that has not sent it yet sees it abandoned
+/// (checked right before sending), and the outcome is still journaled.
 pub(crate) struct Claim;
 
 impl Claim {
     pub(crate) const QUEUED: u8 = 0;
     pub(crate) const TAKEN: u8 = 1;
     pub(crate) const GIVEN_UP: u8 = 2;
+    pub(crate) const LEFT: u8 = 3;
 
     /// Moves a queued order to `to`; false if it was already decided.
     pub(crate) fn settle(claim: &AtomicU8, to: u8) -> bool {
@@ -65,13 +67,24 @@ impl Claim {
             .compare_exchange(Self::QUEUED, to, Ordering::AcqRel, Ordering::Acquire)
             .is_ok()
     }
+
+    /// The caller of a taken order left.
+    pub(crate) fn leave(claim: &AtomicU8) {
+        let _ =
+            claim.compare_exchange(Self::TAKEN, Self::LEFT, Ordering::AcqRel, Ordering::Acquire);
+    }
 }
 
 impl CommandRequest {
-    /// Nobody waits for the answer any more: the hub timed out or gave up.
+    /// Nobody waits for the answer any more: the hub timed out, or the
+    /// caller gave up. A driver checks it right before each step that sends
+    /// the order (connecting, writing): an order its caller renounced before
+    /// it left must not leave.
     #[must_use]
     pub fn abandoned(&self) -> bool {
-        self.reply.is_closed() || Instant::now() >= self.deadline
+        self.reply.is_closed()
+            || Instant::now() >= self.deadline
+            || self.claim.load(Ordering::Acquire) == Claim::LEFT
     }
 
     /// Reports the outcome. Dropping the request without replying is

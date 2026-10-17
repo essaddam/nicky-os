@@ -143,11 +143,12 @@ impl Bridge<'_> {
     }
 }
 
-/// `work`, never polled again once `deadline` has passed (checked before
-/// each step: connecting, sending): an order nobody waits for any more is
-/// never sent, and never retried.
+/// `work`, never polled again once `deadline` has passed or `gone` says
+/// its caller left (both checked before each step: connecting, sending):
+/// an order nobody waits for any more is never sent, and never retried.
 async fn before<T>(
     deadline: std::time::Instant,
+    gone: impl Fn() -> bool,
     work: impl Future<Output = anyhow::Result<T>>,
 ) -> anyhow::Result<T> {
     let late = || anyhow::anyhow!(moli_i18n::tr!("pilotes.nuki.trop_tard"));
@@ -155,7 +156,7 @@ async fn before<T>(
     // The clock itself is read before every step: a timer has a granularity,
     // the order must not slip through it.
     let checked = std::future::poll_fn(|cx| {
-        if std::time::Instant::now() >= deadline {
+        if std::time::Instant::now() >= deadline || gone() {
             return std::task::Poll::Ready(Err(late()));
         }
         work.as_mut().poll(cx)
@@ -278,9 +279,13 @@ async fn obey(bridge: &Bridge<'_>, known: &[Known], command: CommandRequest) -> 
     };
     let result = match model::action(&command.key, &command.value) {
         Err(why) => Err(why),
-        Ok(action) => before(command.deadline, bridge.act(&entry.lock, action))
-            .await
-            .map_err(|e| e.to_string()),
+        Ok(action) => before(
+            command.deadline,
+            || command.abandoned(),
+            bridge.act(&entry.lock, action),
+        )
+        .await
+        .map_err(|e| e.to_string()),
     };
     let done = result.is_ok();
     command.reply(result);
@@ -554,7 +559,7 @@ mod tests {
             }
         };
         let deadline = std::time::Instant::now() + Duration::from_millis(20);
-        assert!(before(deadline, slow).await.is_err());
+        assert!(before(deadline, || false, slow).await.is_err());
         tokio::time::sleep(Duration::from_millis(150)).await;
         assert!(!sent.load(Ordering::SeqCst), "sent after the deadline");
         // Already past: not even started.
@@ -566,10 +571,35 @@ mod tests {
                 Ok(())
             }
         };
-        assert!(before(std::time::Instant::now(), late).await.is_err());
+        assert!(
+            before(std::time::Instant::now(), || false, late)
+                .await
+                .is_err()
+        );
         assert!(!started.load(Ordering::SeqCst));
         // In time: done.
         let soon = std::time::Instant::now() + Duration::from_secs(5);
-        assert!(before(soon, async { Ok(()) }).await.is_ok());
+        assert!(before(soon, || false, async { Ok(()) }).await.is_ok());
+        // The caller leaves while the connection waits: when it frees up,
+        // nothing is sent, long before the deadline.
+        let left = Arc::new(AtomicBool::new(false));
+        let sent = Arc::new(AtomicBool::new(false));
+        let blocked = {
+            let (left, sent) = (Arc::clone(&left), Arc::clone(&sent));
+            async move {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                left.store(true, Ordering::SeqCst);
+                // The connection frees up only after the caller left.
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                sent.store(true, Ordering::SeqCst);
+                Ok(())
+            }
+        };
+        let gone = {
+            let left = Arc::clone(&left);
+            move || left.load(Ordering::SeqCst)
+        };
+        assert!(before(soon, gone, blocked).await.is_err());
+        assert!(!sent.load(Ordering::SeqCst), "sent after the caller left");
     }
 }
