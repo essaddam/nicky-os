@@ -50,6 +50,29 @@ allowed_hosts = ["192.168.0.10", "moli.local"]
 # price = 0.14
 # reset = "never"        # an index; default "auto" handles daily counters
 
+# History: every change, kept `[server] history_days` days (30 by default,
+# 0 = no history). [storage] refines it by family and by point: a point's
+# own rule, else its family's, else history_days. Families come from what a
+# point means and its unit: power, climate, energy, states, diagnostic,
+# other. A longer duration applies at once; a shorter one deletes nothing
+# until a person validates it with the code (page Système). Excluded points
+# are no longer written (what is recorded stays); the energy still sees them.
+# --- storage example ---
+# [storage.history]
+# exclude = ["z2m:*/linkquality", "tapo:*/rssi"]
+# include = ["z2m:bureau_routeur/linkquality"]   # written even if excluded
+#
+# [storage.policy.climate]
+# days = 90
+#
+# [storage.policy.diagnostic]
+# days = 7
+#
+# [[storage.point]]                              # the first match wins
+# match = "z2m:cave_thermometre/temperature"
+# days = 365
+# --- end ---
+
 # Light fixtures: bulbs and the relay that feeds them as one light
 # (lumieres:<id>). Orders go to the bulbs; the relay only cuts when no bulb
 # answers, and comes back on its own when the light is switched on.

@@ -3,7 +3,8 @@
 ## Historique (`crates/moli-history`)
 
 - SQLite `data/history.db`, enregistrement **au changement** (le hub n'émet que les
-  changements), 30 jours (`retention_days`), purgé toutes les 6 h. La purge garde, pour
+  changements), `[server] history_days` jours (30 par défaut), affinés par famille et par
+  point (ci-dessous), purgé toutes les 6 h. La purge garde, pour
   chaque point, le **dernier échantillon antérieur au seuil** : une courbe qui commence au
   seuil connaît sa valeur de départ, et une valeur stable depuis des mois reste connue.
 - Le recorder lit le bus sans jamais l'attendre et passe des lots (2 s ou 1 000 changements)
@@ -22,6 +23,87 @@
   Moli (questions sur le passé), le nœud d'automatisme… (les automatismes lisent l'état
   courant, pas l'historique).
 - Ordre de grandeur : ~2,5 Mo pour environ 70 appareils sur 30 jours.
+
+## Politiques de conservation (`[storage]`, `crates/moli-history/src/policy.rs`)
+
+Sans section `[storage]`, rien ne change : tout est écrit et gardé `history_days` jours
+(test `without_a_new_configuration_the_purge_is_the_one_before`, qui compare à l'ancienne
+requête).
+
+**Familles.** Chaque point appartient à une famille, déduite de sa sémantique puis de son
+unité (`policy::family`), jamais du seul type : le type ne départage que les points sans
+sémantique ni unité (un bouton, un texte → états ; un nombre → autre).
+
+| Famille | Contient |
+|---|---|
+| `power` | puissance, puissance apparente, courant, tension secteur (V) |
+| `climate` | température, humidité, pression, luminosité, ppm |
+| `energy` | compteurs (kWh, Wh) ; leurs heures vivent aussi dans `energy.db` |
+| `states` | marche/arrêt, contacts, présence, fuites, fumée, luminosité et couleur d'une lampe, boutons, textes |
+| `diagnostic` | signal, link quality, batterie, tension de pile (mV) |
+| `other` | le reste (un pourcentage sans sémantique, par exemple) |
+
+L'association famille → agrégation (moyenne pondérée, somme, durées, comptage) n'est pas
+faite ici : le module de résumés n'est pas encore fusionné, elle revient à son ticket.
+
+**Priorité** : la règle du point (`[[storage.point]]`, la première qui correspond), puis sa
+famille (`[storage.policy.<famille>]`), puis `history_days`. Un motif est un identifiant de
+point où `*` remplace n'importe quelle suite de caractères (`z2m:*/linkquality`).
+
+```toml
+[storage.history]
+exclude = ["z2m:*/linkquality", "tapo:*/rssi"]   # plus jamais écrits
+include = ["z2m:bureau_routeur/linkquality"]     # écrit même s'il est exclu
+
+[storage.policy.climate]
+days = 90
+
+[storage.policy.diagnostic]
+days = 7
+
+[[storage.point]]
+match = "z2m:cave_thermometre/temperature"
+days = 365
+```
+
+Validation au démarrage, messages dans la langue de la maison : famille inconnue, durée hors
+de 1 à 36 500 jours, motif vide, clé inconnue.
+
+**Exclure n'est pas purger.** Un point exclu n'est plus écrit ; ce qui est déjà enregistré reste
+et suit sa durée. L'énergie a son propre abonné au bus : un compteur exclu de l'historique
+reste compté exactement (test `an_excluded_point_is_not_written_and_its_energy_stays_exact`).
+
+**Purge par lots.** Point par point, au plus 5 000 lignes par requête, le rédacteur relâché
+entre deux lots (2 ms) : les lots du recorder passent entre deux (test
+`pruning_goes_by_lots_and_writes_pass_in_between`). SQL portable (pas de `DELETE … LIMIT`),
+toujours par la clé primaire, ancrage conservé.
+
+**Garde des réductions.** La dernière politique validée est gardée dans
+`data/history-policy.json` (dans la sauvegarde). Chaque point est gardé la plus longue des
+deux durées, configurée et validée :
+
+- une durée **plus longue** s'applique tout de suite ; une configuration qui n'efface rien de
+  plus que la politique validée est adoptée d'elle-même (`by: null`) ;
+- une durée **plus courte** n'efface rien. `GET /api/history/retention` montre le volume
+  (`reduction.rows`, `points`) et la période (`from`, `to`) qu'elle supprimerait, avec les
+  points les plus touchés ; la page Système l'affiche dans « Stockage ». Une personne la valide
+  avec son code : `POST /api/history/retention/validate` `{ "at", "fingerprint" }` (session PIN
+  exigée, 403 sinon, même depuis un tableau de bord de confiance). La purge qui suit est faite
+  à l'instant `at` du décompte : elle supprime exactement ce qui était annoncé. Un décompte de
+  plus de 15 min, ou une politique changée depuis, est refusé (410, 409) ;
+- un agent (`api`, `mcp`, `cli`, `assistant`) ne valide jamais : `History::validate` refuse
+  toute origine autre qu'une personne avec code, et aucun outil MCP ne l'expose ;
+- un point dont l'appareil n'est pas (encore) publié, juste après un démarrage par exemple,
+  est gardé la plus longue durée de toutes les familles ;
+- `history-policy.json` illisible : plus aucune purge tant qu'une personne n'a pas validé.
+
+Limite connue : sur un changement mêlant une hausse et une baisse, la politique validée n'est
+pas mise à jour ; ramener plus tard la hausse à la valeur validée efface ce que la hausse avait
+gardé en plus (jamais ce que la politique validée garde).
+
+**Échantillonnage des courbes bavardes : non fait.** Il n'est prévu que si le relevé de la
+maison montre des points à plus d'un changement par seconde. Ce relevé (mesure réelle après
+déploiement) n'existe pas encore ; `top_24h` sur la page Système le donnera.
 
 ## Croissance visible (`/api/system`, page Système)
 

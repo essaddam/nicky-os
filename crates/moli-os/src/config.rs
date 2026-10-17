@@ -373,6 +373,23 @@ mod tests {
     }
 
     #[test]
+    fn the_storage_example_is_valid() {
+        let example = include_str!("../../../moli.example.toml");
+        let block: String = example
+            .split("# --- storage example ---\n")
+            .nth(1)
+            .and_then(|rest| rest.split("# --- end ---").next())
+            .unwrap()
+            .lines()
+            .map(|l| l.strip_prefix('#').unwrap_or(l).trim_start())
+            .collect::<Vec<_>>()
+            .join("\n");
+        let config: Config = toml::from_str(&block).unwrap();
+        config.check().unwrap();
+        assert_eq!(config.storage.points.len(), 1);
+    }
+
+    #[test]
     fn storage_rules_are_checked() {
         let config: Config = toml::from_str("[storage.policy.climat]\ndays = 90").unwrap();
         let err = config.check().unwrap_err().to_string();
