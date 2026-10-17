@@ -239,6 +239,7 @@
   "systeme.stockage.lignes_24h_one": "{n} ligne ajoutée en 24 h",
   "systeme.stockage.lignes_24h_other": "{n} lignes ajoutées en 24 h",
   "systeme.stockage.cout": "(compté en {ms} ms)",
+  "systeme.stockage.indisponible": "Comptage sur 24 h indisponible : {message}",
   "systeme.stockage.lots": "Depuis le démarrage : {ok} lots écrits, {failed} en erreur",
   "systeme.stockage.sature": "Écriture saturée : {merged} changements fusionnés, {dropped} perdus",
   "systeme.stockage.purge": "Dernière purge le {date} : {n} lignes supprimées en {ms} ms",

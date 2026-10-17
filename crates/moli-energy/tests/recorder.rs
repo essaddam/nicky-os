@@ -155,6 +155,22 @@ async fn readings_become_priced_hours_that_survive_restarts() {
         .map(|a| a.kwh)
         .sum();
     assert!((hourly - 3.2).abs() < 1e-6, "{hourly}");
+
+    // How it grows; a failed count keeps the counters and says why.
+    let storage = energy.storage().await;
+    assert!(
+        storage.writes_ok > 0 && storage.writes_failed == 0,
+        "{storage:?}"
+    );
+    assert!(storage.rows_24h.is_some_and(|n| n >= 1), "{storage:?}");
+    rusqlite::Connection::open(&db)
+        .unwrap()
+        .execute_batch("ALTER TABLE energy_hour RENAME TO gone")
+        .unwrap();
+    let broken = energy.storage().await;
+    assert_eq!(broken.rows_24h, None);
+    assert!(broken.volume_error.is_some(), "{broken:?}");
+    assert_eq!(broken.writes_ok, storage.writes_ok);
     cancel.cancel();
     drivers.cancel();
     let _ = std::fs::remove_dir_all(dir);

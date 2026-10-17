@@ -1128,6 +1128,7 @@ dependencies = [
  "moli-weather",
  "ring",
  "rmcp",
+ "rusqlite",
  "rust-embed",
  "rustix",
  "schemars",

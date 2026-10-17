@@ -9,6 +9,7 @@
   import PeopleCard from '../ui/PeopleCard.svelte';
   import { hub, home } from '../lib/home.svelte.js';
   import { t, locale } from '../../lib/i18n.svelte.js';
+  import { storageLines } from '../lib/storage.js';
 
   // « Comment ça marche » : the system as it runs, drawn from /api/system and
   // the live event stream. Nothing here is written by hand: a new driver or
@@ -326,15 +327,9 @@
           <div>
             <small>{b.name}</small>
             <p><b class="num">{bytes((f.db_bytes ?? 0) + (f.wal_bytes ?? 0))}</b> <span class="muted">{t('systeme.stockage.fichiers', { db: bytes(f.db_bytes), wal: bytes(f.wal_bytes ?? 0) })}</span></p>
-            {#if f.rows_24h != null}<p>{t('systeme.stockage.lignes_24h', { count: f.rows_24h, n: num(f.rows_24h) })} <span class="muted">{t('systeme.stockage.cout', { ms: num(f.query_ms, 1) })}</span></p>{/if}
-            {#if b.id === 'history'}
-              <p>{t('systeme.stockage.lots', { ok: num(f.batches_written ?? 0), failed: num(f.batches_failed ?? 0) })}</p>
-              {#if f.rows_merged || f.rows_dropped}<p class="alert">{t('systeme.stockage.sature', { merged: num(f.rows_merged), dropped: num(f.rows_dropped) })}</p>{/if}
-              <p>{f.last_prune ? t('systeme.stockage.purge', { date: when(f.last_prune.at), n: num(f.last_prune.rows), ms: num(f.last_prune.ms) }) : t('systeme.stockage.purge_aucune')}</p>
-            {:else}
-              <p>{t('systeme.stockage.releves', { ok: num(f.writes_ok ?? 0), failed: num(f.writes_failed ?? 0) })}</p>
-            {/if}
-            {#if f.last_error}<p class="alert">{t('systeme.stockage.erreur', { date: when(f.last_error[0]), message: f.last_error[1] })}</p>{/if}
+            {#each storageLines(b.id, f, { num, when }) as l (l.key)}
+              <p class:alert={l.alert}>{t(l.key, l.params)}{#if l.note} <span class="muted">{t(l.note.key, l.note.params)}</span>{/if}</p>
+            {/each}
             {#if f.top_24h?.length}
               <small>{t('systeme.stockage.bavards')}</small>
               <ol class="chatty">

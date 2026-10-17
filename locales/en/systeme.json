@@ -239,6 +239,7 @@
   "systeme.stockage.lignes_24h_one": "{n} row added in 24 h",
   "systeme.stockage.lignes_24h_other": "{n} rows added in 24 h",
   "systeme.stockage.cout": "(counted in {ms} ms)",
+  "systeme.stockage.indisponible": "24-hour count unavailable: {message}",
   "systeme.stockage.lots": "Since start: {ok} batches written, {failed} failed",
   "systeme.stockage.sature": "Writer saturated: {merged} changes merged, {dropped} lost",
   "systeme.stockage.purge": "Last pruning on {date}: {n} rows removed in {ms} ms",

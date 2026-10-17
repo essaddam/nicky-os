@@ -61,7 +61,8 @@ struct Counters {
     rows_dropped: AtomicU64,
     last_error: Mutex<Option<(u64, String)>>,
     last_prune: Mutex<Option<Prune>>,
-    volume: Mutex<Option<(Instant, Volume)>>,
+    /// Held while counting: concurrent callers wait, then reuse the count.
+    volume: tokio::sync::Mutex<Option<(Instant, Volume)>>,
 }
 
 /// The last retention pass.
@@ -79,6 +80,8 @@ pub struct Volume {
     /// The chattiest points: (point, rows), most first.
     pub top_24h: Vec<(String, u64)>,
     pub query_ms: f64,
+    /// When it was counted (ms since the epoch).
+    pub counted_at: u64,
 }
 
 /// How the history grows and how its writes go (`/api/system`).
@@ -93,8 +96,10 @@ pub struct Growth {
     /// (when, what) of the last batch not written.
     pub last_error: Option<(u64, String)>,
     pub last_prune: Option<Prune>,
+    /// Absent when it could not be counted: `volume_error` says why.
     #[serde(flatten)]
-    pub volume: Volume,
+    pub volume: Option<Volume>,
+    pub volume_error: Option<String>,
 }
 
 impl History {
@@ -133,32 +138,15 @@ impl History {
         }
     }
 
-    /// Counted on demand, at most once a minute: no timer of its own.
-    pub async fn growth(&self) -> Result<Growth, HistoryError> {
-        let fresh = store::lock(&self.counters.volume)
-            .as_ref()
-            .filter(|(at, _)| at.elapsed() < VOLUME_TTL)
-            .map(|(_, v)| v.clone());
-        let volume = if let Some(v) = fresh {
-            v
-        } else {
-            let store = Arc::clone(&self.store);
-            let since = now_ms().saturating_sub(DAY_MS);
-            let v = blocking(move || {
-                let started = Instant::now();
-                let (rows_24h, top_24h) = store.volume(since, 10)?;
-                Ok(Volume {
-                    rows_24h,
-                    top_24h,
-                    query_ms: started.elapsed().as_secs_f64() * 1000.0,
-                })
-            })
-            .await?;
-            *store::lock(&self.counters.volume) = Some((Instant::now(), v.clone()));
-            v
+    /// The counters always; the volume when it can be counted (otherwise
+    /// why not). On demand, no timer of its own.
+    pub async fn growth(&self) -> Growth {
+        let (volume, volume_error) = match self.volume().await {
+            Ok(v) => (Some(v), None),
+            Err(e) => (None, Some(e.to_string())),
         };
         let c = &self.counters;
-        Ok(Growth {
+        Growth {
             batches_written: c.batches_written.load(Relaxed),
             batches_failed: c.batches_failed.load(Relaxed),
             rows_merged: c.rows_merged.load(Relaxed),
@@ -166,7 +154,33 @@ impl History {
             last_error: store::lock(&c.last_error).clone(),
             last_prune: *store::lock(&c.last_prune),
             volume,
+            volume_error,
+        }
+    }
+
+    /// The last 24 hours' volume, counted at most once a minute and once at
+    /// a time: callers arriving during a count wait for it and reuse it. A
+    /// failed count is not kept (the next call tries again).
+    async fn volume(&self) -> Result<Volume, HistoryError> {
+        let mut cache = self.counters.volume.lock().await;
+        if let Some((_, v)) = cache.as_ref().filter(|(at, _)| at.elapsed() < VOLUME_TTL) {
+            return Ok(v.clone());
+        }
+        let store = Arc::clone(&self.store);
+        let since = now_ms().saturating_sub(DAY_MS);
+        let v = blocking(move || {
+            let started = Instant::now();
+            let (rows_24h, top_24h) = store.volume(since, 10)?;
+            Ok(Volume {
+                rows_24h,
+                top_24h,
+                query_ms: started.elapsed().as_secs_f64() * 1000.0,
+                counted_at: now_ms(),
+            })
         })
+        .await?;
+        *cache = Some((Instant::now(), v.clone()));
+        Ok(v)
     }
 
     pub async fn series(
@@ -368,6 +382,8 @@ async fn prune_loop(
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use super::*;
 
     /// The writer never reads: its queue is full after one batch.
@@ -422,6 +438,67 @@ mod tests {
         let peak = feed(&tx, &counters, rows);
         assert!(peak <= PENDING_MAX, "{peak}");
         assert!(counters.rows_dropped.load(Relaxed) > 190_000);
+    }
+
+    fn history(name: &str) -> (History, PathBuf) {
+        let dir =
+            std::env::temp_dir().join(format!("moli-history-lib-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let store = Arc::new(Store::open(&dir.join("history.db")).unwrap());
+        let rows: Vec<Row> = (0..10_000u64)
+            .map(|i| (PointId::from("d/p"), Value::Null, now_ms() - 60_000 + i))
+            .collect();
+        store.insert(&rows, false).unwrap();
+        (History::from_store(store), dir)
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn concurrent_callers_share_one_count() {
+        let (history, dir) = history("concurrent");
+        let barrier = Arc::new(tokio::sync::Barrier::new(16));
+        let calls: Vec<_> = (0..16)
+            .map(|_| {
+                let (history, barrier) = (history.clone(), Arc::clone(&barrier));
+                tokio::spawn(async move {
+                    barrier.wait().await;
+                    history.growth().await.volume.unwrap()
+                })
+            })
+            .collect();
+        let mut counted = std::collections::HashSet::new();
+        for call in calls {
+            let v = call.await.unwrap();
+            assert_eq!(v.rows_24h, 10_000);
+            counted.insert((v.counted_at, v.query_ms.to_bits()));
+        }
+        assert_eq!(counted.len(), 1, "one count for all: {counted:?}");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[tokio::test]
+    async fn a_failed_count_keeps_the_counters_and_says_why() {
+        let (history, dir) = history("broken");
+        history.counters.batches_written.store(3, Relaxed);
+        history.counters.batches_failed.store(1, Relaxed);
+        rusqlite::Connection::open(dir.join("history.db"))
+            .unwrap()
+            .execute_batch("ALTER TABLE samples RENAME TO gone")
+            .unwrap();
+        let g = history.growth().await;
+        assert!(g.volume.is_none());
+        assert!(
+            g.volume_error
+                .as_ref()
+                .is_some_and(|e| e.contains("samples"))
+        );
+        assert_eq!((g.batches_written, g.batches_failed), (3, 1));
+        let json = serde_json::to_value(&g).unwrap();
+        assert!(
+            json.get("rows_24h").is_none(),
+            "unknown, never zero: {json}"
+        );
+        assert_eq!(json["batches_written"], 3);
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

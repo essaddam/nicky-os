@@ -40,7 +40,7 @@ pub(crate) async fn system(
     let files = |db: &str| json!({ "db_bytes": size(db), "wal_bytes": size(&format!("{db}-wal")), "free_bytes": free_bytes });
 
     let history_facts = match &history {
-        Some(h) => merged(files("history.db"), h.growth().await.ok()),
+        Some(h) => merged(files("history.db"), Some(h.growth().await)),
         None => json!({}),
     };
     let energy_facts = match &energy {
@@ -51,7 +51,7 @@ pub(crate) async fn system(
             );
             merged(
                 merged(facts, Some(files("energy.db"))),
-                e.storage().await.ok(),
+                Some(e.storage().await),
             )
         }
         None => json!({}),

@@ -121,14 +121,18 @@ pub struct Summary {
 }
 
 /// Readings written / not written since start, the last failure (when,
-/// what), the hour rows of the last 24 hours and what counting them cost.
+/// what), the hour rows of the last 24 hours and what counting them cost
+/// (absent if they could not be counted: `volume_error` says why).
 #[derive(Clone, Debug, Serialize)]
 pub struct Storage {
     pub writes_ok: u64,
     pub writes_failed: u64,
     pub last_error: Option<(u64, String)>,
-    pub rows_24h: u64,
-    pub query_ms: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rows_24h: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub query_ms: Option<f64>,
+    pub volume_error: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -292,21 +296,28 @@ impl Energy {
             .await
     }
 
-    /// How `energy.db` grows and how its writes go (`/api/system`).
-    pub async fn storage(&self) -> Result<Storage, EnergyError> {
+    /// How `energy.db` grows and how its writes go (`/api/system`). The
+    /// count is not cached: a few hundred rows (meters × 24 hours) through
+    /// the `hour` index, its cost measured each time.
+    pub async fn storage(&self) -> Storage {
         let store = Arc::clone(&self.inner.store);
         let since = now_ms().saturating_sub(24 * 3_600_000);
         let started = std::time::Instant::now();
-        let rows_24h = blocking(move || store.rows_since(since)).await?;
+        let counted = blocking(move || store.rows_since(since)).await;
         let query_ms = started.elapsed().as_secs_f64() * 1000.0;
         let (writes_ok, writes_failed, last_error) = self.inner.store.writes();
-        Ok(Storage {
+        let (rows_24h, query_ms, volume_error) = match counted {
+            Ok(n) => (Some(n), Some(query_ms), None),
+            Err(e) => (None, None, Some(e.to_string())),
+        };
+        Storage {
             writes_ok,
             writes_failed,
             last_error,
             rows_24h,
             query_ms,
-        })
+            volume_error,
+        }
     }
 
     pub async fn report(&self, from: u64, to: u64, step: Step) -> Result<Report, EnergyError> {

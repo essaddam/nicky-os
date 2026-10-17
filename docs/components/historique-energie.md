@@ -35,10 +35,20 @@ Les briques `history` et `energy` de `/api/system` donnent, dans `facts` :
   `rows_dropped` (saturation, ci-dessus), `last_error` (`[ms, message]`) ;
 - énergie : `writes_ok` / `writes_failed`, `last_error`.
 
-Tout est calculé à la demande, sans minuterie : les compteurs sont en mémoire depuis le
-démarrage, le volume sur 24 h est recompté au plus une fois par minute (une plage de clé
-primaire par point, jamais un parcours de toute la table : ~2 ms pour 100 000 lignes sur 24 h
-dans une base de 3 millions). La page Système les montre dans « Stockage ».
+Tout est calculé à la demande, sans minuterie. Les compteurs sont en mémoire depuis le
+démarrage et toujours renvoyés. Si le comptage sur 24 h échoue, `rows_24h` (et ce qui
+l'accompagne) est **absent** et `volume_error` dit pourquoi : la page affiche « indisponible »,
+jamais zéro.
+
+- Historique : le volume sur 24 h est recompté au plus une fois par minute, **un comptage à
+  la fois** (les appels qui arrivent pendant un comptage l'attendent et le reprennent ; un
+  échec n'est pas gardé). Une plage de clé primaire par point, jamais un parcours de toute la
+  table : ~2 ms pour 100 000 lignes sur 24 h dans une base de 3 millions (mesure locale, à
+  confirmer sur la maison avec `query_ms`). `counted_at` dit quand il a été compté.
+- Énergie : pas de cache, le comptage passe par l'index `hour` sur quelques centaines de
+  lignes (compteurs × 24 h) ; son coût est mesuré à chaque appel (`query_ms`).
+
+La page Système les montre dans « Stockage ».
 
 ## Énergie (`crates/moli-energy`)
 
