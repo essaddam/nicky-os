@@ -497,7 +497,7 @@ impl Hub {
         }
         let result = match self.prepare(point, &value) {
             Err(e) => Err(e),
-            Ok(prepared) => match self.verdict(point, origin) {
+            Ok(prepared) => match self.verdict(point, Some(&value), origin) {
                 Verdict::Allow => self.send(prepared).await,
                 Verdict::Approval(reason) => {
                     let id = self.hold(point, &value, origin, actor.clone(), &reason);
@@ -528,23 +528,29 @@ impl Hub {
 
     /// What the guard would say, now, about an order on this point from this
     /// origin: the reason it would be held, or `None` if it would go
-    /// through. Nothing is sent.
+    /// through. Nothing is sent. `value`: `None` when not known yet (a
+    /// toggle), judged as the worst it could be.
     #[must_use]
-    pub fn would_hold(&self, point: &PointId, origin: Origin) -> Option<String> {
-        match self.verdict(point, origin) {
+    pub fn would_hold(
+        &self,
+        point: &PointId,
+        value: Option<&Value>,
+        origin: Origin,
+    ) -> Option<String> {
+        match self.verdict(point, value, origin) {
             Verdict::Allow => None,
             Verdict::Approval(reason) => Some(reason),
         }
     }
 
     /// What the guard says about an order on this point from this origin.
-    fn verdict(&self, point: &PointId, origin: Origin) -> Verdict {
-        // Stopping a machine at work (a print, a computer) is a person's
-        // call, whatever the room: an agent asks, and so does the dashboard
-        // without a code.
+    fn verdict(&self, point: &PointId, value: Option<&Value>, origin: Origin) -> Verdict {
+        // Stopping a machine at work (a print, a computer) and opening a
+        // door are a person's call, whatever the room: an agent asks, and so
+        // does the dashboard without a code.
         let agent = !matches!(origin, Origin::Ui | Origin::System | Origin::Automation);
-        if agent && self.is_control(point) {
-            return Verdict::Approval(moli_i18n::tr!("serveur.garde.machine"));
+        if agent && let Some(reason) = self.sensitive(point, value) {
+            return Verdict::Approval(reason);
         }
         let rooms = point
             .split()
@@ -557,16 +563,19 @@ impl Hub {
             .check(&rooms, origin, jiff::Timestamp::now())
     }
 
-    /// Whether the point is an order to a machine at work.
-    fn is_control(&self, point: &PointId) -> bool {
-        let Some((device, key)) = point.split() else {
-            return false;
-        };
-        self.read()
-            .devices
-            .get(&device)
-            .and_then(|d| d.point(key))
-            .is_some_and(|p| p.semantic == moli_core::Semantic::Control)
+    /// Why an order on this point is a person's call in any room: an order
+    /// to a machine at work, or one that opens a door.
+    fn sensitive(&self, point: &PointId, value: Option<&Value>) -> Option<String> {
+        let (device, key) = point.split()?;
+        let model = self.read();
+        let spec = model.devices.get(&device).and_then(|d| d.point(key))?;
+        if spec.semantic == moli_core::Semantic::Control {
+            Some(moli_i18n::tr!("serveur.garde.machine"))
+        } else if spec.opens(value) {
+            Some(moli_i18n::tr!("serveur.garde.serrure"))
+        } else {
+            None
+        }
     }
 
     /// Every room an order on this device reaches: its own (user label and

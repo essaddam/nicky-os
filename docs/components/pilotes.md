@@ -72,7 +72,7 @@ Le hub l'appelle quand une surface demande une image : rien n'est récupéré po
 ```toml
 [[driver]]
 id = "enceinte"         # non vide, sans ':' ni '/', unique ; réservés : core, assistant, automations
-kind = "sonos"          # z2m, hue, tuya, reolink, sonos, philips, frigate, bambu, tapo, igd, helpers, profile
+kind = "sonos"          # z2m, hue, tuya, reolink, sonos, philips, frigate, bambu, tapo, igd, nuki, helpers, profile
 # enabled = false       # désactive l'instance sans la supprimer
 
 [driver.options]        # s'applique au [[driver]] qui précède ; clés inconnues refusées
@@ -329,6 +329,18 @@ name = "Bambu A1"              # optionnel
 - **Pas fait** : lancer une impression (le plateau doit être libre : un humain sur place), la caméra (le flux du U1 ne répond pas en HTTP local), le flux en direct par websocket (le relevé toutes les 5 s suffit).
 - **Tests** : réponses réelles du U1 (`integrations/klipper/fixtures/u1.json`) → forme, points, valeurs ; estimation du temps restant ; Klipper arrêté ; ordres → requêtes.
 
+## `nuki` : serrures Nuki (`crates/moli-nuki`)
+
+- **Couvre** : les serrures appairées à un **pont Nuki matériel** (Smart Lock 1.0/2.0/3.0, Smart Door). L'Opener (interphone) est ignoré. Paquet `integrations/nuki`.
+- **Protocole** : API HTTP locale du pont (port 8080), **jeton haché** (`ts`, `rnr`, `hash` = SHA-256 de `ts,rnr,jeton` : le jeton ne circule jamais ; le pont refuse une heure à plus d'une minute de la sienne). Lecture de `/list` (l'état gardé par le pont : interroger la serrure viderait ses piles) toutes les **30 s**, toutes les **3 s pendant 30 s** après un ordre. Ordres : `/lockAction` avec `nowait=1`, l'état réel suit à la lecture suivante. Le pont ne sert **qu'une requête à la fois** (503 sinon) : le pilote n'en envoie jamais deux.
+- **Configuration** : `host`, `port` (8080).
+- **Secrets** : `token`, le jeton de l'API que montre l'appli Nuki. `moli-os secrets set <instance> token`.
+- **Points** : `locked` (sémantique `lock`, vrai = verrouillée ; une serrure qui bouge ou bloquée n'est pas « verrouillée »), `state` (`locked`, `unlocking`, `unlocked`, `locking`, `unlatched`, `unlocked_lock_n_go`, `unlatching`, `motor_blocked`, `uncalibrated`, `undefined`), `unlatch` (écriture seule, sémantique `lock` : tire le pêne), `battery_low`, et selon la serrure `battery` (%), `charging`, `door` (contact, vrai = fermée), `keypad_battery_low`.
+- **Garde** : verrouiller passe ; **déverrouiller et tirer le pêne sont retenus pour un humain, dans toutes les pièces**, pour un agent comme pour le dashboard sans code (voir [coeur.md](coeur.md#la-garde-moli-runtimesrcguardrs)). Tout est au journal.
+- **Identité** : le numéro Nuki (`nukiId`, en hexadécimal, comme l'appli l'affiche). Nom = nom Nuki, borné à 64 caractères.
+- **Pièges** : 401 avec le bon jeton = horloges décalées (ou API désactivée : 403). Le jeton haché est déclaré « déprécié » par Nuki au profit d'un jeton chiffré (XSalsa20-Poly1305), pas encore implémenté.
+- **Tests** : `/list` d'après la doc (fixture anonymisée : trois appareils dont un Opener ignoré), réponses hostiles (100 serrures, noms trop longs, états inconnus), ordres → actions, jeton haché identique à l'exemple de la doc.
+
 ## `tapo` : ampoules et prises TP-Link Tapo (`crates/moli-tapo`)
 
 - **Couvre** : marche/arrêt, luminosité, température de couleur, couleur.
@@ -482,6 +494,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
 | `bambu` | `moli-bambu` | MQTT TLS 8883, épinglé | lumière, `control` (humain pour un agent) | pas encore (cible : Bambu Lab A1) |
 | `moonraker` | `moli-moonraker` | HTTP local 7125 | lumière, `control` (humain pour un agent) | Snapmaker U1 |
+| `nuki` | `moli-nuki` | HTTP local 8080, jeton haché | verrouiller ; déverrouiller et ouvrir (humain pour un agent et le dashboard sans code) | pas encore (pont Nuki + Smart Lock) |
 | `tapo` | `moli-tapo` | HTTP 80 + KLAP v2 | oui : tout | pas encore (cible : Tapo L530) |
 | `igd` | `moli-igd` | UPnP IGD (SSDP + SOAP) | non | Livebox |
 | `ipp` | `moli-ipp` | IPP 2.0 HTTP 631 | identifier, annuler, imprimer (tableau de bord) | Canon MG3600 |

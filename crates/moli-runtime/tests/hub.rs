@@ -80,6 +80,14 @@ impl Driver for FakePlug {
                         true,
                         Semantic::Control,
                     ),
+                    spec("locked", Kind::Binary, true, Semantic::Lock),
+                    PointSpec {
+                        access: Access {
+                            read: false,
+                            write: true,
+                        },
+                        ..spec("unlatch", Kind::Binary, true, Semantic::Lock)
+                    },
                 ],
             });
             ctx.set_state(&id, "state", Value::Bool(false));
@@ -498,6 +506,53 @@ async fn stopping_a_machine_is_a_humans_call_in_any_room() {
     hub.command(&point("state"), Value::Bool(true), Origin::Mcp, None)
         .await
         .unwrap();
+}
+
+#[tokio::test]
+async fn opening_a_door_is_a_humans_call_in_any_room() {
+    // No guard on rooms at all: unlocking and unlatching still wait for a
+    // person, from an agent as from the dashboard without a code.
+    let (hub, _cancel) = start(false).await;
+    for origin in [Origin::Assistant, Origin::Mcp, Origin::Household] {
+        for (key, value) in [("locked", false), ("unlatch", true), ("unlatch", false)] {
+            let held = hub
+                .command(&point(key), Value::Bool(value), origin, None)
+                .await;
+            assert!(
+                matches!(held, Err(CommandError::NeedsApproval { .. })),
+                "{origin:?} {key}={value}"
+            );
+        }
+    }
+    assert!(hub.state(&point("locked")).is_none(), "nothing ran");
+    assert!(
+        hub.would_hold(&point("locked"), None, Origin::Household)
+            .is_some()
+    );
+    // Locking is free, opening is free for a person and a validated routine.
+    hub.command(&point("locked"), Value::Bool(true), Origin::Mcp, None)
+        .await
+        .unwrap();
+    assert!(
+        hub.would_hold(&point("locked"), Some(&Value::Bool(true)), Origin::Mcp)
+            .is_none()
+    );
+    for origin in [Origin::Ui, Origin::Automation] {
+        hub.command(&point("locked"), Value::Bool(false), origin, None)
+            .await
+            .unwrap();
+    }
+    assert_eq!(
+        hub.state(&point("locked")).unwrap().value,
+        Value::Bool(false)
+    );
+    // Every attempt is in the journal, the held ones too.
+    let attempts = hub
+        .journal(200)
+        .iter()
+        .filter(|e| matches!(&e.action, moli_core::Action::Command { point: p, .. } if p.as_str().ends_with("/locked")))
+        .count();
+    assert_eq!(attempts, 6);
 }
 
 #[tokio::test]

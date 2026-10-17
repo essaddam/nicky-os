@@ -15,7 +15,7 @@ use axum::response::{IntoResponse, Response};
 use futures::Stream;
 use futures::stream::{self, StreamExt};
 use moli_automation::{Actor, Author, Automation, AutomationError, Automations, Graph, Step};
-use moli_core::{Origin, PointId};
+use moli_core::{Origin, PointId, Value};
 use moli_runtime::Hub;
 use serde::Deserialize;
 use serde_json::{Value as Json, json};
@@ -269,12 +269,16 @@ pub(crate) async fn run(
 }
 
 /// Whether each order of the routine would go through from the dashboard
-/// without a code (nothing in a protected room, no machine at work).
+/// without a code (nothing in a protected room, no machine at work, no door
+/// opened).
 fn household_may_run(hub: &Hub, graph: &Graph) -> bool {
+    let free = |point: &str, value: Option<&Value>| {
+        hub.would_hold(&PointId::from(point), value, Origin::Household)
+            .is_none()
+    };
     graph.nodes.iter().all(|node| match &node.step {
-        Step::Set { point, .. } | Step::Toggle { point } => hub
-            .would_hold(&PointId::from(point.as_str()), Origin::Household)
-            .is_none(),
+        Step::Set { point, value } => free(point, Some(&Value::from_json(value))),
+        Step::Toggle { point } => free(point, None),
         _ => true,
     })
 }

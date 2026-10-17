@@ -1,0 +1,29 @@
+[integration]
+id = "nuki"
+name = "Serrure Nuki (pont Nuki, API HTTP locale)"
+# Smart locks paired to a Nuki Bridge (hardware bridge, local HTTP API).
+brands = ["Nuki"]
+models = ["Smart Lock 1.0", "Smart Lock 2.0", "Smart Lock 3.0", "Smart Lock 3.0 Pro", "Smart Door", "Bridge"]
+transport = "http"
+driver = "nuki"
+crate = "moli-nuki"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = [8080]
+
+[needs]
+secrets = ["token"]
+vars = []
+options = ["host"]
+
+[origin]
+reused = "Nuki Bridge HTTP API 1.13.2 (documentation publique de Nuki) ; lecture de /list comme l'intégration HA nuki"
+author = "agent"
+
+[[fixture]]
+file = "fixtures/list.json"
+
+[[fixture]]
+file = "fixtures/lockAction.json"
