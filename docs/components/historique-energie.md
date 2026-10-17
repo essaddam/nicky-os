@@ -81,22 +81,28 @@ toujours par la clé primaire, ancrage conservé.
 **Garde des réductions** (`crates/moli-history/src/retention.rs`). Chaque point a un
 **plancher** dans `history.db` (table `retention`) : la durée pendant laquelle il est gardé
 jusqu'ici. Au premier démarrage, tous les points déjà enregistrés reçoivent `history_days`
-(Moli avant toute politique) ; un point apparu ensuite commence à sa durée configurée. Une
-passe garde chaque point la plus longue de son plancher et de sa durée configurée :
+(Moli avant toute politique) ; un point apparu ensuite reçoit sa durée configurée **avec sa
+première ligne, dans la même transaction** (la plus longue possible si son appareil est encore
+inconnu) : un arrêt avant la passe suivante ne le laisse jamais sans plancher. Une passe garde
+chaque point la plus longue de son plancher et de sa durée configurée :
 
 - une durée **plus longue** s'applique tout de suite et **relève le plancher** aussitôt, même si
-  une autre réduction attend : la ramener ensuite est une réduction comme une autre ;
+  une autre réduction attend : la ramener ensuite est une réduction comme une autre. Appareil
+  inconnu : seule la hausse certaine relève le plancher (la plus courte durée que pourrait lui
+  donner une famille, donc toute règle propre au point), jamais une simple ambiguïté ;
 - une durée **plus courte** n'efface rien. `GET /api/history/retention` compte, point par point,
   ce qu'elle supprimerait (`reduction.rows`, `points`, période `from`–`to`, points les plus
   touchés) et **garde ce plan** : points, familles, planchers, ancre et nombre de lignes de
   chacun. La page Système l'affiche dans « Stockage ». Une personne le valide avec son code :
   `POST /api/history/retention/validate` `{ "at", "fingerprint" }` (session PIN exigée, 403 sinon,
   même depuis un tableau de bord de confiance). La validation applique **ce plan seul** : elle
-  abaisse les planchers de ses points et supprime leurs lignes antérieures à l'ancre comptée,
-  **jamais plus que le nombre annoncé** (une écriture arrivée entre-temps n'élargit rien). Les
-  autres points attendent leur passe ordinaire. Un décompte plus récent remplace celui affiché,
-  un plancher changé entre-temps refuse la validation (409), un décompte de plus de 15 min aussi
-  (410) : la page montre alors la nouvelle proposition et demande un nouveau clic ;
+  revérifie chaque point (plancher, famille, durée configurée), abaisse leurs planchers et
+  supprime leurs lignes **dans la période annoncée** (de la plus ancienne comptée jusqu'à
+  l'ancre), **jamais plus que le nombre annoncé** : une écriture arrivée entre-temps n'élargit
+  rien. Les autres points attendent leur passe ordinaire. Un décompte plus récent remplace
+  celui affiché ; un point dont le plancher, la famille ou la durée a changé refuse la
+  validation (409), un décompte de plus de 15 min aussi (410) : la page montre alors la
+  nouvelle proposition et demande un nouveau clic ;
 - validation et passes prennent le même verrou, tenu du contrôle du plan jusqu'à la dernière
   ligne supprimée : aucune passe ne s'intercale ;
 - un agent (`api`, `mcp`, `cli`, `assistant`) ne valide jamais : `History::validate` refuse

@@ -107,10 +107,12 @@ pub struct SqlResult {
     pub truncated: bool,
 }
 
-/// One point's purge: rows older than `anchor`, at most `max` of them.
+/// One point's purge: rows from `oldest` to just before `anchor`, at most
+/// `max` of them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cut {
     pub id: i64,
+    pub oldest: u64,
     pub anchor: u64,
     pub max: u64,
 }
@@ -236,13 +238,29 @@ impl Store {
         rows: &[(PointId, Value, u64)],
         restate: bool,
     ) -> Result<(), HistoryError> {
+        self.record(rows, restate, None)
+    }
+
+    /// `insert`, and a point recorded for the first time gets its retention
+    /// floor (`first_floor`) in the same transaction: it never exists
+    /// without one, whatever happens before the next pass.
+    pub fn record(
+        &self,
+        rows: &[(PointId, Value, u64)],
+        restate: bool,
+        first_floor: Option<&dyn Fn(&str) -> u32>,
+    ) -> Result<(), HistoryError> {
         let mut conn = lock(&self.writer);
         let tx = conn.transaction()?;
         {
             let mut ids = lock(&self.ids);
-            let mut upsert = tx.prepare(
-                "INSERT INTO points(point) VALUES (?1)
-                 ON CONFLICT(point) DO UPDATE SET point = excluded.point RETURNING id",
+            let mut create = tx.prepare(
+                "INSERT INTO points(point) VALUES (?1) ON CONFLICT(point) DO NOTHING RETURNING id",
+            )?;
+            let mut known = tx.prepare("SELECT id FROM points WHERE point = ?1")?;
+            let mut floor = tx.prepare(
+                "INSERT INTO retention(point_id, days) VALUES (?1, ?2)
+                 ON CONFLICT(point_id) DO NOTHING",
             )?;
             // Two changes in the same millisecond (two button presses…) are
             // two samples: a collision moves the later one by 1 ms.
@@ -254,7 +272,18 @@ impl Store {
                 let id = if let Some(id) = ids.get(point.as_str()) {
                     *id
                 } else {
-                    let id: i64 = upsert.query_row([point.as_str()], |r| r.get(0))?;
+                    let created: Option<i64> = create
+                        .query_row([point.as_str()], |r| r.get(0))
+                        .optional()?;
+                    let id = match created {
+                        Some(id) => {
+                            if let Some(first_floor) = first_floor {
+                                floor.execute(params![id, first_floor(point.as_str())])?;
+                            }
+                            id
+                        }
+                        None => known.query_row([point.as_str()], |r| r.get(0))?,
+                    };
                     ids.insert(point.as_str().to_owned(), id);
                     id
                 };
@@ -310,9 +339,10 @@ impl Store {
         }))
     }
 
-    /// For each cut, deletes the point's samples older than its anchor, the
-    /// oldest first and never more than its `max`: an anchor fixed when the
-    /// purge was decided, so a write arriving meanwhile never widens it. At
+    /// For each cut, deletes the point's samples from `oldest` to just
+    /// before its anchor, the oldest first and never more than its `max`:
+    /// bounds fixed when the purge was decided, so a write arriving
+    /// meanwhile never widens it. At
     /// most `lot` rows per statement, the writer released in between
     /// (`between` runs then): the recorder's batches pass between two lots.
     /// Returns how many.
@@ -332,10 +362,11 @@ impl Store {
                 // (no DELETE … LIMIT).
                 let n = lock(&self.writer).execute(
                     "DELETE FROM samples WHERE point_id = ?1 AND ts IN (
-                        SELECT ts FROM samples WHERE point_id = ?1 AND ts < ?2
-                        ORDER BY ts LIMIT ?3)",
+                        SELECT ts FROM samples WHERE point_id = ?1 AND ts >= ?2 AND ts < ?3
+                        ORDER BY ts LIMIT ?4)",
                     params![
                         cut.id,
+                        ts(cut.oldest),
                         ts(cut.anchor),
                         i64::try_from(limit).unwrap_or(i64::MAX)
                     ],
@@ -657,6 +688,7 @@ mod tests {
                 let anchor = store.anchor(id, cutoff).unwrap()?;
                 Some(Cut {
                     id,
+                    oldest: 0,
                     anchor,
                     max: u64::MAX,
                 })
@@ -816,6 +848,7 @@ mod tests {
         );
         let cut = Cut {
             id,
+            oldest: doomed.oldest.unwrap(),
             anchor: doomed.anchor,
             max: doomed.rows,
         };
@@ -847,27 +880,31 @@ mod tests {
     #[test]
     fn a_write_between_lots_never_widens_the_purge() {
         let (store, dir) = store("prune-fixed");
-        let rows: Vec<_> = (0..=20u64).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        let rows: Vec<_> = (10..=30u64).map(|i| (p("d/x"), Value::Int(1), i)).collect();
         store.insert(&rows, false).unwrap();
         let (id, _) = store.points().unwrap()[0].clone();
         let doomed = store.doomed(id, 100).unwrap().unwrap();
-        assert_eq!((doomed.anchor, doomed.rows), (20, 20));
+        assert_eq!(
+            (doomed.oldest, doomed.anchor, doomed.rows),
+            (Some(10), 30, 20)
+        );
         let cut = Cut {
             id,
+            oldest: 10,
             anchor: doomed.anchor,
             max: doomed.rows,
         };
-        let mut late = vec![(p("d/x"), Value::Int(2), 50), (p("d/x"), Value::Int(3), 2)];
+        // Old readings restated between two lots: newer than the anchor, and
+        // older than the oldest row announced.
+        let mut late = vec![(p("d/x"), Value::Int(2), 50), (p("d/x"), Value::Int(3), 0)];
         let removed = store
             .prune(&[cut], 5, || {
-                // An old reading restated between two lots: newer than the
-                // anchor, or older than what is left to delete.
                 if let Some(row) = late.pop() {
                     store.insert(&[row], false).unwrap();
                 }
             })
             .unwrap();
-        assert_eq!(removed, 20, "exactly what was announced, never more");
+        assert_eq!(removed, 20, "exactly what was announced");
         let left: Vec<u64> = store
             .series("d/x", 0, 1_000, 100)
             .unwrap()
@@ -877,9 +914,32 @@ mod tests {
             .collect();
         assert_eq!(
             left,
-            vec![19, 20, 50],
-            "the anchor and the new reading stay"
+            vec![0, 30, 50],
+            "nothing outside the period announced"
         );
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_point_gets_its_floor_with_its_first_row() {
+        let (store, dir) = store("first-floor");
+        store.set_up_floors(30, 1).unwrap();
+        let floor = |point: &str| if point == "d/a" { 7 } else { 90 };
+        store
+            .record(&[(p("d/a"), Value::Int(1), 1)], false, Some(&floor))
+            .unwrap();
+        store
+            .record(
+                &[(p("d/b"), Value::Int(1), 1), (p("d/a"), Value::Int(2), 2)],
+                false,
+                Some(&floor),
+            )
+            .unwrap();
+        let floors = store.floors().unwrap().unwrap();
+        let mut got: Vec<u32> = floors.values().copied().collect();
+        got.sort_unstable();
+        assert_eq!(got, vec![7, 90], "set once, at the first row");
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }

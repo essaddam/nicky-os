@@ -138,6 +138,7 @@ impl History {
             Arc::clone(&history.store),
             queue,
             Arc::clone(&history.counters),
+            Arc::clone(&history.policy),
         ));
         tokio::spawn(prune_loop(history.clone(), cancel.clone()));
         let source = hub_events(hub);
@@ -371,11 +372,22 @@ fn compact(batch: &mut Vec<Row>, counters: &Counters) {
     );
 }
 
-async fn write_loop(store: Arc<Store>, mut queue: mpsc::Receiver<Batch>, counters: Arc<Counters>) {
+/// Writes the recorder's batches; a point's first row comes with its
+/// retention floor.
+async fn write_loop(
+    store: Arc<Store>,
+    mut queue: mpsc::Receiver<Batch>,
+    counters: Arc<Counters>,
+    policy: Arc<retention::Policy>,
+) {
     while let Some((rows, restate)) = queue.recv().await {
         let count = rows.len();
-        let store = Arc::clone(&store);
-        match blocking(move || store.insert(&rows, restate)).await {
+        let (store, policy) = (Arc::clone(&store), Arc::clone(&policy));
+        let written = blocking(move || {
+            let first_floor = |point: &str| policy.first_floor(point);
+            store.record(&rows, restate, Some(&first_floor))
+        });
+        match written.await {
             Ok(()) => {
                 counters.batches_written.fetch_add(1, Relaxed);
             }

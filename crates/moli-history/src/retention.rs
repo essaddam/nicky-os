@@ -191,35 +191,47 @@ impl Policy {
         }
     }
 
-    /// A pass as of `now`: floors raised where the configuration asks for
-    /// longer (a new point starts at its configured duration, the longest
-    /// one while its device is unknown), then every point purged at the
-    /// longer of its floor and its configured duration.
+    /// What the configuration surely asks for: the configured duration;
+    /// for an unknown family, the shortest any family could give it (a
+    /// point's own rule gives the same to all).
+    fn certain(&self, point: &str, family: Option<Family>) -> u32 {
+        match family {
+            Some(f) => self.configured.days(point, f),
+            None => Family::ALL
+                .iter()
+                .map(|&f| self.configured.days(point, f))
+                .min()
+                .unwrap_or(self.configured.days),
+        }
+    }
+
+    /// The floor a point gets with its first row (see `Store::record`).
+    pub(crate) fn first_floor(&self, point: &str) -> u32 {
+        self.configured(point, (self.families)(point))
+    }
+
+    /// A pass as of `now`: floors raised to what the configuration surely
+    /// asks for (a point without one starts at its longest duration), then
+    /// every point purged at the longer of its floor and its longest
+    /// configured duration. An unknown family raises no floor on a mere
+    /// ambiguity: a validated floor survives restarts.
     fn pass(&self, store: &Store, now: u64) -> Result<usize, HistoryError> {
         let mut raised = Vec::new();
         let mut cuts = Vec::new();
         for s in self.seen(store)? {
-            let configured = self.configured(&s.point, s.family);
-            let keep = match (s.family, s.floor) {
-                (Some(_), floor) => {
-                    let keep = configured.max(floor.unwrap_or(0));
-                    if floor != Some(keep) {
-                        raised.push((s.id, keep));
-                    }
-                    keep
-                }
-                // Not raised for an unknown family (a validated floor
-                // survives restarts), but never left without one: a point
-                // first seen this way starts at its longest duration.
-                (None, Some(floor)) => configured.max(floor),
-                (None, None) => {
-                    raised.push((s.id, configured));
-                    configured
-                }
-            };
+            let longest = self.configured(&s.point, s.family);
+            let floor = s
+                .floor
+                .unwrap_or(longest)
+                .max(self.certain(&s.point, s.family));
+            if s.floor != Some(floor) {
+                raised.push((s.id, floor));
+            }
+            let keep = floor.max(longest);
             if let Some(anchor) = store.anchor(s.id, cutoff(now, keep))? {
                 cuts.push(Cut {
                     id: s.id,
+                    oldest: 0,
                     anchor,
                     max: u64::MAX,
                 });
@@ -261,34 +273,35 @@ impl Policy {
             items,
         }))
     }
-}
 
-impl Plan {
-    /// Applies the plan shown, if it still is what it was: its floors are
-    /// lowered and exactly its rows deleted. Returns how many.
-    fn apply(&self, store: &Store, by: Option<&str>) -> Result<usize, PolicyError> {
+    /// Applies the plan shown, if each of its points still is what it was
+    /// (floor, family, duration): their floors are lowered and exactly their
+    /// rows deleted, within the period announced. Returns how many.
+    fn apply(&self, store: &Store, plan: &Plan, by: Option<&str>) -> Result<usize, PolicyError> {
+        // Each point as it was counted: its floor, its family, its duration.
         let floors = store.floors()?.unwrap_or_default();
-        if self
-            .items
-            .iter()
-            .any(|i| floors.get(&i.id) != Some(&i.floor))
-        {
+        if plan.items.iter().any(|i| {
+            floors.get(&i.id) != Some(&i.floor)
+                || (self.families)(&i.point) != Some(i.family)
+                || self.configured.days(&i.point, i.family) != i.days
+        }) {
             return Err(PolicyError::Changed);
         }
-        let announced = self
+        let announced = plan
             .items
             .iter()
             .filter_map(|i| i.doomed)
             .map(|d| d.rows)
             .sum();
-        let floors: Vec<_> = self.items.iter().map(|i| (i.id, i.days)).collect();
+        let floors: Vec<_> = plan.items.iter().map(|i| (i.id, i.days)).collect();
         store.set_floors(&floors, Some((now_ms(), by, announced)))?;
-        let cuts: Vec<_> = self
+        let cuts: Vec<_> = plan
             .items
             .iter()
             .filter_map(|i| {
                 i.doomed.map(|d| Cut {
                     id: i.id,
+                    oldest: d.oldest.unwrap_or(0),
                     anchor: d.anchor,
                     max: d.rows,
                 })
@@ -296,7 +309,9 @@ impl Plan {
             .collect();
         Ok(store.prune(&cuts, PRUNE_LOT, || std::thread::sleep(PRUNE_PAUSE))?)
     }
+}
 
+impl Plan {
     fn reduction(&self) -> Reduction {
         let mut top: Vec<Reduced> = self
             .items
@@ -391,10 +406,11 @@ impl History {
         if now_ms().saturating_sub(plan.at) > REDUCTION_TTL_MS {
             return Err(PolicyError::Expired);
         }
-        let store = Arc::clone(&self.store);
-        let removed = tokio::task::spawn_blocking(move || plan.apply(&store, by.as_deref()))
-            .await
-            .map_err(|e| HistoryError::Internal(e.to_string()))??;
+        let (store, policy) = (Arc::clone(&self.store), Arc::clone(&self.policy));
+        let removed =
+            tokio::task::spawn_blocking(move || policy.apply(&store, &plan, by.as_deref()))
+                .await
+                .map_err(|e| HistoryError::Internal(e.to_string()))??;
         *store::lock(&self.policy.shown) = None;
         tracing::info!(removed, "history retention reduction validated");
         Ok(removed)
@@ -458,6 +474,28 @@ mod tests {
             let policy =
                 Policy::open(&self.store, Filter::default(), configured, families).unwrap();
             History::with_policy(Arc::clone(&self.store), policy)
+        }
+
+        /// Rows written the way the recorder writes them (`write_loop`).
+        fn record(&self, history: &History, rows: &[(&str, u64)]) {
+            let policy = Arc::clone(&history.policy);
+            let rows: Vec<Row> = rows
+                .iter()
+                .map(|(p, ago)| (PointId::from(*p), Value::Int(1), self.now - ago))
+                .collect();
+            let first_floor = |point: &str| policy.first_floor(point);
+            self.store.record(&rows, false, Some(&first_floor)).unwrap();
+        }
+
+        fn floor(&self, point: &str) -> Option<u32> {
+            let id = self
+                .store
+                .points()
+                .unwrap()
+                .into_iter()
+                .find(|(_, p)| p == point)?
+                .0;
+            self.store.floors().unwrap()?.get(&id).copied()
         }
 
         /// (point, days ago) of every row left.
@@ -699,6 +737,97 @@ mod tests {
         );
         let r = history.policies().await.unwrap().reduction.unwrap();
         assert_eq!((r.top[0].from_days, r.top[0].to_days, r.rows), (30, 3, 1));
+    }
+
+    #[tokio::test]
+    async fn a_point_recorded_just_before_a_stop_keeps_its_duration() {
+        // Recorded after the first pass, stopped before the next one, then
+        // started again two days later with a shorter duration.
+        let bench = Bench::new("stop", &[]);
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::States);
+        let before = bench.history(with(30, &[], &[]));
+        bench.record(&before, &[("d/x", 20 * D), ("d/x", 10 * D), ("d/x", 5 * D)]);
+        assert_eq!(bench.floor("d/x"), Some(30), "set with its first row");
+        let after = bench.history(with(1, &[], &[]));
+        assert_eq!(after.prune_pass(bench.now + 2 * D).await.unwrap(), 0);
+        assert_eq!(bench.left().len(), 3);
+        let r = after.policies().await.unwrap().reduction.unwrap();
+        assert_eq!((r.top[0].from_days, r.top[0].to_days), (30, 1));
+    }
+
+    #[tokio::test]
+    async fn a_certain_increase_is_remembered_even_without_the_device() {
+        let bench = Bench::new(
+            "certain",
+            &[("d/x", 50 * D), ("d/x", 40 * D), ("d/x", 5 * D)],
+        );
+        bench.known.lock().unwrap().clear();
+        // The point's own rule: 60 days whatever its family.
+        let longer = bench.history(with(30, &[], &[("d/x", 60)]));
+        assert_eq!(longer.prune_pass(bench.now).await.unwrap(), 0);
+        assert_eq!(bench.floor("d/x"), Some(60));
+        let back = bench.history(with(30, &[], &[]));
+        assert_eq!(back.prune_pass(bench.now).await.unwrap(), 0, "60 days hold");
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::States);
+        let r = back.policies().await.unwrap().reduction.unwrap();
+        assert_eq!((r.top[0].from_days, r.top[0].to_days, r.rows), (60, 30, 1));
+    }
+
+    #[tokio::test]
+    async fn an_ambiguous_family_raises_no_floor() {
+        // A diagnostic point validated at 3 days, its device not published
+        // yet after a restart: its floor stays 3, not climate's 90.
+        let bench = Bench::new("ambiguous", &[("d/x", 2 * D)]);
+        bench.known.lock().unwrap().clear();
+        let history = bench.history(with(
+            30,
+            &[(Family::Diagnostic, 3), (Family::Climate, 90)],
+            &[],
+        ));
+        let id = bench.store.points().unwrap()[0].0;
+        bench.store.set_floors(&[(id, 3)], None).unwrap();
+        history.prune_pass(bench.now).await.unwrap();
+        assert_eq!(bench.floor("d/x"), Some(3));
+    }
+
+    #[tokio::test]
+    async fn a_point_reclassified_after_the_count_is_refused() {
+        let bench = Bench::new(
+            "reclassified",
+            &[("d/x", 20 * D), ("d/x", 10 * D), ("d/x", 5 * D)],
+        );
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Diagnostic);
+        let history = bench.history(with(
+            30,
+            &[(Family::Diagnostic, 3), (Family::Climate, 90)],
+            &[],
+        ));
+        let r = history.policies().await.unwrap().reduction.unwrap();
+        assert_eq!(r.rows, 2);
+        // The device is published again, its point now a temperature.
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Climate);
+        let refused = history
+            .validate(r.at, &r.fingerprint, Origin::Ui, None)
+            .await;
+        assert!(matches!(refused, Err(PolicyError::Changed)), "{refused:?}");
+        assert_eq!(bench.left().len(), 3);
+        assert_eq!(bench.floor("d/x"), Some(30));
     }
 
     #[tokio::test]
