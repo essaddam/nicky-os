@@ -1888,4 +1888,76 @@ mod tests {
         // The pass came after, with the validated duration and its own time.
         assert_eq!(passing.await.unwrap().unwrap(), 1);
     }
+
+    #[tokio::test]
+    async fn n0_reclassification_keeps_its_persisted_floor_after_reopen() {
+        let diagnostic: moli_core::Semantic = serde_json::from_str("\"diagnostic\"").unwrap();
+        let bench = Bench::new(
+            "n0-diagnostic",
+            &[
+                ("d/x", 25 * D),
+                ("d/x", 20 * D),
+                ("d/x", 15 * D),
+                ("d/x", 5 * D),
+            ],
+        );
+        bench
+            .known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Other);
+        let configured = with(30, &[(Family::Diagnostic, 7)], &[]);
+        let history = bench.history(configured.clone());
+        assert_eq!(bench.floor("d/x"), Some(30));
+        let telemetry = device(diagnostic, moli_core::Unit::Other("B/s".into()));
+        let family = Family::of(&telemetry.points[0]);
+        assert_eq!(family, Family::Diagnostic);
+        bench.known.lock().unwrap().insert("d/x".into(), family);
+        history.policy.published_at(&telemetry, None);
+        assert_eq!(history.prune_pass(bench.now).await.unwrap(), 0);
+        assert_eq!(bench.floor("d/x"), Some(30));
+        let before = history.policies().await.unwrap().reduction.unwrap();
+        assert_eq!(
+            (before.top[0].from_days, before.top[0].to_days, before.rows),
+            (30, 7, 2)
+        );
+        drop(history);
+        let reopened = bench.reopen(configured);
+        assert_eq!(reopened.prune_pass(bench.now).await.unwrap(), 0);
+        assert_eq!(bench.floor("d/x"), Some(30));
+        assert_eq!(bench.left().len(), 4);
+        let proposed = reopened.policies().await.unwrap().reduction.unwrap();
+        assert_eq!(
+            (
+                proposed.top[0].from_days,
+                proposed.top[0].to_days,
+                proposed.rows
+            ),
+            (30, 7, 2)
+        );
+        for origin in [
+            Origin::Api,
+            Origin::Mcp,
+            Origin::Cli,
+            Origin::Assistant,
+            Origin::Household,
+            Origin::Automation,
+            Origin::System,
+        ] {
+            assert!(matches!(
+                reopened
+                    .validate(proposed.at, &proposed.fingerprint, origin, None)
+                    .await,
+                Err(PolicyError::HumanOnly)
+            ));
+        }
+        assert_eq!(bench.left().len(), 4);
+        let removed = reopened
+            .validate(proposed.at, &proposed.fingerprint, Origin::Ui, None)
+            .await
+            .unwrap();
+        assert_eq!(removed as u64, proposed.rows);
+        assert_eq!(bench.left(), vec![("d/x".into(), 15), ("d/x".into(), 5)]);
+        assert_eq!(bench.floor("d/x"), Some(7));
+    }
 }

@@ -37,13 +37,13 @@ automatique. Un matériel incompatible reste à qualifier et sous son propriéta
 
 ## N0 : diagnostic et unités, avant les clients
 
-État vérifié dans le code : `moli_history::policy::family` classe `SignalStrength` en
-`diagnostic`, mais un nombre `Other` sans unité reconnue reste `other`. Les octets et les
-octets par seconde ne deviennent donc pas diagnostics par une simple étiquette.
+Le socle N0 fournit `Semantic::Diagnostic`, sérialisé `diagnostic`, et son classement
+dans `Family::Diagnostic`. `SignalStrength` garde son classement diagnostic existant ;
+un nombre `Other` en octets ou octets par seconde reste `other`. Les unités et une simple
+étiquette ne remplacent donc jamais une sémantique explicitement déclarée.
 Une règle `storage.point` sait régler la durée, pas changer la famille.
 
-Contrat approuvé par l’architecte à la revue du cadrage : ajouter `Semantic::Diagnostic`
-sérialisé `diagnostic` ; le plan de N0 est relu par son relecteur avant implémentation.
+Contrat approuvé par l’architecte à la revue du cadrage, plan N0 relu avant implémentation.
 `Diagnostic` décrit la santé technique de l’équipement lui-même : charge, mémoire, durée
 de fonctionnement, trafic ou température de puce, avec une unité indépendante. Une mesure
 de l’environnement garde sa sémantique physique, même venant d’un équipement réseau.
@@ -51,8 +51,8 @@ B1 classe explicitement cette nouvelle sémantique dans `Family::Diagnostic`, av
 l'inférence par unité. Les sémantiques existantes conservent leur classement ; le signal
 reste `SignalStrength`. Aucune inférence globale fondée sur des noms tels que `rx`.
 
-Les unités `B`, `B/s` et `Mbit/s` passent par `Unit::Other`, déjà sérialisable ; ajouter
-seulement leur acceptation explicite dans le validateur des profils. `s`, `%`, `°C`, `dB`
+Les unités `B`, `B/s` et `Mbit/s` passent par `Unit::Other`, déjà sérialisable, et sont
+acceptées explicitement par le validateur des profils. `s`, `%`, `°C`, `dB`
 et `dBm` gardent leur sens. Un compteur réseau n'est jamais de l'énergie (`Wh`/`kWh`).
 Vérifier les consommateurs Rust et web de `Semantic`, la compatibilité des données
 existantes, les traductions fr/en nécessaires et les validations de profil. Ne changer

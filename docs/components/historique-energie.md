@@ -47,8 +47,14 @@ sémantique ni unité (un bouton, un texte → états ; un nombre → autre).
 | `climate` | température, humidité, pression, luminosité, ppm |
 | `energy` | compteurs (kWh, Wh) ; leurs heures vivent aussi dans `energy.db` |
 | `states` | marche/arrêt, contacts, serrures et ouvre-portes, présence, fuites, fumée, luminosité et couleur d'une lampe, boutons, textes |
-| `diagnostic` | signal, link quality, batterie, tension de pile (`voltage` en mV d'un appareil sur pile, ou un nom de batterie) |
+| `diagnostic` | santé technique explicitement déclarée `diagnostic` (charge, mémoire, durée, trafic, température de puce), signal, link quality, batterie, tension de pile (`voltage` en mV d'un appareil sur pile, ou un nom de batterie) |
 | `other` | le reste : un pourcentage sans sémantique, une mesure en mV qui n'est pas une pile (ORP d'une piscine) |
+
+La sémantique explicite `diagnostic` prime sur l'unité : la température d'une puce peut
+être du diagnostic, tandis qu'une température ambiante reste du climat. Les unités `B`,
+`B/s`, `Mbit/s` seules ne reclassent aucun point. Les points existants et la règle de
+tension de pile conservent leur classement. Une reclassification ne réduit jamais un
+plancher de conservation sans la validation humaine décrite plus bas.
 
 L'association famille → agrégation (moyenne pondérée, somme, durées, comptage) n'est pas
 faite ici : le module de résumés n'est pas encore fusionné, elle revient à son ticket.

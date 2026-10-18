@@ -161,6 +161,10 @@ pub enum Semantic {
     /// (unlatch, buzzer): every write opens. Opening is a person's call:
     /// an agent asks, and so does the dashboard without a code.
     Lock,
+    /// The equipment's own technical health (load, traffic, chip temperature),
+    /// explicitly declared by its driver. Ambient measurements keep their
+    /// physical meaning; this category is never inferred from a key or unit.
+    Diagnostic,
     Other,
 }
 
@@ -367,6 +371,71 @@ mod tests {
         assert_eq!(
             validate(&Kind::Text, &Value::Int(1)),
             Err(ValueError::ExpectedText)
+        );
+    }
+
+    #[test]
+    fn n0_diagnostic_round_trips_in_a_point_spec() {
+        for unit in ["B", "B/s", "Mbit/s"] {
+            let fixture = serde_json::json!({
+                "key": "traffic", "label": "Traffic", "kind": { "type": "numeric" },
+                "access": { "read": true, "write": false },
+                "unit": unit, "semantic": "diagnostic"
+            });
+            let spec: PointSpec = serde_json::from_value(fixture.clone()).unwrap();
+            assert_eq!(spec.unit, Some(Unit::Other(unit.into())));
+            assert_eq!(serde_json::to_value(&spec).unwrap(), fixture);
+        }
+        assert!(serde_json::from_str::<Semantic>("\"diagnostics\"").is_err());
+    }
+
+    #[test]
+    fn n0_existing_semantics_units_and_inference_are_unchanged() {
+        let existing = [
+            (Semantic::OnOff, "on_off"),
+            (Semantic::Brightness, "brightness"),
+            (Semantic::ColorTemp, "color_temp"),
+            (Semantic::Color, "color"),
+            (Semantic::Power, "power"),
+            (Semantic::ApparentPower, "apparent_power"),
+            (Semantic::Energy, "energy"),
+            (Semantic::Voltage, "voltage"),
+            (Semantic::Current, "current"),
+            (Semantic::Temperature, "temperature"),
+            (Semantic::Humidity, "humidity"),
+            (Semantic::Pressure, "pressure"),
+            (Semantic::Illuminance, "illuminance"),
+            (Semantic::Battery, "battery"),
+            (Semantic::BatteryLow, "battery_low"),
+            (Semantic::SignalStrength, "signal_strength"),
+            (Semantic::Contact, "contact"),
+            (Semantic::Occupancy, "occupancy"),
+            (Semantic::WaterLeak, "water_leak"),
+            (Semantic::Smoke, "smoke"),
+            (Semantic::Tamper, "tamper"),
+            (Semantic::Config, "config"),
+            (Semantic::Control, "control"),
+            (Semantic::Lock, "lock"),
+            (Semantic::Other, "other"),
+        ];
+        for (semantic, name) in existing {
+            let json = serde_json::Value::from(name);
+            assert_eq!(serde_json::to_value(semantic).unwrap(), json);
+            assert_eq!(serde_json::from_value::<Semantic>(json).unwrap(), semantic);
+        }
+        for unit in ["B", "B/s", "Mbit/s"] {
+            let parsed = Unit::parse(unit).unwrap();
+            assert_eq!(parsed, Unit::Other(unit.into()));
+            assert_eq!(serde_json::to_value(&parsed).unwrap(), unit);
+            assert_eq!(Semantic::infer("rx_bytes", Some(&parsed)), Semantic::Other);
+        }
+        assert_eq!(
+            Semantic::infer("temperature", Some(&Unit::Celsius)),
+            Semantic::Temperature
+        );
+        assert_eq!(
+            Semantic::infer("ram_usage", Some(&Unit::Percent)),
+            Semantic::Other
         );
     }
 }

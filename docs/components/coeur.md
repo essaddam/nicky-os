@@ -18,6 +18,13 @@ aucune logique d'appareil (c'est le rôle des [pilotes](pilotes.md)) et aucun LL
 | `Event` | `device_upserted`, `device_removed`, `state`, `availability`, `driver_status`, `label_changed`, `journal`, `approval_requested`, `approval_resolved`, `notice` |
 | `Origin` | `ui`, `api`, `mcp`, `cli`, `system`, `assistant`, `automation` : par où arrive une action |
 
+La sémantique explicite `diagnostic` décrit la santé technique de l'équipement lui-même :
+charge, mémoire, durée de fonctionnement, trafic ou température de puce. Une mesure
+ambiante garde sa sémantique physique (`temperature`, `humidity`…), même si elle provient
+d'un équipement réseau. `diagnostic` ne se déduit jamais d'une clé ou d'une unité ; le
+pilote ou le profil doit la déclarer. Les symboles de trafic `B`, `B/s`, `Mbit/s` restent
+des `Unit::Other` et ne sont jamais des compteurs d'énergie.
+
 ## `moli-runtime` : le hub
 
 `Hub` est un handle clonable (`Arc`) partagé par tout le monde.

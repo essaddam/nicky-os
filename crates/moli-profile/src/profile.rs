@@ -180,7 +180,8 @@ const MAX_ROUND: u32 = 6;
 
 /// Units accepted beyond those the core knows by name.
 const EXTRA_UNITS: &[&str] = &[
-    "mired", "lqi", "dBm", "Hz", "L", "m³", "µg/m³", "ppb", "rpm", "km/h", "mm", "°", "UV",
+    "mired", "lqi", "dBm", "Hz", "L", "m³", "µg/m³", "ppb", "rpm", "km/h", "mm", "°", "UV", "B",
+    "B/s", "Mbit/s",
 ];
 
 /// Raw values that mean « no reading ».
@@ -1702,5 +1703,72 @@ kind = \"numeric\"
         assert_eq!(parse_every("1h"), Some(Duration::from_secs(3600)));
         assert_eq!(parse_every("2s"), None);
         assert_eq!(parse_every("2d"), None);
+    }
+
+    fn n0_profile(unit: &str, semantic: Option<&str>) -> Result<Compiled, ProfileError> {
+        let meaning = semantic.map_or_else(String::new, |s| format!("semantic = \"{s}\""));
+        try_compile(&format!(
+            r#"
+            [profile]
+            id = "n0"
+            name = "Telemetry"
+            [[request]]
+            id = "q"
+            path = "/readings"
+            format = "json"
+            every = "60s"
+            [[point]]
+            key = "rx_bytes"
+            label = "Traffic"
+            from = "q.value"
+            kind = "numeric"
+            unit = "{unit}"
+            {meaning}
+        "#
+        ))
+    }
+
+    #[test]
+    fn n0_network_units_remain_other_without_an_explicit_semantic() {
+        let answer = Answer::parse(Format::Json, br#"{"value":123.5}"#).unwrap();
+        for unit in ["B", "B/s", "Mbit/s"] {
+            let compiled = n0_profile(unit, None).unwrap();
+            let point = &compiled.points[0];
+            assert_eq!(point.spec.unit, Some(Unit::Other(unit.into())));
+            assert_eq!(point.spec.semantic, Semantic::Other);
+            assert_eq!(point.read(&answer), Some(Value::Float(123.5)));
+        }
+    }
+
+    #[test]
+    fn n0_diagnostic_profiles_decode_without_writes() {
+        let diagnostic: Semantic = serde_json::from_str("\"diagnostic\"").unwrap();
+        let answer = Answer::parse(Format::Json, br#"{"value":123.5}"#).unwrap();
+        let absent = Answer::parse(Format::Json, br#"{"value":null}"#).unwrap();
+        for unit in ["B", "B/s", "Mbit/s"] {
+            let compiled = n0_profile(unit, Some("diagnostic")).unwrap();
+            assert!(compiled.writes.is_empty());
+            let point = &compiled.points[0];
+            assert_eq!(point.spec.semantic, diagnostic);
+            assert_eq!(point.spec.unit, Some(Unit::Other(unit.into())));
+            assert!(point.spec.access.read);
+            assert!(!point.spec.access.write);
+            assert_eq!(point.read(&answer), Some(Value::Float(123.5)));
+            assert_eq!(point.read(&absent), Some(Value::Null));
+        }
+        for typo in ["Mb/s", "B/sec", "byte"] {
+            assert!(
+                n0_profile(typo, None)
+                    .unwrap_err()
+                    .to_string()
+                    .contains("unknown unit")
+            );
+        }
+        assert!(
+            n0_profile("B", Some("diagnostics"))
+                .unwrap_err()
+                .to_string()
+                .contains("unknown variant")
+        );
     }
 }

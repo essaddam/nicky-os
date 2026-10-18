@@ -74,7 +74,7 @@ pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind, key: &str) -
         S::Power | S::ApparentPower | S::Current | S::Voltage => Family::Power,
         S::Energy => Family::Energy,
         S::Temperature | S::Humidity | S::Pressure | S::Illuminance => Family::Climate,
-        S::Battery | S::BatteryLow | S::SignalStrength => Family::Diagnostic,
+        S::Battery | S::BatteryLow | S::Diagnostic | S::SignalStrength => Family::Diagnostic,
         S::OnOff
         | S::Brightness
         | S::ColorTemp
@@ -464,5 +464,97 @@ mod tests {
         assert!(err("[[point]]\nmatch = \" \"\ndays = 3").contains("[[storage.point]]"));
         assert!(err("[history]\nexclude = [\"\"]").contains("exclude"));
         assert!(toml::from_str::<StorageConfig>("[policy.climate]\nhot_days = 3").is_err());
+    }
+
+    #[test]
+    fn n0_diagnostics_win_over_units_without_changing_policy_precedence() {
+        let diagnostic: Semantic = serde_json::from_str("\"diagnostic\"").unwrap();
+        let (filter, retention) = config(
+            r#"
+            [history]
+            exclude = ["net:*/traffic"]
+            include = ["net:unit/traffic"]
+            [policy.diagnostic]
+            days = 7
+            [policy.climate]
+            days = 90
+            [[point]]
+            match = "net:special/traffic"
+            days = 60
+            "#,
+        )
+        .compile(30)
+        .unwrap();
+        let units = [
+            None,
+            Unit::parse("B"),
+            Unit::parse("B/s"),
+            Unit::parse("Mbit/s"),
+            Some(Unit::Percent),
+            Some(Unit::Second),
+            Some(Unit::Celsius),
+        ];
+        for unit in units {
+            for kind in [
+                NUMBER,
+                Kind::Text,
+                Kind::Binary,
+                Kind::Enum {
+                    values: vec!["ok".into()],
+                },
+            ] {
+                let spec = PointSpec {
+                    key: "traffic".into(),
+                    label: "Traffic".into(),
+                    kind,
+                    access: moli_core::Access {
+                        read: true,
+                        write: false,
+                    },
+                    unit: unit.clone(),
+                    semantic: diagnostic,
+                };
+                let classified = Family::of(&spec);
+                assert_eq!(classified, Family::Diagnostic);
+                assert_eq!(retention.days("net:unit/traffic", classified), 7);
+                assert_eq!(retention.days("net:special/traffic", classified), 60);
+            }
+        }
+        assert!(filter.records("net:unit/traffic"));
+        assert!(!filter.records("net:other/traffic"));
+        let ambient = family(
+            Semantic::Temperature,
+            Some(&Unit::Celsius),
+            &NUMBER,
+            "temperature",
+        );
+        assert_eq!(ambient, Family::Climate);
+        assert_eq!(retention.days("net:unit/temperature", ambient), 90);
+        let ordinary = family(
+            Semantic::Other,
+            Unit::parse("B").as_ref(),
+            &NUMBER,
+            "rx_bytes",
+        );
+        assert_eq!(ordinary, Family::Other);
+        assert_eq!(retention.days("net:unit/rx_bytes", ordinary), 30);
+        assert_eq!(
+            family(
+                Semantic::Voltage,
+                Some(&Unit::MilliVolt),
+                &NUMBER,
+                "voltage"
+            ),
+            Family::Diagnostic
+        );
+        assert_eq!(
+            family(
+                Semantic::Other,
+                Some(&Unit::MilliVolt),
+                &NUMBER,
+                "battery_voltage"
+            ),
+            Family::Diagnostic
+        );
     }
 }
