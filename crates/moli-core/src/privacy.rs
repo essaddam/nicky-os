@@ -75,6 +75,7 @@ fn nested(value: &Json, depth: usize) -> bool {
 }
 
 /// Inspects borrowed text without constructing an owned JSON tree.
+/// JSON-like text that cannot be fully inspected is refused.
 #[must_use]
 pub fn private_text(text: &str) -> bool {
     inspect_text(text, 0)
@@ -165,5 +166,34 @@ mod tests {
         );
         let dense = format!("[{}null]", "null,".repeat(400_000));
         assert!(!private_text(&dense), "ordinary dense array rejected");
+    }
+
+    #[test]
+    fn suspicious_json_text_never_becomes_public_after_a_parse_error() {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let code = format!("0{stamp}");
+        for text in [
+            format!(r#"{{"pin":"{code}","tail":}}"#),
+            format!(r#"{{"tail":,"pin":"{code}"}}"#),
+            format!(r#"{{"pin":"{code}","n":1e400}}"#),
+            format!(r#"{{"n":1e400,"pin":"{code}"}}"#),
+            format!(r#"{{"pin":"{code}"}} trailing"#),
+        ] {
+            assert!(private_text(&text), "uninspectable JSON text was public");
+            assert!(
+                private_json(&Json::String(text)),
+                "outer JSON string lost its privacy guard"
+            );
+        }
+        assert!(
+            private_text(r#"{"ordinary":}"#),
+            "invalid JSON text must not certify absence of a code"
+        );
+        for ordinary in ["disarm", r#"{"ordinary":[true,81,"ready"]}"#] {
+            assert!(!private_text(ordinary), "valid ordinary text was hidden");
+        }
     }
 }

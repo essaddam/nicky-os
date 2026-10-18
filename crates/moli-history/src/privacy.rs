@@ -324,4 +324,46 @@ mod tests {
         drop(Store::open(&dir.join("history.db")).unwrap());
         fs::remove_dir_all(dir).unwrap();
     }
+
+    #[test]
+    fn startup_removes_uninspectable_json_text_and_keeps_the_ordinary_sample() {
+        let (dir, code, writer) = fixture();
+        for (at, text) in [
+            (10, format!(r#"{{"pin":"{code}","tail":}}"#)),
+            (11, format!(r#"{{"tail":,"pin":"{code}"}}"#)),
+            (12, format!(r#"{{"pin":"{code}","n":1e400}}"#)),
+            (13, format!(r#"{{"n":1e400,"pin":"{code}"}}"#)),
+            (14, format!(r#"{{"pin":"{code}"}} trailing"#)),
+        ] {
+            writer
+                .execute(
+                    "INSERT INTO samples(point_id,ts,kind,txt) VALUES(3,?1,'t',?2)",
+                    params![at, text],
+                )
+                .unwrap();
+        }
+        drop(writer);
+        let store = Store::open(&dir.join("history.db")).unwrap();
+        let reader = Connection::open(dir.join("history.db")).unwrap();
+        assert_eq!(
+            reader
+                .query_row("SELECT count(*) FROM samples WHERE point_id=3", [], |row| {
+                    row.get::<_, i64>(0)
+                })
+                .unwrap(),
+            0,
+            "uninspectable private JSON survived restart"
+        );
+        assert_eq!(
+            reader
+                .query_row("SELECT num FROM samples WHERE point_id=2", [], |row| row
+                    .get::<_, f64>(0))
+                .unwrap(),
+            81.0
+        );
+        drop(reader);
+        drop(store);
+        drop(Store::open(&dir.join("history.db")).unwrap());
+        fs::remove_dir_all(dir).unwrap();
+    }
 }

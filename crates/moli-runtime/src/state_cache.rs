@@ -75,6 +75,9 @@ mod tests {
             "settings.code":{"value":code,"ts":1},
             "settings.key_code":{"value":code,"ts":1},
             "action":{"value":json!({"pin_code":code}).to_string(),"ts":1},
+            "action_after":{"value":format!(r#"{{"pin":"{code}","tail":}}"#),"ts":1},
+            "action_before":{"value":format!(r#"{{"tail":,"pin":"{code}"}}"#),"ts":1},
+            "action_range":{"value":format!(r#"{{"pin":"{code}","n":1e400}}"#),"ts":1},
             "battery":{"value":81,"ts":1}}}))
         .unwrap();
         std::fs::write(&path, &bytes).unwrap();

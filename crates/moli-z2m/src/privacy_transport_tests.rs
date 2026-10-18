@@ -197,6 +197,11 @@ async fn private_inputs_are_bounded_and_absent_from_every_public_surface() {
         json!({"action":{"pin_code":code},"battery":81}),
         json!({"action":"disarm","pin_code":{"pin_code":code}}),
         json!({"action":"disarm","settings":{"pin":code}}),
+        json!({"action":format!(r#"{{"pin":"{code}","tail":}}"#),"battery":81}),
+        json!({"action":format!(r#"{{"tail":,"pin":"{code}"}}"#),"battery":81}),
+        json!({"action":format!(r#"{{"pin":"{code}","n":1e400}}"#),"battery":81}),
+        json!({"action":format!(r#"{{"n":1e400,"pin":"{code}"}}"#),"battery":81}),
+        json!({"action":format!(r#"{{"pin":"{code}"}} trailing"#),"battery":81}),
     ] {
         send(
             &tx,
@@ -210,6 +215,12 @@ async fn private_inputs_are_bounded_and_absent_from_every_public_surface() {
         assert!(
             private.try_recv().is_err(),
             "malformed private input accepted"
+        );
+        assert!(
+            !serde_json::to_string(&hub.snapshot())
+                .unwrap()
+                .contains(&code),
+            "outer-valid MQTT frame exposed a code in public state"
         );
     }
     send(

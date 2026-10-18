@@ -596,6 +596,13 @@ qui reçoivent un mot de passe. Les noms ordinaires `battery`, `error_code`,
 imbriquant un champ privé n’est pas convertie en texte public. Une nouvelle
 propriété de credential exige une extension de cette liste et de ses tests.
 
+Un texte commençant par `{`, `[` ou un guillemet après les espaces est aussi
+refusé si son analyse JSON complète échoue : syntaxe malformée, nombre non
+représentable ou données supplémentaires. Une erreur, même avant un champ
+privé, ne prouve pas l’absence de code. Cette règle s’applique aussi aux copies
+persistées au redémarrage. Les textes ordinaires et les JSON valides sans champ
+privé restent publics.
+
 Un message de clavier valide est remis par `DriverCtx::submit_keypad_input` au
 seul consommateur interne inscrit avec `Hub::take_keypad_inputs`. Ce chemin n’a
 aucune route REST/MCP. Sa file contient au plus 16 entrées, code et action sont

@@ -10,7 +10,8 @@ pub(super) fn inspect(text: &str, depth: usize) -> bool {
     }
     .deserialize(&mut parser)
     .and_then(|found| parser.end().map(|()| found))
-    .unwrap_or(false)
+    // An error cannot prove absence of a code, including before its field.
+    .unwrap_or(true)
 }
 
 struct Probe {

@@ -221,7 +221,9 @@ mod privacy_tests {
         let safe = json!({"id":1,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:lamp/state","value":true},"outcome":{"result":"ok"},"duration_ms":0});
         let bad = json!({"id":2,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:panel/action_code","value":code},"outcome":{"result":"ok"},"duration_ms":0});
         let composite = json!({"id":3,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:panel/settings.pin","value":code},"outcome":{"result":"ok"},"duration_ms":0});
-        let text = format!("{safe}\n{bad}\n{composite}\n");
+        let after = json!({"id":4,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:panel/action","value":format!(r#"{{"pin":"{code}","tail":}}"#)},"outcome":{"result":"ok"},"duration_ms":0});
+        let before = json!({"id":5,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:panel/action","value":format!(r#"{{"tail":,"pin":"{code}"}}"#)},"outcome":{"result":"ok"},"duration_ms":0});
+        let text = format!("{safe}\n{bad}\n{composite}\n{after}\n{before}\n");
         for name in ["journal.jsonl", "audit.log"] {
             let path = dir.join(name);
             for file in [path.clone(), previous(&path), pending(&path)] {
