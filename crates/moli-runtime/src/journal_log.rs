@@ -29,6 +29,12 @@ pub(crate) struct JournalLog {
 impl JournalLog {
     /// Opens (or creates) the log and returns its last `keep` entries.
     pub(crate) fn open(path: &Path, keep: usize) -> io::Result<(Self, Vec<Arc<JournalEntry>>)> {
+        sanitize(path)?;
+        sanitize(&previous(path))?;
+        let tmp = pending(path);
+        if tmp != path {
+            crate::private_files::discard(&tmp)?;
+        }
         let mut entries: Vec<Arc<JournalEntry>> = match std::fs::read_to_string(path) {
             Ok(text) => text
                 .lines()
@@ -99,6 +105,32 @@ impl JournalLog {
     }
 }
 
+/// Includes the previous rotation; never create a fresh copy of unsafe bytes.
+fn sanitize(path: &Path) -> io::Result<()> {
+    let text = match std::fs::read_to_string(path) {
+        Ok(text) => text,
+        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(e) => return Err(e),
+    };
+    let mut clean = String::new();
+    let mut removed = 0;
+    for line in text.lines() {
+        let keep = serde_json::from_str::<serde_json::Value>(line)
+            .is_ok_and(|value| !moli_core::privacy::private_json(&value));
+        if keep {
+            clean.push_str(line);
+            clean.push('\n');
+        } else {
+            removed += 1;
+        }
+    }
+    if removed != 0 {
+        crate::private_files::replace(path, clean.as_bytes())?;
+        tracing::warn!(removed, "private or invalid journal entries removed");
+    }
+    Ok(())
+}
+
 fn append_to(path: &Path) -> io::Result<File> {
     OpenOptions::new().create(true).append(true).open(path)
 }
@@ -110,7 +142,7 @@ fn trim(path: &Path) -> io::Result<(File, u64)> {
     let text = std::fs::read_to_string(path)?;
     let lines: Vec<&str> = text.lines().collect();
     let kept = &lines[lines.len().saturating_sub(KEEP_LINES)..];
-    let tmp = path.with_extension("jsonl.tmp");
+    let tmp = pending(path);
     {
         let mut out = BufWriter::new(File::create(&tmp)?);
         for line in kept {
@@ -133,6 +165,11 @@ fn previous(path: &Path) -> PathBuf {
     let mut name = path.as_os_str().to_owned();
     name.push(".1");
     PathBuf::from(name)
+}
+
+/// The historical trim filename, including for a custom journal extension.
+fn pending(path: &Path) -> PathBuf {
+    path.with_extension("jsonl.tmp")
 }
 
 #[cfg(test)]
@@ -162,5 +199,54 @@ mod tests {
             "the previous file is kept whole"
         );
         let _ = std::fs::remove_dir_all(dir);
+    }
+}
+
+#[cfg(test)]
+mod privacy_tests {
+    use super::*;
+    use serde_json::json;
+    #[test]
+    fn repair_covers_current_rotation_and_uncommitted_journal_without_copying_codes() {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let code = format!("0{stamp}");
+        let dir = std::env::temp_dir().join(format!(
+            "moli-journal-private-{}-{stamp}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let safe = json!({"id":1,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:lamp/state","value":true},"outcome":{"result":"ok"},"duration_ms":0});
+        let bad = json!({"id":2,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:panel/action_code","value":code},"outcome":{"result":"ok"},"duration_ms":0});
+        let composite = json!({"id":3,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:panel/settings.pin","value":code},"outcome":{"result":"ok"},"duration_ms":0});
+        let after = json!({"id":4,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:panel/action","value":format!(r#"{{"pin":"{code}","tail":}}"#)},"outcome":{"result":"ok"},"duration_ms":0});
+        let before = json!({"id":5,"ts":1,"origin":"system","action":{"kind":"command","point":"fixture:panel/action","value":format!(r#"{{"tail":,"pin":"{code}"}}"#)},"outcome":{"result":"ok"},"duration_ms":0});
+        let text = format!("{safe}\n{bad}\n{composite}\n{after}\n{before}\n");
+        for name in ["journal.jsonl", "audit.log"] {
+            let path = dir.join(name);
+            for file in [path.clone(), previous(&path), pending(&path)] {
+                std::fs::write(file, &text).unwrap();
+            }
+            let (_log, past) = JournalLog::open(&path, 100).unwrap();
+            assert_eq!(past.len(), 1);
+            for file in [&path, &previous(&path)] {
+                let bytes = std::fs::read(file).unwrap();
+                assert!(
+                    !bytes
+                        .windows(code.len())
+                        .any(|part| part == code.as_bytes()),
+                    "credential left in journal"
+                );
+                assert!(
+                    String::from_utf8(bytes)
+                        .unwrap()
+                        .contains("fixture:lamp/state")
+                );
+            }
+            assert!(!pending(&path).exists());
+        }
+        std::fs::remove_dir_all(dir).unwrap();
     }
 }

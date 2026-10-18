@@ -133,6 +133,10 @@ pub enum Origin {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Action {
+    /// Audit only: no code, raw action or transaction can enter the public journal.
+    KeypadInput {
+        device: DeviceId,
+    },
     Command {
         point: PointId,
         value: Value,

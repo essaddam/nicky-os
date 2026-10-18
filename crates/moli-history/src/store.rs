@@ -274,11 +274,12 @@ impl Store {
         if let Some(dir) = path.parent() {
             std::fs::create_dir_all(dir).map_err(|e| HistoryError::Internal(e.to_string()))?;
         }
-        let writer = Connection::open(path)?;
+        let mut writer = Connection::open(path)?;
         writer.pragma_update(None, "journal_mode", "WAL")?;
         writer.pragma_update(None, "synchronous", "NORMAL")?;
         writer.busy_timeout(Duration::from_secs(5))?;
         writer.execute_batch(SCHEMA)?;
+        crate::privacy::repair(&mut writer)?;
 
         let read_only = || -> Result<Connection, HistoryError> {
             let conn = Connection::open_with_flags(
@@ -367,6 +368,15 @@ impl Store {
             let mut created = std::collections::HashSet::new();
             let mut floored = std::collections::HashSet::new();
             for (point, value, at) in rows {
+                if moli_core::privacy::code_point(point.as_str())
+                    || moli_core::privacy::private_value(value)
+                {
+                    continue;
+                }
+                if matches!(value, Value::Text(text) if text.len() > moli_core::privacy::MAX_JSON_TEXT_BYTES)
+                {
+                    return Err(HistoryError::Internal("history_text_too_large".into()));
+                }
                 let cached = ids
                     .get(point.as_str())
                     .or_else(|| fresh.get(point.as_str()));

@@ -1863,13 +1863,18 @@ name = "moli-z2m"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
+ "moli-api",
  "moli-core",
+ "moli-history",
  "moli-runtime",
  "rumqttc",
  "serde",
  "serde_json",
  "tokio",
+ "tokio-util",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

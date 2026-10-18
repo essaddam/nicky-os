@@ -13,8 +13,10 @@ mod driver;
 pub mod guard;
 mod hub;
 mod journal_log;
+mod keypad;
 mod labels;
 pub mod media;
+mod private_files;
 mod secrets;
 mod state_cache;
 mod stats;
@@ -27,6 +29,7 @@ pub use hub::{
     ApprovalError, CORE_NAMESPACE, CommandError, DeviceView, DriverView, Hub, HubOptions,
     LabelError, LabelPatch, MAX_LABEL, Snapshot,
 };
+pub use keypad::{KeypadCode, KeypadInput, KeypadReceiver};
 pub use secrets::{MasterKey, forget_secret, set_secret};
 pub use stats::Stats;
 pub use supervisor::spawn_driver;

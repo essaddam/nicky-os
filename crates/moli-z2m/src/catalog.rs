@@ -8,6 +8,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use moli_core::privacy;
 use moli_core::{Access, Device, DeviceId, InstanceId, Kind, PointSpec, Semantic, Unit, Value};
 use serde::Deserialize;
 use serde_json::{Map, Value as Json};
@@ -146,7 +147,13 @@ impl Entry {
             .points
             .iter()
             .filter_map(|point| {
+                if privacy::code_property(&point.key) {
+                    return None;
+                }
                 let json = lookup(payload, &point.key)?;
+                if privacy::private_json(json) {
+                    return None;
+                }
                 let codec = self.codecs.get(&point.key);
                 let value = match codec.and_then(|c| c.binary.as_ref()) {
                     Some((on, _)) if json == on => Value::Bool(true),
@@ -206,6 +213,15 @@ fn flatten(
     points: &mut Vec<PointSpec>,
     codecs: &mut HashMap<Arc<str>, Codec>,
 ) {
+    if expose
+        .property
+        .as_deref()
+        .is_some_and(privacy::code_property)
+        || expose.name.as_deref().is_some_and(privacy::code_property)
+        || privacy::code_property(prefix)
+    {
+        return;
+    }
     if !expose.features.is_empty() {
         // Composite values nest under their property; specific types
         // (light, switch, climate…) are plain groups.
@@ -222,6 +238,9 @@ fn flatten(
         return;
     };
     let key: Arc<str> = format!("{prefix}{property}").into();
+    if privacy::code_property(&key) {
+        return;
+    }
     if points.iter().any(|p| p.key == key) {
         return;
     }
@@ -318,6 +337,8 @@ struct RawExpose {
     kind: String,
     #[serde(default)]
     property: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
     #[serde(default)]
     label: Option<String>,
     #[serde(default)]

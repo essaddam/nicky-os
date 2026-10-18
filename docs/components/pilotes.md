@@ -608,3 +608,55 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `profile` | `moli-profile` | HTTP/HTTPS GET, Meross signé | oui si le profil déclare `[[write]]` (Daikin) | Daikin BRP069 (lecture), Meross EM06, Open-Meteo, Tempo, iopool EcO (voir [profils.md](profils.md#les-profils-du-catalogue)) |
 | `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |
 | `lumieres` (interne) | `moli-lights` | aucun (lit et commande d'autres appareils via le hub) | oui | ampoules Hue derrière un relais |
+
+
+## Entrées privées des claviers et serrures Z2M
+
+Les propriétés qui portent un code restent hors du modèle public : ni point,
+état, cache, historique, SSE, REST ou outil MCP. `moli_core::privacy` définit la
+liste de namespaces réservés, compare leurs formes de casse/séparateurs et couvre
+chaque segment de chemin composite (`settings.pin`, par exemple),
+les composites `pin_code.*`, les PIN temporaires et les commandes `unlock_door`
+qui reçoivent un mot de passe. Les noms ordinaires `battery`, `error_code`,
+`date_code`, `action_transaction` et `lock_state` restent publics. Une valeur JSON
+imbriquant un champ privé n’est pas convertie en texte public. Une nouvelle
+propriété de credential exige une extension de cette liste et de ses tests.
+
+Un texte commençant par `{`, `[` ou un guillemet après les espaces est aussi
+refusé si son analyse JSON complète échoue : syntaxe malformée, nombre non
+représentable ou données supplémentaires. Une erreur, même avant un champ
+privé, ne prouve pas l’absence de code. Cette règle s’applique aussi aux copies
+persistées au redémarrage. Les textes ordinaires et les JSON valides sans champ
+privé restent publics.
+
+Un message de clavier valide est remis par `DriverCtx::submit_keypad_input` au
+seul consommateur interne inscrit avec `Hub::take_keypad_inputs`. Ce chemin n’a
+aucune route REST/MCP. Sa file contient au plus 16 entrées, code et action sont
+bornés à 64 octets ; le type de code n’est ni sérialisable ni clonable et son
+`Debug` est masqué. Sans consommateur ou si la file est pleine, l’entrée est
+rejetée et comptée par `rejected_keypad_inputs`, sans garder de contenu. La chute
+d’un consommateur jette sa file ; sa réinscription commence vide. Aucun message
+retenu MQTT ne devient une saisie privée. Une ambiguïté, un objet à la place du
+code ou une transaction invalide est rejeté ; aucune valeur n’est tronquée.
+L’événement public d’audit ne contient que l’identité du clavier (« code saisi au
+clavier »), jamais le code, l’action brute ou la transaction. Ce canal ne commande
+aucun appareil et n’implémente pas la centrale d’alarme.
+
+Avant d’ouvrir les surfaces, le démarrage nettoie le cache, le journal et sa
+rotation, les temporaires abandonnés et l’historique SQLite. Les points de code
+sont identifiés par leur clé ; les anciennes valeurs JSON contenant un champ de
+code sont également retirées. Les suppressions SQLite utilisent `secure_delete`
+et un checkpoint WAL avec troncature, vérifié avant l’ouverture des lecteurs.
+Les scans de métadonnées se font par lots bornés ; un index partiel ne retient
+que les identités et temps des valeurs texte. Leur taille est vérifiée avec
+`octet_length` avant chargement ; une seule valeur empruntée est analysée à la
+fois, sans construire d’arbre JSON. Un ancien texte de plus de 4 Mio fait
+échouer l’ouverture avec `private_history_text_too_large`, sans supprimer cette
+donnée ordinaire : sa mise à l’écart doit être décidée hors ligne avant reprise.
+L’historique refuse aussi une nouvelle écriture texte de plus de 4 Mio, afin
+qu’une valeur acceptée ne rende pas le prochain démarrage impossible.
+Le temporaire du journal suit aussi son nom historique pour les chemins
+personnalisés (`audit.log` → `audit.jsonl.tmp`). Une erreur de nettoyage ou un WAL occupé fait
+échouer le démarrage, afin de retenter avant toute publication. Les données
+ordinaires sont conservées. Cette réparation concerne les fichiers actifs ; elle
+ne modifie pas les anciennes sauvegardes ni un broker ou une instance extérieure.
