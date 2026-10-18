@@ -52,7 +52,7 @@ pub const MAX_SLOW_BODY: usize = 16 * MIB;
 
 /// An answer over its limit. Never retried: the device would send it again.
 #[derive(Debug)]
-struct BodyTooLarge(usize);
+pub struct BodyTooLarge(usize);
 
 impl std::fmt::Display for BodyTooLarge {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -661,6 +661,19 @@ pub async fn plain_if(
     request: Request<Full<Bytes>>,
     wanted: impl Fn() -> bool,
 ) -> anyhow::Result<(StatusCode, Bytes)> {
+    plain_limited_if(host, port, request, MAX_BODY, wanted).await
+}
+
+/// Like [`plain_if`], with a device-specific response body limit. The
+/// limit is enforced while collecting frames, including chunked bodies.
+/// An oversized response fails with [`BodyTooLarge`], never retried.
+pub async fn plain_limited_if(
+    host: &str,
+    port: u16,
+    request: Request<Full<Bytes>>,
+    max_body: usize,
+    wanted: impl Fn() -> bool,
+) -> anyhow::Result<(StatusCode, Bytes)> {
     let still = || {
         if wanted() {
             Ok(())
@@ -682,14 +695,13 @@ pub async fn plain_if(
         });
         let response = sender.send_request(request).await?;
         let status = response.status();
-        let body = read_body(response.into_body(), MAX_BODY).await?;
+        let body = read_body(response.into_body(), max_body).await?;
         anyhow::Ok((status, body))
     };
     tokio::time::timeout(TIMEOUT, exchange)
         .await
         .with_context(|| format!("{host} did not answer in time"))?
 }
-
 /// One request to a web API (an LLM, a cloud service), on its own
 /// connection: TLS checked against the public CAs when `tls`, the whole
 /// exchange within `limit`, the answer capped at `max_body` bytes. The
@@ -982,6 +994,37 @@ mod plain_if_tests {
                 .header("host", "x"),
         )
         .unwrap()
+    }
+
+    #[tokio::test]
+    async fn twinkly_http_body_limit_stops_chunked_accumulation() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0; 2048];
+            let _ = socket.read(&mut request).await.unwrap();
+            socket
+                .write_all(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+                .await
+                .unwrap();
+            // No Content-Length shortcut: the body limit must hold as it arrives.
+            for _ in 0..9 {
+                if socket.write_all(b"400\r\n").await.is_err() {
+                    return;
+                }
+                if socket.write_all(&[b'x'; 1024]).await.is_err() {
+                    return;
+                }
+                if socket.write_all(b"\r\n").await.is_err() {
+                    return;
+                }
+            }
+            let _ = socket.write_all(b"0\r\n\r\n").await;
+        });
+        let result = super::plain_limited_if("127.0.0.1", port, get(), 8192, || true).await;
+        server.await.unwrap();
+        assert!(result.err().is_some_and(|e| e.is::<super::BodyTooLarge>()));
     }
 
     #[tokio::test]

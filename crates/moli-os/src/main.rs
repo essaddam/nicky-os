@@ -881,6 +881,7 @@ const KINDS: &[&str] = &[
     "sonos",
     "reolink",
     "tuya",
+    "twinkly",
     "helpers",
     "presence",
     "telegram",
@@ -1058,6 +1059,9 @@ fn build_driver(
         "tuya" => Arc::new(moli_tuya::Tuya::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "twinkly" => Arc::new(moli_twinkly::Twinkly::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "presence" => Arc::new(moli_presence::Presence::new(
             config.options.clone().try_into().with_context(context)?,
         )?),

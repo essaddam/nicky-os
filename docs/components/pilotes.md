@@ -537,6 +537,31 @@ pièces ; il commande ensuite les membres en origine `system` (journal : `lumina
 
 Un seul pilote générique pour tout appareil HTTP décrit en TOML. Voir [profils.md](profils.md).
 
+## Twinkly locale (`moli-twinkly`)
+
+Un appareil par instance, HTTP API v1 sur une IPv4 locale et une MAC validées par
+l'humain : `on`, luminosité 0–100 %, couleur statique `#rrggbb` seulement si profil
+RGB et firmware compatible avec la route directe. Ni film monochrome de repli,
+ni effets, sélection de playlist, synchronisation ou temps réel. L'allumage reprend
+un mode compatible observé ou explicitement choisi ; sans cela il est refusé.
+
+Le client utilise login/verify, un challenge aléatoire et un jeton temporaire RAM,
+avec limites de taille/durée et réponse applicative vérifiée. Une seule opération
+réseau en vol, FIFO bornée à huit ordres, échéance absolue et abandon avant chaque
+émission ; aucun rejeu d'écriture. Après acquittement, seule la relecture alimente
+les points, leur fraîcheur et la disponibilité ; les valeurs demandées ne sont pas
+publiées comme observations. Les trois points relèvent de la famille `states`.
+Un jeton auparavant confirmé puis refusé est remplacé au relevé suivant, sans
+rejouer d'écriture. Un jeton neuf refusé avant sa première lecture complète ou
+un dépassement des trois récupérations par heure demande une intervention humaine.
+Le nettoyage d'arrêt est local à Twinkly, même si sa future est détruite.
+
+Le [paquet](../../integrations/twinkly/README.md) documente versions/licences des
+références communautaires, bornes, fixtures synthétiques et limites. Les contrats
+simulés ne qualifient aucun matériel : même login/interview réel attend **H1**, un
+responsable d'exécution unique, un humain présent et une cible neutre. Configuration
+et démarche dans [onboarding.md](../../integrations/twinkly/onboarding.md).
+
 ## Tests : où et comment
 
 - Tout passe par `.\scripts\dev.ps1 sh scripts/check.sh` (fmt, clippy `-D warnings`, `cargo test --workspace`, dans Docker ; voir [exploitation.md](exploitation.md)). Une crate seule : `.\scripts\dev.ps1 cargo test -p moli-tuya`.
@@ -564,6 +589,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `z2m` | `moli-z2m` | MQTT local (Zigbee2MQTT) | oui, selon les `exposes` | Zigbee2MQTT (appareils variés) |
 | `hue` | `moli-hue` | HTTPS CLIP v2 + SSE, local, épinglé | oui : lumières, pièces ; zones non | pont Philips Hue (CLIP v2) |
 | `tuya` | `moli-tuya` | TCP 6668 chiffré 3.3/3.4/3.5, UDP 6666/6667/7000 ; cloud en lecture | oui : DP booléens, entiers, enum (local seulement) | prises Tuya (local, écriture comprise) ; capteurs sur pile et passerelles (cloud) |
+| `twinkly` | `moli-twinkly` | HTTP local v1, login/verify transitoires | marche, luminosité, RGB statique direct si supporté | pas encore : contrats synthétiques, H1 requis |
 | `reolink` | `moli-reolink` | HTTPS API locale, épinglé (X.509 v1) | non (+ images) | Reolink Home Hub (caméras, sonnette) |
 | `sonos` | `moli-sonos` | UPnP/SOAP HTTP 1400 ; annonces en WebSocket TLS 1443 | oui : lecture, volume, sourdine, annonces | Sonos Beam |
 | `philips` | `moli-philips` | JointSpace HTTPS 1926, digest, WoL ; Android TV Remote, Cast | oui : alimentation, volume, sourdine, Ambilight, touches, appli | Philips Google TV (lecture) |

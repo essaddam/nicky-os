@@ -1600,6 +1600,7 @@ dependencies = [
  "moli-tapo",
  "moli-telegram",
  "moli-tuya",
+ "moli-twinkly",
  "moli-weather",
  "moli-z2m",
  "rusqlite",
@@ -1823,6 +1824,25 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "moli-twinkly"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "http",
+ "moli-core",
+ "moli-history",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "ring",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "zeroize",
 ]
 
 [[package]]

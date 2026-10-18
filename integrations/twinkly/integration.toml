@@ -1,0 +1,28 @@
+[integration]
+id = "twinkly"
+name = "Twinkly locale (marche, luminosité, RGB statique)"
+brands = ["Twinkly"]
+models = []
+transport = "http"
+driver = "twinkly"
+crate = "moli-twinkly"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = [80]
+
+[needs]
+secrets = []
+vars = []
+options = ["host", "mac"]
+
+[origin]
+reused = "XLED docs 6e88f64 (MIT), HA 2026.10.2 (Apache-2.0), ttls 1.11.1 (BSD-2-Clause) ; contrat réimplémenté, aucun code fournisseur embarqué"
+author = "agent"
+
+[[fixture]]
+file = "fixtures/gestalt.json"
+
+[[fixture]]
+file = "fixtures/state.json"

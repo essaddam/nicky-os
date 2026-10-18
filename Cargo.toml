@@ -22,6 +22,7 @@ moli-rollup = { path = "crates/moli-rollup" }
 moli-profile = { path = "crates/moli-profile" }
 moli-energy = { path = "crates/moli-energy" }
 moli-tuya = { path = "crates/moli-tuya" }
+moli-twinkly = { path = "crates/moli-twinkly" }
 moli-net = { path = "crates/moli-net" }
 moli-reolink = { path = "crates/moli-reolink" }
 moli-sonos = { path = "crates/moli-sonos" }

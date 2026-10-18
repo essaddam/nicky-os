@@ -19,6 +19,7 @@ moli-history.workspace = true
 moli-profile.workspace = true
 moli-energy.workspace = true
 moli-tuya.workspace = true
+moli-twinkly.workspace = true
 moli-reolink.workspace = true
 moli-sonos.workspace = true
 moli-bambu.workspace = true

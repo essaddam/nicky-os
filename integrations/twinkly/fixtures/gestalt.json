@@ -1,0 +1,7 @@
+{
+  "code": 1000,
+  "mac": "aa:bb:cc:dd:ee:ff",
+  "device_name": "String lights",
+  "product_code": "RGB-Demo",
+  "led_profile": "RGB"
+}
