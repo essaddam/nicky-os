@@ -28,8 +28,8 @@ Measured on 2026-10-04, next to a real Home Assistant on the same machine
   driver is restarted with backoff, the core never goes down), journal of every write,
   last-known-state cache restored with its original age, encrypted secret store, a guard
   that holds agent commands in protected rooms for a human.
-- **24 integrations** (`integrations/`): Zigbee2MQTT, Hue, Sonos, Tuya, Reolink, Frigate,
-  Philips TV, Bambu Lab, Klipper, Tapo, IPP printers, UPnP routers, presence, Telegram,
+- **25 integrations** (`integrations/`): Zigbee2MQTT, Hue, Sonos, Tuya, Reolink, Frigate,
+  Philips TV, Bambu Lab, Klipper, Nuki locks, Tapo, IPP printers, UPnP routers, presence, Telegram,
   phones, plus declarative profiles (Daikin, Meross, Open-Meteo, Tempo, iopool…).
 - **Dashboard** (Svelte 5) embedded in the binary: rooms, lights, climate, cameras, energy,
   a live floor plan in 2D and 3D.

@@ -29,8 +29,8 @@ historique : [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)) :
   écriture, le dernier état connu restauré avec son âge, un coffre chiffré pour les secrets, et
   une garde qui retient les ordres des agents dans les pièces protégées pour qu'une personne
   les valide.
-- **24 intégrations** (`integrations/`) : Zigbee2MQTT, Hue, Sonos, Tuya, Reolink, Frigate,
-  télés Philips, Bambu Lab, Klipper, Tapo, imprimantes IPP, box UPnP, présence, Telegram,
+- **25 intégrations** (`integrations/`) : Zigbee2MQTT, Hue, Sonos, Tuya, Reolink, Frigate,
+  télés Philips, Bambu Lab, Klipper, serrures Nuki, Tapo, imprimantes IPP, box UPnP, présence, Telegram,
   téléphones, et des profils déclaratifs (Daikin, Meross, Open-Meteo, Tempo, iopool…).
 - **Le tableau de bord** (Svelte 5), embarqué dans le binaire : pièces, lumières, climat,
   caméras, énergie, plan de la maison en 2D et en 3D.

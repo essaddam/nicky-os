@@ -166,6 +166,8 @@
   "systeme.hub.etiquette_non_enregistree": "Label not saved: {message}",
   "systeme.format.binaire.contact.on": "Closed",
   "systeme.format.binaire.contact.off": "Open",
+  "systeme.format.binaire.lock.on": "Locked",
+  "systeme.format.binaire.lock.off": "Unlocked",
   "systeme.format.binaire.occupancy.on": "Someone here",
   "systeme.format.binaire.occupancy.off": "Nobody",
   "systeme.format.binaire.water_leak.on": "Leak!",

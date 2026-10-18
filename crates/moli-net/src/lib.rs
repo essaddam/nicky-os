@@ -636,6 +636,60 @@ pub async fn plain_with_headers(
         .with_context(|| format!("{host} did not answer in time"))?
 }
 
+/// An order that never left: [`plain_if`] found it no longer wanted before
+/// sending it. Anything else after that point may have been sent.
+#[derive(Debug)]
+pub struct NotSent;
+
+impl std::fmt::Display for NotSent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("not sent: no longer wanted")
+    }
+}
+
+impl std::error::Error for NotSent {}
+
+/// Like [`plain`], for an order that must not leave once nobody wants it:
+/// `wanted` is asked before each step up to the request leaving (before
+/// connecting, once connected, once the connection is set up), and an
+/// order no longer wanted fails with [`NotSent`]. Once the request is
+/// handed to the connection it may have left: its answer is then awaited
+/// (within the usual bound) whatever `wanted` says, never sent again.
+pub async fn plain_if(
+    host: &str,
+    port: u16,
+    request: Request<Full<Bytes>>,
+    wanted: impl Fn() -> bool,
+) -> anyhow::Result<(StatusCode, Bytes)> {
+    let still = || {
+        if wanted() {
+            Ok(())
+        } else {
+            Err(anyhow::Error::new(NotSent))
+        }
+    };
+    let exchange = async {
+        still()?;
+        let tcp = TcpStream::connect((host, port))
+            .await
+            .with_context(|| format!("cannot reach {host}:{port}"))?;
+        still()?;
+        let (mut sender, connection) = http1::handshake(TokioIo::new(tcp)).await?;
+        still()?;
+        // From here the connection writes the request: it may have left.
+        tokio::spawn(async move {
+            let _ = connection.await;
+        });
+        let response = sender.send_request(request).await?;
+        let status = response.status();
+        let body = read_body(response.into_body(), MAX_BODY).await?;
+        anyhow::Ok((status, body))
+    };
+    tokio::time::timeout(TIMEOUT, exchange)
+        .await
+        .with_context(|| format!("{host} did not answer in time"))?
+}
+
 /// One request to a web API (an LLM, a cloud service), on its own
 /// connection: TLS checked against the public CAs when `tls`, the whole
 /// exchange within `limit`, the answer capped at `max_body` bytes. The
@@ -872,5 +926,111 @@ mod web_url_tests {
         assert_eq!((l.tls, l.port, l.path.as_str()), (false, 5678, "/"));
         assert!(WebUrl::parse("ftp://x").is_err());
         assert!(WebUrl::parse("https://user@host/").is_err());
+    }
+}
+
+#[cfg(test)]
+mod plain_if_tests {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+
+    use super::{NotSent, empty, plain_if};
+
+    /// A device that counts the bytes it receives, says when a whole
+    /// request arrived (`got`), then answers 200.
+    async fn device() -> (u16, Arc<AtomicUsize>, Arc<tokio::sync::Notify>) {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let bytes = Arc::new(AtomicUsize::new(0));
+        let got = Arc::new(tokio::sync::Notify::new());
+        let (b, g) = (Arc::clone(&bytes), Arc::clone(&got));
+        tokio::spawn(async move {
+            while let Ok((mut socket, _)) = listener.accept().await {
+                let (b, g) = (Arc::clone(&b), Arc::clone(&g));
+                tokio::spawn(async move {
+                    let mut seen = Vec::new();
+                    let mut buf = [0u8; 1024];
+                    while let Ok(n) = socket.read(&mut buf).await {
+                        if n == 0 {
+                            return;
+                        }
+                        b.fetch_add(n, Ordering::SeqCst);
+                        seen.extend_from_slice(&buf[..n]);
+                        if seen.windows(4).any(|w| w == b"\r\n\r\n") {
+                            g.notify_one();
+                            // Answer a little later: the caller may leave meanwhile.
+                            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                            let _ = socket
+                                .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 16\r\n\r\n{\"success\":true}")
+                                .await;
+                            return;
+                        }
+                    }
+                });
+            }
+        });
+        (port, bytes, got)
+    }
+
+    fn get() -> http::Request<http_body_util::Full<super::Bytes>> {
+        empty(
+            http::Request::builder()
+                .uri("/lockAction?action=1")
+                .header("host", "x"),
+        )
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn an_order_no_longer_wanted_never_leaves() {
+        let (port, bytes, _) = device().await;
+        // Not wanted from the start, or no longer once connected.
+        let e = plain_if("127.0.0.1", port, get(), || false)
+            .await
+            .unwrap_err();
+        assert!(e.is::<NotSent>(), "{e:#}");
+        let asked = AtomicUsize::new(0);
+        let e = plain_if("127.0.0.1", port, get(), || {
+            asked.fetch_add(1, Ordering::SeqCst) == 0
+        })
+        .await
+        .unwrap_err();
+        assert!(e.is::<NotSent>(), "{e:#}");
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        assert_eq!(
+            bytes.load(Ordering::SeqCst),
+            0,
+            "nothing reached the device"
+        );
+    }
+
+    #[tokio::test]
+    async fn once_sent_its_answer_counts_even_if_the_caller_left() {
+        let (port, _, got) = device().await;
+        let left = Arc::new(AtomicBool::new(false));
+        let leaving = {
+            let left = Arc::clone(&left);
+            tokio::spawn(async move {
+                got.notified().await;
+                left.store(true, Ordering::SeqCst);
+            })
+        };
+        let wanted = {
+            let left = Arc::clone(&left);
+            move || !left.load(Ordering::SeqCst)
+        };
+        let (status, body) = plain_if("127.0.0.1", port, get(), wanted).await.unwrap();
+        leaving.await.unwrap();
+        assert!(
+            left.load(Ordering::SeqCst),
+            "the caller left after the request arrived"
+        );
+        assert_eq!(
+            (status.as_u16(), &body[..]),
+            (200, &b"{\"success\":true}"[..])
+        );
     }
 }

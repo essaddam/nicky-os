@@ -1,0 +1,47 @@
+[
+  {
+    "nukiId": 439041101,
+    "deviceType": 4,
+    "name": "Porte de test",
+    "firmwareVersion": "3.9.4",
+    "lastKnownState": {
+      "mode": 2,
+      "state": 1,
+      "stateName": "locked",
+      "batteryCritical": false,
+      "batteryCharging": false,
+      "batteryChargeState": 82,
+      "keypadBatteryCritical": false,
+      "doorsensorState": 2,
+      "doorsensorStateName": "door closed",
+      "timestamp": "2026-01-01T08:00:00+00:00"
+    }
+  },
+  {
+    "nukiId": 11,
+    "name": "Serrure ancienne",
+    "lastKnownState": {
+      "mode": 2,
+      "state": 5,
+      "stateName": "unlatched",
+      "batteryCritical": true,
+      "doorsensorState": 1,
+      "doorsensorStateName": "deactivated",
+      "timestamp": "2026-01-01T08:00:00+00:00"
+    }
+  },
+  {
+    "nukiId": 22,
+    "deviceType": 2,
+    "name": "Interphone de test",
+    "lastKnownState": {
+      "mode": 3,
+      "state": 3,
+      "stateName": "rto active",
+      "batteryCritical": false,
+      "ringactionTimestamp": "2026-01-01T07:59:00+00:00",
+      "ringactionState": false,
+      "timestamp": "2026-01-01T08:00:00+00:00"
+    }
+  }
+]

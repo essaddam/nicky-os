@@ -29,7 +29,15 @@ aucune logique d'appareil (c'est le rôle des [pilotes](pilotes.md)) et aucun LL
   reçoit un nouvel instantané au lieu de bloquer les autres (SSE).
 - **Commandes** : `hub.command(point, value, origin, actor)` → validation contre le
   `PointSpec` (lecture seule, valeur invalide : refus) → **garde** → envoi au pilote
-  (délai 5 s) → journal. La confirmation arrive ensuite comme un événement `state`.
+  (délai 5 s) → journal. La confirmation arrive ensuite comme un événement `state`. Un appelant
+  qui abandonne (client parti, tâche annulée) : si l'ordre attendait encore dans la file du
+  pilote, il est abandonné avec lui et ne s'exécute jamais ; si le pilote l'avait déjà pris,
+  `CommandRequest::abandoned()` le lui dit jusqu'à l'envoi (un ordre pas encore parti ne part
+  plus), et la réponse est attendue quand même et journalisée. Si cette attente est elle-même
+  interrompue (arrêt du runtime), la ligne est écrite à sa destruction : la réponse si elle est
+  arrivée, sinon « résultat inconnu ». Toujours une seule ligne (commande directe comme demande
+  libérée par un humain). Prise et abandon sont tranchés de façon atomique
+  (`CommandRequest::claim`).
 - **Superviseur** : chaque pilote tourne dans sa tâche ; à chaque échec, sa file de commandes
   est vidée et ses appareils passent hors ligne ; un `panic` est capturé, relance avec
   attente croissante, statut exposé (`starting`, `running`, `waiting{reason}`, `backoff`,
@@ -64,8 +72,14 @@ un humain.**
   toutes les pièces ou celles listées dans `rooms`.
 - **Commandes de machine** (sémantique `control` : mettre en pause ou annuler une impression
   3D) : retenues pour un humain **quelle que soit la pièce** dès que l'origine n'est pas de
-  confiance (`hub.rs`, `is_control`). Une impression ratée ou un plateau abîmé ne se rattrape
+  confiance (`hub.rs`, `sensitive`). Une impression ratée ou un plateau abîmé ne se rattrape
   pas : un agent propose, un humain décide.
+- **Ouvrir une porte** (sémantique `lock` : déverrouiller une serrure, tirer son pêne) : retenu
+  pour un humain **quelle que soit la pièce**, avec les mêmes origines que les machines
+  (`hub.rs`, `sensitive`). Verrouiller passe. Un point `lock` lisible est le pêne (`true` =
+  verrouillé : écrire `true` verrouille, toute autre valeur ouvre) ; un point `lock` en écriture
+  seule ouvre à chaque écriture (gâche, ouvre-porte). Un automatisme validé par un humain peut
+  ouvrir : c'est l'intention de cet humain.
 - Origines de confiance (jamais retenues) : `ui` (le dashboard avec une session PIN),
   `system`, `automation` (un automatisme validé par un humain = son intention).
 - `household` (le dashboard du foyer **sans** code, mode `dashboard = "trusted"` : réseau

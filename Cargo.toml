@@ -40,6 +40,7 @@ moli-i18n = { path = "crates/moli-i18n" }
 moli-phones = { path = "crates/moli-phones" }
 moli-ambiance = { path = "crates/moli-ambiance" }
 moli-moonraker = { path = "crates/moli-moonraker" }
+moli-nuki = { path = "crates/moli-nuki" }
 moli-overkiz = { path = "crates/moli-overkiz" }
 moli-androidtv = { path = "crates/moli-androidtv" }
 moli-esphome = { path = "crates/moli-esphome" }

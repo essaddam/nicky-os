@@ -16,6 +16,7 @@ const nf = () => cached('number', (l) => new Intl.NumberFormat(l, { maximumFract
  *  The words are in the catalog: systeme.format.binaire.<semantic>.on / .off */
 const BINARY_ALARM = {
   contact: false,
+  lock: false,
   occupancy: false,
   water_leak: true,
   smoke: true,
@@ -26,7 +27,7 @@ const BINARY_ALARM = {
 /** Semantics shown on the card face; everything else goes under « détails ». */
 const PRIMARY = new Set([
   'on_off', 'brightness', 'power', 'apparent_power', 'energy', 'temperature',
-  'humidity', 'pressure', 'illuminance', 'contact', 'occupancy', 'water_leak',
+  'humidity', 'pressure', 'illuminance', 'contact', 'lock', 'occupancy', 'water_leak',
   'smoke', 'current',
 ]);
 

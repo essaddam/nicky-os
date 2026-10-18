@@ -166,6 +166,8 @@
   "systeme.hub.etiquette_non_enregistree": "Étiquette non enregistrée : {message}",
   "systeme.format.binaire.contact.on": "Fermé",
   "systeme.format.binaire.contact.off": "Ouvert",
+  "systeme.format.binaire.lock.on": "Verrouillée",
+  "systeme.format.binaire.lock.off": "Déverrouillée",
   "systeme.format.binaire.occupancy.on": "Présence",
   "systeme.format.binaire.occupancy.off": "Personne",
   "systeme.format.binaire.water_leak.on": "Fuite !",

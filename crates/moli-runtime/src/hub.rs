@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::{Duration, Instant};
 
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
 use crate::addresses::{self, KnownAddress};
-use crate::driver::CommandRequest;
+use crate::driver::{Claim, CommandRequest};
 use crate::guard::{GuardPolicy, GuardStatus, Verdict};
 use crate::journal_log::JournalLog;
 use crate::secrets::{self, MasterKey, SecretStore};
@@ -212,6 +212,110 @@ pub struct Snapshot {
     pub drivers: Vec<DriverView>,
     pub approvals: Vec<Arc<ApprovalRequest>>,
     pub guard: GuardStatus,
+}
+
+/// How a command's result reads in the journal.
+fn outcome_of(result: &Result<(), CommandError>) -> Outcome {
+    match result {
+        Ok(()) => Outcome::Ok,
+        Err(CommandError::NeedsApproval { id, reason }) => Outcome::Pending(moli_i18n::tr!(
+            "serveur.garde.en_attente",
+            id = id,
+            reason = reason
+        )),
+        Err(e) => Outcome::Err(e.to_string()),
+    }
+}
+
+/// Writes an order's journal line, once its outcome is known.
+type JournalLine = Box<dyn FnOnce(Outcome) + Send>;
+
+/// The driver's answer, until the deadline.
+async fn answer_of(
+    answer: &mut oneshot::Receiver<Result<(), String>>,
+    deadline: Instant,
+) -> Result<(), CommandError> {
+    match tokio::time::timeout_at(deadline.into(), answer).await {
+        Err(_) => Err(CommandError::Timeout),
+        Ok(Err(_)) => Err(CommandError::Driver("command dropped".into())),
+        Ok(Ok(result)) => result.map_err(CommandError::Driver),
+    }
+}
+
+/// Waits for a taken order's answer and writes its journal line, once. If
+/// it is itself dropped first (its task cancelled, the runtime shutting
+/// down), the line is still written: the answer if it has come, otherwise
+/// « outcome unknown ».
+struct Observer {
+    answer: oneshot::Receiver<Result<(), String>>,
+    deadline: Instant,
+    journal: Option<JournalLine>,
+}
+
+impl Observer {
+    async fn finish(mut self) -> Result<(), CommandError> {
+        let result = answer_of(&mut self.answer, self.deadline).await;
+        self.write(outcome_of(&result));
+        result
+    }
+
+    fn write(&mut self, outcome: Outcome) {
+        if let Some(journal) = self.journal.take() {
+            journal(outcome);
+        }
+    }
+}
+
+impl Drop for Observer {
+    fn drop(&mut self) {
+        let outcome = match self.answer.try_recv() {
+            Ok(result) => outcome_of(&result.map_err(CommandError::Driver)),
+            Err(_) => Outcome::Err(moli_i18n::tr!("serveur.journal.inconnu")),
+        };
+        self.write(outcome);
+    }
+}
+
+/// An order in a driver's queue, and its journal line still to write. Its
+/// caller may give up (a client gone, a cancelled task): if the order was
+/// still queued, it is given up with it and never runs; if the driver had
+/// taken it, the driver sees the caller gone before sending it, and the
+/// outcome is still awaited and journaled. Either way, one line.
+struct Delivery {
+    observer: Option<Observer>,
+    claim: Arc<AtomicU8>,
+}
+
+impl Delivery {
+    async fn outcome(mut self) -> Result<(), CommandError> {
+        let Some(observer) = self.observer.as_mut() else {
+            return Err(CommandError::DriverUnavailable);
+        };
+        let result = answer_of(&mut observer.answer, observer.deadline).await;
+        if let Some(mut observer) = self.observer.take() {
+            observer.write(outcome_of(&result));
+        }
+        result
+    }
+}
+
+impl Drop for Delivery {
+    fn drop(&mut self) {
+        let Some(mut observer) = self.observer.take() else {
+            return;
+        };
+        if Claim::settle(&self.claim, Claim::GIVEN_UP) {
+            observer.write(Outcome::Err(moli_i18n::tr!("serveur.journal.abandonne")));
+            return;
+        }
+        // Taken by the driver: not sent yet, it will see the caller gone;
+        // sent, it may already have acted. Its outcome is journaled.
+        Claim::leave(&self.claim);
+        if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+            runtime.spawn(observer.finish());
+        }
+        // No runtime: the observer's drop writes what is known.
+    }
 }
 
 /// Cheap, clonable handle to the hub.
@@ -497,22 +601,29 @@ impl Hub {
         }
         let result = match self.prepare(point, &value) {
             Err(e) => Err(e),
-            Ok(prepared) => match self.verdict(point, origin) {
-                Verdict::Allow => self.send(prepared).await,
+            Ok(prepared) => match self.verdict(point, Some(&value), origin) {
+                Verdict::Allow => {
+                    let hub = self.clone();
+                    let action = Action::Command {
+                        point: point.clone(),
+                        value,
+                    };
+                    return self
+                        .send(
+                            prepared,
+                            Box::new(move |outcome| {
+                                hub.record(origin, actor, action, outcome, started);
+                            }),
+                        )
+                        .await;
+                }
                 Verdict::Approval(reason) => {
                     let id = self.hold(point, &value, origin, actor.clone(), &reason);
                     Err(CommandError::NeedsApproval { id, reason })
                 }
             },
         };
-        let outcome =
-            match &result {
-                Ok(()) => Outcome::Ok,
-                Err(CommandError::NeedsApproval { id, reason }) => Outcome::Pending(
-                    moli_i18n::tr!("serveur.garde.en_attente", id = id, reason = reason),
-                ),
-                Err(e) => Outcome::Err(e.to_string()),
-            };
+        let outcome = outcome_of(&result);
         self.record(
             origin,
             actor,
@@ -528,23 +639,29 @@ impl Hub {
 
     /// What the guard would say, now, about an order on this point from this
     /// origin: the reason it would be held, or `None` if it would go
-    /// through. Nothing is sent.
+    /// through. Nothing is sent. `value`: `None` when not known yet (a
+    /// toggle), judged as the worst it could be.
     #[must_use]
-    pub fn would_hold(&self, point: &PointId, origin: Origin) -> Option<String> {
-        match self.verdict(point, origin) {
+    pub fn would_hold(
+        &self,
+        point: &PointId,
+        value: Option<&Value>,
+        origin: Origin,
+    ) -> Option<String> {
+        match self.verdict(point, value, origin) {
             Verdict::Allow => None,
             Verdict::Approval(reason) => Some(reason),
         }
     }
 
     /// What the guard says about an order on this point from this origin.
-    fn verdict(&self, point: &PointId, origin: Origin) -> Verdict {
-        // Stopping a machine at work (a print, a computer) is a person's
-        // call, whatever the room: an agent asks, and so does the dashboard
-        // without a code.
+    fn verdict(&self, point: &PointId, value: Option<&Value>, origin: Origin) -> Verdict {
+        // Stopping a machine at work (a print, a computer) and opening a
+        // door are a person's call, whatever the room: an agent asks, and so
+        // does the dashboard without a code.
         let agent = !matches!(origin, Origin::Ui | Origin::System | Origin::Automation);
-        if agent && self.is_control(point) {
-            return Verdict::Approval(moli_i18n::tr!("serveur.garde.machine"));
+        if agent && let Some(reason) = self.sensitive(point, value) {
+            return Verdict::Approval(reason);
         }
         let rooms = point
             .split()
@@ -557,16 +674,19 @@ impl Hub {
             .check(&rooms, origin, jiff::Timestamp::now())
     }
 
-    /// Whether the point is an order to a machine at work.
-    fn is_control(&self, point: &PointId) -> bool {
-        let Some((device, key)) = point.split() else {
-            return false;
-        };
-        self.read()
-            .devices
-            .get(&device)
-            .and_then(|d| d.point(key))
-            .is_some_and(|p| p.semantic == moli_core::Semantic::Control)
+    /// Why an order on this point is a person's call in any room: an order
+    /// to a machine at work, or one that opens a door.
+    fn sensitive(&self, point: &PointId, value: Option<&Value>) -> Option<String> {
+        let (device, key) = point.split()?;
+        let model = self.read();
+        let spec = model.devices.get(&device).and_then(|d| d.point(key))?;
+        if spec.semantic == moli_core::Semantic::Control {
+            Some(moli_i18n::tr!("serveur.garde.machine"))
+        } else if spec.opens(value) {
+            Some(moli_i18n::tr!("serveur.garde.serrure"))
+        } else {
+            None
+        }
     }
 
     /// Every room an order on this device reaches: its own (user label and
@@ -767,24 +887,49 @@ impl Hub {
             );
             return Err(ApprovalError::Expired);
         }
-        let (decision, outcome, result) = if approve {
-            let sent = match self.prepare(&request.point, &request.value) {
-                Ok(prepared) => self.send(prepared).await,
-                Err(e) => Err(e),
-            };
-            match sent {
-                Ok(()) => (Decision::Approved, Outcome::Ok, Ok(())),
-                Err(e) => (
+        if !approve {
+            self.resolved(
+                &request,
+                Decision::Denied,
+                origin,
+                actor,
+                Outcome::Ok,
+                started,
+            );
+            return Ok(());
+        }
+        let prepared = match self.prepare(&request.point, &request.value) {
+            Ok(prepared) => prepared,
+            Err(e) => {
+                let outcome = Outcome::Err(e.to_string());
+                self.resolved(
+                    &request,
                     Decision::Approved,
-                    Outcome::Err(e.to_string()),
-                    Err(ApprovalError::Command(e)),
-                ),
+                    origin,
+                    actor,
+                    outcome,
+                    started,
+                );
+                return Err(ApprovalError::Command(e));
             }
-        } else {
-            (Decision::Denied, Outcome::Ok, Ok(()))
         };
-        self.resolved(&request, decision, origin, actor, outcome, started);
-        result
+        // Like a command: one journal line, whatever becomes of the caller.
+        let hub = self.clone();
+        self.send(
+            prepared,
+            Box::new(move |outcome| {
+                hub.resolved(
+                    &request,
+                    Decision::Approved,
+                    origin,
+                    actor,
+                    outcome,
+                    started,
+                );
+            }),
+        )
+        .await
+        .map_err(ApprovalError::Command)
     }
 
     /// Drops held orders nobody decided on in time.
@@ -1132,8 +1277,9 @@ impl Hub {
         })
     }
 
-    /// Hands a prepared order to its driver and waits for the answer.
-    async fn send(&self, prepared: Prepared) -> Result<(), CommandError> {
+    /// Hands a prepared order to its driver, waits for the answer, and has
+    /// `journal` write its line (see [`Delivery`]).
+    async fn send(&self, prepared: Prepared, journal: JournalLine) -> Result<(), CommandError> {
         let Prepared {
             point,
             device,
@@ -1142,24 +1288,35 @@ impl Hub {
             commands,
         } = prepared;
         let (reply, answer) = oneshot::channel();
-        commands
-            .try_send(CommandRequest {
-                point,
-                device,
-                key,
-                value,
-                deadline: Instant::now() + self.0.opts.command_timeout,
-                reply,
-            })
-            .map_err(|e| match e {
+        let claim = Arc::new(AtomicU8::new(Claim::QUEUED));
+        let deadline = Instant::now() + self.0.opts.command_timeout;
+        let queued = commands.try_send(CommandRequest {
+            point,
+            device,
+            key,
+            value,
+            deadline,
+            reply,
+            claim: Arc::clone(&claim),
+        });
+        if let Err(e) = queued {
+            let error = match e {
                 mpsc::error::TrySendError::Full(_) => CommandError::Busy,
                 mpsc::error::TrySendError::Closed(_) => CommandError::DriverUnavailable,
-            })?;
-        match tokio::time::timeout(self.0.opts.command_timeout, answer).await {
-            Err(_) => Err(CommandError::Timeout),
-            Ok(Err(_)) => Err(CommandError::Driver("command dropped".into())),
-            Ok(Ok(result)) => result.map_err(CommandError::Driver),
+            };
+            journal(outcome_of(&Err(error.clone())));
+            return Err(error);
         }
+        Delivery {
+            observer: Some(Observer {
+                answer,
+                deadline,
+                journal: Some(journal),
+            }),
+            claim,
+        }
+        .outcome()
+        .await
     }
 
     fn record(

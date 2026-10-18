@@ -156,7 +156,21 @@ pub enum Semantic {
     /// An order to a machine at work (pause or cancel a print): an agent
     /// asking gets a human's approval first.
     Control,
+    /// A door's lock. Readable, it is the bolt (`true` = locked): writing
+    /// `true` locks, any other write opens. Write-only, it is an opener
+    /// (unlatch, buzzer): every write opens. Opening is a person's call:
+    /// an agent asks, and so does the dashboard without a code.
+    Lock,
     Other,
+}
+
+impl PointSpec {
+    /// Whether writing `value` here may open a door (see [`Semantic::Lock`]).
+    /// `None`: a value not known yet (a toggle), so assumed to open.
+    #[must_use]
+    pub fn opens(&self, value: Option<&Value>) -> bool {
+        self.semantic == Semantic::Lock && !(self.access.read && value == Some(&Value::Bool(true)))
+    }
 }
 
 impl Semantic {
