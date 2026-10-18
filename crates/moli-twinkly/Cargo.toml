@@ -1,0 +1,27 @@
+[package]
+name = "moli-twinkly"
+description = "Moli OS local Twinkly API v1 driver: bounded sessions and confirmed light state."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+http.workspace = true
+moli-core.workspace = true
+moli-i18n.workspace = true
+moli-net.workspace = true
+moli-runtime.workspace = true
+ring.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+zeroize = "1"
+
+[dev-dependencies]
+moli-history.workspace = true
+tokio-util.workspace = true
+
+[lints]
+workspace = true

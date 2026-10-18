@@ -869,29 +869,30 @@ fn start_history(
 /// catalogue checks packages against, without building anything. A kind
 /// missing here is unknown, whatever `build_driver`'s match says.
 const KINDS: &[&str] = &[
-    "z2m",
+    "alexa",
+    "bambu",
+    "demo",
+    "esphome",
+    "frigate",
+    "helpers",
+    "host",
     "hue",
     "igd",
-    "tapo",
-    "philips",
-    "frigate",
-    "bambu",
-    "esphome",
-    "alexa",
-    "sonos",
-    "reolink",
-    "tuya",
-    "helpers",
-    "presence",
-    "telegram",
-    "phones",
+    "ipp",
     "moonraker",
     "nuki",
     "overkiz",
-    "ipp",
-    "host",
+    "philips",
+    "phones",
+    "presence",
     "profile",
-    "demo",
+    "reolink",
+    "sonos",
+    "tapo",
+    "telegram",
+    "tuya",
+    "twinkly",
+    "z2m",
 ];
 
 /// Every enabled driver, running. The phones driver and the API share its
@@ -1058,6 +1059,9 @@ fn build_driver(
         "tuya" => Arc::new(moli_tuya::Tuya::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "twinkly" => Arc::new(moli_twinkly::Twinkly::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "presence" => Arc::new(moli_presence::Presence::new(
             config.options.clone().try_into().with_context(context)?,
         )?),

@@ -194,6 +194,13 @@ les chemins qui exigent un téléversement de film ne sont pas un repli implicit
 Effets, sélecteur d'effets, playlists, synchronisation, temps réel et téléversements
 sont hors périmètre. Allumer n'autorise pas à remplacer un effet sauvegardé par un autre.
 
+Le pilote natif `moli-twinkly` et son [paquet](../../integrations/twinkly/README.md)
+implémentent ce sous-lot pour API v1 RGB sur contrats simulés : marche, luminosité
+et couleur directe, sans effet ni upload. Les autres sous-lots gardent leur état
+propre. Cette livraison de développement ne lève pas H1 et ne clôture pas le parent
+fonctionnel. Les modèles/firmwares réellement installés restent à qualifier par
+l'humain selon [l'onboarding](../../integrations/twinkly/onboarding.md).
+
 ## Vérification par sous-lot
 
 Avant toute qualification réelle, les contrats sont exercés sur des fixtures publiques
