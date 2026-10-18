@@ -388,7 +388,7 @@
   "systeme.conservation.erreur": "Validation impossible : {message}",
   "systeme.conservation.inclus": "Sauf, toujours écrits : {list}",
   "systeme.conservation.changee": "La proposition a changé depuis ton clic : vérifie la nouvelle, puis valide de nouveau. Rien n’a été supprimé.",
-  "systeme.conservation.reprise_one": "Purge suspendue : une hausse de durée n’a pas pu être enregistrée. La reprise supprimera {n} mesure de {points} point(s), du {from} au {to}. Rien n’est effacé avant ta validation.",
-  "systeme.conservation.reprise_other": "Purge suspendue : une hausse de durée n’a pas pu être enregistrée. La reprise supprimera {n} mesures de {points} point(s), du {from} au {to}. Rien n’est effacé avant ta validation.",
-  "systeme.conservation.reprise_vide": "Purge suspendue : une hausse de durée n’a pas pu être enregistrée. La reprise ne supprime rien pour l’instant ; valide-la pour reprendre."
+  "systeme.conservation.reprise_one": "Purge suspendue après un arrêt non finalisé ou une erreur d’enregistrement des durées. La reprise supprimera {n} mesure de {points} point(s), du {from} au {to}. Rien n’est effacé avant ta validation.",
+  "systeme.conservation.reprise_other": "Purge suspendue après un arrêt non finalisé ou une erreur d’enregistrement des durées. La reprise supprimera {n} mesures de {points} point(s), du {from} au {to}. Rien n’est effacé avant ta validation.",
+  "systeme.conservation.reprise_vide": "Purge suspendue après un arrêt non finalisé ou une erreur d’enregistrement des durées. La reprise ne supprime rien pour l’instant ; valide-la pour reprendre."
 }

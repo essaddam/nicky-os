@@ -158,5 +158,6 @@
   "serveur.personnes.point_depuis": "Dans cette zone depuis",
   "serveur.personnes.point_nombre": "Personnes à la maison",
   "serveur.personnes.point_quelquun": "Quelqu'un à la maison",
-  "serveur.personnes.point_tous_partis": "Tout le monde est parti"
+  "serveur.personnes.point_tous_partis": "Tout le monde est parti",
+  "serveur.historique.reprise_redemarrage": "La suspension n’a pas pu être enregistrée. Répare le stockage puis redémarre Moli avant de valider la reprise."
 }

@@ -26,7 +26,7 @@
 
 ## Politiques de conservation (`[storage]`, `crates/moli-history/src/policy.rs`)
 
-Sans section `[storage]`, rien ne change : tout est écrit et gardé `history_days` jours
+Sans section `[storage]`, tout est écrit et gardé `history_days` jours
 (test `without_a_new_configuration_the_purge_is_the_one_before`, qui compare à l'ancienne
 requête).
 
@@ -75,7 +75,9 @@ reste compté exactement (test `an_excluded_point_is_not_written_and_its_energy_
 
 **Purge par lots.** Point par point, au plus 5 000 lignes par requête, le rédacteur relâché
 entre deux lots (2 ms). Chaque lot vérifie, dans sa propre requête, que le plancher du point
-n'a pas été relevé au-dessus de celui qui a décidé la coupe ; s'il l'a été, plus rien ne part : les lots du recorder passent entre deux (test
+n'a pas été relevé au-dessus de celui qui a décidé la coupe, que les purges ne sont pas
+suspendues et que la génération de garde est inchangée. Sinon, plus rien ne part : les lots
+du recorder passent entre deux (test
 `pruning_goes_by_lots_and_writes_pass_in_between`). SQL portable (pas de `DELETE … LIMIT`),
 toujours par la clé primaire, ancrage conservé.
 
@@ -93,13 +95,16 @@ chaque point la plus longue de son plancher et de sa durée configurée :
   et relecture de toutes les descriptions du hub au démarrage et après une perte d'événements,
   points exclus compris), **à chaque écriture du point**, dans la transaction de ses lignes, et
   par chaque passe. Les publications mettent en file les points concernés (une entrée par
-  point), écrite par une seule tâche et vidée avant l'arrêt ; la durée de chacun est calculée
-  **au moment de l'écriture, dans sa transaction**, d'après ce que le hub en dit alors : une
-  publication ancienne ne défait jamais une réduction validée depuis. Une hausse impossible à
-  écrire (après 3 essais) **suspend les purges, durablement** (`retention_log`) : plus rien
-  n'est supprimé tant qu'une personne n'a pas vu ce que la reprise supprimerait, point par point
-  (`reduction.resume`), et validé avec son code ; le handle d'arrêt de l'historique le signale
-  en erreur. Il n'est
+  point), écrite par une seule tâche et vidée avant l'arrêt. Elles conservent le maximum
+  des durées certaines observées, associé à une **génération de consentement par point**
+  (`retention_consent`). Dans la transaction d'écriture, ce maximum s'applique seulement si
+  aucun consentement plus récent ne l'a remplacé ; la durée certaine actuelle s'applique
+  toujours. Une ancienne publication ne défait donc pas une réduction validée depuis, même
+  si son lot était déjà sorti de la file.
+  Une hausse impossible à écrire (après 3 essais) **suspend les purges, durablement**
+  (`retention_guard` et `retention_log`) : plus rien n'est supprimé tant qu'une personne
+  n'a pas vu ce que la reprise supprimerait, point par point (`reduction.resume`), et
+  validé avec son code ; le handle d'arrêt de l'historique le signale en erreur. Il n'est
   jamais abaissé que par une validation. Appareil inconnu : seule la hausse certaine relève le
   plancher (la plus courte durée que pourrait lui donner une famille, donc toute règle propre
   au point), jamais une simple ambiguïté ;
@@ -122,9 +127,26 @@ chaque point la plus longue de son plancher et de sa durée configurée :
 - un agent (`api`, `mcp`, `cli`, `assistant`) ne valide jamais : `History::validate` refuse
   toute origine autre qu'une personne avec code, et aucun outil MCP ne l'expose ;
 - un point dont l'appareil n'est pas (encore) publié, juste après un démarrage par exemple,
-  est gardé la plus longue durée de toutes les familles et n'entre dans aucun plan ;
+  est gardé la plus longue durée de toutes les familles et n'entre dans aucun plan de
+  réduction ; une reprise le garde au moins aussi longtemps ;
 - chaque validation est journalisée (`retention_log` : quand, qui, points, lignes) ; la
   dernière est rendue par `GET /api/history/retention` (`last_validation`).
+
+**Suspension et redémarrage.** Le démarrage du recorder inscrit un run non finalisé dans
+`retention_guard` avant tout travail. Seul son arrêt ordonné, après vidage réussi des files
+et fin de la purge en cours, le finalise. Un échec d’écriture de lot suspend aussi les
+purges et fait échouer cet arrêt : le plancher écrit avec les mesures a pu échouer lui aussi. Après un **arrêt brutal**, le démarrage suivant
+suspend donc les purges jusqu'à validation humaine de reprise, même sans changement de
+configuration. Cela protège aussi d'une panne qui empêcherait d'écrire le journal de
+suspension après l'échec d'une hausse. Si ce marqueur échoue, les suppressions du processus
+sont bloquées et la reprise nécessite un redémarrage après réparation du stockage.
+Une ouverture de lecture (`History::from_store`) ne démarre ni ne finalise de run.
+
+L'état de suspension et sa génération font foi en base. Chaque lot SQL les revérifie ; une
+nouvelle suspension invalide les plans précédents, y compris une ancienne reprise. La
+transaction de reprise vérifie cette génération et persiste **toutes les hausses certaines**
+du plan avant de lever la suspension. Si l'une échoue, rien n'est validé et la suspension
+reste active. La simple ambiguïté d'une famille inconnue ne relève pas son plancher.
 
 **Échantillonnage des courbes bavardes : non fait.** Il n'est prévu que si le relevé de la
 maison montre des points à plus d'un changement par seconde. Ce relevé (mesure réelle après

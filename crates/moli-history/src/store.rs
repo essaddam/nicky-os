@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 use std::sync::{Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
@@ -41,6 +42,23 @@ CREATE TABLE IF NOT EXISTS retention_log (
     who    TEXT,
     points INTEGER NOT NULL,
     rows   INTEGER NOT NULL
+);
+-- A run is dirty before recording starts, clean only after a successful
+-- drain. Recovery must not depend on writing a marker AFTER a disk error.
+CREATE TABLE IF NOT EXISTS retention_guard (
+    id         INTEGER PRIMARY KEY CHECK(id = 1),
+    generation INTEGER NOT NULL,
+    suspended  INTEGER NOT NULL,
+    clean      INTEGER NOT NULL
+);
+INSERT INTO retention_guard(id, generation, suspended, clean)
+    SELECT 1, 0, COALESCE((SELECT kind = 'suspended' FROM retention_log
+        WHERE kind IN ('suspended', 'resumed') ORDER BY rowid DESC LIMIT 1), 0), 1
+    WHERE NOT EXISTS(SELECT 1 FROM retention_guard WHERE id = 1);
+-- A lower floor invalidates observations made before that consent.
+CREATE TABLE IF NOT EXISTS retention_consent (
+    point_id   INTEGER PRIMARY KEY REFERENCES points(id),
+    generation INTEGER NOT NULL
 );
 -- What agents query: one row per recorded change.
 CREATE VIEW IF NOT EXISTS history AS
@@ -130,6 +148,22 @@ pub struct Cut {
     pub anchor: u64,
     pub max: u64,
     pub floor: u32,
+    pub generation: i64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub(crate) struct Guard {
+    pub generation: i64,
+    pub suspended: bool,
+}
+
+pub(crate) type Consents = HashMap<String, i64>;
+
+/// The maximum observed within one generation of a point's consent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct Observed {
+    pub days: u32,
+    pub generation: i64,
 }
 
 /// What a purge would delete for a point.
@@ -156,6 +190,9 @@ pub struct Store {
     reader: Mutex<Connection>,
     agents: Mutex<Connection>,
     ids: Mutex<HashMap<String, i64>>,
+    /// If even the suspension transaction fails, no deletion or validation
+    /// can proceed in this process. The dirty run protects the next one.
+    suspension_failed: AtomicBool,
 }
 
 impl std::fmt::Debug for Store {
@@ -202,6 +239,19 @@ fn ts(ms: u64) -> i64 {
     i64::try_from(ms).unwrap_or(i64::MAX)
 }
 
+fn read_guard(conn: &Connection) -> Result<Guard, rusqlite::Error> {
+    conn.query_row(
+        "SELECT generation, suspended FROM retention_guard WHERE id = 1",
+        [],
+        |r| {
+            Ok(Guard {
+                generation: r.get(0)?,
+                suspended: r.get(1)?,
+            })
+        },
+    )
+}
+
 impl Store {
     pub fn open(path: &Path) -> Result<Self, HistoryError> {
         if let Some(dir) = path.parent() {
@@ -242,6 +292,7 @@ impl Store {
             reader: Mutex::new(reader),
             agents: Mutex::new(agents),
             ids: Mutex::new(HashMap::new()),
+            suspension_failed: AtomicBool::new(false),
         })
     }
 
@@ -395,19 +446,27 @@ impl Store {
                 let limit = lot.min(left);
                 // Through the primary key (point_id, ts) only; portable SQL
                 // (no DELETE … LIMIT).
-                let n = lock(&self.writer).execute(
+                let conn = lock(&self.writer);
+                if self.suspension_failed.load(SeqCst) {
+                    break;
+                }
+                let n = conn.execute(
                     "DELETE FROM samples WHERE point_id = ?1 AND ts IN (
                         SELECT ts FROM samples WHERE point_id = ?1 AND ts >= ?2 AND ts < ?3
                         AND COALESCE((SELECT days FROM retention WHERE point_id = ?1), 0) <= ?5
+                        AND (SELECT suspended FROM retention_guard WHERE id = 1) = 0
+                        AND (SELECT generation FROM retention_guard WHERE id = 1) = ?6
                         ORDER BY ts LIMIT ?4)",
                     params![
                         cut.id,
                         ts(cut.oldest),
                         ts(cut.anchor),
                         i64::try_from(limit).unwrap_or(i64::MAX),
-                        cut.floor
+                        cut.floor,
+                        cut.generation
                     ],
                 )?;
+                drop(conn);
                 removed += n;
                 left = left.saturating_sub(n as u64);
                 if (n as u64) < limit {
@@ -471,14 +530,12 @@ impl Store {
         Ok(())
     }
 
-    /// Raises the floors of points already recorded, by name, each to
-    /// `days(point)` computed inside the transaction (from what is known
-    /// at that instant): a validation's lowering, which takes the writer
-    /// too, comes entirely before or after. A point not recorded yet gets
-    /// its floor with its first row.
-    pub fn raise_named_floors(
+    /// Observed maxima survive a changing family until a newer consent.
+    /// Check that consent inside the writer, including for extracted lots.
+    /// Current certain durations always apply, even after a consent.
+    pub(crate) fn raise_named_floors(
         &self,
-        points: &[String],
+        points: &[(String, Observed)],
         days: &dyn Fn(&str) -> u32,
     ) -> Result<(), HistoryError> {
         let mut conn = lock(&self.writer);
@@ -488,57 +545,135 @@ impl Store {
                 "UPDATE retention SET days = ?2
                  WHERE point_id = (SELECT id FROM points WHERE point = ?1) AND days < ?2",
             )?;
-            for point in points {
-                raise.execute(params![point, days(point)])?;
+            let mut consent = tx.prepare(
+                "SELECT COALESCE((SELECT generation FROM retention_consent
+                 WHERE point_id = (SELECT id FROM points WHERE point = ?1)), 0)",
+            )?;
+            for (point, observed) in points {
+                let generation: i64 = consent.query_row([point], |r| r.get(0))?;
+                let current = days(point);
+                let keep = if generation == observed.generation {
+                    current.max(observed.days)
+                } else {
+                    current
+                };
+                raise.execute(params![point, keep])?;
             }
         }
         tx.commit()?;
         Ok(())
     }
 
-    /// Purges are suspended until a person validates them again: a raise of
-    /// floors could not be written (`points` were waiting for it).
-    pub fn suspend(&self, at: u64, points: usize) -> Result<(), HistoryError> {
-        lock(&self.writer).execute(
-            "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'suspended', ?2, 0)",
-            params![ts(at), i64::try_from(points).unwrap_or(i64::MAX)],
-        )?;
+    /// Open the recorder's run before any task can observe a higher duration.
+    /// An unfinished predecessor requires a person's consent to resume.
+    pub(crate) fn open_run(&self) -> Result<(), HistoryError> {
+        let mut conn = lock(&self.writer);
+        let tx = conn.transaction()?;
+        let clean: bool =
+            tx.query_row("SELECT clean FROM retention_guard WHERE id = 1", [], |r| {
+                r.get(0)
+            })?;
+        if !clean {
+            tx.execute("UPDATE retention_guard SET suspended = 1, generation = generation + 1 WHERE id = 1", [])?;
+            tx.execute(
+                "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'suspended', 0, 0)",
+                [ts(moli_core::now_ms())],
+            )?;
+        }
+        tx.execute("UPDATE retention_guard SET clean = 0 WHERE id = 1", [])?;
+        tx.commit()?;
         Ok(())
     }
 
-    /// Whether purges are suspended (a `suspended` not followed by `resumed`).
-    pub fn suspended(&self) -> Result<bool, HistoryError> {
-        let last: Option<String> = lock(&self.reader)
-            .query_row(
-                "SELECT kind FROM retention_log WHERE kind IN ('suspended', 'resumed')
-                 ORDER BY rowid DESC LIMIT 1",
-                [],
-                |r| r.get(0),
-            )
-            .optional()?;
-        Ok(last.as_deref() == Some("suspended"))
+    /// Called only after the recorder, writer, raises and purge have ended.
+    pub(crate) fn close_run(&self) -> Result<(), HistoryError> {
+        let conn = lock(&self.writer);
+        self.check_suspension_write()?;
+        conn.execute("UPDATE retention_guard SET clean = 1 WHERE id = 1", [])?;
+        Ok(())
     }
 
-    /// Lowers floors a person validated, each `(id, from, to)` only if it
-    /// is still `from`, and logs who did (and, with `resume`, that purges
-    /// resume): all or nothing. `false` when one changed meanwhile (nothing
-    /// is written then).
-    pub fn lower_floors(
+    fn check_suspension_write(&self) -> Result<(), HistoryError> {
+        if self.suspension_failed.load(SeqCst) {
+            return Err(HistoryError::Internal(moli_i18n::tr!(
+                "serveur.historique.reprise_redemarrage"
+            )));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn guard(&self) -> Result<Guard, HistoryError> {
+        let mut guard = read_guard(&lock(&self.reader))?;
+        guard.suspended |= self.suspension_failed.load(SeqCst);
+        Ok(guard)
+    }
+
+    pub(crate) fn consents(&self) -> Result<Consents, HistoryError> {
+        let conn = lock(&self.reader);
+        let mut stmt = conn.prepare("SELECT p.point, c.generation FROM retention_consent c JOIN points p ON p.id = c.point_id")?;
+        Ok(stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<Result<_, _>>()?)
+    }
+
+    /// Both the durable transition and its fallback share the DELETE writer.
+    pub fn suspend(&self, at: u64, points: usize) -> Result<(), HistoryError> {
+        let mut conn = lock(&self.writer);
+        self.suspension_failed.store(true, SeqCst);
+        let tx = conn.transaction()?;
+        tx.execute(
+            "UPDATE retention_guard SET suspended = 1, generation = generation + 1 WHERE id = 1",
+            [],
+        )?;
+        tx.execute(
+            "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'suspended', ?2, 0)",
+            params![ts(at), i64::try_from(points).unwrap_or(i64::MAX)],
+        )?;
+        tx.commit()?;
+        self.suspension_failed.store(false, SeqCst);
+        Ok(())
+    }
+
+    /// The database is authoritative; a failed suspension write also blocks.
+    pub fn suspended(&self) -> Result<bool, HistoryError> {
+        Ok(self.guard()?.suspended)
+    }
+
+    /// Apply the whole plan atomically: floors (including certain raises),
+    /// point consent generations and the guard generation being resumed.
+    /// None means a stale plan; otherwise return committed consent updates.
+    pub(crate) fn validate_floors(
         &self,
         floors: &[(i64, u32, u32)],
         at: u64,
         who: Option<&str>,
         rows: u64,
-        resume: bool,
-    ) -> Result<bool, HistoryError> {
+        guard: Guard,
+    ) -> Result<Option<Consents>, HistoryError> {
         let mut conn = lock(&self.writer);
+        self.check_suspension_write()?;
         let tx = conn.transaction()?;
+        if read_guard(&tx)? != guard {
+            return Ok(None);
+        }
+        let mut consents = Consents::new();
         {
             let mut lower =
                 tx.prepare("UPDATE retention SET days = ?3 WHERE point_id = ?1 AND days = ?2")?;
             for (id, from, to) in floors {
                 if lower.execute(params![id, from, to])? != 1 {
-                    return Ok(false);
+                    return Ok(None);
+                }
+                if to < from {
+                    tx.execute("INSERT INTO retention_consent(point_id, generation) VALUES (?1, 1)
+                        ON CONFLICT(point_id) DO UPDATE SET generation = retention_consent.generation + 1", [id])?;
+                    let (point, generation) = tx.query_row(
+                        "SELECT p.point, c.generation FROM points p
+                        JOIN retention_consent c ON c.point_id = p.id WHERE p.id = ?1",
+                        [id],
+                        |r| Ok((r.get(0)?, r.get(1)?)),
+                    )?;
+                    consents.insert(point, generation);
                 }
             }
         }
@@ -551,14 +686,15 @@ impl Store {
                 i64::try_from(rows).unwrap_or(i64::MAX)
             ],
         )?;
-        if resume {
+        if guard.suspended {
+            tx.execute("UPDATE retention_guard SET suspended = 0 WHERE id = 1", [])?;
             tx.execute(
                 "INSERT INTO retention_log(at, kind, who, points, rows) VALUES (?1, 'resumed', ?2, 0, 0)",
                 params![ts(at), who],
             )?;
         }
         tx.commit()?;
-        Ok(true)
+        Ok(Some(consents))
     }
 
     /// The last reduction a person validated: (when, who, points, rows).
@@ -800,6 +936,7 @@ mod tests {
                     anchor,
                     max: u64::MAX,
                     floor: u32::MAX,
+                    generation: store.guard().unwrap().generation,
                 })
             })
             .collect();
@@ -961,6 +1098,7 @@ mod tests {
             anchor: doomed.anchor,
             max: doomed.rows,
             floor: u32::MAX,
+            generation: store.guard().unwrap().generation,
         };
         let mut lots = 0;
         let removed = store
@@ -1004,6 +1142,7 @@ mod tests {
             anchor: doomed.anchor,
             max: doomed.rows,
             floor: u32::MAX,
+            generation: store.guard().unwrap().generation,
         };
         // Old readings restated between two lots: newer than the anchor, and
         // older than the oldest row announced.
@@ -1075,18 +1214,115 @@ mod tests {
             anchor: 20,
             max: u64::MAX,
             floor: 30,
+            generation: store.guard().unwrap().generation,
         };
         // Raised before the purge: nothing goes.
-        store.raise_named_floors(&["d/x".into()], &|_| 90).unwrap();
+        store.raise_floors(&[(id, 90)]).unwrap();
         assert_eq!(store.prune(&[cut], 5, || {}).unwrap(), 0);
         // Raised between two lots: the first lot only.
         let cut = Cut { floor: 90, ..cut };
         let removed = store
             .prune(&[cut], 5, || {
-                store.raise_named_floors(&["d/x".into()], &|_| 120).unwrap();
+                store.raise_floors(&[(id, 120)]).unwrap();
             })
             .unwrap();
         assert_eq!(removed, 5);
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_suspension_stops_a_purge_between_lots() {
+        let (store, dir) = store("prune-suspended");
+        store.set_up_floors(30, 1).unwrap();
+        let rows: Vec<_> = (0..=20).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        store.insert(&rows, false).unwrap();
+        let cut = Cut {
+            id: store.points().unwrap()[0].0,
+            oldest: 0,
+            anchor: 20,
+            max: u64::MAX,
+            floor: 30,
+            generation: store.guard().unwrap().generation,
+        };
+        let removed = store
+            .prune(&[cut], 5, || store.suspend(1, 1).unwrap())
+            .unwrap();
+        assert_eq!(removed, 5, "only the lot before the suspension");
+        assert_eq!(store.series("d/x", 0, 100, 100).unwrap().total, 16);
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_resume_cannot_revive_an_old_cut_or_validate_an_old_guard() {
+        let (store, dir) = store("old-guard");
+        store.set_up_floors(30, 1).unwrap();
+        let rows: Vec<_> = (0..=20).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        store
+            .record(
+                &rows,
+                false,
+                Some(&|_| Floors {
+                    first: 30,
+                    certain: 30,
+                }),
+            )
+            .unwrap();
+        let id = store.points().unwrap()[0].0;
+        let cut = Cut {
+            id,
+            oldest: 0,
+            anchor: 20,
+            max: u64::MAX,
+            floor: 30,
+            generation: store.guard().unwrap().generation,
+        };
+        let removed = store
+            .prune(&[cut], 5, || {
+                store.suspend(1, 1).unwrap();
+                let old = store.guard().unwrap();
+                store.suspend(2, 1).unwrap();
+                assert!(
+                    store
+                        .validate_floors(&[(id, 30, 3)], 3, None, 0, old)
+                        .unwrap()
+                        .is_none()
+                );
+                assert_eq!(store.floors().unwrap().unwrap()[&id], 30);
+                assert!(store.suspended().unwrap());
+                let current = store.guard().unwrap();
+                assert!(
+                    store
+                        .validate_floors(&[], 4, None, 0, current)
+                        .unwrap()
+                        .is_some()
+                );
+            })
+            .unwrap();
+        assert_eq!(
+            removed, 5,
+            "the pre-suspension cut remains stale after resuming"
+        );
+        assert!(!store.suspended().unwrap());
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn an_existing_suspension_survives_the_guard_schema_upgrade() {
+        let (store, dir) = store("guard-migration");
+        lock(&store.writer)
+            .execute_batch(
+                "INSERT INTO retention_log(at, kind, points, rows) VALUES (1, 'suspended', 1, 0);
+             DROP TABLE retention_guard;",
+            )
+            .unwrap();
+        drop(store);
+        let store = Store::open(&dir.join("history.db")).unwrap();
+        assert!(store.suspended().unwrap());
+        store.open_run().unwrap();
+        assert!(store.suspended().unwrap());
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }

@@ -122,7 +122,7 @@ impl History {
     /// Opens the database and starts recording. Start it *before* the
     /// drivers: it subscribes first, then records the current state, so no
     /// value is missed. The handle resolves once everything is flushed; in
-    /// error when retention floors could not be written (purges are then
+    /// error when a batch or retention floors could not be written (purges are then
     /// suspended until a person validates them).
     pub fn start(
         hub: &Hub,
@@ -130,6 +130,7 @@ impl History {
         cancel: CancellationToken,
     ) -> Result<(Self, Recorder), HistoryError> {
         let store = Arc::new(Store::open(&options.path)?);
+        store.open_run()?;
         let hub_families = hub.clone();
         let policy = retention::Policy::open(
             &store,
@@ -145,7 +146,7 @@ impl History {
             Arc::clone(&history.counters),
             Arc::clone(&history.policy),
         ));
-        tokio::spawn(prune_loop(history.clone(), cancel.clone()));
+        let pruning = tokio::spawn(prune_loop(history.clone(), cancel.clone()));
         let raising = tokio::spawn(retention::raise_loop(
             Arc::clone(&history.store),
             Arc::clone(&history.policy),
@@ -157,10 +158,14 @@ impl History {
             record(source, batches, &recording, &filter, cancel).await;
             // Everything queued is written before the handle resolves.
             recording.policy.stop_raising();
-            let _ = writer.await;
-            raising
-                .await
-                .map_err(|e| HistoryError::Internal(e.to_string()))?
+            let written = writer.await;
+            let raised = raising.await;
+            let pruned = pruning.await;
+            written.map_err(|e| HistoryError::Internal(e.to_string()))??;
+            raised.map_err(|e| HistoryError::Internal(e.to_string()))??;
+            pruned.map_err(|e| HistoryError::Internal(e.to_string()))?;
+            let store = Arc::clone(&recording.store);
+            blocking(move || store.close_run()).await
         });
         Ok((history, recorder))
     }
@@ -405,13 +410,14 @@ async fn write_loop(
     mut queue: mpsc::Receiver<Batch>,
     counters: Arc<Counters>,
     policy: Arc<retention::Policy>,
-) {
+) -> Result<(), HistoryError> {
+    let mut failed = None;
     while let Some((rows, restate)) = queue.recv().await {
         let count = rows.len();
-        let (store, policy) = (Arc::clone(&store), Arc::clone(&policy));
+        let (db, rules) = (Arc::clone(&store), Arc::clone(&policy));
         let written = blocking(move || {
-            let floors = |point: &str| policy.floors(point);
-            store.record(&rows, restate, Some(&floors))
+            let floors = |point: &str| rules.floors(point);
+            db.record(&rows, restate, Some(&floors))
         });
         match written.await {
             Ok(()) => {
@@ -421,9 +427,18 @@ async fn write_loop(
                 tracing::warn!(error = %e, count, "history batch not written");
                 counters.batches_failed.fetch_add(1, Relaxed);
                 *store::lock(&counters.last_error) = Some((now_ms(), e.to_string()));
+                // The batch's floor may have failed too, even before the
+                // bus recorder has consumed the corresponding publication.
+                // Keep the run unfinished and block every later purge lot.
+                failed = Some(e);
+                let db = Arc::clone(&store);
+                if let Err(e) = blocking(move || db.suspend(now_ms(), 0)).await {
+                    tracing::error!(error = %e, "history suspension not written");
+                }
             }
         }
     }
+    failed.map_or(Ok(()), Err)
 }
 
 async fn prune_loop(history: History, cancel: CancellationToken) {
@@ -711,6 +726,96 @@ mod tests {
         assert!(ended.is_err(), "not a normal stop: {ended:?}");
         assert!(Store::open(&path).unwrap().suspended().unwrap());
         drivers.cancel();
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[tokio::test]
+    async fn a_failed_batch_suspends_purges_even_without_a_queued_publication() {
+        let dir =
+            std::env::temp_dir().join(format!("moli-history-batch-fails-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let store = Arc::new(Store::open(&dir.join("history.db")).unwrap());
+        store
+            .insert(&[(PointId::from("d/x"), Value::Int(1), 1)], false)
+            .unwrap();
+        store.open_run().unwrap();
+        let policy = Arc::new(
+            retention::Policy::open(
+                &store,
+                Filter::default(),
+                Retention::uniform(90),
+                Box::new(|_| Some(Family::Climate)),
+            )
+            .unwrap(),
+        );
+        // Simulate an established 30-day floor and metadata already read as
+        // 90 by the writer, before the recorder consumes that publication.
+        let db = rusqlite::Connection::open(dir.join("history.db")).unwrap();
+        db.execute_batch(
+            "UPDATE retention SET days = 30;
+             CREATE TRIGGER boom BEFORE UPDATE ON retention WHEN NEW.days = 90
+             BEGIN SELECT RAISE(ABORT, 'raise failed'); END;",
+        )
+        .unwrap();
+        let (tx, queue) = mpsc::channel(1);
+        tx.send((vec![(PointId::from("d/x"), Value::Int(2), 2)], false))
+            .await
+            .unwrap();
+        drop(tx);
+        let counters = Arc::new(Counters::default());
+        let ended = write_loop(Arc::clone(&store), queue, Arc::clone(&counters), policy).await;
+        assert!(
+            ended.is_err(),
+            "the recorder must not finalize a failed drain"
+        );
+        assert_eq!(counters.batches_failed.load(Relaxed), 1);
+        assert!(
+            store.suspended().unwrap(),
+            "an unwritten floor blocks every later purge lot"
+        );
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[tokio::test]
+    async fn a_drained_recorder_restarts_without_suspending_purges() {
+        let dir = std::env::temp_dir().join(format!("moli-history-clean-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let options = Options {
+            path: dir.join("history.db"),
+            filter: Filter::default(),
+            retention: Retention::uniform(30),
+        };
+        let hub = Hub::new(moli_runtime::HubOptions::default()).unwrap();
+        for _ in 0..2 {
+            let cancel = CancellationToken::new();
+            let (history, recorder) = History::start(&hub, &options, cancel.clone()).unwrap();
+            assert!(!history.store.suspended().unwrap());
+            // Opening a reader must not finalize this running recorder.
+            let reader = History::from_store(Arc::clone(&history.store)).unwrap();
+            assert_eq!(
+                reader
+                    .sql("SELECT clean FROM retention_guard", 1)
+                    .await
+                    .unwrap()
+                    .rows[0][0],
+                0
+            );
+            cancel.cancel();
+            tokio::time::timeout(Duration::from_secs(5), recorder)
+                .await
+                .unwrap()
+                .unwrap()
+                .unwrap();
+            assert_eq!(
+                reader
+                    .sql("SELECT clean FROM retention_guard", 1)
+                    .await
+                    .unwrap()
+                    .rows[0][0],
+                1
+            );
+        }
         let _ = std::fs::remove_dir_all(dir);
     }
 
