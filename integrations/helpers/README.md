@@ -12,3 +12,5 @@
   indépendamment du cache d'état. Les bornes, erreurs et identités sont décrites dans
   [le contrat compteur](../../docs/components/compteurs.md).
 - `button` : occurrence distincte par appui, sans état restauré ; voir AUTO-H4.
+- Recette : [`recettes/ballon.md`](recettes/ballon.md), un ballon d'eau chaude sur relais
+  (sélecteur et trois brouillons d'automatismes, repris d'un paquet HA).

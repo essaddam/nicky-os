@@ -1,0 +1,27 @@
+[
+  {
+    "gw": "A1B2C3D4E5F6",
+    "sn": "A1B2C3D4E5F6",
+    "name": "Chauffe-eau",
+    "sys": 4,
+    "wheType": 6,
+    "wheModelType": 22,
+    "isOwner": true,
+    "isOffline48H": false,
+    "notifyOnErrors": true,
+    "notifyOnReadyShowers": false,
+    "utcOft": 120
+  },
+  {
+    "gw": "F6E5D4C3B2A1",
+    "name": "Autre modèle",
+    "sys": 4,
+    "wheType": 3
+  },
+  {
+    "gw": "../setup",
+    "name": "Passerelle illisible",
+    "sys": 4,
+    "wheType": 6
+  }
+]

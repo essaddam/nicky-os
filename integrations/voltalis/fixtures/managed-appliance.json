@@ -1,0 +1,72 @@
+[
+  {
+    "id": 200001,
+    "name": "SEJOUR",
+    "applianceType": "HEATER",
+    "modulatorType": "VX_WIRE",
+    "availableModes": ["CONFORT", "ECO", "HORS_GEL", "NORMAL", "TEMPERATURE"],
+    "voltalisVersion": "V3",
+    "heatingLevel": 3,
+    "programming": {
+      "progType": "USER",
+      "progName": "Semaine",
+      "idManualSetting": null,
+      "isOn": true,
+      "untilFurtherNotice": false,
+      "mode": "ECO",
+      "idPlanning": 400001,
+      "endDate": null,
+      "temperatureTarget": 19.0,
+      "defaultTemperature": 19.0
+    }
+  },
+  {
+    "id": 200002,
+    "name": "BUREAU",
+    "applianceType": "HEATER",
+    "modulatorType": "VX_WIRE",
+    "availableModes": ["CONFORT", "ECO", "HORS_GEL", "NORMAL", "TEMPERATURE"],
+    "voltalisVersion": "V3",
+    "heatingLevel": 3,
+    "programming": {
+      "progType": "MANUAL",
+      "progName": "Réglage manuel",
+      "idManualSetting": 300002,
+      "isOn": false,
+      "untilFurtherNotice": true,
+      "mode": "TEMPERATURE",
+      "idPlanning": null,
+      "endDate": null,
+      "temperatureTarget": 18.5,
+      "defaultTemperature": 19.0
+    }
+  },
+  {
+    "id": 200003,
+    "name": "CHAUFFE-EAU",
+    "applianceType": "WATER_HEATER",
+    "modulatorType": "VX_RELAY",
+    "availableModes": [],
+    "voltalisVersion": "V3",
+    "heatingLevel": 0,
+    "programming": {
+      "progType": "USER",
+      "progName": "Semaine",
+      "idManualSetting": null,
+      "isOn": true,
+      "untilFurtherNotice": false,
+      "mode": "NORMAL",
+      "idPlanning": 400001,
+      "endDate": null,
+      "temperatureTarget": 55.0,
+      "defaultTemperature": 55.0
+    }
+  },
+  {
+    "id": 200004,
+    "name": "AUTRE",
+    "applianceType": "OTHER",
+    "modulatorType": "VX_RELAY",
+    "programming": {}
+  }
+]

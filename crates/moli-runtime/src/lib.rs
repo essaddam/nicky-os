@@ -19,6 +19,7 @@ mod labels;
 pub mod media;
 mod occurrences;
 mod private_files;
+pub mod orders;
 mod secrets;
 mod state_cache;
 mod state_file;

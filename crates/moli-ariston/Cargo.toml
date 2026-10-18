@@ -1,0 +1,26 @@
+[package]
+name = "moli-ariston"
+description = "Moli OS Ariston: Velis water heaters (Velis Evo 2, Andris 2) through the Ariston NET cloud: temperature, setpoint, mode, eco, anti-legionella, orders sent once and confirmed by what reads back."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+moli-i18n.workspace = true
+moli-core.workspace = true
+moli-runtime.workspace = true
+moli-net.workspace = true
+anyhow.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio-util.workspace = true
+
+[lints]
+workspace = true

@@ -18,12 +18,12 @@ Mesures sur une installation réelle, à côté de son Home Assistant (détail d
 | Échelle | 77 appareils (22 pilotes) | 171 appareils (1 591 entités) |
 
 Ce qui marche aujourd'hui :
-- 28 intégrations : aides de la maison, Bambu (et son AMS), box UPnP, Frigate, hôte et
+- 28 intégrations : aides de la maison, chauffe-eau Ariston (cloud), Bambu (et son AMS), box UPnP, Frigate, hôte et
   ordinateurs, Hue, imprimante IPP, Klipper, tondeuses Landroid, serrures Nuki, télés Philips et Samsung Tizen (Samsung sur contrats simulés),
   présence par Wi-Fi, profils déclaratifs (Daikin, iopool, Meross, Open-Meteo, Tempo), Reolink,
   aspirateurs Roborock, Somfy TaHoma (volets et portails, local et cloud), Sonos (et ses
   annonces vocales), Tapo, **Telegram** (votre bot, sans relais), **téléphones** (appli Moli),
-  Tuya (local et cloud) et Zigbee (Zigbee2MQTT) ;
+  Tuya (local et cloud), chauffage Voltalis (cloud) et Zigbee (Zigbee2MQTT) ;
 - la garde (pièces protégées, heures calmes), l'historique et l'énergie ;
 - le dashboard « Maison », avec des **filtres par type** et le **plan vivant** : la maison
   redessinée en données, en 2D zoomable à 4 habillages et en **3D** ;

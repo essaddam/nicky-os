@@ -1,0 +1,7 @@
+{
+  "MedAntilegionellaOnOff": 1.0,
+  "MedHeatingRate": 1.0,
+  "MedMaxSetpointTemperature": 80.0,
+  "MedMaxSetpointTemperatureMin": 65.0,
+  "MedMaxSetpointTemperatureMax": 80.0
+}

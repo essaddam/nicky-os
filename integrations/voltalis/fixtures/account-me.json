@@ -1,0 +1,11 @@
+{
+  "id": 900001,
+  "firstname": "Prénom",
+  "lastname": "Nom",
+  "email": "user@example.com",
+  "defaultSite": {
+    "id": 100001,
+    "name": "Maison",
+    "voltalisVersion": "V3"
+  }
+}

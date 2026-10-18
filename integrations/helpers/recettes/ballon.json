@@ -1,0 +1,67 @@
+{
+  "about": "Coordination d'un ballon d'eau chaude sur relais : un sélecteur à trois choix et trois automatismes, comme le paquet HA qu'ils remplacent. Brouillons : avant de les enregistrer, remplacer {aides} par l'instance des aides et {relais} par le point du relais (appareil/clé), puis un humain valide chacun. Voir ballon.md.",
+  "helper": {
+    "id": "ballon_mode",
+    "name": "Mode Chauffe Eau",
+    "kind": "select",
+    "options": ["Éteint", "Automatique", "Forcer"],
+    "initial": "Éteint"
+  },
+  "automations": [
+    {
+      "name": "Ballon Mode Automatique",
+      "mode": "single",
+      "note": "Repris d'un automatisme HA « Ballon Mode Automatique » : désactiver l'original dans HA en validant celui-ci, sinon les deux agissent. Chauffe seulement dans les heures creuses (01:20–07:20, 11:50–13:50) : les ajuster au contrat de la maison.",
+      "graph": {
+        "nodes": [
+          { "id": "choisi", "type": "when_state", "point": "{aides}:ballon_mode/state", "to": "Automatique", "x": 0, "y": 0 },
+          { "id": "h0120", "type": "at_time", "at": "01:20", "x": 0, "y": 120 },
+          { "id": "h0720", "type": "at_time", "at": "07:20", "x": 0, "y": 240 },
+          { "id": "h1150", "type": "at_time", "at": "11:50", "x": 0, "y": 360 },
+          { "id": "h1350", "type": "at_time", "at": "13:50", "x": 0, "y": 480 },
+          { "id": "automatique", "type": "if", "rules": [{ "kind": "state", "point": "{aides}:ballon_mode/state", "value": "Automatique" }], "x": 300, "y": 240 },
+          { "id": "creuses", "type": "if", "all": false, "rules": [
+            { "kind": "time", "after": "01:20", "before": "07:20" },
+            { "kind": "time", "after": "11:50", "before": "13:50" }
+          ], "x": 600, "y": 240 },
+          { "id": "chauffe", "type": "set", "point": "{relais}", "value": true, "x": 900, "y": 160 },
+          { "id": "coupe", "type": "set", "point": "{relais}", "value": false, "x": 900, "y": 320 }
+        ],
+        "edges": [
+          { "from": "choisi", "to": "automatique" },
+          { "from": "h0120", "to": "automatique" },
+          { "from": "h0720", "to": "automatique" },
+          { "from": "h1150", "to": "automatique" },
+          { "from": "h1350", "to": "automatique" },
+          { "from": "automatique", "port": "yes", "to": "creuses" },
+          { "from": "creuses", "port": "yes", "to": "chauffe" },
+          { "from": "creuses", "port": "no", "to": "coupe" }
+        ]
+      }
+    },
+    {
+      "name": "Ballon Mode Forcer",
+      "mode": "single",
+      "note": "Repris d'un automatisme HA « Ballon Mode Forcer » : désactiver l'original dans HA en validant celui-ci, sinon les deux agissent. Le relais reste fermé jusqu'à un autre choix.",
+      "graph": {
+        "nodes": [
+          { "id": "choisi", "type": "when_state", "point": "{aides}:ballon_mode/state", "to": "Forcer", "x": 0, "y": 0 },
+          { "id": "chauffe", "type": "set", "point": "{relais}", "value": true, "x": 300, "y": 0 }
+        ],
+        "edges": [{ "from": "choisi", "to": "chauffe" }]
+      }
+    },
+    {
+      "name": "Ballon Mode Éteint",
+      "mode": "single",
+      "note": "Repris d'un automatisme HA « Ballon Mode Éteint » : désactiver l'original dans HA en validant celui-ci, sinon les deux agissent.",
+      "graph": {
+        "nodes": [
+          { "id": "choisi", "type": "when_state", "point": "{aides}:ballon_mode/state", "to": "Éteint", "x": 0, "y": 0 },
+          { "id": "coupe", "type": "set", "point": "{relais}", "value": false, "x": 300, "y": 0 }
+        ],
+        "edges": [{ "from": "choisi", "to": "coupe" }]
+      }
+    }
+  ]
+}

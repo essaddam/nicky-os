@@ -1,0 +1,4 @@
+[
+  {"id": 400001, "name": "Semaine", "enabled": true},
+  {"id": 400002, "name": "Vacances scolaires", "enabled": false}
+]

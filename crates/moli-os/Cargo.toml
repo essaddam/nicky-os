@@ -9,6 +9,7 @@ rust-version.workspace = true
 [dependencies]
 moli-alexa.workspace = true
 moli-api.workspace = true
+moli-ariston.workspace = true
 moli-assistant.workspace = true
 moli-automation.workspace = true
 moli-bambu.workspace = true
@@ -44,6 +45,7 @@ moli-tapo.workspace = true
 moli-telegram.workspace = true
 moli-tuya.workspace = true
 moli-twinkly.workspace = true
+moli-voltalis.workspace = true
 moli-weather.workspace = true
 moli-wyoming.workspace = true
 moli-z2m.workspace = true

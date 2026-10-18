@@ -1330,6 +1330,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-ariston"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "http",
+ "http-body-util",
+ "moli-core",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
 name = "moli-assistant"
 version = "0.1.0"
 dependencies = [
@@ -1718,6 +1736,7 @@ dependencies = [
  "jiff",
  "moli-alexa",
  "moli-api",
+ "moli-ariston",
  "moli-assistant",
  "moli-automation",
  "moli-bambu",
@@ -1753,6 +1772,7 @@ dependencies = [
  "moli-telegram",
  "moli-tuya",
  "moli-twinkly",
+ "moli-voltalis",
  "moli-weather",
  "moli-wyoming",
  "moli-z2m",
@@ -2035,6 +2055,24 @@ dependencies = [
  "tokio",
  "tokio-util",
  "zeroize",
+]
+
+[[package]]
+name = "moli-voltalis"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "http",
+ "http-body-util",
+ "moli-core",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "tracing",
 ]
 
 [[package]]

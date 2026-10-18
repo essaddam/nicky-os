@@ -918,6 +918,7 @@ fn start_history(
 /// missing here is unknown, whatever `build_driver`'s match says.
 const KINDS: &[&str] = &[
     "alexa",
+    "ariston",
     "bambu",
     "demo",
     "esphome",
@@ -944,6 +945,7 @@ const KINDS: &[&str] = &[
     "telegram",
     "tuya",
     "twinkly",
+    "voltalis",
     "wyoming",
     "z2m",
 ];
@@ -1105,6 +1107,9 @@ fn build_driver(
         "alexa" => Arc::new(moli_alexa::Alexa::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "ariston" => Arc::new(moli_ariston::Ariston::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
         "bambu" => Arc::new(moli_bambu::Bambu::new(
             config.options.clone().try_into().with_context(context)?,
         )),
@@ -1198,6 +1203,9 @@ fn build_driver_n_to_z(
         "twinkly" => Arc::new(moli_twinkly::Twinkly::new(
             config.options.clone().try_into().with_context(context)?,
         )?),
+        "voltalis" => Arc::new(moli_voltalis::Voltalis::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
         "wyoming" => Arc::new(moli_wyoming::Wyoming::new(
             config.options.clone().try_into().with_context(context)?,
         )?),

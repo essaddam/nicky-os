@@ -1,0 +1,5 @@
+[
+  {"id": 300001, "enabled": false, "idAppliance": 200001, "applianceName": "SEJOUR", "applianceType": "HEATER", "untilFurtherNotice": false, "mode": "ECO", "heatingLevel": 3, "endDate": null, "temperatureTarget": 19.0, "isOn": true},
+  {"id": 300002, "enabled": true, "idAppliance": 200002, "applianceName": "BUREAU", "applianceType": "HEATER", "untilFurtherNotice": true, "mode": "TEMPERATURE", "heatingLevel": 3, "endDate": null, "temperatureTarget": 18.5, "isOn": false},
+  {"id": 300003, "enabled": false, "idAppliance": 200003, "applianceName": "CHAUFFE-EAU", "applianceType": "WATER_HEATER", "untilFurtherNotice": false, "mode": "NORMAL", "heatingLevel": 0, "endDate": null, "temperatureTarget": 55.0, "isOn": true}
+]

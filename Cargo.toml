@@ -14,6 +14,7 @@ moli-alexa = { path = "crates/moli-alexa" }
 moli-ambiance = { path = "crates/moli-ambiance" }
 moli-androidtv = { path = "crates/moli-androidtv" }
 moli-api = { path = "crates/moli-api" }
+moli-ariston = { path = "crates/moli-ariston" }
 moli-assistant = { path = "crates/moli-assistant" }
 moli-audio = { path = "crates/moli-audio" }
 moli-automation = { path = "crates/moli-automation" }
@@ -51,6 +52,7 @@ moli-tapo = { path = "crates/moli-tapo" }
 moli-telegram = { path = "crates/moli-telegram" }
 moli-tuya = { path = "crates/moli-tuya" }
 moli-twinkly = { path = "crates/moli-twinkly" }
+moli-voltalis = { path = "crates/moli-voltalis" }
 moli-weather = { path = "crates/moli-weather" }
 moli-wyoming = { path = "crates/moli-wyoming" }
 moli-z2m = { path = "crates/moli-z2m" }

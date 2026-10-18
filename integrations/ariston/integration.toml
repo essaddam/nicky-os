@@ -1,0 +1,39 @@
+[integration]
+id = "ariston"
+name = "Ariston (chauffe-eau Velis, cloud Ariston NET)"
+brands = ["Ariston"]
+# The water heaters served by `medPlantData` (`wheType` 6 and 5); the
+# reference home has a Velis Evo 2.
+models = ["Velis Evo 2", "Andris 2"]
+transport = "https"
+driver = "ariston"
+crate = "moli-ariston"
+
+[discovery]
+# No discovery: the Ariston NET cloud's address is fixed in the driver.
+mdns = []
+ssdp = []
+ports = []
+
+[needs]
+# The Ariston NET account's e-mail and password, given by a human.
+secrets = ["username", "password"]
+vars = []
+options = []
+
+[origin]
+reused = "aucun code repris : routes, champs et corps des ordres d'après la bibliothèque Python « ariston » 0.19.9 (MIT) qu'utilise l'intégration HA personnalisée « ariston », lue sans être recopiée"
+author = "agent"
+
+# Replayed by the crate's tests (crates/moli-ariston/src/model.rs, src/tests.rs).
+[[fixture]]
+file = "fixtures/velis-plants.json"
+
+[[fixture]]
+file = "fixtures/med-plant-data.json"
+
+[[fixture]]
+file = "fixtures/plant-settings.json"
+
+[[fixture]]
+file = "fixtures/bus-errors.json"

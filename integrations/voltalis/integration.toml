@@ -1,0 +1,44 @@
+[integration]
+id = "voltalis"
+name = "Voltalis (radiateurs fil pilote et relais de chauffe-eau)"
+brands = ["Voltalis"]
+# The modulators seen in the reference homes (`modulatorType`).
+models = ["VX_WIRE", "VX_RELAY"]
+transport = "https"
+driver = "voltalis"
+crate = "moli-voltalis"
+
+[discovery]
+# No discovery: the Voltalis cloud's address is fixed in the driver.
+mdns = []
+ssdp = []
+ports = []
+
+[needs]
+# The Voltalis account's e-mail and password, given by a human.
+secrets = ["username", "password"]
+vars = []
+options = []
+
+[origin]
+reused = "aucun code repris : routes, corps des réglages manuels et des programmes, préréglages d'après le client de l'intégration HA personnalisée « voltalis » (aiovoltalis embarqué), lu sans être recopié"
+author = "agent"
+
+# Replayed by the crate's tests (crates/moli-voltalis/src/model.rs, src/tests.rs).
+[[fixture]]
+file = "fixtures/account-me.json"
+
+[[fixture]]
+file = "fixtures/managed-appliance.json"
+
+[[fixture]]
+file = "fixtures/manualsetting.json"
+
+[[fixture]]
+file = "fixtures/autodiag.json"
+
+[[fixture]]
+file = "fixtures/programs.json"
+
+[[fixture]]
+file = "fixtures/quicksettings.json"

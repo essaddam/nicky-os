@@ -1,0 +1,5 @@
+[
+  {"csApplianceId": 200001, "status": "OK", "name": "SEJOUR"},
+  {"csApplianceId": 200002, "status": "NOK", "name": "BUREAU"},
+  {"csApplianceId": 200003, "status": "OK", "name": "CHAUFFE-EAU"}
+]

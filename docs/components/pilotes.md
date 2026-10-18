@@ -54,7 +54,13 @@ heures après « échec », c'est pire qu'un refus). Un pilote dont l'envoi peut
 (connexion, file d'un pont) vérifie `CommandRequest::abandoned()` juste avant chaque étape qui
 envoie : échéance passée **ou appelant parti** = l'ordre ne part plus. Une fois parti, sa
 réponse est attendue et gardée (absence de réponse = non confirmé, pas « non envoyé »), sans
-rejeu. En HTTP : `moli_net::plain_if` (exemple : `moli-nuki`). La confirmation arrive ensuite comme une
+rejeu. En HTTP : `moli_net::plain_if` (exemple : `moli-nuki`). Derrière un cloud (une connexion par requête, des
+secondes de latence), `moli_runtime::orders` tient la discipline commune : `OrderLine` (un
+ordre en vol, dans l'ordre reçu, file bornée, instant limite absolu, au moins une seconde
+devant soi pour partir, « non envoyé » / « peut-être parti, jamais renvoyé ») et
+`Confirmations` (la valeur demandée doit se relire avant une limite, sinon la maison est
+prévenue) ; le pilote ne fait que le réseau, à côté de sa boucle (`moli-ariston`,
+`moli-voltalis`). La confirmation arrive ensuite comme une
 mise à jour d'état normale (Sonos et Tapo publient la valeur dès le succès).
 
 **Images.** Une caméra déclare une `SnapshotSource` (`crates/moli-runtime/src/media.rs`).
@@ -398,6 +404,27 @@ kind = "frigate"
 - **Pièges** : abonnements ciblés, jamais les JPEG retenus (`…/snapshot`) ni `stats`. Broker injoignable : commandes refusées (pas mises en file), nouvel essai après 5 s.
 - **Tests** : correspondance sujets → points.
 
+## `ariston` : chauffe-eau Ariston Velis (`crates/moli-ariston`)
+
+- **Couvre** : les chauffe-eau d'un compte **Ariston NET** servis par `medPlantData` : Velis
+  Evo 2 et Andris 2 (au plus 4). Les autres modèles et les chaudières sont ignorés. Paquet
+  `integrations/ariston`.
+- **Protocole** : cloud Ariston NET (`www.ariston-net.remotethermo.com/api/v2/`, adresse fixée
+  dans le pilote), jeton de session dans l'en-tête `ar.authToken`. État toutes les 3 min
+  (20 s pendant une confirmation), réglages et erreurs toutes les 30 min.
+- **Configuration** : aucune option. **Secrets** : `username`, `password` du compte (humain).
+- **Points** : `on` (`control`), `mode` (`manuel`, `programme`), `setpoint` (40 à 80 °C, jamais
+  au-dessus du plafond réglé sur l'appareil), `eco`, `max_setpoint`, `antilegionella`
+  (`control`) ; en lecture `temperature`, `effective_setpoint`, `heating`, `showers`,
+  `remaining` (min), `antilegionella_cycle`, `errors`.
+- **Ordres** : file commune `moli_runtime::orders` (ci-dessus) : une seule fois, un à la fois,
+  jamais en retard ; « fait » = le cloud a pris l'ordre, puis la valeur doit se relire dans
+  les 3 min, sinon notice. Jeton refusé (401, 405) : renouvelé, jamais rejoué ; trois
+  sessions refusées ou identifiants refusés : `waiting`. Quota (429) : pause de 15 min.
+- **Tests** : fixtures reconstruites (aucune capture avant H1) ; la boucle contre un cloud
+  simulé et le vrai hub (`src/tests.rs`) : relecture, ordre jamais confirmé, cloud lent,
+  session expirée sans rejeu, identifiants refusés, plafond de consigne.
+
 ## `bambu` : imprimante Bambu Lab (`crates/moli-bambu`)
 
 - **Couvre** : A1, P1, X1. Écritures : la lumière et `control` (`pause`, `resume`, `stop`, envoyés comme ha-bambulab : `{"print": {"command": …}}`), de sémantique `control` : **un agent qui les demande attend un humain** (garde du hub). Pas encore vu en vrai.
@@ -594,6 +621,27 @@ host = "192.168.1.x"        # local seulement
 - **Pièges** : ampoule coupée au mur : statut `waiting` et nouvel essai chaque minute. Session expirée : une nouvelle poignée de main, une fois. Un changement de teinte/saturation remet `color_temp` à 0 (et inversement côté appareil).
 - **Tests** : session KLAP identique **octet par octet** à python-kasa ; lecture de `get_device_info`.
 
+## `voltalis` : chauffage Voltalis (`crates/moli-voltalis`)
+
+- **Couvre** : les radiateurs sur fil pilote (`VX_WIRE`) d'un compte Voltalis, le relais de
+  chauffe-eau (`VX_RELAY`) **en lecture seule**, et les programmes du compte. Paquet
+  `integrations/voltalis`.
+- **Protocole** : cloud Voltalis (`api.myvoltalis.com`, adresse fixée dans le pilote), jeton
+  porteur. Appareils et programmes toutes les 2 min (10 s pendant une confirmation),
+  joignabilité (`autodiag`) toutes les 10 min, tout toutes les 30 min.
+- **Configuration** : aucune option. **Secrets** : `username`, `password` du compte (humain).
+- **Points** : radiateur : `mode` (`programme`, `manuel`, `arret` ; `control`), `preset`
+  (`eco`, `confort`, `temperature`, `hors_gel`, `normal`), `setpoint` (7 à 24 °C), `heating`,
+  `program` ; chauffe-eau : `setpoint`, `heating`, `program` (aucune écriture : le client HA
+  n'en implémente aucune) ; programme : `enabled` (`control`).
+- **Ordres** : le réglage manuel entier (`PUT manualsetting/{id}`), par la file commune
+  `moli_runtime::orders` ; « fait » = le cloud a pris l'ordre, puis la valeur doit se relire
+  dans les 2 min, sinon notice. 401 : session renouvelée, jamais rejouée ; trois sessions
+  refusées ou identifiants refusés : `waiting`. Quota ou service indisponible : pause de
+  10 min.
+- **Tests** : fixtures reconstruites (aucune capture avant H1) ; la boucle contre un cloud
+  simulé et le vrai hub (`src/tests.rs`).
+
 ## `igd` : box internet (`crates/moli-igd`)
 
 - **Couvre** : toute passerelle UPnP IGD (Livebox, Freebox…) : connexion, IP publique, durée, débit de ligne. **Lecture seule.**
@@ -773,6 +821,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 
 | Pilote | Crate | Protocole | Écriture possible | Vérifié sur du vrai matériel |
 |---|---|---|---|---|
+| `ariston` | `moli-ariston` | cloud Ariston NET (HTTPS, jeton de session) | oui : marche, mode, consigne, éco, plafond, anti-légionelle | pas encore (cible : Velis Evo 2) |
 | `bambu` | `moli-bambu` | MQTT TLS 8883, épinglé | lumière, `control` (humain pour un agent) | pas encore (cible : Bambu Lab A1) |
 | `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
 | `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |
@@ -797,6 +846,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `telegram` | `moli-telegram` | HTTPS, API des bots | `notify` (message) | oui (API des bots) |
 | `tuya` | `moli-tuya` | TCP 6668 chiffré 3.3/3.4/3.5, UDP 6666/6667/7000 ; cloud en lecture | oui : DP booléens, entiers, enum (local seulement) | prises Tuya (local, écriture comprise) ; capteurs sur pile et passerelles (cloud) |
 | `twinkly` | `moli-twinkly` | HTTP local v1, login/verify transitoires | marche, luminosité, RGB statique direct si supporté | pas encore : contrats synthétiques, H1 requis |
+| `voltalis` | `moli-voltalis` | cloud Voltalis (HTTPS, jeton porteur) | radiateurs : régime, préréglage, consigne ; programmes ; chauffe-eau non | pas encore (cible : radiateurs fil pilote) |
 | `z2m` | `moli-z2m` | MQTT local (Zigbee2MQTT) | oui, selon les `exposes` | Zigbee2MQTT (appareils variés) |
 
 
