@@ -255,10 +255,10 @@ archive_ack  (id = 1, durable_upto, published_upto, generation, at)
 
 **Totaux de période : accumulateurs persistants.** Option écartée : garder deux mois civils
 d'heures et `Energy::summary()` inchangé. À la charge ×2, `summary()` lit 127 452 heures
-(‹SUM_WIN›) ; depuis les totaux, 456 lignes (‹SUM_TOT›), même réponse. `energy_total` est
+(p95 50,23–54,50 ms) ; depuis les totaux, 456 lignes (p95 0,47–0,92 ms), même réponse. `energy_total` est
 tenue dans la transaction de l'heure, par le même apport additif, sur tous les chemins qui
 écrivent une heure (relevé vivant, import, re-tarification) ; `kill -9` le vérifie. Les jours
-restent 62 jours, les mois 13 mois (le graphique 12 mois reste local, ‹M12›), les heures
+restent 62 jours, les mois 13 mois (le graphique 12 mois reste local, p95 2,99–3,07 ms), les heures
 deux mois civils (graphiques horaires jusqu'à 31 jours, recalcul des totaux). Au démarrage,
 somme des jours = somme des heures sur la fenêtre locale, sinon recalcul journalisé.
 
@@ -326,7 +326,7 @@ tape plus de SQL.
    `energy.db` existe, copie dans `moli.db.tmp` (une séquence et une entrée d'outbox par
    ligne : l'archive reçoit l'historique existant ; totaux recalculés depuis les heures), fsync,
    renommage. Les anciens fichiers ne sont plus jamais écrits. Mesure : 100 200 opérations
-   copiées en 7,4 s sur un CPU (séquences, outbox et totaux compris), soit quelques minutes
+   copiées en 5,22 s sur un CPU (séquences, outbox et totaux compris), soit quelques minutes
    pour un historique de 30 jours : une seule fois, hub arrêté, progression au journal.
 2. **Retour arrière** : Moli arrêté, sur une **copie** des anciens fichiers, le SQL de
    `ROLLBACK_HISTORY` / `ROLLBACK_ENERGY` (SQLite seul, `ATTACH` du fichier Turso) y ajoute ce
@@ -359,6 +359,17 @@ complet donne encore 26,6 Mo. Retenu : les symboles restent (des traces lisibles
 production), le budget passe à 40 Mo ([PERFORMANCE.md](PERFORMANCE.md)), réévalué à chaque
 montée de Turso. Ce sont des pages de fichier, pas de la mémoire anonyme : le budget de
 32 Mio ne bouge pas.
+
+**Réserves avant bascule (série complète du 18 octobre 2026).** Le graphique
+d'énergie sur 168 h reste à 31,11–33,99 ms au p95 sur le banc limité à un CPU,
+au-delà des 25 ms visées ; la rafale vise 974 op/s et en atteint 955,82–965,61
+avec cinq lecteurs. C1/C2 doivent réduire ce coût de lecture et prouver la capacité
+requise sur le cœur intégré avant sa mise en service. Le pic RSS du processus qui
+compare toutes les lectures, y compris les options écartées, est de 52,09–52,77 Mio :
+le budget de 32 Mio **anonymes** du cœur reste à vérifier avec les chemins retenus.
+La projection de taille reste à vérifier sur l'image réelle de C1. Ces réserves
+figurent aussi dans [le budget de performance](PERFORMANCE.md) et dans l'annexe ;
+les choix du propriétaire et les plafonds restent ceux fixés ci-dessus.
 
 **Ce qui invaliderait cette décision**
 

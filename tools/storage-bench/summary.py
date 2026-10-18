@@ -78,7 +78,7 @@ if samples:
     print(f"  relevés chargés          {samples[0]['rows']} sur {samples[0]['points']} points")
     print(f"  durée (s)                {spread([r['elapsed_ms'] / 1000 for r in samples])}")
     print(f"  op/s                     {spread([r['ops_per_s'] for r in samples])}")
-    print(f"  validation p95 (ms)      {spread([r['commit']['p95_ms'] for r in samples])}")
+    print(f"  transaction p95 (ms)     {spread([r['commit']['p95_ms'] for r in samples])}")
     energy = [r for r in load if r.get("phase") == "load_energy_window"]
     print(f"  heures d'énergie (s)     {spread([r['elapsed_ms'] / 1000 for r in energy])}  ({energy[0]['rows'] if energy else '—'} heures)")
     print(f"  pic RSS (Mio)            {spread([r['memory']['peak_rss_kib'] / 1024 for r in done])}")
@@ -86,7 +86,7 @@ if samples:
 
 p = out / "host-load.txt"
 if p.exists():
-    print("  charge de la VM Docker (1, 5, 15 min) au début de chaque tour :")
+    print("  charge (1, 5, 15 min) de la VM Docker et de l'hôte, au début de chaque tour et à la fin :")
     print("  " + p.read_text().strip().replace("\n", "\n  "))
 
 print("\n== lectures, p95 en ms (min / médiane / max)")
@@ -105,7 +105,7 @@ for rate in ("4", "974"):
     if rs:
         print(f"  {rate:>4} op/s visés : atteint {spread([r['achieved_writes_per_s'] for r in rs])} op/s ; "
               f"lecture p95 {spread([r['p95_ms'] for r in rs])} ms, p99 {spread([r['p99_ms'] for r in rs])} ms ; "
-              f"validation p95 {spread([r['commit']['p95_ms'] for r in rs])} ms ; pic RSS {spread([r['memory']['peak_rss_kib'] / 1024 for r in rs])} Mio")
+              f"transaction p95 {spread([r['commit']['p95_ms'] for r in rs])} ms ; pic RSS {spread([r['memory']['peak_rss_kib'] / 1024 for r in rs])} Mio")
 
 print("\n== réouverture et purge")
 ro = [r for _, r in lines("reopen-*.jsonl")]

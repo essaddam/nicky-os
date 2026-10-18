@@ -57,7 +57,7 @@ bins="$bins size-core"
 } >"$out/sizes.txt"
 # Facultatif (MOLI_IMAGE=1, une vingtaine de minutes) : le binaire de Moli tel
 # qu'il est, étapes du Dockerfile racine rejouées sans BuildKit (tableau de
-# bord compris), pour situer le delta dans le budget d'image de 25 Mo.
+# bord compris), pour situer le delta dans le budget d'image de 40 Mo (D13).
 if [ "${MOLI_IMAGE:-0}" = 1 ]; then
     repo=$(cd "$here/../.." && pwd)
     log "binaire actuel de Moli ($platform)…"
@@ -108,7 +108,7 @@ i=1
 while [ "$i" -le "$repeat" ]; do
     log "charge ×2, tour $i/${repeat}…"
     # Charge de l'hôte (les autres conteneurs comptent) : pour lire la dispersion.
-    echo "tour $i : $(docker run --rm alpine:3.22 cat /proc/loadavg)" >>"$out/host-load.txt"
+    echo "tour $i : VM $(docker run --rm alpine:3.22 cat /proc/loadavg) ; hôte $(uptime | sed 's/.*load average[s]*: //')" >>"$out/host-load.txt"
     run load /fixtures/shape.json /bench/hot.db >"$out/load-$i.jsonl"
     run reads /fixtures/shape.json /bench/hot.db >"$out/reads-$i.jsonl"
     run burst /fixtures/shape.json /bench/hot.db 4 >"$out/burst-4-$i.jsonl"
@@ -118,5 +118,6 @@ while [ "$i" -le "$repeat" ]; do
     i=$((i + 1))
 done
 
+echo "fin : VM $(docker run --rm alpine:3.22 cat /proc/loadavg) ; hôte $(uptime | sed 's/.*load average[s]*: //')" >>"$out/host-load.txt"
 python3 -I "$here/summary.py" "$out" | tee "$out/summary.txt"
 log "résultats : $out"

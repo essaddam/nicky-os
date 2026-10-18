@@ -21,6 +21,19 @@ Assistant.
 | API, p95 | ≤ 25 ms (listes), ≤ 5 ms (santé) | Le dashboard doit répondre au doigt. |
 | Démarrage | ≤ 2 s jusqu'à « sain » | Un redémarrage ne doit rien coûter. |
 
+### Réserves de la bascule Turso (18 octobre 2026)
+
+Le [banc D13](annexe-d13-stockage.md) a terminé trois tours en linux/arm64,
+limité à un CPU : énergie sur 7 jours à **31,11–33,99 ms** au p95, avant HTTP ;
+rafale de **955,82–965,61 op/s** pour 974 visées avec cinq lecteurs. C1/C2 doivent
+corriger le coût de ce graphique et prouver la capacité requise avant la bascule.
+Le processus comparant toutes les lectures culmine à **52,09–52,77 Mio de RSS**,
+options écartées comprises ; le budget du cœur se mesure en mémoire anonyme du
+cgroup, avec les seuls chemins retenus et les autres briques actives. Cette
+validation et celle de l'image réelle (projection actuelle : 34,43 Mo, 35,69 Mo
+avec les deux moteurs) restent à faire en C1. Les budgets du tableau restent
+inchangés.
+
 ## Principes de conception qui tiennent le budget
 
 - Rien ne se recalcule « au cas où » : ce qui sert à chaque seconde ou à chaque événement
