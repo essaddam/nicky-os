@@ -65,18 +65,15 @@ impl Operation {
                 let valid = match kind.as_str() {
                     "b" => txt.is_none() && matches!(scalar, Some(0.0 | 1.0)),
                     "i" => {
-                        txt.is_none()
-                            && num.as_ref().is_some_and(|n| {
-                                n.as_i64().is_some()
-                                    || n.as_f64().is_some_and(|f| {
-                                        f.is_finite()
-                                            && f.fract() == 0.0
-                                            && f.abs() <= 9_007_199_254_740_992.0
-                                    })
-                            })
+                        txt.is_none() && scalar.is_some_and(|f| f.is_finite() && f.fract() == 0.0)
                     }
                     "f" => txt.is_none() && scalar.is_some_and(f64::is_finite),
-                    "t" => num.is_none() && txt.as_ref().is_some_and(|s| s.len() <= 4096),
+                    "t" => {
+                        num.is_none()
+                            && txt
+                                .as_ref()
+                                .is_some_and(|s| s.chars().count() <= moli_core::MAX_TEXT)
+                    }
                     "z" => num.is_none() && txt.is_none(),
                     _ => false,
                 };

@@ -158,11 +158,11 @@ fn interrupted_writer_is_poisoned_until_reopen() {
 }
 
 #[test]
-fn trailing_gzip_and_inexact_integers_are_rejected() {
+fn trailing_gzip_and_fractional_integers_are_rejected() {
     let mut compressed = gzip(&body(1, 42));
     compressed.extend_from_slice(b"trailing");
     assert!(decode(1, 1, &compressed).is_err());
-    for replacement in ["42.5", "9223372036854775808", "1e300"] {
+    for replacement in ["42.5", "1e309"] {
         let invalid = String::from_utf8(body(1, 42))
             .unwrap()
             .replace("\"num\":42", &format!("\"num\":{replacement}"));
@@ -246,4 +246,26 @@ fn catalog_accepts_a_house_with_4096_points() {
     }
     .validate()
     .unwrap();
+}
+
+#[test]
+fn scalar_limits_match_the_core_export_contract() {
+    let text = |value: String| {
+        let mut bytes = serde_json::to_vec(&serde_json::json!({
+            "type":"sample", "seq":1, "point":"demo.text", "ts":0,
+            "kind":"t", "num":null, "txt":value
+        }))
+        .unwrap();
+        bytes.push(b'\n');
+        bytes
+    };
+    assert!(decode(1, 1, &gzip(&text("🦀".repeat(moli_core::MAX_TEXT)))).is_ok());
+    assert!(decode(1, 1, &gzip(&text("a".repeat(moli_core::MAX_TEXT + 1)))).is_err());
+    let large_integer = body(1, 42);
+    let large_integer = String::from_utf8(large_integer)
+        .unwrap()
+        .replace("\"num\":42", "\"num\":1.152921504606847e18");
+    assert!(decode(1, 1, &gzip(large_integer.as_bytes())).is_ok());
+    let fractional = large_integer.replace("1.152921504606847e18", "1.5");
+    assert!(decode(1, 1, &gzip(fractional.as_bytes())).is_err());
 }

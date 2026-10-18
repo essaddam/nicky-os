@@ -3,7 +3,7 @@ use crate::{
     Archive, Snapshot,
     protocol::{self, CatalogUpdate, Query, Status},
 };
-use anyhow::{Result, ensure};
+use anyhow::{Result, bail, ensure};
 use axum::{
     Json, Router,
     body::{Body, to_bytes},
@@ -29,7 +29,10 @@ use std::{
     },
     time::Duration,
 };
-use tokio::{net::TcpListener, sync::Semaphore};
+use tokio::{
+    net::TcpListener,
+    sync::{Semaphore, watch},
+};
 
 struct Auth {
     key: hmac::Key,
@@ -75,10 +78,22 @@ struct App {
     snapshot: RwLock<Snapshot>,
     auth: Auth,
     jobs: Arc<Semaphore>,
+    reads: Arc<Semaphore>,
+    fatal: watch::Sender<bool>,
     publishing: AtomicBool,
 }
 type Shared = Arc<App>;
 impl App {
+    fn failure(&self, archive: &Archive, error: &anyhow::Error) {
+        eprintln!("{}: {error:#}", tr!("archive.storage_error"));
+        if archive.poisoned {
+            self.fatal.send_replace(true);
+        }
+    }
+    fn worker_failed(&self, error: &tokio::task::JoinError) {
+        eprintln!("{}: {error:#}", tr!("archive.storage_error"));
+        self.fatal.send_replace(true);
+    }
     fn refresh(&self, archive: &Archive) {
         *self
             .status
@@ -97,6 +112,13 @@ impl App {
     }
 }
 fn error(state: Option<&App>, status: StatusCode, code: &str) -> Response {
+    if status.is_server_error() {
+        eprintln!(
+            "{}: HTTP {} {code}",
+            tr!("archive.storage_error"),
+            status.as_u16()
+        );
+    }
     let key = match status {
         StatusCode::UNAUTHORIZED => "archive.unauthorized",
         StatusCode::CONFLICT => "archive.conflict",
@@ -205,6 +227,7 @@ async fn batches(
             if ["sequence_gap", "batch_conflict", "receipt_expired"].contains(&code.as_str()) {
                 ("batch_conflict", StatusCode::CONFLICT)
             } else {
+                work.failure(&archive, &e);
                 ("storage_unavailable", StatusCode::SERVICE_UNAVAILABLE)
             }
         })
@@ -216,11 +239,14 @@ async fn batches(
             Json(ack).into_response()
         }
         Ok(Err((code, status))) => error(Some(&state), status, code),
-        Err(_) => error(
-            Some(&state),
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "worker_failed",
-        ),
+        Err(e) => {
+            state.worker_failed(&e);
+            error(
+                Some(&state),
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "worker_failed",
+            )
+        }
     }
 }
 async fn query(
@@ -231,7 +257,7 @@ async fn query(
     if identity(&state, &installation).is_err() {
         return error(None, StatusCode::NOT_FOUND, "installation_mismatch");
     }
-    let Ok(permit) = state.jobs.clone().try_acquire_owned() else {
+    let Ok(permit) = state.reads.clone().try_acquire_owned() else {
         return error(Some(&state), StatusCode::SERVICE_UNAVAILABLE, "busy");
     };
     let snapshot = state
@@ -263,11 +289,14 @@ async fn query(
     {
         Ok(Ok(response)) => Json(response).into_response(),
         Ok(Err(_)) => error(Some(&state), StatusCode::BAD_REQUEST, "query_rejected"),
-        Err(_) => error(
-            Some(&state),
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "worker_failed",
-        ),
+        Err(e) => {
+            eprintln!("{}: {e:#}", tr!("archive.storage_error"));
+            error(
+                Some(&state),
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "worker_failed",
+            )
+        }
     }
 }
 async fn update_catalog(
@@ -309,17 +338,27 @@ async fn update_catalog(
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let result = archive.set_catalog(update);
         work.refresh(&archive);
-        result
+        result.map_err(|e| {
+            if archive.poisoned {
+                work.failure(&archive, &e);
+                ("storage_unavailable", StatusCode::SERVICE_UNAVAILABLE)
+            } else {
+                ("catalog_rejected", StatusCode::CONFLICT)
+            }
+        })
     })
     .await
     {
         Ok(Ok(status)) => Json(status).into_response(),
-        Ok(Err(_)) => error(Some(&state), StatusCode::CONFLICT, "catalog_rejected"),
-        Err(_) => error(
-            Some(&state),
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "worker_failed",
-        ),
+        Ok(Err((code, status))) => error(Some(&state), status, code),
+        Err(e) => {
+            state.worker_failed(&e);
+            error(
+                Some(&state),
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "worker_failed",
+            )
+        }
     }
 }
 fn schedule_publication(state: &Shared) {
@@ -348,12 +387,22 @@ fn schedule_publication(state: &Shared) {
                     .unwrap_or_else(std::sync::PoisonError::into_inner);
                 let result = archive.publish();
                 work.refresh(&archive);
+                if let Err(e) = &result {
+                    work.failure(&archive, e);
+                }
                 result
             })
             .await;
-            if !matches!(result, Ok(Ok(_))) {
-                eprintln!("{}", tr!("archive.storage_error"));
-                break;
+            match result {
+                Ok(Ok(_)) => {}
+                Ok(Err(_)) => {
+                    state.fatal.send_replace(true);
+                    break;
+                }
+                Err(e) => {
+                    state.worker_failed(&e);
+                    break;
+                }
             }
             if state.status().published_upto < state.status().durable_upto {
                 tokio::task::yield_now().await;
@@ -380,6 +429,7 @@ pub async fn serve(
     address: SocketAddr,
     token_file: &FsPath,
 ) -> Result<()> {
+    ensure!(!archive.poisoned, "archive_requires_reopen");
     let snapshot = archive.snapshot();
     let initial_status = archive.status();
     let state = Arc::new(App {
@@ -389,8 +439,14 @@ pub async fn serve(
         snapshot: RwLock::new(snapshot),
         auth: Auth::from_file(token_file)?,
         jobs: Arc::new(Semaphore::new(1)),
+        reads: Arc::new(Semaphore::new(1)),
+        fatal: watch::channel(false).0,
         publishing: AtomicBool::new(false),
     });
+    let listener = TcpListener::bind(address).await?;
+    serve_state(state, listener).await
+}
+async fn serve_state(state: Shared, listener: TcpListener) -> Result<()> {
     let router = Router::new()
         .route("/v1/installations/{installation}/status", get(status))
         .route(
@@ -404,11 +460,15 @@ pub async fn serve(
         .route("/v1/installations/{installation}/query", post(query))
         .layer(middleware::from_fn_with_state(state.clone(), authenticate))
         .with_state(state.clone());
-    let listener = TcpListener::bind(address).await?;
     let connections = Arc::new(Semaphore::new(16));
+    let mut fatal = state.fatal.subscribe();
+    ensure!(!*fatal.borrow(), "archive_requires_reopen");
     schedule_publication(&state);
     loop {
-        let (socket, _) = listener.accept().await?;
+        let (socket, _) = tokio::select! {
+            _ = fatal.changed() => bail!("archive_requires_reopen"),
+            accepted = listener.accept() => accepted?,
+        };
         let Ok(permit) = connections.clone().try_acquire_owned() else {
             drop(socket);
             continue;
@@ -426,5 +486,108 @@ pub async fn serve(
                 .serve_connection(TokioIo::new(socket), service)
                 .await;
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn http_reads_the_previous_snapshot_during_a_paused_publication() {
+        let root =
+            std::env::temp_dir().join(format!("moli-http-publication-{}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        let token = root.join("token");
+        std::fs::write(&token, "fixture-archive-token-for-tests").unwrap();
+        let installation = "00000000000000000000000000000002";
+        let mut archive = Archive::open(&root.join("data"), installation).unwrap();
+        archive.receive(1, 1, b"{\"type\":\"energy_hour\",\"seq\":1,\"meter\":\"demo.meter\",\"hour\":0,\"kwh\":1.0,\"cost\":null}\n").unwrap();
+        let state = Arc::new(App {
+            installation: installation.into(),
+            status: RwLock::new(archive.status()),
+            snapshot: RwLock::new(archive.snapshot()),
+            archive: Mutex::new(archive),
+            auth: Auth::from_file(&token).unwrap(),
+            jobs: Arc::new(Semaphore::new(1)),
+            reads: Arc::new(Semaphore::new(1)),
+            fatal: watch::channel(false).0,
+            publishing: AtomicBool::new(false),
+        });
+        // Pause the publisher after admission, before any manifest can change.
+        let (ready_tx, ready_rx) = std::sync::mpsc::channel();
+        let (release_tx, release_rx) = std::sync::mpsc::channel();
+        let writer = state.clone();
+        let paused = std::thread::spawn(move || {
+            let _guard = writer.archive.lock().unwrap();
+            ready_tx.send(()).unwrap();
+            release_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+        });
+        ready_rx.recv().unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(serve_state(state.clone(), listener));
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while state.jobs.available_permits() != 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(state.publishing.load(Ordering::Acquire));
+        let response = tokio::task::spawn_blocking(move || {
+            use std::io::{Read, Write};
+            let mut socket = std::net::TcpStream::connect(address).unwrap();
+            socket.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+            let body = r#"{"source":"energy","points":["demo.meter"],"from":0,"to":3600000,"resolution":"raw","max_points":200}"#;
+            let request = format!("POST /v1/installations/{installation}/query HTTP/1.1\r\nHost: archive\r\nAuthorization: Bearer fixture-archive-token-for-tests\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len());
+            socket.write_all(request.as_bytes()).unwrap();
+            let mut response = Vec::new();
+            socket.read_to_end(&mut response).unwrap();
+            response
+        }).await.unwrap();
+        release_tx.send(()).unwrap();
+        paused.join().unwrap();
+        let response = String::from_utf8(response).unwrap();
+        assert!(response.starts_with("HTTP/1.1 200"), "{response}");
+        let (_, body) = response.split_once("\r\n\r\n").unwrap();
+        let result: serde_json::Value = serde_json::from_str(body).unwrap();
+        assert_eq!(result["published_upto"], 0);
+        assert!(result["series"][0]["values"].as_array().unwrap().is_empty());
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while state.status().published_upto != 1 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        server.abort();
+        let _ = server.await;
+        drop(state);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[tokio::test]
+    async fn a_failed_background_publication_stops_the_listener() {
+        let root = std::env::temp_dir().join(format!("moli-http-fatal-{}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        let token = root.join("token");
+        std::fs::write(&token, "fixture-archive-token-for-tests").unwrap();
+        let installation = "00000000000000000000000000000002";
+        let mut archive = Archive::open(&root.join("data"), installation).unwrap();
+        archive.receive(1, 1, b"{\"type\":\"energy_hour\",\"seq\":1,\"meter\":\"demo.meter\",\"hour\":0,\"kwh\":1.0,\"cost\":null}\n").unwrap();
+        archive.fail_at(crate::PublicationFailure::PartSynced);
+        let result = tokio::time::timeout(
+            Duration::from_secs(5),
+            serve(
+                archive,
+                installation.into(),
+                "127.0.0.1:0".parse().unwrap(),
+                &token,
+            ),
+        )
+        .await
+        .unwrap();
+        assert_eq!(result.unwrap_err().to_string(), "archive_requires_reopen");
+        std::fs::remove_dir_all(root).unwrap();
     }
 }

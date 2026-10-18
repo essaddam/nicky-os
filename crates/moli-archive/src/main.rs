@@ -62,10 +62,11 @@ async fn main() -> ExitCode {
             }
         }
     };
-    if let Ok(()) = result {
-        ExitCode::SUCCESS
-    } else {
-        eprintln!("{}", tr!("archive.storage_error"));
-        ExitCode::FAILURE
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("{}: {e:#}", tr!("archive.storage_error"));
+            ExitCode::FAILURE
+        }
     }
 }

@@ -260,7 +260,7 @@ fn response_byte_limit_is_applied_before_collecting_all_values() {
     let mut a = Archive::open(&d.0, INSTALL).unwrap();
     let mut bytes = Vec::new();
     for seq in 1..=300 {
-        let line = serde_json::json!({"type":"sample","seq":seq,"point":"demo.text","ts":seq,"kind":"t","num":null,"txt":"x".repeat(4096)});
+        let line = serde_json::json!({"type":"sample","seq":seq,"point":"demo.text","ts":seq,"kind":"t","num":null,"txt":"x".repeat(moli_core::MAX_TEXT)});
         serde_json::to_writer(&mut bytes, &line).unwrap();
         bytes.push(b'\n');
     }
@@ -327,7 +327,7 @@ fn large_valid_text_batch_publishes_with_bounded_parquet_metadata() {
     let mut a = Archive::open(&d.0, INSTALL).unwrap();
     let mut bytes = Vec::new();
     for seq in 1..=1800 {
-        serde_json::to_writer(&mut bytes,&serde_json::json!({"type":"sample","seq":seq,"point":"demo.text","ts":seq,"kind":"t","num":null,"txt":"x".repeat(4096)})).unwrap();
+        serde_json::to_writer(&mut bytes,&serde_json::json!({"type":"sample","seq":seq,"point":"demo.text","ts":seq,"kind":"t","num":null,"txt":"x".repeat(moli_core::MAX_TEXT)})).unwrap();
         bytes.push(b'\n');
     }
     assert!(bytes.len() < 8 * 1024 * 1024);
@@ -441,4 +441,34 @@ fn lost_metadata_never_creates_a_new_identity_or_a_zero_ack() {
     fs::remove_file(&pointer).unwrap();
     assert!(Archive::open(&d.0, INSTALL).is_err());
     assert!(!pointer.exists());
+}
+
+#[test]
+fn core_scalar_boundaries_publish_and_round_trip_without_loss() {
+    let d = Dir::new();
+    let mut archive = Archive::open(&d.0, INSTALL).unwrap();
+    let mut bytes = Vec::new();
+    let text = "🦀".repeat(moli_core::MAX_TEXT);
+    for op in [
+        serde_json::json!({"type":"sample","seq":1,"point":"demo.text","ts":0,"kind":"t","num":null,"txt":text}),
+        serde_json::json!({"type":"sample","seq":2,"point":"demo.integer","ts":0,"kind":"i","num":1_i64 << 60,"txt":null}),
+    ] {
+        serde_json::to_writer(&mut bytes, &op).unwrap();
+        bytes.push(b'\n');
+    }
+    archive.receive(1, 2, &bytes).unwrap();
+    assert_eq!(archive.publish().unwrap().published_upto, 2);
+    let reply = archive
+        .snapshot()
+        .query(&Query {
+            source: Source::Samples,
+            points: vec!["demo.text".into(), "demo.integer".into()],
+            from: 0,
+            to: 1,
+            resolution: Resolution::Raw,
+            max_points: 2,
+        })
+        .unwrap();
+    assert_eq!(reply.series[0].values[0]["txt"], text);
+    assert_eq!(reply.series[1].values[0]["num"], 1_i64 << 60);
 }

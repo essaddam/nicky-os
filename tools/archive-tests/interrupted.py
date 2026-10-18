@@ -12,7 +12,7 @@ client=Client(args.url)
 first=client.status()["durable_upto"]+1 if args.phase=="send" else args.first
 assert first and first>0
 last=first+1799
-body=b"".join(encoded({"type":"sample","seq":first+i,"point":"fixture.interrupted","ts":i,"kind":"t","num":None,"txt":"x"*4096})+b"\n" for i in range(1800))
+body=b"".join(encoded({"type":"sample","seq":first+i,"point":"fixture.interrupted","ts":i,"kind":"t","num":None,"txt":"x"*4000})+b"\n" for i in range(1800))
 assert len(body)<=8*1024*1024
 if args.phase=="send":
     ack,_=client.request("POST",f"batches/{first}-{last}",gzip.compress(body,compresslevel=1,mtime=0),True)
@@ -25,7 +25,7 @@ else:
         rows=reply["series"][0]["values"]
         assert len(rows)==100
         assert [r["seq"] for r in rows]==list(range(first+start,first+start+100))
-        assert all(r["txt"]=="x"*4096 for r in rows)
+        assert all(r["txt"]=="x"*4000 for r in rows)
     # Same decompressed NDJSON, deliberately different gzip header.
     ack,_=client.request("POST",f"batches/{first}-{last}",gzip.compress(body,compresslevel=1,mtime=1),True)
     assert ack["published_upto"]>=last

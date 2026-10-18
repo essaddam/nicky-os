@@ -14,7 +14,12 @@ sont strictement contiguës ; aucune opération n’est reconstruite depuis une 
 Les limites sont de 5 000 opérations, 1 Mio compressé et 8 Mio décompressés. Les temps
 sont des entiers positifs en millisecondes UTC ; une heure énergie est alignée sur
 3 600 000 ms. Les identifiants de point/compteur sont des chaînes bornées, jamais des chemins.
-Les nombres doivent être finis ; un coût absent reste inconnu et ne devient pas zéro.
+Les nombres doivent être finis ; `i` accepte tout nombre fini entier, y compris au-delà
+de 2^53 (le cœur le conserve en REAL). Le texte `t` est borné à
+`moli_core::MAX_TEXT`, soit 4 000 caractères Unicode, et non 4 000 octets ; C2 applique
+cette borne avant d’écrire son journal immuable. Un coût absent reste inconnu et ne devient pas zéro.
+Les champs inconnus sont refusés : avant d’ajouter un champ exporté par le cœur,
+mettre à jour l’archive, puis le producteur.
 
 La clé d’idempotence est l’installation, les bornes et SHA-256 des octets NDJSON
 originaux après décompression (retours à la ligne compris). Le serveur calcule le hash.
@@ -87,10 +92,15 @@ Bearer obligatoire pour toutes les routes, jeton lu depuis un fichier secret. Bo
 par défaut ; sur VPS, TLS est assuré par le mandataire inverse et le port du service
 reste privé. Aucun jeton ou corps d’opération dans les journaux.
 
-Un travail de données à la fois, admission avant allocation du corps. Les dépassements de
-corps renvoient 413, entrées invalides 400, conflits 409, saturation 503. Une erreur I/O
-rend les mutations indisponibles jusqu’à réouverture, pour éviter de publier un état
-ambigu. Le statut reste rapide ; les limites de stockage et les générations conservées
-sont des erreurs explicites. La purge du détail relève d’E1.
+Une mutation lourde et une lecture bornée peuvent tourner en parallèle ; chacune a
+son permis distinct, acquis avant allocation du corps. Une publication ou un compactage
+ne prend pas le permis de lecture : celle-ci utilise le manifeste précédemment publié.
+Les dépassements de corps renvoient 413, entrées invalides 400, conflits 409,
+saturation du permis demandé 503. Chaque erreur 5xx est journalisée avec son code ;
+les erreurs de stockage et d’ouverture conservent leur chaîne de causes, sans jeton
+ni corps d’opération. Une archive empoisonnée fait sortir `serve` en erreur pour que
+`restart: unless-stopped` déclenche la réouverture et la récupération. Le statut reste
+rapide ; les limites de stockage et les générations conservées sont des erreurs
+explicites. La purge du détail relève d’E1.
 
 Les statistiques de somme dans les métadonnées de fichiers vérifient les lignes physiques. Elles ne se somment pas entre fichiers versionnés : les lectures et résumés résolvent d’abord la dernière version de chaque heure.

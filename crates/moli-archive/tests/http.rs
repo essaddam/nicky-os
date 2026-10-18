@@ -254,3 +254,97 @@ fn assert_energy_query(server: &Server) {
     assert_eq!(reply["series"][0]["values"][0]["known_cost_sum"], 0.3);
     assert_eq!(reply["series"][0]["values"][0]["coverage"], "unknown");
 }
+
+#[test]
+fn a_poisoned_archive_exits_serve_with_a_diagnostic() {
+    if std::env::var_os("ARCHIVE_TEST_URL").is_some() {
+        return; // Filesystem fault injection belongs to the local process fixture.
+    }
+    let mut server = Server::start();
+    let root = server.root.as_ref().unwrap();
+    let errors = root.join("errors.log");
+    // Replace the local process so its stderr is captured, never a real installation.
+    let process = server.process.as_mut().unwrap();
+    process.kill().unwrap();
+    process.wait().unwrap();
+    let token = root.join("token");
+    let process = std::process::Command::new(env!("CARGO_BIN_EXE_moli-archive"))
+        .args([
+            "serve",
+            "--installation",
+            INSTALL,
+            "--listen",
+            &server.address.to_string(),
+            "--token-file",
+            token.to_str().unwrap(),
+            "--data",
+            root.join("data").to_str().unwrap(),
+        ])
+        .stdout(std::process::Stdio::null())
+        .stderr(fs::File::create(&errors).unwrap())
+        .spawn()
+        .unwrap();
+    server.process = Some(process);
+    wait_ready(server.address);
+    fs::create_dir(root.join("data/.staging/receipt.ndjson")).unwrap();
+    let body = gzip(b"{\"type\":\"energy_hour\",\"seq\":1,\"meter\":\"demo.meter\",\"hour\":0,\"kwh\":1.0,\"cost\":null}\n");
+    let mut stream = TcpStream::connect(server.address).unwrap();
+    write!(stream, "POST /v1/installations/{INSTALL}/batches/1-1 HTTP/1.1\r\nHost: archive\r\nAuthorization: Bearer {TOKEN}\r\nContent-Encoding: gzip\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len()).unwrap();
+    stream.write_all(&body).unwrap();
+    let start = Instant::now();
+    let status = loop {
+        if let Some(status) = server.process.as_mut().unwrap().try_wait().unwrap() {
+            break status;
+        }
+        assert!(
+            start.elapsed() < Duration::from_secs(5),
+            "poisoned serve did not exit"
+        );
+        std::thread::sleep(Duration::from_millis(10));
+    };
+    assert!(!status.success());
+    let diagnostic = fs::read_to_string(errors).unwrap();
+    assert!(diagnostic.contains("Is a directory"), "{diagnostic}");
+    assert!(!diagnostic.contains(TOKEN));
+    assert!(!diagnostic.contains("demo.meter"));
+}
+
+#[test]
+fn opening_failures_report_their_cause_without_the_token() {
+    if std::env::var_os("ARCHIVE_TEST_URL").is_some() {
+        return;
+    }
+    let root = std::env::temp_dir().join(format!(
+        "moli-open-{}-{}",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    ));
+    let data = root.join("data");
+    drop(moli_archive::Archive::open(&data, INSTALL).unwrap());
+    let token = root.join("token");
+    fs::write(&token, "fixture-short").unwrap();
+    for (installation, expected) in [
+        (INSTALL, "invalid_token_file"),
+        ("00000000000000000000000000000003", "installation_mismatch"),
+    ] {
+        let result = std::process::Command::new(env!("CARGO_BIN_EXE_moli-archive"))
+            .args([
+                "serve",
+                "--installation",
+                installation,
+                "--listen",
+                "127.0.0.1:0",
+                "--token-file",
+                token.to_str().unwrap(),
+                "--data",
+                data.to_str().unwrap(),
+            ])
+            .output()
+            .unwrap();
+        assert!(!result.status.success());
+        let diagnostic = String::from_utf8(result.stderr).unwrap();
+        assert!(diagnostic.contains(expected), "{diagnostic}");
+        assert!(!diagnostic.contains("fixture-short"));
+    }
+    fs::remove_dir_all(root).unwrap();
+}

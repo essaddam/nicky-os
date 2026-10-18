@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Synthetic domestic load only; never run against an inhabited installation."""
-import argparse, gzip, http.client, json, math, statistics, sys, time
+import argparse, gzip, http.client, json, math, statistics, sys, time, threading
 from urllib.parse import urlsplit
 
 TOKEN = "fixture-archive-token-for-tests"
@@ -15,10 +15,11 @@ def encoded(value):
 
 
 class Client:
-    def __init__(self, url):
+    def __init__(self, url, retry_busy=True):
         target = urlsplit(url)
         assert target.scheme == "http" and target.hostname.startswith("moli-archive-c1-"), "isolated fixture only"
         self.host, self.port = target.hostname, target.port
+        self.retry_busy = retry_busy
         self.calls = 0
         self.ack_ms = []
         self.publish_ms = []
@@ -41,7 +42,7 @@ class Client:
                 self.calls += 1
                 assert len(raw) <= 1_048_576
                 value = json.loads(raw)
-                if reply.status == 503 and time.monotonic() - started < 30:
+                if reply.status == 503 and self.retry_busy and time.monotonic() - started < 30:
                     time.sleep(0.05)
                     continue
                 assert reply.status == 200, (reply.status, value)
@@ -139,6 +140,25 @@ def bench(client, name, action, repetitions=20):
     return reply, result
 
 
+def read_during_publication(url, days, stopped, proof):
+    """A single reader, with no busy retry hiding a failed admission."""
+    reader = Client(url, retry_busy=False)
+    try:
+        while not stopped.is_set():
+            before = reader.status()
+            target = before["durable_upto"]
+            if before["published_upto"] < target:
+                reply, elapsed = reader.query("samples", ["fixture.point.0000"], BASE,
+                                              BASE + days * DAY, "hour", 200)
+                if reply["published_upto"] < target:
+                    proof["times"].append(elapsed)
+                    if reply["series"][0]["values"]:
+                        proof["nonempty_reads"] += 1
+            stopped.wait(.02)
+    except Exception as error:
+        proof["error"] = repr(error)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", required=True)
@@ -148,6 +168,7 @@ def main():
     parser.add_argument("--energy-hours", type=int, default=128_000)
     parser.add_argument("--days", type=int, default=7)
     parser.add_argument("--stress-only", action="store_true")
+    parser.add_argument("--concurrent-reader", action="store_true")
     args = parser.parse_args()
     assert 1 <= args.points <= 4095 and args.samples >= args.points and args.meters > 0
     client = Client(args.url)
@@ -159,6 +180,13 @@ def main():
     started = time.monotonic()
     if not args.stress_only:
         durable = client.status()["durable_upto"]
+        proof = {"times": [], "nonempty_reads": 0}
+        stopped = threading.Event()
+        reader = None
+        if args.concurrent_reader:
+            reader = threading.Thread(target=read_during_publication,
+                                      args=(args.url, args.days, stopped, proof), daemon=True)
+            reader.start()
         batch = []
         for op in operations(args.points, args.samples, args.meters, args.energy_hours, args.days):
             if op["seq"] <= durable:
@@ -172,6 +200,15 @@ def main():
                 batch = []
         if batch:
             client.send(batch)
+        stopped.set()
+        if reader:
+            reader.join(timeout=35)
+            assert not reader.is_alive(), "reader did not stop"
+            assert "error" not in proof, proof
+            assert proof["nonempty_reads"] > 0, proof
+            print(json.dumps({"phase": "concurrent_read_proof", "busy_retries": 0,
+                              "nonempty_reads": proof["nonempty_reads"],
+                              **quantiles(proof["times"])}), flush=True)
         final = client.status()
         assert final["published_upto"] >= args.samples + args.energy_hours
         print(json.dumps({"phase": "fixture_complete", "samples": args.samples, "energy_hours": args.energy_hours,
@@ -198,7 +235,7 @@ def main():
         for index in range(1800):
             seq += 1
             text.append({"type": "sample", "seq": seq, "point": "fixture.text", "ts": BASE + index,
-                         "kind": "t", "num": None, "txt": "x" * 4096})
+                         "kind": "t", "num": None, "txt": "x" * 4000})
         client.send(text)
         reply, _ = client.query("samples", ["fixture.stable"], 1_483_228_800_000, 1_483_232_400_000, "hour", 200)
         assert reply["series"][0]["values"][0]["stat"]["aggregate"]["mean"] == 10.0
