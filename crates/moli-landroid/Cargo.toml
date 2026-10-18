@@ -1,0 +1,30 @@
+[package]
+name = "moli-landroid"
+description = "Moli OS Worx Landroid: robotic mowers through the Worx cloud (OAuth, MQTT over websockets): start, pause, home, rain delay, schedule, state, battery, errors."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+moli-i18n.workspace = true
+anyhow.workspace = true
+bytes.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+jiff.workspace = true
+moli-core.workspace = true
+moli-net.workspace = true
+moli-runtime.workspace = true
+ring.workspace = true
+rumqttc.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tokio-util.workspace = true

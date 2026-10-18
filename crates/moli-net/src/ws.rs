@@ -1,7 +1,9 @@
 //! A minimal WebSocket client (RFC 6455) over TLS, pinned for appliances
 //! that speak JSON over a websocket (Sonos audio clips), public CAs for
-//! cloud feeds (Tuya's message service). Text messages only; pings are
-//! answered; anything else ends the conversation.
+//! cloud feeds (Tuya's message service, a mower's MQTT over websockets).
+//! Text messages, and binary ones through [`WebSocket::send_binary`] /
+//! [`WebSocket::recv_data`]; pings are answered; anything else ends the
+//! conversation.
 
 use std::fmt::Write as _;
 use std::sync::Arc;
@@ -27,6 +29,10 @@ pub struct WebSocket {
     stream: TlsStream<TcpStream>,
     /// Bytes read but not yet consumed (a frame split across reads).
     buf: Vec<u8>,
+    /// A data message whose first fragments arrived ([`WebSocket::recv_data`]).
+    partial: Vec<u8>,
+    /// A ping heard by [`WebSocket::recv_data`], answered at the next send.
+    pong: Option<Vec<u8>>,
 }
 
 impl std::fmt::Debug for WebSocket {
@@ -125,11 +131,50 @@ impl WebSocket {
             "bad websocket accept key"
         );
         buf.drain(..end);
-        Ok(Self { stream, buf })
+        Ok(Self {
+            stream,
+            buf,
+            partial: Vec::new(),
+            pong: None,
+        })
     }
 
     pub async fn send_text(&mut self, text: &str) -> anyhow::Result<()> {
         self.send(0x1, text.as_bytes()).await
+    }
+
+    /// Sends one binary message (MQTT over websockets), after the answer to
+    /// a ping [`WebSocket::recv_data`] heard.
+    pub async fn send_binary(&mut self, data: &[u8]) -> anyhow::Result<()> {
+        if let Some(pong) = self.pong.take() {
+            self.send(0xA, &pong).await?;
+        }
+        self.send(0x2, data).await
+    }
+
+    /// The next data message, text or binary, as bytes. Cancel-safe: it
+    /// never writes (a ping is answered at the next [`WebSocket::send_binary`])
+    /// and keeps what it read, so it can sit in a `select!` beside writes.
+    pub async fn recv_data(&mut self) -> anyhow::Result<Vec<u8>> {
+        loop {
+            let (fin, opcode, payload) = self.frame().await?;
+            match opcode {
+                0x0..=0x2 => {
+                    ensure!(
+                        self.partial.len() + payload.len() <= MAX_MESSAGE,
+                        "message too large"
+                    );
+                    self.partial.extend_from_slice(&payload);
+                    if fin {
+                        return Ok(std::mem::take(&mut self.partial));
+                    }
+                }
+                0x9 => self.pong = Some(payload),
+                0xA => {}
+                0x8 => bail!("the server closed the websocket"),
+                other => bail!("unexpected websocket frame {other:#x}"),
+            }
+        }
     }
 
     /// Keeps a quiet connection alive (the answer is skipped on receive).
@@ -202,6 +247,8 @@ impl WebSocket {
         Ok(())
     }
 
+    /// One frame. Cancel-safe: nothing leaves `buf` until the whole frame is
+    /// there, and nothing is awaited after.
     async fn frame(&mut self) -> anyhow::Result<(bool, u8, Vec<u8>)> {
         self.fill(2).await?;
         let (b0, b1) = (self.buf[0], self.buf[1]);

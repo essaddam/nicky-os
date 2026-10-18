@@ -376,6 +376,55 @@ name = "Bambu A1"              # optionnel
 - **Pièges** : certificat épinglé au premier contact, **avant** l'envoi du code ; imprimante souvent éteinte (prise connectée) : nouvel essai d'épinglage chaque minute, puis pause de 30 s entre reconnexions. Les rapports sont des **deltas** fusionnés dans le dernier état ; rapport complet (`pushall`) demandé toutes les 5 min. Ne jamais journaliser les `MqttOptions` (le `Debug` affiche le mot de passe).
 - **Tests** : rapport fusionné → points.
 
+## `landroid` : tondeuses Worx Landroid (`crates/moli-landroid`)
+
+- **Couvre** : les tondeuses Landroid **filaires** (protocole 0 du cloud Worx, dont la L1000
+  WR147E.1). Les modèles Vision (protocole 1) sont ignorés. Paquet `integrations/landroid`.
+- **Protocole** : cloud Worx seulement (la tondeuse n'a pas d'API locale). Session OAuth du
+  compte (`id.worx.com`, client public de l'appli), liste des tondeuses
+  (`api.worxlandroid.com/api/v2/product-items`) à la connexion seulement (30 min au moins
+  entre deux lectures), puis **MQTT 3.1.1 sur websocket** (`moli-net::ws`, messages binaires)
+  vers le broker que nomme le compte, accepté seulement sous `worxlandroid.com` ; le jeton
+  d'accès voyage dans le nom d'utilisateur (autorisation personnalisée AWS IoT). État en
+  direct sur le sujet `commandOut` de chaque tondeuse (sujets vérifiés : sans joker), ordres
+  sur `commandIn`. Paquets codés par le codec de `rumqttc` (aucune dépendance nouvelle).
+- **Configuration** : aucune option.
+
+```toml
+[[driver]]
+id = "tondeuse"
+kind = "landroid"
+```
+
+- **Secrets** : `username`, `password` (le compte Worx, posés par l'humain). Refusés : statut
+  `waiting`, et plus aucun essai avant un redémarrage (Worx bloque les comptes qui insistent).
+  « Trop d'appels » (429) : une heure d'attente. La session survit aux redémarrages du pilote
+  et se renouvelle par son jeton de rafraîchissement 5 min avant sa fin, puis le pilote se
+  reconnecte au broker avec le nouveau jeton (entre deux ordres).
+- **Points** : `control` (écriture seule, `start`, `pause`, `home`, sémantique `control`),
+  `state`, `error`, `battery` (%), `charging`, `battery_temperature`, `rain_delay` (0 à
+  1 440 min, écrivable, sémantique `config`), `rain`, `rain_remaining`, `schedule` (`active`,
+  `off`, `party`, écrivable, sémantique `control` : un planning rallumé fait partir la
+  tondeuse plus tard), `schedule_week` (texte : les tontes de la semaine), `wifi_signal`,
+  `blade_hours`, `mowing_hours`.
+- **Ordres** : file de 4 au plus derrière un seul ordre en vol, dans l'ordre reçu ; revérifié
+  juste avant de partir (appelant présent, avant l'échéance absolue) ; publié **une fois** en
+  QoS 1 (jamais rejoué, session MQTT propre : rien ne repart après une reconnexion). Accusé du
+  broker → fait ; pas d'accusé 400 ms avant l'échéance du hub → « peut-être parti, non
+  confirmé » ; liaison perdue → « peut-être parti » (ordre en vol) ou « non envoyé » (file).
+  Sans liaison, un ordre est refusé tout de suite. L'effet est suivi : sans état de la
+  tondeuse dans la minute, une notice prévient la maison.
+- **Identité** : numéro de série. Nom = nom Worx, borné à 64 caractères. Au plus 8 tondeuses
+  par compte.
+- **Pièges** : le broker coupe la connexion à l'expiration du jeton ; le pilote se reconnecte
+  avant. Deux clients au même identifiant se chassent l'un l'autre : suffixe aléatoire à
+  chaque connexion. Un statut qui nomme un autre numéro de série est ignoré.
+- **Tests** : `src/model.rs` sur les fixtures reconstruites (inventaire, réponses hostiles,
+  états, planning, ordres, nom d'utilisateur) ; `src/mqtt.rs` contre un broker en mémoire ;
+  `src/tests.rs` : la vraie boucle avec le vrai hub (ordre unique et accusé, file dans
+  l'ordre, ordre abandonné jamais parti, file pleine, liaison perdue sans rejeu, accusé absent
+  répondu à temps, garde) ; `src/cloud.rs` : session, refus, reconnexion.
+
 ## `moonraker` : imprimantes 3D Klipper (`crates/moli-moonraker`)
 
 - **Couvre** : toute imprimante Klipper avec l'API Moonraker (vue sur un Snapmaker U1 ; Voron, Prusa sous Klipper…). Paquet `integrations/klipper` ; le profil `moonraker` (lecture seule) reste pour qui n'a besoin que de l'état.
@@ -681,6 +730,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `hue` | `moli-hue` | HTTPS CLIP v2 + SSE, local, épinglé | oui : lumières, pièces ; zones non | pont Philips Hue (CLIP v2) |
 | `igd` | `moli-igd` | UPnP IGD (SSDP + SOAP) | non | Livebox |
 | `ipp` | `moli-ipp` | IPP 2.0 HTTP 631 | identifier, annuler, imprimer (tableau de bord) | Canon MG3600 |
+| `landroid` | `moli-landroid` | cloud Worx : OAuth + MQTT sur websocket | `control` (humain pour un agent), délai de pluie, planning | pas encore (cible : Landroid L1000) |
 | `lumieres` (interne) | `moli-lights` | aucun (lit et commande d'autres appareils via le hub) | oui | ampoules Hue derrière un relais |
 | `moonraker` | `moli-moonraker` | HTTP local 7125 | lumière, `control` (humain pour un agent) | Snapmaker U1 |
 | `netatmo` | `moli-netatmo` | HTTPS fournisseur, OAuth humain `read_station` | non | pas encore ; contrats synthétiques seulement, qualification après H1 |

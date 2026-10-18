@@ -892,6 +892,7 @@ const KINDS: &[&str] = &[
     "hue",
     "igd",
     "ipp",
+    "landroid",
     "moonraker",
     "netatmo",
     "nuki",
@@ -1093,6 +1094,9 @@ fn build_driver(
             config.options.clone().try_into().with_context(context)?,
         )),
         "ipp" => Arc::new(moli_ipp::Ipp::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "landroid" => Arc::new(moli_landroid::Landroid::new(
             config.options.clone().try_into().with_context(context)?,
         )),
         "moonraker" => Arc::new(moli_moonraker::Moonraker::new(

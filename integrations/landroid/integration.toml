@@ -1,0 +1,36 @@
+[integration]
+id = "landroid"
+name = "Tondeuse Worx Landroid (cloud Worx)"
+# Wire models speaking protocol 0 (L1000 WR147E.1 among them). Vision
+# models (protocol 1) are left out.
+brands = ["Worx"]
+models = ["Landroid L1000 (WR147E.1)", "Landroid (protocole 0)"]
+transport = "mqtt"
+driver = "landroid"
+crate = "moli-landroid"
+
+[discovery]
+# No discovery: everything comes from the Worx account. The addresses are
+# fixed in the driver (id.worx.com, api.worxlandroid.com); the broker the
+# account names must be under worxlandroid.com.
+mdns = []
+ssdp = []
+ports = [443]
+
+[needs]
+# The Worx account (the one of the Landroid app), given by a human.
+secrets = ["username", "password"]
+vars = []
+options = []
+
+[origin]
+reused = "aucun code repris : protocole d'après la bibliothèque publique pyworxcloud (GPL-3.0) et l'intégration landroid_cloud de HA, lus pour leurs faits (adresses, client OAuth public, sujets, codes d'état et d'erreur), réécrits en Rust"
+author = "agent"
+
+# Replayed by the crate's tests (crates/moli-landroid/src/model.rs).
+# Reconstructed: fictitious serials, address and account.
+[[fixture]]
+file = "fixtures/product-items.json"
+
+[[fixture]]
+file = "fixtures/status-mowing.json"

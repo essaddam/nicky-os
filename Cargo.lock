@@ -1587,6 +1587,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-landroid"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "http",
+ "http-body-util",
+ "jiff",
+ "moli-core",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "ring",
+ "rumqttc",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
 name = "moli-lights"
 version = "0.1.0"
 dependencies = [
@@ -1711,6 +1733,7 @@ dependencies = [
  "moli-i18n",
  "moli-igd",
  "moli-ipp",
+ "moli-landroid",
  "moli-lights",
  "moli-moonraker",
  "moli-net",

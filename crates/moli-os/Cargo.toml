@@ -27,6 +27,7 @@ moli-samsung.workspace = true
 moli-bambu.workspace = true
 moli-esphome.workspace = true
 moli-alexa.workspace = true
+moli-landroid.workspace = true
 moli-moonraker.workspace = true
 moli-nuki.workspace = true
 moli-overkiz.workspace = true

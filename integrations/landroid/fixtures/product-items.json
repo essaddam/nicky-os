@@ -1,0 +1,92 @@
+[
+  {
+    "id": 101,
+    "uuid": "00000000-0000-4000-8000-000000000001",
+    "serial_number": "20000000000000000001",
+    "mac_address": "AABBCCDDEEFF",
+    "name": "Tondeuse",
+    "user_id": 12345,
+    "product_id": 47,
+    "protocol": 0,
+    "online": true,
+    "firmware_version": "3.30",
+    "mqtt_endpoint": "iot.eu-west-1.worxlandroid.com",
+    "mqtt_topics": {
+      "command_in": "PRM100/AABBCCDDEEFF/commandIn",
+      "command_out": "PRM100/AABBCCDDEEFF/commandOut"
+    },
+    "last_status": {
+      "timestamp": "2026-10-01 08:00:00",
+      "payload": {
+        "cfg": {
+          "id": 4242,
+          "lg": "fr",
+          "tm": "10:00:00",
+          "dt": "01/10/2026",
+          "sc": {
+            "m": 1,
+            "p": 0,
+            "d": [
+              ["00:00", 0, 0],
+              ["10:00", 300, 1],
+              ["00:00", 0, 0],
+              ["10:00", 120, 0],
+              ["00:00", 0, 0],
+              ["14:30", 90, 0],
+              ["00:00", 0, 0]
+            ]
+          },
+          "cmd": 0,
+          "mz": [0, 0, 0, 0],
+          "mzv": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "rd": 60,
+          "sn": "20000000000000000001"
+        },
+        "dat": {
+          "mac": "AABBCCDDEEFF",
+          "fw": 3.3,
+          "bt": { "t": 18.5, "v": 20.1, "p": 87, "nr": 512, "c": 1, "m": 1 },
+          "dmp": [1.2, -0.4, 180.0],
+          "st": { "b": 30000, "d": 1500000, "wt": 36000 },
+          "ls": 1,
+          "le": 0,
+          "lz": 0,
+          "rsi": -61,
+          "lk": 0,
+          "rain": { "s": 0, "cnt": 0 },
+          "conn": "wifi"
+        }
+      }
+    }
+  },
+  {
+    "id": 102,
+    "uuid": "00000000-0000-4000-8000-000000000002",
+    "serial_number": "20000000000000000002",
+    "mac_address": "__UUID__",
+    "name": "Vision",
+    "user_id": 12345,
+    "product_id": 90,
+    "protocol": 1,
+    "online": true,
+    "mqtt_endpoint": "iot.eu-west-1.worxlandroid.com",
+    "mqtt_topics": {
+      "command_in": "RV0000/00000000-0000-4000-8000-000000000002/commandIn",
+      "command_out": "RV0000/00000000-0000-4000-8000-000000000002/commandOut"
+    }
+  },
+  {
+    "id": 103,
+    "serial_number": "20000000000000000003",
+    "mac_address": "AABBCCDDEE00",
+    "name": "Ailleurs",
+    "user_id": 12345,
+    "protocol": 0,
+    "online": true,
+    "mqtt_endpoint": "broker.example.org",
+    "mqtt_topics": {
+      "command_in": "PRM100/AABBCCDDEE00/commandIn",
+      "command_out": "PRM100/AABBCCDDEE00/#"
+    }
+  }
+]

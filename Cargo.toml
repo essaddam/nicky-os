@@ -33,6 +33,7 @@ moli-frigate = { path = "crates/moli-frigate" }
 moli-philips = { path = "crates/moli-philips" }
 moli-tapo = { path = "crates/moli-tapo" }
 moli-igd = { path = "crates/moli-igd" }
+moli-landroid = { path = "crates/moli-landroid" }
 moli-ipp = { path = "crates/moli-ipp" }
 moli-assistant = { path = "crates/moli-assistant" }
 moli-automation = { path = "crates/moli-automation" }
@@ -57,6 +58,7 @@ aes = "0.8"
 anyhow = "1"
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "query", "tokio", "macros"] }
 base64 = "0.23"
+bytes = "1"
 crc32fast = "1"
 earshot = "1.2"
 symphonia-bundle-flac = "0.6"
