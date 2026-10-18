@@ -25,6 +25,11 @@ pub fn writer(path: &str, seed: u64) -> R<()> {
     let (_db, c) = open(path)?;
     exec(&c, TARGET)?;
     exec(&c, "PRAGMA synchronous = FULL")?;
+    exec(&c, "BEGIN")?;
+    for point in 0..97i64 {
+        block_on(c.execute("INSERT OR IGNORE INTO catalog (id, point, family) VALUES (?1, ?2, 'other')", (point, format!("crash:{point}/value"))))?;
+    }
+    exec(&c, "COMMIT")?;
     let mut rng = Lcg(seed);
     let stdout = std::io::stdout();
     for tx in 0u64.. {
@@ -39,15 +44,15 @@ pub fn writer(path: &str, seed: u64) -> R<()> {
                 let (day, month) = local_day_month(hour, 2 * H);
                 block_on(c.execute(TOTAL_UPSERT, ("day", day, meter, ENERGY_STEP, None::<f64>)))?;
                 block_on(c.execute(TOTAL_UPSERT, ("month", month, meter, ENERGY_STEP, None::<f64>)))?;
-                block_on(c.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_ENERGY_HOUR, id)))?;
                 block_on(c.execute(
                     "INSERT INTO meter_state (id, meter, last_kwh, last_ts, first_ts) VALUES (?1, 'm' || ?1, ?2, ?3, ?3)
                      ON CONFLICT (id) DO UPDATE SET last_kwh = last_kwh + excluded.last_kwh, last_ts = excluded.last_ts",
                     (meter, ENERGY_STEP, seq),
                 ))?;
+                crate::journal::append(&c, seq, OP_ENERGY_HOUR, id)?;
             } else {
                 block_on(c.execute(SAMPLE_INSERT, (seq % 97, seq, seq, seq as f64)))?;
-                block_on(c.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_SAMPLE, key(seq % 97, seq))))?;
+                crate::journal::append(&c, seq, OP_SAMPLE, key(seq % 97, seq))?;
             }
         }
         block_on(c.execute("UPDATE meta SET next_seq = ?1", (next + k,)))?;
@@ -77,6 +82,7 @@ fn verify(path: &str, reported: i64) -> R<(Check, f64)> {
     let last = next - 1;
     let outbox = one(&c, "SELECT count(*) FROM outbox", ())?;
     let max_seq = one(&c, "SELECT coalesce(max(seq), 0) FROM outbox", ())?;
+    let journal = one(&c, "SELECT count(*) FROM export_journal", ())?;
     let samples = one(&c, "SELECT count(*) FROM samples", ())?;
     let linked = one(
         &c,
@@ -100,7 +106,7 @@ fn verify(path: &str, reported: i64) -> R<(Check, f64)> {
     let integrity = rows(&c, "PRAGMA integrity_check", ())?;
     let integrity_ok = matches!(integrity.first().and_then(|r| r.first()), Some(turso::Value::Text(t)) if t == "ok");
     let ok = last >= reported
-        && outbox == last
+        && outbox == last && journal == last
         && max_seq == last
         && samples == last - expected_energy_ops
         && linked == samples
@@ -113,7 +119,7 @@ fn verify(path: &str, reported: i64) -> R<(Check, f64)> {
             ok,
             detail: json!({
                 "reported_committed": reported, "recovered_last_seq": last,
-                "outbox": outbox, "samples": samples, "linked": linked,
+                "outbox": outbox, "journal": journal, "samples": samples, "linked": linked,
                 "energy_ops": energy_ops, "energy_consistent": energy_consistent, "integrity": integrity_ok,
             }),
         },
@@ -127,6 +133,7 @@ fn verify_with_sqlite(path: &str, reported: i64) -> R<Check> {
     let l = Sqlite::open(path)?;
     let next: i64 = l.query_row("SELECT next_seq FROM meta", [], |r| r.get(0))?;
     let outbox: i64 = l.query_row("SELECT count(*) FROM outbox", [], |r| r.get(0))?;
+    let journal: i64 = l.query_row("SELECT count(*) FROM export_journal", [], |r| r.get(0))?;
     let integrity: String = l.query_row("PRAGMA integrity_check", [], |r| r.get(0))?;
     let consistent: i64 = l.query_row(
         "SELECT count(*) FROM meter_state m WHERE abs(m.last_kwh - (SELECT total(kwh) FROM energy_hour e WHERE e.meter_id = m.id)) > 1e-6
@@ -135,12 +142,13 @@ fn verify_with_sqlite(path: &str, reported: i64) -> R<Check> {
         |r| r.get(0),
     )?;
     Ok(Check {
-        ok: next - 1 >= reported && outbox == next - 1 && integrity == "ok" && consistent == 0,
-        detail: json!({ "reported_committed": reported, "recovered_last_seq": next - 1, "outbox": outbox, "integrity": integrity, "inconsistent_meters": consistent }),
+        ok: next - 1 >= reported && outbox == next - 1 && journal == next - 1 && integrity == "ok" && consistent == 0,
+        detail: json!({ "reported_committed": reported, "recovered_last_seq": next - 1, "outbox": outbox, "journal": journal, "integrity": integrity, "inconsistent_meters": consistent }),
     })
 }
 
 pub fn run(dir: &str, iterations: u32) -> R<()> {
+    if iterations == 0 { return Err("au moins une reprise Turso est requise".into()) }
     std::fs::create_dir_all(dir)?;
     let path = format!("{dir}/crash.db");
     remove_db(&path);
@@ -190,6 +198,7 @@ pub fn run(dir: &str, iterations: u32) -> R<()> {
             emit(&json!({ "test": "crash_recovery_read_by_sqlite", "pass": check.ok, "detail": check.detail }));
             let (after, _) = verify(&path, reported)?;
             emit(&json!({ "test": "turso_reopens_after_sqlite_recovery", "pass": after.ok, "detail": after.detail }));
+            if !after.ok { failures.push(json!({"iteration": it, "after_sqlite": true})); }
         }
     }
     let (_db, c) = open(&path)?;
@@ -206,6 +215,7 @@ pub fn run(dir: &str, iterations: u32) -> R<()> {
         "kill_delay_ms": quantiles(&mut killed_after),
         "checks": "séquence validée annoncée ≤ séquence relue ; outbox contiguë 1..n ; chaque échantillon lié à son entrée d'outbox ; heures, totaux de jour et de mois et meter_state égaux (même transaction) ; integrity_check",
     }));
+    if !failures.is_empty() { return Err("invariants après arrêt brutal non vérifiés".into()); }
     Ok(())
 }
 

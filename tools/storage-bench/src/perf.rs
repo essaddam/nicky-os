@@ -128,7 +128,7 @@ pub fn load(s: &Shape, path: &str) -> R<()> {
             if added == 0 {
                 return Err(format!("point {point} : deux relevés à {ts} ms").into());
             }
-            block_on(c.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_SAMPLE, key(i(point), i(ts)))))?;
+            crate::journal::append(&c, seq, OP_SAMPLE, key(i(point), i(ts)))?;
             seq += 1;
             in_tx += 1;
             if in_tx == LOAD_BATCH {
@@ -182,7 +182,7 @@ pub fn load(s: &Shape, path: &str) -> R<()> {
             let (kwh, cost) = energy_amount(hour, meter);
             block_on(c.execute(ENERGY_UPSERT, (i(meter), i(hour), kwh, cost, seq)))?;
             let id = hour_key(i(meter), i(hour));
-            block_on(c.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_ENERGY_HOUR, id)))?;
+            crate::journal::append(&c, seq, OP_ENERGY_HOUR, id)?;
             let (day, month) = local_day_month(i(hour), offset);
             for k in [("day", day, meter), ("month", month, meter)] {
                 let e = totals.entry(k).or_default();
@@ -439,41 +439,17 @@ fn same_totals(a: &Json, b: &Json) -> bool {
         })
 }
 
-fn text(v: &Value) -> String {
-    match v {
-        Value::Text(t) => t.clone(),
-        _ => String::new(),
-    }
-}
-
 /// Un lot d'export du contrat : `n` opérations consécutives depuis `after`,
 /// échantillons et heures d'énergie, autonomes (point ou compteur nommé),
 /// encodées en NDJSON.
+pub(crate) fn export_ndjson(c: &Connection, after: i64, n: i64) -> R<Vec<u8>> {
+    crate::journal::body(c, after, n)
+}
+
 fn export_batch(c: &Connection, after: i64, n: i64) -> R<Shape_> {
-    let samples = rows(
-        c,
-        "SELECT o.seq, c.point, s.ts, s.kind, s.num, s.txt FROM outbox o JOIN samples s ON s.id = o.ref
-         JOIN catalog c ON c.id = s.point_id
-         WHERE o.kind = 1 AND o.seq > ?1 AND o.seq <= ?2 ORDER BY o.seq",
-        (after, after + n),
-    )?;
-    let energy = rows(
-        c,
-        "SELECT o.seq, m.meter, e.hour, e.kwh, e.cost FROM outbox o JOIN energy_hour e ON e.id = o.ref
-         JOIN meter_state m ON m.id = e.meter_id
-         WHERE o.kind = 2 AND o.seq > ?1 AND o.seq <= ?2 ORDER BY o.seq",
-        (after, after + n),
-    )?;
-    let mut body = Vec::new();
-    for r in &samples {
-        serde_json::to_writer(&mut body, &json!({"seq": int(&r[0]), "point": text(&r[1]), "ts": int(&r[2]), "v": sample_json(&[r[2].clone(), r[3].clone(), r[4].clone(), r[5].clone()])[1]}))?;
-        body.push(b'\n');
-    }
-    for r in &energy {
-        serde_json::to_writer(&mut body, &json!({"seq": int(&r[0]), "meter": text(&r[1]), "hour": int(&r[2]), "kwh": real(&r[3]), "cost": real(&r[4])}))?;
-        body.push(b'\n');
-    }
-    Ok(Shape_ { scanned: (samples.len() + energy.len()) as u64, emitted: (samples.len() + energy.len()) as u64, bytes: body.len() })
+    let body = export_ndjson(c, after, n)?;
+    let count = body.iter().filter(|b| **b == b'\n').count() as u64;
+    Ok(Shape_ { scanned: count, emitted: count, bytes: body.len() })
 }
 
 fn bench(name: &str, n: usize, mut action: impl FnMut() -> R<Shape_>) -> R<()> {
@@ -538,13 +514,47 @@ pub fn reads(s: &Shape, path: &str) -> R<()> {
     bench("energy_summary_two_month_window", 30, || summary(&c, s).map(|x| x.0))?;
     bench("energy_summary_from_totals", 100, || summary_from_totals(&c, s).map(|x| x.0))?;
     let (window, totals) = (summary(&c, s)?.1, summary_from_totals(&c, s)?.1);
-    emit(&json!({"test": "summary_window_equals_totals", "pass": same_totals(&window, &totals) && window["today"].as_object().is_some_and(|m| !m.is_empty())}));
+    let totals_pass = same_totals(&window, &totals) && window["today"].as_object().is_some_and(|m| !m.is_empty());
+    emit(&json!({"test": "summary_window_equals_totals", "pass": totals_pass}));
+    if !totals_pass { return Err("les résumés d'énergie divergent".into()) }
     let next = one(&c, "SELECT next_seq FROM meta", ())?;
+    let first_energy = one(&c, "SELECT min(seq) FROM outbox WHERE kind = 2", ())?;
+    let sample_rows = first_energy - 1;
+    let energy_rows = next - first_energy;
+    if sample_rows < 5_000 || energy_rows < 5_000 {
+        return Err("le jeu doit couvrir un lot complet de chaque famille".into());
+    }
     let mut offset = 0i64;
-    bench("export_batch_5000_ops", 20, || {
-        offset = (offset + 104_729) % (next - 5_001).max(1);
+    bench("export_samples_batch_5000_ops", 20, || {
+        offset = (offset + 104_729) % (sample_rows - 4_999);
         export_batch(&c, offset, 5_000)
     })?;
+    let mut offset = 0i64;
+    bench("export_energy_batch_5000_ops", 20, || {
+        offset = (offset + 7_919) % (energy_rows - 4_999);
+        export_batch(&c, first_energy - 1 + offset, 5_000)
+    })?;
+    bench("export_mixed_batch_5000_ops", 20, || export_batch(&c, first_energy - 2_501, 5_000))?;
+    let count_types = |after: i64| -> R<(usize, usize)> {
+        let body = export_ndjson(&c, after, 5_000)?;
+        let (mut samples, mut energy) = (0, 0);
+        for line in body.split(|b| *b == b'\n').filter(|line| !line.is_empty()) {
+            let operation: Json = serde_json::from_slice(line)?;
+            match operation["type"].as_str() {
+                Some("sample") => samples += 1,
+                Some("energy_hour") => energy += 1,
+                _ => return Err("opération d'export inconnue".into()),
+            }
+        }
+        Ok((samples, energy))
+    };
+    let sample_batch = count_types(0)?;
+    let energy_batch = count_types(first_energy - 1)?;
+    let mixed_batch = count_types(first_energy - 2_501)?;
+    let coverage = sample_batch == (5_000, 0) && energy_batch == (0, 5_000) && mixed_batch == (2_500, 2_500);
+    emit(&json!({"test": "export_batches_cover_samples_and_energy", "pass": coverage,
+                 "samples_only": sample_batch, "energy_only": energy_batch, "mixed": mixed_batch}));
+    if !coverage { return Err("couverture des lots d'export incorrecte".into()) }
     emit(&json!({"phase": "reads_done", "memory": memory()}));
     Ok(())
 }
@@ -587,7 +597,7 @@ pub fn burst(s: &Shape, path: &str, rate: u64) -> R<()> {
                         let (day, month) = local_day_month(hour, offset);
                         block_on(w.execute(TOTAL_UPSERT, ("day", day, meter, 0.001, Some(0.0002))))?;
                         block_on(w.execute(TOTAL_UPSERT, ("month", month, meter, 0.001, Some(0.0002))))?;
-                        block_on(w.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_ENERGY_HOUR, id)))?;
+                        crate::journal::append(&w, seq, OP_ENERGY_HOUR, id)?;
                         block_on(w.execute(
                             "UPDATE meter_state SET last_kwh = last_kwh + 0.001, last_ts = ?2 WHERE id = ?1",
                             (meter, i(end)),
@@ -598,7 +608,7 @@ pub fn burst(s: &Shape, path: &str, rate: u64) -> R<()> {
                         let point = if k % 10 == 1 { busy_id } else { 1 + seq % i(points) };
                         let ts = i(end) + seq - first_seq;
                         block_on(w.execute(SAMPLE_INSERT, (point, ts, seq, 200.0)))?;
-                        block_on(w.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_SAMPLE, key(point, ts))))?;
+                        crate::journal::append(&w, seq, OP_SAMPLE, key(point, ts))?;
                     }
                     seq += 1;
                 }
@@ -655,8 +665,18 @@ pub fn burst(s: &Shape, path: &str, rate: u64) -> R<()> {
 pub fn purge(s: &Shape, path: &str) -> R<()> {
     let (_db, c) = open(path)?;
     let next = one(&c, "SELECT next_seq FROM meta", ())?;
-    block_on(c.execute("UPDATE archive_ack SET durable_upto = ?1, published_upto = ?1, generation = 1", (next - 1,)))?;
     let published = next - 1;
+    let acknowledged_at = i(s.raw_fixture_end_ms);
+    let ack_started = Instant::now();
+    let mut upto = 0;
+    while upto < published {
+        upto = (upto + 5_000).min(published);
+        crate::journal::acknowledge(&c, 1, upto, upto, acknowledged_at)?;
+    }
+    let ack_ms = ms(ack_started);
+    let pending_after_ack = one(&c, "SELECT count(*) FROM outbox", ())?;
+    let protected_deleted = crate::journal::prune(&c, acknowledged_at, 10_000)?;
+    let retained = one(&c, "SELECT count(*) FROM export_journal", ())?;
     let cutoff = i(s.raw_fixture_end_ms - 6 * DAY);
     let before_bytes = file_size(path);
     let points: Vec<i64> = rows(&c, "SELECT id FROM catalog ORDER BY id", ())?.iter().map(|r| int(&r[0])).collect();
@@ -689,28 +709,36 @@ pub fn purge(s: &Shape, path: &str) -> R<()> {
     let with_anchor = left.iter().filter(|r| int(&r[0]) == 1).count() as i64;
     let with_extra = left.iter().filter(|r| int(&r[0]) > 1).count();
     let started = Instant::now();
-    let mut outbox_times = Vec::new();
-    let mut from = 0i64;
-    let mut outbox_deleted = 0u64;
-    while from < published {
+    let mut journal_times = Vec::new();
+    let mut journal_deleted = 0u64;
+    loop {
         let t = Instant::now();
-        outbox_deleted += block_on(c.execute("DELETE FROM outbox WHERE seq > ?1 AND seq <= ?2", (from, (from + 10_000).min(published))))?;
-        outbox_times.push(ms(t));
-        from += 10_000;
+        let deleted = crate::journal::prune(&c, acknowledged_at + crate::journal::REPLAY_WINDOW_MS + 1, 10_000)?;
+        if deleted == 0 { break }
+        journal_deleted += deleted;
+        journal_times.push(ms(t));
     }
-    let outbox_ms = ms(started);
+    let journal_ms = ms(started);
+    let floor = one(&c, "SELECT replay_floor FROM archive_ack", ())?;
+    let journal_pass = pending_after_ack == 0 && protected_deleted == 0 && retained == published
+        && journal_deleted as i64 == published && floor == published;
+    let anchors_pass = with_anchor == anchored && with_extra == 0;
     let t = Instant::now();
     rows(&c, "PRAGMA wal_checkpoint(TRUNCATE)", ())?;
     emit(&json!({
         "phase": "purge",
         "samples_deleted": deleted, "points": points.len(), "samples_ms": samples_ms,
         "per_point_tx": quantiles(&mut tx_times),
-        "anchors": {"points_with_data_before_cutoff": anchored, "kept_exactly_one": with_anchor, "kept_more": with_extra, "pass": with_anchor == anchored && with_extra == 0},
-        "outbox_deleted": outbox_deleted, "outbox_ms": outbox_ms, "outbox_chunk_10k": quantiles(&mut outbox_times),
+        "anchors": {"points_with_data_before_cutoff": anchored, "kept_exactly_one": with_anchor, "kept_more": with_extra, "pass": anchors_pass},
+        "outbox_deleted": published, "outbox_ms": ack_ms,
+        "journal_deleted": journal_deleted, "journal_ms": journal_ms, "journal_chunk_10k": quantiles(&mut journal_times),
+        "journal_retention": {"pass": journal_pass, "pending_after_ack": pending_after_ack,
+            "retained_after_ack": retained, "deleted_before_window": protected_deleted, "replay_floor": floor},
         "checkpoint_ms": ms(t),
         "db_bytes_before": before_bytes, "db_bytes_after": file_size(path),
         "memory": memory(),
     }));
+    if !anchors_pass || !journal_pass { return Err("ancrages ou rétention du journal incorrects".into()) }
     Ok(())
 }
 
@@ -727,11 +755,66 @@ pub fn reopen(s: &Shape, path: &str) -> R<()> {
     let mem = memory();
     let t = Instant::now();
     let integrity = rows(&c, "PRAGMA integrity_check", ())?;
+    let integrity = match integrity.first().and_then(|r| r.first()) {
+        Some(Value::Text(value)) => value.clone(),
+        other => format!("{other:?}"),
+    };
     emit(&json!({
         "phase": "reopen", "open_ms": open_ms, "first_query_ms": first_query_ms, "first_curve_ms": first_curve_ms,
         "curve_rows": curve.scanned, "next_seq": next, "memory_after_first_curve": mem,
-        "integrity": format!("{:?}", integrity.first().and_then(|r| r.first())), "integrity_ms": ms(t),
+        "integrity": integrity, "integrity_ms": ms(t),
         "db_bytes": file_size(path), "memory": memory(),
     }));
+    if integrity != "ok" { return Err("vérification d'intégrité incorrecte".into()) }
     Ok(())
+}
+
+#[cfg(test)]
+mod review_regressions {
+    use super::*;
+    use crate::schema::TARGET;
+
+    fn fixture(label: &str) -> R<(turso::Database, Connection, String)> {
+        let path = format!("/tmp/moli-bench-{label}-{}.db", std::process::id());
+        remove_db(&path);
+        let (db, c) = open(&path)?;
+        exec(&c, TARGET)?;
+        exec(&c, "INSERT INTO meter_state (id, meter) VALUES (0, 'meter-test')")?;
+        Ok((db, c, path))
+    }
+
+    fn write_hour(c: &Connection, seq: i64, kwh: f64) -> R<()> {
+        exec(c, "BEGIN IMMEDIATE")?;
+        block_on(c.execute(ENERGY_UPSERT, (0i64, 0i64, kwh, Some(kwh * 0.2), seq)))?;
+        crate::journal::append(c, seq, OP_ENERGY_HOUR, 0)?;
+        block_on(c.execute("UPDATE meta SET next_seq = ?1", (seq + 1,)))?;
+        exec(c, "COMMIT")
+    }
+
+    #[test]
+    fn retry_keeps_the_original_energy_operation() -> R<()> {
+        let (db, c, path) = fixture("retry")?;
+        write_hour(&c, 1, 1.0)?;
+        let first = export_ndjson(&c, 0, 1)?;
+        write_hour(&c, 2, 1.0)?;
+        drop(c);
+        drop(db);
+        let (_db, c) = open(&path)?;
+        assert_eq!(first, export_ndjson(&c, 0, 1)?, "le même lot change après une mise à jour et une réouverture");
+        Ok(())
+    }
+
+    #[test]
+    fn published_operations_can_replay_after_outbox_is_drained() -> R<()> {
+        let (_db, c, _path) = fixture("restore")?;
+        write_hour(&c, 1, 1.0)?;
+        let first = export_ndjson(&c, 0, 1)?;
+        write_hour(&c, 2, 1.0)?;
+        let second = export_ndjson(&c, 1, 1)?;
+        exec(&c, "DELETE FROM outbox; DELETE FROM energy_hour")?;
+        let mut expected = first;
+        expected.extend(second);
+        assert_eq!(expected, export_ndjson(&c, 0, 2)?, "les tables courantes ne reconstruisent pas le journal publié");
+        Ok(())
+    }
 }

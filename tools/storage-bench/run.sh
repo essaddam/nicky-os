@@ -38,10 +38,13 @@ build_in() {
         -v moli-storage-bench-cargo:/usr/local/cargo/registry -v "$target:/target" \
         -e CARGO_TARGET_DIR=/target "$image" sh -c "apk add --no-cache musl-dev >/dev/null && $*"
 }
+log "régressions du verdict global…"
+python3 -I "$here/test_summary.py"
 log "construction ($platform, musl statique)…"
 bins="storage-bench size_none size_sqlite size_turso size_both"
 build_in rust:1-alpine moli-storage-bench-target \
-    "rustc --version > /src/target-linux/rustc-version && cargo build --release --locked -q \
+    "rustc --version > /src/target-linux/rustc-version && cargo test --release --locked -q --bin storage-bench -- --test-threads=1 \
+     && cargo build --release --locked -q \
      && for b in $bins; do cp /target/release/\$b /src/target-linux/; done" 2>"$out/build.log"
 # Le moteur seul (`turso_core`, fonctions minimales) : crate à part, pour que
 # les fonctions par défaut de `turso` ne s'y ajoutent pas.
@@ -83,6 +86,8 @@ if build_in rust:1.88-alpine moli-storage-bench-target-msrv 'cargo check --relea
     echo '{"msrv":"1.88","check":"ok"}' >"$out/msrv.json"
 else
     echo '{"msrv":"1.88","check":"failed"}' >"$out/msrv.json"
+    log "échec du minimum Rust, voir $out/msrv.log"
+    exit 1
 fi
 
 docker volume create "$volume" >/dev/null
@@ -119,5 +124,7 @@ while [ "$i" -le "$repeat" ]; do
 done
 
 echo "fin : VM $(docker run --rm alpine:3.22 cat /proc/loadavg) ; hôte $(uptime | sed 's/.*load average[s]*: //')" >>"$out/host-load.txt"
-python3 -I "$here/summary.py" "$out" | tee "$out/summary.txt"
+python3 -I "$here/summary.py" "$out" "$repeat" >"$out/summary.txt.tmp"
+mv "$out/summary.txt.tmp" "$out/summary.txt"
+cat "$out/summary.txt"
 log "résultats : $out"

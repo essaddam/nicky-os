@@ -17,22 +17,27 @@ Assistant.
 |---|---|---|
 | Mémoire (mémoire **anonyme** du cgroup : tas et piles, aucun cache de fichiers ; **la même définition pour Moli et HA** ; le RSS de Moli est noté à côté) | ≤ 32 Mio (plafond conteneur 128) | HA : ~2,1 Gio. Rester sous 1/50. |
 | CPU **au repos** (compteur du cgroup sur 30 s, aucun client connecté) | ≤ 0,5 % | HA : 1,5–2,5 %. Rien ne tourne pour rien. Une mesure faite avec un dashboard ouvert est notée « en usage » (nombre de connexions) et n'est pas jugée contre ce budget. |
-| Image | ≤ 40 Mo (25 jusqu'au 17 octobre 2026) | HA : 2,3 Go. Relevé par le propriétaire pour Turso (ADR D13) : le moteur ajoute 11,4 Mo et le binaire linux/arm64 mesuré passe de 23,1 à 34,4 Mo (35,7 pendant la période de retour arrière, où SQLite reste lié), symboles gardés. Réévalué à chaque montée de version de Turso. |
+| Image | ≤ 40 Mo (25 jusqu'au 17 octobre 2026) | HA : 2,3 Go. Relevé par le propriétaire pour Turso (ADR D13) : les sondes mesurent un delta de +11,4 Mo, projetant le binaire linux/arm64 actuel de 23,1 à 34,4 Mo (35,7 pendant le retour arrière avec SQLite) ; C1 mesurera l’image réelle, symboles gardés. Réévalué à chaque montée de version de Turso. |
 | API, p95 | ≤ 25 ms (listes), ≤ 5 ms (santé) | Le dashboard doit répondre au doigt. |
 | Démarrage | ≤ 2 s jusqu'à « sain » | Un redémarrage ne doit rien coûter. |
 
 ### Réserves de la bascule Turso (18 octobre 2026)
 
-Le [banc D13](annexe-d13-stockage.md) a terminé trois tours en linux/arm64,
-limité à un CPU : énergie sur 7 jours à **31,11–33,99 ms** au p95, avant HTTP ;
-rafale de **955,82–965,61 op/s** pour 974 visées avec cinq lecteurs. C1/C2 doivent
-corriger le coût de ce graphique et prouver la capacité requise avant la bascule.
-Le processus comparant toutes les lectures culmine à **52,09–52,77 Mio de RSS**,
-options écartées comprises ; le budget du cœur se mesure en mémoire anonyme du
-cgroup, avec les seuls chemins retenus et les autres briques actives. Cette
-validation et celle de l'image réelle (projection actuelle : 34,43 Mo, 35,69 Mo
-avec les deux moteurs) restent à faire en C1. Les budgets du tableau restent
-inchangés.
+Le [banc D13](annexe-d13-stockage.md) a terminé trois tours avec journal
+immuable, en linux/arm64, limité à un CPU : énergie sur 7 jours à
+**30,37–31,83 ms** au p95 avant HTTP ; rafale de **949,24–965,17 op/s**
+pour 974 visées avec cinq lecteurs. C1/C2 doivent prouver le coût du graphique
+et la capacité requise avant bascule. Pic RSS du processus de comparaison :
+**53,21–54,32 Mio**, options écartées comprises ; les 32 Mio anonymes du
+cœur intégré restent à mesurer sur les seuls chemins retenus. La projection
+d'image reste 34,43 Mo (35,69 Mo avec les deux moteurs), à vérifier
+sur l'image réelle en C1. Les budgets du tableau restent inchangés.
+
+Le journal conservé sept jours après publication porte le fichier du banc à
+**465,14 Mo**, contre 151,74 Mo avant correction ; le chargement de
+2 322 732 relevés prend 213,38–251,49 s contre 141,80–161,20 s.
+Ce coût d'écriture et de disque assure les réessais identiques et la reprise
+après restauration, y compris les imports anciens dont les lignes ont été purgées.
 
 ## Principes de conception qui tiennent le budget
 

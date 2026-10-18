@@ -3,6 +3,7 @@
 mod compat;
 mod crash;
 mod perf;
+mod journal;
 mod schema;
 mod util;
 

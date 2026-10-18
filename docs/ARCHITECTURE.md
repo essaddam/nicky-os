@@ -195,7 +195,7 @@ dimensionnement, pas un nouveau choix.
 | Décision | Conséquence |
 |---|---|
 | Turso remplace SQLite pour le stockage local : récent, état métier, journal d'export | un seul fichier `data/moli.db` remplace `history.db` et `energy.db` ; `rusqlite` ne reste que le temps du retour arrière |
-| Le long terme : archives Parquet et résumés, tenus par un service Rust ; DuckDB facultatif et hors périmètre | le cœur ne garde que des fenêtres chaudes ; tout ce qu'il écrit entre dans un journal d'export (outbox) dans la même transaction |
+| Le long terme : archives Parquet et résumés, tenus par un service Rust ; DuckDB facultatif et hors périmètre | le cœur ne garde que des fenêtres chaudes ; chaque écriture alimente l'outbox et le journal d'export immuable dans la même transaction |
 | Le service d'archive tourne d'abord sur la même machine, déplaçable sur un VPS sans refonte | contrat réseau dès le premier jour : HTTP borné, aucun disque partagé |
 
 **Ce que Turso 0.8.3 tient**
@@ -206,7 +206,7 @@ dimensionnement, pas un nouveau choix.
 | Tables `WITHOUT ROWID` (le schéma actuel) | **non** : Turso ouvre les fichiers actuels mais refuse `UPDATE` / `DELETE` et **lit faux** les plages de clé primaire (0 ligne au lieu de 200) | jamais de `WITHOUT ROWID` ; le rangement par clé passe par un rowid calculé (schéma ci-dessous) ; Turso n'ouvre jamais les fichiers actuels, ils sont copiés |
 | Transactions | tenu : validation, annulation, `SAVEPOINT` | — |
 | Lecteurs pendant une écriture | tenu : ils ne bloquent pas, ne voient rien de la transaction en cours et gardent leur instantané | un rédacteur, des lecteurs sur leurs connexions ; `BEGIN CONCURRENT` (MVCC) fonctionne mais reste expérimental : pas utilisé |
-| Durabilité | tenu : `synchronous = FULL` par défaut, WAL, point de contrôle `TRUNCATE` ; sous `strace`, 200 validations font 213 fsync en `FULL`, 13 en `NORMAL` comme en `OFF` (ceux de la création du fichier) : seul `FULL` rend chaque validation durable | `FULL`, alors que les bases actuelles sont en `NORMAL` : une séquence déjà envoyée à l'archive ne doit jamais être perdue par le cœur, qui la réattribuerait à d'autres données ; lots d'écriture bornés (≤ 100 ms ou 500 opérations) pour borner le nombre de fsync |
+| Durabilité | tenu : `synchronous = FULL` par défaut, WAL, point de contrôle `TRUNCATE` ; sous `strace`, 200 validations font 214 fsync en `FULL`, 14 en `NORMAL` comme en `OFF` (ceux de la création du fichier) : seul `FULL` rend chaque validation durable | `FULL`, alors que les bases actuelles sont en `NORMAL` : une séquence déjà envoyée à l'archive ne doit jamais être perdue par le cœur, qui la réattribuerait à d'autres données ; lots d'écriture bornés (≤ 100 ms ou 500 opérations) pour borner le nombre de fsync |
 | Cohérence après `kill -9` | tenu : 31 arrêts brutaux pendant des transactions multi-tables et des points de contrôle ; rien d'annoncé validé n'est perdu, l'outbox reste contiguë, heures = totaux = état des compteurs, `integrity_check` correct ; SQLite relit aussi le fichier laissé par le crash | — |
 | Fichier compatible dans les deux sens | tenu : SQLite lit, modifie et vérifie un fichier écrit par Turso, que Turso relit ensuite | c'est la voie de secours : le schéma n'emploie rien que SQLite ne sache faire (ni MVCC, ni vecteur, ni plein texte) |
 | Autorisateur SQL | **absent** : ni autorisateur, ni limite de longueur, ni budget de temps dans la crate `turso` ; une connexion en lecture seule accepte `PRAGMA query_only = 0`, `PRAGMA journal_mode`, `BEGIN`, plusieurs instructions et 10 Mo de `zeroblob` | `history_sql` devient un outil structuré (plus bas) |
@@ -225,8 +225,9 @@ samples      (id = point_id·2^44 + ts, point_id, ts, seq, kind, num, txt)      
 meter_state  (id ≤ 1023, meter UNIQUE, last_kwh, last_ts, first_ts, imported_until)
 energy_hour  (id = heure·1024 + compteur, meter_id, hour, kwh, cost, seq)      -- aucun index secondaire
 energy_total (id, span 'day'|'month', start, meter_id, kwh, cost)  UNIQUE (span, start, meter_id)
-outbox       (seq PRIMARY KEY, kind, ref)
-archive_ack  (id = 1, durable_upto, published_upto, generation, at)
+outbox       (seq PRIMARY KEY, kind, ref)                           -- attente de publication
+export_journal (seq PRIMARY KEY, payload, published_at)               -- contenu immuable
+archive_ack  (id = 1, durable_upto, published_upto, generation, at, replay_floor)
 ```
 
 - **`samples` est rangée par point puis par instant**, comme la clé `(point_id, ts)` actuelle :
@@ -242,10 +243,21 @@ archive_ack  (id = 1, durable_upto, published_upto, generation, at)
 - **`energy_total`** tient les totaux de jour et de mois civils locaux (plus bas).
 - **`meter_state`** : dernier relevé, `first_ts` (l'actuel `meter_first`), `imported_until`
   (marqueur d'import) ; son `id` sert de numéro de compteur.
-- **`outbox`** : une ligne par opération à exporter, écrite dans la même transaction que la
-  donnée. `seq` vient de `meta.next_seq`, mis à jour dans cette transaction : un
-  `INTEGER PRIMARY KEY` seul réutilise les numéros libérés (prouvé). Chaque ligne de donnée
-  garde son `seq`, de quoi rejouer un export sans l'outbox.
+- **`outbox`** : attente de publication, une ligne par opération. La transaction de la
+  donnée ajoute aussi une ligne à **`export_journal`** : son contenu NDJSON autonome
+  (séquence, type, point ou compteur nommé, valeurs) est sérialisé une seule fois.
+  Ce contenu reste immuable, même si la même heure d'énergie change à la séquence
+  suivante. Un export copie ces octets dans l'ordre des séquences ; il ne joint
+  jamais l'outbox aux tables métier mutables.
+- **`seq`** vient de `meta.next_seq`, mis à jour dans la transaction : un
+  `INTEGER PRIMARY KEY` seul réutilise les numéros libérés (prouvé). Le `seq` des
+  tables métier sert au suivi et à la purge ; le rejeu vient du journal immuable.
+- **`export_journal.published_at`** est posé au reçu de la publication. L'outbox
+  peut alors être vidée, mais le journal garde chaque opération au moins **7 jours
+  après publication**, même pour un import portant sur une date ancienne. La purge
+  avance par préfixes contigus de 10 000 opérations au plus et persiste
+  **`archive_ack.replay_floor`**, la dernière séquence retirée. Le journal ne se
+  purge pas avant publication ni au simple accusé de réception durable.
 - **`meta`** : version du schéma (migrations en avant seulement, vérifiées à l'ouverture),
   identité de l'installation (128 bits tirés au hasard à la création, jamais un nom ni une
   adresse), prochaine séquence, première heure d'énergie (le « depuis » de l'écran).
@@ -255,10 +267,10 @@ archive_ack  (id = 1, durable_upto, published_upto, generation, at)
 
 **Totaux de période : accumulateurs persistants.** Option écartée : garder deux mois civils
 d'heures et `Energy::summary()` inchangé. À la charge ×2, `summary()` lit 127 452 heures
-(p95 50,23–54,50 ms) ; depuis les totaux, 456 lignes (p95 0,47–0,92 ms), même réponse. `energy_total` est
+(p95 49,30–53,31 ms) ; depuis les totaux, 456 lignes (p95 0,48–0,52 ms), même réponse. `energy_total` est
 tenue dans la transaction de l'heure, par le même apport additif, sur tous les chemins qui
 écrivent une heure (relevé vivant, import, re-tarification) ; `kill -9` le vérifie. Les jours
-restent 62 jours, les mois 13 mois (le graphique 12 mois reste local, p95 2,99–3,07 ms), les heures
+restent 62 jours, les mois 13 mois (le graphique 12 mois reste local, p95 2,64–3,21 ms), les heures
 deux mois civils (graphiques horaires jusqu'à 31 jours, recalcul des totaux). Au démarrage,
 somme des jours = somme des heures sur la fenêtre locale, sinon recalcul journalisé.
 
@@ -291,18 +303,31 @@ injoignable : la partie locale seule, marquée `"archive": "unavailable"`.
   séquences **contiguës** depuis `durable_upto + 1`. Chaque opération est autonome : le point
   ou le compteur y est nommé (les identifiants locaux ne sortent pas). Un relevé est un ajout ;
   une heure d'énergie est un état (la plus grande séquence gagne), donc idempotente.
-- **Lot idempotent** : identité = installation + plage + SHA-256 du corps. Le même lot renvoyé
-  rend la même réponse ; une plage déjà reçue avec un autre contenu → 409 ; un trou → 409
-  avec `durable_upto`, d'où le cœur reprend.
+- **Lot idempotent** : identité = installation + plage + SHA-256 du **NDJSON
+  décompressé**, concaténation des contenus persistés et d'un saut de ligne par
+  opération. L'en-tête gzip ne participe pas à l'identité. Pour une même plage,
+  les octets restent identiques après mise à jour métier et redémarrage. Le même
+  lot rend la même réponse ; une plage déjà reçue avec un autre contenu → 409 ;
+  un trou → 409 avec `durable_upto`. Après une erreur de transport ou un
+  redémarrage, le cœur relit `status`, puis reprend à `durable_upto + 1` : un
+  accusé perdu ne conduit pas à assembler une plage recouvrant un lot déjà reçu.
 - **Deux accusés distincts**, dans chaque réponse et dans `GET /v1/installations/{installation}/status` :
   `durable_upto` (reçu et écrit durablement côté archive : le cœur cesse de renvoyer) et
   `published_upto` (archives Parquet et résumés publiés : le cœur peut purger), plus
-  `generation`. Le cœur les recopie dans `archive_ack` ; l'outbox n'est vidée que jusqu'à
-  `published_upto`.
-- **Génération** : elle change quand l'archive repart d'une sauvegarde. Si `published_upto`
-  recule, le cœur renvoie depuis ses tables (chaque ligne garde son `seq`) et le signale sur
-  la page Système ; ce qui a déjà quitté le local est perdu pour l'archive, d'où la règle de
-  sauvegarde ci-dessous.
+  `generation`. Le cœur les recopie dans `archive_ack`, marque les opérations du
+  journal comme publiées et vide l'outbox jusqu'à `published_upto` dans la même
+  transaction. Les sauts importants d'accusé sont traités par tranches bornées.
+- **Génération** : elle change quand l'archive repart d'une sauvegarde. Dans une
+  génération, les accusés ne reculent pas. À une nouvelle génération, le cœur
+  vérifie `replay_floor ≤ durable_upto ≤ next_seq - 1` et
+  `0 ≤ published_upto ≤ durable_upto`. Il renvoie le **journal immuable** depuis
+  `durable_upto + 1`, y compris les versions d'heures remplacées et les imports
+  anciens dont les lignes locales ont été purgées. Les opérations au-delà du
+  nouveau `published_upto` perdent leur ancien `published_at` : leur republication
+  ouvre une nouvelle fenêtre de 7 jours. Une sauvegarde à `durable_upto` inférieur
+  à `replay_floor` est explicitement refusée comme hors fenêtre ; aucune reprise
+  sans perte n'est alors promise. Une séquence absente du journal bloque aussi
+  l'envoi, sans fabriquer de remplacement depuis les tables métier.
 - **Jeton** : un porteur aléatoire, dans le coffre de Moli côté cœur (règle 6), dans un
   fichier secret côté archive ; jamais dans `moli.toml`.
 - **Délais** : connexion 5 s, lot 30 s, un seul lot en vol, reprise exponentielle de 1 s à
@@ -311,9 +336,15 @@ injoignable : la partie locale seule, marquée `"archive": "unavailable"`.
 - **Passage sur un VPS** : même image derrière TLS (le cœur refuse `http://` hors adresse
   privée), nouveau jeton ; arrêter l'archive locale, copier son dossier, démarrer sur le VPS,
   vérifier que `status` rend les mêmes `durable_upto`, `published_upto` et `generation`,
-  changer `[archive] url` et le jeton du cœur. Le VPS a sa propre sauvegarde, **plus récente
-  que la plus courte fenêtre locale (7 jours)** : une restauration ne perd alors rien, le cœur
-  renvoie ce qu'il garde encore.
+  changer `[archive] url` et le jeton du cœur. Le VPS garde une sauvegarde
+  **cohérente et vérifiée** des fichiers publiés, des lots reçus durablement et de
+  leurs métadonnées. Elle doit avoir moins de 7 jours et son `durable_upto` doit
+  rester dans la fenêtre de reprise du cœur (`≥ replay_floor`). Le journal, retenu
+  selon la date de publication et non la date métier, permet alors de rejouer
+  toutes les opérations postérieures à cette sauvegarde. Une indisponibilité du
+  service, une sauvegarde trop ancienne ou une restauration hors fenêtre sont
+  signalées ; la purge des données non publiées reste bloquée. La seule rétention
+  des lignes métier, même de 7 jours, n'assure pas cette reprise.
 
 **`history_sql` devient un outil structuré** (C2), faute d'autorisateur : point ou motif de
 points, intervalle, opération (valeurs, seaux moyenne / min / max / nombre, comptes par
@@ -326,12 +357,12 @@ tape plus de SQL.
    `energy.db` existe, copie dans `moli.db.tmp` (une séquence et une entrée d'outbox par
    ligne : l'archive reçoit l'historique existant ; totaux recalculés depuis les heures), fsync,
    renommage. Les anciens fichiers ne sont plus jamais écrits. Mesure : 100 200 opérations
-   copiées en 5,22 s sur un CPU (séquences, outbox et totaux compris), soit quelques minutes
+   copiées en 9,33 s sur un CPU (séquences, outbox et totaux compris), soit quelques minutes
    pour un historique de 30 jours : une seule fois, hub arrêté, progression au journal.
 2. **Retour arrière** : Moli arrêté, sur une **copie** des anciens fichiers, le SQL de
    `ROLLBACK_HISTORY` / `ROLLBACK_ENERGY` (SQLite seul, `ATTACH` du fichier Turso) y ajoute ce
-   qui a été écrit depuis ; puis l'ancienne version. Prouvé à l'identique ; 100 200 lignes en 0,11 s.
-3. **Période de retour arrière : 30 jours.** `rusqlite` reste lié (image de 35,7 Mo), les anciens
+   qui a été écrit depuis ; puis l'ancienne version. Prouvé à l'identique ; 100 200 lignes en 0,13 s.
+3. **Période de retour arrière : 30 jours.** `rusqlite` reste lié (projection de 35,7 Mo), les anciens
    fichiers sont gardés, aucune purge plus courte que la rétention actuelle (30 jours) ; les
    durées par famille s'appliquent ensuite, puis `rusqlite` et les anciens fichiers partent.
 
@@ -351,8 +382,9 @@ tape plus de SQL.
 
 **Budget d'image : 40 Mo, décision du propriétaire (17 octobre 2026).** Mesuré en
 linux/arm64 musl avec le profil de release de Moli (`strip = "debuginfo"`) : Moli aujourd'hui
-23,1 Mo ; Turso à la place de SQLite +11,4 Mo, soit **34,4 Mo** ; les deux moteurs pendant
-la période de retour arrière, **35,7 Mo**. Le budget de 25 Mo ne tenait dans aucune
+23,1 Mo mesurés ; le delta des sondes Turso/SQLite est de +11,4 Mo : projection
+**34,4 Mo**, ou **35,7 Mo** avec les deux moteurs pendant le retour arrière.
+L’image réelle du cœur intégré reste à mesurer en C1. Le budget de 25 Mo ne tenait dans aucune
 configuration : `turso_core` réduit à ses fonctions minimales ne gagne qu'environ 1 Mo
 (collation Unicode, chiffrement et vecteurs ne se désactivent pas en 0.8.3), un strip
 complet donne encore 26,6 Mo. Retenu : les symboles restent (des traces lisibles en
@@ -360,16 +392,17 @@ production), le budget passe à 40 Mo ([PERFORMANCE.md](PERFORMANCE.md)), réév
 montée de Turso. Ce sont des pages de fichier, pas de la mémoire anonyme : le budget de
 32 Mio ne bouge pas.
 
-**Réserves avant bascule (série complète du 18 octobre 2026).** Le graphique
-d'énergie sur 168 h reste à 31,11–33,99 ms au p95 sur le banc limité à un CPU,
-au-delà des 25 ms visées ; la rafale vise 974 op/s et en atteint 955,82–965,61
-avec cinq lecteurs. C1/C2 doivent réduire ce coût de lecture et prouver la capacité
-requise sur le cœur intégré avant sa mise en service. Le pic RSS du processus qui
-compare toutes les lectures, y compris les options écartées, est de 52,09–52,77 Mio :
-le budget de 32 Mio **anonymes** du cœur reste à vérifier avec les chemins retenus.
-La projection de taille reste à vérifier sur l'image réelle de C1. Ces réserves
-figurent aussi dans [le budget de performance](PERFORMANCE.md) et dans l'annexe ;
-les choix du propriétaire et les plafonds restent ceux fixés ci-dessus.
+**Réserves avant bascule (série complète avec journal immuable, 18 octobre 2026).**
+Le graphique d'énergie sur 168 h reste à 30,37–31,83 ms au p95 sur un CPU,
+avant HTTP ; la rafale vise 974 op/s et en atteint 949,24–965,17 avec cinq
+lecteurs. C1/C2 doivent prouver le budget de lecture et la capacité requise
+sur le cœur intégré avant mise en service. Pic RSS du processus comparant
+toutes les options : 53,21–54,32 Mio ; le budget de 32 Mio anonymes reste
+à mesurer avec les seuls chemins retenus. Le journal immuable porte le fichier
+à 465,14 Mo sur la charge ×2, contre 151,74 Mo sans ce journal : cette
+rétention locale est le coût de la reprise bornée. La projection de taille
+reste à vérifier sur l'image réelle de C1. Réserves aussi consignées dans
+[PERFORMANCE.md](PERFORMANCE.md) ; choix et plafonds du propriétaire inchangés.
 
 **Ce qui invaliderait cette décision**
 

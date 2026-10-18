@@ -67,12 +67,18 @@ CREATE TABLE IF NOT EXISTS outbox (
     kind INTEGER NOT NULL,
     ref  INTEGER NOT NULL
 ) STRICT;
+CREATE TABLE IF NOT EXISTS export_journal (
+    seq          INTEGER PRIMARY KEY,
+    payload      TEXT NOT NULL,
+    published_at INTEGER
+) STRICT;
 CREATE TABLE IF NOT EXISTS archive_ack (
     id             INTEGER PRIMARY KEY CHECK (id = 1),
     durable_upto   INTEGER NOT NULL,
     published_upto INTEGER NOT NULL,
     generation     INTEGER NOT NULL,
-    at             INTEGER NOT NULL
+    at             INTEGER NOT NULL,
+    replay_floor   INTEGER NOT NULL DEFAULT 0 CHECK (replay_floor >= 0)
 ) STRICT;
 INSERT OR IGNORE INTO meta (id, schema_version, installation, next_seq)
     VALUES (1, 1, '00000000000000000000000000000000', 1);

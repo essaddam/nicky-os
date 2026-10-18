@@ -24,7 +24,7 @@ const OFFSET: i64 = 2 * 3_600_000;
 pub fn run(dir: &str) -> R<()> {
     std::fs::create_dir_all(dir)?;
     let mut failed = 0;
-    let tests: [(&str, fn(&str) -> R<Json>); 15] = [
+    let tests: [(&str, fn(&str) -> R<Json>); 18] = [
         ("rowid_index_dml_upsert_returning", dml),
         ("differential_vs_sqlite_20k_ops", differential),
         ("transactions_commit_rollback", transactions),
@@ -40,6 +40,9 @@ pub fn run(dir: &str) -> R<()> {
         ("second_process_is_refused", multiprocess),
         ("backup_vacuum_into", vacuum_into),
         ("io_backend_under_default_seccomp", seccomp),
+        ("archive_export_retry_immutable", crate::journal::proof_retry),
+        ("archive_restore_replay_journal", crate::journal::proof_restore),
+        ("migration_batch_boundaries", migration_boundaries),
     ];
     for (name, test) in tests {
         let started = Instant::now();
@@ -55,6 +58,7 @@ pub fn run(dir: &str) -> R<()> {
         emit(&out);
     }
     emit(&json!({ "phase": "compat_done", "failed": failed, "turso": "0.8.3" }));
+    if failed > 0 { return Err(format!("{failed} essais de compatibilité ont échoué").into()); }
     Ok(())
 }
 
@@ -810,9 +814,11 @@ pub fn migrate(history: &str, energy: &str, target: &str) -> R<i64> {
     let mut stmt = h.prepare("SELECT point_id, ts, kind, num, txt FROM samples ORDER BY ts, point_id")?;
     let mut cursor = stmt.query([])?;
     let mut in_tx = 0;
+    let mut transaction_open = false;
     while let Some(r) = cursor.next()? {
-        if in_tx == 0 {
+        if !transaction_open {
             exec(&c, "BEGIN")?;
+            transaction_open = true;
         }
         let (point, ts, kind, num, txt): (i64, i64, String, Option<f64>, Option<String>) =
             (r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?);
@@ -820,13 +826,14 @@ pub fn migrate(history: &str, energy: &str, target: &str) -> R<i64> {
             "INSERT INTO samples (id, point_id, ts, seq, kind, num, txt) VALUES ((?1 << 44) + ?2, ?1, ?2, ?3, ?4, ?5, ?6)",
             (point, ts, seq, kind, num, txt),
         ))?;
-        block_on(c.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_SAMPLE, key(point, ts))))?;
+        crate::journal::append(&c, seq, OP_SAMPLE, key(point, ts))?;
         seq += 1;
         in_tx += 1;
         if in_tx == 5_000 {
             block_on(c.execute("UPDATE meta SET next_seq = ?1", (seq,)))?;
             exec(&c, "COMMIT")?;
             in_tx = 0;
+            transaction_open = false;
         }
     }
     let e = Sqlite::open_with_flags(energy, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
@@ -836,8 +843,9 @@ pub fn migrate(history: &str, energy: &str, target: &str) -> R<i64> {
         .query_map([], |r| r.get(0))?
         .collect::<Result<_, _>>()?;
     let ids: HashMap<&str, i64> = meters.iter().enumerate().map(|(i, m)| (m.as_str(), i as i64)).collect();
-    if in_tx == 0 {
+    if !transaction_open {
         exec(&c, "BEGIN")?;
+        transaction_open = true;
     }
     for (meter, id) in &ids {
         block_on(c.execute("INSERT INTO meter_state (id, meter) VALUES (?1, ?2)", (*id, *meter)))?;
@@ -845,8 +853,9 @@ pub fn migrate(history: &str, energy: &str, target: &str) -> R<i64> {
     let mut stmt = e.prepare("SELECT meter, hour, kwh, cost FROM energy_hour ORDER BY hour, meter")?;
     let mut cursor = stmt.query([])?;
     while let Some(r) = cursor.next()? {
-        if in_tx == 0 {
+        if !transaction_open {
             exec(&c, "BEGIN")?;
+            transaction_open = true;
         }
         let (meter, hour, kwh, cost): (String, i64, f64, Option<f64>) = (r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?);
         let id = ids[meter.as_str()];
@@ -855,16 +864,17 @@ pub fn migrate(history: &str, energy: &str, target: &str) -> R<i64> {
         let (day, month) = local_day_month(hour, OFFSET);
         block_on(c.execute(TOTAL_UPSERT, ("day", day, id, kwh, cost)))?;
         block_on(c.execute(TOTAL_UPSERT, ("month", month, id, kwh, cost)))?;
-        block_on(c.execute("INSERT INTO outbox (seq, kind, ref) VALUES (?1, ?2, ?3)", (seq, OP_ENERGY_HOUR, row)))?;
+        crate::journal::append(&c, seq, OP_ENERGY_HOUR, row)?;
         seq += 1;
         in_tx += 1;
         if in_tx == 5_000 {
             block_on(c.execute("UPDATE meta SET next_seq = ?1", (seq,)))?;
             exec(&c, "COMMIT")?;
             in_tx = 0;
+            transaction_open = false;
         }
     }
-    if in_tx == 0 {
+    if !transaction_open {
         exec(&c, "BEGIN")?;
     }
     let mut stmt = e.prepare("SELECT meter, kwh, ts FROM meter_last")?;
@@ -1092,4 +1102,41 @@ fn seccomp(dir: &str) -> R<Json> {
         "io_uring_setup": io_uring,
         "turso_writes_with_default_backend": n,
     }))
+}
+
+fn migration_boundaries(dir: &str) -> R<Json> {
+    let mut cases = Vec::new();
+    for samples in [0, 1, 4_999, 5_000, 5_001] {
+        for hours in [0, 1] {
+            let history = fresh(dir, &format!("bound-h-{samples}-{hours}"));
+            let energy = fresh(dir, &format!("bound-e-{samples}-{hours}"));
+            let target = fresh(dir, &format!("bound-m-{samples}-{hours}"));
+            current_files(&history, &energy, 1, samples, 1, hours)?;
+            let result = match migrate(&history, &energy, &target) {
+                Ok(n) => {
+                    let (_db, c) = open(&target)?;
+                    let journal = one(&c, "SELECT count(*) FROM export_journal", ())?;
+                    let next = one(&c, "SELECT next_seq FROM meta", ())?;
+                    json!({"samples": samples, "hours": hours, "pass": n == samples + hours && journal == n && next == n + 1})
+                }
+                Err(error) => json!({"samples": samples, "hours": hours, "pass": false, "error": error.to_string()}),
+            };
+            cases.push(result);
+        }
+    }
+    Ok(json!({"pass": cases.iter().all(|c| c["pass"] == true), "cases": cases}))
+}
+
+#[cfg(test)]
+mod review_regressions {
+    use super::*;
+
+    #[test]
+    fn migration_handles_empty_and_full_sample_batches() -> R<()> {
+        let dir = format!("/tmp/moli-migration-boundaries-{}", std::process::id());
+        std::fs::create_dir_all(&dir)?;
+        let result = migration_boundaries(&dir)?;
+        assert_eq!(result["pass"], true, "{result}");
+        Ok(())
+    }
 }
