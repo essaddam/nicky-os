@@ -1,0 +1,29 @@
+[package]
+name = "storage-bench"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Banc Turso du stockage récent de Moli (ADR D13) : compatibilité, crash, charge ×2"
+
+# Hors du workspace de Moli : n'entre ni dans `cargo test --workspace` ni dans
+# le Cargo.lock racine. Lancer avec `sh tools/storage-bench/run.sh`.
+[workspace]
+
+[dependencies]
+# Version figée (avant 1.0). Sans les fonctions par défaut : `mimalloc`
+# remplacerait l'allocateur de tout le processus, `fts` tire tantivy.
+# Cargo.lock épingle roaring 0.11.3 et uuid 1.26.1 : les suivantes demandent
+# Rust 1.90 et 1.89, le dépôt annonce 1.88 (`cargo update` les relèverait).
+turso = { version = "=0.8.3", default-features = false }
+# Même version que le workspace : la référence SQLite des essais.
+rusqlite = { version = "0.40", default-features = false, features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+libc = "0.2"
+
+# Le profil de Moli : mesures et tailles comparables au produit.
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+strip = "debuginfo"
