@@ -52,16 +52,17 @@ téléphones passent sans Access, avec leur propre jeton.
 
 | Doc | Contenu |
 |---|---|
-| [coeur.md](components/coeur.md) | vocabulaire, hub, bus, garde et approbations, sessions PIN, journal, étiquettes, coffre des secrets, superviseur |
-| [pilotes.md](components/pilotes.md) | trait `Driver`, chaque pilote natif, `moli-net` |
-| [profils.md](components/profils.md) | moteur de profils déclaratifs, format TOML, ajouter un appareil sans code |
-| [historique-energie.md](components/historique-energie.md) | historique SQLite, SQL pour agents, énergie (kWh, €, Tempo), import HA |
-| [automatismes.md](components/automatismes.md) | modèle de graphe, validation humaine, moteur, éditeur, import HA |
-| [moli.md](components/moli.md) | l'assistant : conversation, outils, garde, création d'automatismes, filtres |
 | [api.md](components/api.md) | REST, SSE, MCP, CLI, sécurité des routes |
+| [automatismes.md](components/automatismes.md) | modèle de graphe, validation humaine, moteur, éditeur, import HA |
+| [capteurs-lumieres.md](components/capteurs-lumieres.md) | cadrage proposé : Xiaomi BLE, pont EnOcean MQTT, Netatmo météo, Twinkly ; contrats et sous-lots, pilotes à livrer |
+| [coeur.md](components/coeur.md) | vocabulaire, hub, bus, garde et approbations, sessions PIN, journal, étiquettes, coffre des secrets, superviseur |
 | [dashboard.md](components/dashboard.md) | interface Maison et Atelier (Svelte 5), carte vivante |
 | [exploitation.md](components/exploitation.md) | image Docker, clé maître, sauvegarde, mise à jour, développement |
+| [historique-energie.md](components/historique-energie.md) | historique SQLite, SQL pour agents, énergie (kWh, €, Tempo), import HA |
 | [installation.md](components/installation.md) | premier démarrage, code de la maison, clé maître, premiers appareils, accès hors de chez soi |
+| [moli.md](components/moli.md) | l'assistant : conversation, outils, garde, création d'automatismes, filtres |
+| [pilotes.md](components/pilotes.md) | trait `Driver`, chaque pilote natif, `moli-net` |
+| [profils.md](components/profils.md) | moteur de profils déclaratifs, format TOML, ajouter un appareil sans code |
 | [traduction.md](components/traduction.md) | catalogues `locales/`, clés, pluriels, ajouter une langue, contrôle |
 
 ## Les règles à ne jamais oublier
