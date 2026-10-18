@@ -326,6 +326,7 @@ pub struct Hub(Arc<Inner>);
 struct Inner {
     model: RwLock<Model>,
     journal: Mutex<Journal>,
+    keypad: crate::keypad::Inputs,
     approvals: Mutex<Approvals>,
     events: broadcast::Sender<Event>,
     /// Counts emissions in exactly the broadcast order. Also gates an
@@ -407,10 +408,7 @@ impl Hub {
             None => BTreeMap::new(),
         };
         let restored = match &opts.state_path {
-            Some(path) => state_cache::load(path).unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "state cache unreadable, starting empty");
-                States::new()
-            }),
+            Some(path) => state_cache::load(path)?,
             None => States::new(),
         };
         let (journal_log, past) = match &opts.journal_path {
@@ -455,6 +453,7 @@ impl Hub {
                 entries: past.into(),
                 next_id,
             }),
+            keypad: crate::keypad::Inputs::default(),
             approvals: Mutex::new(Approvals::default()),
             journal_log,
             secrets,
@@ -471,6 +470,42 @@ impl Hub {
             opts,
             started: Instant::now(),
         })))
+    }
+
+    /// The only trusted internal consumer; never exposed by REST/SSE/MCP.
+    /// Dropping it discards pending inputs. Re-registration starts with an empty queue.
+    pub fn take_keypad_inputs(&self) -> Option<crate::KeypadReceiver> {
+        self.0.keypad.subscribe()
+    }
+    #[must_use]
+    pub fn rejected_keypad_inputs(&self) -> u64 {
+        self.0.keypad.rejected()
+    }
+    pub(crate) fn reject_keypad_input(&self) {
+        self.0.keypad.reject();
+    }
+    pub(crate) fn submit_keypad_input(&self, input: crate::KeypadInput) -> bool {
+        if input.action.is_empty()
+            || input.action.len() > 64
+            || input.action.chars().any(char::is_control)
+            || input.device.as_str().len() > 512
+            || self.device(&input.device).is_none()
+        {
+            self.0.keypad.reject();
+            return false;
+        }
+        let device = input.device.clone();
+        let accepted = self.0.keypad.send(input);
+        if accepted {
+            self.record(
+                Origin::System,
+                None,
+                Action::KeypadInput { device },
+                Outcome::Ok,
+                Instant::now(),
+            );
+        }
+        accepted
     }
 
     /// The assistant voice satellites talk to, once it exists (set once).
@@ -608,6 +643,22 @@ impl Hub {
         actor: Option<String>,
     ) -> Result<(), CommandError> {
         let started = Instant::now();
+        if moli_core::privacy::code_point(point.as_str())
+            || moli_core::privacy::private_value(&value)
+        {
+            let error = CommandError::UnknownPoint;
+            self.record(
+                origin,
+                actor,
+                Action::Command {
+                    point: point.clone(),
+                    value: Value::Null,
+                },
+                outcome_of(&Err(error.clone())),
+                started,
+            );
+            return Err(error);
+        }
         // Absurd inputs are refused before anything, and journaled without
         // their bulk (the journal is not a place to store what an agent sent).
         let oversized = point.as_str().len() > MAX_POINT
@@ -1523,7 +1574,10 @@ impl Hub {
         }
     }
 
-    pub(crate) fn upsert_device(&self, device: Device) {
+    pub(crate) fn upsert_device(&self, mut device: Device) {
+        device
+            .points
+            .retain(|point| !moli_core::privacy::code_property(&point.key));
         let device = Arc::new(device);
         let restored = {
             let mut model = self.write();
@@ -1746,6 +1800,9 @@ impl Hub {
     }
 
     fn record_state(&self, device: &DeviceId, key: &str, value: Value, always: bool) {
+        if moli_core::privacy::code_property(key) || moli_core::privacy::private_value(&value) {
+            return;
+        }
         let ts = now_ms();
         let event = {
             let mut model = self.write();

@@ -5,6 +5,7 @@
 //! commands into `{friendly_name}/set` publications.
 
 mod catalog;
+mod keypad;
 
 use std::collections::{HashSet, VecDeque};
 use std::time::Duration;
@@ -144,15 +145,12 @@ fn on_publish(ctx: &DriverCtx, base: &str, catalog: &mut Catalog, publish: &Publ
         return false;
     };
     if rest == "bridge/devices" {
-        return match Catalog::from_bridge_devices(ctx.instance(), &publish.payload) {
-            Ok(fresh) => {
-                apply_catalog(ctx, catalog, fresh);
-                true
-            }
-            Err(e) => {
-                tracing::warn!(error = %e, "invalid bridge/devices payload");
-                false
-            }
+        return if let Ok(fresh) = Catalog::from_bridge_devices(ctx.instance(), &publish.payload) {
+            apply_catalog(ctx, catalog, fresh);
+            true
+        } else {
+            tracing::warn!("invalid bridge/devices payload");
+            false
         };
     }
     if rest.starts_with("bridge/") || is_request(rest) {
@@ -168,6 +166,7 @@ fn on_publish(ctx: &DriverCtx, base: &str, catalog: &mut Catalog, publish: &Publ
         return false;
     };
     if let Ok(serde_json::Value::Object(payload)) = serde_json::from_slice(&publish.payload) {
+        keypad::hand_over(ctx, entry, &payload, publish.retain);
         for (key, value) in entry.decode(&payload) {
             ctx.set_state(&entry.device.id, &key, value);
         }
@@ -282,3 +281,9 @@ mod tests {
         serde_json::from_str(json).unwrap()
     }
 }
+
+#[cfg(test)]
+mod privacy_tests;
+
+#[cfg(test)]
+mod privacy_transport_tests;

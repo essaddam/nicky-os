@@ -276,6 +276,18 @@ impl DriverCtx {
             .map(|sample| sample.value)
     }
 
+    /// Hands a keypad input directly to the sole internal consumer, never the bus.
+    pub fn submit_keypad_input(&self, input: crate::KeypadInput) -> bool {
+        if !self.owns(&input.device) {
+            self.hub.reject_keypad_input();
+            return false;
+        }
+        self.hub.submit_keypad_input(input)
+    }
+    pub fn reject_keypad_input(&self) {
+        self.hub.reject_keypad_input();
+    }
+
     /// Records a value for a point of one of this instance's devices.
     pub fn set_state(&self, device: &DeviceId, key: &str, value: Value) {
         if self.owns(device) {

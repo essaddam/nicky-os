@@ -9,6 +9,7 @@ pub mod color;
 mod event;
 mod id;
 mod model;
+pub mod privacy;
 mod spec;
 mod value;
 

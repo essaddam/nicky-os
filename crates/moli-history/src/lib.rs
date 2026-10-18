@@ -12,6 +12,7 @@
 //! person (PIN session) has seen what it would delete and validated it.
 
 mod policy;
+mod privacy;
 mod retention;
 pub use moli_rollup as rollup;
 mod store;
