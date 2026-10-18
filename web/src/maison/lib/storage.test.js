@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { storageLines } from './storage.js';
+import { storageLines, retentionLines } from './storage.js';
 
 const fmt = { num: String, when: String };
 const keys = (lines) => lines.map((l) => l.key);
@@ -42,5 +42,46 @@ test('every line is worded in French and in English', () => {
         assert.ok(words[key] ?? words[`${key}_other`], `${lang}: ${key}`);
       }
     }
+  }
+});
+
+test('the retention says each duration, and what a reduction would delete', () => {
+  const policies = {
+    filter: { exclude: ['z2m:*/linkquality'], include: ['z2m:bureau/linkquality'] },
+    configured: { days: 30, families: { diagnostic: 3, climate: 90 }, points: [['z2m:cave/temperature', 365]] },
+    last_validation: null,
+    reduction: { at: 5, fingerprint: 'f', points: 2, rows: 1200, from: 10, to: 20, top: [] },
+  };
+  const lines = retentionLines(policies, fmt);
+  assert.deepEqual(keys(lines), [
+    'systeme.conservation.general',
+    'systeme.conservation.famille',
+    'systeme.conservation.famille',
+    'systeme.conservation.regles',
+    'systeme.conservation.exclus',
+    'systeme.conservation.inclus',
+    'systeme.conservation.reduction',
+  ]);
+  assert.equal(lines[5].params.list, 'z2m:bureau/linkquality');
+  assert.equal(lines[1].params.family.key, 'systeme.conservation.familles.climate');
+  assert.deepEqual(lines[6].params, { count: 1200, n: '1200', points: '2', from: '10', to: '20' });
+  assert.ok(lines[6].alert);
+  // Suspended purges: what resuming them deletes, in its own words.
+  const resume = retentionLines({ ...policies, reduction: { ...policies.reduction, resume: true } }, fmt);
+  assert.equal(resume.at(-1).key, 'systeme.conservation.reprise');
+  const resumeEmpty = retentionLines({ ...policies, reduction: { ...policies.reduction, resume: true, rows: 0 } }, fmt);
+  assert.equal(resumeEmpty.at(-1).key, 'systeme.conservation.reprise_vide');
+  for (const lang of ['fr', 'en']) {
+    const words = catalog(lang);
+    for (const key of ['systeme.conservation.reprise_other', 'systeme.conservation.reprise_vide']) assert.ok(words[key], `${lang}: ${key}`);
+  }
+  // Nothing configured: the general duration only, nothing waiting.
+  const plain = retentionLines({ filter: { exclude: [], include: [] }, configured: { days: 30, families: {}, points: [] }, reduction: null }, fmt);
+  assert.deepEqual(keys(plain), ['systeme.conservation.general']);
+  // Every key exists in both languages, plurals included.
+  for (const lang of ['fr', 'en']) {
+    const words = catalog(lang);
+    for (const l of lines) assert.ok(words[l.key] ?? words[`${l.key}_other`], `${lang}: ${l.key}`);
+    assert.ok(words['systeme.conservation.changee'], `${lang}: changee`);
   }
 });

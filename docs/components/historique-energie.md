@@ -3,7 +3,8 @@
 ## Historique (`crates/moli-history`)
 
 - SQLite `data/history.db`, enregistrement **au changement** (le hub n'émet que les
-  changements), 30 jours (`retention_days`), purgé toutes les 6 h. La purge garde, pour
+  changements), `[server] history_days` jours (30 par défaut), affinés par famille et par
+  point (ci-dessous), purgé toutes les 6 h. La purge garde, pour
   chaque point, le **dernier échantillon antérieur au seuil** : une courbe qui commence au
   seuil connaît sa valeur de départ, et une valeur stable depuis des mois reste connue.
 - Le recorder lit le bus sans jamais l'attendre et passe des lots (2 s ou 1 000 changements)
@@ -29,6 +30,146 @@
   l'origine ; regroupement en jours et mois locaux (journées de 23 ou 25 h). `Null` = non
   couvert, une valeur n'est crue que pendant une fraîcheur réglable, une heure vide n'a pas
   d'agrégat (≠ zéro). Fuseaux dont minuit ne tombe pas sur une heure UTC pleine : refusés.
+
+## Politiques de conservation (`[storage]`, `crates/moli-history/src/policy.rs`)
+
+Sans section `[storage]`, tout est écrit et gardé `history_days` jours
+(test `without_a_new_configuration_the_purge_is_the_one_before`, qui compare à l'ancienne
+requête).
+
+**Familles.** Chaque point appartient à une famille, déduite de sa sémantique puis de son
+unité (`policy::family`), jamais du seul type : le type ne départage que les points sans
+sémantique ni unité (un bouton, un texte → états ; un nombre → autre).
+
+| Famille | Contient |
+|---|---|
+| `power` | puissance, puissance apparente, courant, tension secteur (V) |
+| `climate` | température, humidité, pression, luminosité, ppm |
+| `energy` | compteurs (kWh, Wh) ; leurs heures vivent aussi dans `energy.db` |
+| `states` | marche/arrêt, contacts, serrures et ouvre-portes, présence, fuites, fumée, luminosité et couleur d'une lampe, boutons, textes |
+| `diagnostic` | signal, link quality, batterie, tension de pile (`voltage` en mV d'un appareil sur pile, ou un nom de batterie) |
+| `other` | le reste : un pourcentage sans sémantique, une mesure en mV qui n'est pas une pile (ORP d'une piscine) |
+
+L'association famille → agrégation (moyenne pondérée, somme, durées, comptage) n'est pas
+faite ici : le module de résumés n'est pas encore fusionné, elle revient à son ticket.
+
+**Priorité** : la règle du point (`[[storage.point]]`, la première qui correspond), puis sa
+famille (`[storage.policy.<famille>]`), puis `history_days`. Un motif est un identifiant de
+point où `*` remplace n'importe quelle suite de caractères (`z2m:*/linkquality`).
+
+```toml
+[storage.history]
+exclude = ["z2m:*/linkquality", "tapo:*/rssi"]   # plus jamais écrits
+include = ["z2m:bureau_routeur/linkquality"]     # écrit même s'il est exclu
+
+[storage.policy.climate]
+days = 90
+
+[storage.policy.diagnostic]
+days = 7
+
+[[storage.point]]
+match = "z2m:cave_thermometre/temperature"
+days = 365
+```
+
+Validation au démarrage, messages dans la langue de la maison : famille inconnue, durée hors
+de 1 à 36 500 jours, motif vide, clé inconnue.
+
+**Exclure n'est pas purger.** Un point exclu n'est plus écrit ; ce qui est déjà enregistré reste
+et suit sa durée. L'énergie a son propre abonné au bus : un compteur exclu de l'historique
+reste compté exactement (test `an_excluded_point_is_not_written_and_its_energy_stays_exact`).
+
+**Purge par lots.** Point par point, au plus 5 000 lignes par requête, le rédacteur relâché
+entre deux lots (2 ms). Chaque lot vérifie, dans sa propre requête, que le plancher du point
+n'a pas été relevé au-dessus de celui qui a décidé la coupe, que les purges ne sont pas
+suspendues et que la génération de garde est inchangée. Il consulte aussi les maxima
+**déjà admis mais pas encore persistés**, sous le même verrou que leur admission : une
+hausse reçue entre deux lots protège dès le lot suivant, sans attendre son worker.
+Sinon, plus rien ne part : les lots
+du recorder passent entre deux (test
+`pruning_goes_by_lots_and_writes_pass_in_between`). SQL portable (pas de `DELETE … LIMIT`),
+toujours par la clé primaire, ancrage conservé.
+
+**Garde des réductions** (`crates/moli-history/src/retention.rs`). Chaque point a un
+**plancher** dans `history.db` (table `retention`) : la durée pendant laquelle il est gardé
+jusqu'ici. Au premier démarrage, tous les points déjà enregistrés reçoivent `history_days`
+(Moli avant toute politique) ; un point apparu ensuite reçoit sa durée configurée **avec sa
+première ligne, dans la même transaction** (la plus longue possible si son appareil est encore
+inconnu) : un arrêt avant la passe suivante ne le laisse jamais sans plancher. Une passe garde
+chaque point la plus longue de son plancher et de sa durée configurée :
+
+- une durée **plus longue** s'applique tout de suite et **relève le plancher** aussitôt, même si
+  une autre réduction attend : la ramener ensuite est une réduction comme une autre. Le
+  plancher est relevé **dès la publication de son appareil** (`DeviceUpserted` sur le bus,
+  et relecture de toutes les descriptions du hub au démarrage et après une perte d'événements,
+  points exclus compris), **à chaque écriture du point**, dans la transaction de ses lignes, et
+  par chaque passe. Les publications mettent en file les points concernés (une entrée par
+  point), écrite par une seule tâche et vidée avant l'arrêt. Elles conservent le maximum
+  des durées certaines observées, associé à une **génération de consentement par point**
+  (`retention_consent`). Dans la transaction d'écriture, ce maximum s'applique seulement si
+  aucun consentement plus récent ne l'a remplacé ; la durée certaine actuelle s'applique
+  toujours. Une ancienne publication ne défait donc pas une réduction validée depuis, même
+  si son lot était déjà sorti de la file. La validation capture aussi la **position d’émission
+  du bus** : les anciennes descriptions encore dans le récepteur ne reçoivent pas la
+  génération nouvelle au seul motif qu’elles sont consommées plus tard. Une publication
+  émise après cette borne reste nouvelle. Les positions tiennent compte des événements
+  perdus (`Lagged`), et la capture d’un instantané et son admission prennent ensemble le
+  verrou de consentement. Une reprise remplace aussi les observations antérieures quand
+  sa durée validée est identique au plancher (30 → 30).
+  Toute hausse de plancher échouée **bloque les suppressions avant de rendre le verrou
+  SQL**, puis **suspend les purges, durablement**
+  (`retention_guard` et `retention_log`) : plus rien n'est supprimé tant qu'une personne
+  n'a pas vu ce que la reprise supprimerait, point par point (`reduction.resume`), et
+  validé avec son code. Le worker retente ses hausses au plus trois fois et garde son
+  erreur terminale. Le plancher n'est jamais abaissé que par une validation. Appareil inconnu : seule la hausse certaine relève le
+  plancher (la plus courte durée que pourrait lui donner une famille, donc toute règle propre
+  au point), jamais une simple ambiguïté ;
+- une durée **plus courte** n'efface rien. `GET /api/history/retention` compte, point par point,
+  ce qu'elle supprimerait (`reduction.rows`, `points`, période `from`–`to`, points les plus
+  touchés) et **garde ce plan** : points, familles, planchers, ancre et nombre de lignes de
+  chacun. La page Système l'affiche dans « Stockage ». Une personne le valide avec son code :
+  `POST /api/history/retention/validate` `{ "at", "fingerprint" }` (session PIN exigée, 403 sinon,
+  même depuis un tableau de bord de confiance). La validation applique **ce plan seul** : elle
+  revérifie chaque point (plancher, famille, durée configurée), abaisse leurs planchers **seulement
+  s'ils valent encore ce qui a été compté** (tout ou rien, dans une transaction) et
+  supprime leurs lignes **dans la période annoncée** (de la plus ancienne comptée jusqu'à
+  l'ancre), **jamais plus que le nombre annoncé** : une écriture arrivée entre-temps n'élargit
+  rien. Les autres points attendent leur passe ordinaire. Un décompte plus récent remplace
+  celui affiché ; un point dont le plancher, la famille ou la durée a changé refuse la
+  validation (409), un décompte de plus de 15 min aussi (410) : la page montre alors la
+  nouvelle proposition et demande un nouveau clic ;
+- validation et passes prennent le même verrou, tenu du contrôle du plan jusqu'à la dernière
+  ligne supprimée : aucune passe ne s'intercale ;
+- un agent (`api`, `mcp`, `cli`, `assistant`) ne valide jamais : `History::validate` refuse
+  toute origine autre qu'une personne avec code, et aucun outil MCP ne l'expose ;
+- un point dont l'appareil n'est pas (encore) publié, juste après un démarrage par exemple,
+  est gardé la plus longue durée de toutes les familles et n'entre dans aucun plan de
+  réduction ; une reprise le garde au moins aussi longtemps ;
+- chaque validation est journalisée (`retention_log` : quand, qui, points, lignes) ; la
+  dernière est rendue par `GET /api/history/retention` (`last_validation`).
+
+**Suspension et redémarrage.** Le démarrage du recorder inscrit un run non finalisé dans
+`retention_guard` avant tout travail. Seul son arrêt ordonné, après vidage réussi des files
+et fin de la purge en cours, le finalise. Les erreurs du rédacteur, du worker de hausses
+**et de la boucle de purge** remontent au handle du recorder : aucun de ces échecs ne
+peut déclarer le run propre. Un échec d’écriture de lot suspend aussi les purges, car le
+plancher écrit avec les mesures a pu échouer lui aussi. Après un **arrêt brutal**, le démarrage suivant
+suspend donc les purges jusqu'à validation humaine de reprise, même sans changement de
+configuration. Cela protège aussi d'une panne qui empêcherait d'écrire le journal de
+suspension après l'échec d'une hausse. Si ce marqueur échoue, les suppressions du processus
+sont bloquées et la reprise nécessite un redémarrage après réparation du stockage.
+Une ouverture de lecture (`History::from_store`) ne démarre ni ne finalise de run.
+
+L'état de suspension et sa génération font foi en base. Chaque lot SQL les revérifie ; une
+nouvelle suspension invalide les plans précédents, y compris une ancienne reprise. La
+transaction de reprise vérifie cette génération et persiste **toutes les hausses certaines**
+du plan avant de lever la suspension. Si l'une échoue, rien n'est validé et la suspension
+reste active. La simple ambiguïté d'une famille inconnue ne relève pas son plancher.
+
+**Échantillonnage des courbes bavardes : non fait.** Il n'est prévu que si le relevé de la
+maison montre des points à plus d'un changement par seconde. Ce relevé (mesure réelle après
+déploiement) n'existe pas encore ; `top_24h` sur la page Système le donnera.
 
 ## Croissance visible (`/api/system`, page Système)
 

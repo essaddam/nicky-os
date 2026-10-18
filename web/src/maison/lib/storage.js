@@ -28,3 +28,35 @@ export function storageLines(id, facts, { num, when }) {
   if (f.last_error) lines.push({ key: 'systeme.stockage.erreur', params: { date: when(f.last_error[0]), message: f.last_error[1] }, alert: true });
   return lines;
 }
+
+const FAMILIES = ['power', 'climate', 'energy', 'states', 'diagnostic', 'other'];
+
+/** What the history keeps (`GET /api/history/retention`), as translation
+ *  keys: the general duration, each family's and the point rules, the
+ *  points not written, and the reduction waiting for a person. */
+export function retentionLines(policies, { num, when }) {
+  const p = policies ?? {};
+  const c = p.configured;
+  if (!c) return [];
+  const lines = [{ key: 'systeme.conservation.general', params: { count: c.days, n: num(c.days) } }];
+  for (const f of FAMILIES) {
+    if (c.families?.[f] != null) {
+      lines.push({ key: 'systeme.conservation.famille', params: { family: { key: `systeme.conservation.familles.${f}` }, count: c.families[f], n: num(c.families[f]) } });
+    }
+  }
+  if (c.points?.length) lines.push({ key: 'systeme.conservation.regles', params: { count: c.points.length, n: num(c.points.length) } });
+  if (p.filter?.exclude?.length) lines.push({ key: 'systeme.conservation.exclus', params: { list: p.filter.exclude.join(', ') } });
+  // Written all the same: `include` wins over `exclude`.
+  if (p.filter?.exclude?.length && p.filter?.include?.length) lines.push({ key: 'systeme.conservation.inclus', params: { list: p.filter.include.join(', ') } });
+  const r = p.reduction;
+  if (r) {
+    // Suspended purges (a raise could not be written) resume once validated.
+    const [some, none] = r.resume ? ['reprise', 'reprise_vide'] : ['reduction', 'reduction_vide'];
+    lines.push(
+      r.rows
+        ? { key: `systeme.conservation.${some}`, params: { count: r.rows, n: num(r.rows), points: num(r.points), from: when(r.from), to: when(r.to) }, alert: true }
+        : { key: `systeme.conservation.${none}`, alert: true },
+    );
+  }
+  return lines;
+}

@@ -112,6 +112,14 @@
 
   "serveur.config.depart_ecrite": "first start: starter configuration written",
   "serveur.config.depart_non_ecrite": "starter configuration not written: default settings, in memory",
+  "serveur.config.stockage_jours": "{ou}: days must be between 1 and {max}",
+  "serveur.config.stockage_motif_vide": "{ou}: a pattern cannot be empty",
+  "serveur.config.stockage_famille_inconnue": "{ou}: unknown family (families: {familles})",
+  "serveur.historique.reduction_humain": "only a person (with the code) can validate a history reduction",
+  "serveur.historique.reduction_aucune": "no history reduction is waiting for validation",
+  "serveur.historique.reduction_changee": "the reduction shown is no longer the one waiting: show it again",
+  "serveur.historique.reduction_perimee": "the count shown is too old: show it again",
+  "serveur.historique.desactive": "history is disabled",
 
   "serveur.energie.lecture_seule": "read-only",
   "serveur.energie.appareil": "Energy",
@@ -153,5 +161,6 @@
   "serveur.personnes.point_depuis": "In this zone since",
   "serveur.personnes.point_nombre": "People at home",
   "serveur.personnes.point_quelquun": "Someone at home",
-  "serveur.personnes.point_tous_partis": "Everyone has left"
+  "serveur.personnes.point_tous_partis": "Everyone has left",
+  "serveur.historique.reprise_redemarrage": "The suspension could not be recorded. Repair storage and restart Moli before validating the resume."
 }

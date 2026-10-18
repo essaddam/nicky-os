@@ -2,7 +2,8 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, PoisonError};
+use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
+use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use moli_core::{PointId, Value};
@@ -27,11 +28,47 @@ CREATE TABLE IF NOT EXISTS samples (
     PRIMARY KEY (point_id, ts)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS samples_ts ON samples(ts);
+-- How long each point has been kept so far, in days: a shorter duration
+-- waits for a person (see retention.rs).
+CREATE TABLE IF NOT EXISTS retention (
+    point_id INTEGER PRIMARY KEY REFERENCES points(id),
+    days     INTEGER NOT NULL
+);
+-- When the durations were set up (baseline) and each reduction a person
+-- validated.
+CREATE TABLE IF NOT EXISTS retention_log (
+    at     INTEGER NOT NULL,
+    kind   TEXT    NOT NULL,           -- baseline | validated | suspended | resumed
+    who    TEXT,
+    points INTEGER NOT NULL,
+    rows   INTEGER NOT NULL
+);
+-- A run is dirty before recording starts, clean only after a successful
+-- drain. Recovery must not depend on writing a marker AFTER a disk error.
+CREATE TABLE IF NOT EXISTS retention_guard (
+    id         INTEGER PRIMARY KEY CHECK(id = 1),
+    generation INTEGER NOT NULL,
+    suspended  INTEGER NOT NULL,
+    clean      INTEGER NOT NULL
+);
+INSERT INTO retention_guard(id, generation, suspended, clean)
+    SELECT 1, 0, COALESCE((SELECT kind = 'suspended' FROM retention_log
+        WHERE kind IN ('suspended', 'resumed') ORDER BY rowid DESC LIMIT 1), 0), 1
+    WHERE NOT EXISTS(SELECT 1 FROM retention_guard WHERE id = 1);
+-- A lower floor invalidates observations made before that consent.
+CREATE TABLE IF NOT EXISTS retention_consent (
+    point_id   INTEGER PRIMARY KEY REFERENCES points(id),
+    generation INTEGER NOT NULL
+);
 -- What agents query: one row per recorded change.
 CREATE VIEW IF NOT EXISTS history AS
     SELECT p.point AS point, s.ts AS ts, s.kind AS kind, s.num AS num, s.txt AS txt
     FROM samples s JOIN points p ON p.id = s.point_id;
 ";
+
+/// Sets a point's floor, or raises it: never lowers it.
+const RAISE_FLOOR: &str = "INSERT INTO retention(point_id, days) VALUES (?1, ?2)
+     ON CONFLICT(point_id) DO UPDATE SET days = excluded.days WHERE excluded.days > retention.days";
 
 /// Agents' SQL: time budget per query.
 const SQL_BUDGET: Duration = Duration::from_secs(2);
@@ -92,12 +129,73 @@ pub struct SqlResult {
     pub truncated: bool,
 }
 
+/// A point's floors when one of its rows is written (`Store::record`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Floors {
+    /// For a point recorded for the first time.
+    pub first: u32,
+    /// What the configuration surely asks for an existing one.
+    pub certain: u32,
+}
+
+/// One point's purge: rows from `oldest` to just before `anchor`, at most
+/// `max` of them, while the point's floor is at most `floor` (the duration
+/// the cut was decided with: raised since, the cut no longer holds).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cut {
+    pub id: i64,
+    pub oldest: u64,
+    pub anchor: u64,
+    pub max: u64,
+    pub floor: u32,
+    pub generation: i64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub(crate) struct Guard {
+    pub generation: i64,
+    pub suspended: bool,
+}
+
+pub(crate) type Consents = HashMap<String, i64>;
+pub(crate) type Observations = Arc<Mutex<HashMap<String, Observed>>>;
+
+/// The maximum observed within one generation of a point's consent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct Observed {
+    pub days: u32,
+    pub generation: i64,
+}
+
+/// What a purge would delete for a point.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct Doomed {
+    /// The sample kept: the last one before the cutoff.
+    pub anchor: u64,
+    pub rows: u64,
+    pub oldest: Option<u64>,
+}
+
+/// A reduction a person validated.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct Validation {
+    pub at: u64,
+    pub by: Option<String>,
+    pub points: u64,
+    pub rows: u64,
+}
+
 pub struct Store {
     path: PathBuf,
     writer: Mutex<Connection>,
     reader: Mutex<Connection>,
     agents: Mutex<Connection>,
     ids: Mutex<HashMap<String, i64>>,
+    /// If even the suspension transaction fails, no deletion or validation
+    /// can proceed in this process. The dirty run protects the next one.
+    suspension_failed: AtomicBool,
+    /// Admission of observed durations and each DELETE share this gate.
+    observations: Observations,
 }
 
 impl std::fmt::Debug for Store {
@@ -144,6 +242,33 @@ fn ts(ms: u64) -> i64 {
     i64::try_from(ms).unwrap_or(i64::MAX)
 }
 
+fn read_guard(conn: &Connection) -> Result<Guard, rusqlite::Error> {
+    conn.query_row(
+        "SELECT generation, suspended FROM retention_guard WHERE id = 1",
+        [],
+        |r| {
+            Ok(Guard {
+                generation: r.get(0)?,
+                suspended: r.get(1)?,
+            })
+        },
+    )
+}
+
+fn mark_suspended(conn: &mut Connection, at: u64, points: usize) -> Result<(), HistoryError> {
+    let tx = conn.transaction()?;
+    tx.execute(
+        "UPDATE retention_guard SET suspended = 1, generation = generation + 1 WHERE id = 1",
+        [],
+    )?;
+    tx.execute(
+        "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'suspended', ?2, 0)",
+        params![ts(at), i64::try_from(points).unwrap_or(i64::MAX)],
+    )?;
+    tx.commit()?;
+    Ok(())
+}
+
 impl Store {
     pub fn open(path: &Path) -> Result<Self, HistoryError> {
         if let Some(dir) = path.parent() {
@@ -184,6 +309,8 @@ impl Store {
             reader: Mutex::new(reader),
             agents: Mutex::new(agents),
             ids: Mutex::new(HashMap::new()),
+            suspension_failed: AtomicBool::new(false),
+            observations: Arc::default(),
         })
     }
 
@@ -195,28 +322,81 @@ impl Store {
         rows: &[(PointId, Value, u64)],
         restate: bool,
     ) -> Result<(), HistoryError> {
-        let mut conn = lock(&self.writer);
+        self.record(rows, restate, None)
+    }
+
+    /// `insert`, keeping each point's retention floor up to date in the
+    /// same transaction (`floors`): a point recorded for the first time gets
+    /// its `first` floor, an existing one is raised to what the
+    /// configuration surely asks (`certain`), never lowered. A point never
+    /// exists without a floor, and an increase is kept as soon as a row of
+    /// the point is written, whatever happens before the next pass.
+    pub fn record(
+        &self,
+        rows: &[(PointId, Value, u64)],
+        restate: bool,
+        floors: Option<&dyn Fn(&str) -> Floors>,
+    ) -> Result<(), HistoryError> {
+        self.protect_write(|conn| self.record_in(conn, rows, restate, floors))
+    }
+
+    fn record_in(
+        &self,
+        conn: &mut Connection,
+        rows: &[(PointId, Value, u64)],
+        restate: bool,
+        floors: Option<&dyn Fn(&str) -> Floors>,
+    ) -> Result<(), HistoryError> {
         let tx = conn.transaction()?;
+        // Ids created here are known to the cache only once committed: a
+        // rolled-back id may be handed to another point.
+        let mut fresh: HashMap<String, i64> = HashMap::new();
         {
-            let mut ids = lock(&self.ids);
-            let mut upsert = tx.prepare(
-                "INSERT INTO points(point) VALUES (?1)
-                 ON CONFLICT(point) DO UPDATE SET point = excluded.point RETURNING id",
+            let ids = lock(&self.ids);
+            let mut create = tx.prepare(
+                "INSERT INTO points(point) VALUES (?1) ON CONFLICT(point) DO NOTHING RETURNING id",
             )?;
+            let mut known = tx.prepare("SELECT id FROM points WHERE point = ?1")?;
+            let mut raise = tx.prepare(RAISE_FLOOR)?;
             // Two changes in the same millisecond (two button presses…) are
             // two samples: a collision moves the later one by 1 ms.
             let mut sample = tx.prepare(
                 "INSERT INTO samples(point_id, ts, kind, num, txt) VALUES (?1, ?2, ?3, ?4, ?5)
                  ON CONFLICT(point_id, ts) DO NOTHING",
             )?;
+            let mut created = std::collections::HashSet::new();
+            let mut floored = std::collections::HashSet::new();
             for (point, value, at) in rows {
-                let id = if let Some(id) = ids.get(point.as_str()) {
+                let cached = ids
+                    .get(point.as_str())
+                    .or_else(|| fresh.get(point.as_str()));
+                let id = if let Some(id) = cached {
                     *id
                 } else {
-                    let id: i64 = upsert.query_row([point.as_str()], |r| r.get(0))?;
-                    ids.insert(point.as_str().to_owned(), id);
+                    let new: Option<i64> = create
+                        .query_row([point.as_str()], |r| r.get(0))
+                        .optional()?;
+                    let id = match new {
+                        Some(id) => {
+                            created.insert(id);
+                            id
+                        }
+                        None => known.query_row([point.as_str()], |r| r.get(0))?,
+                    };
+                    fresh.insert(point.as_str().to_owned(), id);
                     id
                 };
+                if let Some(floors) = floors
+                    && floored.insert(id)
+                {
+                    let f = floors(point.as_str());
+                    let days = if created.contains(&id) {
+                        f.first
+                    } else {
+                        f.certain
+                    };
+                    raise.execute(params![id, days])?;
+                }
                 let (kind, num, txt) = encode(value);
                 for at in (ts(*at)..).take(MAX_SAME_MS) {
                     if sample.execute(params![id, at, kind, num, txt])? == 1 || restate {
@@ -226,20 +406,375 @@ impl Store {
             }
         }
         tx.commit()?;
+        lock(&self.ids).extend(fresh);
         Ok(())
     }
 
-    /// Deletes samples older than `cutoff_ms`, except each point's last one
-    /// before it: a chart starting at the cutoff still knows its first value,
-    /// and a value stable for months is still known. Returns how many.
-    pub fn prune(&self, cutoff_ms: u64) -> Result<usize, HistoryError> {
-        // The anchor is found through the primary key (point_id, ts).
-        Ok(lock(&self.writer).execute(
-            "DELETE FROM samples WHERE ts < ?1
-             AND ts < (SELECT MAX(s.ts) FROM samples s
-                       WHERE s.point_id = samples.point_id AND s.ts < ?1)",
-            [ts(cutoff_ms)],
-        )?)
+    /// Every recorded point: (id, point).
+    pub fn points(&self) -> Result<Vec<(i64, String)>, HistoryError> {
+        let conn = lock(&self.reader);
+        let mut stmt = conn.prepare("SELECT id, point FROM points")?;
+        let rows = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<Result<_, _>>()?;
+        Ok(rows)
+    }
+
+    /// The point's last sample before `cutoff`: the one a purge at that
+    /// cutoff keeps (a chart starting there still knows its first value, a
+    /// value stable for months is still known), everything older goes.
+    pub fn anchor(&self, id: i64, cutoff: u64) -> Result<Option<u64>, HistoryError> {
+        let at: Option<i64> = lock(&self.reader).query_row(
+            "SELECT MAX(ts) FROM samples WHERE point_id = ?1 AND ts < ?2",
+            params![id, ts(cutoff)],
+            |r| r.get(0),
+        )?;
+        Ok(at.map(ms))
+    }
+
+    /// What a purge at `cutoff` deletes for this point: the anchor, the rows
+    /// before it and the oldest one's time.
+    pub fn doomed(&self, id: i64, cutoff: u64) -> Result<Option<Doomed>, HistoryError> {
+        let Some(anchor) = self.anchor(id, cutoff)? else {
+            return Ok(None);
+        };
+        let (rows, oldest): (i64, Option<i64>) = lock(&self.reader).query_row(
+            "SELECT COUNT(*), MIN(ts) FROM samples WHERE point_id = ?1 AND ts < ?2",
+            params![id, ts(anchor)],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )?;
+        Ok(Some(Doomed {
+            anchor,
+            rows: u64::try_from(rows).unwrap_or(0),
+            oldest: oldest.map(ms),
+        }))
+    }
+
+    /// For each cut, deletes the point's samples from `oldest` to just
+    /// before its anchor, the oldest first and never more than its `max`:
+    /// bounds fixed when the purge was decided, so a write arriving
+    /// meanwhile never widens it. Each lot checks, in its own statement, that
+    /// the point's floor was not raised above the cut's: if it was, nothing
+    /// more goes. At
+    /// most `lot` rows per statement, the writer released in between
+    /// (`between` runs then): the recorder's batches pass between two lots.
+    /// Returns how many.
+    pub fn prune(
+        &self,
+        cuts: &[Cut],
+        lot: usize,
+        mut between: impl FnMut(),
+    ) -> Result<usize, HistoryError> {
+        let lot = u64::try_from(lot.max(1)).unwrap_or(u64::MAX);
+        let mut removed = 0;
+        for cut in cuts {
+            let point: Option<String> = lock(&self.reader)
+                .query_row("SELECT point FROM points WHERE id = ?1", [cut.id], |r| {
+                    r.get(0)
+                })
+                .optional()?;
+            let Some(point) = point else { continue };
+            let mut left = cut.max;
+            while left > 0 {
+                let limit = lot.min(left);
+                // Through the primary key (point_id, ts) only; portable SQL
+                // (no DELETE … LIMIT).
+                let conn = lock(&self.writer);
+                // Retained through the DELETE: a publication is admitted
+                // entirely before this lot or after it, never in its gap.
+                let observed = lock(&self.observations);
+                if self.suspension_failed.load(SeqCst) {
+                    break;
+                }
+                if let Some(pending) = observed.get(&point) {
+                    let consent: i64 = conn.query_row(
+                        "SELECT COALESCE((SELECT generation FROM retention_consent WHERE point_id = ?1), 0)",
+                        [cut.id], |r| r.get(0),
+                    )?;
+                    if pending.generation == consent && pending.days > cut.floor {
+                        break;
+                    }
+                }
+                let n = conn.execute(
+                    "DELETE FROM samples WHERE point_id = ?1 AND ts IN (
+                        SELECT ts FROM samples WHERE point_id = ?1 AND ts >= ?2 AND ts < ?3
+                        AND COALESCE((SELECT days FROM retention WHERE point_id = ?1), 0) <= ?5
+                        AND (SELECT suspended FROM retention_guard WHERE id = 1) = 0
+                        AND (SELECT generation FROM retention_guard WHERE id = 1) = ?6
+                        ORDER BY ts LIMIT ?4)",
+                    params![
+                        cut.id,
+                        ts(cut.oldest),
+                        ts(cut.anchor),
+                        i64::try_from(limit).unwrap_or(i64::MAX),
+                        cut.floor,
+                        cut.generation
+                    ],
+                )?;
+                drop(observed);
+                drop(conn);
+                removed += n;
+                left = left.saturating_sub(n as u64);
+                if (n as u64) < limit {
+                    break;
+                }
+                if left > 0 {
+                    between();
+                }
+            }
+        }
+        Ok(removed)
+    }
+
+    /// How long each point has been kept so far (point id → days); `None`
+    /// before the durations were ever set up.
+    pub fn floors(&self) -> Result<Option<HashMap<i64, u32>>, HistoryError> {
+        let conn = lock(&self.reader);
+        let set_up: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM retention_log WHERE kind = 'baseline')",
+            [],
+            |r| r.get(0),
+        )?;
+        if !set_up {
+            return Ok(None);
+        }
+        let mut stmt = conn.prepare("SELECT point_id, days FROM retention")?;
+        let floors = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<Result<_, _>>()?;
+        Ok(Some(floors))
+    }
+
+    /// The first time: every point recorded so far was kept `days` days
+    /// (Moli before any policy).
+    pub fn set_up_floors(&self, days: u32, at: u64) -> Result<(), HistoryError> {
+        let mut conn = lock(&self.writer);
+        let tx = conn.transaction()?;
+        let points = tx.execute(
+            "INSERT OR IGNORE INTO retention(point_id, days) SELECT id, ?1 FROM points",
+            [days],
+        )?;
+        tx.execute(
+            "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'baseline', ?2, 0)",
+            params![ts(at), i64::try_from(points).unwrap_or(i64::MAX)],
+        )?;
+        tx.commit()?;
+        Ok(())
+    }
+
+    /// Raises points' floors (a floor missing is set): never lowers one.
+    pub fn raise_floors(&self, floors: &[(i64, u32)]) -> Result<(), HistoryError> {
+        self.protect_write(|conn| {
+            let tx = conn.transaction()?;
+            {
+                let mut raise = tx.prepare(RAISE_FLOOR)?;
+                for (id, days) in floors {
+                    raise.execute(params![id, days])?;
+                }
+            }
+            tx.commit()?;
+            Ok(())
+        })
+    }
+
+    /// Observed maxima survive a changing family until a newer consent.
+    /// Check that consent inside the writer, including for extracted lots.
+    /// Current certain durations always apply, even after a consent.
+    pub(crate) fn raise_named_floors(
+        &self,
+        points: &[(String, Observed)],
+        days: &dyn Fn(&str) -> u32,
+    ) -> Result<(), HistoryError> {
+        self.protect_write(|conn| {
+            let tx = conn.transaction()?;
+            {
+                let mut raise = tx.prepare(
+                    "UPDATE retention SET days = ?2
+                 WHERE point_id = (SELECT id FROM points WHERE point = ?1) AND days < ?2",
+                )?;
+                let mut consent = tx.prepare(
+                    "SELECT COALESCE((SELECT generation FROM retention_consent
+                 WHERE point_id = (SELECT id FROM points WHERE point = ?1)), 0)",
+                )?;
+                for (point, observed) in points {
+                    let generation: i64 = consent.query_row([point], |r| r.get(0))?;
+                    let current = days(point);
+                    let keep = if generation == observed.generation {
+                        current.max(observed.days)
+                    } else {
+                        current
+                    };
+                    raise.execute(params![point, keep])?;
+                }
+            }
+            tx.commit()?;
+            Ok(())
+        })
+    }
+
+    pub(crate) fn observations(&self) -> Observations {
+        Arc::clone(&self.observations)
+    }
+
+    /// Rollback and the purge block share the writer. Callers cannot
+    /// accidentally leave a window by suspending in a later async job.
+    fn protect_write<T>(
+        &self,
+        write: impl FnOnce(&mut Connection) -> Result<T, HistoryError>,
+    ) -> Result<T, HistoryError> {
+        let mut conn = lock(&self.writer);
+        let result = write(&mut conn);
+        if result.is_err() {
+            self.suspension_failed.store(true, SeqCst);
+            match mark_suspended(&mut conn, moli_core::now_ms(), 0) {
+                Ok(()) => self.suspension_failed.store(false, SeqCst),
+                Err(e) => tracing::error!(error = %e, "history suspension not written"),
+            }
+        }
+        result
+    }
+
+    /// Open the recorder's run before any task can observe a higher duration.
+    /// An unfinished predecessor requires a person's consent to resume.
+    pub(crate) fn open_run(&self) -> Result<(), HistoryError> {
+        let mut conn = lock(&self.writer);
+        let tx = conn.transaction()?;
+        let clean: bool =
+            tx.query_row("SELECT clean FROM retention_guard WHERE id = 1", [], |r| {
+                r.get(0)
+            })?;
+        if !clean {
+            tx.execute("UPDATE retention_guard SET suspended = 1, generation = generation + 1 WHERE id = 1", [])?;
+            tx.execute(
+                "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'suspended', 0, 0)",
+                [ts(moli_core::now_ms())],
+            )?;
+        }
+        tx.execute("UPDATE retention_guard SET clean = 0 WHERE id = 1", [])?;
+        tx.commit()?;
+        Ok(())
+    }
+
+    /// Called only after the recorder, writer, raises and purge have ended.
+    pub(crate) fn close_run(&self) -> Result<(), HistoryError> {
+        let conn = lock(&self.writer);
+        self.check_suspension_write()?;
+        conn.execute("UPDATE retention_guard SET clean = 1 WHERE id = 1", [])?;
+        Ok(())
+    }
+
+    fn check_suspension_write(&self) -> Result<(), HistoryError> {
+        if self.suspension_failed.load(SeqCst) {
+            return Err(HistoryError::Internal(moli_i18n::tr!(
+                "serveur.historique.reprise_redemarrage"
+            )));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn guard(&self) -> Result<Guard, HistoryError> {
+        let mut guard = read_guard(&lock(&self.reader))?;
+        guard.suspended |= self.suspension_failed.load(SeqCst);
+        Ok(guard)
+    }
+
+    pub(crate) fn consents(&self) -> Result<Consents, HistoryError> {
+        let conn = lock(&self.reader);
+        let mut stmt = conn.prepare("SELECT p.point, c.generation FROM retention_consent c JOIN points p ON p.id = c.point_id")?;
+        Ok(stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+            .collect::<Result<_, _>>()?)
+    }
+
+    /// Both the durable transition and its fallback share the DELETE writer.
+    pub fn suspend(&self, at: u64, points: usize) -> Result<(), HistoryError> {
+        let mut conn = lock(&self.writer);
+        self.suspension_failed.store(true, SeqCst);
+        mark_suspended(&mut conn, at, points)?;
+        self.suspension_failed.store(false, SeqCst);
+        Ok(())
+    }
+
+    /// The database is authoritative; a failed suspension write also blocks.
+    pub fn suspended(&self) -> Result<bool, HistoryError> {
+        Ok(self.guard()?.suspended)
+    }
+
+    /// Apply the whole plan atomically: floors (including certain raises),
+    /// point consent generations and the guard generation being resumed.
+    /// None means a stale plan; otherwise return committed consent updates.
+    pub(crate) fn validate_floors(
+        &self,
+        floors: &[(i64, u32, u32)],
+        at: u64,
+        who: Option<&str>,
+        rows: u64,
+        guard: Guard,
+    ) -> Result<Option<Consents>, HistoryError> {
+        let mut conn = lock(&self.writer);
+        self.check_suspension_write()?;
+        let tx = conn.transaction()?;
+        if read_guard(&tx)? != guard {
+            return Ok(None);
+        }
+        let mut consents = Consents::new();
+        {
+            let mut lower =
+                tx.prepare("UPDATE retention SET days = ?3 WHERE point_id = ?1 AND days = ?2")?;
+            for (id, from, to) in floors {
+                if lower.execute(params![id, from, to])? != 1 {
+                    return Ok(None);
+                }
+                if guard.suspended || to < from {
+                    tx.execute("INSERT INTO retention_consent(point_id, generation) VALUES (?1, 1)
+                        ON CONFLICT(point_id) DO UPDATE SET generation = retention_consent.generation + 1", [id])?;
+                    let (point, generation) = tx.query_row(
+                        "SELECT p.point, c.generation FROM points p
+                        JOIN retention_consent c ON c.point_id = p.id WHERE p.id = ?1",
+                        [id],
+                        |r| Ok((r.get(0)?, r.get(1)?)),
+                    )?;
+                    consents.insert(point, generation);
+                }
+            }
+        }
+        tx.execute(
+            "INSERT INTO retention_log(at, kind, who, points, rows) VALUES (?1, 'validated', ?2, ?3, ?4)",
+            params![
+                ts(at),
+                who,
+                i64::try_from(floors.len()).unwrap_or(i64::MAX),
+                i64::try_from(rows).unwrap_or(i64::MAX)
+            ],
+        )?;
+        if guard.suspended {
+            tx.execute("UPDATE retention_guard SET suspended = 0 WHERE id = 1", [])?;
+            tx.execute(
+                "INSERT INTO retention_log(at, kind, who, points, rows) VALUES (?1, 'resumed', ?2, 0, 0)",
+                params![ts(at), who],
+            )?;
+        }
+        tx.commit()?;
+        Ok(Some(consents))
+    }
+
+    /// The last reduction a person validated: (when, who, points, rows).
+    pub fn last_validation(&self) -> Result<Option<Validation>, HistoryError> {
+        Ok(lock(&self.reader)
+            .query_row(
+                "SELECT at, who, points, rows FROM retention_log WHERE kind = 'validated'
+                 ORDER BY at DESC LIMIT 1",
+                [],
+                |r| {
+                    Ok(Validation {
+                        at: ms(r.get(0)?),
+                        by: r.get(1)?,
+                        points: u64::try_from(r.get::<_, i64>(2)?).unwrap_or(0),
+                        rows: u64::try_from(r.get::<_, i64>(3)?).unwrap_or(0),
+                    })
+                },
+            )
+            .optional()?)
     }
 
     pub fn series(
@@ -448,6 +983,27 @@ mod tests {
         PointId::from(s)
     }
 
+    /// Every point pruned at the same cutoff, in lots of 2.
+    fn prune_all(store: &Store, cutoff: u64) -> usize {
+        let cuts: Vec<_> = store
+            .points()
+            .unwrap()
+            .into_iter()
+            .filter_map(|(id, _)| {
+                let anchor = store.anchor(id, cutoff).unwrap()?;
+                Some(Cut {
+                    id,
+                    oldest: 0,
+                    anchor,
+                    max: u64::MAX,
+                    floor: u32::MAX,
+                    generation: store.guard().unwrap().generation,
+                })
+            })
+            .collect();
+        store.prune(&cuts, 2, || {}).unwrap()
+    }
+
     #[test]
     fn values_round_trip_exactly() {
         let (store, dir) = store("types");
@@ -557,7 +1113,7 @@ mod tests {
             (p("d/stable"), Value::Int(7), 1_000),
         ];
         store.insert(&rows, false).unwrap();
-        assert_eq!(store.prune(5_000).unwrap(), 1);
+        assert_eq!(prune_all(&store, 5_000), 1);
         // 2 s stays: the value the window starts from.
         assert_eq!(store.series("d/x", 0, 10_000, 10).unwrap().total, 2);
         // A value that never changed is still known, however old.
@@ -575,10 +1131,361 @@ mod tests {
             (p("d/x"), Value::Int(6), 6_000),
         ];
         store.insert(&rows, false).unwrap();
-        assert_eq!(store.prune(5_000).unwrap(), 0);
+        assert_eq!(prune_all(&store, 5_000), 0);
         // A chart starting at the cutoff still knows where the curve was.
         let s = store.series("d/x", 5_000, 10_000, 10).unwrap();
         assert_eq!(s.before, Some((1_000, Value::Int(1))));
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn pruning_goes_by_lots_and_writes_pass_in_between() {
+        let (store, dir) = store("prune-lots");
+        let old: Vec<_> = (0..100u64)
+            .map(|i| (p("d/x"), Value::Int(1), 1_000 + i))
+            .collect();
+        store.insert(&old, false).unwrap();
+        let (id, _) = store.points().unwrap()[0].clone();
+        // What the purge will delete: every old row but the anchor.
+        let doomed = store.doomed(id, 50_000).unwrap().unwrap();
+        assert_eq!(
+            (doomed.anchor, doomed.rows, doomed.oldest),
+            (1_099, 99, Some(1_000))
+        );
+        let cut = Cut {
+            id,
+            oldest: doomed.oldest.unwrap(),
+            anchor: doomed.anchor,
+            max: doomed.rows,
+            floor: u32::MAX,
+            generation: store.guard().unwrap().generation,
+        };
+        let mut lots = 0;
+        let removed = store
+            .prune(&[cut], 10, || {
+                // The writer is free: a recorder's batch goes in now.
+                lots += 1;
+                assert!(store.writer.try_lock().is_ok(), "writer held between lots");
+                store
+                    .insert(
+                        &[(p("d/live"), Value::Int(lots), 60_000 + lots.unsigned_abs())],
+                        false,
+                    )
+                    .unwrap();
+            })
+            .unwrap();
+        assert_eq!(removed, 99);
+        assert_eq!(lots, 9, "99 rows in lots of 10: 9 full lots, then the rest");
+        assert_eq!(store.series("d/live", 0, 100_000, 100).unwrap().total, 9);
+        assert_eq!(
+            store.series("d/x", 0, 100_000, 100).unwrap().raw,
+            vec![(1_099, Value::Int(1))]
+        );
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_write_between_lots_never_widens_the_purge() {
+        let (store, dir) = store("prune-fixed");
+        let rows: Vec<_> = (10..=30u64).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        store.insert(&rows, false).unwrap();
+        let (id, _) = store.points().unwrap()[0].clone();
+        let doomed = store.doomed(id, 100).unwrap().unwrap();
+        assert_eq!(
+            (doomed.oldest, doomed.anchor, doomed.rows),
+            (Some(10), 30, 20)
+        );
+        let cut = Cut {
+            id,
+            oldest: 10,
+            anchor: doomed.anchor,
+            max: doomed.rows,
+            floor: u32::MAX,
+            generation: store.guard().unwrap().generation,
+        };
+        // Old readings restated between two lots: newer than the anchor, and
+        // older than the oldest row announced.
+        let mut late = vec![(p("d/x"), Value::Int(2), 50), (p("d/x"), Value::Int(3), 0)];
+        let removed = store
+            .prune(&[cut], 5, || {
+                if let Some(row) = late.pop() {
+                    store.insert(&[row], false).unwrap();
+                }
+            })
+            .unwrap();
+        assert_eq!(removed, 20, "exactly what was announced");
+        let left: Vec<u64> = store
+            .series("d/x", 0, 1_000, 100)
+            .unwrap()
+            .raw
+            .iter()
+            .map(|(t, _)| *t)
+            .collect();
+        assert_eq!(
+            left,
+            vec![0, 30, 50],
+            "nothing outside the period announced"
+        );
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_point_gets_its_floor_with_its_first_row() {
+        let (store, dir) = store("first-floor");
+        store.set_up_floors(30, 1).unwrap();
+        let floor = |point: &str| {
+            let first = if point == "d/a" { 7 } else { 90 };
+            Floors { first, certain: 1 }
+        };
+        store
+            .record(&[(p("d/a"), Value::Int(1), 1)], false, Some(&floor))
+            .unwrap();
+        store
+            .record(
+                &[(p("d/b"), Value::Int(1), 1), (p("d/a"), Value::Int(2), 2)],
+                false,
+                Some(&floor),
+            )
+            .unwrap();
+        let floors = store.floors().unwrap().unwrap();
+        let mut got: Vec<u32> = floors.values().copied().collect();
+        got.sort_unstable();
+        assert_eq!(got, vec![7, 90], "set once, at the first row");
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_raised_floor_stops_a_purge_even_between_lots() {
+        let (store, dir) = store("prune-raised");
+        store.set_up_floors(30, 1).unwrap();
+        let rows: Vec<_> = (0..=20u64).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        let floors = |_: &str| Floors {
+            first: 30,
+            certain: 30,
+        };
+        store.record(&rows, false, Some(&floors)).unwrap();
+        let (id, _) = store.points().unwrap()[0].clone();
+        let cut = Cut {
+            id,
+            oldest: 0,
+            anchor: 20,
+            max: u64::MAX,
+            floor: 30,
+            generation: store.guard().unwrap().generation,
+        };
+        // Raised before the purge: nothing goes.
+        store.raise_floors(&[(id, 90)]).unwrap();
+        assert_eq!(store.prune(&[cut], 5, || {}).unwrap(), 0);
+        // Raised between two lots: the first lot only.
+        let cut = Cut { floor: 90, ..cut };
+        let removed = store
+            .prune(&[cut], 5, || {
+                store.raise_floors(&[(id, 120)]).unwrap();
+            })
+            .unwrap();
+        assert_eq!(removed, 5);
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_suspension_stops_a_purge_between_lots() {
+        let (store, dir) = store("prune-suspended");
+        store.set_up_floors(30, 1).unwrap();
+        let rows: Vec<_> = (0..=20).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        store.insert(&rows, false).unwrap();
+        let cut = Cut {
+            id: store.points().unwrap()[0].0,
+            oldest: 0,
+            anchor: 20,
+            max: u64::MAX,
+            floor: 30,
+            generation: store.guard().unwrap().generation,
+        };
+        let removed = store
+            .prune(&[cut], 5, || store.suspend(1, 1).unwrap())
+            .unwrap();
+        assert_eq!(removed, 5, "only the lot before the suspension");
+        assert_eq!(store.series("d/x", 0, 100, 100).unwrap().total, 16);
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_failed_floor_write_blocks_cuts_before_returning_to_its_caller() {
+        let (store, dir) = store("floor-write-fails");
+        store
+            .insert(
+                &[(p("d/x"), Value::Int(1), 1), (p("d/x"), Value::Int(2), 2)],
+                false,
+            )
+            .unwrap();
+        store.set_up_floors(30, 1).unwrap();
+        let cut = Cut {
+            id: store.points().unwrap()[0].0,
+            oldest: 0,
+            anchor: 2,
+            max: 1,
+            floor: 30,
+            generation: store.guard().unwrap().generation,
+        };
+        Connection::open(dir.join("history.db"))
+            .unwrap()
+            .execute_batch(
+                "CREATE TRIGGER boom BEFORE UPDATE ON retention WHEN NEW.days = 90
+             BEGIN SELECT RAISE(ABORT, 'raise failed'); END;",
+            )
+            .unwrap();
+        let written = store.record(
+            &[(p("d/x"), Value::Int(3), 3)],
+            false,
+            Some(&|_| Floors {
+                first: 90,
+                certain: 90,
+            }),
+        );
+        assert!(written.is_err());
+        // No async caller has had an opportunity to enqueue a suspension.
+        assert_eq!(store.prune(&[cut], 1, || {}).unwrap(), 0);
+        assert!(store.suspended().unwrap());
+        assert_eq!(store.series("d/x", 0, 10, 10).unwrap().total, 2);
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_resume_cannot_revive_an_old_cut_or_validate_an_old_guard() {
+        let (store, dir) = store("old-guard");
+        store.set_up_floors(30, 1).unwrap();
+        let rows: Vec<_> = (0..=20).map(|i| (p("d/x"), Value::Int(1), i)).collect();
+        store
+            .record(
+                &rows,
+                false,
+                Some(&|_| Floors {
+                    first: 30,
+                    certain: 30,
+                }),
+            )
+            .unwrap();
+        let id = store.points().unwrap()[0].0;
+        let cut = Cut {
+            id,
+            oldest: 0,
+            anchor: 20,
+            max: u64::MAX,
+            floor: 30,
+            generation: store.guard().unwrap().generation,
+        };
+        let removed = store
+            .prune(&[cut], 5, || {
+                store.suspend(1, 1).unwrap();
+                let old = store.guard().unwrap();
+                store.suspend(2, 1).unwrap();
+                assert!(
+                    store
+                        .validate_floors(&[(id, 30, 3)], 3, None, 0, old)
+                        .unwrap()
+                        .is_none()
+                );
+                assert_eq!(store.floors().unwrap().unwrap()[&id], 30);
+                assert!(store.suspended().unwrap());
+                let current = store.guard().unwrap();
+                assert!(
+                    store
+                        .validate_floors(&[], 4, None, 0, current)
+                        .unwrap()
+                        .is_some()
+                );
+            })
+            .unwrap();
+        assert_eq!(
+            removed, 5,
+            "the pre-suspension cut remains stale after resuming"
+        );
+        assert!(!store.suspended().unwrap());
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn an_existing_suspension_survives_the_guard_schema_upgrade() {
+        let (store, dir) = store("guard-migration");
+        lock(&store.writer)
+            .execute_batch(
+                "INSERT INTO retention_log(at, kind, points, rows) VALUES (1, 'suspended', 1, 0);
+             DROP TABLE retention_guard;",
+            )
+            .unwrap();
+        drop(store);
+        let store = Store::open(&dir.join("history.db")).unwrap();
+        assert!(store.suspended().unwrap());
+        store.open_run().unwrap();
+        assert!(store.suspended().unwrap());
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_rolled_back_point_never_lends_its_id() {
+        let (store, dir) = store("rollback");
+        store.set_up_floors(30, 1).unwrap();
+        let first = |point: &str| Floors {
+            first: match point {
+                "d/a" => 30,
+                "d/b" => 13,
+                _ => 1,
+            },
+            certain: 1,
+        };
+        // The second point's floor fails: the whole batch is rolled back.
+        let other = Connection::open(dir.join("history.db")).unwrap();
+        other
+            .execute_batch(
+                "CREATE TRIGGER boom BEFORE INSERT ON retention WHEN NEW.days = 13
+                 BEGIN SELECT RAISE(ABORT, 'boom'); END;",
+            )
+            .unwrap();
+        let failed = store.record(
+            &[
+                (p("d/a"), Value::Int(1), 111),
+                (p("d/b"), Value::Int(1), 222),
+            ],
+            false,
+            Some(&first),
+        );
+        assert!(failed.is_err());
+        other.execute_batch("DROP TRIGGER boom").unwrap();
+        // A new point may take the id the rolled-back one had…
+        store
+            .record(&[(p("d/c"), Value::Int(1), 333)], false, Some(&first))
+            .unwrap();
+        // …and the first point's next reading is still its own.
+        store
+            .record(&[(p("d/a"), Value::Int(2), 444)], false, Some(&first))
+            .unwrap();
+        let ts = |point: &str| -> Vec<u64> {
+            let s = store.series(point, 0, 1_000, 10).unwrap();
+            s.raw.iter().map(|(t, _)| *t).collect()
+        };
+        assert_eq!(ts("d/a"), vec![444]);
+        assert_eq!(ts("d/c"), vec![333]);
+        assert_eq!(ts("d/b"), Vec::<u64>::new());
+        let floors = store.floors().unwrap().unwrap();
+        let id = |point: &str| {
+            store
+                .points()
+                .unwrap()
+                .into_iter()
+                .find(|(_, p)| p == point)
+                .unwrap()
+                .0
+        };
+        assert_eq!((floors[&id("d/a")], floors[&id("d/c")]), (30, 1));
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }

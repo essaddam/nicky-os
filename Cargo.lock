@@ -1311,6 +1311,8 @@ dependencies = [
  "anyhow",
  "jiff",
  "moli-core",
+ "moli-energy",
+ "moli-i18n",
  "moli-runtime",
  "rusqlite",
  "serde",
@@ -1318,6 +1320,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-util",
+ "toml",
  "tracing",
 ]
 

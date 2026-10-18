@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import Icon from '../ui/Icon.svelte';
   import TuyaCloudKeys from '../ui/TuyaCloudKeys.svelte';
+  import RetentionCard from '../ui/RetentionCard.svelte';
   import AssistantSettings from '../ui/AssistantSettings.svelte';
   import AssistantExchanges from '../ui/AssistantExchanges.svelte';
   import AlexaAccount from '../ui/AlexaAccount.svelte';
@@ -341,6 +342,7 @@
           </div>
         {/each}
       </div>
+      {#if storage.some((b) => b.id === 'history')}<RetentionCard />{/if}
     </section>
   {/if}
 </div>

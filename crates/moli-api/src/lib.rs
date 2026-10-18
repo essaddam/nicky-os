@@ -296,6 +296,11 @@ pub fn router(hub: Hub, shutdown: CancellationToken, options: &Options) -> Route
             get(rest::session).post(rest::login).delete(rest::logout),
         )
         .route("/api/history", get(rest::history))
+        .route("/api/history/retention", get(rest::retention))
+        .route(
+            "/api/history/retention/validate",
+            post(rest::validate_retention),
+        )
         .route("/api/bench", get(rest::bench))
         .route("/api/home", get(rest::home))
         .merge(house_routes(&humans, options))
