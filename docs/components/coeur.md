@@ -26,7 +26,11 @@ aucune logique d'appareil (c'est le rôle des [pilotes](pilotes.md)) et aucun LL
   caméras. Lu sous `RwLock` ; ⚠️ ne jamais reprendre le verrou qu'on tient déjà en lecture
   (blocage total déjà vécu).
 - **Bus** : `broadcast` d'`Event`. Un état n'est émis **que s'il change**. Un abonné trop lent
-  reçoit un nouvel instantané au lieu de bloquer les autres (SSE).
+  reçoit un nouvel instantané au lieu de bloquer les autres (SSE). Les consommateurs qui
+  ordonnent un consentement face aux événements retardés utilisent
+  `subscribe_with_position()` et `event_position()` : émission et abonnement partagent un
+  compteur local au hub ; le lecteur avance d’un par événement et de `n` sur `Lagged(n)`.
+  Les messages d’`Event` et les flux REST/SSE restent identiques.
 - **Commandes** : `hub.command(point, value, origin, actor)` → validation contre le
   `PointSpec` (lecture seule, valeur invalide : refus) → **garde** → envoi au pilote
   (délai 5 s) → journal. La confirmation arrive ensuite comme un événement `state`.

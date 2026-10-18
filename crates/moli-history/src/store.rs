@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
-use std::sync::{Mutex, PoisonError};
+use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use moli_core::{PointId, Value};
@@ -158,6 +158,7 @@ pub(crate) struct Guard {
 }
 
 pub(crate) type Consents = HashMap<String, i64>;
+pub(crate) type Observations = Arc<Mutex<HashMap<String, Observed>>>;
 
 /// The maximum observed within one generation of a point's consent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -193,6 +194,8 @@ pub struct Store {
     /// If even the suspension transaction fails, no deletion or validation
     /// can proceed in this process. The dirty run protects the next one.
     suspension_failed: AtomicBool,
+    /// Admission of observed durations and each DELETE share this gate.
+    observations: Observations,
 }
 
 impl std::fmt::Debug for Store {
@@ -252,6 +255,20 @@ fn read_guard(conn: &Connection) -> Result<Guard, rusqlite::Error> {
     )
 }
 
+fn mark_suspended(conn: &mut Connection, at: u64, points: usize) -> Result<(), HistoryError> {
+    let tx = conn.transaction()?;
+    tx.execute(
+        "UPDATE retention_guard SET suspended = 1, generation = generation + 1 WHERE id = 1",
+        [],
+    )?;
+    tx.execute(
+        "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'suspended', ?2, 0)",
+        params![ts(at), i64::try_from(points).unwrap_or(i64::MAX)],
+    )?;
+    tx.commit()?;
+    Ok(())
+}
+
 impl Store {
     pub fn open(path: &Path) -> Result<Self, HistoryError> {
         if let Some(dir) = path.parent() {
@@ -293,6 +310,7 @@ impl Store {
             agents: Mutex::new(agents),
             ids: Mutex::new(HashMap::new()),
             suspension_failed: AtomicBool::new(false),
+            observations: Arc::default(),
         })
     }
 
@@ -319,7 +337,16 @@ impl Store {
         restate: bool,
         floors: Option<&dyn Fn(&str) -> Floors>,
     ) -> Result<(), HistoryError> {
-        let mut conn = lock(&self.writer);
+        self.protect_write(|conn| self.record_in(conn, rows, restate, floors))
+    }
+
+    fn record_in(
+        &self,
+        conn: &mut Connection,
+        rows: &[(PointId, Value, u64)],
+        restate: bool,
+        floors: Option<&dyn Fn(&str) -> Floors>,
+    ) -> Result<(), HistoryError> {
         let tx = conn.transaction()?;
         // Ids created here are known to the cache only once committed: a
         // rolled-back id may be handed to another point.
@@ -441,14 +468,32 @@ impl Store {
         let lot = u64::try_from(lot.max(1)).unwrap_or(u64::MAX);
         let mut removed = 0;
         for cut in cuts {
+            let point: Option<String> = lock(&self.reader)
+                .query_row("SELECT point FROM points WHERE id = ?1", [cut.id], |r| {
+                    r.get(0)
+                })
+                .optional()?;
+            let Some(point) = point else { continue };
             let mut left = cut.max;
             while left > 0 {
                 let limit = lot.min(left);
                 // Through the primary key (point_id, ts) only; portable SQL
                 // (no DELETE … LIMIT).
                 let conn = lock(&self.writer);
+                // Retained through the DELETE: a publication is admitted
+                // entirely before this lot or after it, never in its gap.
+                let observed = lock(&self.observations);
                 if self.suspension_failed.load(SeqCst) {
                     break;
+                }
+                if let Some(pending) = observed.get(&point) {
+                    let consent: i64 = conn.query_row(
+                        "SELECT COALESCE((SELECT generation FROM retention_consent WHERE point_id = ?1), 0)",
+                        [cut.id], |r| r.get(0),
+                    )?;
+                    if pending.generation == consent && pending.days > cut.floor {
+                        break;
+                    }
                 }
                 let n = conn.execute(
                     "DELETE FROM samples WHERE point_id = ?1 AND ts IN (
@@ -466,6 +511,7 @@ impl Store {
                         cut.generation
                     ],
                 )?;
+                drop(observed);
                 drop(conn);
                 removed += n;
                 left = left.saturating_sub(n as u64);
@@ -518,16 +564,17 @@ impl Store {
 
     /// Raises points' floors (a floor missing is set): never lowers one.
     pub fn raise_floors(&self, floors: &[(i64, u32)]) -> Result<(), HistoryError> {
-        let mut conn = lock(&self.writer);
-        let tx = conn.transaction()?;
-        {
-            let mut raise = tx.prepare(RAISE_FLOOR)?;
-            for (id, days) in floors {
-                raise.execute(params![id, days])?;
+        self.protect_write(|conn| {
+            let tx = conn.transaction()?;
+            {
+                let mut raise = tx.prepare(RAISE_FLOOR)?;
+                for (id, days) in floors {
+                    raise.execute(params![id, days])?;
+                }
             }
-        }
-        tx.commit()?;
-        Ok(())
+            tx.commit()?;
+            Ok(())
+        })
     }
 
     /// Observed maxima survive a changing family until a newer consent.
@@ -538,30 +585,53 @@ impl Store {
         points: &[(String, Observed)],
         days: &dyn Fn(&str) -> u32,
     ) -> Result<(), HistoryError> {
-        let mut conn = lock(&self.writer);
-        let tx = conn.transaction()?;
-        {
-            let mut raise = tx.prepare(
-                "UPDATE retention SET days = ?2
+        self.protect_write(|conn| {
+            let tx = conn.transaction()?;
+            {
+                let mut raise = tx.prepare(
+                    "UPDATE retention SET days = ?2
                  WHERE point_id = (SELECT id FROM points WHERE point = ?1) AND days < ?2",
-            )?;
-            let mut consent = tx.prepare(
-                "SELECT COALESCE((SELECT generation FROM retention_consent
+                )?;
+                let mut consent = tx.prepare(
+                    "SELECT COALESCE((SELECT generation FROM retention_consent
                  WHERE point_id = (SELECT id FROM points WHERE point = ?1)), 0)",
-            )?;
-            for (point, observed) in points {
-                let generation: i64 = consent.query_row([point], |r| r.get(0))?;
-                let current = days(point);
-                let keep = if generation == observed.generation {
-                    current.max(observed.days)
-                } else {
-                    current
-                };
-                raise.execute(params![point, keep])?;
+                )?;
+                for (point, observed) in points {
+                    let generation: i64 = consent.query_row([point], |r| r.get(0))?;
+                    let current = days(point);
+                    let keep = if generation == observed.generation {
+                        current.max(observed.days)
+                    } else {
+                        current
+                    };
+                    raise.execute(params![point, keep])?;
+                }
+            }
+            tx.commit()?;
+            Ok(())
+        })
+    }
+
+    pub(crate) fn observations(&self) -> Observations {
+        Arc::clone(&self.observations)
+    }
+
+    /// Rollback and the purge block share the writer. Callers cannot
+    /// accidentally leave a window by suspending in a later async job.
+    fn protect_write<T>(
+        &self,
+        write: impl FnOnce(&mut Connection) -> Result<T, HistoryError>,
+    ) -> Result<T, HistoryError> {
+        let mut conn = lock(&self.writer);
+        let result = write(&mut conn);
+        if result.is_err() {
+            self.suspension_failed.store(true, SeqCst);
+            match mark_suspended(&mut conn, moli_core::now_ms(), 0) {
+                Ok(()) => self.suspension_failed.store(false, SeqCst),
+                Err(e) => tracing::error!(error = %e, "history suspension not written"),
             }
         }
-        tx.commit()?;
-        Ok(())
+        result
     }
 
     /// Open the recorder's run before any task can observe a higher duration.
@@ -620,16 +690,7 @@ impl Store {
     pub fn suspend(&self, at: u64, points: usize) -> Result<(), HistoryError> {
         let mut conn = lock(&self.writer);
         self.suspension_failed.store(true, SeqCst);
-        let tx = conn.transaction()?;
-        tx.execute(
-            "UPDATE retention_guard SET suspended = 1, generation = generation + 1 WHERE id = 1",
-            [],
-        )?;
-        tx.execute(
-            "INSERT INTO retention_log(at, kind, points, rows) VALUES (?1, 'suspended', ?2, 0)",
-            params![ts(at), i64::try_from(points).unwrap_or(i64::MAX)],
-        )?;
-        tx.commit()?;
+        mark_suspended(&mut conn, at, points)?;
         self.suspension_failed.store(false, SeqCst);
         Ok(())
     }
@@ -664,7 +725,7 @@ impl Store {
                 if lower.execute(params![id, from, to])? != 1 {
                     return Ok(None);
                 }
-                if to < from {
+                if guard.suspended || to < from {
                     tx.execute("INSERT INTO retention_consent(point_id, generation) VALUES (?1, 1)
                         ON CONFLICT(point_id) DO UPDATE SET generation = retention_consent.generation + 1", [id])?;
                     let (point, generation) = tx.query_row(
@@ -1250,6 +1311,48 @@ mod tests {
             .unwrap();
         assert_eq!(removed, 5, "only the lot before the suspension");
         assert_eq!(store.series("d/x", 0, 100, 100).unwrap().total, 16);
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn a_failed_floor_write_blocks_cuts_before_returning_to_its_caller() {
+        let (store, dir) = store("floor-write-fails");
+        store
+            .insert(
+                &[(p("d/x"), Value::Int(1), 1), (p("d/x"), Value::Int(2), 2)],
+                false,
+            )
+            .unwrap();
+        store.set_up_floors(30, 1).unwrap();
+        let cut = Cut {
+            id: store.points().unwrap()[0].0,
+            oldest: 0,
+            anchor: 2,
+            max: 1,
+            floor: 30,
+            generation: store.guard().unwrap().generation,
+        };
+        Connection::open(dir.join("history.db"))
+            .unwrap()
+            .execute_batch(
+                "CREATE TRIGGER boom BEFORE UPDATE ON retention WHEN NEW.days = 90
+             BEGIN SELECT RAISE(ABORT, 'raise failed'); END;",
+            )
+            .unwrap();
+        let written = store.record(
+            &[(p("d/x"), Value::Int(3), 3)],
+            false,
+            Some(&|_| Floors {
+                first: 90,
+                certain: 90,
+            }),
+        );
+        assert!(written.is_err());
+        // No async caller has had an opportunity to enqueue a suspension.
+        assert_eq!(store.prune(&[cut], 1, || {}).unwrap(), 0);
+        assert!(store.suspended().unwrap());
+        assert_eq!(store.series("d/x", 0, 10, 10).unwrap().total, 2);
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }

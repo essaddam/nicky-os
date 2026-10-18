@@ -224,6 +224,9 @@ struct Inner {
     journal: Mutex<Journal>,
     approvals: Mutex<Approvals>,
     events: broadcast::Sender<Event>,
+    /// Counts emissions in exactly the broadcast order. Also gates an
+    /// ordered subscription so its first event cannot fall in a gap.
+    event_position: Mutex<u64>,
     /// Serializes label writes so the file always matches the model.
     label_write: tokio::sync::Mutex<()>,
     /// Where each instance last reached its device.
@@ -353,6 +356,7 @@ impl Hub {
             secrets,
             secrets_problem,
             events,
+            event_position: Mutex::new(0),
             label_write: tokio::sync::Mutex::new(()),
             addresses: Mutex::new(book),
             address_write: tokio::sync::Mutex::new(()),
@@ -385,6 +389,30 @@ impl Hub {
     #[must_use]
     pub fn subscribe(&self) -> broadcast::Receiver<Event> {
         self.0.events.subscribe()
+    }
+
+    /// An ordinary subscription plus the position just before its first
+    /// event. Advance by one on receipt, by `n` on `Lagged(n)`. Positions
+    /// are local to this hub's lifetime, independent of wall-clock time.
+    #[must_use]
+    pub fn subscribe_with_position(&self) -> (broadcast::Receiver<Event>, u64) {
+        let position = self
+            .0
+            .event_position
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        (self.0.events.subscribe(), *position)
+    }
+
+    /// The last event emitted, for consumers ordering an action against
+    /// events not consumed yet. Their payload and public stream stay intact.
+    #[must_use]
+    pub fn event_position(&self) -> u64 {
+        *self
+            .0
+            .event_position
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
     }
 
     #[must_use]
@@ -1645,6 +1673,12 @@ impl Hub {
     // ---- internals -----------------------------------------------------------
 
     fn emit(&self, event: Event) {
+        let mut position = self
+            .0
+            .event_position
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        *position = position.checked_add(1).expect("event position exhausted");
         // No subscriber is not an error.
         let _ = self.0.events.send(event);
     }

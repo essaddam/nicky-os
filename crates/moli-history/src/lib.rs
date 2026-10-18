@@ -137,6 +137,7 @@ impl History {
             options.filter.clone(),
             options.retention.clone(),
             Box::new(move |point: &str| retention::family_in(&hub_families, point)),
+            Some(hub.clone()),
         )?;
         let history = Self::with_policy(store, policy);
         let (batches, queue) = mpsc::channel::<Batch>(WRITER_QUEUE);
@@ -163,7 +164,7 @@ impl History {
             let pruned = pruning.await;
             written.map_err(|e| HistoryError::Internal(e.to_string()))??;
             raised.map_err(|e| HistoryError::Internal(e.to_string()))??;
-            pruned.map_err(|e| HistoryError::Internal(e.to_string()))?;
+            pruned.map_err(|e| HistoryError::Internal(e.to_string()))??;
             let store = Arc::clone(&recording.store);
             blocking(move || store.close_run()).await
         });
@@ -177,6 +178,7 @@ impl History {
             Filter::default(),
             Retention::uniform(30),
             Box::new(|_: &str| None),
+            None,
         )?;
         Ok(Self::with_policy(store, policy))
     }
@@ -264,14 +266,16 @@ async fn blocking<T: Send + 'static>(
 struct HubEvents {
     hub: Hub,
     events: tokio::sync::broadcast::Receiver<Event>,
+    position: u64,
 }
 
 fn hub_events(hub: &Hub) -> HubEvents {
     // Subscribe before reading the state: nothing falls between the two.
-    let events = hub.subscribe();
+    let (events, position) = hub.subscribe_with_position();
     HubEvents {
         hub: hub.clone(),
         events,
+        position,
     }
 }
 
@@ -280,10 +284,7 @@ fn hub_events(hub: &Hub) -> HubEvents {
 /// filter, whether its points have a value or not), and the values of the
 /// points recorded are returned.
 fn present(hub: &Hub, filter: &Filter, policy: &retention::Policy) -> Vec<Row> {
-    let snapshot = hub.snapshot();
-    for d in &snapshot.devices {
-        policy.published(&d.device);
-    }
+    let snapshot = policy.snapshot(hub);
     snapshot
         .devices
         .iter()
@@ -302,7 +303,7 @@ fn present(hub: &Hub, filter: &Filter, policy: &retention::Policy) -> Vec<Row> {
 
 /// Excluded points are not written; the energy has its own subscription to
 /// the bus and sees every reading. A device published has its floors queued
-/// (`Policy::published`), without blocking the bus.
+/// (`Policy::published_at`), without blocking the bus.
 async fn record(
     mut source: HubEvents,
     batches: mpsc::Sender<Batch>,
@@ -319,7 +320,13 @@ async fn record(
     loop {
         tokio::select! {
             () = cancel.cancelled() => break,
-            event = source.events.recv() => match event {
+            event = source.events.recv() => {
+                source.position += match &event {
+                    Ok(_) => 1,
+                    Err(RecvError::Lagged(n)) => *n,
+                    Err(RecvError::Closed) => 0,
+                };
+                match event {
                 Ok(Event::State { point, value, ts }) => {
                     if !filter.records(point.as_str()) {
                         continue;
@@ -329,7 +336,7 @@ async fn record(
                         hand_over(&batches, &mut batch, counters);
                     }
                 }
-                Ok(Event::DeviceUpserted { device }) => history.policy.published(&device),
+                Ok(Event::DeviceUpserted { device }) => history.policy.published_at(&device, Some(source.position)),
                 Ok(_) => {}
                 Err(RecvError::Lagged(missed)) => {
                     // Changes were missed; at least the present is recorded.
@@ -342,6 +349,7 @@ async fn record(
                     }
                 }
                 Err(RecvError::Closed) => break,
+                }
             },
             _ = flush.tick() => hand_over(&batches, &mut batch, counters),
         }
@@ -441,7 +449,8 @@ async fn write_loop(
     failed.map_or(Ok(()), Err)
 }
 
-async fn prune_loop(history: History, cancel: CancellationToken) {
+async fn prune_loop(history: History, cancel: CancellationToken) -> Result<(), HistoryError> {
+    let mut failed = None;
     let mut tick = tokio::time::interval(RETENTION_EVERY);
     loop {
         tokio::select! {
@@ -451,9 +460,17 @@ async fn prune_loop(history: History, cancel: CancellationToken) {
         match history.prune_pass(now_ms()).await {
             Ok(0) => {}
             Ok(rows) => tracing::info!(removed = rows, "history pruned"),
-            Err(e) => tracing::warn!(error = %e, "history pruning failed"),
+            Err(e) => {
+                tracing::warn!(error = %e, "history pruning failed");
+                failed = Some(e);
+                let store = Arc::clone(&history.store);
+                if let Err(e) = blocking(move || store.suspend(now_ms(), 0)).await {
+                    tracing::error!(error = %e, "history suspension not written");
+                }
+            }
         }
     }
+    failed.map_or(Ok(()), Err)
 }
 
 #[cfg(test)]
@@ -658,6 +675,7 @@ mod tests {
                     let hub = hub.clone();
                     move |point: &str| retention::family_in(&hub, point)
                 }),
+                Some(hub.clone()),
             )
             .unwrap(),
         );
@@ -729,6 +747,94 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir);
     }
 
+    struct PruneFailureTrace(Arc<AtomicU64>);
+    struct PruneEventText(String);
+    impl tracing::field::Visit for PruneEventText {
+        fn record_debug(&mut self, _field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+            use std::fmt::Write as _;
+            let _ = write!(self.0, "{value:?}");
+        }
+    }
+    impl tracing::Subscriber for PruneFailureTrace {
+        fn enabled(&self, _: &tracing::Metadata<'_>) -> bool {
+            true
+        }
+        fn new_span(&self, _: &tracing::span::Attributes<'_>) -> tracing::span::Id {
+            tracing::span::Id::from_u64(1)
+        }
+        fn record(&self, _: &tracing::span::Id, _: &tracing::span::Record<'_>) {}
+        fn record_follows_from(&self, _: &tracing::span::Id, _: &tracing::span::Id) {}
+        fn event(&self, event: &tracing::Event<'_>) {
+            let mut text = PruneEventText(String::new());
+            event.record(&mut text);
+            if text.0.contains("history pruning failed") {
+                self.0.fetch_add(1, Relaxed);
+            }
+        }
+        fn enter(&self, _: &tracing::span::Id) {}
+        fn exit(&self, _: &tracing::span::Id) {}
+    }
+
+    #[tokio::test]
+    async fn a_failed_pass_cannot_finalize_the_recorder_as_clean() {
+        let dir =
+            std::env::temp_dir().join(format!("moli-history-pass-fails-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let path = dir.join("history.db");
+        let now = now_ms();
+        {
+            let store = Store::open(&path).unwrap();
+            let rows: Vec<_> = [50, 40, 5]
+                .into_iter()
+                .map(|days| (PointId::from("d/x"), Value::Int(1), now - days * DAY_MS))
+                .collect();
+            store.insert(&rows, false).unwrap();
+            store.set_up_floors(30, now).unwrap();
+        }
+        let db = rusqlite::Connection::open(&path).unwrap();
+        db.execute_batch("CREATE TRIGGER boom BEFORE UPDATE ON retention WHEN NEW.days=90 BEGIN SELECT RAISE(ABORT,'raise failed'); END;").unwrap();
+        let errors = Arc::new(AtomicU64::new(0));
+        let _trace = tracing::subscriber::set_default(PruneFailureTrace(Arc::clone(&errors)));
+        let hub = Hub::new(moli_runtime::HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let mut options = Options {
+            path,
+            filter: Filter::default(),
+            retention: Retention::uniform(90),
+        };
+        let (history, recorder) = History::start(&hub, &options, cancel.clone()).unwrap();
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while errors.load(Relaxed) == 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        cancel.cancel();
+        assert!(
+            tokio::time::timeout(Duration::from_secs(5), recorder)
+                .await
+                .unwrap()
+                .unwrap()
+                .is_err()
+        );
+        assert!(history.store.suspended().unwrap());
+        let clean: bool = db
+            .query_row("SELECT clean FROM retention_guard", [], |r| r.get(0))
+            .unwrap();
+        assert!(!clean);
+        db.execute_batch("DROP TRIGGER boom").unwrap();
+        options.retention = Retention::uniform(30);
+        let cancel = CancellationToken::new();
+        let (back, recorder) = History::start(&hub, &options, cancel.clone()).unwrap();
+        assert_eq!(back.prune_pass(now).await.unwrap(), 0);
+        assert_eq!(back.series("d/x", 0, now, 10).await.unwrap().total, 3);
+        assert!(back.policies().await.unwrap().reduction.unwrap().resume);
+        cancel.cancel();
+        recorder.await.unwrap().unwrap();
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
     #[tokio::test]
     async fn a_failed_batch_suspends_purges_even_without_a_queued_publication() {
         let dir =
@@ -745,6 +851,7 @@ mod tests {
                 Filter::default(),
                 Retention::uniform(90),
                 Box::new(|_| Some(Family::Climate)),
+                None,
             )
             .unwrap(),
         );

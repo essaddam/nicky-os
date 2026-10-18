@@ -28,7 +28,7 @@ use serde::Serialize;
 
 use crate::policy::{Family, Filter, Retention};
 use crate::store::{
-    self, Consents, Cut, Doomed, Floors, Guard, HistoryError, Observed, Store, Validation,
+    self, Cut, Doomed, Floors, Guard, HistoryError, Observations, Observed, Store, Validation,
 };
 use crate::{DAY_MS, History, Prune, blocking};
 
@@ -65,8 +65,16 @@ pub(crate) struct Policy {
     /// One at a time: a pass, a count, a validation.
     passes: tokio::sync::Mutex<()>,
     raises: Raises,
+    observed: Observations,
+    /// Orders consent against events emitted, including those still queued.
+    hub: Option<Hub>,
     /// Serializes observations with the commit of a newer consent.
-    consents: Mutex<Consents>,
+    consents: Mutex<HashMap<String, Consent>>,
+}
+
+struct Consent {
+    generation: i64,
+    through: u64,
 }
 
 /// Certain durations observed since each point's last consent. One entry per
@@ -188,6 +196,7 @@ impl Policy {
         filter: Filter,
         configured: Retention,
         families: Families,
+        hub: Option<Hub>,
     ) -> Result<Self, HistoryError> {
         if store.floors()?.is_none() {
             store.set_up_floors(configured.days, now_ms())?;
@@ -203,26 +212,61 @@ impl Policy {
             shown: Mutex::new(None),
             passes: tokio::sync::Mutex::new(()),
             raises: Raises::default(),
-            consents: Mutex::new(store.consents()?),
+            observed: store.observations(),
+            hub,
+            consents: Mutex::new(
+                store
+                    .consents()?
+                    .into_iter()
+                    .map(|(point, generation)| {
+                        (
+                            point,
+                            Consent {
+                                generation,
+                                through: 0,
+                            },
+                        )
+                    })
+                    .collect(),
+            ),
         })
     }
 
-    /// A device published, or read again after events were lost: its
-    /// points' observed durations are queued, whether recorded or not.
-    pub(crate) fn published(&self, device: &Device) {
-        {
-            let consents = store::lock(&self.consents);
-            let mut pending = store::lock(&self.raises.pending);
-            for spec in &device.points {
-                let point = PointId::new(&device.id, &spec.key).as_str().to_owned();
-                let observed = Observed {
-                    days: self.certain(&point, Some(Family::of(spec))),
-                    generation: consents.get(&point).copied().unwrap_or(0),
-                };
-                merge_raise(&mut pending, point, observed);
-            }
+    /// Capture and admit a fresh snapshot under the consent lock. A snapshot
+    /// taken before a consent cannot be stamped with its newer generation.
+    pub(crate) fn snapshot(&self, hub: &Hub) -> moli_runtime::Snapshot {
+        let consents = store::lock(&self.consents);
+        let snapshot = hub.snapshot();
+        for device in &snapshot.devices {
+            self.admit(&device.device, None, &consents);
         }
         self.raises.wake.notify_one();
+        snapshot
+    }
+
+    pub(crate) fn published_at(&self, device: &Device, position: Option<u64>) {
+        let consents = store::lock(&self.consents);
+        self.admit(device, position, &consents);
+        self.raises.wake.notify_one();
+    }
+
+    fn admit(&self, device: &Device, position: Option<u64>, consents: &HashMap<String, Consent>) {
+        // Same gate as each DELETE, held until admission is complete.
+        let mut admitted = store::lock(&self.observed);
+        let mut pending = store::lock(&self.raises.pending);
+        for spec in &device.points {
+            let point = PointId::new(&device.id, &spec.key).as_str().to_owned();
+            let consent = consents.get(&point);
+            if consent.is_some_and(|c| position.is_some_and(|p| p <= c.through)) {
+                continue;
+            }
+            let observed = Observed {
+                days: self.certain(&point, Some(Family::of(spec))),
+                generation: consent.map_or(0, |c| c.generation),
+            };
+            merge_raise(&mut admitted, point.clone(), observed);
+            merge_raise(&mut pending, point, observed);
+        }
     }
 
     /// No more devices: `raise_loop` writes what is queued, then ends.
@@ -386,6 +430,9 @@ impl Policy {
     fn apply(&self, store: &Store, plan: &Plan, by: Option<&str>) -> Result<usize, PolicyError> {
         // Serialize the whole check and its commit with publication stamps.
         let mut consents = store::lock(&self.consents);
+        // Events emitted before this point are replaced by this consent,
+        // even if the recorder has not consumed their old descriptions yet.
+        let through = self.hub.as_ref().map_or(0, Hub::event_position);
         if !plan.resume {
             self.raise_pending(store)?;
         }
@@ -416,7 +463,15 @@ impl Policy {
         let updates = store
             .validate_floors(&floors, now_ms(), by, announced, guard)?
             .ok_or(PolicyError::Changed)?;
-        consents.extend(updates);
+        consents.extend(updates.into_iter().map(|(point, generation)| {
+            (
+                point,
+                Consent {
+                    generation,
+                    through,
+                },
+            )
+        }));
         drop(consents);
         let cuts: Vec<_> = plan
             .items
@@ -488,7 +543,7 @@ impl Plan {
     }
 }
 
-/// Raises the floors of the points queued by `Policy::published`, a batch
+/// Raises the floors of the points queued by `Policy::published_at`, a batch
 /// at a time, each from what is known when it is written, until
 /// `stop_raising` and everything queued is written. A batch that cannot be
 /// written after `RAISE_TRIES` tries stays queued and suspends purges,
@@ -527,10 +582,14 @@ pub(crate) async fn raise_loop(store: Arc<Store>, policy: Arc<Policy>) -> Result
             }
         };
         let Some(e) = failed else {
+            let mut admitted = store::lock(&policy.observed);
             let mut pending = store::lock(&raises.pending);
             for (point, observed) in &batch {
                 if pending.get(point) == Some(observed) {
                     pending.remove(point);
+                }
+                if admitted.get(point) == Some(observed) {
+                    admitted.remove(point);
                 }
             }
             continue;
@@ -673,7 +732,20 @@ mod tests {
             let known = Arc::clone(&self.known);
             let families: Families = Box::new(move |p: &str| known.lock().unwrap().get(p).copied());
             let policy =
-                Policy::open(&self.store, Filter::default(), configured, families).unwrap();
+                Policy::open(&self.store, Filter::default(), configured, families, None).unwrap();
+            History::with_policy(Arc::clone(&self.store), policy)
+        }
+
+        fn on_hub(&self, hub: &Hub, configured: Retention) -> History {
+            let source = hub.clone();
+            let policy = Policy::open(
+                &self.store,
+                Filter::default(),
+                configured,
+                Box::new(move |p| family_in(&source, p)),
+                Some(hub.clone()),
+            )
+            .unwrap();
             History::with_policy(Arc::clone(&self.store), policy)
         }
 
@@ -687,6 +759,7 @@ mod tests {
                 Filter::default(),
                 configured,
                 Box::new(move |p| known.lock().unwrap().get(p).copied()),
+                None,
             )
             .unwrap();
             History::with_policy(store, policy)
@@ -1043,7 +1116,7 @@ mod tests {
             .lock()
             .unwrap()
             .insert("d/x".into(), Family::Climate);
-        history.policy.published(&device);
+        history.policy.published_at(&device, None);
         history.policy.stop_raising();
         raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy))
             .await
@@ -1092,15 +1165,15 @@ mod tests {
         // 128 descriptions of one device, its point's meaning changing.
         for i in 0..128 {
             if i % 2 == 0 {
-                policy.published(&device(
-                    moli_core::Semantic::Temperature,
-                    moli_core::Unit::Celsius,
-                ));
+                policy.published_at(
+                    &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+                    None,
+                );
             } else {
-                policy.published(&device(
-                    moli_core::Semantic::Battery,
-                    moli_core::Unit::Percent,
-                ));
+                policy.published_at(
+                    &device(moli_core::Semantic::Battery, moli_core::Unit::Percent),
+                    None,
+                );
             }
         }
         assert_eq!(
@@ -1147,14 +1220,14 @@ mod tests {
         ));
         let id = bench.store.points().unwrap()[0].0;
         bench.store.raise_floors(&[(id, 90)]).unwrap();
-        history.policy.published(&device(
-            moli_core::Semantic::Temperature,
-            moli_core::Unit::Celsius,
-        ));
-        history.policy.published(&device(
-            moli_core::Semantic::Battery,
-            moli_core::Unit::Percent,
-        ));
+        history.policy.published_at(
+            &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+            None,
+        );
+        history.policy.published_at(
+            &device(moli_core::Semantic::Battery, moli_core::Unit::Percent),
+            None,
+        );
         bench
             .known
             .lock()
@@ -1174,6 +1247,255 @@ mod tests {
         assert!(history.policies().await.unwrap().reduction.is_none());
     }
 
+    #[test]
+    fn a_certain_increase_received_between_lots_stops_the_next_delete() {
+        let b = Bench::new(
+            "pending-lots",
+            &[
+                ("d/x", 50 * D),
+                ("d/x", 45 * D),
+                ("d/x", 40 * D),
+                ("d/x", 35 * D),
+                ("d/x", 5 * D),
+            ],
+        );
+        let h = b.history(with(
+            30,
+            &[(Family::Climate, 90), (Family::Diagnostic, 3)],
+            &[],
+        ));
+        let id = b.store.points().unwrap()[0].0;
+        let doomed = b.store.doomed(id, cutoff(b.now, 30)).unwrap().unwrap();
+        let cut = Cut {
+            id,
+            oldest: doomed.oldest.unwrap(),
+            anchor: doomed.anchor,
+            max: doomed.rows,
+            floor: 30,
+            generation: b.store.guard().unwrap().generation,
+        };
+        let removed = b
+            .store
+            .prune(&[cut], 1, || {
+                b.known
+                    .lock()
+                    .unwrap()
+                    .insert("d/x".into(), Family::Climate);
+                h.policy.published_at(
+                    &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+                    None,
+                );
+                b.known
+                    .lock()
+                    .unwrap()
+                    .insert("d/x".into(), Family::Diagnostic);
+                h.policy.published_at(
+                    &device(moli_core::Semantic::Battery, moli_core::Unit::Percent),
+                    None,
+                );
+            })
+            .unwrap();
+        assert_eq!(
+            removed, 1,
+            "the pending maximum must protect the remaining lots"
+        );
+        assert_eq!(b.left().len(), 4);
+        assert_eq!(
+            b.floor("d/x"),
+            Some(30),
+            "no worker has persisted the increase yet"
+        );
+    }
+
+    struct BusDescriptions {
+        ready: Arc<tokio::sync::Notify>,
+        again: Arc<tokio::sync::Notify>,
+    }
+
+    impl moli_runtime::Driver for BusDescriptions {
+        fn kind(&self) -> &'static str {
+            "fake"
+        }
+
+        fn run<'a>(
+            &'a self,
+            ctx: &'a mut moli_runtime::DriverCtx,
+        ) -> moli_runtime::BoxFuture<'a, anyhow::Result<()>> {
+            Box::pin(async move {
+                for value in [1, 2, 3] {
+                    for (semantic, unit) in [
+                        (moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+                        (moli_core::Semantic::Battery, moli_core::Unit::Percent),
+                    ] {
+                        let mut d = device(semantic, unit);
+                        d.id = ctx.device_id("device");
+                        d.instance = ctx.instance().clone();
+                        ctx.upsert_device(d);
+                    }
+                    ctx.set_state(&ctx.device_id("device"), "x", Value::Int(value));
+                    ctx.ready();
+                    self.ready.notify_one();
+                    if value < 3 {
+                        tokio::select! { () = self.again.notified() => {}, () = ctx.cancelled() => return Ok(()) }
+                    }
+                }
+                ctx.cancelled().await;
+                Ok(())
+            })
+        }
+    }
+
+    async fn changed_batch(queue: &mut tokio::sync::mpsc::Receiver<crate::Batch>) {
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while let Some((rows, restate)) = queue.recv().await {
+                if !restate && !rows.is_empty() {
+                    return;
+                }
+            }
+            panic!("the recorder stopped before the bus event was consumed");
+        })
+        .await
+        .unwrap();
+    }
+
+    fn notices(hub: &Hub, count: usize) {
+        for _ in 0..count {
+            hub.notice(moli_core::Notice {
+                title: None,
+                message: "test".into(),
+                from: None,
+                ts: now_ms(),
+            });
+        }
+    }
+
+    #[tokio::test]
+    async fn consent_replaces_old_bus_events_but_keeps_new_publications() {
+        let point = "queued:device/x";
+        let b = Bench::new(
+            "bus-consent",
+            &[(point, 20 * D), (point, 10 * D), (point, D)],
+        );
+        let hub = Hub::new(moli_runtime::HubOptions {
+            event_capacity: 16,
+            ..Default::default()
+        })
+        .unwrap();
+        notices(&hub, 17); // The subscription must start after prior emissions.
+        let source = crate::hub_events(&hub);
+        let h = b.on_hub(
+            &hub,
+            with(30, &[(Family::Climate, 90), (Family::Diagnostic, 3)], &[]),
+        );
+        let id = b.store.points().unwrap()[0].0;
+        b.store.raise_floors(&[(id, 90)]).unwrap();
+        let ready = Arc::new(tokio::sync::Notify::new());
+        let again = Arc::new(tokio::sync::Notify::new());
+        let drivers = tokio_util::sync::CancellationToken::new();
+        let driver = moli_runtime::spawn_driver(
+            &hub,
+            moli_core::InstanceId::from("queued"),
+            Arc::new(BusDescriptions {
+                ready: Arc::clone(&ready),
+                again: Arc::clone(&again),
+            }),
+            drivers.clone(),
+        );
+        tokio::time::timeout(Duration::from_secs(5), ready.notified())
+            .await
+            .unwrap();
+        let r = h.policies().await.unwrap().reduction.unwrap();
+        h.validate(r.at, &r.fingerprint, Origin::Ui, None)
+            .await
+            .unwrap();
+        let (tx, mut queue) = tokio::sync::mpsc::channel(8);
+        let cancel = tokio_util::sync::CancellationToken::new();
+        let recording = tokio::spawn({
+            let h = h.clone();
+            let cancel = cancel.clone();
+            async move {
+                crate::record(source, tx, &h, &Filter::default(), cancel).await;
+            }
+        });
+        changed_batch(&mut queue).await;
+        h.policy.raise_pending(&b.store).unwrap();
+        assert_eq!(
+            b.floor(point),
+            Some(3),
+            "pre-consent publications cannot restore 90"
+        );
+        assert_eq!(family_in(&hub, point), Some(Family::Diagnostic));
+        // Force a bus gap before the genuinely new publications.
+        notices(&hub, 32);
+        again.notify_one();
+        changed_batch(&mut queue).await;
+        h.policy.raise_pending(&b.store).unwrap();
+        assert_eq!(
+            b.floor(point),
+            Some(90),
+            "a genuinely new maximum must survive"
+        );
+        // A second consent after Lagged must still have the right cursor.
+        let r = h.policies().await.unwrap().reduction.unwrap();
+        h.validate(r.at, &r.fingerprint, Origin::Ui, None)
+            .await
+            .unwrap();
+        again.notify_one();
+        changed_batch(&mut queue).await;
+        h.policy.raise_pending(&b.store).unwrap();
+        assert_eq!(
+            b.floor(point),
+            Some(90),
+            "new observations survive a consent after a bus gap"
+        );
+        cancel.cancel();
+        recording.await.unwrap();
+        h.policy.stop_raising();
+        raise_loop(Arc::clone(&b.store), Arc::clone(&h.policy))
+            .await
+            .unwrap();
+        drivers.cancel();
+        driver.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn a_resume_at_the_same_floor_replaces_the_old_failed_observation() {
+        let b = Bench::new(
+            "resume-same",
+            &[("d/x", 50 * D), ("d/x", 40 * D), ("d/x", 5 * D)],
+        );
+        let h = b.history(with(30, &[(Family::Climate, 90)], &[]));
+        let db = rusqlite::Connection::open(b.dir.join("history.db")).unwrap();
+        db.execute_batch("CREATE TRIGGER boom BEFORE UPDATE ON retention WHEN NEW.days=90 BEGIN SELECT RAISE(ABORT,'raise failed'); END;").unwrap();
+        b.known
+            .lock()
+            .unwrap()
+            .insert("d/x".into(), Family::Climate);
+        h.policy.published_at(
+            &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+            None,
+        );
+        h.policy.stop_raising();
+        assert!(
+            raise_loop(Arc::clone(&b.store), Arc::clone(&h.policy))
+                .await
+                .is_err()
+        );
+        b.known.lock().unwrap().insert("d/x".into(), Family::States);
+        db.execute_batch("DROP TRIGGER boom").unwrap();
+        let r = h.policies().await.unwrap().reduction.unwrap();
+        assert!(r.resume);
+        assert_eq!((r.top[0].from_days, r.top[0].to_days), (30, 30));
+        h.validate(r.at, &r.fingerprint, Origin::Ui, None)
+            .await
+            .unwrap();
+        raise_loop(Arc::clone(&b.store), Arc::clone(&h.policy))
+            .await
+            .unwrap();
+        assert_eq!(b.floor("d/x"), Some(30));
+        assert!(h.policies().await.unwrap().reduction.is_none());
+    }
+
     #[tokio::test]
     async fn a_queued_increase_is_kept_before_the_next_pass_or_count() {
         let bench = Bench::new("queued", &[("d/x", 50 * D), ("d/x", 40 * D), ("d/x", D)]);
@@ -1182,14 +1504,14 @@ mod tests {
             &[(Family::Climate, 90), (Family::Diagnostic, 3)],
             &[],
         ));
-        history.policy.published(&device(
-            moli_core::Semantic::Temperature,
-            moli_core::Unit::Celsius,
-        ));
-        history.policy.published(&device(
-            moli_core::Semantic::Battery,
-            moli_core::Unit::Percent,
-        ));
+        history.policy.published_at(
+            &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+            None,
+        );
+        history.policy.published_at(
+            &device(moli_core::Semantic::Battery, moli_core::Unit::Percent),
+            None,
+        );
         bench
             .known
             .lock()
@@ -1214,10 +1536,10 @@ mod tests {
             .unwrap();
         assert_eq!(bench.floor("d/x"), Some(3));
         // A fresh observation belongs to the newer consent generation.
-        history.policy.published(&device(
-            moli_core::Semantic::Temperature,
-            moli_core::Unit::Celsius,
-        ));
+        history.policy.published_at(
+            &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+            None,
+        );
         history.policy.stop_raising();
         raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy))
             .await
@@ -1266,10 +1588,10 @@ mod tests {
              BEGIN SELECT RAISE(ABORT, 'boom'); END;",
         )
         .unwrap();
-        history.policy.published(&device(
-            moli_core::Semantic::Temperature,
-            moli_core::Unit::Celsius,
-        ));
+        history.policy.published_at(
+            &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+            None,
+        );
         history.policy.stop_raising();
         let failed = raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy)).await;
         assert!(failed.is_err(), "the stop says it failed");
@@ -1316,10 +1638,10 @@ mod tests {
             .lock()
             .unwrap()
             .insert("d/x".into(), Family::Climate);
-        history.policy.published(&device(
-            moli_core::Semantic::Temperature,
-            moli_core::Unit::Celsius,
-        ));
+        history.policy.published_at(
+            &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+            None,
+        );
         history.policy.stop_raising();
         assert!(
             raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy))
@@ -1399,10 +1721,10 @@ mod tests {
              BEGIN SELECT RAISE(ABORT, 'raise failed'); END;",
         )
         .unwrap();
-        history.policy.published(&device(
-            moli_core::Semantic::Temperature,
-            moli_core::Unit::Celsius,
-        ));
+        history.policy.published_at(
+            &device(moli_core::Semantic::Temperature, moli_core::Unit::Celsius),
+            None,
+        );
         history.policy.stop_raising();
         assert!(
             raise_loop(Arc::clone(&history.store), Arc::clone(&history.policy))

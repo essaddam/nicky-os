@@ -76,7 +76,10 @@ reste compté exactement (test `an_excluded_point_is_not_written_and_its_energy_
 **Purge par lots.** Point par point, au plus 5 000 lignes par requête, le rédacteur relâché
 entre deux lots (2 ms). Chaque lot vérifie, dans sa propre requête, que le plancher du point
 n'a pas été relevé au-dessus de celui qui a décidé la coupe, que les purges ne sont pas
-suspendues et que la génération de garde est inchangée. Sinon, plus rien ne part : les lots
+suspendues et que la génération de garde est inchangée. Il consulte aussi les maxima
+**déjà admis mais pas encore persistés**, sous le même verrou que leur admission : une
+hausse reçue entre deux lots protège dès le lot suivant, sans attendre son worker.
+Sinon, plus rien ne part : les lots
 du recorder passent entre deux (test
 `pruning_goes_by_lots_and_writes_pass_in_between`). SQL portable (pas de `DELETE … LIMIT`),
 toujours par la clé primaire, ancrage conservé.
@@ -100,12 +103,19 @@ chaque point la plus longue de son plancher et de sa durée configurée :
   (`retention_consent`). Dans la transaction d'écriture, ce maximum s'applique seulement si
   aucun consentement plus récent ne l'a remplacé ; la durée certaine actuelle s'applique
   toujours. Une ancienne publication ne défait donc pas une réduction validée depuis, même
-  si son lot était déjà sorti de la file.
-  Une hausse impossible à écrire (après 3 essais) **suspend les purges, durablement**
+  si son lot était déjà sorti de la file. La validation capture aussi la **position d’émission
+  du bus** : les anciennes descriptions encore dans le récepteur ne reçoivent pas la
+  génération nouvelle au seul motif qu’elles sont consommées plus tard. Une publication
+  émise après cette borne reste nouvelle. Les positions tiennent compte des événements
+  perdus (`Lagged`), et la capture d’un instantané et son admission prennent ensemble le
+  verrou de consentement. Une reprise remplace aussi les observations antérieures quand
+  sa durée validée est identique au plancher (30 → 30).
+  Toute hausse de plancher échouée **bloque les suppressions avant de rendre le verrou
+  SQL**, puis **suspend les purges, durablement**
   (`retention_guard` et `retention_log`) : plus rien n'est supprimé tant qu'une personne
   n'a pas vu ce que la reprise supprimerait, point par point (`reduction.resume`), et
-  validé avec son code ; le handle d'arrêt de l'historique le signale en erreur. Il n'est
-  jamais abaissé que par une validation. Appareil inconnu : seule la hausse certaine relève le
+  validé avec son code. Le worker retente ses hausses au plus trois fois et garde son
+  erreur terminale. Le plancher n'est jamais abaissé que par une validation. Appareil inconnu : seule la hausse certaine relève le
   plancher (la plus courte durée que pourrait lui donner une famille, donc toute règle propre
   au point), jamais une simple ambiguïté ;
 - une durée **plus courte** n'efface rien. `GET /api/history/retention` compte, point par point,
@@ -134,8 +144,10 @@ chaque point la plus longue de son plancher et de sa durée configurée :
 
 **Suspension et redémarrage.** Le démarrage du recorder inscrit un run non finalisé dans
 `retention_guard` avant tout travail. Seul son arrêt ordonné, après vidage réussi des files
-et fin de la purge en cours, le finalise. Un échec d’écriture de lot suspend aussi les
-purges et fait échouer cet arrêt : le plancher écrit avec les mesures a pu échouer lui aussi. Après un **arrêt brutal**, le démarrage suivant
+et fin de la purge en cours, le finalise. Les erreurs du rédacteur, du worker de hausses
+**et de la boucle de purge** remontent au handle du recorder : aucun de ces échecs ne
+peut déclarer le run propre. Un échec d’écriture de lot suspend aussi les purges, car le
+plancher écrit avec les mesures a pu échouer lui aussi. Après un **arrêt brutal**, le démarrage suivant
 suspend donc les purges jusqu'à validation humaine de reprise, même sans changement de
 configuration. Cela protège aussi d'une panne qui empêcherait d'écrire le journal de
 suspension après l'échec d'une hausse. Si ce marqueur échoue, les suppressions du processus
