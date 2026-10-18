@@ -1,0 +1,8 @@
+{
+  "archive.unauthorized": "Archive access denied.",
+  "archive.conflict": "The batch or revision no longer matches the archive status.",
+  "archive.limit": "The request exceeds the archive limit.",
+  "archive.busy": "The archive is busy. Try again shortly.",
+  "archive.storage_error": "The archive encountered a storage error. Check its volume before restarting it.",
+  "archive.invalid_request": "The archive request is invalid."
+}

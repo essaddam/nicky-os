@@ -1,0 +1,8 @@
+{
+  "archive.unauthorized": "Accès à l’archive refusé.",
+  "archive.conflict": "Le lot ou la révision ne correspond plus au statut de l’archive.",
+  "archive.limit": "La demande dépasse la limite de l’archive.",
+  "archive.busy": "L’archive est occupée. Réessayez dans un instant.",
+  "archive.storage_error": "L’archive a rencontré une erreur de stockage. Vérifiez son volume avant de la redémarrer.",
+  "archive.invalid_request": "La demande adressée à l’archive est invalide."
+}

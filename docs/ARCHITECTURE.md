@@ -307,7 +307,7 @@ injoignable : la partie locale seule, marquée `"archive": "unavailable"`.
   décompressé**, concaténation des contenus persistés et d'un saut de ligne par
   opération. L'en-tête gzip ne participe pas à l'identité. Pour une même plage,
   les octets restent identiques après mise à jour métier et redémarrage. Le même
-  lot rend la même réponse ; une plage déjà reçue avec un autre contenu → 409 ;
+  lot rend le statut courant sans nouvelle écriture ; une plage déjà reçue avec un autre contenu → 409 ;
   un trou → 409 avec `durable_upto`. Après une erreur de transport ou un
   redémarrage, le cœur relit `status`, puis reprend à `durable_upto + 1` : un
   accusé perdu ne conduit pas à assembler une plage recouvrant un lot déjà reçu.

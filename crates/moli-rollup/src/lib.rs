@@ -27,12 +27,12 @@ use std::collections::BTreeMap;
 use jiff::tz::TimeZone;
 use jiff::{Timestamp, ToSpan as _, Zoned};
 use moli_core::Value;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub const HOUR_MS: u64 = 3_600_000;
 
 /// How the samples of one point are summarised.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Aggregation {
     /// A level (temperature, power): mean weighted by how long each value
@@ -51,7 +51,7 @@ pub enum Aggregation {
 
 /// Where the samples come from, copied into every summary. Ordered from the
 /// most to the least reliable: a merged period keeps the least reliable.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Origin {
     /// Recorded live by Moli.
@@ -63,7 +63,7 @@ pub enum Origin {
 }
 
 /// How much of the period the aggregate covers.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Quality {
     Complete,
@@ -71,7 +71,7 @@ pub enum Quality {
     Empty,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Aggregate {
     TimeWeighted {
@@ -93,7 +93,7 @@ pub enum Aggregate {
 
 /// The summary of one period: an hour from [`hourly`], a local day or month
 /// from [`group`].
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Stat {
     /// `[start, end)`, ms since the Unix epoch.
     pub start: u64,
@@ -133,6 +133,8 @@ pub enum RollupError {
     OffHour(&'static str),
     #[error("a sum exceeds the range of a 64-bit float")]
     Overflow,
+    #[error("state cardinality exceeds the configured bound")]
+    StateLimit,
     #[error("time: {0}")]
     Time(String),
 }
@@ -188,7 +190,80 @@ pub fn hourly(
     Ok(stats)
 }
 
+/// One hour accumulated incrementally, with the same semantics as [`hourly`].
+/// `state_limit` bounds distinct duration states; input samples are never buffered.
+#[derive(Debug)]
+pub struct Hour {
+    start: u64,
+    end: u64,
+    cursor: u64,
+    carry: Option<(u64, Value)>,
+    acc: Acc,
+    freshness: Option<u64>,
+    origin: Origin,
+    state_limit: usize,
+}
+impl Hour {
+    pub fn new(
+        rule: &Rollup,
+        start: u64,
+        anchor: Option<(u64, Value)>,
+        state_limit: usize,
+    ) -> Result<Self, RollupError> {
+        if !start.is_multiple_of(HOUR_MS) {
+            return Err(RollupError::Unaligned);
+        }
+        if anchor.as_ref().is_some_and(|a| a.0 >= start) {
+            return Err(RollupError::Unordered);
+        }
+        let end = start.checked_add(HOUR_MS).ok_or(RollupError::Unaligned)?;
+        Ok(Self {
+            start,
+            end,
+            cursor: start,
+            carry: anchor,
+            acc: Acc::new(rule.aggregation),
+            freshness: rule.freshness_ms,
+            origin: rule.origin,
+            state_limit,
+        })
+    }
+    fn hold_to(&mut self, to: u64) -> Result<(), RollupError> {
+        if let Some(sample) = &self.carry {
+            let held_to = self
+                .freshness
+                .map_or(to, |f| to.min(sample.0.saturating_add(f)));
+            if self.acc.aggregation == Aggregation::Durations
+                && held_to > self.cursor
+                && let Some(key) = state(&sample.1)
+                && !self.acc.durations.contains_key(&key)
+                && self.acc.durations.len() >= self.state_limit
+            {
+                return Err(RollupError::StateLimit);
+            }
+            self.acc.hold(sample, self.cursor, to, self.freshness);
+        }
+        self.cursor = to;
+        Ok(())
+    }
+    pub fn push(&mut self, ts: u64, value: Value) -> Result<(), RollupError> {
+        if ts < self.cursor || ts >= self.end {
+            return Err(RollupError::Unordered);
+        }
+        self.hold_to(ts)?;
+        self.acc.event(&value);
+        self.carry = Some((ts, value));
+        Ok(())
+    }
+    pub fn finish(mut self) -> Result<Stat, RollupError> {
+        self.hold_to(self.end)?;
+        self.acc
+            .finish(self.start, self.end, self.carry, self.origin)
+    }
+}
+
 /// Accumulates one hour.
+#[derive(Debug)]
 struct Acc {
     aggregation: Aggregation,
     covered: u64,
@@ -331,7 +406,7 @@ fn quality(covered: u64, length: u64) -> Quality {
 }
 
 /// Calendar periods in local time.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Period {
     Day,
@@ -384,6 +459,82 @@ pub fn group(hours: &[Stat], period: Period, tz: &TimeZone) -> Result<Vec<Stat>,
         g.quality = quality(g.covered_ms, g.end - g.start);
     }
     Ok(groups)
+}
+
+/// Calendar grouping in constant space, emitting the previous complete period.
+#[derive(Debug)]
+pub struct PeriodAccumulator {
+    period: Period,
+    timezone: TimeZone,
+    current: Option<Stat>,
+    previous_end: Option<u64>,
+    kind: Option<std::mem::Discriminant<Aggregate>>,
+    state_limit: usize,
+}
+impl PeriodAccumulator {
+    pub fn new(period: Period, timezone: TimeZone, state_limit: usize) -> Self {
+        Self {
+            period,
+            timezone,
+            current: None,
+            previous_end: None,
+            kind: None,
+            state_limit,
+        }
+    }
+    pub fn push(&mut self, hour: &Stat) -> Result<Option<Stat>, RollupError> {
+        if hour.end.checked_sub(hour.start) != Some(HOUR_MS) {
+            return Err(RollupError::Mismatch);
+        }
+        self.push_span(hour)
+    }
+    /// Merge contiguous base spans, e.g. local days into a local month.
+    pub fn push_span(&mut self, hour: &Stat) -> Result<Option<Stat>, RollupError> {
+        if hour.end <= hour.start || self.previous_end.is_some_and(|end| end != hour.start) {
+            return Err(RollupError::Mismatch);
+        }
+        if let Some(aggregate) = &hour.aggregate {
+            let kind = std::mem::discriminant(aggregate);
+            if self.kind.is_some_and(|previous| previous != kind) {
+                return Err(RollupError::Mismatch);
+            }
+            self.kind = Some(kind);
+        }
+        if self
+            .current
+            .as_ref()
+            .is_some_and(|s| hour.start < s.end && hour.end > s.end)
+        {
+            return Err(RollupError::Mismatch);
+        }
+        let mut emitted = None;
+        if self.current.as_ref().is_none_or(|s| hour.start >= s.end) {
+            emitted = self.current.take();
+            let start = floor(hour.start, self.period, &self.timezone)?;
+            let end = next(start, self.period, &self.timezone)?;
+            if hour.end > end {
+                return Err(RollupError::Mismatch);
+            }
+            let mut summary = hour.clone();
+            summary.start = start;
+            summary.end = end;
+            self.current = Some(summary);
+        } else if let Some(stat) = &mut self.current {
+            merge(stat, hour)?;
+        }
+        if let Some(stat) = &mut self.current {
+            if matches!(&stat.aggregate,Some(Aggregate::Durations{ms}) if ms.len()>self.state_limit)
+            {
+                return Err(RollupError::StateLimit);
+            }
+            stat.quality = quality(stat.covered_ms, stat.end - stat.start);
+        }
+        self.previous_end = Some(hour.end);
+        Ok(emitted)
+    }
+    pub fn finish(self) -> Option<Stat> {
+        self.current
+    }
 }
 
 fn merge(into: &mut Stat, hour: &Stat) -> Result<(), RollupError> {
@@ -475,6 +626,12 @@ fn next(start: u64, period: Period, tz: &TimeZone) -> Result<u64, RollupError> {
     }
     .map_err(|e| RollupError::Time(e.to_string()))?;
     floor(millis(&later)?, period, tz)
+}
+
+/// Calendar bounds shared by archive scheduling and pure aggregation.
+pub fn period_bounds(ms: u64, period: Period, tz: &TimeZone) -> Result<(u64, u64), RollupError> {
+    let start = floor(ms, period, tz)?;
+    Ok((start, next(start, period, tz)?))
 }
 
 #[cfg(test)]

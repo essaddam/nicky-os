@@ -252,3 +252,54 @@ Les compteurs cumulés deviennent des **kWh et des euros heure par heure**, gard
   part non mesurée), `/api/energy/series?step=hour|day|month`, outil MCP `energy`, page
   Énergie, carte Accueil ; la ligne « Électricité en direct » du prompt de Moli.
 - **Brique future : production** (panneaux solaires, injection, batterie).
+
+## Service d’archive indépendant (C1)
+
+`moli-archive` reçoit le journal immuable par HTTP, même sur la même machine. Il ne
+monte jamais le volume du cœur. Son volume contient les lots encore non publiés,
+un index de reçus borné et les données Parquet ; il n’embarque ni SQLite, ni Turso,
+ni la runtime des commandes. Le récent et le client restent C2 ; la fusion des
+lectures et le branchement réel restent D1.
+
+Le journal fait foi pour `durable_upto`. Le manifeste courant, publié seulement
+après synchronisation et relecture des fichiers, fait foi pour `published_upto`.
+Les reçus d’un lot publié restent vérifiables au plus sept jours, ou moins si son
+quota doit faire de la place ; un reçu non publié n’est jamais évincé. Un doublon
+rend le statut courant. Un trou, une plage différente ou un reçu expiré rend un
+conflit explicite avec le statut. Une erreur de stockage arrête les mutations
+jusqu’à réouverture ; les opérations reçues restent rejouables côté cœur.
+
+Les relevés bruts sont des ajouts identifiés par séquence ; deux événements au
+même instant restent distincts. Les heures d’énergie sont des états absolus :
+la séquence la plus récente remplace les kWh **et** le coût de la même heure.
+Le calcul résout ces versions avant toute somme. Un coût inconnu reste inconnu.
+Une heure d’énergie ne prouve pas, à elle seule, la durée de couverture : ses
+résumés indiquent explicitement une couverture inconnue, avec heures observées,
+heures au coût connu et somme des coûts connus.
+
+Le calcul A3 est extrait sans couplage au stockage dans `moli-rollup`, réexporté
+par `moli_history::rollup`. Les résumés horaires reconstruisent les fenêtres
+modifiées et leurs ancres, puis les jours sont calculés depuis les heures et les
+mois depuis les jours, au fuseau du catalogue. Le calcul se fait en flux, avec
+une borne de cardinalité des états. Les moyennes utilisent les durées couvertes ;
+un trou ne devient jamais un zéro. Le catalogue tardif ou une règle changée
+produisent une nouvelle version cohérente des résumés, sans changer le journal
+reçu. Sans règle connue, le brut reste publiable dans la famille `other` et le
+résumé est inconnu. La durée B1 par défaut reste 30 jours ; son application par
+purge relève d’E1.
+
+Les lectures épinglent un manifeste. Le compactage fusionne par famille/mois avec
+quatre lecteurs au plus ; les fichiers d’un lecteur ou d’un pin de sauvegarde
+persistent jusqu’à sa libération. La collecte supprime uniquement les générations
+et fichiers sans référence, jamais le détail au nom d’une politique de durée.
+Le catalogue accepte 4 096 points dans 2 Mio. Les écritures par mois passent par de petits tampons disque puis un seul encodeur Parquet à la fois ; les fragments sont limités à 32 Mio logiques ou 65 536 lignes. L’index de reçus est borné à 8 Mio, le journal non publié à 64 Mio, un corps à
+1 Mio gzip / 8 Mio décompressés ; une réponse contient au plus 5 000 valeurs et
+1 Mio JSON. Le cache de vérification des fichiers immuables est fini et invalidé
+sur changement de taille ou de date de modification.
+
+Le [contrat réseau](archive-protocol.md) décrit les trois champs D13, le catalogue
+et les lectures. L’[exploitation](exploitation.md#archive-parquet--service-séparé)
+décrit le lancement, le déplacement et la distinction entre redémarrage,
+déplacement et restauration. Les mesures mémoire/image et la validation finale
+sont consignées dans le compte rendu du ticket C1 ; aucune instance habitée n’est
+modifiée par les tests.

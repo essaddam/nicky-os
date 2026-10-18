@@ -1,0 +1,16 @@
+[package]
+name = "moli-rollup"
+description = "Pure bounded history aggregation, shared by the core and archive."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+jiff.workspace = true
+moli-core.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

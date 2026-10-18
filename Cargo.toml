@@ -18,6 +18,7 @@ moli-api = { path = "crates/moli-api" }
 moli-hue = { path = "crates/moli-hue" }
 moli-host = { path = "crates/moli-host" }
 moli-history = { path = "crates/moli-history" }
+moli-rollup = { path = "crates/moli-rollup" }
 moli-profile = { path = "crates/moli-profile" }
 moli-energy = { path = "crates/moli-energy" }
 moli-tuya = { path = "crates/moli-tuya" }

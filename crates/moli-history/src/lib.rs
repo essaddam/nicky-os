@@ -13,7 +13,7 @@
 
 mod policy;
 mod retention;
-pub mod rollup;
+pub use moli_rollup as rollup;
 mod store;
 
 use std::path::PathBuf;

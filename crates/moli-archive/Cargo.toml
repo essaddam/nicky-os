@@ -1,0 +1,30 @@
+[package]
+name = "moli-archive"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow.workspace = true
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+ring.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+rustix.workspace = true
+crc32fast.workspace = true
+moli-core.workspace = true
+moli-rollup.workspace = true
+jiff.workspace = true
+parquet = { version = "=60.0.0", default-features = false, features = ["snap"] }
+axum.workspace = true
+http.workspace = true
+hyper = { workspace = true, features = ["server"] }
+hyper-util = { workspace = true, features = ["service"] }
+tokio.workspace = true
+clap.workspace = true
+moli-i18n.workspace = true

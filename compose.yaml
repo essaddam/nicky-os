@@ -1,4 +1,4 @@
-# Moli OS : une maison, un conteneur.
+# Moli OS : le cœur local, et une archive séparée en option.
 #   mkdir -p data && sudo chown 1000:1000 data
 #   docker compose up -d --build
 #   docker compose logs moli-os        # le code d'installation, au premier démarrage
@@ -16,3 +16,43 @@ services:
       # Configuration, coffre chiffré, historique : tout ce que Moli sait.
       - ./data:/data
     mem_limit: 128m
+
+  # C1 ships the independent service. D1 will connect the core to its HTTP API.
+  # Enable after setting the installation identity and the external secret-file path:
+  #   docker compose --profile archive up -d --build
+  moli-archive:
+    profiles: [archive]
+    build:
+      context: .
+      dockerfile: docker/archive.Dockerfile
+    image: moli-archive:latest
+    restart: unless-stopped
+    command:
+      - serve
+      - --installation
+      - ${MOLI_ARCHIVE_INSTALLATION:-}
+      - --listen
+      - 0.0.0.0:8791
+      - --data
+      - /data/archive
+      - --token-file
+      - /run/secrets/archive_token
+    ports:
+      - "127.0.0.1:8791:8791"
+    volumes:
+      - moli-archive-data:/data/archive
+    secrets:
+      - archive_token
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 128m
+
+volumes:
+  moli-archive-data:
+
+secrets:
+  archive_token:
+    # Kept outside this public repository; readable by uid 1000, never printed.
+    file: ${MOLI_ARCHIVE_TOKEN_FILE:-/run/moli-archive/token}
