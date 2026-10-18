@@ -28,9 +28,11 @@ jusqu'à la qualification humaine Moli ; ne pas activer deux propriétaires conc
    aucun point couleur n'est exposé. L'API v2/RGBW reste hors périmètre. Une lampe
    initialement éteinte sans mode de reprise connu peut être éteinte mais refuse
    l'allumage jusqu'à observation d'un mode compatible ou choix humain explicite.
-4. Si la session est refusée, arrêter les propriétaires concurrents puis faire
-   réexaminer l'instance par l'humain avant redémarrage. Moli ne mène aucun duel
-   de reconnexion et ne rejoue pas les commandes échouées.
+4. Une coupure électrique peut invalider le jeton : Moli recrée sa session à la
+   lecture suivante, sans répéter une écriture refusée. Si un jeton neuf est aussi
+   refusé ou si le budget de trois récupérations par heure est dépassé, l'instance
+   attend l'humain. Arrêter les propriétaires concurrents puis faire réexaminer
+   l'instance avant redémarrage ; aucune commande échouée n'est rejouée.
 
 ## Vérification humaine, après H1
 

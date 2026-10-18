@@ -63,8 +63,6 @@ pub fn spawn_driver(
             }
             backoff = (backoff * 2).min(BACKOFF_MAX);
         }
-        // A clean shutdown must not leave the last device readings online.
-        hub.mark_instance_offline(&instance);
         hub.set_driver_status(&instance, DriverStatus::Stopped);
     })
 }

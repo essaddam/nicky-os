@@ -55,8 +55,13 @@ absolue du hub et abandon contrôlés avant chaque émission, authentification
 comprise. Une réponse déjà en vol reste acquise de façon bornée après le départ
 de l'appelant ; aucune deuxième étape non envoyée ne part après son abandon.
 Un renouvellement de session précède une opération non envoyée ; jamais de rejeu
-après une erreur d'envoi. Un refus de session demande une intervention plutôt que
-de renouveler en boucle et déconnecter alternativement HA/l'application.
+après une erreur d'envoi. Un 401/403 invalide la session qui avait déjà fourni une lecture complète : la
+lecture suivante refait un login/verify, sans répéter l'écriture refusée. Un jeton
+neuf refusé avant sa première lecture complète met l'instance en attente humaine.
+Les récupérations après refus sont limitées à trois dans une heure glissante ;
+un nouveau refus au-delà de ce budget demande une intervention plutôt que de
+mener un duel avec HA/l'application. Les expirations normales suivent la durée
+retournée, distinctement de ce budget de récupération.
 
 ## Provenance, licences et choix
 
@@ -88,3 +93,6 @@ Restant avant usage réel : jalon humain H1, modèle et firmware réellement rel
 propriétaire d'exécution unique, couleur directe prouvée, état observé après chaque
 commande et restauration de l'état initial sur une cible neutre. Aucun matériel
 n'est qualifié par ces fixtures. Voir [onboarding.md](onboarding.md).
+
+À l'arrêt, un nettoyage propre à Twinkly met ses seuls appareils hors ligne,
+y compris si sa future est détruite. Le superviseur des autres pilotes est inchangé.

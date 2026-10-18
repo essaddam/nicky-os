@@ -1,5 +1,7 @@
 //! One bounded HTTP exchange at a time; session material never leaves RAM.
+use std::collections::VecDeque;
 use std::net::Ipv4Addr;
+use std::time::Duration;
 
 use http::{HeaderValue, Method, Request, StatusCode};
 use ring::rand::{SecureRandom as _, SystemRandom};
@@ -9,12 +11,16 @@ use zeroize::Zeroizing;
 
 use crate::model::{self, Capabilities, Info, MAX_JSON, Mode, Step};
 
+const RECOVERY_WINDOW: Duration = Duration::from_secs(60 * 60);
+const MAX_RECOVERIES: usize = 3;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Failure {
     NotSent,
     Transport,
     Identity,
     Session,
+    Reconnect,
     Expired,
     Refused,
     Unavailable,
@@ -35,6 +41,8 @@ pub(crate) struct Snapshot {
 struct Session {
     token: Zeroizing<String>,
     expires: Instant,
+    /// A complete useful state was observed with this token.
+    confirmed: bool,
 }
 
 pub(crate) struct Client {
@@ -44,6 +52,7 @@ pub(crate) struct Client {
     session: Option<Session>,
     parked: Option<Failure>,
     caps: Capabilities,
+    recoveries: VecDeque<Instant>,
 }
 
 fn protocol(key: &'static str) -> Failure {
@@ -67,6 +76,26 @@ impl Client {
             session: None,
             parked: None,
             caps: Capabilities::default(),
+            recoveries: VecDeque::new(),
+        }
+    }
+
+    /// Invalidate only this serialized session. Recover a previously useful
+    /// token on the next read; never repeat the request that was refused.
+    fn session_refused(&mut self, authenticated: bool) -> Failure {
+        let confirmed = self
+            .session
+            .take()
+            .is_some_and(|session| authenticated && session.confirmed);
+        let now = Instant::now();
+        self.recoveries
+            .retain(|at| now.duration_since(*at) < RECOVERY_WINDOW);
+        if confirmed && self.recoveries.len() < MAX_RECOVERIES {
+            self.recoveries.push_back(now);
+            Failure::Reconnect
+        } else {
+            self.parked = Some(Failure::Session);
+            Failure::Session
         }
     }
 
@@ -125,9 +154,7 @@ impl Client {
             })?;
         match status {
             StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
-                self.session = None;
-                self.parked = Some(Failure::Session);
-                Err(Failure::Session)
+                Err(self.session_refused(authenticated))
             }
             StatusCode::NOT_FOUND | StatusCode::NOT_IMPLEMENTED => Err(Failure::Unavailable),
             s if s.is_success() => Ok(body.to_vec()),
@@ -163,6 +190,7 @@ impl Client {
         self.session = Some(Session {
             token: Zeroizing::new(login.token),
             expires,
+            confirmed: false,
         });
         let verified = self
             .request(
@@ -252,6 +280,9 @@ impl Client {
             None
         };
         self.caps = caps;
+        if let Some(session) = &mut self.session {
+            session.confirmed = true;
+        }
         Ok(Snapshot {
             info,
             caps,

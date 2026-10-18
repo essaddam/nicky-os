@@ -7,6 +7,39 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 
+// Keep the supervisor pending after dropping or cleanly finishing the
+// real driver, so its failure cleanup cannot mask missing local cleanup.
+struct ExitProbe {
+    driver: Twinkly,
+    abort: Arc<tokio::sync::Notify>,
+    ended: Arc<tokio::sync::Notify>,
+}
+impl Driver for ExitProbe {
+    fn kind(&self) -> &'static str {
+        "twinkly"
+    }
+    fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(async move {
+            tokio::select! {
+                biased;
+                ()=self.abort.notified()=>Ok(()),
+                result=self.driver.run(ctx)=>result,
+            }?;
+            self.ended.notify_one();
+            std::future::pending::<anyhow::Result<()>>().await
+        })
+    }
+}
+struct Quiet;
+impl Driver for Quiet {
+    fn kind(&self) -> &'static str {
+        "twinkly"
+    }
+    fn run<'a>(&'a self, _ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(std::future::pending())
+    }
+}
+
 fn point(key: &str) -> PointId {
     PointId::from(format!("lights:aabbccddeeff/{key}"))
 }
@@ -212,36 +245,81 @@ async fn twinkly_runtime_failed_reread_is_offline_without_false_freshness() {
 
 #[tokio::test]
 async fn twinkly_runtime_stop_is_offline_and_restart_does_not_replay() {
-    let server = Server::start().await;
-    let (hub, cancel, handle) = start(&server, false).await;
-    hub.command(&point("brightness"), Value::Int(60), Origin::Ui, None)
-        .await
-        .unwrap();
-    cancel.cancel();
-    handle.await.unwrap();
-    assert!(
-        hub.snapshot()
-            .devices
-            .iter()
-            .all(|d| d.online == Some(false))
-    );
-    let config = Config {
-        host: std::net::Ipv4Addr::LOCALHOST,
-        port: server.port,
-        mac: "aa:bb:cc:dd:ee:ff".into(),
-        resume_mode: None,
-    };
-    let stop = CancellationToken::new();
-    let task = spawn_driver(
-        &hub,
-        InstanceId::from("lights"),
-        Arc::new(Twinkly::new(config).unwrap()),
-        stop.clone(),
-    );
-    until(|| server.count("POST", "/xled/v1/verify") == 2).await;
-    assert_eq!(server.writes().len(), 1);
-    stop.cancel();
-    task.await.unwrap();
+    for clean_exit in [false, true] {
+        let server = Server::start().await;
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let config = Config {
+            host: std::net::Ipv4Addr::LOCALHOST,
+            port: server.port,
+            mac: "aa:bb:cc:dd:ee:ff".into(),
+            resume_mode: None,
+        };
+        let abort = Arc::new(tokio::sync::Notify::new());
+        let ended = Arc::new(tokio::sync::Notify::new());
+        let cancel = CancellationToken::new();
+        let handle = spawn_driver(
+            &hub,
+            InstanceId::from("lights"),
+            Arc::new(ExitProbe {
+                driver: Twinkly::new(config.clone()).unwrap(),
+                abort: Arc::clone(&abort),
+                ended: Arc::clone(&ended),
+            }),
+            cancel.clone(),
+        );
+        until(|| hub.state(&point("on")).is_some()).await;
+        hub.command(&point("brightness"), Value::Int(60), Origin::Ui, None)
+            .await
+            .unwrap();
+        let quiet_cancel = CancellationToken::new();
+        let quiet = if clean_exit {
+            // Replacing only the command sender closes the old receiver.
+            // register_driver does not change device availability.
+            Some(spawn_driver(
+                &hub,
+                InstanceId::from("lights"),
+                Arc::new(Quiet),
+                quiet_cancel.clone(),
+            ))
+        } else {
+            abort.notify_one();
+            None
+        };
+        tokio::time::timeout(Duration::from_secs(2), ended.notified())
+            .await
+            .unwrap();
+        assert!(
+            hub.snapshot()
+                .devices
+                .iter()
+                .all(|d| d.online == Some(false)),
+            "clean_exit={clean_exit}"
+        );
+        cancel.cancel();
+        handle.await.unwrap();
+        quiet_cancel.cancel();
+        if let Some(quiet) = quiet {
+            quiet.await.unwrap();
+        }
+        let stop = CancellationToken::new();
+        let task = spawn_driver(
+            &hub,
+            InstanceId::from("lights"),
+            Arc::new(Twinkly::new(config).unwrap()),
+            stop.clone(),
+        );
+        until(|| server.count("POST", "/xled/v1/verify") == 2).await;
+        until(|| {
+            hub.snapshot()
+                .devices
+                .iter()
+                .all(|d| d.online == Some(true))
+        })
+        .await;
+        assert_eq!(server.writes().len(), 1);
+        stop.cancel();
+        task.await.unwrap();
+    }
 }
 
 #[test]

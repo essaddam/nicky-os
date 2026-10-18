@@ -99,6 +99,11 @@ impl Server {
             task,
         }
     }
+    fn reboot(&self) {
+        let mut wire = self.wire.lock().unwrap();
+        wire.token = secret()[..24].to_owned();
+        wire.response = secret();
+    }
     pub fn client(&self) -> Client {
         Client::new(Ipv4Addr::LOCALHOST, self.port, "aabbccddeeff".into())
     }
@@ -184,26 +189,29 @@ async fn serve(mut socket: TcpStream, wire: &Mutex<Wire>, received: &Notify, rel
     let (status, body, hold, lose) = {
         let mut w = wire.lock().unwrap();
         w.requests.push((method.into(), path.into(), json.clone()));
-        if path != "/xled/v1/gestalt" && path != "/xled/v1/login" {
-            assert!(
-                headers
-                    .to_ascii_lowercase()
-                    .contains(&format!("x-auth-token: {}", w.token))
-            );
+        let authorized = path == "/xled/v1/gestalt"
+            || path == "/xled/v1/login"
+            || headers
+                .to_ascii_lowercase()
+                .contains(&format!("x-auth-token: {}", w.token));
+        if authorized {
+            let reply = payload(&w, &headers, method, path, &json);
+            let failed = w.fail_path.as_deref() == Some(path);
+            (
+                if failed { w.status } else { 200 },
+                if failed {
+                    w.failure.clone()
+                } else {
+                    serde_json::to_vec(&reply).unwrap()
+                },
+                w.hold_path.as_deref() == Some(path)
+                    && w.hold_method.as_deref().is_none_or(|m| m == method),
+                w.lose_write && method == "POST" && path.contains("/led/"),
+            )
+        } else {
+            // A reboot invalidates the previous token; no test panic or echo.
+            (401, br#"{"code":1101}"#.to_vec(), false, false)
         }
-        let reply = payload(&w, &headers, method, path, &json);
-        let failed = w.fail_path.as_deref() == Some(path);
-        (
-            if failed { w.status } else { 200 },
-            if failed {
-                w.failure.clone()
-            } else {
-                serde_json::to_vec(&reply).unwrap()
-            },
-            w.hold_path.as_deref() == Some(path)
-                && w.hold_method.as_deref().is_none_or(|m| m == method),
-            w.lose_write && method == "POST" && path.contains("/led/"),
-        )
     };
     if hold {
         received.notify_one();
@@ -410,10 +418,66 @@ async fn twinkly_http_refused_session_parks_without_authentication_duel() {
     s.fail("/xled/v1/led/mode", 401, br#"{"code":1101}"#.to_vec());
     assert_eq!(
         c.apply(&[Step::Mode(Mode::Off)], || true).await,
+        Err(Failure::Reconnect)
+    );
+    // The replacement session is refused before any useful complete reading.
+    assert_eq!(c.read(|| true).await.err(), Some(Failure::Session));
+    assert_eq!(c.read(|| true).await.err(), Some(Failure::Session));
+    assert_eq!(s.count("POST", "/xled/v1/login"), 2);
+    assert_eq!(s.writes().len(), 1);
+}
+
+#[tokio::test]
+async fn twinkly_http_device_reboot_recovers_one_session_without_replaying_write() {
+    for status in [401, 403] {
+        let s = Server::start().await;
+        let mut c = s.client();
+        c.read(|| true).await.unwrap();
+        if status == 401 {
+            s.reboot();
+        } else {
+            s.fail("/xled/v1/led/mode", 403, br#"{"code":1101}"#.to_vec());
+        }
+        assert_eq!(
+            c.apply(&[Step::Mode(Mode::Off)], || true).await,
+            Err(Failure::Reconnect)
+        );
+        if status == 403 {
+            s.wire.lock().unwrap().fail_path = None;
+        }
+        let state = c
+            .read(|| true)
+            .await
+            .expect("one new session after power loss");
+        assert_eq!(state.mode, Mode::Movie);
+        c.read(|| true).await.unwrap();
+        assert_eq!(s.count("POST", "/xled/v1/login"), 2);
+        assert_eq!(s.count("POST", "/xled/v1/verify"), 2);
+        assert_eq!(s.writes(), vec![json!({"mode":"off"})]);
+    }
+}
+
+#[tokio::test]
+async fn twinkly_http_repeated_token_loss_has_a_bounded_recovery_budget() {
+    let s = Server::start().await;
+    let mut c = s.client();
+    c.read(|| true).await.unwrap();
+    for _ in 0..3 {
+        s.reboot();
+        assert_eq!(
+            c.apply(&[Step::Mode(Mode::Off)], || true).await,
+            Err(Failure::Reconnect)
+        );
+        c.read(|| true).await.unwrap();
+    }
+    s.reboot();
+    assert_eq!(
+        c.apply(&[Step::Mode(Mode::Off)], || true).await,
         Err(Failure::Session)
     );
     assert_eq!(c.read(|| true).await.err(), Some(Failure::Session));
-    assert_eq!(s.count("POST", "/xled/v1/login"), 1);
+    assert_eq!(s.count("POST", "/xled/v1/login"), 4);
+    assert_eq!(s.writes().len(), 4);
 }
 
 #[tokio::test]

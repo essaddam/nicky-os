@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
-use moli_core::{Device, Value};
+use moli_core::{Device, DeviceId, Value};
 use moli_runtime::{CommandRequest, DriverCtx};
 use tokio::task::JoinSet;
 use tokio::time::Instant;
@@ -21,6 +21,7 @@ fn message(error: Failure) -> String {
     let key = match error {
         Failure::NotSent => "pilotes.twinkly.non_envoye",
         Failure::Identity => "pilotes.twinkly.identite_differente",
+        Failure::Reconnect => "pilotes.twinkly.reconnexion",
         Failure::Session => "pilotes.twinkly.session_refusee",
         Failure::Expired => "pilotes.twinkly.session_expiree",
         Failure::Refused => "pilotes.twinkly.refus",
@@ -256,7 +257,12 @@ impl Loop {
                 for id in ctx.known_devices() {
                     ctx.set_availability(&id, false);
                 }
-                ctx.wait_for(message(error));
+                if error == Failure::Reconnect {
+                    // The loop is recovering automatically; no human action yet.
+                    ctx.ready();
+                } else {
+                    ctx.wait_for(message(error));
+                }
                 self.next += RETRY;
             }
             None => {}
@@ -332,9 +338,29 @@ fn publish(ctx: &DriverCtx, state: Snapshot) {
     ctx.set_availability(&id, true);
 }
 
-pub(crate) async fn run(config: &Config, native: &str, ctx: &mut DriverCtx) -> anyhow::Result<()> {
-    for id in ctx.known_devices() {
-        ctx.set_availability(&id, false);
+/// Scoped to this driver only, including destruction of its run future.
+/// IDs are captured before serving; Drop performs no lookup, I/O or await.
+struct OfflineOnExit<'a> {
+    ctx: &'a mut DriverCtx,
+    ids: Vec<DeviceId>,
+}
+impl Drop for OfflineOnExit<'_> {
+    fn drop(&mut self) {
+        for id in &self.ids {
+            self.ctx.set_availability(id, false);
+        }
     }
-    Loop::new(config, native).serve(ctx).await
+}
+
+pub(crate) async fn run(config: &Config, native: &str, ctx: &mut DriverCtx) -> anyhow::Result<()> {
+    let mut ids = ctx.known_devices();
+    let expected = ctx.device_id(native);
+    if !ids.contains(&expected) {
+        ids.push(expected);
+    }
+    let offline = OfflineOnExit { ctx, ids };
+    for id in &offline.ids {
+        offline.ctx.set_availability(id, false);
+    }
+    Loop::new(config, native).serve(&mut *offline.ctx).await
 }

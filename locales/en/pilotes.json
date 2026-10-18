@@ -492,5 +492,6 @@
   "pilotes.twinkly.non_envoye": "The Twinkly command was not sent: the request was abandoned or its deadline passed.",
   "pilotes.twinkly.non_confirme": "The Twinkly command outcome is unconfirmed; check the observed state before making another request.",
   "pilotes.twinkly.file_pleine": "The Twinkly queue is full; the command was not sent.",
-  "pilotes.twinkly.session_expiree": "The Twinkly session expired before sending; no command is replayed."
+  "pilotes.twinkly.session_expiree": "The Twinkly session expired before sending; no command is replayed.",
+  "pilotes.twinkly.reconnexion": "The Twinkly session was lost; Moli will renew it on the next reading without replaying the command."
 }

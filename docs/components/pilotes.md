@@ -26,7 +26,6 @@ superviseur (`crates/moli-runtime/src/supervisor.rs`) le relance :
 - à chaque échec, la file de commandes est **vidée** (chaque ordre en attente reçoit le refus
   `driver restarting`) et les appareils de l'instance passent **hors ligne** : rien ne part
   plus tard par surprise, et un automatisme ne raisonne pas sur des valeurs périmées.
-  Un arrêt propre met aussi les appareils de l'instance hors ligne.
 
 ### `DriverCtx` : ce qu'un pilote peut faire
 
@@ -538,7 +537,6 @@ pièces ; il commande ensuite les membres en origine `system` (journal : `lumina
 
 Un seul pilote générique pour tout appareil HTTP décrit en TOML. Voir [profils.md](profils.md).
 
-
 ## Twinkly locale (`moli-twinkly`)
 
 Un appareil par instance, HTTP API v1 sur une IPv4 locale et une MAC validées par
@@ -553,6 +551,10 @@ réseau en vol, FIFO bornée à huit ordres, échéance absolue et abandon avant
 émission ; aucun rejeu d'écriture. Après acquittement, seule la relecture alimente
 les points, leur fraîcheur et la disponibilité ; les valeurs demandées ne sont pas
 publiées comme observations. Les trois points relèvent de la famille `states`.
+Un jeton auparavant confirmé puis refusé est remplacé au relevé suivant, sans
+rejouer d'écriture. Un jeton neuf refusé avant sa première lecture complète ou
+un dépassement des trois récupérations par heure demande une intervention humaine.
+Le nettoyage d'arrêt est local à Twinkly, même si sa future est détruite.
 
 Le [paquet](../../integrations/twinkly/README.md) documente versions/licences des
 références communautaires, bornes, fixtures synthétiques et limites. Les contrats
@@ -584,25 +586,25 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 
 | Pilote | Crate | Protocole | Écriture possible | Vérifié sur du vrai matériel |
 |---|---|---|---|---|
-| `bambu` | `moli-bambu` | MQTT TLS 8883, épinglé | lumière, `control` (humain pour un agent) | pas encore (cible : Bambu Lab A1) |
-| `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
-| `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |
-| `host` | `moli-host` | /proc, /sys ; WoL ; agent HTTP sortant | allumer, éteindre, veille, Claude et Codex pour le téléphone (PIN) | hôte Linux ; PC Windows avec l'agent |
+| `z2m` | `moli-z2m` | MQTT local (Zigbee2MQTT) | oui, selon les `exposes` | Zigbee2MQTT (appareils variés) |
 | `hue` | `moli-hue` | HTTPS CLIP v2 + SSE, local, épinglé | oui : lumières, pièces ; zones non | pont Philips Hue (CLIP v2) |
-| `igd` | `moli-igd` | UPnP IGD (SSDP + SOAP) | non | Livebox |
-| `ipp` | `moli-ipp` | IPP 2.0 HTTP 631 | identifier, annuler, imprimer (tableau de bord) | Canon MG3600 |
-| `lumieres` (interne) | `moli-lights` | aucun (lit et commande d'autres appareils via le hub) | oui | ampoules Hue derrière un relais |
+| `tuya` | `moli-tuya` | TCP 6668 chiffré 3.3/3.4/3.5, UDP 6666/6667/7000 ; cloud en lecture | oui : DP booléens, entiers, enum (local seulement) | prises Tuya (local, écriture comprise) ; capteurs sur pile et passerelles (cloud) |
+| `twinkly` | `moli-twinkly` | HTTP local v1, login/verify transitoires | marche, luminosité, RGB statique direct si supporté | pas encore : contrats synthétiques, H1 requis |
+| `reolink` | `moli-reolink` | HTTPS API locale, épinglé (X.509 v1) | non (+ images) | Reolink Home Hub (caméras, sonnette) |
+| `sonos` | `moli-sonos` | UPnP/SOAP HTTP 1400 ; annonces en WebSocket TLS 1443 | oui : lecture, volume, sourdine, annonces | Sonos Beam |
+| `philips` | `moli-philips` | JointSpace HTTPS 1926, digest, WoL ; Android TV Remote, Cast | oui : alimentation, volume, sourdine, Ambilight, touches, appli | Philips Google TV (lecture) |
+| `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
+| `bambu` | `moli-bambu` | MQTT TLS 8883, épinglé | lumière, `control` (humain pour un agent) | pas encore (cible : Bambu Lab A1) |
 | `moonraker` | `moli-moonraker` | HTTP local 7125 | lumière, `control` (humain pour un agent) | Snapmaker U1 |
 | `nuki` | `moli-nuki` | HTTP local 8080, jeton haché | verrouiller ; déverrouiller et ouvrir (humain pour un agent et le dashboard sans code) | pas encore (pont Nuki + Smart Lock) |
 | `overkiz` | `moli-overkiz` | API Overkiz : HTTPS local 8443 épinglé, ou cloud Somfy (OAuth) | oui : volets, portails (`open`, `stop`, `my`, `close`), lumière, prise | pas encore (cible : TaHoma en local, Connectivity Kit en cloud) |
-| `philips` | `moli-philips` | JointSpace HTTPS 1926, digest, WoL ; Android TV Remote, Cast | oui : alimentation, volume, sourdine, Ambilight, touches, appli | Philips Google TV (lecture) |
-| `phones` | `moli-phones` | rapports HTTP de l'appli (jeton) | `notify` (notification) | iPhone (appli Moli) |
-| `presence` | `moli-presence` | UDP + table ARP de l'hôte | non | téléphones sur le Wi-Fi |
-| `profile` | `moli-profile` | HTTP/HTTPS GET, Meross signé | oui si le profil déclare `[[write]]` (Daikin) | Daikin BRP069 (lecture), Meross EM06, Open-Meteo, Tempo, iopool EcO (voir [profils.md](profils.md#les-profils-du-catalogue)) |
-| `reolink` | `moli-reolink` | HTTPS API locale, épinglé (X.509 v1) | non (+ images) | Reolink Home Hub (caméras, sonnette) |
-| `sonos` | `moli-sonos` | UPnP/SOAP HTTP 1400 ; annonces en WebSocket TLS 1443 | oui : lecture, volume, sourdine, annonces | Sonos Beam |
 | `tapo` | `moli-tapo` | HTTP 80 + KLAP v2 | oui : tout | pas encore (cible : Tapo L530) |
+| `igd` | `moli-igd` | UPnP IGD (SSDP + SOAP) | non | Livebox |
+| `ipp` | `moli-ipp` | IPP 2.0 HTTP 631 | identifier, annuler, imprimer (tableau de bord) | Canon MG3600 |
+| `host` | `moli-host` | /proc, /sys ; WoL ; agent HTTP sortant | allumer, éteindre, veille, Claude et Codex pour le téléphone (PIN) | hôte Linux ; PC Windows avec l'agent |
+| `presence` | `moli-presence` | UDP + table ARP de l'hôte | non | téléphones sur le Wi-Fi |
+| `phones` | `moli-phones` | rapports HTTP de l'appli (jeton) | `notify` (notification) | iPhone (appli Moli) |
 | `telegram` | `moli-telegram` | HTTPS, API des bots | `notify` (message) | oui (API des bots) |
-| `tuya` | `moli-tuya` | TCP 6668 chiffré 3.3/3.4/3.5, UDP 6666/6667/7000 ; cloud en lecture | oui : DP booléens, entiers, enum (local seulement) | prises Tuya (local, écriture comprise) ; capteurs sur pile et passerelles (cloud) |
-| `twinkly` | `moli-twinkly` | HTTP local v1, login/verify transitoires | marche, luminosité, RGB statique direct si supporté | pas encore : contrats synthétiques, H1 requis |
-| `z2m` | `moli-z2m` | MQTT local (Zigbee2MQTT) | oui, selon les `exposes` | Zigbee2MQTT (appareils variés) |
+| `profile` | `moli-profile` | HTTP/HTTPS GET, Meross signé | oui si le profil déclare `[[write]]` (Daikin) | Daikin BRP069 (lecture), Meross EM06, Open-Meteo, Tempo, iopool EcO (voir [profils.md](profils.md#les-profils-du-catalogue)) |
+| `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |
+| `lumieres` (interne) | `moli-lights` | aucun (lit et commande d'autres appareils via le hub) | oui | ampoules Hue derrière un relais |

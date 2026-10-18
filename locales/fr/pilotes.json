@@ -492,5 +492,6 @@
   "pilotes.twinkly.non_envoye": "La commande Twinkly n'a pas été envoyée : demande abandonnée ou délai dépassé.",
   "pilotes.twinkly.non_confirme": "Le résultat de la commande Twinkly n'est pas confirmé ; vérifier l'état relu avant toute nouvelle demande.",
   "pilotes.twinkly.file_pleine": "La file Twinkly est pleine ; la commande n'a pas été envoyée.",
-  "pilotes.twinkly.session_expiree": "La session Twinkly a expiré avant l'envoi ; aucune commande n'est répétée."
+  "pilotes.twinkly.session_expiree": "La session Twinkly a expiré avant l'envoi ; aucune commande n'est répétée.",
+  "pilotes.twinkly.reconnexion": "La session Twinkly a été perdue ; Moli la renouvellera au prochain relevé, sans répéter la commande."
 }
