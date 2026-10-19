@@ -1450,6 +1450,7 @@ mod tests {
         hub: moli_runtime::Hub,
         cancel: tokio_util::sync::CancellationToken,
         task: tokio::task::JoinHandle<()>,
+        release_table_after_read: std::cell::Cell<Option<&'static tokio::sync::Notify>>,
     }
 
     impl House {
@@ -1491,6 +1492,7 @@ mod tests {
                 hub,
                 cancel,
                 task,
+                release_table_after_read: std::cell::Cell::new(None),
             }
         }
 
@@ -1527,8 +1529,55 @@ mod tests {
         }
 
         fn remembered(&self) -> serde_json::Value {
-            serde_json::from_slice(&std::fs::read(self.dir.join("addresses.json")).unwrap())
-                .unwrap()
+            let remembered: serde_json::Value =
+                serde_json::from_slice(&std::fs::read(self.dir.join("addresses.json")).unwrap())
+                    .unwrap();
+            self.release_table(&remembered);
+            remembered
+        }
+
+        /// Availability can precede the asynchronous address-book save.
+        async fn remembered_until(
+            &self,
+            description: &str,
+            expected: impl Fn(&serde_json::Value) -> bool,
+        ) {
+            let path = self.dir.join("addresses.json");
+            let mut last = "no disk read completed".to_owned();
+            let saved = tokio::time::timeout(Duration::from_secs(3), async {
+                loop {
+                    last = match tokio::fs::read(&path).await {
+                        Ok(bytes) => match serde_json::from_slice::<serde_json::Value>(&bytes) {
+                            Ok(remembered) => {
+                                self.release_table(&remembered);
+                                if expected(&remembered) {
+                                    return;
+                                }
+                                remembered.to_string()
+                            }
+                            Err(error) => format!("invalid address book: {error}"),
+                        },
+                        Err(error) => format!("address book unreadable: {error}"),
+                    };
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await;
+            assert!(
+                saved.is_ok(),
+                "expected {description} in {} within 3 seconds; last observation: {last}",
+                path.display()
+            );
+        }
+
+        fn release_table(&self, remembered: &serde_json::Value) {
+            if let Some(release) = self.release_table_after_read.take() {
+                assert_eq!(
+                    remembered["clim"]["identity"], MAC,
+                    "the controlled LAN still holds persistence at the first disk read"
+                );
+                release.notify_one();
+            }
         }
 
         async fn stop(self) {
@@ -1557,6 +1606,11 @@ mod tests {
             [("127.0.0.2".to_owned(), "127.0.0.1".to_owned())],
             "journaled once"
         );
+        house
+            .remembered_until("the new address", |saved| {
+                *saved == book(Ipv4Addr::LOCALHOST)
+            })
+            .await;
         assert_eq!(house.remembered(), book(Ipv4Addr::LOCALHOST));
         let remembered = house.remembered();
         house.stop().await;
@@ -1612,6 +1666,11 @@ mod tests {
             house.moves(),
             [("127.0.0.2".to_owned(), "127.0.0.3".to_owned())]
         );
+        house
+            .remembered_until("the address found elsewhere", |saved| {
+                *saved == book(ELSEWHERE)
+            })
+            .await;
         assert_eq!(house.remembered(), book(ELSEWHERE));
         house.stop().await;
     }
@@ -1628,13 +1687,34 @@ mod tests {
 
     #[tokio::test]
     async fn an_address_a_person_changed_is_obeyed() {
+        fn table_release() -> &'static tokio::sync::Notify {
+            static RELEASE: std::sync::OnceLock<tokio::sync::Notify> = std::sync::OnceLock::new();
+            RELEASE.get_or_init(tokio::sync::Notify::new)
+        }
+        // Online is published before this controlled table permits learning.
+        // The first disk read captures the old book, then releases learning.
+        let delayed = Lan {
+            table: || {
+                Box::pin(async {
+                    table_release().notified().await;
+                    Vec::new()
+                })
+            },
+            ..LOOPBACK
+        };
         // Learned for another configured address: the person's word wins.
         let port = adapter(CONFIGURED, 0, OTHER).await;
         let mut before = book(Ipv4Addr::LOCALHOST);
         before["clim"]["configured"] = "127.0.0.9".into();
-        let house = House::new("edited", port, LOOPBACK, Some(before));
+        let house = House::new("edited", port, delayed, Some(before));
+        house.release_table_after_read.set(Some(table_release()));
         assert!(house.online(OTHER).await, "what answers there is taken");
         assert!(house.moves().is_empty(), "nothing was looked for");
+        house
+            .remembered_until("the identity at the edited address", |saved| {
+                saved["clim"]["identity"] == OTHER
+            })
+            .await;
         assert_eq!(house.remembered()["clim"]["identity"], OTHER);
         house.stop().await;
     }
