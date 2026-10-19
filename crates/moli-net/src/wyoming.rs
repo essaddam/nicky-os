@@ -14,12 +14,33 @@ use serde_json::{Value, json};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 
+#[cfg(test)]
+mod supervision_tests;
+
 /// About ten minutes of speech: far beyond any announcement.
 const MAX_AUDIO: usize = 8 * 1024 * 1024;
 const MAX_BLOCK: usize = 64 * 1024;
 const VERSION: &str = "1.5.2";
 /// Bytes of PCM per `audio-chunk` sent to Whisper (~0.25 s at 16 kHz).
 const CHUNK: usize = 8 * 1024;
+
+/// Ask a configured service for its description, without sending or receiving
+/// audio. The limit covers DNS, connection, write and the single `info` reply.
+/// Failures deliberately discard remote text, JSON errors and endpoint details.
+pub async fn describe(host: &str, port: u16, limit: Duration) -> anyhow::Result<Value> {
+    let exchange = async {
+        let mut tcp = TcpStream::connect((host, port)).await?;
+        send(&mut tcp, "describe", &json!({}), b"").await?;
+        tcp.flush().await?;
+        let event = receive(&mut BufReader::new(tcp), 0).await?;
+        ensure!(event.kind == "info", "expected a Wyoming info event");
+        anyhow::Ok(event.data)
+    };
+    match tokio::time::timeout(limit, exchange).await {
+        Ok(Ok(data)) => Ok(data),
+        _ => bail!("Wyoming description unavailable"),
+    }
+}
 
 /// The WAV file of `text` spoken by the server's voice (or `voice`).
 pub async fn synthesize(
@@ -102,31 +123,43 @@ async fn receive<R: AsyncBufReadExt + Unpin>(reader: &mut R, room: usize) -> any
         .read_until(b'\n', &mut line)
         .await?;
     ensure!(n > 0, "the speech server closed the connection");
+    ensure!(
+        line.last() == Some(&b'\n'),
+        "speech server: incomplete header"
+    );
     let header: Value = serde_json::from_slice(&line).context("speech server: bad event")?;
-    let mut data = header.get("data").cloned().unwrap_or_else(|| json!({}));
-    if let Some(len) = header.get("data_length").and_then(Value::as_u64) {
-        let len = usize::try_from(len)?;
-        ensure!(len <= MAX_BLOCK, "speech server: event data too large");
-        let mut block = vec![0; len];
-        reader.read_exact(&mut block).await?;
-        if let (Some(into), Value::Object(more)) =
-            (data.as_object_mut(), serde_json::from_slice(&block)?)
-        {
-            into.extend(more);
-        }
-    }
-    let mut payload = Vec::new();
-    if let Some(len) = header.get("payload_length").and_then(Value::as_u64) {
-        let len = usize::try_from(len)?;
-        ensure!(len <= room, "speech too long");
-        payload = vec![0; len];
-        reader.read_exact(&mut payload).await?;
-    }
+    ensure!(
+        header.is_object(),
+        "speech server: header must be an object"
+    );
     let kind = header
         .get("type")
         .and_then(Value::as_str)
-        .unwrap_or_default()
-        .to_owned();
+        .context("speech server: event without type")?;
+    ensure!(
+        !kind.is_empty() && kind.len() <= 128,
+        "speech server: invalid event type"
+    );
+    // Validate both sizes before reading either block. In particular, a
+    // description refuses binary data even if its JSON block never arrives.
+    let data_length = block_length(&header, "data_length", MAX_BLOCK)?;
+    let payload_length = block_length(&header, "payload_length", room)?;
+    let mut data = match header.get("data") {
+        None => serde_json::Map::new(),
+        Some(Value::Object(data)) => data.clone(),
+        _ => bail!("speech server: event data must be an object"),
+    };
+    if data_length > 0 {
+        let mut block = vec![0; data_length];
+        reader.read_exact(&mut block).await?;
+        let more: serde_json::Map<String, Value> =
+            serde_json::from_slice(&block).context("speech server: invalid event data object")?;
+        data.extend(more);
+    }
+    let mut payload = vec![0; payload_length];
+    if payload_length > 0 {
+        reader.read_exact(&mut payload).await?;
+    }
     if kind == "error" {
         bail!(
             "speech server: {}",
@@ -134,10 +167,23 @@ async fn receive<R: AsyncBufReadExt + Unpin>(reader: &mut R, room: usize) -> any
         );
     }
     Ok(Event {
-        kind,
-        data,
+        kind: kind.to_owned(),
+        data: Value::Object(data),
         payload,
     })
+}
+
+/// A missing length is zero; a present length must be an unsigned integer.
+fn block_length(header: &Value, key: &str, maximum: usize) -> anyhow::Result<usize> {
+    let Some(value) = header.get(key) else {
+        return Ok(0);
+    };
+    let length = value
+        .as_u64()
+        .context("speech server: invalid block length")?;
+    let length = usize::try_from(length).context("speech server: block length overflow")?;
+    ensure!(length <= maximum, "speech server: event block too large");
+    Ok(length)
 }
 
 async fn exchange(

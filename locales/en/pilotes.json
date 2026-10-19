@@ -493,5 +493,14 @@
   "pilotes.twinkly.non_confirme": "The Twinkly command outcome is unconfirmed; check the observed state before making another request.",
   "pilotes.twinkly.file_pleine": "The Twinkly queue is full; the command was not sent.",
   "pilotes.twinkly.session_expiree": "The Twinkly session expired before sending; no command is replayed.",
-  "pilotes.twinkly.reconnexion": "The Twinkly session was lost; Moli will renew it on the next reading without replaying the command."
+  "pilotes.twinkly.reconnexion": "The Twinkly session was lost; Moli will renew it on the next reading without replaying the command.",
+  "pilotes.wyoming.configuration_invalide": "Wyoming configuration requires a local host or valid DNS name, a nonzero port, a polling period of 10–3600 seconds and a timeout of 1–10 seconds.",
+  "pilotes.wyoming.derniere_erreur": "Last error",
+  "pilotes.wyoming.disponible": "Available",
+  "pilotes.wyoming.indisponible": "Wyoming service unavailable or invalid description.",
+  "pilotes.wyoming.modeles": "Advertised models",
+  "pilotes.wyoming.programme": "Advertised program",
+  "pilotes.wyoming.service": "Local voice service",
+  "pilotes.wyoming.version": "Advertised version",
+  "pilotes.wyoming.voix": "Advertised voices"
 }

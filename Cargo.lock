@@ -1602,6 +1602,7 @@ dependencies = [
  "moli-tuya",
  "moli-twinkly",
  "moli-weather",
+ "moli-wyoming",
  "moli-z2m",
  "rusqlite",
  "serde",
@@ -1856,6 +1857,21 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "moli-wyoming"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "moli-core",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
 ]
 
 [[package]]

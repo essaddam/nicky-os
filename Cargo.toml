@@ -49,6 +49,7 @@ moli-esphome = { path = "crates/moli-esphome" }
 moli-alexa = { path = "crates/moli-alexa" }
 moli-demo = { path = "crates/moli-demo" }
 moli-weather = { path = "crates/moli-weather" }
+moli-wyoming = { path = "crates/moli-wyoming" }
 
 aes = "0.8"
 anyhow = "1"

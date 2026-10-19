@@ -120,6 +120,29 @@ l'exige).
 En cas d'empreinte différente, l'erreur contient `PIN_MISMATCH` : les pilotes passent alors
 en `waiting` avec la commande `moli-os secrets forget <instance> cert` (ou `cert_sha256`).
 
+## `wyoming` : supervision des services vocaux locaux (`crates/moli-wyoming`)
+
+- **Périmètre** : surveiller Piper, Whisper et openWakeWord, sans posséder le
+  pipeline voix. L'assistant et les annonces Sonos gardent `moli-net::wyoming` ;
+  HA conserve l'usage voix jusqu'à validation.
+- **Configuration** : une instance par service, `host` et `port` obligatoires
+  fournis par le propriétaire (D5) ; `every = 60` secondes (10–3600),
+  `timeout = 4` secondes (1–10). Aucun secret ni découverte automatique.
+- **Identité** : `<instance>:service`, indépendante de l'adresse, du port et
+  du programme annoncé.
+- **Protocole** : une requête `describe`, une réponse `info`, fermeture ;
+  en-tête et bloc JSON limités à 64 Kio chacun, longueurs typées, objets exigés,
+  aucune charge binaire acceptée. Délai global et annulation de la sonde.
+- **Points RO** : `available` (OnOff), `last_error` (message local traduit et
+  expurgé), `models`, `program`, `version`, `voices` (textes bornés). Les listes
+  sont triées et dédupliquées. Disponibilité de l'appareil = résultat valide
+  de la sonde ; après échec ou arrêt, hors ligne et métadonnées effacées.
+- **Rythme** : première sonde immédiate, puis période complète après chaque
+  résultat ; aucun nouvel essai immédiat ni rafale de rattrapage.
+- **Tests et état** : [contrat Wyoming](wyoming.md), fixtures synthétiques et
+  faux serveur TCP. Garde-fou complet réussi (735 tests, formatage, Clippy,
+  catalogue et fuites génériques) ; aucune qualification réelle avant H1.
+
 ## `z2m` : Zigbee via Zigbee2MQTT (`crates/moli-z2m`)
 
 - **Couvre** : tous les appareils Zigbee que Zigbee2MQTT sait décrire (~4 000), sans code par marque.

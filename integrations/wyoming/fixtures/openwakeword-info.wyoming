@@ -1,0 +1,2 @@
+{"type":"info","version":"1.5.2","data_length":383}
+{"asr":[],"tts":[],"wake":[{"name":"openWakeWord","attribution":{"name":"Example project","url":"https://example.org"},"installed":true,"description":null,"version":"0.0.0","models":[{"name":"example-wake","attribution":{"name":"Example project","url":"https://example.org"},"installed":true,"description":null,"version":"0.0.0","languages":["en"],"phrase":"Example wake phrase"}]}]}
