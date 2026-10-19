@@ -66,6 +66,7 @@ téléphones passent sans Access, avec leur propre jeton.
 | [reseau.md](components/reseau.md) | cadrage réseau : diagnostic, ASUSWRT, Huawei LTE, Netgear et SMLIGHT ; clients à implémenter |
 | [reseau-qualification.md](components/reseau-qualification.md) | preuves de contrat réseau, fixtures, bornes et porte de qualification humaine |
 | [traduction.md](components/traduction.md) | catalogues `locales/`, clés, pluriels, ajouter une langue, contrôle |
+| [wyoming.md](components/wyoming.md) | supervision locale Piper, Whisper et openWakeWord ; garde-fou complet réussi, revue architecte et qualification réelle après H1 distinctes |
 
 ## Les règles à ne jamais oublier
 

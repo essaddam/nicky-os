@@ -1,0 +1,2 @@
+{"type":"info","version":"1.5.2","data_length":365}
+{"asr":[],"tts":[{"name":"piper","attribution":{"name":"Example project","url":"https://example.org"},"installed":true,"description":null,"version":"0.0.0","voices":[{"name":"example-fr-voice","attribution":{"name":"Example project","url":"https://example.org"},"installed":true,"description":null,"version":"0.0.0","languages":["fr"],"speakers":null}]}],"wake":[]}

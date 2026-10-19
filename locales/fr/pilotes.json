@@ -493,5 +493,14 @@
   "pilotes.twinkly.non_confirme": "Le résultat de la commande Twinkly n'est pas confirmé ; vérifier l'état relu avant toute nouvelle demande.",
   "pilotes.twinkly.file_pleine": "La file Twinkly est pleine ; la commande n'a pas été envoyée.",
   "pilotes.twinkly.session_expiree": "La session Twinkly a expiré avant l'envoi ; aucune commande n'est répétée.",
-  "pilotes.twinkly.reconnexion": "La session Twinkly a été perdue ; Moli la renouvellera au prochain relevé, sans répéter la commande."
+  "pilotes.twinkly.reconnexion": "La session Twinkly a été perdue ; Moli la renouvellera au prochain relevé, sans répéter la commande.",
+  "pilotes.wyoming.configuration_invalide": "La configuration Wyoming exige un hôte local ou un nom DNS valide, un port non nul, une période de 10 à 3600 secondes et un délai de 1 à 10 secondes.",
+  "pilotes.wyoming.derniere_erreur": "Dernière erreur",
+  "pilotes.wyoming.disponible": "Disponible",
+  "pilotes.wyoming.indisponible": "Service Wyoming indisponible ou description invalide.",
+  "pilotes.wyoming.modeles": "Modèles annoncés",
+  "pilotes.wyoming.programme": "Programme annoncé",
+  "pilotes.wyoming.service": "Service vocal local",
+  "pilotes.wyoming.version": "Version annoncée",
+  "pilotes.wyoming.voix": "Voix annoncées"
 }

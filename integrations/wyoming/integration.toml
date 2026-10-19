@@ -1,0 +1,31 @@
+[integration]
+id = "wyoming"
+name = "Wyoming"
+brands = []
+models = ["openWakeWord", "Piper", "Whisper"]
+transport = "tcp"
+driver = "wyoming"
+crate = "moli-wyoming"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = []
+
+[needs]
+secrets = []
+vars = []
+options = ["host", "port"]
+
+[origin]
+reused = "Protocole Wyoming (OHF-Voice) : describe/info, asr/tts/wake ; codec moli-net partagé, aucun code fournisseur copié ; fixtures synthétiques, aucune capture réelle"
+author = "agent"
+
+[[fixture]]
+file = "fixtures/openwakeword-info.wyoming"
+
+[[fixture]]
+file = "fixtures/piper-info.wyoming"
+
+[[fixture]]
+file = "fixtures/whisper-info.wyoming"
