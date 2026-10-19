@@ -379,9 +379,8 @@ async fn serve(config: Config, boot: Instant) -> anyhow::Result<()> {
         access: config.server.access.clone(),
         demo: config.server.demo,
         household: Some(household),
-        phones: gates.phones,
-        machines: gates.machines,
         weather: weather(&config),
+        ..gates.into_api_options()
     };
     // Client addresses matter: human sessions are bound to them.
     axum::serve(
@@ -880,6 +879,7 @@ const KINDS: &[&str] = &[
     "igd",
     "ipp",
     "moonraker",
+    "netatmo",
     "nuki",
     "overkiz",
     "philips",
@@ -959,6 +959,19 @@ fn spawn_household(
 struct Gateways {
     phones: Option<moli_phones::Gateway>,
     machines: Option<moli_host::agents::Agents>,
+    netatmo: std::collections::BTreeMap<InstanceId, moli_api::NetatmoEndpoint>,
+}
+
+impl Gateways {
+    /// The API handles shared by enabled drivers.
+    fn into_api_options(self) -> moli_api::Options {
+        moli_api::Options {
+            machines: self.machines,
+            netatmo: self.netatmo,
+            phones: self.phones,
+            ..moli_api::Options::default()
+        }
+    }
 }
 
 fn spawn_drivers(
@@ -971,6 +984,13 @@ fn spawn_drivers(
     for driver in config.drivers.iter().filter(|d| d.enabled != Some(false)) {
         let context = || format!("driver {:?} options", driver.id);
         let built: Arc<dyn Driver> = match driver.kind.as_str() {
+            "netatmo" => {
+                let (native, endpoint) = netatmo_driver(driver)?;
+                gates
+                    .netatmo
+                    .insert(InstanceId::from(driver.id.as_str()), endpoint);
+                Arc::new(native)
+            }
             "phones" => {
                 let options = driver.options.clone().try_into().with_context(context)?;
                 let (gateway, phones_driver) = moli_phones::open(options, &config.server.data_dir)?;
@@ -995,6 +1015,27 @@ fn spawn_drivers(
     Ok((tasks, gates))
 }
 
+/// Configuration checking and startup use the same callback identity rules.
+/// Constructing the driver and its endpoint performs no network operation.
+fn netatmo_driver(
+    config: &DriverConfig,
+) -> anyhow::Result<(moli_netatmo::Netatmo, moli_api::NetatmoEndpoint)> {
+    let options: moli_netatmo::Config = config
+        .options
+        .clone()
+        .try_into()
+        .with_context(|| format!("driver {:?} options", config.id))?;
+    let invalid = || anyhow::anyhow!(moli_i18n::tr!("netatmo.status.configuration"));
+    options
+        .callback(&InstanceId::from(config.id.as_str()))
+        .map_err(|_| invalid())?;
+    let origin = options.public_origin.clone();
+    let native = moli_netatmo::Netatmo::new(options).map_err(|_| invalid())?;
+    let endpoint =
+        moli_api::NetatmoEndpoint::new(native.gateway(), origin).map_err(|_| invalid())?;
+    Ok((native, endpoint))
+}
+
 fn build_driver(
     config: &DriverConfig,
     data_dir: &std::path::Path,
@@ -1009,7 +1050,25 @@ fn build_driver(
         );
     }
     Ok(match config.kind.as_str() {
-        "z2m" => Arc::new(moli_z2m::Z2m::new(
+        "alexa" => Arc::new(moli_alexa::Alexa::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "bambu" => Arc::new(moli_bambu::Bambu::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "demo" => Arc::new(moli_demo::Demo::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
+        "esphome" => Arc::new(moli_esphome::Esphome::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "frigate" => Arc::new(moli_frigate::Frigate::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "helpers" => Arc::new(moli_helpers::Helpers::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
+        "host" => Arc::new(moli_host::Host::new(
             config.options.clone().try_into().with_context(context)?,
         )),
         "hue" => Arc::new(moli_hue::Hue::new(
@@ -1018,54 +1077,22 @@ fn build_driver(
         "igd" => Arc::new(moli_igd::Igd::new(
             config.options.clone().try_into().with_context(context)?,
         )),
-        "tapo" => Arc::new(moli_tapo::Tapo::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "philips" => Arc::new(moli_philips::Philips::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "frigate" => Arc::new(moli_frigate::Frigate::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "bambu" => Arc::new(moli_bambu::Bambu::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "esphome" => Arc::new(moli_esphome::Esphome::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "alexa" => Arc::new(moli_alexa::Alexa::new(
+        "ipp" => Arc::new(moli_ipp::Ipp::new(
             config.options.clone().try_into().with_context(context)?,
         )),
         "moonraker" => Arc::new(moli_moonraker::Moonraker::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "netatmo" => Arc::new(netatmo_driver(config)?.0),
         "nuki" => Arc::new(moli_nuki::Nuki::new(
             config.options.clone().try_into().with_context(context)?,
         )),
         "overkiz" => Arc::new(moli_overkiz::Overkiz::new(
             config.options.clone().try_into().with_context(context)?,
         )?),
-        "ipp" => Arc::new(moli_ipp::Ipp::new(
+        "philips" => Arc::new(moli_philips::Philips::new(
             config.options.clone().try_into().with_context(context)?,
         )),
-        "host" => Arc::new(moli_host::Host::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "sonos" => Arc::new(moli_sonos::Sonos::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "reolink" => Arc::new(moli_reolink::Reolink::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "tuya" => Arc::new(moli_tuya::Tuya::new(
-            config.options.clone().try_into().with_context(context)?,
-        )),
-        "twinkly" => Arc::new(moli_twinkly::Twinkly::new(
-            config.options.clone().try_into().with_context(context)?,
-        )?),
-        "presence" => Arc::new(moli_presence::Presence::new(
-            config.options.clone().try_into().with_context(context)?,
-        )?),
         "phones" => Arc::new(
             moli_phones::open(
                 config.options.clone().try_into().with_context(context)?,
@@ -1073,22 +1100,37 @@ fn build_driver(
             )?
             .1,
         ),
-        "telegram" => Arc::new(moli_telegram::Telegram::new(
-            config.options.clone().try_into().with_context(context)?,
-        )?),
-        "helpers" => Arc::new(moli_helpers::Helpers::new(
-            config.options.clone().try_into().with_context(context)?,
-        )?),
-        "demo" => Arc::new(moli_demo::Demo::new(
+        "presence" => Arc::new(moli_presence::Presence::new(
             config.options.clone().try_into().with_context(context)?,
         )?),
         "profile" => Arc::new(moli_profile::ProfileDriver::new(
             config.options.clone().try_into().with_context(context)?,
             data_dir.join(moli_profile::TRUST_FILE),
         )?),
+        "reolink" => Arc::new(moli_reolink::Reolink::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "sonos" => Arc::new(moli_sonos::Sonos::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "tapo" => Arc::new(moli_tapo::Tapo::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "telegram" => Arc::new(moli_telegram::Telegram::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
+        "tuya" => Arc::new(moli_tuya::Tuya::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "twinkly" => Arc::new(moli_twinkly::Twinkly::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "wyoming" => Arc::new(moli_wyoming::Wyoming::new(
             config.options.clone().try_into().with_context(context)?,
         )?),
+        "z2m" => Arc::new(moli_z2m::Z2m::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
         other => bail!("driver kind {other:?} is in KINDS but never built"),
     })
 }
@@ -1136,6 +1178,65 @@ mod tests {
             enabled: None,
             options: toml::Value::Table(toml::Table::new()),
         }
+    }
+
+    fn netatmo_config(enabled: bool) -> Config {
+        let mut config: Config = toml::from_str("").unwrap();
+        let mut weather = driver("netatmo");
+        weather.enabled = Some(enabled);
+        weather.options = toml::from_str("public_origin = 'https://weather.example.com'").unwrap();
+        config.drivers.push(weather);
+        config
+    }
+
+    #[test]
+    fn netatmo_is_built_and_rejects_invalid_callback_identity() {
+        let mut config = netatmo_config(true);
+        let data = std::env::temp_dir();
+        let built = build_driver(&config.drivers[0], &data)
+            .unwrap_or_else(|error| panic!("native weather driver: {error}"));
+        assert_eq!(built.kind(), "netatmo");
+        config.drivers[0].id = "invalid:callback".into();
+        assert!(build_driver(&config.drivers[0], &data).is_err());
+    }
+
+    #[tokio::test]
+    async fn netatmo_enabled_instance_exposes_exactly_its_gateway() {
+        let config = netatmo_config(true);
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let (tasks, gates) = spawn_drivers(&config, &hub, &cancel)
+            .unwrap_or_else(|error| panic!("enabled weather driver: {error}"));
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(gates.netatmo.len(), 1);
+        assert!(gates.netatmo.contains_key(&InstanceId::from("t")));
+        cancel.cancel();
+        for task in tasks {
+            tokio::time::timeout(std::time::Duration::from_secs(1), task)
+                .await
+                .unwrap()
+                .unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn netatmo_disabled_instance_needs_no_options_or_gateway() {
+        let mut config = netatmo_config(false);
+        config.drivers[0].options = toml::Value::Table(toml::Table::new());
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let (tasks, gates) = spawn_drivers(&config, &hub, &CancellationToken::new()).unwrap();
+        assert!(tasks.is_empty());
+        assert!(gates.netatmo.is_empty());
+    }
+
+    #[test]
+    fn netatmo_has_a_complete_native_catalogue_package() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../integrations");
+        let rows = catalogue::check(&dir, KINDS).unwrap();
+        let row = rows.iter().find(|row| row.id == "netatmo").unwrap();
+        assert!(row.errors.is_empty(), "{:?}", row.errors);
+        assert_eq!(row.driver, "netatmo");
+        assert_eq!(row.transport, "https");
     }
 
     #[test]

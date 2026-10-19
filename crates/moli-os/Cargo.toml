@@ -46,6 +46,7 @@ moli-automation.workspace = true
 anyhow.workspace = true
 rusqlite.workspace = true
 moli-net.workspace = true
+moli-netatmo.workspace = true
 http.workspace = true
 serde_json.workspace = true
 axum.workspace = true

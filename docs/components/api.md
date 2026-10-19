@@ -47,7 +47,8 @@ Détails transverses :
   tableau de bord ouvert.
 - Il n'y a **pas d'authentification en lecture** : tout client qui passe la garde `Host`
   lit l'état, le journal, l'historique, l'énergie. Seules certaines écritures exigent un
-  humain (voir 1.3).
+  humain (voir 1.3). Exception : le statut d'autorisation Netatmo exige aussi une session PIN
+  (`GET /api/integrations/netatmo`, § 2.1 ter).
 
 ### 1.2 Garde `Host` (anti DNS-rebinding)
 
@@ -289,6 +290,11 @@ Légende « Accès » : **libre** = aucune condition au-delà de la garde `Host`
 
 | Méthode | Chemin | Accès | Entrée | Réponse | Erreurs |
 |---|---|---|---|---|---|
+| GET | `/api/integrations/netatmo` | **session PIN** | aucune | `{instances:[{instance,status}]}` sans identifiant d'application ni jeton | `403` |
+| POST | `/api/integrations/netatmo/{instance}/authorize` | **session PIN**, origine configurée | `{}` (≤ 8 Kio) | `{url,expires_in:600}`, URL de consentement éphémère | `403`, `404`, `409`, `410`, `413`, `422`, `503` |
+| GET, HEAD | `/api/integrations/netatmo/{instance}/callback` | retour public statique, garde `Host` conservée | requête ≤ 8192 caractères, jamais reflétée | HTML traduit, `no-store`, `no-referrer`, CSP stricte | `414`, `422` |
+| POST | `/api/integrations/netatmo/{instance}/callback` | **même session PIN** que l'autorisation, même origine | `{code,state}` (≤ 8 Kio) | `{connected:true}` après sauvegarde durable du couple de jetons | `403`, `404`, `409`, `410`, `413`, `422`, `429`, `502`, `503` |
+| GET, HEAD | `/api/integrations/netatmo/callback.css`, `/api/integrations/netatmo/callback.js` | ressources publiques statiques, garde `Host` conservée | aucune | CSS / JS statiques, `no-store` | aucune |
 | GET | `/api/integrations/tuya-cloud` | libre | aucune | `{instances:[{instance, configured}]}` (jamais les clés) | aucune |
 | PUT | `/api/integrations/tuya-cloud` | **humain** | `{access_id, access_secret, instance?}` (lettres et chiffres) | `{stored, instance}` ; le pilote redémarre avec elles en moins d'une minute | `403` ; `404` pas de pilote tuya ; `422` pas des clés Tuya ; `500` coffre |
 | GET | `/api/ambiances` | libre | aucune | `[{id, name, icon, colors:["#rrggbb"], white (K), brightness (%), effect?}]` (`crates/moli-ambiance`) | aucune |
@@ -377,6 +383,37 @@ Limites de `Turn` : 14 derniers messages renvoyés au modèle, 2 000 caractères
 | GET | `/api/plan/images/{name}` | libre | l'image, `immutable`, avec une CSP `sandbox` (un SVG ouvert seul ne peut rien exécuter) |
 
 Notifier un téléphone : `POST /api/command` sur `telephones:<id>/push` (texte : une ligne de titre, puis le message), ou le canal « telephone » d'un automatisme. Envoi par le service push d'Expo (jeton de l'appli), qui relaie vers Apple ou Google.
+
+### 2.1 ter Netatmo météo
+
+Les instances activées par le binaire fournissent leur passerelle au routeur. Le statut
+ne révèle que leurs identifiants Moli et l'un des états `needs_credentials`,
+`needs_authorization`, `authorizing`, `connected`, `unavailable`. La carte de connexion
+ne s'affiche que pour ces instances ; elle ne reçoit aucun secret d'application.
+
+Le POST d'autorisation construit l'URL du fournisseur fixe sans contacter Netatmo.
+Le navigateur vérifie fournisseur, chemin, périmètre `read_station` et retour exact
+sur son origine actuelle. Une autre origine, même admise dans `allowed_hosts`, est refusée.
+Une nouvelle tentative remplace la précédente. L'état aléatoire à usage unique expire
+après dix minutes et est lié au cookie PIN validé, pas uniquement à l'adresse du client.
+
+Le GET de retour est une exception publique explicite de `caller::public`, pour que le
+cookie `SameSite=Strict` conserve sa protection lors du retour externe. Il ne recherche
+pas l'instance et n'embarque aucune valeur de requête. Son script enlève les paramètres
+de l'adresse affichée, puis POSTe code et état de même origine. Le POST reste privé,
+limité à 8 Kio après preuve humaine ; le code fait au plus 2048 caractères ASCII visibles,
+l'état 64 chiffres hexadécimaux. Déconnexion, changement de PIN et expiration invalident
+le lien à la session. Aucun cookie ni contrôle intersite existant n'est affaibli.
+
+Les jetons ne figurent dans aucune réponse. Les erreurs sont des textes traduits sûrs,
+sans contenu fournisseur. La file de contrôle fait quatre entrées, attente vingt secondes ;
+`409` signale l'occupation et `429` impose `Retry-After` borné à 60–900 secondes.
+Le renouvellement ambigu ou le refus de stockage impose de reconnecter le service.
+Une réponse `{connected:true}` confirme la conservation durable de l'autorisation ;
+la fraîcheur des mesures est qualifiée séparément par le pilote.
+
+Contrat complet : [OpenAPI Netatmo](../../integrations/netatmo/openapi.yaml).
+Installation et limites : [paquet Netatmo](../../integrations/netatmo/README.md).
 
 ### 2.2 Formes JSON principales
 

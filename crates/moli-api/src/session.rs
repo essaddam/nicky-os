@@ -430,6 +430,23 @@ impl Sessions {
             .is_some_and(|s| s.ip == key && now_ms().saturating_sub(s.created) < max_age_ms)
     }
 
+    /// An opaque binding to this exact validated PIN session, never just
+    /// the caller's address. It is not a credential accepted by a surface.
+    pub(crate) fn binding(&self, headers: &HeaderMap, key: &str) -> Option<[u8; 32]> {
+        if !self.is_human(headers, key) {
+            return None;
+        }
+        let token = cookie_token(headers)?;
+        let mut hash = ring::digest::Context::new(&SHA256);
+        hash.update(b"moli-os netatmo session\0");
+        hash.update(key.as_bytes());
+        hash.update(b"\0");
+        hash.update(token.as_bytes());
+        let mut binding = [0; 32];
+        binding.copy_from_slice(hash.finish().as_ref());
+        Some(binding)
+    }
+
     /// Checks the PIN; on success returns a new session token bound to the
     /// caller's key.
     pub(crate) async fn login(&self, attempt: &str, caller: &Caller) -> Result<String, LoginError> {

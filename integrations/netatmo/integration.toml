@@ -1,0 +1,25 @@
+[integration]
+id = "netatmo"
+name = "Station météo Netatmo"
+brands = ["Netatmo"]
+models = ["NAMain", "NAModule1", "NAModule3"]
+transport = "https"
+driver = "netatmo"
+crate = "moli-netatmo"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = [443]
+
+[needs]
+secrets = ["client_id", "client_secret"]
+vars = []
+options = ["public_origin"]
+
+[origin]
+reused = "Documentation publique OAuth et API météo Netatmo ; contrats écrits pour Moli, fixture entièrement synthétique"
+author = "agent"
+
+[[fixture]]
+file = "fixtures/weather.json"

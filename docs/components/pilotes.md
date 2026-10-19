@@ -115,6 +115,7 @@ l'exige).
 | `plain()` / `plain_with_headers()` | HTTP en clair, une connexion par requête (UPnP, API JSON locales), corps borné à 4 Mio |
 | `plain_if(…, wanted)` + `NotSent` | comme `plain`, pour un ordre : `wanted` est demandé avant de se connecter, une fois connecté et avant d'écrire ; non voulu = `NotSent` (rien n'est parti). Après l'écriture, la réponse est attendue quoi que dise `wanted` |
 | `web(host, port, tls, req, limit, max_body)` + `WebUrl::parse` | une requête vers une API web, délai global et taille de réponse bornés ; `WebUrl` n'accepte que `http(s)://` et refuse `user@host`. Utilisé par l'assistant et les webhooks des automatismes. |
+| `web_once(host, port, tls, req, limit, max_body)` | un seul envoi sans redirection ni retry, délai global et corps bornés ; `OnceError::BeforeSend` garantit que rien n'a été remis à HTTP, `AfterSend` est ambigu. Le pilote décide du retour à l'humain pour un renouvellement OAuth ambigu. La tâche de connexion est abandonnée avec la requête. |
 | `upnp` | `discover` (SSDP `M-SEARCH` vers 239.255.255.250:1900), `fetch` (description), `soap` (action), `control_url`, lecture XML minimale par nom de balise |
 
 En cas d'empreinte différente, l'erreur contient `PIN_MISMATCH` : les pilotes passent alors
@@ -356,6 +357,25 @@ name = "Bambu A1"              # optionnel
 - **Image** : la vignette du travail (la plus grande que le trancheur a mise dans le G-code) sert d'image de l'appareil (`/api/devices/{id}/snapshot`).
 - **Pas fait** : lancer une impression (le plateau doit être libre : un humain sur place), la caméra (le flux du U1 ne répond pas en HTTP local), le flux en direct par websocket (le relevé toutes les 5 s suffit).
 - **Tests** : réponses réelles du U1 (`integrations/klipper/fixtures/u1.json`) → forme, points, valeurs ; estimation du temps restant ; Klipper arrêté ; ordres → requêtes.
+
+## `netatmo` : station météo et modules (`crates/moli-netatmo`)
+
+Lecture HTTPS de `NAMain`, `NAModule1` et `NAModule3`, après consentement humain
+`read_station`. Un profil déclaratif ne porte ni la session OAuth renouvelable,
+ni sa rotation durable, ni l'expiration indépendante des mesures : pilote natif (D2).
+Origine de retour choisie par l'humain ; fournisseur et chemins fixés dans le code,
+sans découverte ni URL libre. Secrets d'application au coffre, couple de jetons écrit
+ensemble via le hub avant activation. Un envoi de renouvellement ambigu attend une
+nouvelle autorisation humaine et n'est pas rejoué.
+
+Un module absent/inaccessible/périmé passe hors ligne et ses valeurs à inconnu,
+y compris pendant une requête fournisseur en attente. Une date source répétée ne
+prolonge pas la fraîcheur ; seuls les changements de valeur alimentent l'historique.
+Familles B1 : `climate` pour température/humidité/CO₂/pression, `diagnostic` pour batterie,
+`other` pour bruit/pluie. Ni écriture sur appareil, ni caméra, ni chauffage.
+
+Paquet, bornes, limites et onboarding : [Netatmo](../../integrations/netatmo/README.md).
+Tests sur données synthétiques uniquement ; qualification réelle après H1.
 
 ## `nuki` : serrures Nuki (`crates/moli-nuki`)
 
@@ -609,28 +629,29 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 
 | Pilote | Crate | Protocole | Écriture possible | Vérifié sur du vrai matériel |
 |---|---|---|---|---|
-| `z2m` | `moli-z2m` | MQTT local (Zigbee2MQTT) | oui, selon les `exposes` | Zigbee2MQTT (appareils variés) |
-| `hue` | `moli-hue` | HTTPS CLIP v2 + SSE, local, épinglé | oui : lumières, pièces ; zones non | pont Philips Hue (CLIP v2) |
-| `tuya` | `moli-tuya` | TCP 6668 chiffré 3.3/3.4/3.5, UDP 6666/6667/7000 ; cloud en lecture | oui : DP booléens, entiers, enum (local seulement) | prises Tuya (local, écriture comprise) ; capteurs sur pile et passerelles (cloud) |
-| `twinkly` | `moli-twinkly` | HTTP local v1, login/verify transitoires | marche, luminosité, RGB statique direct si supporté | pas encore : contrats synthétiques, H1 requis |
-| `reolink` | `moli-reolink` | HTTPS API locale, épinglé (X.509 v1) | non (+ images) | Reolink Home Hub (caméras, sonnette) |
-| `sonos` | `moli-sonos` | UPnP/SOAP HTTP 1400 ; annonces en WebSocket TLS 1443 | oui : lecture, volume, sourdine, annonces | Sonos Beam |
-| `philips` | `moli-philips` | JointSpace HTTPS 1926, digest, WoL ; Android TV Remote, Cast | oui : alimentation, volume, sourdine, Ambilight, touches, appli | Philips Google TV (lecture) |
-| `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
 | `bambu` | `moli-bambu` | MQTT TLS 8883, épinglé | lumière, `control` (humain pour un agent) | pas encore (cible : Bambu Lab A1) |
-| `moonraker` | `moli-moonraker` | HTTP local 7125 | lumière, `control` (humain pour un agent) | Snapmaker U1 |
-| `nuki` | `moli-nuki` | HTTP local 8080, jeton haché | verrouiller ; déverrouiller et ouvrir (humain pour un agent et le dashboard sans code) | pas encore (pont Nuki + Smart Lock) |
-| `overkiz` | `moli-overkiz` | API Overkiz : HTTPS local 8443 épinglé, ou cloud Somfy (OAuth) | oui : volets, portails (`open`, `stop`, `my`, `close`), lumière, prise | pas encore (cible : TaHoma en local, Connectivity Kit en cloud) |
-| `tapo` | `moli-tapo` | HTTP 80 + KLAP v2 | oui : tout | pas encore (cible : Tapo L530) |
+| `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
+| `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |
+| `host` | `moli-host` | /proc, /sys ; WoL ; agent HTTP sortant | allumer, éteindre, veille, Claude et Codex pour le téléphone (PIN) | hôte Linux ; PC Windows avec l'agent |
+| `hue` | `moli-hue` | HTTPS CLIP v2 + SSE, local, épinglé | oui : lumières, pièces ; zones non | pont Philips Hue (CLIP v2) |
 | `igd` | `moli-igd` | UPnP IGD (SSDP + SOAP) | non | Livebox |
 | `ipp` | `moli-ipp` | IPP 2.0 HTTP 631 | identifier, annuler, imprimer (tableau de bord) | Canon MG3600 |
-| `host` | `moli-host` | /proc, /sys ; WoL ; agent HTTP sortant | allumer, éteindre, veille, Claude et Codex pour le téléphone (PIN) | hôte Linux ; PC Windows avec l'agent |
-| `presence` | `moli-presence` | UDP + table ARP de l'hôte | non | téléphones sur le Wi-Fi |
-| `phones` | `moli-phones` | rapports HTTP de l'appli (jeton) | `notify` (notification) | iPhone (appli Moli) |
-| `telegram` | `moli-telegram` | HTTPS, API des bots | `notify` (message) | oui (API des bots) |
-| `profile` | `moli-profile` | HTTP/HTTPS GET, Meross signé | oui si le profil déclare `[[write]]` (Daikin) | Daikin BRP069 (lecture), Meross EM06, Open-Meteo, Tempo, iopool EcO (voir [profils.md](profils.md#les-profils-du-catalogue)) |
-| `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |
 | `lumieres` (interne) | `moli-lights` | aucun (lit et commande d'autres appareils via le hub) | oui | ampoules Hue derrière un relais |
+| `moonraker` | `moli-moonraker` | HTTP local 7125 | lumière, `control` (humain pour un agent) | Snapmaker U1 |
+| `netatmo` | `moli-netatmo` | HTTPS fournisseur, OAuth humain `read_station` | non | pas encore ; contrats synthétiques seulement, qualification après H1 |
+| `nuki` | `moli-nuki` | HTTP local 8080, jeton haché | verrouiller ; déverrouiller et ouvrir (humain pour un agent et le dashboard sans code) | pas encore (pont Nuki + Smart Lock) |
+| `overkiz` | `moli-overkiz` | API Overkiz : HTTPS local 8443 épinglé, ou cloud Somfy (OAuth) | oui : volets, portails (`open`, `stop`, `my`, `close`), lumière, prise | pas encore (cible : TaHoma en local, Connectivity Kit en cloud) |
+| `philips` | `moli-philips` | JointSpace HTTPS 1926, digest, WoL ; Android TV Remote, Cast | oui : alimentation, volume, sourdine, Ambilight, touches, appli | Philips Google TV (lecture) |
+| `phones` | `moli-phones` | rapports HTTP de l'appli (jeton) | `notify` (notification) | iPhone (appli Moli) |
+| `presence` | `moli-presence` | UDP + table ARP de l'hôte | non | téléphones sur le Wi-Fi |
+| `profile` | `moli-profile` | HTTP/HTTPS GET, Meross signé | oui si le profil déclare `[[write]]` (Daikin) | Daikin BRP069 (lecture), Meross EM06, Open-Meteo, Tempo, iopool EcO (voir [profils.md](profils.md#les-profils-du-catalogue)) |
+| `reolink` | `moli-reolink` | HTTPS API locale, épinglé (X.509 v1) | non (+ images) | Reolink Home Hub (caméras, sonnette) |
+| `sonos` | `moli-sonos` | UPnP/SOAP HTTP 1400 ; annonces en WebSocket TLS 1443 | oui : lecture, volume, sourdine, annonces | Sonos Beam |
+| `tapo` | `moli-tapo` | HTTP 80 + KLAP v2 | oui : tout | pas encore (cible : Tapo L530) |
+| `telegram` | `moli-telegram` | HTTPS, API des bots | `notify` (message) | oui (API des bots) |
+| `tuya` | `moli-tuya` | TCP 6668 chiffré 3.3/3.4/3.5, UDP 6666/6667/7000 ; cloud en lecture | oui : DP booléens, entiers, enum (local seulement) | prises Tuya (local, écriture comprise) ; capteurs sur pile et passerelles (cloud) |
+| `twinkly` | `moli-twinkly` | HTTP local v1, login/verify transitoires | marche, luminosité, RGB statique direct si supporté | pas encore : contrats synthétiques, H1 requis |
+| `z2m` | `moli-z2m` | MQTT local (Zigbee2MQTT) | oui, selon les `exposes` | Zigbee2MQTT (appareils variés) |
 
 
 ## Entrées privées des claviers et serrures Z2M

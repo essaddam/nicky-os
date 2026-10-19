@@ -24,6 +24,7 @@ moli-energy = { path = "crates/moli-energy" }
 moli-tuya = { path = "crates/moli-tuya" }
 moli-twinkly = { path = "crates/moli-twinkly" }
 moli-net = { path = "crates/moli-net" }
+moli-netatmo = { path = "crates/moli-netatmo" }
 moli-reolink = { path = "crates/moli-reolink" }
 moli-sonos = { path = "crates/moli-sonos" }
 moli-bambu = { path = "crates/moli-bambu" }
@@ -54,6 +55,7 @@ moli-wyoming = { path = "crates/moli-wyoming" }
 aes = "0.8"
 anyhow = "1"
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "query", "tokio", "macros"] }
+base64 = "0.23"
 crc32fast = "1"
 earshot = "1.2"
 symphonia-bundle-flac = "0.6"

@@ -1181,6 +1181,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
+ "base64",
  "futures",
  "http",
  "mime_guess",
@@ -1193,6 +1194,7 @@ dependencies = [
  "moli-host",
  "moli-i18n",
  "moli-net",
+ "moli-netatmo",
  "moli-phones",
  "moli-runtime",
  "moli-weather",
@@ -1541,6 +1543,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-netatmo"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "http",
+ "http-body-util",
+ "moli-core",
+ "moli-history",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "ring",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "toml",
+ "tracing",
+]
+
+[[package]]
 name = "moli-nuki"
 version = "0.1.0"
 dependencies = [
@@ -1588,6 +1611,7 @@ dependencies = [
  "moli-lights",
  "moli-moonraker",
  "moli-net",
+ "moli-netatmo",
  "moli-nuki",
  "moli-overkiz",
  "moli-philips",

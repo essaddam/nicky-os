@@ -1,0 +1,18 @@
+{
+  "body": {
+    "devices": [{
+      "_id": "aa:bb:cc:dd:ee:01",
+      "type": "NAMain",
+      "station_name": "Station",
+      "reachable": true,
+      "wifi_status": 50,
+      "dashboard_data": {"time_utc": 1700000000, "Temperature": 21.5, "Humidity": 45, "CO2": 650, "Pressure": 1013.2, "Noise": 39},
+      "modules": [
+        {"_id": "aa:bb:cc:dd:ee:02", "type": "NAModule1", "module_name": "Outdoor", "reachable": true, "battery_percent": 80, "rf_status": 65, "dashboard_data": {"time_utc": 1700000000, "Temperature": 12.4, "Humidity": 70}},
+        {"_id": "aa:bb:cc:dd:ee:03", "type": "NAModule3", "module_name": "Rain", "reachable": true, "battery_percent": 75, "dashboard_data": {"time_utc": 1700000000, "Rain": 0, "sum_rain_1": 1.2, "sum_rain_24": 4.8}}
+      ]
+    }]
+  },
+  "status": "ok",
+  "time_server": 1700000300
+}

@@ -91,6 +91,7 @@ fn guest_allowed(method: &Method, path: &str) -> bool {
 fn public(method: &Method, path: &str) -> bool {
     let api = path.starts_with("/api/") || path == "/api" || path.starts_with("/mcp");
     (!api && (method == Method::GET || method == Method::HEAD))
+        || crate::netatmo::public_return(method, path)
         || path == "/api/session"
         || (path == "/api/invitation" && method == Method::POST)
 }

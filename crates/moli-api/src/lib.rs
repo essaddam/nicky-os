@@ -24,6 +24,7 @@ mod integrations;
 mod limit;
 mod machines;
 mod mcp;
+mod netatmo;
 mod people;
 mod people_api;
 mod whereabouts;
@@ -50,6 +51,7 @@ use tower_http::compression::CompressionLayer;
 use tower_http::compression::predicate::{DefaultPredicate, NotForContentType, Predicate};
 
 pub use access::AccessConfig;
+pub use netatmo::Endpoint as NetatmoEndpoint;
 pub use plan::image_name_ok as plan_image_name_ok;
 
 /// A JSON request is small: orders, labels, a graph, a conversation turn.
@@ -123,6 +125,8 @@ pub struct Options {
     pub phones: Option<moli_phones::Gateway>,
     /// The house's computers' Moli agents, when a host driver runs.
     pub machines: Option<moli_host::agents::Agents>,
+    /// Human weather authorization, for enabled native instances only.
+    pub netatmo: std::collections::BTreeMap<moli_core::InstanceId, NetatmoEndpoint>,
     /// The sky over the house (forecast, satellite), when its position is
     /// known.
     pub weather: Option<moli_weather::Weather>,
@@ -283,6 +287,7 @@ pub fn router(hub: Hub, shutdown: CancellationToken, options: &Options) -> Route
     Router::new()
         .route("/api/health", get(rest::health))
         .merge(device_routes())
+        .merge(netatmo::routes(&humans, options))
         .route("/api/media/{name}", get(rest::media))
         .route("/api/command", post(rest::command))
         .route("/api/ambiances", get(rest::ambiances))

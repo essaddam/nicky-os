@@ -7,6 +7,7 @@
   import AssistantExchanges from '../ui/AssistantExchanges.svelte';
   import AlexaAccount from '../ui/AlexaAccount.svelte';
   import DashboardCode from '../ui/DashboardCode.svelte';
+  import NetatmoAuthorization from '../ui/NetatmoAuthorization.svelte';
   import PeopleCard from '../ui/PeopleCard.svelte';
   import { hub, home } from '../lib/home.svelte.js';
   import { t, locale } from '../../lib/i18n.svelte.js';
@@ -98,7 +99,7 @@
   // ---- words ------------------------------------------------------------------
   // Driver kinds: their name and description are in the catalog
   // (systeme.pilotes.<kind>.nom / .desc); a kind not listed shows as it is.
-  const KINDS = ['z2m', 'hue', 'tuya', 'reolink', 'sonos', 'helpers', 'philips', 'frigate', 'bambu', 'tapo', 'igd', 'presence', 'telegram', 'phones', 'profile'];
+  const KINDS = ['bambu', 'frigate', 'helpers', 'hue', 'igd', 'netatmo', 'philips', 'phones', 'presence', 'profile', 'reolink', 'sonos', 'tapo', 'telegram', 'tuya', 'z2m'];
   const kindWord = (kind, part) => (KINDS.includes(kind) ? t(`systeme.pilotes.${kind}.${part}`) : null);
   const driverName = (d) => (d.kind === 'profile' ? d.instance.charAt(0).toUpperCase() + d.instance.slice(1) : (kindWord(d.kind, 'nom') ?? d.kind));
 
@@ -182,6 +183,10 @@
   <AlexaAccount />
 
   <TuyaCloudKeys />
+
+  {#if sys?.drivers?.some((driver) => driver.kind === 'netatmo')}
+    <NetatmoAuthorization instances={sys.drivers.filter((driver) => driver.kind === 'netatmo').map((driver) => driver.instance)} />
+  {/if}
 
   <!-- Only where a host script measures Moli against a Home Assistant. -->
   {#if sys && last?.ha}

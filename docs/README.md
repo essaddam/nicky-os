@@ -61,7 +61,7 @@ téléphones passent sans Access, avec leur propre jeton.
 | [historique-energie.md](components/historique-energie.md) | historique SQLite, SQL pour agents, énergie (kWh, €, Tempo), import HA |
 | [installation.md](components/installation.md) | premier démarrage, code de la maison, clé maître, premiers appareils, accès hors de chez soi |
 | [moli.md](components/moli.md) | l'assistant : conversation, outils, garde, création d'automatismes, filtres |
-| [pilotes.md](components/pilotes.md) | trait `Driver`, chaque pilote natif, `moli-net` |
+| [pilotes.md](components/pilotes.md) | trait `Driver`, pilotes natifs dont Netatmo météo, `moli-net` |
 | [profils.md](components/profils.md) | moteur de profils déclaratifs, format TOML, ajouter un appareil sans code |
 | [reseau.md](components/reseau.md) | cadrage réseau : diagnostic, ASUSWRT, Huawei LTE, Netgear et SMLIGHT ; clients à implémenter |
 | [reseau-qualification.md](components/reseau-qualification.md) | preuves de contrat réseau, fixtures, bornes et porte de qualification humaine |

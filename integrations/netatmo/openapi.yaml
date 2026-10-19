@@ -1,0 +1,169 @@
+openapi: 3.1.0
+info:
+  title: Weather authorization
+  version: 0.1.0
+  description: >-
+    Human PIN sessions only. POST bodies are limited to 8192 bytes. The
+    authorization return must use the origin configured by the operator.
+    No route accepts a provider URL, scope, client secret or token.
+security:
+  - MoliPin: []
+paths:
+  /api/integrations/netatmo:
+    get:
+      summary: List enabled weather instances without credentials
+      responses:
+        '200':
+          description: Instance identifiers and public connection states
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [instances]
+                properties:
+                  instances:
+                    type: array
+                    items:
+                      type: object
+                      required: [instance, status]
+                      properties:
+                        instance: {type: string}
+                        status:
+                          enum: [needs_credentials, needs_authorization, authorizing, connected, unavailable]
+        '403': {$ref: '#/components/responses/Error'}
+  /api/integrations/netatmo/{instance}/authorize:
+    parameters:
+      - {$ref: '#/components/parameters/Instance'}
+    post:
+      summary: Start authorization bound to this exact PIN session
+      description: >-
+        Constructs a fixed-provider URL without contacting the provider.
+        A new request replaces the previous pending attempt for this instance.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: false}
+      responses:
+        '200':
+          description: Ephemeral authorization URL; never log or persist it
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, expires_in]
+                properties:
+                  url: {type: string, format: uri}
+                  expires_in: {type: integer, const: 600}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '410': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+        '503': {$ref: '#/components/responses/Error'}
+  /api/integrations/netatmo/{instance}/callback:
+    parameters:
+      - {$ref: '#/components/parameters/Instance'}
+    get:
+      security: []
+      summary: Static return page, including when the Strict cookie is absent
+      description: >-
+        Does not interpret or echo query values and does not look up an
+        instance. The static script removes the query from browser history,
+        then submits a same-origin POST. No token exchange occurs on GET.
+        Responses use no-store, no-referrer and a SHA-256 script policy with
+        matching subresource integrity. The URL is limited to 8192 bytes.
+      responses:
+        '200':
+          description: Static translated HTML
+          content:
+            text/html: {schema: {type: string}}
+        '403': {$ref: '#/components/responses/Error'}
+        '414': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+    post:
+      summary: Consume an attempt using its original PIN session
+      description: >-
+        Login, caller binding, session expiration and revocation are checked
+        before dispatch. State is single use. Success means the complete
+        token pair was stored by the native driver before activation.
+        Provider text and credentials are never returned. An ambiguous
+        exchange requires a new human authorization and is not replayed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [state, code]
+              properties:
+                state: {type: string, pattern: '^[0-9a-fA-F]{64}$'}
+                code: {type: string, minLength: 1, maxLength: 2048, pattern: '^[!-~]+$'}
+      responses:
+        '200':
+          description: Credentials durably stored; no token in the response
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [connected]
+                properties:
+                  connected: {const: true}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '410': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+        '429':
+          description: Safe localized error; wait before trying again
+          headers:
+            Retry-After: {schema: {type: integer, minimum: 60, maximum: 900}}
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/Error'}}
+        '502': {$ref: '#/components/responses/Error'}
+        '503': {$ref: '#/components/responses/Error'}
+  /api/integrations/netatmo/callback.js:
+    get:
+      security: []
+      summary: Static return script; no instance or query data embedded
+      responses:
+        '200':
+          description: Same-origin JavaScript, no-store and no-referrer
+          content:
+            application/javascript: {schema: {type: string}}
+  /api/integrations/netatmo/callback.css:
+    get:
+      security: []
+      summary: Static return stylesheet
+      responses:
+        '200':
+          description: Same-origin CSS, no-store
+          content:
+            text/css: {schema: {type: string}}
+components:
+  securitySchemes:
+    MoliPin:
+      type: apiKey
+      in: cookie
+      name: moli_session
+      description: HttpOnly, SameSite=Strict; obtained with the human PIN
+  parameters:
+    Instance:
+      name: instance
+      in: path
+      required: true
+      schema: {type: string, minLength: 1, maxLength: 64, pattern: '^[A-Za-z0-9_-]+$'}
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string, description: Safe localized message without provider input}
+  responses:
+    Error:
+      description: Safe localized error; no provider body or authorization value
+      content:
+        application/json: {schema: {$ref: '#/components/schemas/Error'}}
