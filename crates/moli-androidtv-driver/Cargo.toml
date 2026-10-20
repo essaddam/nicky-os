@@ -1,0 +1,27 @@
+[package]
+name = "moli-androidtv-driver"
+description = "Moli OS generic Android TV driver and human pairing gateway."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+moli-androidtv.workspace = true
+moli-core.workspace = true
+moli-i18n.workspace = true
+moli-media-target = { path = "../moli-media-target" }
+moli-net.workspace = true
+moli-runtime.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+
+[lints]
+workspace = true

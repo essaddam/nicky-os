@@ -1,0 +1,545 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Moli OS — appairage Android TV",
+    "version": "0.1.0",
+    "description": "Fragment du contrat REST. Hérite des gardes Host, origine, foyer et invité du serveur. Les écritures exigent une session humaine PIN ; elles sont interdites en démo. Taille maximale du corps : 1024 octets. Aucun accès réseau déclenché par GET."
+  },
+  "paths": {
+    "/api/integrations/androidtv/{instance}/pairing": {
+      "parameters": [
+        {
+          "name": "instance",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "androidtvPairingState",
+        "responses": {
+          "200": {
+            "description": "État public sans secret.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "androidtvPairingStart",
+        "responses": {
+          "202": {
+            "description": "État public sans secret.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Start"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "androidtvPairingSubmit",
+        "responses": {
+          "200": {
+            "description": "État public sans secret.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Submit"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "androidtvPairingCancel",
+        "responses": {
+          "204": {
+            "description": "Tentative annulée ; identité durable conservée."
+          },
+          "403": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Erreur contrôlée ; aucun code ni matériel d’identité dans la réponse.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cancel"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Generation": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 18446744073709551615
+      },
+      "Start": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "Submit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "generation",
+          "code"
+        ],
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9A-Fa-f]{6}$",
+            "writeOnly": true,
+            "description": "Code de télévision éphémère, jamais un PIN Moli."
+          }
+        }
+      },
+      "Cancel": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "generation"
+        ],
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          }
+        }
+      },
+      "PairingView": {
+        "type": "object",
+        "required": [
+          "phase",
+          "generation",
+          "expires_at",
+          "error",
+          "message"
+        ],
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "unavailable",
+              "idle",
+              "preparing",
+              "awaiting_code",
+              "verifying",
+              "persisting",
+              "paired",
+              "failed"
+            ]
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expires_at": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Échéance humaine absolue, millisecondes Unix."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              null,
+              "unavailable",
+              "busy",
+              "stale",
+              "invalid_code",
+              "refused",
+              "expired",
+              "network",
+              "vault"
+            ]
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Explication traduite de l’erreur, sans donnée saisie."
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Message traduit contrôlé."
+          },
+          "code": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

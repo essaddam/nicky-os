@@ -30,7 +30,8 @@ pub mod voice;
 pub use addresses::KnownAddress;
 pub use counters::CounterError;
 pub use driver::{
-    BoxFuture, CommandMetadata, CommandRequest, Driver, DriverCtx, MediaPublisher, SendPermit,
+    BoxFuture, CommandMetadata, CommandRequest, Driver, DriverCtx, MediaPublisher, ScopedSecrets,
+    SendPermit,
 };
 pub use hub::{
     ApprovalError, CORE_NAMESPACE, CommandError, DeviceView, DriverView, Hub, HubOptions,

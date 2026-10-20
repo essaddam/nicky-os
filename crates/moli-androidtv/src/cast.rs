@@ -61,6 +61,28 @@ pub enum Order {
     Stop,
 }
 
+#[path = "cast_tracked.rs"]
+mod tracked_transport;
+
+/// Deadline-aware media control, additive to the legacy Philips API.
+pub async fn tracked_session(
+    tls: &PinnedTls,
+    host: &str,
+    orders: &mut mpsc::Receiver<crate::tracked::TrackedOrder<Order>>,
+    events: &mpsc::Sender<Event>,
+) -> anyhow::Result<()> {
+    tracked_transport::session(tls, host, orders, events).await
+}
+
+/// The same session over an already authenticated stream.
+pub async fn tracked_stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
+    stream: S,
+    orders: &mut mpsc::Receiver<crate::tracked::TrackedOrder<Order>>,
+    events: &mpsc::Sender<Event>,
+) -> anyhow::Result<()> {
+    tracked_transport::stream(stream, orders, events).await
+}
+
 /// The app being followed and its media session.
 #[derive(Default)]
 struct Follow {
@@ -272,6 +294,10 @@ async fn read_frame<R: AsyncRead + Unpin>(read: &mut R) -> anyhow::Result<Vec<u8
     read.read_exact(&mut frame).await?;
     Ok(frame)
 }
+
+#[cfg(test)]
+#[path = "cast_tracked_tests.rs"]
+mod tracked_tests;
 
 #[cfg(test)]
 mod tests {

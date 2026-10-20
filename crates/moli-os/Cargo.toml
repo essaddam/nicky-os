@@ -8,6 +8,7 @@ rust-version.workspace = true
 
 [dependencies]
 moli-alexa.workspace = true
+moli-androidtv-driver.workspace = true
 moli-api.workspace = true
 moli-ariston.workspace = true
 moli-assistant.workspace = true

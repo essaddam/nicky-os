@@ -904,6 +904,43 @@ Restent ouverts (non urgents) :
   `/api/home`, `/api/bench`, `/api/history`, `/api/devices/{id}/snapshot` ; la plupart des
   handlers de `rest.rs` et `automations.rs` n'ont pas de commentaire de documentation.
 
+## Appairage Android TV
+
+Le contrat versionné est dans
+[`integrations/androidtv/openapi.json`](../../integrations/androidtv/openapi.json).
+Les seules passerelles accessibles appartiennent aux instances `androidtv`
+activées. Le constructeur et GET ne lancent aucun échange d’appairage.
+
+| Route | Fonction |
+|---|---|
+| `GET /api/integrations/androidtv/{instance}/pairing` | État public : phase, génération, échéance Unix en ms, code d’erreur et message traduit ; aucune identité ni saisie. |
+| `POST …/pairing`, corps `{}` | Geste humain : préparer l’identité et demander le code sur la télévision ; 202. Tentative active ou identité déjà enregistrée : 409. |
+| `PUT …/pairing`, corps `{generation, code}` | Soumettre les six caractères hexadécimaux. 200 après accusé de la télévision et enregistrement durable au coffre. |
+| `DELETE …/pairing`, corps `{generation}` | Annuler la tentative active ; 204. Une identité durable n’est jamais effacée par cette route. |
+
+Les écritures exigent une session humaine PIN et refusent invités et démos.
+Les gardes Host, origine et foyer restent communes au routeur. Le corps JSON
+est limité à 1024 octets ; les champs inconnus sont refusés, sans réafficher
+leur valeur. Instance absente ou désactivée : 404 ; tentative périmée ou
+occupée : 409 ; code invalide ou refus : 422 ; erreur de protocole/connexion :
+502 ; coffre ou pilote indisponible : 503 ; délai dépassé : 504. Les erreurs
+portent un message traduit contrôlé, jamais le code entré ou une erreur TLS
+brute. L’audit structuré identifie l’acteur, l’instance, l’opération, son identifiant
+de corrélation et le résultat sans sérialiser le corps, les certificats, la clé ou la preuve.
+
+Une annulation acceptée invalide la génération et ferme la session possédée.
+Après le début de l’enregistrement atomique, la passerelle refuse l’annulation
+avec 409 : elle n’annonce jamais une annulation suivie d’un enregistrement
+caché. Échec de persistance : aucune nouvelle identité utilisable et ancienne
+entrée durable conservée. Le code de télévision et le PIN Moli sont distincts.
+
+Les contenus passent par `POST /api/command` et le point texte
+`<instance>:tv/play_media`, donc par la garde habituelle. La valeur est le
+JSON `{service,kind,target}` du contrat `moli-media-target` : 4096 octets au
+maximum, cible de 2048 octets. Aucun lancement direct depuis ces routes
+HTTP d’appairage. Une transmission réussie ne confirme pas le programme en
+lecture ; seules les observations reçues alimentent les métadonnées.
+
 ## Compteurs AUTO-H2
 
 Le [contrat des compteurs](compteurs.md) détaille les valeurs, commandes, identités,

@@ -1,7 +1,8 @@
 <script>
-  import { home, value, reachable, nameOf, act, since, clock } from '../lib/home.svelte.js';
+  import { home, hub, value, reachable, nameOf, act, since, clock } from '../lib/home.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from '../ui/Icon.svelte';
+  import MediaLauncher from '../ui/MediaLauncher.svelte';
   import Remote from '../ui/Remote.svelte';
   import LightTile from '../ui/LightTile.svelte';
   import SpeakerCard from '../ui/SpeakerCard.svelte';
@@ -104,13 +105,17 @@
         </div>
       </section>
 
+      {#if hub.devices[tv]?.points?.some(point => point.key === 'play_media' && point.access?.write)}
+        {#key tv}<MediaLauncher {tv} />{/key}
+      {/if}
+
       {#if sp}<SpeakerCard id={sp} name={nameOf(sp, t('salon.barre_de_son'))} />{/if}
 
       <section class="card ambiance">
         <div class="card-head"><h2><Icon name="light-group" size={18} />{t('salon.ambiance')}</h2></div>
         <div class="amb">
           {#if s.room_light}<LightTile id={s.room_light} name={t('salon.tout_le_salon')} icon="sofa" dimmer members={s.lamps ?? []} />{/if}
-          {#if tv}<LightTile id={tv} point="ambilight" name="Ambilight" icon="ambilight" />{/if}
+          {#if hub.devices[tv]?.points?.some(point => point.key === 'ambilight' && point.access?.write)}<LightTile id={tv} point="ambilight" name="Ambilight" icon="ambilight" />{/if}
         </div>
         <AmbiancePicker lights={s.lamps ?? []} label={t('salon.titre')} />
         <div class="lamps">

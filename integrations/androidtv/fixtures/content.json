@@ -1,0 +1,10 @@
+[
+  {"service":"netflix","kind":"episode","target":"12345678"},
+  {"service":"crunchyroll","kind":"episode","target":"EXAMPLE123"},
+  {"service":"freetv","kind":"channel","target":"123"},
+  {"service":"freetv","kind":"replay","target":"https://tv.free.fr/replay/123/detail"},
+  {"service":"primevideo","kind":"title","target":"B000TEST00"},
+  {"service":"disneyplus","kind":"title","target":"00000000-0000-4000-8000-000000000001"},
+  {"service":"molotov","kind":"app","target":""},
+  {"service":"appletv","kind":"title","target":"https://tv.apple.com/fr/movie/example/umc.cmc.example"}
+]

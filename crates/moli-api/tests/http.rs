@@ -1396,3 +1396,114 @@ async fn an_invited_person_reaches_the_house_from_the_internet() {
     assert_eq!(status, 401);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[tokio::test]
+async fn androidtv_pairing_reads_are_public_to_household_and_never_start_an_attempt() {
+    let hub = lamp_hub().await;
+    let gateway = moli_androidtv_driver::pairing::PairingGateway::new();
+    let options = moli_api::Options {
+        androidtv: std::collections::BTreeMap::from([("example".into(), gateway.clone())]),
+        ..moli_api::Options::default()
+    };
+    let addr = serve(&hub, &options).await;
+    let (status, body) = request(
+        &addr,
+        "GET",
+        "/api/integrations/androidtv/example/pairing",
+        None,
+    )
+    .await;
+    assert_eq!(status, 200);
+    assert!(
+        body.contains("\"phase\":\"unavailable\""),
+        "public JSON state missing: {body}"
+    );
+    assert_eq!(gateway.state().generation, 0);
+    for instance in ["unknown", "disabled"] {
+        let (status, _) = request(
+            &addr,
+            "GET",
+            &format!("/api/integrations/androidtv/{instance}/pairing"),
+            None,
+        )
+        .await;
+        assert_eq!(status, 404);
+    }
+}
+
+#[tokio::test]
+async fn androidtv_pairing_mutations_require_pin_and_refuse_invalid_bodies_without_echoing_codes() {
+    let hub = lamp_hub().await;
+    let gateway = moli_androidtv_driver::pairing::PairingGateway::new();
+    let options = moli_api::Options {
+        ui_pin: Some(moli_api::UiPin::new("482915")),
+        androidtv: std::collections::BTreeMap::from([("example".into(), gateway.clone())]),
+        ..moli_api::Options::default()
+    };
+    let addr = serve(&hub, &options).await;
+    let path = "/api/integrations/androidtv/example/pairing";
+    for method in ["POST", "PUT", "DELETE"] {
+        let (status, _) = request(&addr, method, path, Some(&json!({}))).await;
+        assert_eq!(status, 403);
+    }
+    let human = pin_session(&addr, "482915").await;
+    let (status, body) = request_with(&addr, "POST", path, Some(&json!({})), &human).await;
+    assert_eq!(
+        status, 503,
+        "no running actor must not start network: {body}"
+    );
+    for payload in [
+        json!({"generation":1,"code":"SECRET-MARKER"}),
+        json!({"generation":1,"code":"ABC123","unknown":"SECRET-MARKER"}),
+    ] {
+        let (status, body) = request_with(&addr, "PUT", path, Some(&payload), &human).await;
+        assert_eq!(status, 422);
+        assert!(!body.contains("SECRET-MARKER") && !body.contains("ABC123"));
+    }
+    let (status, _) = request_with(
+        &addr,
+        "PUT",
+        path,
+        Some(&json!({"generation":1,"code":"x".repeat(1100)})),
+        &human,
+    )
+    .await;
+    assert_eq!(status, 413);
+    let (status, _) = request_with(
+        &addr,
+        "POST",
+        "/api/integrations/androidtv/unknown/pairing",
+        Some(&json!({})),
+        &human,
+    )
+    .await;
+    assert_eq!(status, 404);
+    assert_eq!(gateway.state().generation, 0);
+}
+
+#[tokio::test]
+async fn androidtv_pairing_is_never_mutable_in_demo_even_with_a_pin() {
+    let hub = lamp_hub().await;
+    let options = moli_api::Options {
+        demo: true,
+        ui_pin: Some(moli_api::UiPin::new("482915")),
+        androidtv: std::collections::BTreeMap::from([(
+            "example".into(),
+            moli_androidtv_driver::pairing::PairingGateway::new(),
+        )]),
+        ..moli_api::Options::default()
+    };
+    let addr = serve(&hub, &options).await;
+    let human = pin_session(&addr, "482915").await;
+    for method in ["POST", "PUT", "DELETE"] {
+        let (status, _) = request_with(
+            &addr,
+            method,
+            "/api/integrations/androidtv/example/pairing",
+            Some(&json!({})),
+            &human,
+        )
+        .await;
+        assert_eq!(status, 403);
+    }
+}

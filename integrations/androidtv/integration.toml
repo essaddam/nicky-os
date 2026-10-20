@@ -1,0 +1,27 @@
+[integration]
+id = "androidtv"
+name = "Android TV et Google TV"
+brands = ["Android TV", "Google TV", "TCL"]
+models = []
+transport = "tcp"
+driver = "androidtv"
+crate = "moli-androidtv-driver"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = [6466, 6467, 8009]
+
+[needs]
+# The driver writes identity and cast_pin to the instance's encrypted vault.
+secrets = []
+vars = []
+options = ["host"]
+
+[origin]
+reused = "Android TV Remote v2, Polo v2 and Google Cast protocols"
+author = "agent"
+
+[[fixture]]
+# Synthetic explicit targets, not captured provider or household data.
+file = "fixtures/content.json"

@@ -918,6 +918,7 @@ fn start_history(
 /// missing here is unknown, whatever `build_driver`'s match says.
 const KINDS: &[&str] = &[
     "alexa",
+    "androidtv",
     "ariston",
     "bambu",
     "demo",
@@ -1011,6 +1012,7 @@ fn spawn_household(
 /// the computers' agents.
 #[derive(Default)]
 struct Gateways {
+    androidtv: std::collections::BTreeMap<String, moli_androidtv_driver::pairing::PairingGateway>,
     phones: Option<moli_phones::Gateway>,
     machines: Option<moli_host::agents::Agents>,
     netatmo: std::collections::BTreeMap<InstanceId, moli_api::NetatmoEndpoint>,
@@ -1020,6 +1022,7 @@ impl Gateways {
     /// The API handles shared by enabled drivers.
     fn into_api_options(self) -> moli_api::Options {
         moli_api::Options {
+            androidtv: self.androidtv,
             machines: self.machines,
             netatmo: self.netatmo,
             phones: self.phones,
@@ -1038,6 +1041,12 @@ fn spawn_drivers(
     for driver in config.drivers.iter().filter(|d| d.enabled != Some(false)) {
         let context = || format!("driver {:?} options", driver.id);
         let built: Arc<dyn Driver> = match driver.kind.as_str() {
+            "androidtv" => {
+                let options = driver.options.clone().try_into().with_context(context)?;
+                let tv = moli_androidtv_driver::AndroidTv::new(options)?;
+                gates.androidtv.insert(driver.id.clone(), tv.gateway());
+                Arc::new(tv)
+            }
             "netatmo" => {
                 let (native, endpoint) = netatmo_driver(driver)?;
                 gates
@@ -1107,6 +1116,9 @@ fn build_driver(
         "alexa" => Arc::new(moli_alexa::Alexa::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "androidtv" => Arc::new(moli_androidtv_driver::AndroidTv::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "ariston" => Arc::new(moli_ariston::Ariston::new(
             config.options.clone().try_into().with_context(context)?,
         )),
@@ -1293,6 +1305,42 @@ async fn wait_for_signal() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn androidtv_builder_is_network_free() {
+        let mut config = driver("androidtv");
+        config.options = toml::from_str("host='tv.example.invalid'").unwrap();
+        assert_eq!(
+            build_driver(&config, &std::env::temp_dir()).unwrap().kind(),
+            "androidtv"
+        );
+    }
+    #[tokio::test]
+    async fn androidtv_enabled_instance_registers_its_own_pairing_gateway() {
+        let config: Config = toml::from_str(
+            "[[driver]]\nid='example'\nkind='androidtv'\n[driver.options]\nhost='tv.example.invalid'\n",
+        )
+        .unwrap();
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let (tasks, gates) = spawn_drivers(&config, &hub, &cancel).unwrap();
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(gates.androidtv.len(), 1);
+        assert!(gates.androidtv.contains_key("example"));
+        cancel.cancel();
+        for task in tasks {
+            task.await.unwrap();
+        }
+    }
+    #[tokio::test]
+    async fn androidtv_disabled_instance_has_no_task_or_pairing_gateway() {
+        let config:Config=toml::from_str("[[driver]]\nid='example'\nkind='androidtv'\nenabled=false\n[driver.options]\nhost='tv.example.invalid'\n").unwrap();
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let (tasks, gates) = spawn_drivers(&config, &hub, &CancellationToken::new()).unwrap();
+        assert!(tasks.is_empty());
+        assert!(gates.androidtv.is_empty());
+        assert!(hub.snapshot().drivers.is_empty());
+    }
 
     fn driver(kind: &str) -> DriverConfig {
         DriverConfig {

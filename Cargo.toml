@@ -13,6 +13,7 @@ rust-version = "1.88"
 moli-alexa = { path = "crates/moli-alexa" }
 moli-ambiance = { path = "crates/moli-ambiance" }
 moli-androidtv = { path = "crates/moli-androidtv" }
+moli-androidtv-driver = { path = "crates/moli-androidtv-driver" }
 moli-api = { path = "crates/moli-api" }
 moli-ariston = { path = "crates/moli-ariston" }
 moli-assistant = { path = "crates/moli-assistant" }

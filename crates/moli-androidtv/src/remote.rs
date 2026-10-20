@@ -57,6 +57,29 @@ pub enum Order {
 /// `KEYCODE_ENTER`: what a keyboard's Enter key sends (a search starts).
 pub const ENTER: u32 = 66;
 
+#[path = "remote_tracked.rs"]
+mod tracked_transport;
+
+/// A deadline-aware connection for the generic driver; the legacy Philips
+/// session remains unchanged.
+pub async fn tracked_session(
+    tls: &PinnedTls,
+    host: &str,
+    orders: &mut mpsc::Receiver<crate::tracked::TrackedOrder<Order>>,
+    events: &mpsc::Sender<Event>,
+) -> anyhow::Result<()> {
+    tracked_transport::session(tls, host, orders, events).await
+}
+
+/// The same session over an already authenticated stream.
+pub async fn tracked_stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
+    stream: S,
+    orders: &mut mpsc::Receiver<crate::tracked::TrackedOrder<Order>>,
+    events: &mpsc::Sender<Event>,
+) -> anyhow::Result<()> {
+    tracked_transport::stream(stream, orders, events).await
+}
+
 /// An app people name rather than spell (« mets YouTube »).
 struct KnownApp {
     /// As letters and digits only, lowercase. Brands: the same in every language.
@@ -304,6 +327,10 @@ async fn send<W: AsyncWrite + Unpin>(write: &mut W, message: &[u8]) -> anyhow::R
     write.flush().await?;
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "remote_tracked_tests.rs"]
+mod tracked_tests;
 
 #[cfg(test)]
 mod tests {

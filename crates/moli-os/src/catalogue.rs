@@ -317,7 +317,12 @@ fn native(dir: &Path, manifest: &Manifest, kinds: &[&str], row: &mut Row) {
             kinds.join(", ")
         ));
     }
-    let expected = format!("moli-{kind}");
+    // The shared protocol library keeps the moli-androidtv name for Philips.
+    let expected = if kind == "androidtv" {
+        "moli-androidtv-driver".to_owned()
+    } else {
+        format!("moli-{kind}")
+    };
     match &manifest.integration.krate {
         Some(krate) if *krate == expected => row.runs.clone_from(krate),
         _ => row.errors.push(format!(
@@ -546,6 +551,33 @@ fn replay(compiled: &Compiled, answers: &HashMap<String, Answer>, row: &mut Row)
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn androidtv_catalogue_names_its_separate_driver_crate() {
+        let manifest: Manifest = toml::from_str(
+            r#"
+[integration]
+id="androidtv"
+name="Android TV"
+transport="tcp"
+driver="androidtv"
+crate="moli-androidtv-driver"
+[origin]
+reused="Remote v2 and Cast"
+author="agent"
+"#,
+        )
+        .unwrap();
+        let mut row = Row::default();
+        native(
+            Path::new("synthetic-androidtv-package"),
+            &manifest,
+            &["androidtv"],
+            &mut row,
+        );
+        assert!(row.errors.is_empty(), "{:?}", row.errors);
+        assert_eq!(row.runs, "moli-androidtv-driver");
+    }
 
     const KINDS: &[&str] = &["hue", "profile"];
 

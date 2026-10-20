@@ -41,6 +41,7 @@ Le contexte est limité à **sa** instance : un appareil d'une autre instance es
 | `next_command()` | prochaine commande (annulable) ; `None` à l'arrêt |
 | `ready()` / `wait_for(reason)` | « opérationnel » / « bloqué sur une action humaine » (affiché partout) |
 | `secret(name)`, `store_secret`, `forget_secret`, `can_store_secrets()`, `secrets_problem()` | coffre chiffré, rangé par instance |
+| `scoped_secrets()` | même espace de coffre, possédé par une tâche de fond ; aucune autre instance accessible |
 | `provide_snapshots(device, source)` | l'appareil sait produire une image à la demande (caméras) |
 | `cancelled()` | se résout à l'arrêt du système |
 
@@ -900,3 +901,41 @@ personnalisés (`audit.log` → `audit.jsonl.tmp`). Une erreur de nettoyage ou u
 échouer le démarrage, afin de retenter avant toute publication. Les données
 ordinaires sont conservées. Cette réparation concerne les fichiers actifs ; elle
 ne modifie pas les anciennes sauvegardes ni un broker ou une instance extérieure.
+
+
+## Android TV / Google TV (`moli-androidtv-driver`)
+
+Le pilote natif `androidtv` réutilise la bibliothèque `moli-androidtv` et garde
+son propre appairage Polo v2, sans import de l’identité Philips. Le paquet
+[`integrations/androidtv`](../../integrations/androidtv/README.md) décrit les
+ports, les points, les limites des services et la procédure humaine. Options :
+`host` uniquement. Le constructeur ne fait pas de réseau ; une instance
+désactivée ne possède ni tâche ni passerelle d’appairage. L’identité stable
+est `<instance>:tv`, quelle que soit l’adresse configurée.
+
+Remote v2 donne la disponibilité et les états observés. Une liaison perdue
+rend alimentation, application et volume inconnus, sans présumer la veille.
+Cast perdu vide les métadonnées tout en conservant la disponibilité Remote.
+Pas d’Ambilight sur ce pilote générique ; l’interface vérifie les points
+présents sur la télé sélectionnée. Les chemins Philips restent distincts.
+
+Les ordres passent dans une FIFO de quatre requêtes, confirmations comprises,
+un seul en vol pour Remote et Cast. L’abandon et l’échéance absolue suivent
+l’ordre jusqu’au dernier réveil d’écriture ; aucun ordre n’est rejoué à la
+reconnexion. Volume absolu : une touche, une nouvelle observation, puis
+recalcul de l’écart. Un réglage interrompu peut être partiel et est signalé.
+
+L’appairage est demandé explicitement par l’humain dans Système, avec le PIN
+Moli et le code de six caractères affiché par la télé. Une tentative par
+instance, 120 s au total. Identité RSA et empreinte Remote sont conservées
+dans une entrée atomique du coffre ; l’épinglage Cast est séparé. La
+passerelle n’expose que phase, génération, échéance et erreur contrôlée.
+L’[API](api.md#appairage-android-tv) documente les routes et leur audit.
+
+Le point `play_media` transmet une cible explicite du contrat partagé, sans
+recherche réseau. Netflix, Crunchyroll, Free TV (direct et lien de programme
+replay), Prime Video, Disney+, Molotov (application) et Apple TV sont proposés.
+Le résolveur refuse une cible précise non reconnue sans repli sur l’accueil.
+La recherche et le guide TV sont un domaine transverse indépendant du pilote.
+La qualification sur appareil réel reste soumise à H1 ; aucun succès réseau
+simulé ne la remplace.

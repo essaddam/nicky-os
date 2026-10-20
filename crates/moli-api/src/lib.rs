@@ -15,6 +15,7 @@
 //! person Cloudflare Access let in through the tunnel).
 
 mod access;
+mod androidtv;
 mod assets;
 mod assistant;
 mod automations;
@@ -96,6 +97,9 @@ impl Household {
 pub struct Options {
     /// Host names (or IPs) this instance is reached by, besides localhost.
     pub allowed_hosts: Vec<String>,
+    /// Pairing controls for enabled Android TV instances only.
+    pub androidtv:
+        std::collections::BTreeMap<String, moli_androidtv_driver::pairing::PairingGateway>,
     /// PIN that opens a human session in the dashboard. `None`: nobody is
     /// recognized as human, so guarded orders can only wait (safe default).
     pub ui_pin: Option<UiPin>,
@@ -287,6 +291,7 @@ pub fn router(hub: Hub, shutdown: CancellationToken, options: &Options) -> Route
     Router::new()
         .route("/api/health", get(rest::health))
         .merge(device_routes())
+        .merge(androidtv::routes(options.androidtv.clone(), options.demo))
         .merge(netatmo::routes(&humans, options))
         .route("/api/media/{name}", get(rest::media))
         .route("/api/command", post(rest::command))

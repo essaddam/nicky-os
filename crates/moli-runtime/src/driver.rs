@@ -247,6 +247,15 @@ impl DriverCtx {
         self.hub.store_secret(&self.instance, name, value).await
     }
 
+    /// A capability for owned background work, scoped to this driver instance.
+    #[must_use]
+    pub fn scoped_secrets(&self) -> ScopedSecrets {
+        ScopedSecrets {
+            hub: self.hub.clone(),
+            instance: self.instance.clone(),
+        }
+    }
+
     /// Deletes a secret of this instance (revoked key…).
     pub async fn forget_secret(&self, name: &str) -> std::io::Result<bool> {
         self.hub.forget_secret(&self.instance, name).await
@@ -445,6 +454,94 @@ impl DriverCtx {
 
     fn owns(&self, id: &DeviceId) -> bool {
         id.instance() == self.instance
+    }
+}
+
+/// The same secret namespace as a `DriverCtx`, usable without blocking its loop.
+#[derive(Clone)]
+pub struct ScopedSecrets {
+    hub: Hub,
+    instance: InstanceId,
+}
+
+impl std::fmt::Debug for ScopedSecrets {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ScopedSecrets")
+            .field("instance", &self.instance)
+            .finish_non_exhaustive()
+    }
+}
+
+impl ScopedSecrets {
+    #[must_use]
+    pub fn available(&self) -> bool {
+        self.hub.has_secret_store()
+    }
+
+    #[must_use]
+    pub fn get(&self, name: &str) -> Option<String> {
+        self.hub.secret(&self.instance, name)
+    }
+
+    /// # Errors
+    /// An unavailable or failing vault never becomes a successful write.
+    pub async fn store(&self, name: &str, value: &str) -> std::io::Result<()> {
+        self.hub.store_secret(&self.instance, name, value).await
+    }
+}
+
+#[cfg(test)]
+mod scoped_secret_tests {
+    use super::*;
+    use crate::{HubOptions, MasterKey};
+
+    #[tokio::test]
+    async fn scoped_secret_writer_persists_only_its_own_namespace_after_context_drop() {
+        let dir = std::env::temp_dir().join(format!("moli-scoped-secrets-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("secrets.enc");
+        let options = HubOptions {
+            secrets: Some((path.clone(), MasterKey::new("42".repeat(32)))),
+            ..HubOptions::default()
+        };
+        let hub = Hub::new(options.clone()).unwrap();
+        hub.store_secret(&InstanceId::from("beta"), "identity", "test-beta")
+            .await
+            .unwrap();
+        let (_, commands) = mpsc::channel(1);
+        let ctx = DriverCtx::new(
+            hub.clone(),
+            InstanceId::from("alpha"),
+            commands,
+            CancellationToken::new(),
+        );
+        let writer = ctx.scoped_secrets();
+        drop(ctx);
+        assert!(writer.available());
+        tokio::spawn(async move { writer.store("identity", "test-alpha").await })
+            .await
+            .unwrap()
+            .unwrap();
+        let reopened = Hub::new(options).unwrap();
+        assert_eq!(
+            reopened
+                .secret(&InstanceId::from("alpha"), "identity")
+                .as_deref(),
+            Some("test-alpha")
+        );
+        assert_eq!(
+            reopened
+                .secret(&InstanceId::from("beta"), "identity")
+                .as_deref(),
+            Some("test-beta")
+        );
+        assert!(
+            !std::fs::read(&path)
+                .unwrap()
+                .windows(b"test-alpha".len())
+                .any(|bytes| bytes == b"test-alpha")
+        );
+        let _ = std::fs::remove_dir_all(dir);
     }
 }
 
