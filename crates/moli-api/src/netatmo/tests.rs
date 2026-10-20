@@ -24,6 +24,67 @@ fn generated() -> String {
     encoded
 }
 
+#[test]
+fn endpoint_uses_canonical_origin_and_keeps_hostile_origins_out() {
+    for (configured, host, origin) in [
+        (
+            "https://EXAMPLE.COM:443",
+            "example.com",
+            "https://example.com",
+        ),
+        (
+            "https://Example.com:8443",
+            "example.com:8443",
+            "https://example.com:8443",
+        ),
+        ("http://LOCALHOST:80", "localhost", "http://localhost"),
+        ("http://127.0.0.1:80", "127.0.0.1", "http://127.0.0.1"),
+        ("http://[0:0:0:0:0:0:0:1]:80", "[::1]", "http://[::1]"),
+        (
+            "https://[::ffff:192.0.2.1]:443",
+            "[::ffff:c000:201]",
+            "https://[::ffff:c000:201]",
+        ),
+        (
+            "https://[::FFFF:C000:0201]",
+            "[::ffff:c000:201]",
+            "https://[::ffff:c000:201]",
+        ),
+    ] {
+        let driver = moli_netatmo::Netatmo::new(moli_netatmo::Config {
+            public_origin: configured.into(),
+            poll_seconds: 300,
+            stale_seconds: 1800,
+        })
+        .unwrap();
+        let endpoint = super::Endpoint::new(driver.gateway(), configured.into()).unwrap();
+        assert_eq!(endpoint.origin, origin);
+        let mut headers = HeaderMap::new();
+        headers.insert(header::HOST, host.parse().unwrap());
+        headers.insert(header::ORIGIN, origin.parse().unwrap());
+        assert!(endpoint.same_origin(&headers));
+        for rejected in [
+            "https://other.example.com",
+            "https://example.com:444",
+            "https://user@example.com",
+            "https://example.com/?query=1",
+            "https://example.com/#fragment",
+            "https://example.com/other",
+            "https://192.0.2.1",
+        ] {
+            headers.insert(header::ORIGIN, rejected.parse().unwrap());
+            assert!(!endpoint.same_origin(&headers));
+        }
+        for suffix in ["#fragment", "/#fragment", "/#"] {
+            headers.insert(header::ORIGIN, format!("{origin}{suffix}").parse().unwrap());
+            assert!(!endpoint.same_origin(&headers));
+        }
+        headers.insert(header::ORIGIN, origin.parse().unwrap());
+        headers.insert(header::HOST, "other.example.com".parse().unwrap());
+        assert!(!endpoint.same_origin(&headers));
+    }
+}
+
 fn pin() -> String {
     let mut random = [0_u8; 6];
     SystemRandom::new().fill(&mut random).unwrap();

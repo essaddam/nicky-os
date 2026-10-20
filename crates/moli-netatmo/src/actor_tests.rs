@@ -73,6 +73,10 @@ struct Provider {
     omit_outdoor: AtomicBool,
     hold_weather: AtomicBool,
     hold_token: AtomicBool,
+    hold_before_send: AtomicBool,
+    before_send_entered: AtomicBool,
+    send_release: tokio::sync::Notify,
+    token_release: tokio::sync::Notify,
     check_weather: Mutex<Option<WeatherCheck>>,
 }
 
@@ -90,20 +94,31 @@ impl Provider {
             omit_outdoor: AtomicBool::new(false),
             hold_weather: AtomicBool::new(false),
             hold_token: AtomicBool::new(false),
+            hold_before_send: AtomicBool::new(false),
+            before_send_entered: AtomicBool::new(false),
+            send_release: tokio::sync::Notify::new(),
+            token_release: tokio::sync::Notify::new(),
             check_weather: Mutex::new(None),
         })
     }
 
     fn exchange(self: &Arc<Self>) -> crate::api::Exchange {
         let provider = self.clone();
-        Arc::new(move |request, _| {
+        Arc::new(move |request, _, allowed| {
             let provider = provider.clone();
             Box::pin(async move {
                 let (status, body) =
                     if request.uri().path() == "/oauth2/token" {
+                        if provider.hold_before_send.load(SeqCst) {
+                            provider.before_send_entered.store(true, SeqCst);
+                            provider.send_release.notified().await;
+                        }
+                        if !allowed() {
+                            return Err(OnceError::BeforeSend);
+                        }
                         provider.token_count.fetch_add(1, SeqCst);
                         if provider.hold_token.load(SeqCst) {
-                            std::future::pending::<()>().await;
+                            provider.token_release.notified().await;
                         }
                         let answer = { provider.token_answers.lock().unwrap().pop_front() };
                         answer.unwrap_or_else(|| {
@@ -598,6 +613,119 @@ async fn abandoned_completion_is_not_sent_or_consumed() {
         rig.gateway.complete([1; 32], pending, generated()).await,
         Ok(())
     );
+    assert_eq!(rig.provider.token_count.load(SeqCst), 1);
+    rig.stop().await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn abandonment_during_connection_prevents_the_oauth_post() {
+    let mut rig = Rig::new(None).await;
+    rig.provider.hold_before_send.store(true, SeqCst);
+    rig.start();
+    let pending = state(&rig.gateway.authorize([1; 32]).await.unwrap().url);
+    let mut request = Box::pin(rig.gateway.complete([1; 32], pending, generated()));
+    std::future::poll_fn(|cx| {
+        assert!(request.as_mut().poll(cx).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    until(|| rig.provider.before_send_entered.load(SeqCst)).await;
+    drop(request);
+    rig.provider.send_release.notify_one();
+    until(|| rig.gateway.status() == Status::NeedsAuthorization).await;
+    assert_eq!(rig.provider.token_count.load(SeqCst), 0);
+    assert!(rig.hub.secret(&instance(), "oauth_tokens").is_none());
+    rig.stop().await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn deadline_during_connection_prevents_the_oauth_post() {
+    let mut rig = Rig::new(None).await;
+    rig.provider.hold_before_send.store(true, SeqCst);
+    rig.start();
+    let pending = state(&rig.gateway.authorize([1; 32]).await.unwrap().url);
+    let mut request = Box::pin(rig.gateway.complete([1; 32], pending, generated()));
+    std::future::poll_fn(|cx| {
+        assert!(request.as_mut().poll(cx).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    until(|| rig.provider.before_send_entered.load(SeqCst)).await;
+    step(20).await;
+    rig.provider.send_release.notify_one();
+    assert_eq!(request.await, Err(Error::Expired));
+    until(|| rig.gateway.status() == Status::NeedsAuthorization).await;
+    assert_eq!(rig.provider.token_count.load(SeqCst), 0);
+    rig.stop().await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn live_completion_after_connection_sends_once_and_persists() {
+    let mut rig = Rig::new(None).await;
+    rig.provider.hold_before_send.store(true, SeqCst);
+    rig.start();
+    let pending = state(&rig.gateway.authorize([1; 32]).await.unwrap().url);
+    let mut request = Box::pin(rig.gateway.complete([1; 32], pending, generated()));
+    std::future::poll_fn(|cx| {
+        assert!(request.as_mut().poll(cx).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    until(|| rig.provider.before_send_entered.load(SeqCst)).await;
+    rig.provider.send_release.notify_one();
+    assert_eq!(request.await, Ok(()));
+    assert_eq!(rig.provider.token_count.load(SeqCst), 1);
+    until(|| rig.online(STATION)).await;
+    rig.stop().await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn abandonment_after_post_still_persists_without_replay() {
+    let mut rig = Rig::new(None).await;
+    rig.provider.hold_token.store(true, SeqCst);
+    rig.start();
+    let pending = state(&rig.gateway.authorize([1; 32]).await.unwrap().url);
+    let mut request = Box::pin(rig.gateway.complete([1; 32], pending, generated()));
+    std::future::poll_fn(|cx| {
+        assert!(request.as_mut().poll(cx).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    until(|| rig.provider.token_count.load(SeqCst) == 1).await;
+    drop(request);
+    step(21).await;
+    rig.provider.token_release.notify_one();
+    until(|| rig.online(STATION)).await;
+    let stored: Json = serde_json::from_str(&rig.stored()).unwrap();
+    let saved_refresh_matches = stored["refresh_token"] == rig.provider.refresh;
+    assert!(saved_refresh_matches);
+    assert_eq!(rig.provider.token_count.load(SeqCst), 1);
+    rig.stop().await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn expiry_fires_during_save_before_the_store_is_released() {
+    let mut rig = Rig::new(Some(EPOCH + 390)).await;
+    let gate = Arc::new(SaveGate::default());
+    rig.driver.as_mut().unwrap().persist_gate = Some(gate.clone());
+    rig.start();
+    until(|| rig.online(STATION)).await;
+    for _ in 0..5 {
+        step(60).await;
+        pump().await;
+    }
+    until(|| rig.provider.weather_count.load(SeqCst) == 6).await;
+    step(60).await;
+    until(|| gate.entered.load(SeqCst)).await;
+    assert!(rig.online(STATION));
+    assert_eq!(rig.provider.weather_count.load(SeqCst), 6);
+    step(241).await;
+    until(|| !rig.online(STATION)).await;
+    assert_eq!(rig.hub.state(&point(STATION)).unwrap().value, Value::Null);
+    assert_eq!(rig.provider.weather_count.load(SeqCst), 6);
+    assert_eq!(rig.provider.token_count.load(SeqCst), 1);
+    gate.release.notify_one();
+    until(|| rig.online(STATION)).await;
     assert_eq!(rig.provider.token_count.load(SeqCst), 1);
     rig.stop().await;
 }

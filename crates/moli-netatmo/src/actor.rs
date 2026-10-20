@@ -58,7 +58,7 @@ enum Kind {
 struct Job {
     kind: Kind,
     future: BoxFuture<'static, Answer>,
-    reply: Option<oneshot::Sender<Result<(), Error>>>,
+    reply: Option<Arc<oneshot::Sender<Result<(), Error>>>>,
     deadline: Option<Instant>,
     started: bool,
 }
@@ -66,7 +66,7 @@ struct Job {
 impl Job {
     async fn result(&mut self) -> Answer {
         if !self.started
-            && (self.reply.as_ref().is_some_and(oneshot::Sender::is_closed)
+            && (self.reply.as_ref().is_some_and(|reply| reply.is_closed())
                 || self.deadline.is_some_and(|at| Instant::now() >= at))
         {
             return Answer::Tokens(Err(Error::Expired));
@@ -248,7 +248,9 @@ impl Run<'_> {
             Ok(tokens) => {
                 // A previous pair may already have been rotated upstream.
                 self.tokens = None;
-                match persist(self.driver, self.ctx, &tokens).await {
+                match persist_while_expiring(self.driver, self.ctx, &tokens, &mut self.observed)
+                    .await
+                {
                     Ok(()) => {
                         self.tokens = Some(tokens);
                         self.backoff = 60;
@@ -278,6 +280,7 @@ impl Run<'_> {
             }
         };
         if let Some(reply) = job.reply {
+            let reply = Arc::try_unwrap(reply).expect("actor owns completion sender");
             let _ = reply.send(result);
         }
     }
@@ -332,10 +335,16 @@ impl Run<'_> {
                 self.pending = None;
                 self.next = None;
                 let clock = self.driver.clock;
+                let reply = Arc::new(reply);
+                let waiting = Arc::downgrade(&reply);
+                let allowed = Arc::new(move || {
+                    Instant::now() < deadline
+                        && waiting.upgrade().is_some_and(|reply| !reply.is_closed())
+                });
                 self.job = Some(Job {
                     kind: Kind::Exchange,
                     future: Box::pin(async move {
-                        Answer::Tokens(api.exchange_code(&code, clock.now()).await)
+                        Answer::Tokens(api.exchange_code(&code, clock.now(), allowed).await)
                     }),
                     reply: Some(reply),
                     deadline: Some(deadline),
@@ -383,6 +392,31 @@ impl Run<'_> {
                 Wake::Finished(answer) => self.finished(answer).await,
                 Wake::Tick => {}
             }
+        }
+    }
+}
+
+async fn persist_while_expiring(
+    driver: &Netatmo,
+    ctx: &DriverCtx,
+    tokens: &TokenSet,
+    observed: &mut Observed,
+) -> Result<(), Error> {
+    let save = persist(driver, ctx, tokens);
+    tokio::pin!(save);
+    loop {
+        observed.expire(ctx, driver.clock.now());
+        let Some(expiry) = observed.next_expiry() else {
+            return save.await;
+        };
+        let deadline =
+            Instant::now() + Duration::from_secs(expiry.saturating_sub(driver.clock.now()));
+        tokio::select! {
+            result = &mut save => {
+                observed.expire(ctx, driver.clock.now());
+                return result;
+            }
+            () = tokio::time::sleep_until(deadline) => {}
         }
     }
 }

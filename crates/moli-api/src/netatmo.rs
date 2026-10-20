@@ -44,12 +44,13 @@ impl Endpoint {
     /// # Errors
     /// Returns `Invalid` if the configured origin is not allowed.
     pub fn new(gateway: Gateway, origin: String) -> Result<Self, DriverError> {
-        moli_netatmo::Config {
-            public_origin: origin.clone(),
+        let config = moli_netatmo::Config {
+            public_origin: origin,
             poll_seconds: 300,
             stale_seconds: 1800,
-        }
-        .callback(&InstanceId::from("validation"))?;
+        };
+        config.callback(&InstanceId::from("validation"))?;
+        let origin = config.origin()?;
         Ok(Self { gateway, origin })
     }
 
@@ -67,6 +68,7 @@ impl Endpoint {
             value
                 .to_str()
                 .ok()
+                .filter(|origin| !origin.contains('#'))
                 .and_then(|origin| origin.parse::<Uri>().ok())
                 .is_some_and(|origin| {
                     origin.scheme_str() == expected.scheme_str()

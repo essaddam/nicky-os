@@ -45,7 +45,8 @@ humains évite d’accumuler les demandes ; les contrôles abandonnés sont refu
 Une mesure absente, inaccessible ou périmée devient inconnue et le module hors ligne.
 Un horodatage répété ne rajeunit pas les valeurs ; une valeur stable ne crée pas
 d’écriture d’historique supplémentaire. Les champs absents deviennent inconnus même lorsque
-l’horodatage n’a pas changé. L’expiration continue pendant un échange réseau en attente.
+l’horodatage n’a pas changé. L’expiration continue pendant un échange réseau ou une
+sauvegarde en attente.
 
 | Points | Famille B1 |
 |---|---|

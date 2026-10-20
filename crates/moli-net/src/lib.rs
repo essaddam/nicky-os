@@ -8,7 +8,7 @@
 pub mod lan;
 mod legacy;
 mod once;
-pub use once::{OnceError, web_once};
+pub use once::{OnceError, web_once, web_once_guarded};
 pub mod proto;
 pub mod upnp;
 pub mod wol;

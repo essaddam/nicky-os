@@ -19,6 +19,32 @@ test('consent navigates only to the weather provider with the exact return', () 
   assert.equal(authorizationUrl(url, origin, 'other'), null);
 });
 
+test('canonical callbacks match browser origins for configured case and default ports', () => {
+  for (const [configured, canonical] of [
+    ['https://WEATHER.EXAMPLE.COM:443', 'https://weather.example.com'],
+    ['https://Weather.EXAMPLE.COM:8443', 'https://weather.example.com:8443'],
+    ['http://LOCALHOST:80', 'http://localhost'],
+    ['http://127.0.0.1:80', 'http://127.0.0.1'],
+    ['http://[0:0:0:0:0:0:0:1]:80', 'http://[::1]'],
+    ['https://[::ffff:192.0.2.1]:443', 'https://[::ffff:c000:201]'],
+    ['https://[::FFFF:C000:0201]', 'https://[::ffff:c000:201]'],
+  ]) {
+    assert.equal(new URL(configured).origin, canonical);
+    const url = authorization();
+    // Exact native callback contract, also asserted in the Rust config tests.
+    url.searchParams.set('redirect_uri', `${canonical}/api/integrations/netatmo/${instance}/callback`);
+    assert.equal(authorizationUrl(url.href, new URL(configured).origin, instance), url.href);
+    for (const suffix of ['?x=1', '#fragment', '/', '/../callback', '%2f']) {
+      const hostile = new URL(url);
+      hostile.searchParams.set('redirect_uri', url.searchParams.get('redirect_uri') + suffix);
+      assert.equal(authorizationUrl(hostile.href, canonical, instance), null);
+    }
+    const ipv4 = new URL(url);
+    ipv4.searchParams.set('redirect_uri', `https://192.0.2.1/api/integrations/netatmo/${instance}/callback`);
+    assert.equal(authorizationUrl(ipv4.href, canonical, instance), null);
+  }
+});
+
 test('hostile destinations and changed consent parameters never navigate', () => {
   const mutations = [
     (url) => { url.protocol = 'http:'; },

@@ -15,11 +15,14 @@ const TOKEN_LIMIT: usize = 16 * 1024;
 const WEATHER_LIMIT: usize = 512 * 1024;
 const TIMEOUT: Duration = Duration::from_secs(10);
 
+pub(crate) type SendGuard = std::sync::Arc<dyn Fn() -> bool + Send + Sync>;
+
 #[cfg(test)]
 pub(crate) type Exchange = std::sync::Arc<
     dyn Fn(
             Request<Full<Body>>,
             usize,
+            SendGuard,
         ) -> std::pin::Pin<
             Box<
                 dyn std::future::Future<Output = Result<(StatusCode, HeaderMap, Body), OnceError>>
@@ -79,7 +82,12 @@ impl Api {
         Ok(format!("https://{HOST}/oauth2/authorize?{query}"))
     }
 
-    pub async fn exchange_code(&self, code: &str, now: u64) -> Result<TokenSet, Error> {
+    pub async fn exchange_code(
+        &self,
+        code: &str,
+        now: u64,
+        allowed: SendGuard,
+    ) -> Result<TokenSet, Error> {
         self.validate()?;
         if !plain(code, 2048) {
             return Err(Error::Invalid);
@@ -91,7 +99,7 @@ impl Api {
             ("code", code),
             ("redirect_uri", &self.callback),
         ]);
-        self.token_request(body, now).await
+        self.token_request(body, now, allowed).await
     }
 
     pub async fn refresh(&self, tokens: &TokenSet, now: u64) -> Result<TokenSet, Error> {
@@ -105,10 +113,16 @@ impl Api {
             ("client_secret", &self.client_secret),
             ("refresh_token", &tokens.refresh),
         ]);
-        self.token_request(body, now).await
+        self.token_request(body, now, std::sync::Arc::new(|| true))
+            .await
     }
 
-    async fn token_request(&self, body: String, now: u64) -> Result<TokenSet, Error> {
+    async fn token_request(
+        &self,
+        body: String,
+        now: u64,
+        allowed: SendGuard,
+    ) -> Result<TokenSet, Error> {
         let request = Request::builder()
             .method("POST")
             .uri("/oauth2/token")
@@ -117,7 +131,7 @@ impl Api {
             .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
             .body(Full::new(Body::from(body)))
             .map_err(|_| Error::Invalid)?;
-        let (status, headers, body) = self.send(request, TOKEN_LIMIT).await?;
+        let (status, headers, body) = self.send(request, TOKEN_LIMIT, allowed).await?;
         // Once handed to HTTP, an unreadable token answer may already have
         // rotated the pair. Never treat a malformed answer as safe to replay.
         if !plain_response(&headers) {
@@ -161,7 +175,9 @@ impl Api {
             .header(header::AUTHORIZATION, format!("Bearer {access}"))
             .body(Full::new(Body::new()))
             .map_err(|_| Error::Invalid)?;
-        let (status, headers, body) = self.send(request, WEATHER_LIMIT).await?;
+        let (status, headers, body) = self
+            .send(request, WEATHER_LIMIT, std::sync::Arc::new(|| true))
+            .await?;
         if !plain_response(&headers) {
             return Err(Error::Invalid);
         }
@@ -178,16 +194,21 @@ impl Api {
         &self,
         request: Request<Full<Body>>,
         max_body: usize,
+        allowed: SendGuard,
     ) -> Result<(StatusCode, HeaderMap, Body), Error> {
         #[cfg(test)]
         let response = if let Some(exchange) = &self.exchange {
-            exchange(request, max_body).await
+            exchange(request, max_body, allowed.clone()).await
         } else {
-            moli_net::web_once(HOST, 443, true, request, TIMEOUT, max_body).await
+            moli_net::web_once_guarded(HOST, 443, true, request, TIMEOUT, max_body, || allowed())
+                .await
         };
         #[cfg(not(test))]
-        let response = moli_net::web_once(HOST, 443, true, request, TIMEOUT, max_body).await;
+        let response =
+            moli_net::web_once_guarded(HOST, 443, true, request, TIMEOUT, max_body, || allowed())
+                .await;
         let response = response.map_err(|error| match error {
+            OnceError::BeforeSend if !allowed() => Error::Expired,
             OnceError::BeforeSend => Error::BeforeSend,
             OnceError::AfterSend => Error::Ambiguous,
         })?;

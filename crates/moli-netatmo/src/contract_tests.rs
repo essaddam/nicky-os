@@ -49,7 +49,7 @@ fn responder(
 ) -> (crate::api::Exchange, Arc<AtomicUsize>) {
     let count = Arc::new(AtomicUsize::new(0));
     let calls = count.clone();
-    let exchange: crate::api::Exchange = Arc::new(move |_, _| {
+    let exchange: crate::api::Exchange = Arc::new(move |_, _, _| {
         calls.fetch_add(1, Ordering::SeqCst);
         let answer = (status, headers.clone(), body.clone());
         Box::pin(async move { Ok(answer) })
@@ -74,6 +74,35 @@ fn configuration_has_bounded_defaults_and_fixed_callback() {
             config(origin)
                 .callback(&InstanceId::from("weather"))
                 .is_ok()
+        );
+    }
+}
+
+#[test]
+fn callback_uses_browser_canonical_origins() {
+    for (configured, canonical) in [
+        ("https://EXAMPLE.COM:443", "https://example.com"),
+        ("https://Example.COM:8443", "https://example.com:8443"),
+        ("http://LOCALHOST:80", "http://localhost"),
+        ("http://127.0.0.1:80", "http://127.0.0.1"),
+        ("http://[0:0:0:0:0:0:0:1]:80", "http://[::1]"),
+        (
+            "https://[::ffff:192.0.2.1]:443",
+            "https://[::ffff:c000:201]",
+        ),
+        ("https://[::FFFF:C000:0201]", "https://[::ffff:c000:201]"),
+    ] {
+        assert_eq!(
+            config(configured)
+                .callback(&InstanceId::from("weather"))
+                .unwrap(),
+            format!("{canonical}/api/integrations/netatmo/weather/callback")
+        );
+    }
+    for ambiguous in ["https://127.1", "https://0177.0.0.1", "https://0x7f000001"] {
+        assert_eq!(
+            config(ambiguous).callback(&InstanceId::from("weather")),
+            Err(Error::Invalid)
         );
     }
 }
@@ -164,7 +193,7 @@ async fn code_exchange_uses_form_and_complete_token_pair() {
     let expected_id = id.clone();
     let expected_secret = format!("{}%2B%26%3D%25", secret.trim_end_matches("+&=%"));
     let expected_code = format!("{}%2B%26%3D%25", code.trim_end_matches("+&=%"));
-    api.exchange = Some(Arc::new(move |request, limit| {
+    api.exchange = Some(Arc::new(move |request, limit, _| {
         let id = expected_id.clone();
         let secret = expected_secret.clone();
         let code = expected_code.clone();
@@ -194,7 +223,10 @@ async fn code_exchange_uses_form_and_complete_token_pair() {
             Ok((StatusCode::OK, HeaderMap::new(), body))
         })
     }));
-    let tokens = api.exchange_code(&code, 100).await.unwrap();
+    let tokens = api
+        .exchange_code(&code, 100, Arc::new(|| true))
+        .await
+        .unwrap();
     assert_eq!(tokens.access, access);
     assert_eq!(tokens.refresh, refresh);
     assert_eq!(tokens.expires_at, 3700);
@@ -218,7 +250,7 @@ async fn refresh_is_one_request_and_returns_rotated_pair() {
     let count = Arc::new(AtomicUsize::new(0));
     let calls = count.clone();
     let mut api = client();
-    api.exchange = Some(Arc::new(move |request, limit| {
+    api.exchange = Some(Arc::new(move |request, limit, _| {
         calls.fetch_add(1, Ordering::SeqCst);
         let expected = expected_refresh.clone();
         let response = response.clone();
@@ -253,12 +285,14 @@ async fn failed_exchanges_preserve_stage_and_never_retry() {
         let count = Arc::new(AtomicUsize::new(0));
         let calls = count.clone();
         let mut api = client();
-        api.exchange = Some(Arc::new(move |_, _| {
+        api.exchange = Some(Arc::new(move |_, _, _| {
             calls.fetch_add(1, Ordering::SeqCst);
             Box::pin(async move { Err(stage) })
         }));
         assert_eq!(
-            api.exchange_code(&generated(), 100).await.unwrap_err(),
+            api.exchange_code(&generated(), 100, Arc::new(|| true))
+                .await
+                .unwrap_err(),
             expected
         );
         assert_eq!(count.load(Ordering::SeqCst), 1);
@@ -270,7 +304,7 @@ async fn weather_uses_fixed_path_and_bearer_without_query_credentials() {
     let access = generated();
     let expected = access.clone();
     let mut api = client();
-    api.exchange = Some(Arc::new(move |request, limit| {
+    api.exchange = Some(Arc::new(move |request, limit, _| {
         assert_eq!(limit, 512 * 1024);
         assert_eq!(request.method(), "GET");
         assert_eq!(
@@ -312,7 +346,9 @@ async fn hostile_responses_are_bounded_refused_and_not_retried() {
     let (exchange, count) = responder(StatusCode::OK, HeaderMap::new(), Body::from("not JSON"));
     api.exchange = Some(exchange);
     assert_eq!(
-        api.exchange_code(&generated(), 100).await.unwrap_err(),
+        api.exchange_code(&generated(), 100, Arc::new(|| true))
+            .await
+            .unwrap_err(),
         Error::Ambiguous
     );
     assert_eq!(count.load(Ordering::SeqCst), 1);
@@ -328,7 +364,10 @@ async fn oauth_refusal_and_numeric_retry_after_are_safe() {
         Body::from(json!({"error":"invalid_grant","error_description":sensitive}).to_string()),
     );
     api.exchange = Some(exchange);
-    let error = api.exchange_code(&generated(), 100).await.unwrap_err();
+    let error = api
+        .exchange_code(&generated(), 100, Arc::new(|| true))
+        .await
+        .unwrap_err();
     assert_eq!(error, Error::Unauthorized);
     assert!(!format!("{error:?}").contains(&sensitive));
     assert_eq!(count.load(Ordering::SeqCst), 1);
@@ -357,7 +396,9 @@ async fn invalid_credentials_and_codes_never_reach_transport() {
     api.exchange = Some(exchange.clone());
     for code in [String::new(), "x".repeat(2049), "x\r\ny".into()] {
         assert_eq!(
-            api.exchange_code(&code, 100).await.unwrap_err(),
+            api.exchange_code(&code, 100, Arc::new(|| true))
+                .await
+                .unwrap_err(),
             Error::Invalid
         );
     }
@@ -373,7 +414,9 @@ async fn invalid_credentials_and_codes_never_reach_transport() {
         let mut api = Api::new(id, secret, "https://example.com/callback".into());
         api.exchange = Some(exchange.clone());
         assert_eq!(
-            api.exchange_code(&generated(), 100).await.unwrap_err(),
+            api.exchange_code(&generated(), 100, Arc::new(|| true))
+                .await
+                .unwrap_err(),
             Error::Invalid
         );
     }

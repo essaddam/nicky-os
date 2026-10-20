@@ -135,6 +135,11 @@ les journaux, voir [installation.md](installation.md)). Détail : [api.md § 1.2
   par un tube**, jamais au clavier (refusé), jamais affiché. Le coffre relit le fichier avant
   d'écrire (Moli peut tourner pendant l'écriture) ; la valeur est prise en compte au
   redémarrage.
+- Le helper atomique partagé synchronise le fichier temporaire avant le renommage,
+  puis son répertoire. Toute erreur, y compris la synchronisation du répertoire
+  après renommage, est propagée : le coffre n'active pas la nouvelle valeur en mémoire.
+  Après une telle erreur, le fichier peut déjà contenir la nouvelle version ; le
+  succès de la sauvegarde n'est pas acquis et le pilote doit attendre une intervention.
 - Les secrets repris d'une installation Home Assistant passent de la même façon : par tube,
   sans jamais apparaître.
 

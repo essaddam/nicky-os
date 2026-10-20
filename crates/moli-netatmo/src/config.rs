@@ -25,6 +25,15 @@ const fn stale_default() -> u64 {
 }
 
 impl Config {
+    /// The browser's origin spelling: lowercase DNS, normalized IP and no
+    /// default port. The callback and API must use this same authority.
+    ///
+    /// # Errors
+    /// Returns `Invalid` for origins outside the installation policy.
+    pub fn origin(&self) -> Result<String, Error> {
+        canonical_origin(&self.public_origin)
+    }
+
     pub fn callback(&self, instance: &InstanceId) -> Result<String, Error> {
         if !(60..=3600).contains(&self.poll_seconds)
             || !(300..=86400).contains(&self.stale_seconds)
@@ -41,15 +50,12 @@ impl Config {
         {
             return Err(Error::Invalid);
         }
-        validate_origin(&self.public_origin)?;
-        Ok(format!(
-            "{}/api/integrations/netatmo/{id}/callback",
-            self.public_origin
-        ))
+        let origin = self.origin()?;
+        Ok(format!("{origin}/api/integrations/netatmo/{id}/callback"))
     }
 }
 
-fn validate_origin(origin: &str) -> Result<(), Error> {
+fn canonical_origin(origin: &str) -> Result<String, Error> {
     if origin.len() > 2048 || !origin.is_ascii() {
         return Err(Error::Invalid);
     }
@@ -93,5 +99,33 @@ fn validate_origin(origin: &str) -> Result<(), Error> {
     if scheme == "http" && !loopback {
         return Err(Error::Invalid);
     }
-    Ok(())
+    // WHATWG URLs interpret numeric final labels as IPv4. Refuse alternate
+    // numeric spellings rather than accepting a different browser authority.
+    if ip.is_none()
+        && host.rsplit('.').next().is_some_and(|last| {
+            last.bytes().all(|byte| byte.is_ascii_digit())
+                || last
+                    .strip_prefix("0x")
+                    .or_else(|| last.strip_prefix("0X"))
+                    .is_some_and(|hex| hex.bytes().all(|b| b.is_ascii_hexdigit()))
+        })
+    {
+        return Err(Error::Invalid);
+    }
+    let host = match ip {
+        Some(IpAddr::V6(ip)) => match ip.segments() {
+            // Keep the IPv6 origin, with WHATWG hexadecimal pieces. Display
+            // uses dotted decimal for mapped addresses, unlike browsers.
+            [0, 0, 0, 0, 0, 0xffff, high, low] => format!("[::ffff:{high:x}:{low:x}]"),
+            _ => format!("[{ip}]"),
+        },
+        Some(IpAddr::V4(ip)) => ip.to_string(),
+        None => host.to_ascii_lowercase(),
+    };
+    let default = if scheme == "https" { 443 } else { 80 };
+    let port = authority.port_u16().filter(|port| *port != default);
+    Ok(match port {
+        Some(port) => format!("{scheme}://{host}:{port}"),
+        None => format!("{scheme}://{host}"),
+    })
 }

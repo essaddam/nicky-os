@@ -13,6 +13,10 @@ d'installation, ne découvre pas de serveur et ne contacte jamais cette origine.
 L'accès au fournisseur est fixé à `api.netatmo.com:443` avec TLS.
 
 L'origine est HTTPS, sans chemin, barre finale, utilisateur, requête ni fragment.
+Le retour utilise l'origine canonique du navigateur : nom d'hôte en minuscules,
+adresse IP normalisée et port par défaut omis (`:443` en HTTPS, `:80` en HTTP).
+Enregistrer cette forme chez Netatmo, même si la configuration emploie une autre casse
+ou écrit explicitement le port par défaut.
 HTTP est accepté uniquement sur la boucle locale pour le développement. Si Moli est
 derrière un accès distant, conserver sa protection existante, transmettre le `Host`
 public et ajouter ce nom à `server.allowed_hosts`. Un alias différent est refusé pour

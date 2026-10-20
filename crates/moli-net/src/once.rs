@@ -33,9 +33,28 @@ pub async fn web_once(
     host: &str,
     port: u16,
     tls: bool,
+    request: Request<Full<Bytes>>,
+    limit: Duration,
+    max_body: usize,
+) -> Result<(StatusCode, HeaderMap, Bytes), OnceError> {
+    web_once_guarded(host, port, tls, request, limit, max_body, || true).await
+}
+
+/// Like [`web_once`], with a synchronous permission check after connection
+/// and HTTP handshake, immediately before handing the request to HTTP.
+/// No await separates permission from handoff. Once handed off, permission
+/// changes do not cancel acquisition of a potentially rotating response.
+///
+/// # Errors
+/// A refused permission is `BeforeSend`; other errors follow [`web_once`].
+pub async fn web_once_guarded(
+    host: &str,
+    port: u16,
+    tls: bool,
     mut request: Request<Full<Bytes>>,
     limit: Duration,
     max_body: usize,
+    allowed: impl Fn() -> bool,
 ) -> Result<(StatusCode, HeaderMap, Bytes), OnceError> {
     if host.is_empty() || host.len() > 253 || !host.is_ascii() || port == 0 {
         return Err(OnceError::BeforeSend);
@@ -58,18 +77,24 @@ pub async fn web_once(
     }
     let sent = AtomicBool::new(false);
     let exchange = async {
-        let tcp = TcpStream::connect((host, port))
-            .await
-            .map_err(|_| OnceError::BeforeSend)?;
-        if tls {
-            let name = ServerName::try_from(host.to_owned()).map_err(|_| OnceError::BeforeSend)?;
-            let stream = TlsConnector::from(super::public_tls())
-                .connect(name, tcp)
+        let tcp = async {
+            TcpStream::connect((host, port))
                 .await
-                .map_err(|_| OnceError::BeforeSend)?;
-            exchange_once(stream, request, max_body, &sent).await
+                .map_err(|_| OnceError::BeforeSend)
+        };
+        if tls {
+            let stream = async {
+                let tcp = tcp.await?;
+                let name =
+                    ServerName::try_from(host.to_owned()).map_err(|_| OnceError::BeforeSend)?;
+                TlsConnector::from(super::public_tls())
+                    .connect(name, tcp)
+                    .await
+                    .map_err(|_| OnceError::BeforeSend)
+            };
+            exchange_once(stream, request, max_body, &sent, &allowed).await
         } else {
-            exchange_once(tcp, request, max_body, &sent).await
+            exchange_once(tcp, request, max_body, &sent, &allowed).await
         }
     };
     tokio::time::timeout(limit, exchange)
@@ -92,14 +117,16 @@ impl Drop for AbortOnDrop {
 }
 
 async fn exchange_once<S>(
-    stream: S,
+    connect: impl std::future::Future<Output = Result<S, OnceError>>,
     request: Request<Full<Bytes>>,
     max_body: usize,
     sent: &AtomicBool,
+    allowed: &impl Fn() -> bool,
 ) -> Result<(StatusCode, HeaderMap, Bytes), OnceError>
 where
     S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
 {
+    let stream = connect.await?;
     let (mut sender, connection) = hyper::client::conn::http1::Builder::new()
         .max_headers(64)
         .max_buf_size(16 * 1024)
@@ -109,6 +136,9 @@ where
     let _connection = AbortOnDrop(tokio::spawn(async move {
         let _ = connection.await;
     }));
+    if !allowed() {
+        return Err(OnceError::BeforeSend);
+    }
     sent.store(true, Ordering::Relaxed);
     let response = sender
         .send_request(request)
@@ -134,6 +164,70 @@ mod tests {
             .uri("/oauth2/token")
             .body(Full::new(Bytes::new()))
             .unwrap()
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn permission_is_checked_after_a_pending_connection_before_any_post() {
+        for mode in 0..3 {
+            let (client, mut server) = tokio::io::duplex(4096);
+            let entered = std::sync::Arc::new(tokio::sync::Notify::new());
+            let release = std::sync::Arc::new(tokio::sync::Notify::new());
+            let live = std::sync::Arc::new(AtomicBool::new(true));
+            let deadline = tokio::time::Instant::now() + Duration::from_secs(20);
+            let reader = tokio::spawn(async move {
+                let mut head = Vec::new();
+                loop {
+                    let mut bytes = [0; 256];
+                    let size = server.read(&mut bytes).await.unwrap();
+                    if size == 0 {
+                        return head;
+                    }
+                    head.extend_from_slice(&bytes[..size]);
+                    assert!(head.len() < 4096);
+                    if head.windows(4).any(|w| w == b"\r\n\r\n") {
+                        server
+                            .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}")
+                            .await
+                            .unwrap();
+                        return head;
+                    }
+                }
+            });
+            let connection_entered = entered.clone();
+            let connection_release = release.clone();
+            let permitted = live.clone();
+            let exchange = tokio::spawn(async move {
+                let connect = async {
+                    connection_entered.notify_one();
+                    connection_release.notified().await;
+                    Ok(client)
+                };
+                let sent = AtomicBool::new(false);
+                let allowed =
+                    || permitted.load(Ordering::SeqCst) && tokio::time::Instant::now() < deadline;
+                let result = exchange_once(connect, request(), 100, &sent, &allowed).await;
+                (result, sent.load(Ordering::Relaxed))
+            });
+            entered.notified().await;
+            match mode {
+                0 => live.store(false, Ordering::SeqCst),
+                1 => tokio::time::advance(Duration::from_secs(20)).await,
+                _ => {}
+            }
+            release.notify_one();
+            let (result, sent) = exchange.await.unwrap();
+            let head = reader.await.unwrap();
+            if mode == 2 {
+                assert_eq!(result.unwrap().0, StatusCode::OK);
+                assert!(sent);
+                assert!(head.starts_with(b"POST /oauth2/token HTTP/1.1\r\n"));
+                assert_eq!(head.windows(5).filter(|w| *w == b"POST ").count(), 1);
+            } else {
+                assert_eq!(result, Err(OnceError::BeforeSend));
+                assert!(!sent);
+                assert!(head.is_empty());
+            }
+        }
     }
 
     async fn read_head(stream: &mut TcpStream) -> Vec<u8> {
