@@ -1103,6 +1103,17 @@ fn build_driver(
         "moonraker" => Arc::new(moli_moonraker::Moonraker::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        _ => build_driver_n_to_z(config, data_dir)?,
+    })
+}
+
+/// The second alphabetic group keeps each driver factory below the length limit.
+fn build_driver_n_to_z(
+    config: &DriverConfig,
+    data_dir: &std::path::Path,
+) -> anyhow::Result<Arc<dyn Driver>> {
+    let context = || format!("driver {:?} options", config.id);
+    Ok(match config.kind.as_str() {
         "netatmo" => Arc::new(netatmo_driver(config)?.0),
         "nuki" => Arc::new(moli_nuki::Nuki::new(
             config.options.clone().try_into().with_context(context)?,
