@@ -13,6 +13,11 @@ et Voltalis. Les comptes et appareils sont fictifs ; aucun accès cloud ou physi
   l'appelant, rejet d'un certificat non fiable. Les tâches client et serveur sont
   détenues et jointes. Le signal de fin de l'ordre remplace une temporisation supposée.
 - `failures.rs` : expiration de confirmation sous quota, trois HTTP 500 comptés.
+- `late-read.rs` : le relevé correspondant et la minuterie sont prêts après la
+  limite ; traiter le relevé en premier conserve une notice unique, pour les deux pilotes.
+- `crates/moli-ariston/src/tests/settings.rs` : intention admise avant ACK, baisse
+  du plafond suivie d’une consigne excessive, nouveau réglage reçu pendant la file,
+  deux écritures successives du même champ avec le bon couple `old`/`new`.
 - `crates/moli-voltalis/src/tests/p1/guard.rs` : vraie garde du hub, consigne/préréglage
   sous `Control`, approbation humaine selon l'origine et le contexte, droits existants
   UI/automatisme validé et chauffe-eau en lecture seule.
@@ -25,7 +30,7 @@ L'autorisation appartient à `SendPermit` et `web_if`. Sans contexte, le réseau
 et ses autorités restent inchangés ; sans feature, ces observations ne sont pas compilées.
 
 ```sh
-RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR="$PWD/target" cargo test -j 4 --locked -p moli-ariston -p moli-voltalis -p moli-runtime -p moli-automation
+RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR="$PWD/target" cargo test -j 2 --locked -p moli-ariston -p moli-voltalis -p moli-runtime -p moli-automation
 ```
 
 Les tests de fenêtres du ballon utilisent le JSON de la recette et le prédicat réel
@@ -33,17 +38,28 @@ Les tests de fenêtres du ballon utilisent le JSON de la recette et le prédicat
 modes avec relais initialement ouvert et fermé. La qualification réelle reste soumise
 au jalon humain H1 ; Home Assistant reste propriétaire avant validation de la bascule.
 
-## Garde-fou natif
+## Validation et fusion
+
+À la soumission : `cargo fmt --all -- --check`, Clippy workspace/all-targets strict
+et tests ciblés des crates modifiées, en Rust 1.99.1 avec deux jobs. Le contrôle
+complet ci-dessous se fait une seule fois, après approbation, au tour de fusion.
+Un seul contrôle complet tourne à la fois. Docker est gelé : les quatre cas Linux
+seront rejoués une fois sur `main` au rétablissement du service. Le test de transport
+`authenticated_d13_transport_handles_replay_conflict_gap_and_read` est également
+exclu provisoirement du complet Chaleur, qui ne touche pas `moli-archive`.
+
+### Garde-fou natif
 
 Sur macOS, les quatre tests ci-dessous lient des adresses `127.0.0.x` réservées à
-Linux. Le garde-fou natif exclut exactement ces cas, exécutés séparément dans
-`moli-os-dev` sur une copie des mêmes sources. Il ne modifie pas `scripts/check.sh`.
+Linux. Le garde-fou natif exclut exactement ces cas. Il ne modifie pas
+`scripts/check.sh`. Leur commande Linux est conservée ci-dessous pour la reprise
+commune ultérieure ; elle ne doit pas être lancée pendant le gel Docker.
 
 ```sh
-RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR="$PWD/target" CARGO_BUILD_JOBS=4 sh -c '
+RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR="$PWD/target" CARGO_BUILD_JOBS=2 sh -c '
 cargo() {
     if test "$1" = test; then
-        command cargo "$@" -- --skip tests::a_device_that_changed_address_is_found_and_followed --skip tests::the_device_whose_address_another_one_took_is_found_elsewhere --skip tests::another_device_at_its_configured_address_is_not_taken_before_a_long_search --skip tests::an_address_a_person_changed_is_obeyed
+        command cargo "$@" -- --skip tests::a_device_that_changed_address_is_found_and_followed --skip tests::the_device_whose_address_another_one_took_is_found_elsewhere --skip tests::another_device_at_its_configured_address_is_not_taken_before_a_long_search --skip tests::an_address_a_person_changed_is_obeyed --skip authenticated_d13_transport_handles_replay_conflict_gap_and_read
     else
         command cargo "$@"
     fi
@@ -52,8 +68,8 @@ cargo() {
 '
 ```
 
-Dans la copie Linux :
+Après rétablissement de Docker, dans la copie Linux de `main` :
 
 ```sh
-cargo test -j 4 --locked -p moli-profile --lib -- --exact tests::a_device_that_changed_address_is_found_and_followed tests::the_device_whose_address_another_one_took_is_found_elsewhere tests::another_device_at_its_configured_address_is_not_taken_before_a_long_search tests::an_address_a_person_changed_is_obeyed --test-threads=1
+cargo test -j 2 --locked -p moli-profile --lib -- --exact tests::a_device_that_changed_address_is_found_and_followed tests::the_device_whose_address_another_one_took_is_found_elsewhere tests::another_device_at_its_configured_address_is_not_taken_before_a_long_search tests::an_address_a_person_changed_is_obeyed --test-threads=1
 ```

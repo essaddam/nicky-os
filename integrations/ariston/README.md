@@ -39,6 +39,11 @@ par une relecture.
 - Ordres : **une seule fois** (une connexion par requête, jamais rejouée, ni par Moli ni après
   une nouvelle connexion), un à la fois dans l'ordre reçu, au plus 4 appelants en attente,
   jamais après leur instant limite (il faut au moins une seconde devant soi pour partir).
+  Les intentions sont recomposées et le plafond est revérifié au départ. Après une
+  modification de `plantSettings`, les ordres qui dépendent des réglages attendent
+  une lecture commencée après l’acquittement et confirmant la valeur demandée ;
+  les couples `old`/`new` utilisent cette lecture. Cette attente conserve la file,
+  l’abandon et l’échéance : un ordre expiré n’est jamais libéré plus tard.
   L'appelant entend « fait » quand le cloud a pris l'ordre ; ce n'est pas celui du
   chauffe-eau : la valeur demandée doit se relire dans les 3 min, sinon la maison est
   prévenue (notice). Pas de réponse à temps : « peut-être parti, jamais renvoyé », et Moli

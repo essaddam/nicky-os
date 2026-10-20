@@ -16,6 +16,7 @@ use tokio::sync::broadcast;
 use super::*;
 
 mod p1;
+mod settings;
 
 const TEST_PACE: Pace = Pace {
     idle: Duration::from_millis(200),

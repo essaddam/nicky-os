@@ -98,3 +98,14 @@ async fn successive_orders_preserve_the_acknowledged_setting_without_publishing_
     )
     .await;
 }
+
+mod late_read {
+    include!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../tools/chaleur-p1-contracts/late-read.rs"
+    ));
+}
+
+fn confirmation_device(link: &Link, instance: &InstanceId) -> Device {
+    link.appliances[&heater()].device(instance)
+}

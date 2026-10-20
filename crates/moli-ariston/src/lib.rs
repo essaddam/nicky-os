@@ -166,11 +166,12 @@ struct Snapshot {
     readings: Vec<Reading>,
 }
 
-/// An order for the cloud, and what it should read back.
+/// An intention. The wire path and body are composed only at dispatch.
 #[derive(Clone, Debug)]
 struct Order {
     path: String,
     body: Json,
+    emitted: bool,
     device: Arc<Device>,
     key: String,
     value: Value,
@@ -195,12 +196,25 @@ impl std::fmt::Display for NoAnswer {
 
 impl std::error::Error for NoAnswer {}
 
+/// A setting ACK must be read back before another setting-dependent order.
+#[derive(Debug)]
+struct AwaitSettings {
+    after: Instant,
+    key: String,
+    value: Value,
+}
+
+fn needs_settings(key: &str) -> bool {
+    matches!(key, "setpoint" | "max_setpoint" | "antilegionella")
+}
+
 #[derive(Debug)]
 struct Link {
     cloud: Arc<Cloud>,
     pace: Pace,
     /// The heaters, and their settings as last read.
     heaters: HashMap<DeviceId, (Heater, Json)>,
+    settings_pending: HashMap<DeviceId, AwaitSettings>,
     line: OrderLine<Order>,
     confirm: Confirmations,
     /// Network work in flight: one read and one order at most.
@@ -224,6 +238,7 @@ impl Link {
             cloud: Arc::new(cloud),
             pace,
             heaters: HashMap::new(),
+            settings_pending: HashMap::new(),
             line: OrderLine::new(LINE),
             confirm: Confirmations::default(),
             jobs: JoinSet::new(),
@@ -285,7 +300,7 @@ impl Link {
         let kind = Read {
             list: self.heaters.is_empty() || now >= self.next_list,
             // Read back with the rest while an order is being confirmed.
-            settings: slow || self.confirm.watching(),
+            settings: slow || self.confirm.watching() || !self.settings_pending.is_empty(),
             errors: slow,
         };
         let cloud = Arc::clone(&self.cloud);
@@ -360,8 +375,9 @@ impl Link {
             Err(e) => {
                 let message = describe(&e);
                 // Maybe taken: what reads back will tell.
-                if e.is::<NoAnswer>()
-                    || matches!(api::refused(&e), Some(Refusal::Busy | Refusal::Other))
+                if order.emitted
+                    && (e.is::<NoAnswer>()
+                        || matches!(api::refused(&e), Some(Refusal::Busy | Refusal::Other)))
                 {
                     self.expect(order);
                 }
@@ -398,6 +414,16 @@ impl Link {
     }
 
     fn expect(&mut self, order: &Order) {
+        if order.emitted && matches!(order.key.as_str(), "max_setpoint" | "antilegionella") {
+            self.settings_pending.insert(
+                order.device.id.clone(),
+                AwaitSettings {
+                    after: Instant::now(),
+                    key: order.key.clone(),
+                    value: order.value.clone(),
+                },
+            );
+        }
         self.confirm.expect(
             &order.device,
             &order.key,
@@ -439,6 +465,9 @@ impl Link {
         let mut heaters = HashMap::new();
         for reading in snapshot.readings {
             let id = DeviceId::new(instance, &reading.heater.gateway);
+            if let Some(settings) = &reading.settings {
+                self.reconcile_settings(&id, settings);
+            }
             let settings = reading
                 .settings
                 .or_else(|| self.heaters.get(&id).map(|(_, s)| s.clone()))
@@ -466,7 +495,37 @@ impl Link {
                 }
             }
         }
+        self.settings_pending
+            .retain(|id, _| heaters.contains_key(id));
         self.heaters = heaters;
+    }
+
+    fn reconcile_settings(&mut self, id: &DeviceId, settings: &Json) {
+        let matches = self.settings_pending.get(id).is_some_and(|pending| {
+            self.read_started >= pending.after
+                && model::settings(settings).into_iter().any(|(key, value)| {
+                    key == pending.key
+                        && match (value.as_f64(), pending.value.as_f64()) {
+                            (Some(read), Some(wanted)) => (read - wanted).abs() < 0.01,
+                            _ => value == pending.value,
+                        }
+                })
+        });
+        if matches {
+            self.settings_pending.remove(id);
+        }
+    }
+
+    fn compose(&self, order: &Order) -> Result<(String, Json), String> {
+        let (heater, settings) = self
+            .heaters
+            .get(&order.device.id)
+            .ok_or_else(|| moli_i18n::tr!("pilotes.ariston.point_non_ecrivable"))?;
+        let encoded = model::order(&order.key, &order.value, settings)?;
+        Ok((
+            format!("velis/medPlantData/{}/{}", heater.gateway, encoded.action),
+            encoded.body,
+        ))
     }
 
     /// Takes an order from the hub: refused at once, or queued.
@@ -483,41 +542,53 @@ impl Link {
             )));
             return;
         }
-        let Some((heater, settings)) = self.heaters.get(&command.device.id) else {
-            command.reply(Err(moli_i18n::tr!("pilotes.ariston.point_non_ecrivable")));
-            return;
-        };
-        let encoded = match model::order(&command.key, &command.value, settings) {
-            Ok(encoded) => encoded,
-            Err(why) => {
-                command.reply(Err(why));
-                return;
-            }
-        };
         let order = Order {
-            path: format!("velis/medPlantData/{}/{}", heater.gateway, encoded.action),
-            body: encoded.body,
+            path: String::new(),
+            body: Json::Null,
+            emitted: false,
             device: Arc::clone(&command.device),
             key: command.key.to_string(),
             value: command.value.clone(),
         };
+        if let Err(why) = self.compose(&order) {
+            command.reply(Err(why));
+            return;
+        }
         self.line.push(command, order);
     }
 
-    /// Sends the next order if none is on its way and the cloud is not
-    /// paused; the line has already checked it is awaited and in time.
+    /// Wait for setting reads without releasing FIFO order or its deadline.
     fn pump(&mut self, now: Instant) {
         if self.busy(now).is_some() {
             return;
         }
-        let Some((order, permit)) = self.line.to_send() else {
+        loop {
+            let pending = &self.settings_pending;
+            let reading = self.reading;
+            let Some((mut order, permit)) = self.line.to_send_when(|order| {
+                !needs_settings(&order.key) || (!reading && !pending.contains_key(&order.device.id))
+            }) else {
+                return;
+            };
+            let (path, body) = match self.compose(&order) {
+                Ok(encoded) => encoded,
+                Err(why) => {
+                    if let Some(command) = self.line.sent() {
+                        command.reply(Err(why));
+                    }
+                    continue;
+                }
+            };
+            order.path = path;
+            order.body = body;
+            let cloud = Arc::clone(&self.cloud);
+            self.jobs.spawn(async move {
+                let result = emit(&cloud, &order, &permit).await;
+                order.emitted = permit.emitted();
+                Done::Sent(order, result)
+            });
             return;
-        };
-        let cloud = Arc::clone(&self.cloud);
-        self.jobs.spawn(async move {
-            let result = emit(&cloud, &order, &permit).await;
-            Done::Sent(order, result)
-        });
+        }
     }
 }
 

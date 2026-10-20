@@ -102,10 +102,19 @@ impl<O> OrderLine<O> {
     /// not leave after (the sending task checks it again when it starts,
     /// and gives up the wait for an answer then).
     pub fn to_send(&mut self) -> Option<(O, SendPermit)> {
+        self.to_send_when(|_| true)
+    }
+
+    /// Keep the head in FIFO order while the driver awaits a prerequisite.
+    /// Expiration and caller abandonment still remove it through `due`.
+    pub fn to_send_when(&mut self, ready: impl FnOnce(&O) -> bool) -> Option<(O, SendPermit)> {
         if self.sending.is_some() {
             return None;
         }
         self.prune(Instant::now());
+        if !ready(&self.waiting.front()?.order) {
+            return None;
+        }
         let Waiting {
             command,
             order,
@@ -263,22 +272,28 @@ impl Confirmations {
     /// Only a read started after the order's acknowledgement may confirm it.
     pub fn observe(&mut self, ctx: &DriverCtx, read_started: Instant) {
         self.bind(ctx);
-        self.wants.retain(|w| {
-            read_started < w.asked
-                || !ctx
-                    .current(&w.device, &w.key)
-                    .is_some_and(|v| same(&v, &w.value))
+        self.settle(|want| {
+            read_started >= want.asked
+                && ctx
+                    .current(&want.device, &want.key)
+                    .is_some_and(|value| same(&value, &want.value))
         });
     }
 
     /// Expire independently of the availability of the remote service.
     pub fn expire(&mut self) {
-        let now = Instant::now();
+        self.settle(|_| false);
+    }
+
+    fn settle(&mut self, observed: impl Fn(&Want) -> bool) {
         let mut pending = Vec::new();
         for want in self.wants.drain(..) {
+            let matches = observed(&want);
+            // Check after reading state: a lock wait may cross the deadline.
+            let now = Instant::now();
             if now >= want.until {
                 Self::tell(self.publisher.as_ref(), &want, now);
-            } else {
+            } else if !matches {
                 pending.push(want);
             }
         }
@@ -491,10 +506,13 @@ mod tests {
         assert!(!permit.emitted());
     }
 
-    #[test]
-    fn confirmations_ignore_old_reads_expire_and_report_on_drop_once() {
+    fn confirmation_fixture() -> (
+        DriverCtx,
+        Device,
+        tokio::sync::broadcast::Receiver<moli_core::Event>,
+    ) {
         let hub = crate::Hub::new(crate::HubOptions::default()).unwrap();
-        let mut events = hub.subscribe();
+        let events = hub.subscribe();
         let instance = InstanceId::from("cloud");
         let commands = hub.register_driver(&instance, "test", Arc::from("test"));
         let ctx = DriverCtx::new(
@@ -518,6 +536,36 @@ mod tests {
         });
         ctx.upsert_device(device.clone());
         ctx.set_state(&device.id, "on", Value::Bool(true));
+        (ctx, device, events)
+    }
+
+    #[test]
+    fn matching_observations_at_or_after_expiry_emit_one_notice() {
+        for compatibility in [false, true] {
+            let (ctx, device, mut events) = confirmation_fixture();
+            let mut confirm = Confirmations::default();
+            confirm.bind(&ctx);
+            confirm.expect(&device, "on", Value::Bool(true), Duration::ZERO);
+            if compatibility {
+                confirm.check(&ctx);
+            } else {
+                confirm.observe(&ctx, Instant::now());
+            }
+            confirm.expire();
+            drop(confirm);
+            let count = std::iter::from_fn(|| events.try_recv().ok())
+                .filter(|event| matches!(event, moli_core::Event::Notice { .. }))
+                .count();
+            assert_eq!(
+                count, 1,
+                "late matching value must not silently confirm, compatibility={compatibility}"
+            );
+        }
+    }
+
+    #[test]
+    fn confirmations_ignore_old_reads_expire_and_report_on_drop_once() {
+        let (ctx, device, mut events) = confirmation_fixture();
         let started = Instant::now();
         let mut confirm = Confirmations::default();
         confirm.bind(&ctx);

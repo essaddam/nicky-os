@@ -65,3 +65,15 @@ fn initial_read() -> Read {
 async fn initial_snapshot(cloud: &Cloud) -> Snapshot {
     fetch(cloud, Vec::new(), initial_read()).await.unwrap()
 }
+
+mod late_read {
+    include!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../tools/chaleur-p1-contracts/late-read.rs"
+    ));
+}
+
+fn confirmation_device(link: &Link, instance: &InstanceId) -> Device {
+    let (heater, settings) = &link.heaters[&heater()];
+    heater.device(instance, model::ceiling(settings).1)
+}
