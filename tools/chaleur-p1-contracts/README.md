@@ -18,6 +18,12 @@ et Voltalis. Les comptes et appareils sont fictifs ; aucun accès cloud ou physi
 - `crates/moli-ariston/src/tests/settings.rs` : intention admise avant ACK, baisse
   du plafond suivie d’une consigne excessive, nouveau réglage reçu pendant la file,
   deux écritures successives du même champ avec le bon couple `old`/`new`.
+- `crates/moli-ariston/src/tests/recovery.rs` : vraie boucle `serve`, refus 429/500,
+  réponse perdue, modification externe après ACK et GET correspondant lancé avant
+  la limite mais reçu après. Une notice, pause quota conservée, ancien ordre expiré
+  jamais rejoué, nouvelle intention émise seulement après une lecture de récupération
+  valide, avec `old` issu de cette base. Le GET de récupération est retenu par une
+  barrière ; ses tâches sont arrêtées et jointes même après une assertion en échec.
 - `crates/moli-voltalis/src/tests/p1/guard.rs` : vraie garde du hub, consigne/préréglage
   sous `Control`, approbation humaine selon l'origine et le contexte, droits existants
   UI/automatisme validé et chauffe-eau en lecture seule.
@@ -43,8 +49,10 @@ au jalon humain H1 ; Home Assistant reste propriétaire avant validation de la b
 À la soumission : `cargo fmt --all -- --check`, Clippy workspace/all-targets strict
 et tests ciblés des crates modifiées, en Rust 1.99.1 avec deux jobs. Le contrôle
 complet ci-dessous se fait une seule fois, après approbation, au tour de fusion.
-Un seul contrôle complet tourne à la fois. Docker est gelé : les quatre cas Linux
-seront rejoués une fois sur `main` au rétablissement du service. Le test de transport
+Un seul contrôle complet tourne à la fois. Docker est réservé aux quatre cas
+`moli-profile` propres à Linux, au tour de fusion, avec un volume cible neuf et
+un seul job Docker Moli. Ces cas ne bloquent ni soumission ni fusion ; leur
+rattrapage commun sur `main` appartient à l'agent désigné. Le test de transport
 `authenticated_d13_transport_handles_replay_conflict_gap_and_read` est également
 exclu provisoirement du complet Chaleur, qui ne touche pas `moli-archive`.
 
@@ -53,7 +61,7 @@ exclu provisoirement du complet Chaleur, qui ne touche pas `moli-archive`.
 Sur macOS, les quatre tests ci-dessous lient des adresses `127.0.0.x` réservées à
 Linux. Le garde-fou natif exclut exactement ces cas. Il ne modifie pas
 `scripts/check.sh`. Leur commande Linux est conservée ci-dessous pour la reprise
-commune ultérieure ; elle ne doit pas être lancée pendant le gel Docker.
+commune ou au tour de fusion, selon la file coordonnée.
 
 ```sh
 RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR="$PWD/target" CARGO_BUILD_JOBS=2 sh -c '
@@ -68,7 +76,7 @@ cargo() {
 '
 ```
 
-Après rétablissement de Docker, dans la copie Linux de `main` :
+Dans la copie Linux de `main`, au passage désigné :
 
 ```sh
 cargo test -j 2 --locked -p moli-profile --lib -- --exact tests::a_device_that_changed_address_is_found_and_followed tests::the_device_whose_address_another_one_took_is_found_elsewhere tests::another_device_at_its_configured_address_is_not_taken_before_a_long_search tests::an_address_a_person_changed_is_obeyed --test-threads=1

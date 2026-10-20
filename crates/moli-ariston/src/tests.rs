@@ -16,6 +16,7 @@ use tokio::sync::broadcast;
 use super::*;
 
 mod p1;
+mod recovery;
 mod settings;
 
 const TEST_PACE: Pace = Pace {
@@ -44,6 +45,7 @@ struct Fake {
     obeys: bool,
     slow_post: Option<Duration>,
     post_status: Option<u16>,
+    post_status_once: Mutex<Option<u16>>,
     login_status: Option<u16>,
     read_status: Mutex<Option<u16>>,
 }
@@ -58,6 +60,7 @@ impl Default for Fake {
             obeys: true,
             slow_post: None,
             post_status: None,
+            post_status_once: Mutex::default(),
             login_status: None,
             read_status: Mutex::default(),
         }
@@ -89,6 +92,9 @@ impl Fake {
                 .push((path.to_owned(), body.clone()));
             if let Some(slow) = self.slow_post {
                 tokio::time::sleep(slow).await;
+            }
+            if let Some(status) = self.post_status_once.lock().unwrap().take() {
+                return (status, Json::Null);
             }
             if let Some(status) = self.post_status {
                 return (status, Json::Null);

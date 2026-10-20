@@ -196,12 +196,21 @@ impl std::fmt::Display for NoAnswer {
 
 impl std::error::Error for NoAnswer {}
 
-/// A setting ACK must be read back before another setting-dependent order.
+/// Read back a setting, or recover on a new authoritative base after its
+/// confirmation limit. Old queued orders retain their own deadlines.
+#[derive(Clone, Copy, Debug)]
+enum SettingsPhase {
+    Confirming(Instant),
+    Reconciling(Instant),
+}
+
+/// A setting ACK must be reconciled before another setting-dependent order.
 #[derive(Debug)]
 struct AwaitSettings {
     after: Instant,
     key: String,
     value: Value,
+    phase: SettingsPhase,
 }
 
 fn needs_settings(key: &str) -> bool {
@@ -229,6 +238,8 @@ struct Link {
     ready: bool,
     #[cfg(test)]
     settled: Option<Arc<tokio::sync::Notify>>,
+    #[cfg(test)]
+    busy_pause: Duration,
 }
 
 impl Link {
@@ -252,6 +263,8 @@ impl Link {
             ready: false,
             #[cfg(test)]
             settled: None,
+            #[cfg(test)]
+            busy_pause: BUSY_PAUSE,
         }
     }
 
@@ -266,6 +279,7 @@ impl Link {
         loop {
             self.confirm.expire();
             let now = Instant::now();
+            let settings_at = self.settings_due(now);
             // Answers first: due callers never wait on anything.
             let answer_at = self.line.due();
             self.pump(now);
@@ -280,6 +294,7 @@ impl Link {
                 .into_iter()
                 .chain(read_at)
                 .chain(self.confirm.next_deadline())
+                .chain(settings_at)
                 .min();
             tokio::select! {
                 () = sleep(wake) => {}
@@ -335,6 +350,9 @@ impl Link {
                     } else {
                         self.pace.idle
                     };
+                if self.needs_recovery_read() {
+                    self.next_read = now;
+                }
             }
             Done::Read(_, Err(e)) => {
                 self.reading = false;
@@ -414,23 +432,44 @@ impl Link {
     }
 
     fn expect(&mut self, order: &Order) {
-        if order.emitted && matches!(order.key.as_str(), "max_setpoint" | "antilegionella") {
-            self.settings_pending.insert(
-                order.device.id.clone(),
-                AwaitSettings {
-                    after: Instant::now(),
-                    key: order.key.clone(),
-                    value: order.value.clone(),
-                },
-            );
-        }
         self.confirm.expect(
             &order.device,
             &order.key,
             order.value.clone(),
             self.pace.confirm,
         );
-        self.next_read = self.next_read.min(Instant::now() + self.pace.follow);
+        let now = Instant::now();
+        if order.emitted && matches!(order.key.as_str(), "max_setpoint" | "antilegionella") {
+            self.settings_pending.insert(
+                order.device.id.clone(),
+                AwaitSettings {
+                    after: now,
+                    key: order.key.clone(),
+                    value: order.value.clone(),
+                    // This limit follows the confirmation's, so its notice cannot
+                    // be displaced by a newly accepted setting on the same point.
+                    phase: SettingsPhase::Confirming(now + self.pace.confirm),
+                },
+            );
+        }
+        self.next_read = self.next_read.min(now + self.pace.follow);
+    }
+
+    /// Once the confirmation limit passes, require a new settings read.
+    /// Advance only once: a quota pause or malformed read must not busy-loop.
+    fn settings_due(&mut self, now: Instant) -> Option<Instant> {
+        let mut wake: Option<Instant> = None;
+        for pending in self.settings_pending.values_mut() {
+            if let SettingsPhase::Confirming(until) = pending.phase {
+                if now >= until {
+                    pending.phase = SettingsPhase::Reconciling(now);
+                    self.next_read = self.next_read.min(now);
+                } else {
+                    wake = Some(wake.map_or(until, |at| at.min(until)));
+                }
+            }
+        }
+        wake
     }
 
     /// A refusal the link survives (a pause, a new session, bounded), or
@@ -439,7 +478,11 @@ impl Link {
         match api::refused(e) {
             Some(Refusal::Busy) => {
                 tracing::warn!(error = %e, "ariston busy, pausing");
-                self.busy_until = Some(Instant::now() + BUSY_PAUSE);
+                #[cfg(not(test))]
+                let pause = BUSY_PAUSE;
+                #[cfg(test)]
+                let pause = self.busy_pause;
+                self.busy_until = Some(Instant::now() + pause);
             }
             Some(Refusal::Session) if self.cloud.refused_sessions() >= MAX_SESSION_REFUSALS => {
                 bail!(Refused {
@@ -501,19 +544,38 @@ impl Link {
     }
 
     fn reconcile_settings(&mut self, id: &DeviceId, settings: &Json) {
-        let matches = self.settings_pending.get(id).is_some_and(|pending| {
-            self.read_started >= pending.after
-                && model::settings(settings).into_iter().any(|(key, value)| {
-                    key == pending.key
-                        && match (value.as_f64(), pending.value.as_f64()) {
-                            (Some(read), Some(wanted)) => (read - wanted).abs() < 0.01,
-                            _ => value == pending.value,
-                        }
-                })
+        let values = model::settings(settings);
+        let usable = values
+            .iter()
+            .all(|(_, value)| !matches!(value, Value::Null));
+        let reconciled = self.settings_pending.get(id).is_some_and(|pending| {
+            if !usable || self.read_started < pending.after {
+                return false;
+            }
+            match pending.phase {
+                SettingsPhase::Confirming(until) => {
+                    Instant::now() < until
+                        && values.iter().any(|(key, value)| {
+                            *key == pending.key.as_str()
+                                && match (value.as_f64(), pending.value.as_f64()) {
+                                    (Some(read), Some(wanted)) => (read - wanted).abs() < 0.01,
+                                    _ => *value == pending.value,
+                                }
+                        })
+                }
+                // A matching but old GET is not a recovery base either.
+                SettingsPhase::Reconciling(after) => self.read_started >= after,
+            }
         });
-        if matches {
+        if reconciled {
             self.settings_pending.remove(id);
         }
+    }
+
+    fn needs_recovery_read(&self) -> bool {
+        self.settings_pending.values().any(|pending| {
+            matches!(pending.phase, SettingsPhase::Reconciling(after) if self.read_started < after)
+        })
     }
 
     fn compose(&self, order: &Order) -> Result<(String, Json), String> {

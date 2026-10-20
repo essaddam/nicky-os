@@ -40,10 +40,14 @@ par une relecture.
   une nouvelle connexion), un à la fois dans l'ordre reçu, au plus 4 appelants en attente,
   jamais après leur instant limite (il faut au moins une seconde devant soi pour partir).
   Les intentions sont recomposées et le plafond est revérifié au départ. Après une
-  modification de `plantSettings`, les ordres qui dépendent des réglages attendent
-  une lecture commencée après l’acquittement et confirmant la valeur demandée ;
-  les couples `old`/`new` utilisent cette lecture. Cette attente conserve la file,
-  l’abandon et l’échéance : un ordre expiré n’est jamais libéré plus tard.
+  modification de `plantSettings`, les ordres dépendants attendent d’abord une lecture
+  postérieure confirmant la valeur demandée. À la limite de confirmation, une notice
+  est émise et le pilote passe en réconciliation : une lecture valide commencée après
+  cette transition fournit la base des nouvelles intentions, même si elle diffère de
+  la demande ancienne. Un GET plus ancien reçu en retard ne suffit pas, même s’il
+  correspond à cette demande. Les couples `old`/`new` utilisent la base réellement
+  relue ; aucun état n’est supposé. La pause quota reste respectée. L’attente conserve
+  FIFO, abandon et échéance : aucun ordre expiré n’est libéré ou rejoué plus tard.
   L'appelant entend « fait » quand le cloud a pris l'ordre ; ce n'est pas celui du
   chauffe-eau : la valeur demandée doit se relire dans les 3 min, sinon la maison est
   prévenue (notice). Pas de réponse à temps : « peut-être parti, jamais renvoyé », et Moli
