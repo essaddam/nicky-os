@@ -16,6 +16,7 @@
 
 mod api;
 mod model;
+mod projection;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -24,7 +25,7 @@ use std::time::{Duration, Instant};
 use anyhow::bail;
 use moli_core::{Device, DeviceId, Value};
 use moli_runtime::orders::{Confirmations, OrderLine};
-use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, SendPermit};
 use serde::Deserialize;
 use serde_json::Value as Json;
 use tokio::task::JoinSet;
@@ -124,6 +125,7 @@ async fn drive(cloud: Cloud, ctx: &mut DriverCtx, pace: Pace) -> anyhow::Result<
     // Whatever is still on its way is dropped here, never sent later.
     link.jobs.abort_all();
     link.line.close();
+    link.confirm.close();
     let Err(e) = result else { return Ok(()) };
     if api::refused(&e) == Some(Refusal::Denied) {
         link.cloud.forget();
@@ -178,11 +180,11 @@ enum Done {
 /// The cloud did not answer an order within its time: maybe taken, never
 /// resent.
 #[derive(Debug)]
-struct NoAnswer;
+struct NoAnswer(String);
 
 impl std::fmt::Display for NoAnswer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("no answer in time")
+        f.write_str(&self.0)
     }
 }
 
@@ -194,6 +196,8 @@ struct Link {
     pace: Pace,
     site: Option<u64>,
     appliances: HashMap<DeviceId, Appliance>,
+    projection: projection::Projection,
+    read_revision: u64,
     /// Appliance id → its manual setting, what an order writes to.
     manual: HashMap<u64, u64>,
     programs: HashMap<DeviceId, Program>,
@@ -202,12 +206,15 @@ struct Link {
     /// Network work in flight: one read and one order at most.
     jobs: JoinSet<Done>,
     reading: bool,
+    read_started: Instant,
     next_read: Instant,
     next_diag: Instant,
     next_load: Instant,
     busy_until: Option<Instant>,
     failures: u32,
     ready: bool,
+    #[cfg(test)]
+    settled: Option<Arc<tokio::sync::Notify>>,
 }
 
 impl Link {
@@ -218,18 +225,23 @@ impl Link {
             pace,
             site: None,
             appliances: HashMap::new(),
+            projection: projection::Projection::default(),
+            read_revision: 0,
             manual: HashMap::new(),
             programs: HashMap::new(),
             line: OrderLine::new(LINE),
             confirm: Confirmations::default(),
             jobs: JoinSet::new(),
             reading: false,
+            read_started: now,
             next_read: now,
             next_diag: now + DIAG,
             next_load: now,
             busy_until: None,
             failures: 0,
             ready: false,
+            #[cfg(test)]
+            settled: None,
         }
     }
 
@@ -240,7 +252,9 @@ impl Link {
     }
 
     async fn serve(&mut self, ctx: &mut DriverCtx) -> anyhow::Result<()> {
+        self.confirm.bind(ctx);
         loop {
+            self.confirm.expire();
             let now = Instant::now();
             // Answers first: due callers never wait on anything.
             let answer_at = self.line.due();
@@ -252,7 +266,11 @@ impl Link {
                 self.next_read
                     .max(self.busy_until.unwrap_or(self.next_read))
             });
-            let wake = answer_at.into_iter().chain(read_at).min();
+            let wake = answer_at
+                .into_iter()
+                .chain(read_at)
+                .chain(self.confirm.next_deadline())
+                .min();
             tokio::select! {
                 () = sleep(wake) => {}
                 Some(done) = self.jobs.join_next() => {
@@ -278,6 +296,8 @@ impl Link {
         let cloud = Arc::clone(&self.cloud);
         let site = self.site;
         self.reading = true;
+        self.read_started = now;
+        self.read_revision = self.projection.revision;
         self.jobs
             .spawn(async move { Done::Read(kind, fetch(&cloud, site, kind).await) });
     }
@@ -295,7 +315,9 @@ impl Link {
                     self.next_diag = now + DIAG;
                 }
                 let unknown = self.publish(ctx, &snapshot);
-                self.confirm.check(ctx);
+                self.projection
+                    .observe(&self.appliances, self.read_revision, kind == Read::Load);
+                self.confirm.observe(ctx, self.read_started);
                 if !self.ready {
                     self.ready = true;
                     ctx.ready();
@@ -315,7 +337,7 @@ impl Link {
                 self.reading = false;
                 self.next_read = now + RETRY;
                 self.refused(&e)?;
-                if api::refused(&e).is_none() {
+                if matches!(api::refused(&e), None | Some(Refusal::Other)) {
                     self.failures += 1;
                     tracing::warn!(instance = %ctx.instance(), error = %e, failures = self.failures, "voltalis read failed");
                     if self.failures >= MAX_READ_FAILURES {
@@ -323,40 +345,86 @@ impl Link {
                     }
                 }
             }
-            Done::Sent(order, result) => {
-                let caller = self.line.sent();
-                let listening = caller.as_ref().is_some_and(|c| !c.abandoned());
-                match result {
-                    Ok(()) => {
-                        self.expect(&order);
-                        if let Some(caller) = caller {
-                            caller.reply(Ok(()));
-                        }
+            Done::Sent(order, result) => self.sent(ctx, &order, result)?,
+        }
+        Ok(())
+    }
+
+    fn sent(
+        &mut self,
+        ctx: &DriverCtx,
+        order: &Order,
+        result: anyhow::Result<()>,
+    ) -> anyhow::Result<()> {
+        let now = Instant::now();
+
+        #[cfg(test)]
+        if let Some(settled) = &self.settled {
+            settled.notify_one();
+        }
+        let caller = self.line.sent();
+        let listening = caller.as_ref().is_some_and(|c| !c.abandoned());
+        match result {
+            Ok(()) => {
+                if let Some(appliance) = self.appliances.get(&order.device.id) {
+                    self.projection.accepted(
+                        &order.device.id,
+                        appliance,
+                        &order.body,
+                        self.pace.confirm,
+                    );
+                } else {
+                    self.projection.invalidate_heaters(&self.appliances);
+                    self.next_load = now;
+                }
+                self.expect(order);
+                if let Some(caller) = caller {
+                    caller.reply(Ok(()));
+                }
+            }
+            Err(e) => {
+                let message = describe(&e);
+                // Maybe taken: what reads back will tell.
+                if e.is::<NoAnswer>()
+                    || matches!(api::refused(&e), Some(Refusal::Busy | Refusal::Other))
+                {
+                    if self.appliances.contains_key(&order.device.id) {
+                        self.projection.uncertain(order.device.id.clone());
+                    } else {
+                        self.projection.invalidate_heaters(&self.appliances);
                     }
-                    Err(e) => {
-                        let message = describe(&e);
-                        // Maybe taken: what reads back will tell.
-                        if e.is::<NoAnswer>() {
-                            self.expect(&order);
-                        }
-                        let unsent = e.is::<api::NotSent>();
-                        match caller {
-                            Some(caller) if listening => caller.reply(Err(message)),
-                            _ if unsent || e.is::<NoAnswer>() => {}
-                            _ => ctx.media_publisher().tell(
+                    self.next_load = now;
+                    self.expect(order);
+                }
+                let unsent = e.is::<api::NotSent>();
+                match caller {
+                    Some(caller) => {
+                        if !listening && !unsent && !e.is::<NoAnswer>() {
+                            ctx.media_publisher().tell(
                                 ctx.instance().as_str(),
                                 moli_i18n::tr!(
                                     "pilotes.voltalis.echec_tardif",
                                     device = order.device.native_name,
                                     cause = message
                                 ),
-                            ),
+                            );
                         }
-                        self.refused(&e)?;
+                        caller.reply(Err(message));
                     }
+                    _ if unsent || e.is::<NoAnswer>() => {}
+                    _ => ctx.media_publisher().tell(
+                        ctx.instance().as_str(),
+                        moli_i18n::tr!(
+                            "pilotes.voltalis.echec_tardif",
+                            device = order.device.native_name,
+                            cause = message
+                        ),
+                    ),
                 }
+                self.refused(&e)?;
             }
         }
+
         Ok(())
     }
 
@@ -462,58 +530,64 @@ impl Link {
             )));
             return;
         }
-        let id = &command.device.id;
-        let encoded = if let Some(appliance) = self.appliances.get(id) {
-            let Some(manual) = self.manual.get(&appliance.id) else {
-                command.reply(Err(moli_i18n::tr!("pilotes.voltalis.sans_reglage")));
-                return;
-            };
-            appliance
-                .order(*manual, &command.key, &command.value)
-                .map(|body| (format!("/api/site/{site}/manualsetting/{manual}"), body))
-        } else if let Some(program) = self.programs.get(id) {
-            match (&*command.key, &command.value) {
-                ("enabled", Value::Bool(on)) => Some((
-                    if program.user {
-                        format!("/api/site/{site}/programming/program/{}", program.id)
-                    } else {
-                        format!("/api/site/{site}/quicksettings/{}/enable", program.id)
-                    },
-                    model::program_order(program, *on),
-                )),
-                _ => None,
-            }
-        } else {
-            None
-        };
-        let Some((path, body)) = encoded else {
-            command.reply(Err(moli_i18n::tr!("pilotes.voltalis.point_non_ecrivable")));
-            return;
-        };
         let order = Order {
-            path,
-            body,
+            path: String::new(),
+            body: Json::Null,
             device: Arc::clone(&command.device),
             key: command.key.to_string(),
             value: command.value.clone(),
         };
+        if self.compose(&order, site).is_none() {
+            self.next_load = now;
+            command.reply(Err(moli_i18n::tr!("pilotes.voltalis.sans_reglage")));
+            return;
+        }
         self.line.push(command, order);
     }
 
-    /// Sends the next order if none is on its way and the cloud is not
-    /// paused; the line has already checked it is awaited and in time.
+    /// Compose at dispatch, after the preceding PUT's outcome is known.
+    fn compose(&self, order: &Order, site: u64) -> Option<(String, Json)> {
+        let id = &order.device.id;
+        if let Some(observed) = self.appliances.get(id) {
+            let appliance = self.projection.source(id, observed)?;
+            let manual = self.manual.get(&appliance.id)?;
+            let body = appliance.order(*manual, &order.key, &order.value)?;
+            Some((format!("/api/site/{site}/manualsetting/{manual}"), body))
+        } else {
+            let program = self.programs.get(id)?;
+            let ("enabled", Value::Bool(on)) = (order.key.as_str(), &order.value) else {
+                return None;
+            };
+            let path = if program.user {
+                format!("/api/site/{site}/programming/program/{}", program.id)
+            } else {
+                format!("/api/site/{site}/quicksettings/{}/enable", program.id)
+            };
+            Some((path, model::program_order(program, *on)))
+        }
+    }
+
     fn pump(&mut self, now: Instant) {
         if self.busy(now).is_some() {
             return;
         }
-        let Some((order, reply_by)) = self.line.to_send() else {
-            return;
-        };
-        let cloud = Arc::clone(&self.cloud);
-        self.jobs.spawn(async move {
-            let result = emit(&cloud, &order, reply_by).await;
-            Done::Sent(order, result)
-        });
+        while let Some((mut order, permit)) = self.line.to_send() {
+            let Some((path, body)) = self.site.and_then(|site| self.compose(&order, site)) else {
+                if let Some(command) = self.line.sent() {
+                    command.reply(Err(moli_i18n::tr!("pilotes.voltalis.sans_reglage")));
+                }
+                self.next_load = now;
+                continue;
+            };
+            order.path = path;
+            order.body = body;
+            let cloud = Arc::clone(&self.cloud);
+            self.jobs.spawn(async move {
+                let result = emit(&cloud, &order, &permit).await;
+                Done::Sent(order, result)
+            });
+            break;
+        }
     }
 }
 
@@ -556,22 +630,20 @@ async fn fetch(cloud: &Cloud, site: Option<u64>, kind: Read) -> anyhow::Result<S
 /// One order to the cloud, never after `reply_by`: refused unsent if the
 /// task starts late, its answer given up at that instant (maybe taken
 /// then, never sent again).
-async fn emit(cloud: &Cloud, order: &Order, reply_by: Instant) -> anyhow::Result<()> {
-    if Instant::now() >= reply_by {
-        return Err(api::NotSent.into());
+async fn emit(cloud: &Cloud, order: &Order, permit: &SendPermit) -> anyhow::Result<()> {
+    let result = cloud.put_if(&order.path, &order.body, permit).await;
+    match result {
+        Err(e) if permit.emitted() && api::refused(&e).is_none() => {
+            Err(NoAnswer(format!("{e:#}")).into())
+        }
+        other => other,
     }
-    tokio::time::timeout_at(
-        reply_by.into(),
-        cloud.put(&order.path, &order.body, reply_by),
-    )
-    .await
-    .unwrap_or_else(|_| Err(NoAnswer.into()))
 }
 
 /// What an order's failure means to its caller.
 fn describe(e: &anyhow::Error) -> String {
     if e.is::<NoAnswer>() {
-        return moli_i18n::tr!("pilotes.ordres.sans_reponse");
+        return format!("{}: {e}", moli_i18n::tr!("pilotes.ordres.sans_reponse"));
     }
     if e.is::<api::NotSent>() {
         return moli_i18n::tr!("pilotes.ordres.non_envoye");

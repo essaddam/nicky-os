@@ -23,6 +23,7 @@ const HUMAN: Actor = Actor {
 #[derive(Debug)]
 struct House {
     mode: &'static str,
+    initial_on: bool,
     /// Orders the relay received.
     orders: Arc<AtomicU32>,
 }
@@ -79,7 +80,11 @@ impl Driver for House {
                 "state",
                 Value::from(self.mode),
             );
-            ctx.set_state(&ctx.device_id("relais"), "state", Value::Bool(false));
+            ctx.set_state(
+                &ctx.device_id("relais"),
+                "state",
+                Value::Bool(self.initial_on),
+            );
             ctx.ready();
             while let Some(cmd) = ctx.next_command().await {
                 if cmd.device.id == ctx.device_id("relais") {
@@ -122,6 +127,13 @@ fn drafts() -> Vec<Automation> {
 }
 
 async fn setup(mode: &'static str) -> (Hub, Automations, CancellationToken, Arc<AtomicU32>) {
+    setup_with_relay(mode, false).await
+}
+
+async fn setup_with_relay(
+    mode: &'static str,
+    initial_on: bool,
+) -> (Hub, Automations, CancellationToken, Arc<AtomicU32>) {
     let hub = Hub::new(HubOptions::default()).unwrap();
     let cancel = CancellationToken::new();
     let orders = Arc::new(AtomicU32::new(0));
@@ -130,6 +142,7 @@ async fn setup(mode: &'static str) -> (Hub, Automations, CancellationToken, Arc<
         InstanceId::from("maison"),
         Arc::new(House {
             mode,
+            initial_on,
             orders: Arc::clone(&orders),
         }),
         cancel.clone(),
@@ -222,12 +235,18 @@ async fn they_do_what_the_three_did() {
 
 #[tokio::test]
 async fn coming_up_does_nothing_by_itself() {
-    // The selector was left on « Automatique » and the relay is open: once
-    // approved and running, the drafts wait for a choice or a time, as HA did.
-    let (hub, autos, cancel, orders) = setup("Automatique").await;
-    approve_all(&autos).await;
-    tokio::time::sleep(Duration::from_millis(400)).await;
-    assert_eq!(orders.load(SeqCst), 0, "no order to the relay");
-    assert_eq!(relay(&hub), Some(Value::Bool(false)));
-    cancel.cancel();
+    for mode in ["Éteint", "Automatique", "Forcer"] {
+        for initial_on in [false, true] {
+            let (hub, autos, cancel, orders) = setup_with_relay(mode, initial_on).await;
+            approve_all(&autos).await;
+            tokio::time::sleep(Duration::from_millis(400)).await;
+            assert_eq!(
+                orders.load(SeqCst),
+                0,
+                "no startup order: {mode}/{initial_on}"
+            );
+            assert_eq!(relay(&hub), Some(Value::Bool(initial_on)));
+            cancel.cancel();
+        }
+    }
 }

@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 
 use moli_core::{Device, DeviceId, Value};
 
-use crate::{CommandRequest, DriverCtx};
+use crate::{CommandRequest, DriverCtx, SendPermit};
 
 /// The caller hears back this long before the hub stops waiting.
 pub const REPLY_MARGIN: Duration = Duration::from_millis(400);
@@ -43,6 +43,7 @@ struct Sending {
     /// `None` once its caller heard « no answer in time ».
     command: Option<CommandRequest>,
     reply_by: Instant,
+    permit: SendPermit,
 }
 
 impl<O> OrderLine<O> {
@@ -100,7 +101,7 @@ impl<O> OrderLine<O> {
     /// still awaited with time left ([`MIN_LEFT`]), with the instant it must
     /// not leave after (the sending task checks it again when it starts,
     /// and gives up the wait for an answer then).
-    pub fn to_send(&mut self) -> Option<(O, Instant)> {
+    pub fn to_send(&mut self) -> Option<(O, SendPermit)> {
         if self.sending.is_some() {
             return None;
         }
@@ -110,11 +111,13 @@ impl<O> OrderLine<O> {
             order,
             reply_by,
         } = self.waiting.pop_front()?;
+        let permit = command.send_permit(reply_by);
         self.sending = Some(Sending {
             command: Some(command),
             reply_by,
+            permit: permit.clone(),
         });
-        Some((order, reply_by))
+        Some((order, permit))
     }
 
     /// Answers the callers whose time came: queued orders that can no
@@ -127,7 +130,11 @@ impl<O> OrderLine<O> {
             && now >= sending.reply_by
             && let Some(command) = sending.command.take()
         {
-            command.reply(Err(moli_i18n::tr!("pilotes.ordres.sans_reponse")));
+            command.reply(Err(if sending.permit.emitted() {
+                moli_i18n::tr!("pilotes.ordres.sans_reponse")
+            } else {
+                moli_i18n::tr!("pilotes.ordres.non_envoye")
+            }));
         }
         let on_its_way = self
             .sending
@@ -156,8 +163,14 @@ impl<O> OrderLine<O> {
                 .command
                 .reply(Err(moli_i18n::tr!("pilotes.ordres.non_envoye")));
         }
-        if let Some(command) = self.sending.take().and_then(|s| s.command) {
-            command.reply(Err(moli_i18n::tr!("pilotes.ordres.liaison_perdue")));
+        if let Some(sending) = self.sending.take()
+            && let Some(command) = sending.command
+        {
+            command.reply(Err(if sending.permit.emitted() {
+                moli_i18n::tr!("pilotes.ordres.liaison_perdue")
+            } else {
+                moli_i18n::tr!("pilotes.ordres.non_envoye")
+            }));
         }
     }
 
@@ -186,6 +199,7 @@ impl<O> OrderLine<O> {
 #[derive(Debug, Default)]
 pub struct Confirmations {
     wants: Vec<Want>,
+    publisher: Option<(crate::MediaPublisher, String)>,
 }
 
 #[derive(Debug)]
@@ -212,6 +226,7 @@ impl Confirmations {
             .retain(|w| !(w.device == device.id && w.key == key));
         if self.wants.len() >= MAX_WANTS {
             let dropped = self.wants.remove(0);
+            Self::tell(self.publisher.as_ref(), &dropped, Instant::now());
             tracing::warn!(device = %dropped.device, key = %dropped.key, "confirmation no longer followed");
         }
         let now = Instant::now();
@@ -234,33 +249,71 @@ impl Confirmations {
         !self.wants.is_empty()
     }
 
-    /// After a read: values read back are done; those still not there at
-    /// their limit are told to the household (the order is never resent).
-    pub fn check(&mut self, ctx: &DriverCtx) {
-        let now = Instant::now();
-        let mut late = Vec::new();
+    /// Bind notice delivery to the lifetime of the link. Drop also reports
+    /// pending confirmations when a supervisor cancels the driver's future.
+    pub fn bind(&mut self, ctx: &DriverCtx) {
+        self.publisher = Some((ctx.media_publisher(), ctx.instance().to_string()));
+    }
+
+    #[must_use]
+    pub fn next_deadline(&self) -> Option<Instant> {
+        self.wants.iter().map(|w| w.until).min()
+    }
+
+    /// Only a read started after the order's acknowledgement may confirm it.
+    pub fn observe(&mut self, ctx: &DriverCtx, read_started: Instant) {
+        self.bind(ctx);
         self.wants.retain(|w| {
-            if ctx
-                .current(&w.device, &w.key)
-                .is_some_and(|v| same(&v, &w.value))
-            {
-                return false;
-            }
-            if now >= w.until {
-                late.push(moli_i18n::tr!(
-                    "pilotes.ordres.non_confirme",
-                    device = w.device_name,
-                    point = w.point_name,
-                    value = shown(&w.value),
-                    seconds = now.duration_since(w.asked).as_secs()
-                ));
-                return false;
-            }
-            true
+            read_started < w.asked
+                || !ctx
+                    .current(&w.device, &w.key)
+                    .is_some_and(|v| same(&v, &w.value))
         });
-        for message in late {
-            ctx.media_publisher().tell(ctx.instance().as_str(), message);
+    }
+
+    /// Expire independently of the availability of the remote service.
+    pub fn expire(&mut self) {
+        let now = Instant::now();
+        let mut pending = Vec::new();
+        for want in self.wants.drain(..) {
+            if now >= want.until {
+                Self::tell(self.publisher.as_ref(), &want, now);
+            } else {
+                pending.push(want);
+            }
         }
+        self.wants = pending;
+    }
+
+    /// Compatibility for callers whose complete read happened just now.
+    pub fn check(&mut self, ctx: &DriverCtx) {
+        self.observe(ctx, Instant::now());
+        self.expire();
+    }
+
+    pub fn close(&mut self) {
+        for want in self.wants.drain(..) {
+            Self::tell(self.publisher.as_ref(), &want, Instant::now());
+        }
+    }
+
+    fn tell(publisher: Option<&(crate::MediaPublisher, String)>, want: &Want, now: Instant) {
+        let message = moli_i18n::tr!(
+            "pilotes.ordres.non_confirme",
+            device = want.device_name,
+            point = want.point_name,
+            value = shown(&want.value),
+            seconds = now.saturating_duration_since(want.asked).as_secs()
+        );
+        if let Some((publisher, instance)) = publisher {
+            publisher.tell(instance, message);
+        }
+    }
+}
+
+impl Drop for Confirmations {
+    fn drop(&mut self) {
+        self.close();
     }
 }
 
@@ -312,7 +365,7 @@ mod tests {
             key: "on".into(),
             value: Value::Bool(true),
             deadline: Instant::now() + within,
-            reply: tx,
+            reply: Arc::new(std::sync::Mutex::new(Some(tx))),
             claim: Arc::new(AtomicU8::new(Claim::TAKEN)),
         };
         (command, rx)
@@ -395,7 +448,9 @@ mod tests {
         let mut line = OrderLine::new(4);
         let (a, mut ra) = order(REPLY_MARGIN + MIN_LEFT + Duration::from_millis(20));
         line.push(a, 1);
-        let (_, reply_by) = line.to_send().unwrap();
+        let (_, permit) = line.to_send().unwrap();
+        let reply_by = permit.deadline();
+        assert!(permit.begin_send());
         assert!(line.due().is_some_and(|at| at == reply_by));
         std::thread::sleep(MIN_LEFT + Duration::from_millis(30));
         assert_eq!(line.due(), None);
@@ -416,10 +471,74 @@ mod tests {
         let (b, mut rb) = order(Duration::from_secs(5));
         line.push(a, 1);
         line.push(b, 2);
-        line.to_send().unwrap();
+        let (_, permit) = line.to_send().unwrap();
+        assert!(permit.begin_send());
         line.close();
         assert!(answer(&mut ra).unwrap().unwrap_err().contains("peut-être"));
         assert!(answer(&mut rb).unwrap().unwrap_err().contains("non envoyé"));
+    }
+
+    #[test]
+    fn detached_permit_tracks_caller_and_deadline_until_emission() {
+        let mut line = OrderLine::new(4);
+        let (command, reply) = order(Duration::from_secs(5));
+        line.push(command, ());
+        let ((), permit) = line.to_send().unwrap();
+        assert!(permit.wanted());
+        drop(reply);
+        assert!(!permit.wanted());
+        assert!(!permit.begin_send());
+        assert!(!permit.emitted());
+    }
+
+    #[test]
+    fn confirmations_ignore_old_reads_expire_and_report_on_drop_once() {
+        let hub = crate::Hub::new(crate::HubOptions::default()).unwrap();
+        let mut events = hub.subscribe();
+        let instance = InstanceId::from("cloud");
+        let commands = hub.register_driver(&instance, "test", Arc::from("test"));
+        let ctx = DriverCtx::new(
+            hub.clone(),
+            instance,
+            commands,
+            tokio_util::sync::CancellationToken::new(),
+        );
+        let (command, _reply) = order(Duration::from_secs(5));
+        let mut device = (*command.device).clone();
+        device.points.push(moli_core::PointSpec {
+            key: "on".into(),
+            label: "on".into(),
+            kind: moli_core::Kind::Binary,
+            access: moli_core::Access {
+                read: true,
+                write: true,
+            },
+            unit: None,
+            semantic: moli_core::Semantic::Control,
+        });
+        ctx.upsert_device(device.clone());
+        ctx.set_state(&device.id, "on", Value::Bool(true));
+        let started = Instant::now();
+        let mut confirm = Confirmations::default();
+        confirm.bind(&ctx);
+        confirm.expect(&device, "on", Value::Bool(true), Duration::from_secs(120));
+        confirm.observe(&ctx, started);
+        assert!(confirm.watching(), "a pre-order read is not confirmation");
+        confirm.observe(&ctx, Instant::now());
+        assert!(!confirm.watching());
+        confirm.expect(&device, "on", Value::Bool(false), Duration::ZERO);
+        assert!(confirm.next_deadline().is_some());
+        confirm.expire();
+        assert!(
+            !confirm.watching(),
+            "expiry does not depend on another read"
+        );
+        confirm.expect(&device, "on", Value::Bool(false), Duration::from_secs(120));
+        drop(confirm);
+        let count = std::iter::from_fn(|| events.try_recv().ok())
+            .filter(|event| matches!(event, moli_core::Event::Notice { .. }))
+            .count();
+        assert_eq!(count, 2, "one expiry notice and one pending-at-drop notice");
     }
 
     #[test]

@@ -20,6 +20,12 @@ tokio.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+rcgen = { version = "=0.13.2", default-features = false, features = ["ring"] }
+rustls.workspace = true
+tokio-rustls.workspace = true
+hyper = { workspace = true, features = ["server"] }
+hyper-util.workspace = true
+moli-net = { workspace = true, features = ["contract-test"] }
 tokio-util.workspace = true
 
 [lints]

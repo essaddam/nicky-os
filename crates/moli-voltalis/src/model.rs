@@ -251,7 +251,7 @@ impl Appliance {
                     },
                     true,
                     None,
-                    Semantic::Config,
+                    Semantic::Control,
                 ),
                 setpoint(true),
                 heating(),
@@ -429,7 +429,11 @@ fn setpoint(write: bool) -> PointSpec {
         },
         write,
         Some(Unit::Celsius),
-        Semantic::Config,
+        if write {
+            Semantic::Control
+        } else {
+            Semantic::Config
+        },
     )
 }
 

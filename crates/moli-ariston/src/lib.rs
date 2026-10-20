@@ -24,7 +24,7 @@ use std::time::{Duration, Instant};
 use anyhow::bail;
 use moli_core::{Device, DeviceId, Value};
 use moli_runtime::orders::{Confirmations, OrderLine};
-use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, SendPermit};
 use serde::Deserialize;
 use serde_json::Value as Json;
 use tokio::task::JoinSet;
@@ -125,6 +125,7 @@ async fn drive(cloud: Cloud, ctx: &mut DriverCtx, pace: Pace) -> anyhow::Result<
     // Whatever is still on its way is dropped here, never sent later.
     link.jobs.abort_all();
     link.line.close();
+    link.confirm.close();
     let Err(e) = result else { return Ok(()) };
     if api::refused(&e) == Some(Refusal::Denied) {
         link.cloud.forget();
@@ -184,11 +185,11 @@ enum Done {
 /// The cloud did not answer an order within its time: maybe taken, never
 /// resent.
 #[derive(Debug)]
-struct NoAnswer;
+struct NoAnswer(String);
 
 impl std::fmt::Display for NoAnswer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("no answer in time")
+        f.write_str(&self.0)
     }
 }
 
@@ -205,12 +206,15 @@ struct Link {
     /// Network work in flight: one read and one order at most.
     jobs: JoinSet<Done>,
     reading: bool,
+    read_started: Instant,
     next_read: Instant,
     next_slow: Instant,
     next_list: Instant,
     busy_until: Option<Instant>,
     failures: u32,
     ready: bool,
+    #[cfg(test)]
+    settled: Option<Arc<tokio::sync::Notify>>,
 }
 
 impl Link {
@@ -224,12 +228,15 @@ impl Link {
             confirm: Confirmations::default(),
             jobs: JoinSet::new(),
             reading: false,
+            read_started: now,
             next_read: now,
             next_slow: now,
             next_list: now,
             busy_until: None,
             failures: 0,
             ready: false,
+            #[cfg(test)]
+            settled: None,
         }
     }
 
@@ -240,7 +247,9 @@ impl Link {
     }
 
     async fn serve(&mut self, ctx: &mut DriverCtx) -> anyhow::Result<()> {
+        self.confirm.bind(ctx);
         loop {
+            self.confirm.expire();
             let now = Instant::now();
             // Answers first: due callers never wait on anything.
             let answer_at = self.line.due();
@@ -252,7 +261,11 @@ impl Link {
                 self.next_read
                     .max(self.busy_until.unwrap_or(self.next_read))
             });
-            let wake = answer_at.into_iter().chain(read_at).min();
+            let wake = answer_at
+                .into_iter()
+                .chain(read_at)
+                .chain(self.confirm.next_deadline())
+                .min();
             tokio::select! {
                 () = sleep(wake) => {}
                 Some(done) = self.jobs.join_next() => {
@@ -278,6 +291,7 @@ impl Link {
         let cloud = Arc::clone(&self.cloud);
         let known: Vec<Heater> = self.heaters.values().map(|(h, _)| h.clone()).collect();
         self.reading = true;
+        self.read_started = now;
         self.jobs
             .spawn(async move { Done::Read(kind, fetch(&cloud, known, kind).await) });
     }
@@ -295,7 +309,7 @@ impl Link {
                     self.next_slow = now + SLOW;
                 }
                 self.publish(ctx, snapshot);
-                self.confirm.check(ctx);
+                self.confirm.observe(ctx, self.read_started);
                 if !self.ready {
                     self.ready = true;
                     ctx.ready();
@@ -311,7 +325,7 @@ impl Link {
                 self.reading = false;
                 self.next_read = now + RETRY.min(self.pace.idle);
                 self.refused(&e)?;
-                if api::refused(&e).is_none() {
+                if matches!(api::refused(&e), None | Some(Refusal::Other)) {
                     self.failures += 1;
                     tracing::warn!(instance = %ctx.instance(), error = %e, failures = self.failures, "ariston read failed");
                     if self.failures >= MAX_READ_FAILURES {
@@ -319,40 +333,67 @@ impl Link {
                     }
                 }
             }
-            Done::Sent(order, result) => {
-                let caller = self.line.sent();
-                let listening = caller.as_ref().is_some_and(|c| !c.abandoned());
-                match result {
-                    Ok(()) => {
-                        self.expect(&order);
-                        if let Some(caller) = caller {
-                            caller.reply(Ok(()));
-                        }
-                    }
-                    Err(e) => {
-                        let message = describe(&e);
-                        // Maybe taken: what reads back will tell.
-                        if e.is::<NoAnswer>() {
-                            self.expect(&order);
-                        }
-                        let unsent = e.is::<api::NotSent>();
-                        match caller {
-                            Some(caller) if listening => caller.reply(Err(message)),
-                            _ if unsent || e.is::<NoAnswer>() => {}
-                            _ => ctx.media_publisher().tell(
+            Done::Sent(order, result) => self.sent(ctx, &order, result)?,
+        }
+        Ok(())
+    }
+
+    fn sent(
+        &mut self,
+        ctx: &DriverCtx,
+        order: &Order,
+        result: anyhow::Result<()>,
+    ) -> anyhow::Result<()> {
+        #[cfg(test)]
+        if let Some(settled) = &self.settled {
+            settled.notify_one();
+        }
+        let caller = self.line.sent();
+        let listening = caller.as_ref().is_some_and(|c| !c.abandoned());
+        match result {
+            Ok(()) => {
+                self.expect(order);
+                if let Some(caller) = caller {
+                    caller.reply(Ok(()));
+                }
+            }
+            Err(e) => {
+                let message = describe(&e);
+                // Maybe taken: what reads back will tell.
+                if e.is::<NoAnswer>()
+                    || matches!(api::refused(&e), Some(Refusal::Busy | Refusal::Other))
+                {
+                    self.expect(order);
+                }
+                let unsent = e.is::<api::NotSent>();
+                match caller {
+                    Some(caller) => {
+                        if !listening && !unsent && !e.is::<NoAnswer>() {
+                            ctx.media_publisher().tell(
                                 ctx.instance().as_str(),
                                 moli_i18n::tr!(
                                     "pilotes.ariston.echec_tardif",
                                     device = order.device.native_name,
                                     cause = message
                                 ),
-                            ),
+                            );
                         }
-                        self.refused(&e)?;
+                        caller.reply(Err(message));
                     }
+                    _ if unsent || e.is::<NoAnswer>() => {}
+                    _ => ctx.media_publisher().tell(
+                        ctx.instance().as_str(),
+                        moli_i18n::tr!(
+                            "pilotes.ariston.echec_tardif",
+                            device = order.device.native_name,
+                            cause = message
+                        ),
+                    ),
                 }
+                self.refused(&e)?;
             }
         }
+
         Ok(())
     }
 
@@ -469,12 +510,12 @@ impl Link {
         if self.busy(now).is_some() {
             return;
         }
-        let Some((order, reply_by)) = self.line.to_send() else {
+        let Some((order, permit)) = self.line.to_send() else {
             return;
         };
         let cloud = Arc::clone(&self.cloud);
         self.jobs.spawn(async move {
-            let result = emit(&cloud, &order, reply_by).await;
+            let result = emit(&cloud, &order, &permit).await;
             Done::Sent(order, result)
         });
     }
@@ -535,22 +576,20 @@ async fn fetch(cloud: &Cloud, known: Vec<Heater>, kind: Read) -> anyhow::Result<
 /// One order to the cloud, never after `reply_by`: refused unsent if the
 /// task starts late, its answer given up at that instant (maybe taken
 /// then, never sent again).
-async fn emit(cloud: &Cloud, order: &Order, reply_by: Instant) -> anyhow::Result<()> {
-    if Instant::now() >= reply_by {
-        return Err(api::NotSent.into());
+async fn emit(cloud: &Cloud, order: &Order, permit: &SendPermit) -> anyhow::Result<()> {
+    let result = cloud.post_if(&order.path, &order.body, permit).await;
+    match result {
+        Err(e) if permit.emitted() && api::refused(&e).is_none() => {
+            Err(NoAnswer(format!("{e:#}")).into())
+        }
+        other => other,
     }
-    tokio::time::timeout_at(
-        reply_by.into(),
-        cloud.post(&order.path, &order.body, reply_by),
-    )
-    .await
-    .unwrap_or_else(|_| Err(NoAnswer.into()))
 }
 
 /// What an order's failure means to its caller.
 fn describe(e: &anyhow::Error) -> String {
     if e.is::<NoAnswer>() {
-        return moli_i18n::tr!("pilotes.ordres.sans_reponse");
+        return format!("{}: {e}", moli_i18n::tr!("pilotes.ordres.sans_reponse"));
     }
     if e.is::<api::NotSent>() {
         return moli_i18n::tr!("pilotes.ordres.non_envoye");

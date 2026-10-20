@@ -735,6 +735,83 @@ mod tests {
     }
 
     #[test]
+    fn tank_recipe_windows_and_all_four_clock_triggers_match() {
+        let recipe: Json = serde_json::from_str(include_str!(
+            "../../../integrations/helpers/recettes/ballon.json"
+        ))
+        .unwrap();
+        let automatic: Automation =
+            serde_json::from_value(recipe["automations"][0].clone()).unwrap();
+        let hours: Vec<_> = automatic
+            .graph
+            .triggers()
+            .filter_map(|node| match &node.step {
+                Step::AtTime { at, days } => {
+                    assert!(days.is_empty());
+                    Some((node.id.as_str(), at.as_str()))
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            hours,
+            [
+                ("h0120", "01:20"),
+                ("h0720", "07:20"),
+                ("h1150", "11:50"),
+                ("h1350", "13:50")
+            ]
+        );
+        for (id, _) in hours {
+            assert!(
+                automatic
+                    .graph
+                    .edges
+                    .iter()
+                    .any(|edge| edge.from == id && edge.to == "automatique")
+            );
+        }
+        let node = automatic
+            .graph
+            .nodes
+            .iter()
+            .find(|node| node.id == "creuses")
+            .unwrap();
+        let Step::If { rules, all } = &node.step else {
+            panic!("missing time condition")
+        };
+        assert!(!all, "off-peak windows are alternatives");
+        for (at, expected) in [
+            ("01:19", false),
+            ("01:20", true),
+            ("07:19", true),
+            ("07:20", false),
+            ("11:49", false),
+            ("11:50", true),
+            ("13:49", true),
+            ("13:50", false),
+        ] {
+            let heat = rules.iter().any(|rule| {
+                let Rule::Time {
+                    after,
+                    before,
+                    days,
+                } = rule
+                else {
+                    panic!("expected a time window")
+                };
+                assert!(days.is_empty());
+                in_window(
+                    minutes_of(at).unwrap(),
+                    after.as_deref().and_then(minutes_of),
+                    before.as_deref().and_then(minutes_of),
+                )
+            });
+            assert_eq!(heat, expected, "window at {at}");
+        }
+    }
+
+    #[test]
     fn values_compare_loosely() {
         assert!(same(&Value::Text("ON".into()), &Json::Bool(true)));
         assert!(same(&Value::Bool(false), &Json::String("off".into())));

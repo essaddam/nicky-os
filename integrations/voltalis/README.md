@@ -13,7 +13,9 @@ compte (humain).
   prêts à l'emploi (`quicksettings`), préréglages (`ECO`, `CONFORT`, `TEMPERATURE`,
   `HORS_GEL`, `NORMAL`), bornes de consigne 7 à 24 °C.
 - Un ordre à un radiateur est son **réglage manuel entier** (`PUT manualsetting/{id}`),
-  rempli depuis la dernière lecture, comme le fait ce client.
+  composé au départ depuis la dernière lecture et les réglages précédents acceptés.
+  Cette projection interne ne devient jamais une mesure publiée. Une réponse incertaine
+  ou un changement de programme exige un nouveau relevé complet avant un PUT dépendant.
 
 ## Ce que fait le pilote
 
@@ -25,9 +27,11 @@ compte (humain).
 - **Chauffe-eau** (`WATER_HEATER`) : `setpoint`, `heating`, `program`, **en lecture
   seulement**.
 - **Programme** : un appareil par programme, point `enabled`.
-- Sémantique : `mode` et `enabled` sont des commandes (`control`) : couper le chauffage ou
-  changer le programme de toute la maison, un agent le demande à un humain. Consigne et
-  préréglage sont des réglages (`config`) ; la garde des pièces protégées s'applique à tous.
+- Sémantique : `mode`, `preset`, `setpoint` écrivables et `enabled` sont des commandes
+  (`control`). Une consigne ou un préréglage active aussi le régime manuel : la garde
+  existante juge cet effet avant le PUT selon l’origine et le contexte. Les droits de
+  l’interface authentifiée et des automatismes validés restent ceux du hub ; le
+  chauffe-eau reste en lecture seule.
 - Relevés : appareils et programmes toutes les 2 min (toutes les 10 s tant qu'un ordre attend
   sa confirmation), joignabilité toutes les 10 min, tout (site, réglages manuels) toutes les
   30 min ; trois relevés ratés de suite relancent la liaison (appareils hors ligne entre-temps).
@@ -36,7 +40,9 @@ compte (humain).
   jamais après leur instant limite (il faut au moins une seconde devant soi pour partir).
   L'appelant entend « fait » quand le cloud a pris l'ordre ; ce « fait » n'est pas celui du
   radiateur : la valeur demandée doit se relire dans les 2 min, sinon la maison est prévenue
-  (notice). Pas de réponse à temps : « peut-être parti, jamais renvoyé », et Moli vérifie quand
+  (notice), même en pause quota ; une fermeture de liaison signale les attentes restantes.
+  L’abandon et l’échéance sont revérifiés après login, TCP et TLS, avant émission.
+  Une fois la requête transférée à HTTP, sa réponse bornée est conservée. Pas de réponse à temps : « peut-être parti, jamais renvoyé », et Moli vérifie quand
   même à la relecture.
 - Session : gardée à travers les redémarrages du pilote ; un jeton refusé (401) la fait
   renouveler, trois sessions refusées de suite ou des identifiants refusés mettent le pilote

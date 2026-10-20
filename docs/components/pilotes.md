@@ -631,7 +631,7 @@ host = "192.168.1.x"        # local seulement
   joignabilité (`autodiag`) toutes les 10 min, tout toutes les 30 min.
 - **Configuration** : aucune option. **Secrets** : `username`, `password` du compte (humain).
 - **Points** : radiateur : `mode` (`programme`, `manuel`, `arret` ; `control`), `preset`
-  (`eco`, `confort`, `temperature`, `hors_gel`, `normal`), `setpoint` (7 à 24 °C), `heating`,
+  (`eco`, `confort`, `temperature`, `hors_gel`, `normal` ; `control`), `setpoint` (7 à 24 °C ; `control`), `heating`,
   `program` ; chauffe-eau : `setpoint`, `heating`, `program` (aucune écriture : le client HA
   n'en implémente aucune) ; programme : `enabled` (`control`).
 - **Ordres** : le réglage manuel entier (`PUT manualsetting/{id}`), par la file commune

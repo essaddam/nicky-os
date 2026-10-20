@@ -15,6 +15,8 @@ use tokio::sync::broadcast;
 
 use super::*;
 
+mod p1;
+
 const TEST_PACE: Pace = Pace {
     idle: Duration::from_millis(200),
     follow: Duration::from_millis(30),
@@ -42,6 +44,7 @@ struct Fake {
     slow_post: Option<Duration>,
     post_status: Option<u16>,
     login_status: Option<u16>,
+    read_status: Mutex<Option<u16>>,
 }
 
 impl Default for Fake {
@@ -55,6 +58,7 @@ impl Default for Fake {
             slow_post: None,
             post_status: None,
             login_status: None,
+            read_status: Mutex::default(),
         }
     }
 }
@@ -92,6 +96,9 @@ impl Fake {
                 self.obey(path, &body);
             }
             return (200, Json::Null);
+        }
+        if let Some(status) = *self.read_status.lock().unwrap() {
+            return (status, Json::Null);
         }
         let base = format!("velis/medPlantData/{GATEWAY}");
         let answer = match path {

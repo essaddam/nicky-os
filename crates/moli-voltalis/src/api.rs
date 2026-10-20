@@ -12,6 +12,7 @@ use anyhow::Context as _;
 use http::{Method, Request, StatusCode};
 use http_body_util::Full;
 use moli_net::Body;
+use moli_runtime::SendPermit;
 use serde_json::{Value as Json, json};
 
 const HOST: &str = "api.myvoltalis.com";
@@ -154,6 +155,8 @@ pub struct Cloud {
     sessions: Arc<Sessions>,
     #[cfg(test)]
     pub(crate) exchange: Option<Exchange>,
+    #[cfg(test)]
+    pub(crate) transport: Option<Arc<moli_net::contract_test::Context>>,
 }
 
 impl std::fmt::Debug for Cloud {
@@ -171,6 +174,8 @@ impl Cloud {
             sessions,
             #[cfg(test)]
             exchange: None,
+            #[cfg(test)]
+            transport: None,
         }
     }
 
@@ -186,15 +191,27 @@ impl Cloud {
     }
 
     pub async fn get(&self, path: &str) -> anyhow::Result<Json> {
-        self.call(Method::GET, path, None, None).await
+        self.call(Method::GET, path, None, None, None).await
     }
 
     /// Hands an order to the cloud, **once** (never retried, whatever
     /// happens), never after `deadline` (checked again after a login).
     pub async fn put(&self, path: &str, body: &Json, deadline: Instant) -> anyhow::Result<()> {
-        self.call(Method::PUT, path, Some(body), Some(deadline))
+        self.call(Method::PUT, path, Some(body), Some(deadline), None)
             .await
             .map(drop)
+    }
+
+    pub async fn put_if(&self, path: &str, body: &Json, permit: &SendPermit) -> anyhow::Result<()> {
+        self.call(
+            Method::PUT,
+            path,
+            Some(body),
+            Some(permit.deadline()),
+            Some(permit),
+        )
+        .await
+        .map(drop)
     }
 
     async fn call(
@@ -203,11 +220,18 @@ impl Cloud {
         path: &str,
         body: Option<&Json>,
         deadline: Option<Instant>,
+        permit: Option<&SendPermit>,
     ) -> anyhow::Result<Json> {
         in_time(deadline)?;
+        if permit.is_some_and(|p| !p.wanted()) {
+            return Err(NotSent.into());
+        }
         let (token, generation) = self.access().await?;
         // Logging in may have taken a while: an order out of time stays home.
         in_time(deadline)?;
+        if permit.is_some_and(|p| !p.wanted()) {
+            return Err(NotSent.into());
+        }
         let builder = Request::builder()
             .method(method)
             .uri(path)
@@ -217,7 +241,7 @@ impl Cloud {
             Some(body) => moli_net::json_body(builder, body)?,
             None => moli_net::empty(builder)?,
         };
-        let (status, body) = self.exchange(request).await?;
+        let (status, body) = self.exchange_if(request, permit).await?;
         let result = answer(status, &body);
         match &result {
             Err(e) if refused(e) == Some(Refusal::Session) => self.settle(generation, true),
@@ -274,12 +298,56 @@ impl Cloud {
     }
 
     async fn exchange(&self, request: Request<Full<Body>>) -> anyhow::Result<(StatusCode, Body)> {
+        self.exchange_if(request, None).await
+    }
+
+    async fn exchange_if(
+        &self,
+        request: Request<Full<Body>>,
+        permit: Option<&SendPermit>,
+    ) -> anyhow::Result<(StatusCode, Body)> {
         #[cfg(test)]
         if let Some(exchange) = &self.exchange {
+            if permit.is_some_and(|p| !p.begin_send()) {
+                return Err(NotSent.into());
+            }
             return exchange(request).await;
         }
-        // One connection per request, never retried by `web`.
-        moli_net::web(HOST, 443, true, request, LIMIT, MAX_ANSWER).await
+        let wanted = || permit.is_none_or(SendPermit::wanted);
+        let begin_send = || permit.is_none_or(SendPermit::begin_send);
+        let exchange = moli_net::web_if(
+            HOST,
+            443,
+            true,
+            request,
+            LIMIT,
+            MAX_ANSWER,
+            moli_net::WebGuard {
+                wanted: &wanted,
+                begin_send: &begin_send,
+            },
+        );
+        // One connection per request, never retried.
+        #[cfg(test)]
+        if let Some(context) = &self.transport {
+            // Scope is established in the actual worker, including logins.
+            return moli_net::contract_test::scope(Arc::clone(context), exchange)
+                .await
+                .map_err(|e| {
+                    if e.is::<moli_net::NotSent>() {
+                        NotSent.into()
+                    } else {
+                        e
+                    }
+                });
+        }
+        exchange.await.map_err(|e| {
+            if e.is::<moli_net::NotSent>() {
+                NotSent.into()
+            } else {
+                e
+            }
+        })
     }
 }
 

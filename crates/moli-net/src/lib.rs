@@ -5,6 +5,9 @@
 //! time (trust on first use) and enforced afterwards: another machine
 //! answering on that address is refused.
 
+#[cfg(feature = "contract-test")]
+pub mod contract_test;
+
 pub mod lan;
 mod legacy;
 mod once;
@@ -730,6 +733,58 @@ pub async fn web(
         .with_context(|| format!("{host} did not answer in time"))?
 }
 
+/// Live authorization for an HTTP order. The final callback also records
+/// the conservative emission boundary; it must be synchronous.
+pub struct WebGuard<'a> {
+    pub wanted: &'a (dyn Fn() -> bool + Send + Sync),
+    pub begin_send: &'a (dyn Fn() -> bool + Send + Sync),
+}
+
+impl std::fmt::Debug for WebGuard<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WebGuard").finish_non_exhaustive()
+    }
+}
+
+/// Like [`web`], checking authorization after connection waits and immediately
+/// before emission. Once handed to Hyper, the bounded answer is retained.
+pub async fn web_if(
+    host: &str,
+    port: u16,
+    tls: bool,
+    request: Request<Full<Bytes>>,
+    limit: Duration,
+    max_body: usize,
+    guard: WebGuard<'_>,
+) -> anyhow::Result<(StatusCode, Bytes)> {
+    let exchange = async {
+        let response = web_response_if(host, port, tls, request, limit, Some(&guard)).await?;
+        let status = response.status();
+        let body = Limited::new(response.into_body(), max_body)
+            .collect()
+            .await
+            .map_err(|e| anyhow::anyhow!("{host}: {e}"))?
+            .to_bytes();
+        anyhow::Ok((status, body))
+    };
+    tokio::time::timeout(limit, exchange)
+        .await
+        .context("HTTP order did not answer in time")?
+}
+
+fn authorized(guard: Option<&WebGuard<'_>>, emission: bool) -> anyhow::Result<()> {
+    if guard.is_some_and(|guard| {
+        !(if emission {
+            guard.begin_send
+        } else {
+            guard.wanted
+        })()
+    }) {
+        return Err(NotSent.into());
+    }
+    Ok(())
+}
+
 /// Like [`web`], with the answer's headers too (a service that sets cookies).
 pub async fn web_with_headers(
     host: &str,
@@ -774,8 +829,19 @@ async fn web_response(
     host: &str,
     port: u16,
     tls: bool,
+    request: Request<Full<Bytes>>,
+    limit: Duration,
+) -> anyhow::Result<http::Response<Incoming>> {
+    web_response_if(host, port, tls, request, limit, None).await
+}
+
+async fn web_response_if(
+    host: &str,
+    port: u16,
+    tls: bool,
     mut request: Request<Full<Bytes>>,
     limit: Duration,
+    guard: Option<&WebGuard<'_>>,
 ) -> anyhow::Result<http::Response<Incoming>> {
     if !request.headers().contains_key(http::header::HOST) {
         let value = if (tls && port == 443) || (!tls && port == 80) {
@@ -787,26 +853,65 @@ async fn web_response(
             .headers_mut()
             .insert(http::header::HOST, value.parse().context("host header")?);
     }
+    #[cfg(feature = "contract-test")]
+    let trace = contract_test::Trace::capture(host, port, tls, &request)?;
+    authorized(guard, false)?;
     let exchange = async {
+        #[cfg(feature = "contract-test")]
+        trace.stage(contract_test::Stage::BeforeTcp).await;
+        authorized(guard, false)?;
+        #[cfg(feature = "contract-test")]
+        let tcp = trace.connect(host, port).await?;
+        #[cfg(not(feature = "contract-test"))]
         let tcp = TcpStream::connect((host, port))
             .await
             .with_context(|| format!("cannot reach {host}:{port}"))?;
+        #[cfg(feature = "contract-test")]
+        trace.stage(contract_test::Stage::AfterTcp).await;
+        authorized(guard, false)?;
         let response = if tls {
             let name = ServerName::try_from(host.to_owned()).context("host name")?;
-            let stream = TlsConnector::from(public_tls())
+            #[cfg(feature = "contract-test")]
+            let tls_config = trace.tls_config();
+            #[cfg(not(feature = "contract-test"))]
+            let tls_config = public_tls();
+            let stream = TlsConnector::from(tls_config)
                 .connect(name, tcp)
                 .await
                 .with_context(|| format!("{host}: TLS"))?;
+            #[cfg(feature = "contract-test")]
+            trace.stage(contract_test::Stage::AfterTls).await;
+            authorized(guard, false)?;
             let (mut sender, connection) = http1::handshake(TokioIo::new(stream)).await?;
+            #[cfg(feature = "contract-test")]
+            trace.spawn_connection(async move {
+                connection
+                    .await
+                    .map_err(|error| contract_test::ConnectionFailure::from_hyper(&error))
+            });
+            #[cfg(not(feature = "contract-test"))]
             tokio::spawn(async move {
                 let _ = connection.await;
             });
+            #[cfg(feature = "contract-test")]
+            trace.stage(contract_test::Stage::BeforeSend).await;
+            authorized(guard, true)?;
             sender.send_request(request).await?
         } else {
             let (mut sender, connection) = http1::handshake(TokioIo::new(tcp)).await?;
+            #[cfg(feature = "contract-test")]
+            trace.spawn_connection(async move {
+                connection
+                    .await
+                    .map_err(|error| contract_test::ConnectionFailure::from_hyper(&error))
+            });
+            #[cfg(not(feature = "contract-test"))]
             tokio::spawn(async move {
                 let _ = connection.await;
             });
+            #[cfg(feature = "contract-test")]
+            trace.stage(contract_test::Stage::BeforeSend).await;
+            authorized(guard, true)?;
             sender.send_request(request).await?
         };
         anyhow::Ok(response)
