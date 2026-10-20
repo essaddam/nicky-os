@@ -86,6 +86,9 @@ pub(crate) struct Person {
     /// A guest's end (ms): past it, the person may no longer sign in.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) expires: Option<u64>,
+    /// Optional human-selected reservation. It grants nothing by itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) reservation: Option<moli_runtime::ReservationRef>,
     /// Wi-Fi addresses of devices that say the person is home.
     #[serde(default)]
     pub(crate) macs: Vec<String>,
@@ -408,8 +411,12 @@ fn text_ok(s: &str, max: usize) -> bool {
     !s.is_empty() && s.chars().count() <= max && !s.chars().any(char::is_control)
 }
 
-fn active(p: &Person) -> bool {
+fn active(p: &Person, hub: &Hub) -> bool {
     p.expires.is_none_or(|end| now_ms() < end)
+        && (p.role != Role::Guest
+            || p.reservation
+                .as_ref()
+                .is_none_or(|binding| hub.reservation_allows(binding)))
 }
 
 impl People {
@@ -448,6 +455,7 @@ impl People {
                 color: None,
                 rooms: Vec::new(),
                 expires: None,
+                reservation: None,
                 macs: Vec::new(),
                 created: now_ms(),
             });
@@ -524,7 +532,7 @@ impl People {
     pub(crate) fn has_owner(&self) -> bool {
         lock(&self.book).people.iter().any(|p| {
             p.role == Role::Owner
-                && active(p)
+                && active(p, &self.hub)
                 && (!p.emails.is_empty() || self.hub.core_secret(&password_key(&p.id)).is_some())
         })
     }
@@ -542,8 +550,36 @@ impl People {
         lock(&self.book)
             .people
             .iter()
-            .find(|p| p.id == id && active(p))
+            .find(|p| p.id == id && active(p, &self.hub))
             .map(Self::reference)
+    }
+
+    pub(crate) fn known_email(&self, email: &str) -> bool {
+        let email = email.trim().to_lowercase();
+        lock(&self.book)
+            .people
+            .iter()
+            .any(|person| person.emails.contains(&email))
+    }
+
+    /// Weak capture: pending approvals cannot keep the hub and people alive in a cycle.
+    pub(crate) fn command_permit(
+        self: &std::sync::Arc<Self>,
+        guest: &PersonRef,
+    ) -> moli_runtime::CommandPermit {
+        let people = std::sync::Arc::downgrade(self);
+        let id = guest.id.clone();
+        moli_runtime::CommandPermit::new(move |point| {
+            let Some(people) = people.upgrade() else {
+                return false;
+            };
+            let Some(current) = people.get(&id).filter(PersonRef::is_guest) else {
+                return false;
+            };
+            point
+                .split()
+                .is_some_and(|(device, _)| current.guest_sees(&people.hub, &device))
+        })
     }
 
     /// The person Cloudflare Access vouched for, if Moli knows the e-mail.
@@ -552,7 +588,7 @@ impl People {
         lock(&self.book)
             .people
             .iter()
-            .find(|p| active(p) && p.emails.contains(&email))
+            .find(|p| active(p, &self.hub) && p.emails.contains(&email))
             .map(Self::reference)
     }
 
@@ -584,7 +620,9 @@ impl People {
         password: &str,
         caller: &Caller,
     ) -> Result<(String, PersonRef), LoginError> {
-        let person = self.find_login(login).filter(active);
+        let person = self
+            .find_login(login)
+            .filter(|person| person.expires.is_none_or(|end| now_ms() < end));
         let stored = person
             .as_ref()
             .and_then(|p| self.hub.core_secret(&password_key(&p.id)));
@@ -769,7 +807,12 @@ impl People {
         })
         .await
         .map_err(Err)?;
-        let reference = self.get(&person).ok_or(Err(Refused::NotFound))?;
+        let reference = lock(&self.book)
+            .people
+            .iter()
+            .find(|known| known.id == person)
+            .map(Self::reference)
+            .ok_or(Err(Refused::NotFound))?;
         let token = self.open_session(&person).await.map_err(Ok)?;
         Ok((token, reference))
     }
@@ -790,6 +833,10 @@ impl People {
                 color: draft.color,
                 rooms: draft.rooms,
                 expires: draft.expires,
+                reservation: match draft.reservation {
+                    ReservationChange::Keep => None,
+                    ReservationChange::Set(binding) => binding,
+                },
                 macs: draft.macs,
                 created: now_ms(),
             };
@@ -824,6 +871,9 @@ impl People {
                 p.color = draft.color;
                 p.rooms = draft.rooms;
                 p.expires = draft.expires;
+                if let ReservationChange::Set(binding) = draft.reservation {
+                    p.reservation = binding;
+                }
                 p.macs = draft.macs;
                 Ok(p.clone())
             })
@@ -929,7 +979,22 @@ pub(crate) struct Draft {
     #[serde(default)]
     pub(crate) expires: Option<u64>,
     #[serde(default)]
+    pub(crate) reservation: ReservationChange,
+    #[serde(default)]
     pub(crate) macs: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub(crate) enum ReservationChange {
+    #[default]
+    Keep,
+    Set(Option<moli_runtime::ReservationRef>),
+}
+
+impl<'de> Deserialize<'de> for ReservationChange {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Option::<moli_runtime::ReservationRef>::deserialize(deserializer).map(Self::Set)
+    }
 }
 
 impl Draft {
@@ -980,6 +1045,10 @@ impl Draft {
         if self.role != Role::Guest {
             self.rooms.clear();
             self.expires = None;
+            self.reservation = ReservationChange::Set(None);
+        } else if matches!(&self.reservation, ReservationChange::Set(Some(binding)) if !binding.valid())
+        {
+            return bad("reservation");
         }
         Ok(self)
     }
@@ -1028,6 +1097,7 @@ mod tests {
             color: None,
             rooms: Vec::new(),
             expires: None,
+            reservation: ReservationChange::Keep,
             macs: Vec::new(),
         }
     }

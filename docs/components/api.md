@@ -947,3 +947,14 @@ Le [contrat des compteurs](compteurs.md) détaille les valeurs, commandes, ident
 limites et garanties de reprise. Le schéma [OpenAPI des commandes](../api/counter-command.openapi.yaml)
 complète `POST /api/command` : `value` en lecture seule, `increment` et `reset` à `null`,
 `request_id` conservé lors d’un retry. MCP `command` porte les mêmes champs.
+
+## Invités liés à une réservation
+
+La création et modification humaines des personnes acceptent le champ optionnel
+`reservation: { "instance": "sejours", "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }`.
+À la création, le champ absent signifie sans liaison. À la modification, un champ absent
+préserve la liaison existante ; seul `null` la retire explicitement. Une liaison
+valide ferme l’accès hors de sa fenêtre, si la source est hors ligne/annulée/expirée,
+y compris pour une session et un SSE déjà ouverts. Les commandes gardent le contrôle
+jusqu’à leur émission. Les comptes membre/propriétaire ne conservent pas cette liaison.
+Voir le [contrat des réservations](reservations.md), notamment la fraîcheur et les limites.

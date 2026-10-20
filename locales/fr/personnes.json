@@ -66,5 +66,11 @@
   "personnes.carte_page.rayon": "Rayon : {m} m",
   "personnes.carte_page.retirer_confirmer": "Retirer la zone {name} ? Les automatismes qui l'attendent ne se déclencheront plus.",
   "personnes.carte_page.automatismes": "Dans un automatisme : « Quand la zone de quelqu'un devient Travail », ou « Quand tout le monde est parti ».",
-  "personnes.carte.connexion": "Se connecter"
+  "personnes.carte.connexion": "Se connecter",
+  "personnes.carte.reservation": "Limiter à une réservation",
+  "personnes.carte.reservation_aucune": "Sans liaison à un calendrier",
+  "personnes.carte.reservation_absente": "Réservation liée actuellement indisponible",
+  "personnes.carte.reservation_creneau": "{name} · {start} → {end}",
+  "personnes.carte.reservation_invalide": "Choisissez une référence de réservation valide.",
+  "personnes.carte.reservation_aide": "L’accès est limité aux horaires du séjour, aux pièces choisies et à la date de fin. Un calendrier hors ligne ou une annulation ferme l’accès. Une liaison indisponible est conservée tant que vous ne la retirez pas."
 }

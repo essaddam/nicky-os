@@ -690,5 +690,17 @@
   "pilotes.huawei_lte.tx_rate": "Débit émis",
   "pilotes.huawei_lte.duration": "Durée de connexion",
   "pilotes.reservations.calendrier_invalide": "Le calendrier est invalide, trop volumineux ou utilise une règle non prise en charge. Les accès liés restent fermés.",
-  "pilotes.reservations.lecture_impossible": "La lecture du calendrier a échoué."
+  "pilotes.reservations.lecture_impossible": "La lecture du calendrier a échoué.",
+  "pilotes.reservations.acces": "Fenêtre d’accès active",
+  "pilotes.reservations.arrivee": "Arrivée prévue",
+  "pilotes.reservations.calendrier": "Réservations",
+  "pilotes.reservations.configuration_invalide": "Choisissez un fuseau IANA et une lecture toutes les 30 à 3600 secondes.",
+  "pilotes.reservations.debut": "Début",
+  "pilotes.reservations.depart": "Départ prévu",
+  "pilotes.reservations.etat": "État du calendrier",
+  "pilotes.reservations.fin": "Fin",
+  "pilotes.reservations.identifiant": "Référence de réservation",
+  "pilotes.reservations.observe": "Dernière lecture",
+  "pilotes.reservations.prochaine": "Réservation {numero}",
+  "pilotes.reservations.url_manquante": "Ajoutez l’URL ICS HTTPS choisie au coffre de cette instance."
 }

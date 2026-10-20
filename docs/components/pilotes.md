@@ -966,3 +966,10 @@ Le résolveur refuse une cible précise non reconnue sans repli sur l’accueil.
 La recherche et le guide TV sont un domaine transverse indépendant du pilote.
 La qualification sur appareil réel reste soumise à H1 ; aucun succès réseau
 simulé ne la remplace.
+
+## Réservations ICS
+
+`moli-reservations` : calendrier HTTPS en lecture seule, URL au coffre fournie par un humain,
+cinq prochaines fenêtres, cycle planifié et occurrences sans rejeu au démarrage.
+Le hub garde des fenêtres éphémères ; les invités peuvent y être liés par un humain.
+Aucun chemin direct vers une serrure. [Contrat et bornes](reservations.md).

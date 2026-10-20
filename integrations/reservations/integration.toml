@@ -1,0 +1,20 @@
+[integration]
+id = "reservations"
+name = "Réservations ICS et fenêtres invitées"
+brands = []
+models = ["iCalendar (RFC 5545, sous-ensemble borné)"]
+transport = "https"
+driver = "reservations"
+crate = "moli-reservations"
+
+[needs]
+secrets = ["url"]
+vars = []
+options = ["timezone"]
+
+[origin]
+reused = "RFC 5545 : DTSTART/DTEND, TZID/DATE, DAILY/WEEKLY, EXDATE/RDATE, SEQUENCE, STATUS et RECURRENCE-ID ; Jiff pour les fuseaux"
+author = "agent"
+
+[[fixture]]
+file = "fixtures/calendar.ics"

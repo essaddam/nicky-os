@@ -20,6 +20,7 @@ pub mod media;
 mod occurrences;
 pub mod orders;
 mod private_files;
+mod reservations;
 mod secrets;
 mod state_cache;
 mod state_file;
@@ -30,8 +31,8 @@ pub mod voice;
 pub use addresses::KnownAddress;
 pub use counters::CounterError;
 pub use driver::{
-    BoxFuture, CommandMetadata, CommandRequest, Driver, DriverCtx, MediaPublisher, ScopedSecrets,
-    SendPermit,
+    BoxFuture, CommandMetadata, CommandPermit, CommandRequest, Driver, DriverCtx, MediaPublisher,
+    ScopedSecrets, SendPermit,
 };
 pub use hub::{
     ApprovalError, CORE_NAMESPACE, CommandError, DeviceView, DriverView, Hub, HubOptions,
@@ -39,6 +40,7 @@ pub use hub::{
 };
 pub use keypad::{KeypadCode, KeypadInput, KeypadReceiver};
 pub use occurrences::OccurrenceError;
+pub use reservations::ReservationRef;
 pub use secrets::{MasterKey, forget_secret, set_secret};
 pub use state_file::{StateFile, StateFileError};
 pub use stats::Stats;

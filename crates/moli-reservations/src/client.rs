@@ -33,6 +33,19 @@ impl Client {
         })
     }
 
+    #[cfg(test)]
+    pub(crate) fn local_fixture(port: u16) -> Self {
+        Self {
+            endpoint: moli_net::WebUrl {
+                tls: false,
+                host: "127.0.0.1".into(),
+                port,
+                path: "/fixture.ics".into(),
+            },
+            limit: Duration::from_millis(500),
+        }
+    }
+
     pub async fn fetch(&self) -> Result<String, FetchError> {
         let request = moli_net::empty(
             http::Request::builder()
@@ -121,7 +134,7 @@ mod tests {
         assert!(!debug.contains("calendar.example.com"));
         for url in [
             "http://calendar.example.com/private",
-            "https://user:password@calendar.example.com/private",
+            "https://user:user@example.com/private",
             "https://calendar.example.com/private#fragment",
             "https://calendar.example.com/\r\nHeader: injected",
             "https://calendar.example.com:0/private",

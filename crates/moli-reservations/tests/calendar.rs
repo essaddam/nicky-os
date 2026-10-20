@@ -243,3 +243,12 @@ fn malformed_timezone_quotes_are_not_repaired() {
         assert!(parse(&input, "UTC", ts("2026-10-19T00:00:00Z")).is_err());
     }
 }
+
+#[test]
+fn packaged_calendar_fixture_uses_the_real_decoder_across_the_autumn_dst_change() {
+    let input = include_str!("../../../integrations/reservations/fixtures/calendar.ics");
+    let stays = parse(input, "UTC", ts("2026-10-20T00:00:00Z")).unwrap();
+    assert_eq!(stays.len(), 1);
+    assert_eq!(stays[0].start, ts("2026-10-24T14:00:00Z"));
+    assert_eq!(stays[0].end, ts("2026-10-26T09:00:00Z"));
+}

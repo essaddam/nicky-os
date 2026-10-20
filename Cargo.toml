@@ -46,6 +46,7 @@ moli-phones = { path = "crates/moli-phones" }
 moli-presence = { path = "crates/moli-presence" }
 moli-profile = { path = "crates/moli-profile" }
 moli-reolink = { path = "crates/moli-reolink" }
+moli-reservations = { path = "crates/moli-reservations" }
 moli-roborock = { path = "crates/moli-roborock" }
 moli-rollup = { path = "crates/moli-rollup" }
 moli-runtime = { path = "crates/moli-runtime" }

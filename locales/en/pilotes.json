@@ -690,5 +690,17 @@
   "pilotes.huawei_lte.tx_rate": "Send rate",
   "pilotes.huawei_lte.duration": "Connection duration",
   "pilotes.reservations.calendrier_invalide": "The calendar is invalid, too large or uses an unsupported rule. Linked access remains closed.",
-  "pilotes.reservations.lecture_impossible": "The calendar could not be read."
+  "pilotes.reservations.lecture_impossible": "The calendar could not be read.",
+  "pilotes.reservations.acces": "Access window active",
+  "pilotes.reservations.arrivee": "Scheduled arrival",
+  "pilotes.reservations.calendrier": "Reservations",
+  "pilotes.reservations.configuration_invalide": "Choose an IANA time zone and a polling interval from 30 to 3600 seconds.",
+  "pilotes.reservations.debut": "Start",
+  "pilotes.reservations.depart": "Scheduled departure",
+  "pilotes.reservations.etat": "Calendar state",
+  "pilotes.reservations.fin": "End",
+  "pilotes.reservations.identifiant": "Reservation reference",
+  "pilotes.reservations.observe": "Last read",
+  "pilotes.reservations.prochaine": "Reservation {numero}",
+  "pilotes.reservations.url_manquante": "Add the chosen HTTPS ICS URL to this instance’s vault."
 }

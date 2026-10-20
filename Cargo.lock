@@ -1889,6 +1889,7 @@ dependencies = [
  "moli-presence",
  "moli-profile",
  "moli-reolink",
+ "moli-reservations",
  "moli-roborock",
  "moli-runtime",
  "moli-samsung",
@@ -2024,13 +2025,19 @@ dependencies = [
 name = "moli-reservations"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "http",
  "jiff",
+ "moli-core",
  "moli-i18n",
  "moli-net",
+ "moli-runtime",
  "ring",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

@@ -40,6 +40,25 @@ pub trait Driver: Send + Sync + 'static {
 
 type CommandReply = Arc<std::sync::Mutex<Option<oneshot::Sender<Result<(), crate::CommandError>>>>>;
 
+/// A live authorization checked again until the transport sends an order.
+#[derive(Clone)]
+pub struct CommandPermit(Arc<dyn Fn(&PointId) -> bool + Send + Sync>);
+
+impl std::fmt::Debug for CommandPermit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CommandPermit").finish_non_exhaustive()
+    }
+}
+
+impl CommandPermit {
+    pub fn new(check: impl Fn(&PointId) -> bool + Send + Sync + 'static) -> Self {
+        Self(Arc::new(check))
+    }
+    pub(crate) fn allows(&self, point: &PointId) -> bool {
+        (self.0)(point)
+    }
+}
+
 /// A validated write addressed to a driver. The driver must answer through
 /// [`CommandRequest::reply`] once the order has been handed to the device
 /// (state confirmation arrives later as a regular state update).
@@ -54,6 +73,7 @@ pub struct CommandRequest {
     /// lamp switched on hours after « failed » is worse than a refusal).
     pub deadline: Instant,
     pub metadata: CommandMetadata,
+    pub(crate) permit: Option<CommandPermit>,
     pub(crate) reply: CommandReply,
     /// Who has the order: still queued, taken by the driver, or given up by
     /// its caller. Decided once, atomically (see [`Claim`]).
@@ -138,7 +158,10 @@ impl CommandRequest {
     /// it left must not leave.
     #[must_use]
     pub fn abandoned(&self) -> bool {
-        self.reply
+        self.permit
+            .as_ref()
+            .is_some_and(|permit| !permit.allows(&self.point))
+            || self.reply
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .as_ref()
@@ -205,6 +228,16 @@ impl DriverCtx {
     #[must_use]
     pub fn instance(&self) -> &InstanceId {
         &self.instance
+    }
+
+    /// Replaces this calendar's ephemeral access windows. Invalid input closes them.
+    pub fn replace_reservations(
+        &self,
+        windows: Vec<(String, moli_core::AccessWindow)>,
+        expires: u64,
+    ) -> bool {
+        self.hub
+            .replace_reservations(&self.instance, windows, expires)
     }
 
     /// Builds a device id owned by this instance.

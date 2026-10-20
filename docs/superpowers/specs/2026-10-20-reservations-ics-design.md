@@ -40,8 +40,8 @@ Les identités publiques dérivent du hachage du UID et, pour une série, de son
 Le sous-ensemble initial comprend DTSTART/DTEND, UTC, TZID IANA et DATE ; les heures
 flottantes utilisent le fuseau explicitement configuré. DATE respecte les jours civils
 locaux, sans supposer une durée de 24 h. Les heures locales ambiguës ou inexistantes
-ne sont jamais corrigées silencieusement pour élargir un accès. Les horaires d’arrivée
-et départ des dates seules sont configurables ; sans réglage, minuit respecte le fichier.
+ne sont jamais corrigées silencieusement pour élargir un accès. Les bornes des dates seules restent minuit local, conformément au fichier ; aucun
+décalage implicite ne modifie un droit.
 RRULE minimal : DAILY/WEEKLY, INTERVAL, COUNT ou UNTIL, BYDAY hebdomadaire ; EXDATE,
 RDATE, STATUS:CANCELLED et exceptions RECURRENCE-ID. Une option non prise en charge
 est refusée. Référence : [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545.html).
@@ -68,5 +68,5 @@ RRULE/EXDATE, annulations, chevauchements et données trop grandes. Tests du vra
 la reprise sans événement, l’expiration, la révocation et l’absence de commande physique.
 Tests HTTP des invités avant/au début/avant/à la fin, avec une session déjà ouverte.
 Contrôles natifs Rust 1.99.1 en deux jobs ; avant fusion, un contrôle complet à la fois
-dans la file d’intégration, puis catalogue, fuites et web/i18n si touché. Les quatre cas
-profile propres à Linux sont différés tant que Docker est indisponible.
+dans la file d’intégration, puis catalogue, fuites et web/i18n si touché. Les quatre cas profile propres à Linux sont facultatifs et D13 est exclu de ce lot
+qui ne touche pas moli-archive, conformément aux décisions du propriétaire.

@@ -1,0 +1,10 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Moli//Synthetic reservation fixture//EN
+BEGIN:VEVENT
+UID:synthetic-stay@example.com
+DTSTART;TZID=Europe/Paris:20261024T160000
+DTEND;TZID=Europe/Paris:20261026T100000
+SUMMARY:Synthetic fixture only
+END:VEVENT
+END:VCALENDAR

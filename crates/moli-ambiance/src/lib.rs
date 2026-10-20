@@ -400,6 +400,18 @@ pub async fn apply(
     origin: Origin,
     actor: Option<String>,
 ) -> Report {
+    apply_with_permit(hub, look, targets, origin, actor, None).await
+}
+
+/// A guest's whole look retains live admission for every individual order.
+pub async fn apply_with_permit(
+    hub: &Hub,
+    look: Look<'_>,
+    targets: &[DeviceId],
+    origin: Origin,
+    actor: Option<String>,
+    permit: Option<moli_runtime::CommandPermit>,
+) -> Report {
     let mut ids: Vec<DeviceId> = Vec::new();
     for id in targets {
         match hub.device(id) {
@@ -422,6 +434,7 @@ pub async fn apply(
     }
     let plans = plan(look, &lamps);
     let actor = actor.as_ref();
+    let permit = permit.as_ref();
     let outcomes: Vec<(DeviceId, Outcome)> = futures::stream::iter(
         lamps
             .into_iter()
@@ -431,7 +444,21 @@ pub async fn apply(
                     return (lamp.id, None);
                 }
                 for (point, value) in orders {
-                    if let Err(e) = hub.command(&point, value, origin, actor.cloned()).await {
+                    let result = match permit {
+                        Some(permit) => {
+                            hub.command_with_permit(
+                                &point,
+                                value,
+                                origin,
+                                actor.cloned(),
+                                None,
+                                permit.clone(),
+                            )
+                            .await
+                        }
+                        None => hub.command(&point, value, origin, actor.cloned()).await,
+                    };
+                    if let Err(e) = result {
                         return (lamp.id, Some(Err((point, e))));
                     }
                 }

@@ -185,5 +185,6 @@
   "serveur.compteur.abandonne": "Command abandoned or expired before commit began.",
   "serveur.commande.echouee": "Command refused (HTTP {status}).",
   "serveur.compteur.valeur": "A counter operation has no value: send null.",
-  "serveur.compteur.lecture_seule": "The counter value is read-only; use increment or reset to change it."
+  "serveur.compteur.lecture_seule": "The counter value is read-only; use increment or reset to change it.",
+  "serveur.commande.acces_expire": "Access has expired or was revoked."
 }

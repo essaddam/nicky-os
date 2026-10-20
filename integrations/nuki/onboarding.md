@@ -55,5 +55,6 @@ celle d'une pièce protégée**, et en remettant la serrure dans l'état où on 
 
 - L'Opener Nuki (interphone) n'est pas piloté : il est ignoré.
 - Pas de rappel du pont vers Moli (callbacks) : la lecture est périodique.
-- La coordination avec des réservations (ouvrir pour un invité) n'existe pas encore : c'est
-  un sujet à part, et elle restera soumise à la même garde.
+- Le [pilote de réservations](../reservations/onboarding.md) peut limiter les accès d’un invité.
+  Une coordination de serrure exige un automatisme explicitement validé par un humain ;
+  le calendrier n’envoie jamais directement un ordre au pont.

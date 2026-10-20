@@ -88,6 +88,8 @@ pub enum CommandError {
     ReadOnly,
     #[error("invalid value: {0}")]
     Invalid(#[from] ValueError),
+    #[error("{}", moli_i18n::tr!("serveur.commande.acces_expire"))]
+    AccessDenied,
     #[error("driver unavailable")]
     DriverUnavailable,
     #[error("driver busy")]
@@ -137,6 +139,25 @@ fn clean_actor(actor: Option<String>) -> Option<String> {
         .filter(|a| !a.trim().is_empty())
 }
 
+#[derive(Default)]
+struct CommandContext {
+    request_id: Option<String>,
+    correlation: Option<String>,
+    permit: Option<crate::CommandPermit>,
+}
+
+fn command_input_error(point: &PointId, value: &Value) -> Option<CommandError> {
+    if moli_core::privacy::code_point(point.as_str()) || moli_core::privacy::private_value(value) {
+        return Some(CommandError::UnknownPoint);
+    }
+    if point.as_str().len() > MAX_POINT
+        || matches!(value, Value::Text(t) if t.chars().count() > moli_core::MAX_TEXT)
+    {
+        return Some(CommandError::Invalid(ValueError::TooLong));
+    }
+    None
+}
+
 /// An order resolved and validated, ready for its driver.
 struct Prepared {
     point: PointId,
@@ -150,6 +171,7 @@ struct Prepared {
 struct Approvals {
     next_id: u64,
     pending: BTreeMap<u64, Arc<ApprovalRequest>>,
+    permits: BTreeMap<u64, crate::CommandPermit>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -401,6 +423,7 @@ struct Model {
     held_offline: HashMap<DeviceId, Option<bool>>,
     drivers: BTreeMap<InstanceId, DriverSlot>,
     labels: BTreeMap<DeviceId, Label>,
+    reservations: crate::reservations::Book,
     snapshots: HashMap<DeviceId, Arc<dyn crate::media::SnapshotSource>>,
     printers: HashMap<DeviceId, Arc<dyn crate::media::PrintSink>>,
 }
@@ -670,7 +693,7 @@ impl Hub {
         origin: Origin,
         actor: Option<String>,
     ) -> Result<(), CommandError> {
-        self.command_with_context(point, value, origin, actor, None, None)
+        self.command_with_context(point, value, origin, actor, CommandContext::default())
             .await
     }
 
@@ -683,8 +706,17 @@ impl Hub {
         actor: Option<String>,
         request_id: Option<String>,
     ) -> Result<(), CommandError> {
-        self.command_with_context(point, value, origin, actor, request_id, None)
-            .await
+        self.command_with_context(
+            point,
+            value,
+            origin,
+            actor,
+            CommandContext {
+                request_id,
+                ..CommandContext::default()
+            },
+        )
+        .await
     }
 
     /// Carries an occurrence's correlation through an approved graph's actions.
@@ -696,8 +728,41 @@ impl Hub {
         actor: Option<String>,
         correlation: Option<String>,
     ) -> Result<(), CommandError> {
-        self.command_with_context(point, value, origin, actor, None, correlation)
-            .await
+        self.command_with_context(
+            point,
+            value,
+            origin,
+            actor,
+            CommandContext {
+                correlation,
+                ..CommandContext::default()
+            },
+        )
+        .await
+    }
+
+    /// An order whose guest authorization must remain live until emission.
+    pub async fn command_with_permit(
+        &self,
+        point: &PointId,
+        value: Value,
+        origin: Origin,
+        actor: Option<String>,
+        request_id: Option<String>,
+        permit: crate::CommandPermit,
+    ) -> Result<(), CommandError> {
+        self.command_with_context(
+            point,
+            value,
+            origin,
+            actor,
+            CommandContext {
+                request_id,
+                permit: Some(permit),
+                ..CommandContext::default()
+            },
+        )
+        .await
     }
 
     async fn command_with_context(
@@ -706,20 +771,26 @@ impl Hub {
         value: Value,
         origin: Origin,
         actor: Option<String>,
-        request_id: Option<String>,
-        correlation: Option<String>,
+        context: CommandContext,
     ) -> Result<(), CommandError> {
+        let CommandContext {
+            request_id,
+            correlation,
+            permit,
+        } = context;
         let started = Instant::now();
         let actor = clean_actor(actor);
-        if moli_core::privacy::code_point(point.as_str())
-            || moli_core::privacy::private_value(&value)
-        {
-            let error = CommandError::UnknownPoint;
+        if let Some(error) = command_input_error(point, &value) {
+            let target = if error == CommandError::Invalid(ValueError::TooLong) {
+                PointId::from(point.as_str().chars().take(MAX_POINT).collect::<String>())
+            } else {
+                point.clone()
+            };
             self.record(
                 origin,
                 actor,
                 Action::Command {
-                    point: point.clone(),
+                    point: target,
                     value: Value::Null,
                 },
                 outcome_of(&Err(error.clone())),
@@ -727,34 +798,20 @@ impl Hub {
             );
             return Err(error);
         }
-        // Absurd inputs are refused before anything, and journaled without
-        // their bulk (the journal is not a place to store what an agent sent).
-        let oversized = point.as_str().len() > MAX_POINT
-            || matches!(&value, Value::Text(t) if t.chars().count() > moli_core::MAX_TEXT);
-        if oversized {
-            let short: String = point.as_str().chars().take(MAX_POINT).collect();
-            let error = CommandError::Invalid(ValueError::TooLong);
-            self.record(
-                origin,
-                actor,
-                Action::Command {
-                    point: PointId::from(short),
-                    value: Value::Null,
-                },
-                Outcome::Err(error.to_string()),
-                started,
-            );
-            return Err(error);
-        }
         let mut journal_correlation = None;
-        let result = match self.prepare_context(
-            point,
-            &value,
-            origin,
-            actor.clone(),
-            request_id,
-            correlation,
-        ) {
+        let prepared = if permit.as_ref().is_some_and(|permit| !permit.allows(point)) {
+            Err(CommandError::AccessDenied)
+        } else {
+            self.prepare_context(
+                point,
+                &value,
+                origin,
+                actor.clone(),
+                request_id,
+                correlation,
+            )
+        };
+        let result = match prepared {
             Err(e) => Err(e),
             Ok((prepared, metadata)) => {
                 journal_correlation = metadata.correlation.clone();
@@ -780,6 +837,7 @@ impl Hub {
                                     );
                                 }),
                                 metadata,
+                                permit,
                             )
                             .await;
                     }
@@ -788,7 +846,7 @@ impl Hub {
                             .device
                             .point(&prepared.key)
                             .is_some_and(|point| point.kind.is_operation());
-                        let id = self.hold(point, &value, &metadata, &reason, operation);
+                        let id = self.hold(point, &value, &metadata, &reason, operation, permit);
                         Err(CommandError::NeedsApproval { id, reason })
                     }
                 }
@@ -974,6 +1032,7 @@ impl Hub {
         metadata: &CommandMetadata,
         reason: &str,
         operation: bool,
+        permit: Option<crate::CommandPermit>,
     ) -> u64 {
         let origin = metadata.origin;
         let actor = metadata.actor.clone();
@@ -1028,11 +1087,13 @@ impl Hub {
                 .collect();
             for r in &superseded {
                 approvals.pending.remove(&r.id);
+                approvals.permits.remove(&r.id);
             }
             while approvals.pending.len() >= MAX_PENDING {
                 let Some((&oldest, _)) = approvals.pending.iter().next() else {
                     break;
                 };
+                approvals.permits.remove(&oldest);
                 if let Some(r) = approvals.pending.remove(&oldest) {
                     superseded.push(r);
                 }
@@ -1053,6 +1114,9 @@ impl Hub {
                 request_id: metadata.request_id.clone(),
                 correlation: metadata.correlation.clone(),
             });
+            if let Some(permit) = permit {
+                approvals.permits.insert(request.id, permit);
+            }
             approvals.pending.insert(request.id, Arc::clone(&request));
             request
         };
@@ -1099,20 +1163,21 @@ impl Hub {
             return Err(ApprovalError::HumanOnly);
         }
         let started = Instant::now();
-        let request = {
+        let (request, permit) = {
             let mut approvals = self
                 .0
                 .approvals
                 .lock()
                 .unwrap_or_else(PoisonError::into_inner);
-            match approvals.pending.get(&id) {
+            let request = match approvals.pending.get(&id) {
                 None => return Err(ApprovalError::Unknown),
                 Some(r) if &r.point != expected_point => return Err(ApprovalError::Mismatch),
                 Some(_) => approvals
                     .pending
                     .remove(&id)
                     .ok_or(ApprovalError::Unknown)?,
-            }
+            };
+            (request, approvals.permits.remove(&id))
         };
         if request.expires <= now_ms() {
             self.resolved(
@@ -1172,6 +1237,7 @@ impl Hub {
                 );
             }),
             metadata,
+            permit,
         )
         .await
         .map_err(ApprovalError::Command)
@@ -1192,6 +1258,9 @@ impl Hub {
                 .filter(|r| r.expires <= now)
                 .map(|r| r.id)
                 .collect();
+            for id in &ids {
+                approvals.permits.remove(id);
+            }
             ids.iter()
                 .filter_map(|id| approvals.pending.remove(id))
                 .collect()
@@ -1549,7 +1618,16 @@ impl Hub {
         prepared: Prepared,
         journal: JournalLine,
         metadata: CommandMetadata,
+        permit: Option<crate::CommandPermit>,
     ) -> Result<(), CommandError> {
+        if permit
+            .as_ref()
+            .is_some_and(|permit| !permit.allows(&prepared.point))
+        {
+            let error = CommandError::AccessDenied;
+            journal(outcome_of(&Err(error.clone())));
+            return Err(error);
+        }
         let Prepared {
             point,
             device,
@@ -1567,6 +1645,7 @@ impl Hub {
             value,
             deadline,
             metadata,
+            permit,
             reply: Arc::new(Mutex::new(Some(reply))),
             claim: Arc::clone(&claim),
         });
@@ -1706,6 +1785,37 @@ impl Hub {
         store.set(&format!("{instance}/{name}"), value).await
     }
 
+    /// A human-bound guest is admitted only by a current, live calendar snapshot.
+    #[must_use]
+    pub fn reservation_allows(&self, binding: &crate::ReservationRef) -> bool {
+        let model = self.read();
+        model
+            .drivers
+            .get(&binding.instance)
+            .is_some_and(|slot| slot.kind == "reservations" && slot.status == DriverStatus::Running)
+            && model.reservations.allows(binding, now_ms(), Instant::now())
+    }
+
+    pub(crate) fn replace_reservations(
+        &self,
+        instance: &InstanceId,
+        windows: Vec<(String, moli_core::AccessWindow)>,
+        expires: u64,
+    ) -> bool {
+        let mut model = self.write();
+        if !model
+            .drivers
+            .get(instance)
+            .is_some_and(|slot| slot.kind == "reservations" && slot.status == DriverStatus::Running)
+        {
+            model.reservations.remove(instance);
+            return false;
+        }
+        model
+            .reservations
+            .replace(instance, windows, expires, now_ms(), Instant::now())
+    }
+
     // ---- writing (drivers, via DriverCtx) -----------------------------------
 
     pub(crate) fn register_driver(
@@ -1715,7 +1825,9 @@ impl Hub {
         integration: Arc<str>,
     ) -> mpsc::Receiver<CommandRequest> {
         let (commands, rx) = mpsc::channel(COMMAND_QUEUE);
-        self.write().drivers.insert(
+        let mut model = self.write();
+        model.reservations.remove(instance);
+        model.drivers.insert(
             instance.clone(),
             DriverSlot {
                 kind,
@@ -1724,6 +1836,7 @@ impl Hub {
                 commands,
             },
         );
+        drop(model);
         self.emit(Event::DriverStatus {
             instance: instance.clone(),
             status: DriverStatus::Starting,
@@ -1734,6 +1847,9 @@ impl Hub {
     pub(crate) fn set_driver_status(&self, instance: &InstanceId, status: DriverStatus) {
         let (changed, back) = {
             let mut model = self.write();
+            if status != DriverStatus::Running {
+                model.reservations.remove(instance);
+            }
             let changed = match model.drivers.get_mut(instance) {
                 Some(slot) if slot.status != status => {
                     slot.status = status.clone();
@@ -2426,5 +2542,138 @@ impl Model {
             camera: self.snapshots.contains_key(&device.id),
             printer: self.printers.contains_key(&device.id),
         }
+    }
+}
+
+#[cfg(test)]
+mod reservation_admission_tests {
+    use super::*;
+    #[test]
+    fn only_the_live_owning_calendar_can_admit_and_restarts_close_access() {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let instance = InstanceId::from("fixture");
+        let id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let binding = crate::ReservationRef {
+            instance: instance.clone(),
+            id: id.into(),
+        };
+        let now = now_ms();
+        let windows = || {
+            vec![(
+                id.into(),
+                moli_core::AccessWindow::new(now - 1, now + 60_000).unwrap(),
+            )]
+        };
+        let _rx = hub.register_driver(&instance, "reservations", "reservations".into());
+        assert!(!hub.replace_reservations(&instance, windows(), now + 60_000));
+        hub.set_driver_status(&instance, DriverStatus::Running);
+        assert!(hub.replace_reservations(&instance, windows(), now + 60_000));
+        assert!(hub.reservation_allows(&binding));
+        hub.set_driver_status(
+            &instance,
+            DriverStatus::Waiting {
+                reason: "simulated failure".into(),
+            },
+        );
+        assert!(!hub.reservation_allows(&binding));
+        hub.set_driver_status(&instance, DriverStatus::Running);
+        assert!(!hub.reservation_allows(&binding));
+        assert!(hub.replace_reservations(&instance, windows(), now + 60_000));
+        let _rx = hub.register_driver(&instance, "reservations", "reservations".into());
+        hub.set_driver_status(&instance, DriverStatus::Running);
+        assert!(!hub.reservation_allows(&binding));
+        let _rx = hub.register_driver(&instance, "fake", "fake".into());
+        hub.set_driver_status(&instance, DriverStatus::Running);
+        assert!(!hub.replace_reservations(&instance, windows(), now + 60_000));
+    }
+}
+
+#[cfg(test)]
+mod live_permit_tests {
+    use super::*;
+    fn target(semantic: moli_core::Semantic) -> (Hub, mpsc::Receiver<CommandRequest>, PointId) {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let instance = InstanceId::from("fixture");
+        let rx = hub.register_driver(&instance, "fake", "fake".into());
+        let device = DeviceId::new(&instance, "lamp");
+        hub.upsert_device(Device {
+            id: device.clone(),
+            instance,
+            native_name: "simulated lamp".into(),
+            manufacturer: None,
+            model: None,
+            description: None,
+            native_room: None,
+            members: Vec::new(),
+            points: vec![moli_core::PointSpec {
+                key: "state".into(),
+                label: "state".into(),
+                kind: moli_core::Kind::Binary,
+                access: moli_core::Access {
+                    read: true,
+                    write: true,
+                },
+                unit: None,
+                semantic,
+            }],
+        });
+        (hub, rx, PointId::new(&device, "state"))
+    }
+
+    #[tokio::test]
+    async fn revocation_after_dequeue_still_prevents_emission() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+        let allowed = Arc::new(AtomicBool::new(true));
+        let check = allowed.clone();
+        let h = hub.clone();
+        let task = tokio::spawn(async move {
+            h.command_with_permit(
+                &point,
+                Value::Bool(true),
+                Origin::Ui,
+                None,
+                None,
+                crate::CommandPermit::new(move |_point| check.load(Ordering::Acquire)),
+            )
+            .await
+        });
+        let cmd = rx.recv().await.unwrap();
+        assert!(Claim::settle(&cmd.claim, Claim::TAKEN));
+        assert!(!cmd.abandoned());
+        allowed.store(false, Ordering::Release);
+        assert!(
+            cmd.abandoned(),
+            "revocation is checked after dequeue, before emission"
+        );
+        cmd.reply(Err("simulated revocation".into()));
+        assert!(task.await.unwrap().is_err());
+    }
+    #[tokio::test]
+    async fn an_approval_retains_live_admission_instead_of_reviving_an_expired_guest() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::Lock);
+        let allowed = Arc::new(AtomicBool::new(true));
+        let check = allowed.clone();
+        let result = hub
+            .command_with_permit(
+                &point,
+                Value::Bool(false),
+                Origin::Api,
+                None,
+                None,
+                crate::CommandPermit::new(move |_point| check.load(Ordering::Acquire)),
+            )
+            .await;
+        let Err(CommandError::NeedsApproval { id, .. }) = result else {
+            panic!("opening must be held by the lock guard");
+        };
+        allowed.store(false, Ordering::Release);
+        let result = hub
+            .resolve_approval(id, &point, true, Origin::Ui, None)
+            .await;
+        assert!(matches!(
+            result,
+            Err(ApprovalError::Command(CommandError::AccessDenied))
+        ));
+        assert!(rx.try_recv().is_err());
     }
 }

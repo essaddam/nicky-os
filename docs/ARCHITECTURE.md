@@ -77,6 +77,7 @@ La carte vivante de ce schéma est dans le dashboard : `#/systeme` (« Comment �
 | `moli-energy` | kWh et € par heure, Linky + circuits, import HA | [historique & énergie](components/historique-energie.md) |
 | `moli-automation` | automatismes en graphe, moteur déterministe, validation humaine | [automatismes](components/automatismes.md) |
 | `moli-helpers` | aides de la maison (mode, alarme, budget), comme les `input_*` de HA | [pilotes](components/pilotes.md) |
+| `moli-reservations` | calendrier ICS borné, occurrences planifiées et fenêtres invitées éphémères, sans commande de serrure | [réservations](components/reservations.md) |
 | `moli-assistant` | Moli : conversation, création d'automatismes, import HA, textes | [moli](components/moli.md) |
 | `moli-api` | REST, SSE, MCP, sessions humaines, garde Host, bornes, dashboard embarqué | [api](components/api.md) |
 | `moli-os` | binaire : CLI, config TOML, démarrage, sauvegarde, santé | [exploitation](components/exploitation.md) |

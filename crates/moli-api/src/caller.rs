@@ -300,6 +300,18 @@ pub(crate) async fn identify(
     // person signed in on this browser (from anywhere: a phone moves).
     if let Via::Access { email } = &caller.via {
         caller.person = gate.people.by_email(email);
+        if caller.person.is_none()
+            && gate.people.known_email(email)
+            && !public(request.method(), request.uri().path())
+        {
+            return (
+                StatusCode::FORBIDDEN,
+                axum::Json(
+                    serde_json::json!({ "error": moli_i18n::tr!("serveur.commande.acces_expire") }),
+                ),
+            )
+                .into_response();
+        }
     }
     if caller.person.is_none()
         && let Some(person) = gate.people.signed_in(request.headers())

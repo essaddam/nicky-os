@@ -41,34 +41,48 @@ Fichiers : `crates/moli-core/src/access_window.rs`, `crates/moli-runtime/src/res
 Interfaces : fenêtre validée, remplacement atomique par instance et lecture refusant
 un pilote hors ligne ou une échéance dépassée ; transitions sans rejeu initial.
 
-- [ ] Tests avant/au début/à la fin, expiration et suppression/remplacement du pilote.
+- [x] Tests avant/au début/à la fin, expiration et suppression/remplacement du pilote.
 - [x] Tests purs premier calcul, arrêt couvrant toute la fenêtre, recul d’horloge et réconciliation.
-- [ ] Révocation des droits dans le vrai hub et les sessions.
-- [ ] Implémentation minimale puis tests du vrai hub avec horloge contrôlée.
+- [x] Révocation des droits dans le vrai hub et les sessions.
+- [x] Tests du vrai hub pour statuts/restarts et du registre avec instants contrôlés.
 
 ## 3. Client, paquet et binaire
 
 Fichiers : `crates/moli-reservations/src/{lib.rs,client.rs,runtime.rs}`, `Cargo.toml`,
 `crates/moli-os/{Cargo.toml,src/main.rs}`, `integrations/reservations/` et locales.
 
-- [ ] Tests transport local simulé : corps trop grand, délai, redirection, secret absent,
+- [x] Tests transport local simulé : corps trop grand, délai, redirection, secret absent,
   aucune fuite de l’URL dans les erreurs ; aucun contact d’URL hors du banc de test.
-- [ ] Lire uniquement `url` au coffre ; publier les cinq prochaines réservations et cycle.
-- [ ] Ajouter registre, manifeste, onboarding, fixtures et documentation de configuration.
+- [x] Lire uniquement `url` au coffre ; publier les cinq prochaines réservations et cycle.
+- [x] Ajouter registre, manifeste, onboarding, fixtures et documentation de configuration.
 
 ## 4. Politique invitée
 
 Fichiers : `crates/moli-api/src/people.rs`, tests HTTP et documentation d’API ; éditeur des
 personnes si nécessaire pour une liaison humaine utilisable, avec traductions fr/en.
 
-- [ ] Tests HTTP d’une session existante aux bornes, hors ligne et après annulation ;
+- [x] Tests HTTP d’une session existante avant la fenêtre, active, hors ligne et annulée ;
   flux encore ouvert et commande suspendue au transport au moment de la fermeture.
-- [ ] Ajouter la liaison facultative à une réservation ; préserver l’expiration existante,
+- [x] Ajouter la liaison facultative à une réservation ; préserver l’expiration existante,
   les pièces autorisées et la garde lock. Aucun droit créé depuis le seul calendrier.
-- [ ] Vérifier les invités sans liaison et les comptes propriétaire/membre.
+- [x] Vérifier les invités sans liaison et les comptes propriétaire/membre.
 
 ## 5. Livraison
 
-- [ ] Tests ciblés natifs, format, Clippy, catalogue, fuites, web/i18n si modifié.
-- [ ] Commit du ticket et soumission pour revue avec commandes et résumé PASS/FAIL.
+- [x] Tests ciblés natifs, format, Clippy, catalogue, fuites, web/i18n si modifié.
+- [x] Préparer le commit du ticket et le dossier de revue avec commandes et résumé PASS/FAIL.
+- [ ] Revue indépendante approuvée.
 - [ ] Après approbation : rebase, contrôle complet dans la file, fusion locale sans push.
+
+## Validation de soumission
+
+- 231 tests Rust uniques couverts sur les sept crates concernées, en natif Rust 1.99.1,
+  `-j 2` et un thread de test ; dont 37 dans `moli-reservations`.
+- La première passe conserve deux échecs ConnectionReset des clients HTTP préexistants
+  (demo et invité). Les deux mêmes binaires ont ensuite repassé leurs suites complètes
+  (1 et 19 tests), sans exclusion. Les contrôles nouveaux de session/SSE/transport passent.
+- Format et Clippy workspace/all-targets avec `-D warnings` verts ; 31 tests web, build et
+  contrôle i18n 3003 clés verts. Catalogue 33 paquets, six avertissements antérieurs ;
+  contrôle de fuites générique propre, sans liste privée disponible.
+- Le contrôle complet du workspace est réservé au créneau de fusion après approbation,
+  conformément à la règle propriétaire ; aucun push, calendrier réel ou appareil utilisé.

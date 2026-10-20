@@ -1507,3 +1507,301 @@ async fn androidtv_pairing_is_never_mutable_in_demo_even_with_a_pin() {
         assert_eq!(status, 403);
     }
 }
+
+/// A synthetic calendar supplies admission through the real scoped driver context.
+struct ReservationFixture {
+    updates: std::sync::Mutex<Option<tokio::sync::mpsc::Receiver<ReservationUpdate>>>,
+}
+
+type ReservationUpdate = (
+    Option<Vec<(String, moli_core::AccessWindow)>>,
+    tokio::sync::oneshot::Sender<()>,
+);
+const RESERVATION_FIXTURE_ID: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+impl Driver for ReservationFixture {
+    fn kind(&self) -> &'static str {
+        "reservations"
+    }
+    fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(async move {
+            let mut updates = self.updates.lock().unwrap().take().unwrap();
+            ctx.ready();
+            while let Some((windows, done)) = updates.recv().await {
+                match windows {
+                    Some(windows) => {
+                        ctx.ready();
+                        assert!(ctx.replace_reservations(windows, moli_core::now_ms() + 60_000));
+                    }
+                    None => ctx.wait_for("simulated calendar outage"),
+                }
+                let _ = done.send(());
+            }
+            ctx.cancelled().await;
+            Ok(())
+        })
+    }
+}
+
+async fn reservation_update(
+    tx: &tokio::sync::mpsc::Sender<ReservationUpdate>,
+    windows: Option<Vec<(String, moli_core::AccessWindow)>>,
+) {
+    let (done, wait) = tokio::sync::oneshot::channel();
+    tx.send((windows, done)).await.unwrap();
+    tokio::time::timeout(Duration::from_secs(2), wait)
+        .await
+        .unwrap()
+        .unwrap();
+}
+
+async fn guest_devices_status(house: &GuestHouse) -> u16 {
+    request_with(&house.addr, "GET", "/api/devices", None, &house.guest)
+        .await
+        .0
+}
+
+async fn guest_order_status(house: &GuestHouse, order: &Json) -> u16 {
+    request_with(
+        &house.addr,
+        "POST",
+        "/api/command",
+        Some(order),
+        &house.guest,
+    )
+    .await
+    .0
+}
+
+#[tokio::test]
+async fn reservations_ics_gate_an_existing_guest_session_and_live_stream() {
+    let house = guest_house("reservations-ics", |_| {}).await;
+    let (tx, rx) = tokio::sync::mpsc::channel(4);
+    let cancel = CancellationToken::new();
+    let task = spawn_driver(
+        &house.hub,
+        "calendar".into(),
+        Arc::new(ReservationFixture {
+            updates: std::sync::Mutex::new(Some(rx)),
+        }),
+        cancel.clone(),
+    );
+    let now = moli_core::now_ms();
+    let window = |start, end| {
+        vec![(
+            RESERVATION_FIXTURE_ID.into(),
+            moli_core::AccessWindow::new(start, end).unwrap(),
+        )]
+    };
+    reservation_update(&tx, Some(window(now + 60_000, now + 120_000))).await;
+    let binding = json!({ "name":"Invité", "role":"guest", "rooms":[GUEST_ROOM], "reservation":{"instance":"calendar","id":RESERVATION_FIXTURE_ID} });
+    let (status, body) = request_with(
+        &house.addr,
+        "PUT",
+        "/api/people/invite",
+        Some(&binding),
+        &house.pin,
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    let legacy = json!({ "name":"Invité", "role":"guest", "rooms":[GUEST_ROOM] });
+    assert_eq!(
+        request_with(
+            &house.addr,
+            "PUT",
+            "/api/people/invite",
+            Some(&legacy),
+            &house.pin
+        )
+        .await
+        .0,
+        200
+    );
+
+    assert_eq!(guest_devices_status(&house).await, 403);
+    let order = json!({"point":"fake:lamp/state","value":true});
+    assert_eq!(guest_order_status(&house, &order).await, 403);
+    reservation_update(&tx, Some(window(now - 1, now + 60_000))).await;
+    assert_eq!(guest_devices_status(&house).await, 200);
+    assert_eq!(guest_order_status(&house, &order).await, 200);
+    let (status, mut stream) = live(
+        &house.addr,
+        "/api/events",
+        &format!("{}Connection: close\r\n", house.guest),
+    )
+    .await;
+    assert_eq!(status, 200);
+    assert_eq!(stream.next().await.0, "snapshot");
+    // Cancellation immediately denies the same session and stops new SSE data.
+    reservation_update(&tx, Some(Vec::new())).await;
+    house
+        .hub
+        .command(
+            &"fake:lamp/state".into(),
+            Value::Bool(false),
+            moli_core::Origin::System,
+            None,
+        )
+        .await
+        .unwrap();
+    let mut tail = Vec::new();
+    tokio::time::timeout(Duration::from_secs(2), stream.stream.read_to_end(&mut tail))
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(!String::from_utf8_lossy(&tail).contains("event: "));
+    assert_eq!(guest_devices_status(&house).await, 403);
+    reservation_update(&tx, Some(window(now - 1, now + 60_000))).await;
+    assert_eq!(guest_devices_status(&house).await, 200);
+    reservation_update(&tx, None).await;
+    assert_eq!(guest_devices_status(&house).await, 403);
+    let unbind =
+        json!({ "name":"Invité", "role":"guest", "rooms":[GUEST_ROOM], "reservation":null });
+    assert_eq!(
+        request_with(
+            &house.addr,
+            "PUT",
+            "/api/people/invite",
+            Some(&unbind),
+            &house.pin
+        )
+        .await
+        .0,
+        200
+    );
+    assert_eq!(guest_devices_status(&house).await, 200);
+    cancel.cancel();
+    task.await.unwrap();
+    let _ = std::fs::remove_dir_all(&house.dir);
+}
+
+struct HeldReservationLamp {
+    taken: Arc<tokio::sync::Notify>,
+    release: Arc<tokio::sync::Notify>,
+    emitted: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl Driver for HeldReservationLamp {
+    fn kind(&self) -> &'static str {
+        "fake"
+    }
+    fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(async move {
+            let id = ctx.device_id("lamp");
+            ctx.upsert_device(Device {
+                id: id.clone(),
+                instance: ctx.instance().clone(),
+                native_name: "simulated transport".into(),
+                manufacturer: None,
+                model: None,
+                description: None,
+                native_room: Some(GUEST_ROOM.into()),
+                members: Vec::new(),
+                points: vec![PointSpec {
+                    key: "state".into(),
+                    label: "state".into(),
+                    kind: Kind::Binary,
+                    access: Access {
+                        read: true,
+                        write: true,
+                    },
+                    unit: None,
+                    semantic: Semantic::OnOff,
+                }],
+            });
+            ctx.set_state(&id, "state", Value::Bool(false));
+            ctx.ready();
+            while let Some(command) = ctx.next_command().await {
+                self.taken.notify_one();
+                self.release.notified().await;
+                // The same live hook used by a physical transport before emission.
+                if command.abandoned() {
+                    command.reply_result(Err(moli_runtime::CommandError::AccessDenied));
+                } else {
+                    self.emitted
+                        .store(true, std::sync::atomic::Ordering::Release);
+                    ctx.set_state(&id, "state", command.value.clone());
+                    command.reply(Ok(()));
+                }
+            }
+            Ok(())
+        })
+    }
+}
+
+#[tokio::test]
+async fn reservations_ics_revoke_an_order_waiting_before_transport_emission() {
+    let house = guest_house("reservation-transport", |_| {}).await;
+    let cancel = CancellationToken::new();
+    let taken = Arc::new(tokio::sync::Notify::new());
+    let release = Arc::new(tokio::sync::Notify::new());
+    let emitted = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let lamp = spawn_driver(
+        &house.hub,
+        "held".into(),
+        Arc::new(HeldReservationLamp {
+            taken: taken.clone(),
+            release: release.clone(),
+            emitted: emitted.clone(),
+        }),
+        cancel.clone(),
+    );
+    let (tx, rx) = tokio::sync::mpsc::channel(4);
+    let calendar = spawn_driver(
+        &house.hub,
+        "calendar".into(),
+        Arc::new(ReservationFixture {
+            updates: std::sync::Mutex::new(Some(rx)),
+        }),
+        cancel.clone(),
+    );
+    let now = moli_core::now_ms();
+    reservation_update(
+        &tx,
+        Some(vec![(
+            RESERVATION_FIXTURE_ID.into(),
+            moli_core::AccessWindow::new(now - 1, now + 60_000).unwrap(),
+        )]),
+    )
+    .await;
+    let binding = json!({"name":"Invité","role":"guest","rooms":[GUEST_ROOM],"reservation":{"instance":"calendar","id":RESERVATION_FIXTURE_ID}});
+    assert_eq!(
+        request_with(
+            &house.addr,
+            "PUT",
+            "/api/people/invite",
+            Some(&binding),
+            &house.pin
+        )
+        .await
+        .0,
+        200
+    );
+    let addr = house.addr.clone();
+    let guest = house.guest.clone();
+    let request = tokio::spawn(async move {
+        request_with(
+            &addr,
+            "POST",
+            "/api/command",
+            Some(&json!({"point":"held:lamp/state","value":true})),
+            &guest,
+        )
+        .await
+    });
+    tokio::time::timeout(Duration::from_secs(2), taken.notified())
+        .await
+        .unwrap();
+    reservation_update(&tx, Some(Vec::new())).await;
+    release.notify_one();
+    assert_eq!(request.await.unwrap().0, 403);
+    assert!(!emitted.load(std::sync::atomic::Ordering::Acquire));
+    assert_eq!(
+        house.hub.state(&"held:lamp/state".into()).unwrap().value,
+        Value::Bool(false)
+    );
+    cancel.cancel();
+    lamp.await.unwrap();
+    calendar.await.unwrap();
+    let _ = std::fs::remove_dir_all(&house.dir);
+}

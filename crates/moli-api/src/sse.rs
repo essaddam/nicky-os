@@ -24,7 +24,7 @@ use tokio::sync::broadcast::error::RecvError;
 use tokio_util::sync::CancellationToken;
 
 use crate::caller::Caller;
-use crate::people::PersonRef;
+use crate::people::{People, PersonRef};
 
 /// Live streams one caller may hold at once (a few tabs, a wall tablet).
 const PER_CALLER: usize = 8;
@@ -88,27 +88,40 @@ pub(crate) async fn events(
     State(hub): State<Hub>,
     Extension(shutdown): Extension<CancellationToken>,
     Extension(streams): Extension<Streams>,
+    Extension(persons): Extension<Arc<People>>,
     caller: Caller,
 ) -> Response {
     let Some(seat) = streams.take(&caller.key) else {
         return full(&caller.key);
     };
-    let mut view = View {
+    let view = View {
         guest: caller.person.filter(PersonRef::is_guest),
         sight: HashSet::new(),
     };
-    // Subscribe before the snapshot: nothing can fall between the two.
+    // Authorization is checked when polled, including the first snapshot.
     let rx = hub.subscribe();
-    let first = view.snapshot(&hub);
-    // The seat goes with the stream, and comes back when it ends.
-    let state = (hub, rx, view, seat);
-    let rest = stream::unfold(state, |(hub, mut rx, mut view, seat)| async move {
+    let state = (hub, rx, view, seat, persons, true);
+    let stream = stream::unfold(state, |(hub, mut rx, mut view, seat, persons, first)| async move {
         let event = loop {
-            match rx.recv().await {
+            if let Some(guest) = &view.guest {
+                let current = persons.get(&guest.id).filter(PersonRef::is_guest)?;
+                let changed = current != *guest;
+                view.guest = Some(current);
+                if changed && !first { break view.snapshot(&hub); }
+            }
+            if first { break view.snapshot(&hub); }
+            let received = tokio::select! {
+                event = rx.recv() => event,
+                () = tokio::time::sleep(std::time::Duration::from_secs(1)), if view.guest.is_some() => continue,
+            };
+            // A window may have ended while waiting for a bus event.
+            if let Some(guest) = &view.guest {
+                let current = persons.get(&guest.id).filter(PersonRef::is_guest)?;
+                if current != *guest { view.guest = Some(current); break view.snapshot(&hub); }
+            }
+            match received {
                 Ok(event) => match view.pass(&hub, &event) {
-                    Pass::Event => {
-                        break SseEvent::default().event("event").json_data(&event).ok()?;
-                    }
+                    Pass::Event => break SseEvent::default().event("event").json_data(&event).ok()?,
                     Pass::Snapshot => break view.snapshot(&hub),
                     Pass::Drop => {}
                 },
@@ -119,11 +132,8 @@ pub(crate) async fn events(
                 Err(RecvError::Closed) => return None,
             }
         };
-        Some((Ok::<_, Infallible>(event), (hub, rx, view, seat)))
-    });
-    let stream = stream::once(async { Ok(first) })
-        .chain(rest)
-        .take_until(shutdown.cancelled_owned());
+        Some((Ok::<_, Infallible>(event), (hub, rx, view, seat, persons, false)))
+    }).take_until(shutdown.cancelled_owned());
     Sse::new(stream)
         .keep_alive(KeepAlive::default())
         .into_response()

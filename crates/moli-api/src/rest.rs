@@ -111,6 +111,7 @@ fn guest_may(hub: &Hub, caller: &Caller, device: &DeviceId) -> Result<(), Respon
 pub(crate) async fn command(
     State(hub): State<Hub>,
     Extension(humans): Humans,
+    Extension(persons): Extension<Arc<People>>,
     caller: Caller,
     headers: HeaderMap,
     Json(body): Json<CommandBody>,
@@ -122,10 +123,24 @@ pub(crate) async fn command(
     }
     let origin = origin(&hub, &headers, &humans, &caller);
     let actor = journal_actor(origin, body.actor, &caller);
-    match hub
-        .command_with_request_id(&body.point, body.value, origin, actor, body.request_id)
-        .await
-    {
+    let result = match caller.person.as_ref().filter(|person| person.is_guest()) {
+        Some(guest) => {
+            hub.command_with_permit(
+                &body.point,
+                body.value,
+                origin,
+                actor,
+                body.request_id,
+                persons.command_permit(guest),
+            )
+            .await
+        }
+        None => {
+            hub.command_with_request_id(&body.point, body.value, origin, actor, body.request_id)
+                .await
+        }
+    };
+    match result {
         Ok(()) => Json(json!({ "ok": true })).into_response(),
         // Accepted, not executed: a human decides.
         Err(CommandError::NeedsApproval { id, reason }) => (
@@ -170,6 +185,7 @@ pub(crate) struct AmbianceBody {
 pub(crate) async fn ambiance(
     State(hub): State<Hub>,
     Extension(humans): Humans,
+    Extension(persons): Extension<Arc<People>>,
     caller: Caller,
     headers: HeaderMap,
     Json(body): Json<AmbianceBody>,
@@ -204,7 +220,13 @@ pub(crate) async fn ambiance(
     }
     let origin = origin(&hub, &headers, &humans, &caller);
     let actor = journal_actor(origin, body.actor, &caller);
-    let report = moli_ambiance::apply(&hub, look, &body.lights, origin, actor).await;
+    let permit = caller
+        .person
+        .as_ref()
+        .filter(|person| person.is_guest())
+        .map(|guest| persons.command_permit(guest));
+    let report =
+        moli_ambiance::apply_with_permit(&hub, look, &body.lights, origin, actor, permit).await;
     Json(report).into_response()
 }
 
@@ -272,7 +294,7 @@ pub(crate) fn command_status(e: &CommandError) -> StatusCode {
         },
         CommandError::NeedsApproval { .. } => StatusCode::ACCEPTED,
         CommandError::UnknownPoint => StatusCode::NOT_FOUND,
-        CommandError::ReadOnly => StatusCode::FORBIDDEN,
+        CommandError::ReadOnly | CommandError::AccessDenied => StatusCode::FORBIDDEN,
         CommandError::Invalid(_) => StatusCode::UNPROCESSABLE_ENTITY,
         CommandError::DriverUnavailable | CommandError::Busy => StatusCode::SERVICE_UNAVAILABLE,
         CommandError::Timeout => StatusCode::GATEWAY_TIMEOUT,

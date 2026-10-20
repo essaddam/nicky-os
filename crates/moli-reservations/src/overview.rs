@@ -40,13 +40,9 @@ pub fn overview(snapshot: &[Reservation], now: Timestamp) -> Overview {
     } else {
         Cycle::CheckedOut
     };
-    let mut next: Vec<_> = snapshot
-        .iter()
-        .filter(|stay| stay.end > now)
-        .cloned()
-        .collect();
+    let mut next: Vec<_> = snapshot.iter().filter(|stay| stay.end > now).collect();
     next.sort_by(|left, right| (left.start, &left.id).cmp(&(right.start, &right.id)));
-    next.truncate(5);
+    let next = next.into_iter().take(5).cloned().collect();
     Overview { cycle, next }
 }
 

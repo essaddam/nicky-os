@@ -185,5 +185,6 @@
   "serveur.compteur.abandonne": "Commande abandonnée ou arrivée à échéance avant son engagement.",
   "serveur.commande.echouee": "Commande refusée (HTTP {status}).",
   "serveur.compteur.valeur": "Une opération de compteur n’a pas de valeur : envoie null.",
-  "serveur.compteur.lecture_seule": "La valeur du compteur se lit ; utilise incrémenter ou revenir à l’initial pour la modifier."
+  "serveur.compteur.lecture_seule": "La valeur du compteur se lit ; utilise incrémenter ou revenir à l’initial pour la modifier.",
+  "serveur.commande.acces_expire": "L’accès a expiré ou a été retiré."
 }

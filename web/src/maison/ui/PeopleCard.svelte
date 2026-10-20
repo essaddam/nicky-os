@@ -5,6 +5,7 @@
   import { people, loadPeople, savePerson, removePerson, invite, setPassword, assignPhone, signOut, whereabouts, colorOf, ROLES } from '../lib/people.svelte.js';
   import Icon from './Icon.svelte';
   import Login from './Login.svelte';
+  import { reservationBinding, reservationChoices } from '../lib/reservations.js';
 
   /** Système › Personnes: who lives here, what each may do, their phones.
    *  An owner adds, invites, changes and removes; everyone sees who is
@@ -21,11 +22,12 @@
   let signingIn = $state(false);
 
   function empty() {
-    return { name: '', role: 'member', emails: '', rooms: [], expires: '' };
+    return { name: '', role: 'member', emails: '', rooms: [], expires: '', reservation: '' };
   }
 
   const rooms = $derived((home.config?.rooms ?? []).map((r) => r.name));
   // Signed in with a password (Access signs out by itself).
+  const reservations = $derived(reservationChoices(hub.devices, hub.drivers));
   const signedIn = $derived(!!hub.session?.person && hub.session?.via !== 'access');
 
   function edit(p) {
@@ -33,7 +35,7 @@
     invited = null;
     message = '';
     draft = p
-      ? { name: p.name, role: p.role, emails: (p.emails ?? []).join(', '), rooms: [...(p.rooms ?? [])], expires: p.expires ? new Date(p.expires).toISOString().slice(0, 10) : '' }
+      ? { name: p.name, role: p.role, emails: (p.emails ?? []).join(', '), rooms: [...(p.rooms ?? [])], expires: p.expires ? new Date(p.expires).toISOString().slice(0, 10) : '', reservation: p.reservation ? `${p.reservation.instance}:${p.reservation.id}` : '' }
       : empty();
   }
 
@@ -42,11 +44,17 @@
     busy = true;
     message = '';
     try {
+      let reservation = null;
+      if (draft.role === 'guest') {
+        try { reservation = reservationBinding(draft.reservation); }
+        catch { throw new Error(t('personnes.carte.reservation_invalide')); }
+      }
       const body = {
         name: draft.name,
         role: draft.role,
         emails: draft.emails.split(/[\s,;]+/).filter(Boolean),
         rooms: draft.role === 'guest' ? draft.rooms : [],
+        reservation,
         expires: draft.role === 'guest' && draft.expires ? new Date(`${draft.expires}T23:59:59`).getTime() : null,
       };
       await savePerson(editing === 'new' ? null : editing, body);
@@ -93,6 +101,8 @@
   const phonesOf = (id) => people.phones.filter((ph) => ph.person === id);
   const unassigned = $derived(people.phones.filter((ph) => !ph.person));
   const date = (ms) => new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
+
+  const reservationDate = (ms) => new Date(ms).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
 
   function placeOf(p) {
     const w = whereabouts(p.id);
@@ -187,6 +197,19 @@
             {/each}
           </div>
         </fieldset>
+        <label>
+          <span>{t('personnes.carte.reservation')}</span>
+          <select bind:value={draft.reservation}>
+            <option value="">{t('personnes.carte.reservation_aucune')}</option>
+            {#if draft.reservation && !reservations.some((reservation) => reservation.value === draft.reservation)}
+              <option value={draft.reservation}>{t('personnes.carte.reservation_absente')}</option>
+            {/if}
+            {#each reservations as reservation (reservation.value)}
+              <option value={reservation.value}>{t('personnes.carte.reservation_creneau', { name: reservation.name, start: reservationDate(reservation.start), end: reservationDate(reservation.end) })}</option>
+            {/each}
+          </select>
+          <small>{t('personnes.carte.reservation_aide')}</small>
+        </label>
         <label>
           <span>{t('personnes.carte.fin')}</span>
           <input bind:value={draft.expires} type="date" />

@@ -941,6 +941,7 @@ const KINDS: &[&str] = &[
     "presence",
     "profile",
     "reolink",
+    "reservations",
     "roborock",
     "samsung",
     "sonos",
@@ -1201,6 +1202,9 @@ fn build_driver_n_to_z(
         "reolink" => Arc::new(moli_reolink::Reolink::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "reservations" => Arc::new(moli_reservations::Reservations::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "roborock" => Arc::new(moli_roborock::Roborock::new(
             config.options.clone().try_into().with_context(context)?,
         )),

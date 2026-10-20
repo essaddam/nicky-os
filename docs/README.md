@@ -67,6 +67,7 @@ téléphones passent sans Access, avec leur propre jeton.
 | [profils.md](components/profils.md) | moteur de profils déclaratifs, format TOML, ajouter un appareil sans code |
 | [reseau.md](components/reseau.md) | cadrage réseau : diagnostic, ASUSWRT, Huawei LTE, Netgear et SMLIGHT ; Huawei LTE et Netgear natifs sur fixtures, autres lots à implémenter |
 | [reseau-qualification.md](components/reseau-qualification.md) | preuves de contrat réseau, fixtures, bornes et porte de qualification humaine |
+| [reservations.md](components/reservations.md) | calendriers ICS, cycle planifié, accès invités bornés et reprise sans ouverture tardive |
 | [traduction.md](components/traduction.md) | catalogues `locales/`, clés, pluriels, ajouter une langue, contrôle |
 | [wyoming.md](components/wyoming.md) | supervision locale Piper, Whisper et openWakeWord ; garde-fou complet réussi, revue architecte et qualification réelle après H1 distinctes |
 
