@@ -5,6 +5,7 @@ use std::fmt::Write as _;
 
 mod calendar;
 pub mod client;
+pub mod overview;
 mod recurrence;
 mod revision;
 mod series;
