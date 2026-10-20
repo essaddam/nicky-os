@@ -199,7 +199,6 @@ struct Order {
     command: CommandRequest,
     topic: String,
     serial: String,
-    body: Json,
     name: String,
 }
 
@@ -235,13 +234,10 @@ fn accept(house: &House, queue: &mut VecDeque<Order>, command: CommandRequest) {
         )));
         return;
     }
-    let body = match model::order(&command.key, &command.value, known.schedule.as_ref()) {
-        Ok(body) => body,
-        Err(why) => {
-            command.reply(Err(why));
-            return;
-        }
-    };
+    if let Err(why) = model::order(&command.key, &command.value, known.schedule.as_ref()) {
+        command.reply(Err(why));
+        return;
+    }
     if queue.len() >= QUEUE {
         command.reply(Err(moli_i18n::tr!("pilotes.landroid.occupee")));
         return;
@@ -250,7 +246,6 @@ fn accept(house: &House, queue: &mut VecDeque<Order>, command: CommandRequest) {
         command,
         topic: known.mower.command_in.clone(),
         serial: known.mower.serial.clone(),
-        body,
         name: known.mower.name.clone(),
     });
 }
@@ -315,10 +310,25 @@ async fn send_next<F: Frames>(
         let until = Instant::from_std(order.command.deadline)
             .checked_sub(MARGIN)
             .unwrap_or_else(Instant::now);
-        let payload = model::envelope(&order.body, &order.serial, message_id(), &local_now());
-        let sent = timeout_at(until, mqtt.publish(&order.topic, payload))
-            .await
-            .unwrap_or_else(|_| Err(anyhow::anyhow!("mqtt: publish too slow")));
+        let schedule = house
+            .known
+            .iter()
+            .find(|known| known.id == order.command.device.id)
+            .and_then(|known| known.schedule.as_ref());
+        let body = match model::order(&order.command.key, &order.command.value, schedule) {
+            Ok(body) => body,
+            Err(why) => {
+                order.command.reply(Err(why));
+                continue;
+            }
+        };
+        let payload = model::envelope(&body, &order.serial, message_id(), &local_now());
+        let sent = timeout_at(
+            until,
+            mqtt.publish_if(&order.topic, payload, || !order.command.abandoned()),
+        )
+        .await
+        .unwrap_or_else(|_| Err(anyhow::anyhow!("mqtt: publish too slow")));
         let flight = InFlight {
             id: order.command.device.id.clone(),
             command: order.command,
@@ -328,7 +338,13 @@ async fn send_next<F: Frames>(
         };
         // Written (or partly): from here it may have left.
         return match sent {
-            Ok(pkid) => Ok(Some(InFlight { pkid, ..flight })),
+            Ok(Some(pkid)) => Ok(Some(InFlight { pkid, ..flight })),
+            Ok(None) => {
+                flight
+                    .command
+                    .reply(Err(moli_i18n::tr!("pilotes.landroid.trop_tard")));
+                continue;
+            }
             Err(e) => {
                 fail(Some(flight), queue, house);
                 Err(e)

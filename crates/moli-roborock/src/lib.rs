@@ -264,6 +264,10 @@ async fn serve(ctx: &mut DriverCtx, socket: &UdpSocket, keys: &Keys, name: &str)
                     }
                 }
             } else if let Some((command, method)) = queue.pop_front() {
+                if !published.as_ref().is_some_and(|p| p.online) {
+                    command.reply(Err(moli_i18n::tr!("pilotes.roborock.injoignable")));
+                    continue;
+                }
                 // Checked right before it leaves: never late, never unwanted.
                 if command.abandoned() {
                     command.reply(Err(moli_i18n::tr!("pilotes.roborock.trop_tard")));

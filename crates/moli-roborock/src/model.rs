@@ -251,7 +251,10 @@ fn lookup(table: &[(i64, &'static str)], code: Option<i64>) -> Value {
 /// The status of a `get_status` answer (`result[0]`), if there is one.
 #[must_use]
 pub fn status(result: &Json) -> Option<&Json> {
-    result.get(0).filter(|s| s.is_object())
+    let status = result.get(0)?;
+    let state = status["state"].as_i64()?;
+    let battery = status["battery"].as_u64()?;
+    (STATES.iter().any(|(code, _)| *code == state) && battery <= 100).then_some(status)
 }
 
 /// Whether the vacuum is out working (polled more often).

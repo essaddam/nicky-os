@@ -23,6 +23,14 @@
   confirmé » ; liaison perdue → « peut-être parti » pour l'ordre en vol, « non envoyé » pour
   la file. L'effet est suivi : sans état de la tondeuse dans la minute, la maison est
   prévenue (notice).
+- Le permis suit l'ordre jusqu'au WebSocket : après un éventuel pong et les attentes
+  d'écriture, aucun PUBLISH ne commence si l'appelant est parti. Une trame commencée est
+  terminée et son résultat reste suivi. Le planning est recomposé au départ depuis le
+  dernier `sc` reçu ; seules les propriétés demandées (`m`, `distm`) changent.
+- Un renouvellement OAuth limité (429) garde son erreur et l'attente d'une heure, sans
+  connexion de secours par mot de passe. Seul un refus définitif d'authentification permet
+  ce secours. Les diagnostics réseau n'exposent que des codes autorisés ; la durée des
+  jetons doit être comprise entre une minute et un jour, avec renouvellement avant expiration.
 
 ## Repris
 

@@ -10,6 +10,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use anyhow::Context as _;
 use http::{Method, Request, StatusCode};
 use http_body_util::Full;
 use moli_net::Body;
@@ -167,11 +168,15 @@ impl Account {
             return Ok(current);
         }
         let renewed = match refresh {
-            Some(refresh) => self
+            Some(refresh) => match self
                 .token(&[("grant_type", "refresh_token"), ("refresh_token", &refresh)])
                 .await
-                .inspect_err(|e| tracing::debug!(error = %e, "landroid session not renewed"))
-                .ok(),
+            {
+                Ok(session) => Some(session),
+                // Only a definitive authentication refusal permits password login.
+                Err(error) if refusal(&error) == Some(Refusal::Credentials) => None,
+                Err(error) => return Err(error),
+            },
             None => None,
         };
         let session = if let Some(session) = renewed {
@@ -255,35 +260,46 @@ fn session(status: StatusCode, body: &[u8]) -> anyhow::Result<Session> {
     if status.is_success()
         && let Some(access) = json["access_token"].as_str().filter(|a| !a.is_empty())
     {
-        let life = json["expires_in"].as_u64().unwrap_or(3600);
-        let renew_in = Duration::from_secs(life)
-            .saturating_sub(RENEW_EARLY)
-            .max(Duration::from_secs(60));
+        let life = json["expires_in"]
+            .as_u64()
+            .filter(|life| (60..=86_400).contains(life))
+            .context(moli_i18n::tr!("pilotes.landroid.duree_jeton_invalide"))?;
+        let renew_in = if life > RENEW_EARLY.as_secs() {
+            Duration::from_secs(life).saturating_sub(RENEW_EARLY)
+        } else {
+            Duration::from_secs(life / 2)
+        };
         return Ok(Session {
             access: access.to_owned(),
             refresh: json["refresh_token"]
                 .as_str()
                 .filter(|r| !r.is_empty())
                 .map(str::to_owned),
-            renew_at: Instant::now() + renew_in,
+            renew_at: Instant::now()
+                .checked_add(renew_in)
+                .context(moli_i18n::tr!("pilotes.landroid.duree_jeton_invalide"))?,
         });
     }
     let code = json["error"].as_str().unwrap_or_default();
-    let kind = if code == "invalid_grant"
+    let kind = if status == StatusCode::TOO_MANY_REQUESTS {
+        Refusal::TooMany
+    } else if code == "invalid_grant"
         || code == "invalid_credentials"
         || status == StatusCode::UNAUTHORIZED
     {
         Refusal::Credentials
-    } else if status == StatusCode::TOO_MANY_REQUESTS {
-        Refusal::TooMany
     } else {
         Refusal::Other
     };
-    let code: String = code
-        .chars()
-        .filter(|c| c.is_ascii_alphanumeric() || *c == '_')
-        .take(32)
-        .collect();
+    let code = match code {
+        "invalid_grant" => "invalid_grant",
+        "invalid_credentials" => "invalid_credentials",
+        "invalid_client" => "invalid_client",
+        "unauthorized_client" => "unauthorized_client",
+        "unsupported_grant_type" => "unsupported_grant_type",
+        "invalid_scope" => "invalid_scope",
+        _ => "",
+    };
     Err(Refused {
         kind,
         message: format!("Worx {} {code}", status.as_u16())
@@ -334,6 +350,68 @@ mod tests {
         .unwrap_err();
         assert_eq!(refusal(&odd), Some(Refusal::Other));
         assert!(!odd.to_string().contains('<'));
+    }
+
+    #[test]
+    fn review_rob_003_unknown_error_codes_never_echo_credentials() {
+        let marker = "SensitiveEcho1234";
+        let body = serde_json::json!({"error": marker}).to_string();
+        let error = session(StatusCode::BAD_REQUEST, body.as_bytes()).unwrap_err();
+        assert!(!error.to_string().contains(marker));
+        assert!(!format!("{error:?}").contains(marker));
+    }
+
+    #[test]
+    fn review_rob_004_token_lifetimes_are_bounded() {
+        for life in [0, 1, u64::MAX] {
+            let body = serde_json::json!({"access_token": "a", "expires_in": life});
+            assert!(
+                session(StatusCode::OK, body.to_string().as_bytes()).is_err(),
+                "{life}"
+            );
+        }
+        let before = Instant::now();
+        let body = br#"{"access_token":"a","expires_in":60}"#;
+        let short = session(StatusCode::OK, body).unwrap();
+        assert!(short.renew_at > before);
+        assert!(short.renew_at <= before + Duration::from_secs(60));
+    }
+
+    #[tokio::test]
+    async fn review_rob_002_refresh_limits_and_transient_errors_do_not_log_in_again() {
+        for status in [
+            StatusCode::TOO_MANY_REQUESTS,
+            StatusCode::SERVICE_UNAVAILABLE,
+        ] {
+            let (account, calls) = account(vec![
+                ("/oauth/token", status, ""),
+                (
+                    "/oauth/token",
+                    StatusCode::OK,
+                    r#"{"access_token":"fallback","expires_in":3600}"#,
+                ),
+            ]);
+            *account.sessions.slot() = Some(Session {
+                access: "expired".into(),
+                refresh: Some("refresh".into()),
+                renew_at: Instant::now(),
+            });
+            let result = account.access().await;
+            assert!(result.is_err(), "no password fallback on {status}");
+            assert_eq!(calls.lock().unwrap().len(), 1);
+            assert_eq!(
+                refusal(&result.unwrap_err()),
+                Some(if status == StatusCode::TOO_MANY_REQUESTS {
+                    Refusal::TooMany
+                } else {
+                    Refusal::Other
+                })
+            );
+            assert!(
+                account.sessions.slot().is_some(),
+                "refresh session preserved"
+            );
+        }
     }
 
     /// A Worx in memory: answers by host and path, counts the calls.

@@ -490,6 +490,7 @@
   "pilotes.landroid.aucune": "aucune tondeuse Landroid prise en charge sur ce compte",
   "pilotes.landroid.injoignable": "cloud Worx injoignable ({cause})",
   "pilotes.landroid.cloud_injoignable": "cloud Worx injoignable pour l'instant : ordre non envoyé",
+  "pilotes.landroid.duree_jeton_invalide": "durée du jeton Worx absente ou invalide",
   "pilotes.roborock.commande": "Commande",
   "pilotes.roborock.etat": "État",
   "pilotes.roborock.erreur": "Erreur",

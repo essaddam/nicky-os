@@ -20,6 +20,9 @@ enum Answer {
     Ok,
     Silent,
     Invalid,
+    EmptyStatus,
+    BadStatus,
+    HoldInvalidPoll,
     /// Answered `ok` once [`Vacuum::release`] is notified.
     Hold,
 }
@@ -44,6 +47,7 @@ async fn vacuum(model: &'static str, answers: &[(&'static str, Answer)]) -> Vacu
     tokio::spawn(async move {
         let mut buf = vec![0u8; 4096];
         let stamp = 1000u32;
+        let mut polls = 0;
         while let Ok((n, from)) = socket.recv_from(&mut buf).await {
             let packet = &buf[..n];
             if packet == miio::hello() {
@@ -66,13 +70,39 @@ async fn vacuum(model: &'static str, answers: &[(&'static str, Answer)]) -> Vacu
                 "get_status" if answers.get("get_status") == Some(&Answer::Invalid) => {
                     json!({"id": id, "result": []})
                 }
+                "get_status" if answers.get("get_status") == Some(&Answer::EmptyStatus) => {
+                    json!({"id": id, "result": [{}]})
+                }
+                "get_status" if answers.get("get_status") == Some(&Answer::BadStatus) => {
+                    json!({"id": id, "result": [{"state": "cleaning", "battery": 300}]})
+                }
                 "get_status" => {
+                    polls += 1;
+                    if polls > 1 && answers.get("get_status") == Some(&Answer::HoldInvalidPoll) {
+                        let (socket, keys, rel) =
+                            (Arc::clone(&socket), Arc::clone(&keys), Arc::clone(&rel));
+                        tokio::spawn(async move {
+                            rel.notified().await;
+                            let reply = json!({"id": id, "result": []});
+                            let _ = socket
+                                .send_to(
+                                    &keys.encode(DEVICE, stamp, reply.to_string().as_bytes()),
+                                    from,
+                                )
+                                .await;
+                        });
+                        continue;
+                    }
                     let mut status: Json = serde_json::from_slice(STATUS).unwrap();
                     status["id"] = id;
                     status
                 }
                 other => match answers.get(other).copied().unwrap_or(Answer::Ok) {
-                    Answer::Silent | Answer::Invalid => continue,
+                    Answer::Silent
+                    | Answer::Invalid
+                    | Answer::EmptyStatus
+                    | Answer::BadStatus
+                    | Answer::HoldInvalidPoll => continue,
                     Answer::Ok => json!({"id": id, "result": ["ok"]}),
                     Answer::Hold => {
                         let (socket, keys, rel) =
@@ -292,6 +322,44 @@ async fn an_invalid_status_never_enables_orders() {
         .unwrap();
     assert_ne!(vacuum.online, Some(true));
     assert!(order(&b.hub, "start").await.unwrap().is_err());
+    assert!(
+        !heard_for(&mut b.vacuum, Duration::from_millis(100))
+            .await
+            .iter()
+            .any(|m| m.starts_with("app_"))
+    );
+}
+
+#[tokio::test]
+async fn review_rob_005_empty_or_invalid_status_objects_never_enable_orders() {
+    for answer in [Answer::EmptyStatus, Answer::BadStatus] {
+        let mut b = bench("roborock.vacuum.s6", &[("get_status", answer)]).await;
+        heard_until(&mut b.vacuum, "get_status").await;
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        assert!(order(&b.hub, "start").await.unwrap().is_err(), "{answer:?}");
+        assert!(
+            !heard_for(&mut b.vacuum, Duration::from_millis(100))
+                .await
+                .iter()
+                .any(|m| m.starts_with("app_"))
+        );
+    }
+}
+
+#[tokio::test]
+async fn review_rob_006_a_queued_order_is_refused_after_an_invalid_poll() {
+    let mut b = bench(
+        "roborock.vacuum.s6",
+        &[("get_status", Answer::HoldInvalidPoll)],
+    )
+    .await;
+    ready(&b).await;
+    heard_until(&mut b.vacuum, "get_status").await;
+    heard_until(&mut b.vacuum, "get_status").await;
+    let call = order(&b.hub, "start");
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    b.vacuum.release.notify_one();
+    assert!(call.await.unwrap().is_err());
     assert!(
         !heard_for(&mut b.vacuum, Duration::from_millis(100))
             .await

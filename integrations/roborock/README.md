@@ -14,6 +14,9 @@
   fois** (python-miio réessaie trois fois : Moli jamais). `["ok"]` → fait ; refus → sa raison ;
   pas de réponse 400 ms avant l'échéance du hub → « peut-être parti, non confirmé », puis
   nouveau `hello`. Ensuite l'état est relu toutes les 5 s pendant une minute.
+- Un statut exploitable contient un état connu et une batterie entière entre 0 et 100 %.
+  Une réponse vide ou invalide met le robot hors ligne ; les ordres encore en file sont
+  refusés avant émission.
 
 ## Repris
 

@@ -14,7 +14,7 @@ use ring::digest::{SHA1_FOR_LEGACY_USE_ONLY, digest};
 use ring::rand::{SecureRandom, SystemRandom};
 use rustls::ClientConfig;
 use rustls::pki_types::ServerName;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_rustls::TlsConnector;
 use tokio_rustls::client::TlsStream;
@@ -146,10 +146,18 @@ impl WebSocket {
     /// Sends one binary message (MQTT over websockets), after the answer to
     /// a ping [`WebSocket::recv_data`] heard.
     pub async fn send_binary(&mut self, data: &[u8]) -> anyhow::Result<()> {
-        if let Some(pong) = self.pong.take() {
-            self.send(0xA, &pong).await?;
-        }
-        self.send(0x2, data).await
+        self.send_binary_if(data, || true).await?;
+        Ok(())
+    }
+
+    /// A physical order's permission follows it to the transport.
+    /// False means no application data was emitted.
+    pub async fn send_binary_if(
+        &mut self,
+        data: &[u8],
+        wanted: impl Fn() -> bool + Send + Sync,
+    ) -> anyhow::Result<bool> {
+        binary_if(&mut self.stream, &mut self.pong, data, wanted).await
     }
 
     /// The next data message, text or binary, as bytes. Cancel-safe: it
@@ -214,27 +222,7 @@ impl WebSocket {
 
     /// Client frames are always masked.
     async fn send(&mut self, opcode: u8, payload: &[u8]) -> anyhow::Result<()> {
-        let mut mask = [0u8; 4];
-        SystemRandom::new()
-            .fill(&mut mask)
-            .map_err(|_| anyhow::anyhow!("no randomness"))?;
-        let mut frame = vec![0x80 | opcode];
-        match payload.len() {
-            n if n < 126 => frame.push(0x80 | u8::try_from(n)?),
-            n if let Ok(short) = u16::try_from(n) => {
-                frame.push(0x80 | 0x7e);
-                frame.extend_from_slice(&short.to_be_bytes());
-            }
-            n => {
-                frame.push(0x80 | 0x7f);
-                frame.extend_from_slice(&u64::try_from(n)?.to_be_bytes());
-            }
-        }
-        frame.extend_from_slice(&mask);
-        frame.extend(payload.iter().zip(mask.iter().cycle()).map(|(b, m)| b ^ m));
-        self.stream.write_all(&frame).await?;
-        self.stream.flush().await?;
-        Ok(())
+        send_frame(&mut self.stream, opcode, payload).await
     }
 
     async fn fill(&mut self, n: usize) -> anyhow::Result<()> {
@@ -293,6 +281,72 @@ impl WebSocket {
     }
 }
 
+async fn binary_if(
+    stream: &mut (impl AsyncWrite + Unpin),
+    pong: &mut Option<Vec<u8>>,
+    data: &[u8],
+    wanted: impl Fn() -> bool,
+) -> anyhow::Result<bool> {
+    if !wanted() {
+        return Ok(false);
+    }
+    if let Some(pong) = pong.take() {
+        send_frame(stream, 0xA, &pong).await?;
+    }
+    send_frame_if(stream, 0x2, data, wanted).await
+}
+
+async fn send_frame(
+    stream: &mut (impl AsyncWrite + Unpin),
+    opcode: u8,
+    payload: &[u8],
+) -> anyhow::Result<()> {
+    send_frame_if(stream, opcode, payload, || true).await?;
+    Ok(())
+}
+
+async fn send_frame_if(
+    stream: &mut (impl AsyncWrite + Unpin),
+    opcode: u8,
+    payload: &[u8],
+    wanted: impl Fn() -> bool,
+) -> anyhow::Result<bool> {
+    let mut mask = [0u8; 4];
+    SystemRandom::new()
+        .fill(&mut mask)
+        .map_err(|_| anyhow::anyhow!("no randomness"))?;
+    let mut frame = vec![0x80 | opcode];
+    match payload.len() {
+        n if n < 126 => frame.push(0x80 | u8::try_from(n)?),
+        n if let Ok(short) = u16::try_from(n) => {
+            frame.push(0x80 | 0x7e);
+            frame.extend_from_slice(&short.to_be_bytes());
+        }
+        n => {
+            frame.push(0x80 | 0x7f);
+            frame.extend_from_slice(&u64::try_from(n)?.to_be_bytes());
+        }
+    }
+    frame.extend_from_slice(&mask);
+    frame.extend(payload.iter().zip(mask.iter().cycle()).map(|(b, m)| b ^ m));
+    // Recheck after preparation and every wake until the transport accepts
+    // its first byte. Once started, finish the frame even if its caller leaves.
+    let first = std::future::poll_fn(|cx| {
+        if !wanted() {
+            return std::task::Poll::Ready(Ok(None));
+        }
+        std::pin::Pin::new(&mut *stream)
+            .poll_write(cx, &frame)
+            .map(|result| result.map(Some))
+    })
+    .await?;
+    let Some(first) = first else { return Ok(false) };
+    ensure!(first > 0, "websocket write returned zero");
+    stream.write_all(&frame[first..]).await?;
+    stream.flush().await?;
+    Ok(true)
+}
+
 /// Standard base64 with padding (handshake keys).
 fn base64(bytes: &[u8]) -> String {
     const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -318,6 +372,94 @@ fn base64(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn review_rob_001_abandonment_before_the_first_write_prevents_emission() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        let (mut writer, mut reader) = tokio::io::duplex(1);
+        writer.write_all(b"x").await.unwrap();
+        let wanted = AtomicBool::new(true);
+        let mut pong = None;
+        {
+            let send = binary_if(&mut writer, &mut pong, b"PUBLISH", || {
+                wanted.load(Ordering::SeqCst)
+            });
+            tokio::pin!(send);
+            let mut cx = std::task::Context::from_waker(std::task::Waker::noop());
+            assert!(std::future::Future::poll(send.as_mut(), &mut cx).is_pending());
+            wanted.store(false, Ordering::SeqCst);
+            let mut first = [0];
+            reader.read_exact(&mut first).await.unwrap();
+            assert_eq!(first, [b'x']);
+            assert!(!send.await.unwrap());
+        }
+        drop(writer);
+        let mut rest = Vec::new();
+        reader.read_to_end(&mut rest).await.unwrap();
+        assert!(rest.is_empty());
+    }
+
+    #[tokio::test]
+    async fn review_rob_001_a_started_frame_finishes_after_abandonment() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        let (mut writer, mut reader) = tokio::io::duplex(1);
+        let wanted = AtomicBool::new(true);
+        let mut pong = None;
+        let send = binary_if(&mut writer, &mut pong, b"PUBLISH", || {
+            wanted.load(Ordering::SeqCst)
+        });
+        tokio::pin!(send);
+        let mut cx = std::task::Context::from_waker(std::task::Waker::noop());
+        assert!(std::future::Future::poll(send.as_mut(), &mut cx).is_pending());
+        wanted.store(false, Ordering::SeqCst);
+        let mut frame = [0; 13];
+        let (emitted, received) = tokio::time::timeout(Duration::from_secs(2), async {
+            tokio::join!(send, reader.read_exact(&mut frame))
+        })
+        .await
+        .unwrap();
+        assert!(emitted.unwrap());
+        received.unwrap();
+        assert_eq!(frame[0], 0x82);
+    }
+
+    #[tokio::test]
+    async fn review_rob_001_abandonment_during_a_blocked_pong_prevents_binary_emission() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        for abandon in [false, true] {
+            let (mut writer, mut reader) = tokio::io::duplex(1);
+            let wanted = Arc::new(AtomicBool::new(true));
+            let permit = Arc::clone(&wanted);
+            let task = tokio::spawn(async move {
+                binary_if(&mut writer, &mut Some(b"ping".to_vec()), b"PUBLISH", || {
+                    permit.load(Ordering::SeqCst)
+                })
+                .await
+                .unwrap()
+            });
+            let mut first = [0];
+            reader.read_exact(&mut first).await.unwrap();
+            assert_eq!(
+                first,
+                [0x8a],
+                "pong has started, its remaining bytes are blocked"
+            );
+            if abandon {
+                wanted.store(false, Ordering::SeqCst);
+            }
+            let mut rest = Vec::new();
+            tokio::time::timeout(Duration::from_secs(2), reader.read_to_end(&mut rest))
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(task.await.unwrap(), !abandon);
+            // Pong = 2 header bytes, 4 mask bytes, 4 payload bytes.
+            assert_eq!(rest.len(), if abandon { 9 } else { 22 });
+            if !abandon {
+                assert_eq!(rest[9], 0x82, "one binary frame follows the pong");
+            }
+        }
+    }
 
     #[test]
     fn base64_matches_the_rfc_examples() {

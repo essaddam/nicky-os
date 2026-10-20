@@ -300,6 +300,81 @@ async fn the_schedule_goes_back_whole_and_writes_are_checked() {
 }
 
 #[tokio::test]
+async fn review_rob_007_a_queued_schedule_uses_the_latest_status() {
+    let mut b = bench().await;
+    let first = order(&b.hub, "control", Value::from("start"));
+    let p = published(&mut b.broker).await;
+    let schedule = order(&b.hub, "schedule", Value::from("off"));
+    settle().await;
+    let mut status: Json = serde_json::from_slice(MOWING).unwrap();
+    status["cfg"]["sc"]["d"][1] = serde_json::json!(["14:30", 45, 0]);
+    status["cfg"]["sc"]["distm"] = 17.into();
+    b.broker.send(&Packet::Publish(Publish::new(
+        OUT,
+        QoS::AtMostOnce,
+        status.to_string(),
+    )));
+    settle().await;
+    b.broker.send(&Packet::PubAck(PubAck::new(p.pkid)));
+    assert_eq!(first.await.unwrap(), Ok(()));
+    let p = published(&mut b.broker).await;
+    let mut expected = status["cfg"]["sc"].clone();
+    expected["m"] = 0.into();
+    expected["distm"] = 0.into();
+    assert_eq!(body(&p)["sc"], expected);
+    b.broker.send(&Packet::PubAck(PubAck::new(p.pkid)));
+    assert_eq!(schedule.await.unwrap(), Ok(()));
+}
+
+#[tokio::test]
+async fn review_rob_001_the_driver_carries_abandonment_through_transport_preparation() {
+    use std::sync::atomic::Ordering;
+    for abandon in [false, true] {
+        let mut b = bench().await;
+        b.broker.preparation.hold_next.store(true, Ordering::SeqCst);
+        let call = order(&b.hub, "control", Value::from("start"));
+        tokio::time::timeout(
+            Duration::from_secs(2),
+            b.broker.preparation.entered.notified(),
+        )
+        .await
+        .unwrap();
+        if abandon {
+            call.abort();
+            assert!(call.await.unwrap_err().is_cancelled());
+            b.broker.preparation.release.notify_one();
+            silent(&mut b.broker, Duration::from_millis(100)).await;
+        } else {
+            b.broker.preparation.release.notify_one();
+            let p = published(&mut b.broker).await;
+            b.broker.send(&Packet::PubAck(PubAck::new(p.pkid)));
+            assert_eq!(call.await.unwrap(), Ok(()));
+            silent(&mut b.broker, Duration::from_millis(100)).await;
+        }
+    }
+}
+
+#[tokio::test]
+async fn review_rob_001_an_ack_after_emission_survives_caller_abandonment() {
+    let mut b = bench().await;
+    let call = order(&b.hub, "control", Value::from("start"));
+    let p = published(&mut b.broker).await;
+    call.abort();
+    assert!(call.await.unwrap_err().is_cancelled());
+    b.broker.send(&Packet::PubAck(PubAck::new(p.pkid)));
+    settle().await;
+    let outcomes: Vec<_> = b
+        .hub
+        .journal(10)
+        .iter()
+        .filter(|entry| matches!(entry.action, moli_core::Action::Command { .. }))
+        .map(|entry| entry.outcome.clone())
+        .collect();
+    assert_eq!(outcomes, [moli_core::Outcome::Ok]);
+    silent(&mut b.broker, Duration::from_millis(100)).await;
+}
+
+#[tokio::test]
 async fn an_agent_starting_the_mower_waits_for_a_person() {
     let b = bench().await;
     let held = b

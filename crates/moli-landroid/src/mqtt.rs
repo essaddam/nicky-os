@@ -18,14 +18,22 @@ const SETUP: Duration = Duration::from_secs(10);
 
 /// Whole messages over a connection, in both directions.
 pub trait Frames: Send {
-    fn send(&mut self, data: &[u8]) -> impl Future<Output = anyhow::Result<()>> + Send;
+    fn send_if(
+        &mut self,
+        data: &[u8],
+        wanted: impl Fn() -> bool + Send + Sync,
+    ) -> impl Future<Output = anyhow::Result<bool>> + Send;
     /// Must be cancel-safe: it sits in a `select!` beside the orders.
     fn recv(&mut self) -> impl Future<Output = anyhow::Result<Vec<u8>>> + Send;
 }
 
 impl Frames for moli_net::ws::WebSocket {
-    async fn send(&mut self, data: &[u8]) -> anyhow::Result<()> {
-        self.send_binary(data).await
+    async fn send_if(
+        &mut self,
+        data: &[u8],
+        wanted: impl Fn() -> bool + Send + Sync,
+    ) -> anyhow::Result<bool> {
+        self.send_binary_if(data, wanted).await
     }
 
     async fn recv(&mut self) -> anyhow::Result<Vec<u8>> {
@@ -139,11 +147,22 @@ impl<F: Frames> Mqtt<F> {
     /// Publishes once, QoS 1: the answer is [`Incoming::PubAck`] with the
     /// id returned. Never sent again (no `dup`): a lost answer stays lost.
     pub async fn publish(&mut self, topic: &str, payload: Vec<u8>) -> anyhow::Result<u16> {
+        self.publish_if(topic, payload, || true)
+            .await?
+            .context("mqtt: publish not sent")
+    }
+
+    pub async fn publish_if(
+        &mut self,
+        topic: &str,
+        payload: Vec<u8>,
+        wanted: impl Fn() -> bool + Send + Sync,
+    ) -> anyhow::Result<Option<u16>> {
         let mut publish = Publish::new(topic, QoS::AtLeastOnce, payload);
         publish.pkid = self.next_id();
         let pkid = publish.pkid;
-        self.write(&Packet::Publish(publish)).await?;
-        Ok(pkid)
+        let bytes = encode(&Packet::Publish(publish))?;
+        Ok(self.link.send_if(&bytes, wanted).await?.then_some(pkid))
     }
 
     pub async fn ping(&mut self) -> anyhow::Result<()> {
@@ -180,7 +199,8 @@ impl<F: Frames> Mqtt<F> {
 
     async fn write(&mut self, packet: &Packet) -> anyhow::Result<()> {
         let bytes = encode(packet)?;
-        self.link.send(&bytes).await
+        self.link.send_if(&bytes, || true).await?;
+        Ok(())
     }
 
     /// Packet ids from 1, wrapping (0 is not one).
@@ -197,22 +217,45 @@ pub mod fake {
     use super::{Frames, MAX_PACKET, encode};
     use bytes::BytesMut;
     use rumqttc::mqttbytes::v4::Packet;
-    use std::future::Future;
-    use tokio::sync::mpsc;
+    use std::sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    };
+    use tokio::sync::{Notify, mpsc};
+
+    #[derive(Debug, Default)]
+    pub struct Preparation {
+        pub hold_next: AtomicBool,
+        pub entered: Notify,
+        pub release: Notify,
+    }
 
     #[derive(Debug)]
     pub struct Link {
         pub to_broker: mpsc::UnboundedSender<Vec<u8>>,
         pub from_broker: mpsc::UnboundedReceiver<Vec<u8>>,
+        pub preparation: Arc<Preparation>,
     }
 
     impl Frames for Link {
-        fn send(&mut self, data: &[u8]) -> impl Future<Output = anyhow::Result<()>> + Send {
-            std::future::ready(
-                self.to_broker
-                    .send(data.to_vec())
-                    .map_err(|_| anyhow::anyhow!("broker gone")),
-            )
+        async fn send_if(
+            &mut self,
+            data: &[u8],
+            wanted: impl Fn() -> bool + Send + Sync,
+        ) -> anyhow::Result<bool> {
+            if data.first().is_some_and(|byte| byte >> 4 == 3)
+                && self.preparation.hold_next.swap(false, Ordering::SeqCst)
+            {
+                self.preparation.entered.notify_one();
+                self.preparation.release.notified().await;
+            }
+            if !wanted() {
+                return Ok(false);
+            }
+            self.to_broker
+                .send(data.to_vec())
+                .map_err(|_| anyhow::anyhow!("broker gone"))?;
+            Ok(true)
         }
 
         async fn recv(&mut self) -> anyhow::Result<Vec<u8>> {
@@ -229,21 +272,25 @@ pub mod fake {
         pub heard: mpsc::UnboundedReceiver<Vec<u8>>,
         pub say: mpsc::UnboundedSender<Vec<u8>>,
         buf: BytesMut,
+        pub preparation: Arc<Preparation>,
     }
 
     #[must_use]
     pub fn pair() -> (Link, Broker) {
         let (to_broker, heard) = mpsc::unbounded_channel();
         let (say, from_broker) = mpsc::unbounded_channel();
+        let preparation = Arc::new(Preparation::default());
         (
             Link {
                 to_broker,
                 from_broker,
+                preparation: Arc::clone(&preparation),
             },
             Broker {
                 heard,
                 say,
                 buf: BytesMut::new(),
+                preparation,
             },
         )
     }

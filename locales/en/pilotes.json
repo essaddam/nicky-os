@@ -490,6 +490,7 @@
   "pilotes.landroid.aucune": "no supported Landroid mower on this account",
   "pilotes.landroid.injoignable": "Worx cloud unreachable ({cause})",
   "pilotes.landroid.cloud_injoignable": "Worx cloud unreachable for now: order not sent",
+  "pilotes.landroid.duree_jeton_invalide": "missing or invalid Worx token lifetime",
   "pilotes.roborock.commande": "Command",
   "pilotes.roborock.etat": "State",
   "pilotes.roborock.erreur": "Error",
