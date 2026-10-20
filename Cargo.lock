@@ -2021,6 +2021,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-reservations"
+version = "0.1.0"
+dependencies = [
+ "jiff",
+ "moli-i18n",
+ "ring",
+ "thiserror",
+]
+
+[[package]]
 name = "moli-roborock"
 version = "0.1.0"
 dependencies = [

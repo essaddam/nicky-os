@@ -688,5 +688,6 @@
   "pilotes.huawei_lte.tx_bytes": "Octets de connexion émis",
   "pilotes.huawei_lte.rx_rate": "Débit reçu",
   "pilotes.huawei_lte.tx_rate": "Débit émis",
-  "pilotes.huawei_lte.duration": "Durée de connexion"
+  "pilotes.huawei_lte.duration": "Durée de connexion",
+  "pilotes.reservations.calendrier_invalide": "Le calendrier est invalide, trop volumineux ou utilise une règle non prise en charge. Les accès liés restent fermés."
 }

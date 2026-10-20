@@ -5,6 +5,7 @@
 //! journal entries — lives here so drivers, the runtime and the surfaces
 //! agree on one vocabulary.
 
+mod access_window;
 pub mod color;
 mod counter;
 mod event;
@@ -15,6 +16,7 @@ pub mod privacy;
 mod spec;
 mod value;
 
+pub use access_window::AccessWindow;
 pub use counter::{CounterOperation, CounterSpec, MAX_COUNTER_VALUE};
 pub use event::{
     Action, ApprovalRequest, AutomationChange, Decision, DriverStatus, Event, JournalEntry, Notice,
