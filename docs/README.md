@@ -62,6 +62,7 @@ téléphones passent sans Access, avec leur propre jeton.
 | [installation.md](components/installation.md) | premier démarrage, code de la maison, clé maître, premiers appareils, accès hors de chez soi |
 | [medias.md](components/medias.md) | contrats purs de découverte média R1 : identités, validation et sélection, sans catalogue réel ni lancement raccordé |
 | [moli.md](components/moli.md) | l'assistant : conversation, outils, garde, création d'automatismes, filtres |
+| [netgear.md](components/netgear.md) | client Netgear SOAP en lecture, contrats synthétiques et limites de qualification |
 | [pilotes.md](components/pilotes.md) | trait `Driver`, pilotes natifs dont Netatmo météo, `moli-net` |
 | [profils.md](components/profils.md) | moteur de profils déclaratifs, format TOML, ajouter un appareil sans code |
 | [reseau.md](components/reseau.md) | cadrage réseau : diagnostic, ASUSWRT, Huawei LTE, Netgear et SMLIGHT ; clients à implémenter |

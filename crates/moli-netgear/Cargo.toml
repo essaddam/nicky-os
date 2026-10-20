@@ -1,0 +1,32 @@
+[package]
+name = "moli-netgear"
+description = "Moli OS: bounded read-only Netgear SOAP client."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+moli-i18n.workspace = true
+moli-net.workspace = true
+moli-runtime.workspace = true
+ring.workspace = true
+tokio.workspace = true
+moli-core.workspace = true
+roxmltree = "=0.21.1"
+serde.workspace = true
+
+[dev-dependencies]
+rcgen = { version = "=0.14.7", default-features = false, features = ["ring", "crypto"] }
+rustls.workspace = true
+tokio-rustls.workspace = true
+tokio = { workspace = true, features = ["test-util"] }
+tokio-util.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+[lints]
+workspace = true

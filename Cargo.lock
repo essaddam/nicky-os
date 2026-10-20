@@ -1782,6 +1782,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-netgear"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "http",
+ "http-body-util",
+ "moli-core",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "rcgen 0.14.7",
+ "ring",
+ "roxmltree",
+ "rustls",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-rustls",
+ "tokio-util",
+ "toml",
+]
+
+[[package]]
 name = "moli-nuki"
 version = "0.1.0"
 dependencies = [
@@ -1833,6 +1856,7 @@ dependencies = [
  "moli-moonraker",
  "moli-net",
  "moli-netatmo",
+ "moli-netgear",
  "moli-nuki",
  "moli-overkiz",
  "moli-philips",
@@ -2532,6 +2556,19 @@ dependencies = [
 
 [[package]]
 name = "rcgen"
+version = "0.14.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10b99e0098aa4082912d4c649628623db6aba77335e4f4569ff5083a6448b32e"
+dependencies = [
+ "ring",
+ "rustls-pki-types",
+ "time",
+ "x509-parser",
+ "yasna 0.5.2",
+]
+
+[[package]]
+name = "rcgen"
 version = "0.14.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8774e05a7d0de114588e6a28fe7e71694b82614ed569d86d8b389dfbc98b8ad8"
@@ -2644,6 +2681,15 @@ dependencies = [
  "quote",
  "serde_json",
  "syn 3.0.6",
+]
+
+[[package]]
+name = "roxmltree"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1964b10c76125c36f8afe190065a4bf9a87bf324842c05701330bba9f1cacbb"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]

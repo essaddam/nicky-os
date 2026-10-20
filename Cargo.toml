@@ -37,6 +37,7 @@ moli-lights = { path = "crates/moli-lights" }
 moli-moonraker = { path = "crates/moli-moonraker" }
 moli-net = { path = "crates/moli-net" }
 moli-netatmo = { path = "crates/moli-netatmo" }
+moli-netgear = { path = "crates/moli-netgear" }
 moli-nuki = { path = "crates/moli-nuki" }
 moli-overkiz = { path = "crates/moli-overkiz" }
 moli-philips = { path = "crates/moli-philips" }

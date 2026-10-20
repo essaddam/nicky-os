@@ -31,6 +31,7 @@ moli-lights.workspace = true
 moli-moonraker.workspace = true
 moli-net.workspace = true
 moli-netatmo.workspace = true
+moli-netgear.workspace = true
 moli-nuki.workspace = true
 moli-overkiz.workspace = true
 moli-philips.workspace = true

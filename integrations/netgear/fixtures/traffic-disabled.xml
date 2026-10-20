@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:GetTrafficMeterStatisticsResponse xmlns:u="urn:NETGEAR-ROUTER:service:DeviceConfig:1"><NewTodayConnectionTime>--</NewTodayConnectionTime><NewTodayUpload>--</NewTodayUpload><NewTodayDownload>--</NewTodayDownload></u:GetTrafficMeterStatisticsResponse><ResponseCode>0000</ResponseCode></s:Body></s:Envelope>

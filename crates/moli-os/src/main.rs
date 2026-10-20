@@ -932,6 +932,7 @@ const KINDS: &[&str] = &[
     "landroid",
     "moonraker",
     "netatmo",
+    "netgear",
     "nuki",
     "overkiz",
     "philips",
@@ -1167,6 +1168,9 @@ fn build_driver_n_to_z(
     let context = || format!("driver {:?} options", config.id);
     Ok(match config.kind.as_str() {
         "netatmo" => Arc::new(netatmo_driver(config)?.0),
+        "netgear" => Arc::new(moli_netgear::Netgear::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "nuki" => Arc::new(moli_nuki::Nuki::new(
             config.options.clone().try_into().with_context(context)?,
         )),

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:GetSystemInfoResponse xmlns:u="urn:NETGEAR-ROUTER:service:DeviceInfo:1"></u:GetSystemInfoResponse><ResponseCode>501</ResponseCode></s:Body></s:Envelope>

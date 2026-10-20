@@ -527,6 +527,21 @@ Familles B1 : `climate` pour température/humidité/CO₂/pression, `diagnostic`
 Paquet, bornes, limites et onboarding : [Netatmo](../../integrations/netatmo/README.md).
 Tests sur données synthétiques uniquement ; qualification réelle après H1.
 
+## `netgear` : équipement réseau Netgear SOAP (`crates/moli-netgear`)
+
+Lectures SOAP figées, session v1 ou v2 explicitement choisie et aucun scan de ports.
+HTTPS épinglé avant envoi d'identifiants ; HTTP uniquement avec consentement humain
+`allow_plain_auth`. Secrets `username`, `password`, `cert_sha256` et `device_identity`
+au coffre. Identité par numéro de série ; clients uniquement sélectionnés (32 au plus,
+aucun par défaut), inventaire borné à 512 et validé en entier. Aucun point de présence,
+nom, IP, MAC ou SSID ; aucune connexion aux clients découverts. La liste attachée ne
+prouve pas l'association actuelle. Mesures sans unité qualifiée laissées inconnues,
+jamais de zéro pour un compteur inactif ; aucune activation de Traffic Meter.
+
+Paquet et limites : [Netgear](netgear.md), [README](../../integrations/netgear/README.md)
+et [onboarding](../../integrations/netgear/onboarding.md). Contrats synthétiques seulement,
+aucun firmware réel qualifié ni reprise d'usage HA avant la porte humaine H1.
+
 ## `nuki` : serrures Nuki (`crates/moli-nuki`)
 
 - **Couvre** : les serrures appairées à un **pont Nuki matériel** (Smart Lock 1.0/2.0/3.0, Smart Door). L'Opener (interphone) est ignoré. Paquet `integrations/nuki`.

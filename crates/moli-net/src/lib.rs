@@ -556,6 +556,30 @@ impl PinnedHttps {
             .map(|(status, body, _)| (status, body))
     }
 
+    /// One exchange, including connection and body collection, with caller-owned
+    /// body limit and response headers. Never retries or follows redirects.
+    /// The sender is taken out of the shared slot so cancellation closes it.
+    pub async fn send_once_limited_with_headers(
+        &self,
+        request: Request<Full<Bytes>>,
+        max_body: usize,
+    ) -> anyhow::Result<(StatusCode, http::HeaderMap, Bytes)> {
+        let exchange = async {
+            let mut slot = self.conn.lock().await;
+            let mut sender = match slot.take().filter(|sender| !sender.is_closed()) {
+                Some(sender) => sender,
+                None => self.connect().await?,
+            };
+            sender.ready().await?;
+            let (head, body) = sender.send_request(request).await?.into_parts();
+            let body = read_body(body, max_body).await?;
+            anyhow::Ok((head.status, head.headers, body))
+        };
+        tokio::time::timeout(TIMEOUT, exchange)
+            .await
+            .context("bounded HTTPS exchange timed out")?
+    }
+
     /// Connects and shakes hands, nothing more: records the certificate's
     /// fingerprint before any secret is sent.
     pub async fn handshake(&self) -> anyhow::Result<()> {

@@ -1,0 +1,39 @@
+[integration]
+id = "netgear"
+name = "Netgear SOAP (lecture)"
+brands = ["Netgear"]
+models = []
+transport = "https"
+driver = "netgear"
+crate = "moli-netgear"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = []
+
+[needs]
+secrets = ["username", "password"]
+vars = []
+options = ["host", "port", "transport", "login", "inventory"]
+
+[origin]
+reused = "Connaissance du protocole pynetgear d9b34149b110cd91fbccc5fff7a285a1221af5dd (MIT) ; aucun code copié ; fixtures synthétiques sous la licence du dépôt, aucune capture privée"
+author = "agent"
+
+[[fixture]]
+file = "fixtures/clients-v1.xml"
+[[fixture]]
+file = "fixtures/clients-v2.xml"
+[[fixture]]
+file = "fixtures/ethernet.xml"
+[[fixture]]
+file = "fixtures/info.xml"
+[[fixture]]
+file = "fixtures/system.xml"
+[[fixture]]
+file = "fixtures/traffic-disabled.xml"
+[[fixture]]
+file = "fixtures/traffic.xml"
+[[fixture]]
+file = "fixtures/unsupported.xml"

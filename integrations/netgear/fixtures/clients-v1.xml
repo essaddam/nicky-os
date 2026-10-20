@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:GetAttachDeviceResponse xmlns:u="urn:NETGEAR-ROUTER:service:DeviceInfo:1"><NewAttachDevice>2@1;192.168.1.10;ClientA;aa:bb:cc:dd:ee:01;5GHz;866;75;Allow@2;192.168.1.11;ClientB;aa:bb:cc:dd:ee:02;wired;1000;0;Allow</NewAttachDevice></u:GetAttachDeviceResponse><ResponseCode>0000</ResponseCode></s:Body></s:Envelope>

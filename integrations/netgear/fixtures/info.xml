@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:GetInfoResponse xmlns:u="urn:NETGEAR-ROUTER:service:DeviceInfo:1"><SerialNumber>synthetic-router-01</SerialNumber><ModelName>TestRouter</ModelName><Firmwareversion>test-1</Firmwareversion></u:GetInfoResponse><ResponseCode>0000</ResponseCode></s:Body></s:Envelope>
