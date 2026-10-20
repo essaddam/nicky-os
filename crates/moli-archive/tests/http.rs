@@ -1,8 +1,11 @@
 //! The same authenticated protocol can target a separate container through ARCHIVE_TEST_URL.
+#[path = "support/http.rs"]
+mod http_client;
+
 use flate2::{Compression, write::GzEncoder};
 use std::{
     fs,
-    io::{Read, Write},
+    io::Write,
     net::{SocketAddr, TcpStream, ToSocketAddrs},
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
@@ -94,6 +97,7 @@ impl Server {
         body: &[u8],
         encoding: Option<&str>,
     ) -> (u16, serde_json::Value) {
+        let started = Instant::now();
         let mut stream = TcpStream::connect(self.address).unwrap();
         stream
             .set_read_timeout(Some(Duration::from_secs(5)))
@@ -101,21 +105,13 @@ impl Server {
         let extra = encoding.map_or_else(String::new, |e| format!("Content-Encoding: {e}\r\n"));
         write!(stream,"{method} /v1/installations/{INSTALL}/{path} HTTP/1.1\r\nHost: archive\r\nAuthorization: Bearer {token}\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: {}\r\n{extra}\r\n",body.len()).unwrap();
         stream.write_all(body).unwrap();
-        let mut reply = Vec::new();
-        stream.read_to_end(&mut reply).unwrap();
-        let boundary = reply.windows(4).position(|w| w == b"\r\n\r\n").unwrap();
-        let headers = std::str::from_utf8(&reply[..boundary]).unwrap();
-        let code = headers.split_whitespace().nth(1).unwrap().parse().unwrap();
-        assert!(
-            !headers
-                .to_ascii_lowercase()
-                .contains("transfer-encoding: chunked"),
-            "bounded JSON has a content length"
-        );
-        (
-            code,
-            serde_json::from_slice(&reply[boundary + 4..]).unwrap(),
-        )
+        let (code, reply) = http_client::read_response(&mut stream).unwrap_or_else(|error| {
+            panic!(
+                "archive {method} {path}: response failed after {:?}: {error}",
+                started.elapsed()
+            )
+        });
+        (code, serde_json::from_slice(&reply).unwrap())
     }
 }
 impl Drop for Server {
