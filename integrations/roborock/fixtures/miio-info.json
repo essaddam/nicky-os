@@ -1,0 +1,17 @@
+{
+  "id": 1,
+  "result": {
+    "life": 86400,
+    "model": "roborock.vacuum.s6",
+    "token": "00000000000000000000000000000000",
+    "ipflag": 1,
+    "fw_ver": "3.5.8_002034",
+    "mcu_fw_ver": "1000",
+    "wifi_fw_ver": "SD878x-14.76.36.p84-702.1.0-WM",
+    "hw_ver": "Linux",
+    "mmfree": 228248,
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "ap": { "ssid": "example", "bssid": "AA:BB:CC:DD:EE:00", "rssi": -52 },
+    "netif": { "localIp": "192.168.1.10", "mask": "255.255.255.0", "gw": "192.168.1.1" }
+  }
+}

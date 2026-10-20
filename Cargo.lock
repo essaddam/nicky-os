@@ -1745,6 +1745,7 @@ dependencies = [
  "moli-presence",
  "moli-profile",
  "moli-reolink",
+ "moli-roborock",
  "moli-runtime",
  "moli-samsung",
  "moli-sonos",
@@ -1871,6 +1872,23 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "moli-roborock"
+version = "0.1.0"
+dependencies = [
+ "aes",
+ "anyhow",
+ "md-5",
+ "moli-core",
+ "moli-i18n",
+ "moli-runtime",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
  "tracing",
 ]
 

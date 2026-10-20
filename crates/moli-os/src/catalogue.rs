@@ -14,7 +14,7 @@ use serde::Deserialize;
 
 /// Transports a manifest may name. `native`: nothing on the network, Moli
 /// keeps the values itself (helpers).
-const TRANSPORTS: &[&str] = &["http", "https", "mqtt", "upnp", "tcp", "native"];
+const TRANSPORTS: &[&str] = &["http", "https", "mqtt", "upnp", "tcp", "udp", "native"];
 const PROFILE: &str = "profile";
 
 /// `integration.toml`.

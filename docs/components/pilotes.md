@@ -248,6 +248,51 @@ host = "192.168.1.x"
 - **Pièges** : le certificat est épinglé par une poignée de main nue **avant** tout envoi d'identifiants ; c'est un **X.509 v1**, vérifié à la main par `moli-net`. Une seule session (jeton) est gardée même à travers les redémarrages du pilote : les stations limitent les sessions simultanées. Codes `-6`/`-7` : nouvelle connexion. Le jeton voyage dans l'URL : aucune erreur ne cite l'URL. Une caméra sur batterie peut mettre ~10 s à se réveiller (14 s accordées à l'image). Station injoignable : toutes les détections passent à `null` (jamais de « personne vue » périmée).
 - **Tests** : `src/lib.rs` (événements lus aux deux niveaux `md`/`visitor` et `ai`, erreurs par commande, jeton masqué au débogage) ; `crates/moli-net/src/legacy.rs` sur le certificat public réel du Home Hub (`integrations/reolink/fixtures/home-hub-cert.b64`).
 
+## `roborock` : aspirateurs Roborock en Mi Home (`crates/moli-roborock`)
+
+- **Couvre** : les aspirateurs Roborock **appairés dans Mi Home** (S6 et voisins : modèles
+  `roborock.vacuum.*`, `rockrobo.vacuum.*`). Appairés dans l'appli Roborock, ils parlent un
+  autre protocole (TCP 58867, clé du compte) : pas ce pilote. Paquet `integrations/roborock`.
+- **Protocole** : **miIO local**, UDP 54321, aucun cloud. `hello` (identifiant et horloge de
+  l'appareil), puis requêtes JSON chiffrées en AES-128-CBC (clé = MD5(jeton), IV =
+  MD5(clé ‖ jeton)) et signées (MD5 de l'en-tête, du jeton et des données) ; une réponse est
+  vérifiée (longueur, identifiant, somme) avant d'être déchiffrée. Socket UDP « connectée » :
+  seul l'aspirateur est entendu. `miIO.info` d'abord : un appareil qui n'est pas un aspirateur
+  Roborock n'est jamais piloté. Puis `get_status` toutes les 30 s, 5 s quand il travaille ou
+  pendant la minute qui suit un ordre.
+- **Configuration** :
+
+```toml
+[[driver]]
+id = "aspirateur"
+kind = "roborock"
+[driver.options]
+host = "192.168.1.x"
+# port = 54321
+# name = "Aspirateur"
+```
+
+- **Secrets** : `token` (32 chiffres hexadécimaux, posé par l'humain). Manquant ou illisible :
+  statut `waiting`. Un mauvais jeton se voit comme un silence (l'appareil ne répond pas).
+- **Points** : `control` (écriture seule, `start`, `pause`, `stop`, `home`, sémantique
+  `control`), `state`, `error`, `battery` (%), `cleaning`, `fan_power`, `clean_time` (min),
+  `clean_area` (m²).
+- **Ordres** : un seul échange à la fois avec l'aspirateur ; file de 4 au plus, dans l'ordre
+  reçu ; revérifié juste avant de partir (appelant présent, avant l'échéance absolue) ; envoyé
+  **une fois**, jamais réessayé (python-miio réessaie : Moli non). `["ok"]` → fait ; refus →
+  sa raison (bornée) ; pas de réponse 400 ms avant l'échéance du hub → « peut-être parti, non
+  confirmé », puis nouveau `hello`. Sans liaison, un ordre est refusé tout de suite.
+- **Identité** : identifiant miIO (`did`) donné par le `hello`. Un autre `did` à la même
+  adresse : statut `waiting`, appareil hors ligne, rien n'est envoyé.
+- **Pièges** : l'horloge de l'appareil sert d'horodatage (sa valeur + le temps écoulé + 1 s) ;
+  après une lecture sans réponse, nouveau `hello` (il a pu redémarrer). Trois lectures sans
+  réponse : hors ligne.
+- **Tests** : `src/miio.rs` contre un paquet calculé à part (OpenSSL, `hashlib`), paquets
+  hostiles refusés avant déchiffrement ; `src/model.rs` sur les fixtures reconstruites ;
+  `src/tests.rs` : la vraie boucle avec le vrai hub contre un aspirateur simulé en UDP local
+  (ordre unique, ordre sans réponse jamais renvoyé, file dans l'ordre, ordre abandonné jamais
+  parti, autre appareil jamais piloté, garde).
+
 ## `samsung` : télé Tizen (`crates/moli-samsung`)
 
 - **Transports** : WebSocket TLS local 8002 pour les touches et les applications ;
@@ -741,6 +786,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `presence` | `moli-presence` | UDP + table ARP de l'hôte | non | téléphones sur le Wi-Fi |
 | `profile` | `moli-profile` | HTTP/HTTPS GET, Meross signé | oui si le profil déclare `[[write]]` (Daikin) | Daikin BRP069 (lecture), Meross EM06, Open-Meteo, Tempo, iopool EcO (voir [profils.md](profils.md#les-profils-du-catalogue)) |
 | `reolink` | `moli-reolink` | HTTPS API locale, épinglé (X.509 v1) | non (+ images) | Reolink Home Hub (caméras, sonnette) |
+| `roborock` | `moli-roborock` | miIO local, UDP 54321, jeton | `control` (humain pour un agent) | pas encore (cible : Roborock S6 en Mi Home) |
 | `sonos` | `moli-sonos` | UPnP/SOAP HTTP 1400 ; annonces en WebSocket TLS 1443 | oui : lecture, volume, sourdine, annonces | Sonos Beam |
 | `tapo` | `moli-tapo` | HTTP 80 + KLAP v2 | oui : tout | pas encore (cible : Tapo L530) |
 | `telegram` | `moli-telegram` | HTTPS, API des bots | `notify` (message) | oui (API des bots) |

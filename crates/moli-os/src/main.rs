@@ -902,6 +902,7 @@ const KINDS: &[&str] = &[
     "presence",
     "profile",
     "reolink",
+    "roborock",
     "samsung",
     "sonos",
     "tapo",
@@ -1127,6 +1128,9 @@ fn build_driver(
             data_dir.join(moli_profile::TRUST_FILE),
         )?),
         "reolink" => Arc::new(moli_reolink::Reolink::new(
+            config.options.clone().try_into().with_context(context)?,
+        )),
+        "roborock" => Arc::new(moli_roborock::Roborock::new(
             config.options.clone().try_into().with_context(context)?,
         )),
         "samsung" => Arc::new(

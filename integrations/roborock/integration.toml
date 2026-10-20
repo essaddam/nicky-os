@@ -1,0 +1,40 @@
+[integration]
+id = "roborock"
+name = "Aspirateur Roborock (Mi Home, miIO local)"
+# Roborock vacuums paired in the Mi Home app (miIO). Those paired in the
+# Roborock app speak another protocol: not driven here.
+brands = ["Roborock", "Xiaomi"]
+models = ["roborock.vacuum.s6", "roborock.vacuum.* (Mi Home)", "rockrobo.vacuum.*"]
+transport = "udp"
+driver = "roborock"
+crate = "moli-roborock"
+
+[discovery]
+# No discovery: the address is given by a person (D5).
+mdns = []
+ssdp = []
+ports = [54321]
+
+[needs]
+# The device token (32 hexadecimal digits), given by a human.
+secrets = ["token"]
+vars = []
+options = ["host"]
+
+[origin]
+reused = "aucun code repris : protocole miIO et commandes des aspirateurs d'après python-miio (GPL-3.0) et l'intégration xiaomi_miio de HA, lus pour leurs faits (en-tête, dérivation de clé, méthodes, tables d'états et d'erreurs), réécrits en Rust"
+author = "agent"
+
+# Replayed by the crate's tests (crates/moli-roborock/src/model.rs).
+# Reconstructed: fictitious token, address and network.
+[[fixture]]
+file = "fixtures/miio-info.json"
+
+[[fixture]]
+file = "fixtures/get_status.json"
+
+[[fixture]]
+file = "fixtures/app_start.json"
+
+[[fixture]]
+file = "fixtures/error.json"
