@@ -76,7 +76,8 @@ impl Client {
             )
             .await?;
         match answer.status {
-            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN | StatusCode::LOCKED => {
+            StatusCode::LOCKED => return Err(Failure::Locked),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
                 return Err(Failure::Refused);
             }
             StatusCode::NOT_FOUND | StatusCode::NOT_IMPLEMENTED => {
@@ -91,7 +92,10 @@ impl Client {
             return Err(
                 if (answer.status.is_server_error()
                     || answer.status == StatusCode::TOO_MANY_REQUESTS)
-                    && !matches!(error, Failure::Refused | Failure::Unsupported)
+                    && !matches!(
+                        error,
+                        Failure::Refused | Failure::Locked | Failure::Unsupported
+                    )
                 {
                     Failure::Transport
                 } else {
@@ -143,10 +147,15 @@ impl Client {
         if let Err(failure) = self.exchange(wire, action, Some(credentials), budget).await {
             if matches!(
                 failure,
-                Failure::Refused | Failure::Invalid | Failure::Unsupported
+                Failure::Refused | Failure::Locked | Failure::Invalid | Failure::Unsupported
             ) {
-                self.parked = Some(Failure::Refused);
-                return Err(Failure::Refused);
+                let terminal = if failure == Failure::Locked {
+                    Failure::Locked
+                } else {
+                    Failure::Refused
+                };
+                self.parked = Some(terminal);
+                return Err(terminal);
             }
             return Err(failure);
         }
@@ -232,9 +241,9 @@ impl Client {
                 self.parked = Some(Failure::Identity);
                 Err(Failure::Identity)
             }
-            Err(Failure::Refused) => {
-                self.parked = Some(Failure::Refused);
-                Err(Failure::Refused)
+            Err(terminal @ (Failure::Refused | Failure::Locked)) => {
+                self.parked = Some(terminal);
+                Err(terminal)
             }
             Err(error) => Err(error),
         }

@@ -60,7 +60,7 @@ impl Server {
                                 let mut devices=String::new(); for i in 0..32 { write!(&mut devices,"<Device><MAC>aa:bb:cc:dd:ee:{i:02x}</MAC><ConnectionType>5GHz</ConnectionType><SignalStrength>75</SignalStrength><Linkspeed>1000 Mbit/s</Linkspeed></Device>").unwrap(); }
                                 protocol::response(Action::ClientsV2,&format!("<NewAttachDevice>{devices}</NewAttachDevice>"),0).into_bytes()
                             }else{body};
-                            let status=if status==0{200}else{status};
+                            let status=if mode.load(Ordering::SeqCst)==5 && name=="GetSystemInfo" {423} else if status==0{200}else{status};
                             let cookie=format!("sid={:x}",std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos());
                             let header=format!("HTTP/1.1 {status} result\r\nContent-Length: {}\r\nConnection: close\r\nSet-Cookie: {cookie}; Path=/\r\nLocation: http://192.168.1.9/forbidden\r\n\r\n",body.len());
                             let _=write.write_all(header.as_bytes()).await;let _=write.write_all(&body).await;

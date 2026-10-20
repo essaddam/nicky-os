@@ -116,7 +116,8 @@ pub(crate) fn payload<'a, 'input>(
 fn status(code: &str) -> Result<(), Failure> {
     match code.parse::<u16>() {
         Ok(0) => Ok(()),
-        Ok(401 | 403 | 423) => Err(Failure::Refused),
+        Ok(401 | 403) => Err(Failure::Refused),
+        Ok(423) => Err(Failure::Locked),
         Ok(503) => Err(Failure::Transport),
         Ok(404 | 501) => Err(Failure::Unsupported),
         _ => Err(Failure::Invalid),

@@ -317,3 +317,71 @@ async fn unavailable_authentication_service_backs_off_without_parking_or_retryin
     );
     assert_eq!(wire.sent().len(), 1);
 }
+
+async fn assert_locked_session_never_reauthenticates(
+    version: Version,
+    status: StatusCode,
+    code: u16,
+) {
+    let mut refused = answer(Action::System, "", code);
+    refused.status = status;
+    let wire = Fake::new(vec![login(version), info(), (Action::System, refused)]);
+    let mut client = Client::new(version, None);
+    let (user, password) = credentials();
+    client
+        .read(
+            &wire,
+            Action::Info,
+            (&user, &password),
+            &mut Budget::default(),
+        )
+        .await
+        .unwrap();
+    assert!(
+        client
+            .read(
+                &wire,
+                Action::System,
+                (&user, &password),
+                &mut Budget::default()
+            )
+            .await
+            .is_err()
+    );
+    let expected = vec![
+        if version == Version::V1 {
+            Action::LoginV1
+        } else {
+            Action::LoginV2
+        },
+        Action::Info,
+        Action::System,
+    ];
+    assert_eq!(wire.sent(), expected);
+    assert!(
+        client
+            .read(
+                &wire,
+                Action::Traffic,
+                (&user, &password),
+                &mut Budget::default()
+            )
+            .await
+            .is_err()
+    );
+    assert_eq!(wire.sent(), expected);
+}
+#[tokio::test]
+async fn http_locked_session_parks_without_relogin_or_replay() {
+    for version in [Version::V1, Version::V2] {
+        assert_locked_session_never_reauthenticates(version, StatusCode::LOCKED, 0).await;
+    }
+}
+#[tokio::test]
+async fn soap_locked_session_parks_even_with_http_500() {
+    for version in [Version::V1, Version::V2] {
+        for status in [StatusCode::OK, StatusCode::INTERNAL_SERVER_ERROR] {
+            assert_locked_session_never_reauthenticates(version, status, 423).await;
+        }
+    }
+}

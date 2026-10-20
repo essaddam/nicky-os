@@ -371,3 +371,40 @@ async fn initial_tls_transport_failure_backs_off_without_human_intervention() {
         "{status:?}"
     );
 }
+
+#[tokio::test]
+async fn explicit_lock_parks_the_driver_without_sending_credentials_again() {
+    let server = Server::start(0, vec![], Duration::ZERO).await;
+    server.mode.store(5, std::sync::atomic::Ordering::SeqCst);
+    let vault = vault().await;
+    let hub = &vault.hub;
+    let cancel = CancellationToken::new();
+    let task = spawn_driver(
+        hub,
+        InstanceId::from("network"),
+        Arc::new(Netgear::new(server.config()).unwrap()),
+        cancel.clone(),
+    );
+    until(|| {
+        hub.snapshot()
+            .drivers
+            .iter()
+            .any(|d| matches!(d.status, moli_core::DriverStatus::Waiting { .. }))
+    })
+    .await;
+    cancel.cancel();
+    tokio::time::timeout(Duration::from_secs(1), task)
+        .await
+        .unwrap()
+        .unwrap();
+    let actions = server.actions.lock().unwrap();
+    assert_eq!(
+        actions.len(),
+        3,
+        "initial login, identity and refused read only"
+    );
+    assert!(actions[0].ends_with("#SOAPLogin"));
+    assert!(actions[1].ends_with("#GetInfo"));
+    assert!(actions[2].ends_with("#GetSystemInfo"));
+    assert!(hub.snapshot().devices.is_empty());
+}

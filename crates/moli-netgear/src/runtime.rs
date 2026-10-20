@@ -15,7 +15,9 @@ use tokio::time::Instant;
 
 fn message(error: Failure) -> String {
     match error {
-        Failure::Refused => moli_i18n::tr!("pilotes.netgear.authentification_refusee"),
+        Failure::Refused | Failure::Locked => {
+            moli_i18n::tr!("pilotes.netgear.authentification_refusee")
+        }
         Failure::Certificate => moli_i18n::tr!("pilotes.netgear.certificat_modifie"),
         Failure::Identity => moli_i18n::tr!("pilotes.netgear.identite_modifiee"),
         Failure::Secrets => moli_i18n::tr!("pilotes.netgear.secret_manquant"),
@@ -157,7 +159,7 @@ pub(crate) async fn run(config: &Config, ctx: &mut DriverCtx) -> anyhow::Result<
                 state.offline();
                 if matches!(
                     error,
-                    Failure::Refused | Failure::Identity | Failure::Certificate
+                    Failure::Refused | Failure::Locked | Failure::Identity | Failure::Certificate
                 ) {
                     waiting(state.ctx, error).await;
                     return Ok(());

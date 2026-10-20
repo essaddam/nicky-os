@@ -7,6 +7,7 @@ pub(crate) enum Failure {
     Vault,
     Certificate,
     Refused,
+    Locked,
     Unsupported,
     Transport,
     Identity,
