@@ -689,5 +689,6 @@
   "pilotes.huawei_lte.rx_rate": "Débit reçu",
   "pilotes.huawei_lte.tx_rate": "Débit émis",
   "pilotes.huawei_lte.duration": "Durée de connexion",
-  "pilotes.reservations.calendrier_invalide": "Le calendrier est invalide, trop volumineux ou utilise une règle non prise en charge. Les accès liés restent fermés."
+  "pilotes.reservations.calendrier_invalide": "Le calendrier est invalide, trop volumineux ou utilise une règle non prise en charge. Les accès liés restent fermés.",
+  "pilotes.reservations.lecture_impossible": "La lecture du calendrier a échoué."
 }

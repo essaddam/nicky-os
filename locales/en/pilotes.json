@@ -689,5 +689,6 @@
   "pilotes.huawei_lte.rx_rate": "Receive rate",
   "pilotes.huawei_lte.tx_rate": "Send rate",
   "pilotes.huawei_lte.duration": "Connection duration",
-  "pilotes.reservations.calendrier_invalide": "The calendar is invalid, too large or uses an unsupported rule. Linked access remains closed."
+  "pilotes.reservations.calendrier_invalide": "The calendar is invalid, too large or uses an unsupported rule. Linked access remains closed.",
+  "pilotes.reservations.lecture_impossible": "The calendar could not be read."
 }

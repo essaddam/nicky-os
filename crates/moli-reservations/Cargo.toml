@@ -7,10 +7,13 @@ license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+http.workspace = true
 jiff.workspace = true
+moli-net.workspace = true
 moli-i18n.workspace = true
 ring.workspace = true
 thiserror.workspace = true
+tokio.workspace = true
 
 [lints]
 workspace = true

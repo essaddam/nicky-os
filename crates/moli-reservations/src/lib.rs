@@ -4,6 +4,7 @@ use jiff::Timestamp;
 use std::fmt::Write as _;
 
 mod calendar;
+pub mod client;
 mod recurrence;
 mod revision;
 mod series;
