@@ -1,4 +1,18 @@
 {
+  "systeme.bouton.valider": "Approve pending press",
+
+  "systeme.bouton.identite_indisponible": "Press not sent: its identity storage is unavailable.",
+  "systeme.bouton.journal.published": "Press {sequence} published",
+  "systeme.bouton.journal.replayed": "Press {sequence} already sent, not replayed",
+  "systeme.bouton.journal.ambiguous": "Press {sequence} unconfirmed",
+
+  "systeme.bouton.appuyer": "Press",
+  "systeme.bouton.envoye": "Press sent",
+  "systeme.bouton.reessayer": "Retry request",
+  "systeme.bouton.incertain": "The response is missing. Retrying keeps the same press.",
+  "systeme.bouton.attendre": "Wait for the pending presses to finish.",
+  "systeme.bouton.refus": "Press refused.",
+
   "systeme.approbations.origine.mcp": "An agent",
   "systeme.approbations.origine.api": "A script",
   "systeme.approbations.origine.cli": "The command line",

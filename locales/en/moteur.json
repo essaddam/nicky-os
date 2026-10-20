@@ -1,4 +1,12 @@
 {
+  "moteur.verif.bouton_occurrence": "a button has no state: use an occurrence trigger",
+  "moteur.verif.occurrence_valeur": "the occurrence filter does not match the point type",
+  "moteur.decrit.quand_occurrence": "When {appareil} emits an occurrence",
+  "moteur.decrit.quand_occurrence_valeur": "When {appareil} emits occurrence {valeur}",
+  "moteur.pourquoi.occurrence": "Press or event from {nom}",
+  "moteur.occurrence.persistance": "Occurrence not executed: its consumption state could not be saved.",
+  "moteur.occurrence.interruption": "An interrupted occurrence remains unconfirmed; no command is replayed.",
+  "moteur.occurrence.bus_perdu": "Some bus messages were not received. Missing presses are not recreated from device state.",
   "moteur.verif.trop_noeuds": "Too many nodes ({n} of {max}).",
   "moteur.verif.id_double": "Two nodes share the same identifier.",
   "moteur.verif.sans_declencheur": "At least one trigger is needed (when…?).",

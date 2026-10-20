@@ -67,7 +67,7 @@ struct AutomationIdArgs {
 struct DraftArgs {
     /// The automation, as get_automation returns it: `{ "name", "mode"
     /// (restart|single|queued), "graph": { "nodes": [...], "edges": [...] } }`.
-    /// Give an `id` to rework an existing one. Node `type`s: when_state
+    /// Give an `id` to rework an existing one. Node `type`s: when_occurrence (point, optional value filter), when_state
     /// (point, to, from, for_s), when_threshold (point, above, below, for_s),
     /// at_time (at "HH:MM", days 1=Monday..7), at_sun (event rise|set,
     /// offset_min, days), every (minutes), on_start, manual, if (rules, all →
@@ -131,6 +131,9 @@ struct DeviceArgs {
 struct CommandArgs {
     /// Point id: `<device_id>/<key>`, e.g. `z2m:0x00124b0000000003/state`.
     point: String,
+    /// Optional button idempotency key: 32 hexadecimal client characters, colon, positive sequence.
+    /// A new physical intent needs a new key; a transport retry keeps the same key.
+    request_id: Option<String>,
     /// New value: boolean for on/off points, number for numeric, string for enums.
     value: Json,
     /// Who is acting (your agent name). Recorded in the journal.
@@ -256,7 +259,7 @@ impl MoliMcp {
     }
 
     #[tool(
-        description = "Write a value to a writable point. The order is validated against the point's spec, sent to the device and journaled. The device confirms by reporting its new state."
+        description = "Write a value to a writable point. The order is validated against the point's spec, sent to the device and journaled. The device confirms by reporting its new state. Event buttons accept null and publish a distinct occurrence; request_id deduplicates a retry of that same press."
     )]
     async fn send_command(
         &self,
@@ -266,7 +269,7 @@ impl MoliMcp {
         let value = Value::from_json(&args.value);
         match self
             .hub
-            .command(&point, value, Origin::Mcp, args.actor)
+            .command_with_request_id(&point, value, Origin::Mcp, args.actor, args.request_id)
             .await
         {
             Ok(()) => ok(&json!({ "ok": true, "point": point })),

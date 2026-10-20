@@ -42,6 +42,7 @@ tracing.workspace = true
 rustix.workspace = true
 
 [dev-dependencies]
+moli-helpers.workspace = true
 moli-history.workspace = true
 rusqlite.workspace = true
 tokio = { workspace = true, features = ["test-util"] }

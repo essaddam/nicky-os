@@ -1,4 +1,11 @@
 {
+  "automatismes.noeud.when_occurrence.label": "Appui ou événement",
+  "automatismes.noeud.when_occurrence.court": "Événement",
+  "automatismes.noeud.when_occurrence.indice": "Chaque occurrence compte, même si sa valeur se répète.",
+  "automatismes.inspecteur.source_occurrence": "Quel bouton ou événement ?",
+  "automatismes.inspecteur.occurrence_aide": "Un appui déclenche une fois. Un état restauré ne déclenche rien.",
+  "automatismes.inspecteur.toute_occurrence": "Toute occurrence",
+
   "automatismes.titre": "Automatismes",
   "automatismes.moli_dessine": "Moli dessine…",
   "automatismes.moli_absent": "Moli n’est pas branché.",

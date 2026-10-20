@@ -250,10 +250,12 @@ Toute écriture est journalisée, réussie ou non (`JournalEntry`, `crates/moli-
 | `action` | objet, voir ci-dessous | quoi |
 | `outcome` | `{"result":"ok"}`, `{"result":"err","error":"…"}`, `{"result":"pending","error":"en attente d'autorisation humaine #<id> : <raison>"}` | résultat |
 | `duration_ms` | entier | durée |
+| `correlation` | texte, facultatif | identité de la requête ou occurrence source, propagée aux actions du graphe |
 
 `action` (étiqueté par `kind`) :
 
 - `{"kind":"command","point":"…","value":…}`
+- `{"kind":"occurrence","point":"…","occurrence":{"source":"<hex32>","sequence":1},"status":"published|replayed|ambiguous"}` : publication, réessai déjà transmis ou résultat non confirmé ; aucun rejeu implicite
 - `{"kind":"label","device":"…","label":{"name":"…","room":"…"}}` (label vide si refus)
 - `{"kind":"approval","request":<id>,"point":"…","value":…,"decision":"approved|denied|expired"}`
 
@@ -299,7 +301,7 @@ Légende « Accès » : **libre** = aucune condition au-delà de la garde `Host`
 | PUT | `/api/integrations/tuya-cloud` | **humain** | `{access_id, access_secret, instance?}` (lettres et chiffres) | `{stored, instance}` ; le pilote redémarre avec elles en moins d'une minute | `403` ; `404` pas de pilote tuya ; `422` pas des clés Tuya ; `500` coffre |
 | GET | `/api/ambiances` | libre | aucune | `[{id, name, icon, colors:["#rrggbb"], white (K), brightness (%), effect?}]` (`crates/moli-ambiance`) | aucune |
 | POST | `/api/ambiance` | libre ; chaque ordre passe par la garde comme `/api/command` | `{lights:[id…] (1 → 32, un groupe vaut ses membres), ambiance? \| color? ("#rrggbb") \| white? (1500 → 10000 K), actor?}` | `{done:[id], held:[{device, point, approval, reason}], failed:[{device, error}], skipped:[id]}` | `400` ; `404` ambiance inconnue |
-| POST | `/api/command` | libre ; origine via `x-moli-origin` (§ 1.3) | `{point, value, actor?}` | `200 {ok:true}` ; **`202 {ok:false, pending:<id>, reason}`** si retenu | `404` point inconnu ; `403` point en lecture seule ; `422` valeur invalide ; `503` pilote indisponible / file pleine ; `504` pas de réponse en 5 s ; `502` erreur du pilote |
+| POST | `/api/command` | libre ; origine via `x-moli-origin` (§ 1.3) | `{point, value, actor?, request_id?}` ; bouton : `value:null` | `200 {ok:true}` ; **`202 {ok:false, pending:<id>, reason}`** si retenu | `404` point inconnu ; `403` lecture seule ; `422` valeur/identité invalide ; `409` identité conflictuelle/ancienne ou appui non confirmé ; `503` pilote/file/capacité ; `500` état d'occurrence illisible/non inscriptible ; `504` délai ; `502` pilote |
 | PUT | `/api/labels/{id}` | libre ; changer la pièce d'un appareil gardé exige `ui` | `{name?, room?}` : absent = inchangé, `""` = effacé | `Label` `{name?, room?}` | `404` unknown device ; `403` changement de pièce gardé ; `500` écriture de `labels.toml` |
 | GET | `/api/journal` | libre | `?limit=` (défaut 100) | `[JournalEntry]`, plus récent d'abord (500 au plus en mémoire) | `400` requête invalide |
 | GET | `/api/approvals` | libre ; un invité : ses pièces seulement | aucune | `[ApprovalRequest]`, plus ancien d'abord | aucune |
@@ -483,7 +485,8 @@ live?:{point, max, warn, unit?, value?, ts?}, today, yesterday, month, last_mont
 | `can_restore` | une version validée existe et diffère de l'actuelle |
 | `last_run` | `{id, status, started, why, dry}` ou `null` |
 
-Nœuds du graphe (`type` + paramètres, `x`/`y` pour le canevas) : déclencheurs `when_state`
+Nœuds du graphe (`type` + paramètres, `x`/`y` pour le canevas) : déclencheurs
+`when_occurrence` (`point`, `value?` : filtre facultatif, aucune valeur d'état pour un bouton), `when_state`
 (`point`, `to?`, `from?`, `for_s`), `when_threshold` (`point`, `above?`, `below?`,
 `for_s`), `at_time` (`at` « HH:MM », `days` 1 = lundi … 7), `at_sun` (`event`
 `rise|set`, `offset_min`, `days`), `every` (`minutes`), `on_start`, `manual` ; logique
@@ -493,9 +496,66 @@ Nœuds du graphe (`type` + paramètres, `x`/`y` pour le canevas) : déclencheurs
 `{kind:"state", point, op:"eq|ne|gt|ge|lt|le", value}`, `{kind:"time", after?, before?,
 days}`, `{kind:"sun", is:"day|night"}`. Liens : `{from, port (défaut "out"), to}`.
 
-**`Run`** : `{id, automation, name, trigger, why, started, ended?,
+**`Run`** : `{id, automation, name, trigger, why, started, ended?, occurrence?, correlation?,
 status:"running"|"done"|"failed"|"cancelled", dry, steps:[{node, at,
 status:"done"|"failed"|"simulated"|"yes"|"no"|"timeout"|"waiting", detail?}]}`.
+
+### 2.2 bis Appuyer sur un bouton (AUTO-H4)
+
+REST et MCP utilisent la commande existante, par exemple
+`{"point":"aides:depart/press","value":null,"request_id":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1"}`.
+L'identité facultative est un espace client aléatoire de 32 hexadécimaux et un
+entier positif `u64` en texte. Une nouvelle intention incrémente la séquence ; un
+réessai conserve exactement la même identité et le même point. Un reçu publié
+répond `200` sans nouvelle occurrence. Une réservation dont la publication n'est
+pas confirmée répond `409` ; elle ne doit pas être remplacée automatiquement par
+une identité neuve. Une demande retenue répond `202` et attend l'humain habituel.
+Une réponse de publication ne confirme pas les effets physiques d'un graphe.
+
+CLI : `moli-os press aides:depart/press --request-id aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1`
+contacte l'API de l'instance locale configurée, sans lancer les pilotes ni
+revendiquer une origine humaine. La réponse JSON et les demandes retenues restent
+visibles. Le bouton de l'Atelier et la carte Maison envoient `null`, mettent les
+clics rapides en file et proposent de réessayer la même requête si la réponse manque.
+
+Fragment OpenAPI 3.1 de la commande (les règles d'accès des sections 1.2 à 1.5
+s'appliquent aussi à l'appui) :
+
+```yaml
+openapi: 3.1.0
+info: {title: Moli command, version: 1.0.0}
+paths:
+  /api/command:
+    post:
+      operationId: sendCommand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [point, value]
+              properties:
+                point: {type: string, maxLength: 256}
+                value: {description: "Pour un bouton, uniquement null."}
+                actor: {type: [string, 'null']}
+                request_id:
+                  type: [string, 'null']
+                  maxLength: 53
+                  pattern: '^[0-9a-fA-F]{32}:[1-9][0-9]{0,19}$'
+                  description: "Bouton uniquement ; séquence positive au plus u64::MAX."
+      responses:
+        '200': {description: "Commande transmise ; un réessai publié n'émet rien de nouveau."}
+        '202': {description: "Retenue par la garde ; décision humaine nécessaire."}
+        '403': {description: "Accès ou écriture refusés."}
+        '404': {description: "Point inconnu."}
+        '409': {description: "Identité conflictuelle, trop ancienne ou résultat non confirmé."}
+        '422': {description: "Valeur, identité ou source invalide."}
+        '500': {description: "État métier illisible ou non inscriptible."}
+        '502': {description: "Erreur du pilote."}
+        '503': {description: "Pilote, file, compteur ou capacité indisponible."}
+        '504': {description: "Le pilote n'a pas répondu à temps ; ne pas créer une nouvelle identité."}
+```
 
 ### 2.3 `/api/system`
 
@@ -597,12 +657,13 @@ rend sa place.
 |---|---|---|
 | `device_upserted` | `device` : l'appareil (`id`, `instance`, `native_name`, `manufacturer?`, `model?`, `description?`, `native_room?`, `members?`, `points`) | appareil publié ou redéfini par son pilote |
 | `device_removed` | `device` : device_id | appareil retiré |
-| `state` | `point`, `value`, `ts` | nouvelle valeur (seulement si elle change, sauf points « impulsion » type bouton, diffusés à chaque occurrence) ; aussi à la restauration du cache |
+| `state` | `point`, `value`, `ts` | nouvelle valeur ; aussi à la restauration du cache. Les anciens points à impulsion gardent cet événement pour compatibilité. Un point de type `button` n'en émet pas. |
+| `occurrence` | `occurrence:{id:{source,sequence},stream,position,point,value,ts,durable,correlation?}` | événement en direct, identité indépendante de `ts` ; jamais dans un instantané ou restauré depuis le cache. `durable` concerne l'identité/reçu, pas une garantie de livraison après panne. |
 | `availability` | `device`, `online` (booléen) | joignable / injoignable |
 | `driver_status` | `instance`, `status` (`DriverStatus`, § 2.2) | état d'un pilote |
 | `label_changed` | `device`, `label` `{name?, room?}` | étiquette modifiée (label complet après fusion) |
 | `journal` | `entry` : `JournalEntry` (§ 1.6) | toute écriture journalisée |
-| `approval_requested` | `request` : `ApprovalRequest` (`id`, `ts`, `expires`, `point`, `value`, `origin`, `actor?`, `reason`, `device_name`, `native_name`, `rooms`) | un ordre attend un humain |
+| `approval_requested` | `request` : `ApprovalRequest` (`id`, `ts`, `expires`, `point`, `value`, `origin`, `actor?`, `reason`, `device_name`, `native_name`, `rooms`, `request_id?`, `correlation?`) | un ordre attend un humain ; deux appuis distincts gardent deux demandes, un réessai explicite garde sa demande |
 | `approval_resolved` | `id`, `decision` : `approved` \| `denied` \| `expired` | décision ou expiration |
 | `notice` | `notice` : `{title?, message, from?, ts}` (`from` = nom de l'automatisme) | message pour la maison (nœud `notify`, canal `maison`) |
 
@@ -668,7 +729,7 @@ Brancher un client : `claude mcp add --transport http moli http://<hôte>:8790/m
 | `list_devices` | `room?` (insensible à la casse ; pièce de l'étiquette, sinon native), `search?` (sous-chaîne de l'id, du nom natif, du nom d'étiquette ou du modèle) | `{count, devices:[{id, name, room, model, description, online, points:[{key, value, unit?, writable?}]}]}` | `writable: true` seulement sur les points inscriptibles |
 | `get_device` | `device` (device_id) | `DeviceView` complet (spécifications, bornes, valeurs permises, état) | `unknown device` |
 | `camera_snapshot` | `device` | bloc image (base64, type MIME de la caméra) | **refusé** pour une pièce protégée : `protected room « … »: images are for humans in the dashboard only` ; délai 20 s |
-| `send_command` | `point`, `value` (booléen, nombre ou texte d'énumération ; objet/tableau → texte JSON), `actor?` (nom de l'agent, journalisé) | `{ok:true, point}` ; retenu : `{ok:false, status:"awaiting_human_approval", request:<id>, reason, message:"Not executed. A human must approve this request from the Moli OS dashboard (it expires in 10 minutes). Do not retry; tell the user."}` | l'ordre retenu n'est **pas** une erreur : l'agent doit relayer, pas réessayer. Erreurs : `unknown point`, `point is read-only`, `invalid value: …`, `driver …` |
+| `send_command` | `point`, `value` (bouton : `null` ; sinon booléen, nombre ou texte d'énumération ; objet/tableau → texte JSON), `actor?`, `request_id?` | `{ok:true, point}` ; retenu : `{ok:false, status:"awaiting_human_approval", request:<id>, reason, message:"Not executed. A human must approve this request from the Moli OS dashboard (it expires in 10 minutes). Do not retry; tell the user."}` | Une identité de requête n'est acceptée que pour un bouton. L'ordre retenu doit être relayé à l'humain. Un réessai de transport conserve exactement `request_id`. |
 | `set_label` | `device`, `name?`, `room?` (`""` efface), `actor?` | `{ok:true, device, label}` | changer la pièce d'un appareil gardé est refusé (`seul un humain peut changer la pièce de cet appareil (…)`) |
 | `get_journal` | `limit?` (défaut 20) | `[JournalEntry]`, plus récent d'abord | |
 | `history` | `point`, `hours?` (défaut 24, borné 1 min → 366 j) | `{point, from, to, changes, value_before_window, stats:{min, max, avg}\|null, first, last, series (≤ 60 points, brut ou seaux), truncated}` | moyenne pondérée (seaux pesés par leur nombre d'échantillons, valeur d'avant la fenêtre incluse) ; `history is disabled on this instance` |

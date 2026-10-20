@@ -1,4 +1,11 @@
 {
+  "automatismes.noeud.when_occurrence.label": "Press or event",
+  "automatismes.noeud.when_occurrence.court": "Event",
+  "automatismes.noeud.when_occurrence.indice": "Every occurrence counts, even when its value repeats.",
+  "automatismes.inspecteur.source_occurrence": "Which button or event?",
+  "automatismes.inspecteur.occurrence_aide": "A press triggers once. Restored state does not trigger.",
+  "automatismes.inspecteur.toute_occurrence": "Any occurrence",
+
   "automatismes.titre": "Automations",
   "automatismes.moli_dessine": "Moli is drawing…",
   "automatismes.moli_absent": "Moli isn’t connected.",

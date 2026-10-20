@@ -3,7 +3,7 @@
 
 use std::time::Duration;
 
-use moli_core::{Notice, Origin, PointId, Value};
+use moli_core::{Notice, Occurrence, OccurrenceId, Origin, PointId, Value};
 use moli_i18n::tr;
 use moli_runtime::CommandError;
 use serde::{Deserialize, Serialize};
@@ -32,6 +32,40 @@ pub struct Run {
     #[serde(default)]
     pub dry: bool,
     pub steps: Vec<StepLog>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub occurrence: Option<OccurrenceId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub correlation: Option<String>,
+}
+
+impl Run {
+    pub(crate) fn new(
+        automation: &Automation,
+        trigger: &str,
+        why: String,
+        id: u64,
+        dry: bool,
+        occurrence: Option<&Occurrence>,
+    ) -> Self {
+        Self {
+            id,
+            automation: automation.id.clone(),
+            name: automation.name.clone(),
+            trigger: trigger.to_owned(),
+            why,
+            started: moli_core::now_ms(),
+            ended: None,
+            status: RunStatus::Running,
+            dry,
+            steps: Vec::new(),
+            occurrence: occurrence.map(|e| e.id.clone()),
+            correlation: occurrence.map(|e| {
+                e.correlation
+                    .clone()
+                    .unwrap_or_else(|| crate::occurrences::key(&e.id))
+            }),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -93,6 +127,7 @@ struct Ctx {
 
 /// Runs `a` from the trigger `start`. Dry: conditions are read for real,
 /// nothing acts and nothing waits.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn execute(
     autos: &Automations,
     a: &Automation,
@@ -101,19 +136,9 @@ pub(crate) async fn execute(
     dry: bool,
     token: CancellationToken,
     id: u64,
+    occurrence: Option<&Occurrence>,
 ) -> Run {
-    let mut run = Run {
-        id,
-        automation: a.id.clone(),
-        name: a.name.clone(),
-        trigger: start.to_owned(),
-        why,
-        started: moli_core::now_ms(),
-        ended: None,
-        status: RunStatus::Running,
-        dry,
-        steps: Vec::new(),
-    };
+    let mut run = Run::new(a, start, why, id, dry, occurrence);
     let _ = autos
         .0
         .live
@@ -263,7 +288,17 @@ async fn step(
                 (StepStatus::No, None, Some("no"))
             }
         }
-        Step::Set { point, value } => act(autos, a, point, Value::from_json(value), dry).await,
+        Step::Set { point, value } => {
+            act(
+                autos,
+                a,
+                point,
+                Value::from_json(value),
+                dry,
+                run.correlation.clone(),
+            )
+            .await
+        }
         Step::Toggle { point } => {
             let pid = PointId::from(point.as_str());
             let next = match hub.state(&pid).map(|s| s.value) {
@@ -278,7 +313,7 @@ async fn step(
                     );
                 }
             };
-            act(autos, a, point, next, dry).await
+            act(autos, a, point, next, dry, run.correlation.clone()).await
         }
         Step::Wait { seconds } => {
             if dry {
@@ -337,7 +372,7 @@ async fn step(
             if dry {
                 return (StepStatus::Simulated, Some(text), Some("out"));
             }
-            match notify(autos, a, title, &text, channels).await {
+            match notify(autos, a, title, &text, channels, run.correlation.clone()).await {
                 Ok(()) => (StepStatus::Done, Some(text), Some("out")),
                 Err(e) => (StepStatus::Failed, Some(e.to_string()), Some("out")),
             }
@@ -388,6 +423,7 @@ async fn act(
     point: &str,
     value: Value,
     dry: bool,
+    correlation: Option<String>,
 ) -> (StepStatus, Option<String>, Option<&'static str>) {
     if dry {
         return (
@@ -400,11 +436,12 @@ async fn act(
     match autos
         .0
         .hub
-        .command(
+        .command_correlated(
             &pid,
             value.clone(),
             Origin::Automation,
             Some(a.name.clone()),
+            correlation,
         )
         .await
     {
@@ -625,6 +662,7 @@ async fn notify(
     title: Option<String>,
     message: &str,
     channels: &[Channel],
+    correlation: Option<String>,
 ) -> anyhow::Result<()> {
     let messengers = autos.messengers();
     if channels.contains(&Channel::Maison) || messengers.is_empty() {
@@ -641,11 +679,12 @@ async fn notify(
             if let Err(e) = autos
                 .0
                 .hub
-                .command(
+                .command_correlated(
                     &point,
                     Value::Text(text.clone().into()),
                     Origin::Automation,
                     Some(a.name.clone()),
+                    correlation.clone(),
                 )
                 .await
             {

@@ -2,11 +2,13 @@
   import { device, nameOf, reachable, since, relative, home, num } from '../lib/home.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from './Icon.svelte';
+  import PressButton from '../../components/PressButton.svelte';
 
   /** Any device shown by its readings, in words. */
   let { id, name = null } = $props();
 
   const d = $derived(device(id));
+  const buttons = $derived((d?.points ?? []).filter((p) => p.kind.type === 'button' && p.access.write));
 
   // Said when read (t() inside), never once for all.
   const WORDS = {
@@ -47,13 +49,17 @@
     <h2><Icon name="info" size={18} />{nameOf(id, name)}</h2>
     {#if last}<span class="muted when">{relative(last, home.now)}</span>{/if}
   </div>
+  {#each buttons as point (point.key)}
+    <PressButton point={`${id}/${point.key}`} label={point.label} disabled={!reachable(id)}
+      onheld={(request) => (home.held = { id: request.id, point: request.point, reason: request.reason, label: point.label })} />
+  {/each}
   {#if rows.length}
     <dl>
       {#each rows as r (r.p.key)}
         <div><dt>{r.p.label || r.p.key}</dt><dd class="num">{r.text}</dd></div>
       {/each}
     </dl>
-  {:else}
+  {:else if !buttons.length}
     <p class="muted">{t('commun.capteur.pas_de_mesure')}</p>
   {/if}
 </section>

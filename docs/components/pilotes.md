@@ -534,10 +534,27 @@ agent_sha256 = "<sha256 du jeton de l'agent : le jeton reste sur le PC>"
   `input_boolean` / `input_number` / `input_text` de HA : mode de la maison, alarme active,
   budget… Chaque aide est un appareil `<instance>:<id>` avec un point inscriptible :
   `state` (choix, `select`), `on` (interrupteur, `switch`), `value` (`number`, `text`).
+- **Bouton événementiel** (`kind = "button"`, AUTO-H4) : point `press`, type
+  `button`, écriture seule ; une commande de valeur JSON `null` est un appui.
+  Deux commandes identiques sont deux occurrences, même à la même milliseconde.
+  Ni `initial`, ni options, ni bornes : un bouton n'a aucune valeur à restaurer.
+  Au plus 128 boutons par instance. Exemple :
+
+  ```toml
+  [[driver.options.helper]]
+  id = "depart"
+  name = "Départ"
+  kind = "button"
+  room = "Entrée"
+  ```
+
+  L'appui utilise la garde et le journal habituels. `when_occurrence` écoute ce
+  point ; `when_state` et les conditions d'état refusent un bouton. Les quatre
+  aides à valeur conservent leur cache et leur comportement existants.
 - **Configuration** : `[[driver.options.helper]]` avec `id` (jamais renommé), `name`,
   `kind`, `options` (choix), `min`/`max`/`step` (nombre), `initial`, `room` (facultatif).
 - Une commande devient la nouvelle valeur (garde et journal comme pour tout appareil) ; la
-  valeur survit aux redémarrages (cache d'état) ; une aide jamais vue démarre à `initial`.
+  valeur survit aux redémarrages (cache d'état) ; une aide à valeur jamais vue démarre à `initial`.
 - Exemple : une instance `maison` avec `mode_maison` (Normal, Absent, Nuit, Vacances),
   `alarme_active`, `budget_elec_mensuel`, aux mêmes noms et valeurs que les `input_*` de HA
   qu'elles remplacent.

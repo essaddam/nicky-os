@@ -10,6 +10,7 @@
 mod check;
 mod engine;
 mod model;
+mod occurrences;
 mod run;
 mod store;
 pub mod sun;
@@ -138,6 +139,8 @@ struct Inner {
     /// change and every second. Recomputed only when the list changes
     /// (fingerprints are hashes: not something to redo 87 times a second).
     live_set: RwLock<Arc<Vec<Automation>>>,
+    occurrence_index: RwLock<occurrences::Index>,
+    occurrence_consumer: tokio::sync::Mutex<occurrences::Consumer>,
     /// Fingerprints of the stored versions, by id, for listings (hashing
     /// serializes the graph). Forgotten at every write, under the list's
     /// write lock; approving and running always hash afresh.
@@ -237,6 +240,10 @@ impl Automations {
             tz,
             path,
             runs_path,
+            occurrence_index: RwLock::default(),
+            occurrence_consumer: tokio::sync::Mutex::new(occurrences::Consumer::new(
+                data_dir.map(|dir| dir.join("automation-occurrences.json")),
+            )),
             live_set: RwLock::new(Arc::new(
                 list.iter().filter(|a| a.is_live()).cloned().collect(),
             )),
@@ -259,6 +266,7 @@ impl Automations {
             saving: tokio::sync::Mutex::new(()),
             cancel,
         }));
+        this.refresh_live();
         let task = tokio::spawn(engine::run(this.clone()));
         Ok((this, task))
     }
@@ -392,7 +400,7 @@ impl Automations {
         let (saved, changed_logic, before) = {
             let mut list = self.0.list.write().unwrap_or_else(PoisonError::into_inner);
             let existing = list.iter().position(|x| x.id == a.id && !a.id.is_empty());
-            if let Some(i) = existing {
+            let outcome = if let Some(i) = existing {
                 let old = &list[i];
                 // Outside the fingerprint, but the name heads its messages
                 // (Telegram, notices) and the note is read before trusting
@@ -413,6 +421,9 @@ impl Automations {
                     old.enabled && a.enabled
                 };
                 a.updated = now;
+                if changed_logic || (old.enabled && !a.enabled) {
+                    self.stop_locked(&a.id);
+                }
                 list[i] = a.clone();
                 lock(&self.0.fingerprints).remove(&a.id);
                 (a, changed_logic, before)
@@ -432,14 +443,11 @@ impl Automations {
                 list.push(a.clone());
                 lock(&self.0.fingerprints).remove(&a.id);
                 (a, false, None)
-            }
+            };
+            self.refresh_live_from(&list);
+            outcome
         };
-        self.refresh_live();
         let switched_off = before.is_some_and(|(was_on, _)| was_on) && !saved.enabled;
-        // Off means off: its runs (waiting ones too) end now.
-        if changed_logic || switched_off {
-            self.stop(&saved.id);
-        }
         self.persist().await?;
         self.changed(&saved.id);
         let change = if before.is_some() {
@@ -515,6 +523,7 @@ impl Automations {
         }
         let a = self.update(id, |a| {
             if a.fingerprint() == fingerprint {
+                self.stop_holds(id);
                 a.approved = Some(a.fingerprint());
                 a.approved_version = Some(Version {
                     mode: a.mode,
@@ -527,8 +536,6 @@ impl Automations {
         if !a.is_live() {
             return Err(AutomationError::Conflict);
         }
-        // Timers of the previous version must not fire into this one.
-        self.stop_holds(id);
         self.persist().await?;
         self.changed(id);
         self.journal(&a, AutomationChange::Approved, by);
@@ -543,13 +550,25 @@ impl Automations {
         fingerprint: Option<&str>,
         by: Actor,
     ) -> Result<Automation, AutomationError> {
+        self.set_enabled_after_update(id, on, fingerprint, by, || {})
+            .await
+    }
+
+    async fn set_enabled_after_update(
+        &self,
+        id: &str,
+        on: bool,
+        fingerprint: Option<&str>,
+        by: Actor,
+        after_update: impl FnOnce() + Send,
+    ) -> Result<Automation, AutomationError> {
         if on {
             let fingerprint =
                 fingerprint.ok_or_else(|| AutomationError::Invalid("which version?".into()))?;
             return self.approve(id, fingerprint, by).await;
         }
         let a = self.update(id, |a| a.enabled = false)?;
-        self.stop(id);
+        after_update();
         self.persist().await?;
         self.changed(id);
         self.journal(&a, AutomationChange::SwitchedOff, by);
@@ -573,11 +592,10 @@ impl Automations {
             .ok_or(AutomationError::Unknown)?
             .approved_version
             .ok_or_else(|| AutomationError::Invalid("no approved version".into()))?;
-        let a = self.update(id, |a| {
+        let a = self.update_with_stop(id, true, |a| {
             a.mode = version.mode;
             a.graph = version.graph;
         })?;
-        self.stop(id);
         self.persist().await?;
         self.changed(id);
         self.journal(&a, AutomationChange::Restored, by);
@@ -595,10 +613,11 @@ impl Automations {
                 .position(|a| a.id == id)
                 .ok_or(AutomationError::Unknown)?;
             lock(&self.0.fingerprints).remove(id);
-            list.remove(i)
+            self.stop_locked(id);
+            let gone = list.remove(i);
+            self.refresh_live_from(&list);
+            gone
         };
-        self.refresh_live();
-        self.stop(id);
         self.persist().await?;
         self.changed(id);
         self.journal(&gone, AutomationChange::Deleted, by);
@@ -651,6 +670,7 @@ impl Automations {
                 true,
                 CancellationToken::new(),
                 id,
+                None,
             )
             .await)
         } else {
@@ -669,31 +689,68 @@ impl Automations {
         id: &str,
         f: impl FnOnce(&mut Automation),
     ) -> Result<Automation, AutomationError> {
+        self.update_with_stop(id, false, f)
+    }
+
+    fn update_with_stop(
+        &self,
+        id: &str,
+        force_stop: bool,
+        f: impl FnOnce(&mut Automation),
+    ) -> Result<Automation, AutomationError> {
         let mut list = self.0.list.write().unwrap_or_else(PoisonError::into_inner);
         let a = list
             .iter_mut()
             .find(|a| a.id == id)
             .ok_or(AutomationError::Unknown)?;
+        let previous = a.fingerprint();
+        if force_stop {
+            self.stop_locked(id);
+        }
         f(a);
+        if !force_stop && (!a.is_live() || a.fingerprint() != previous) {
+            self.stop_locked(id);
+        }
         a.updated = moli_core::now_ms();
         lock(&self.0.fingerprints).remove(id);
         let a = a.clone();
-        drop(list);
-        self.refresh_live();
+        self.refresh_live_from(&list);
         Ok(a)
     }
 
     fn refresh_live(&self) {
-        let live: Vec<Automation> = self
-            .list()
-            .into_iter()
-            .filter(Automation::is_live)
-            .collect();
+        self.refresh_live_after_snapshot(|| {});
+    }
+
+    fn refresh_live_after_snapshot(&self, after_snapshot: impl FnOnce()) {
+        let list = self.0.list.read().unwrap_or_else(PoisonError::into_inner);
+        after_snapshot();
+        self.refresh_live_from(&list);
+    }
+
+    fn refresh_live_from(&self, list: &[Automation]) {
+        // Caller retains the definition read/write guard through both index
+        // publication and parent assignment. Never publish a detached snapshot.
+        let live: Vec<Automation> = list.iter().filter(|a| a.is_live()).cloned().collect();
+        let live = Arc::new(live);
+        {
+            let mut index = self
+                .0
+                .occurrence_index
+                .write()
+                .unwrap_or_else(PoisonError::into_inner);
+            index.refresh(live.clone(), self.0.hub.occurrence_position(), |id| {
+                lock(&self.0.stops)
+                    .entry(id.to_owned())
+                    .or_default()
+                    .clone()
+            });
+        }
         *self
             .0
             .live_set
             .write()
-            .unwrap_or_else(PoisonError::into_inner) = Arc::new(live);
+            .unwrap_or_else(PoisonError::into_inner) = live;
     }
 
     /// The automations that run when triggered (cached).
@@ -719,14 +776,20 @@ impl Automations {
         });
     }
 
-    /// Cancels every run of it (waiting ones included) and its pending
-    /// « held for » timers.
-    fn stop(&self, id: &str) {
+    /// Cancels the old activation and its timers while the caller holds the
+    /// definition write guard, before publishing any replacement activation.
+    fn stop_locked(&self, id: &str) {
+        self.invalidate_activation(id);
+        lock(&self.0.active).remove(id);
+        self.stop_holds(id);
+    }
+
+    /// Invalidate the activation under the definition lock, before a concurrent
+    /// approval could expose identical content again. Indexed parents stay cancelled.
+    fn invalidate_activation(&self, id: &str) {
         if let Some(all) = lock(&self.0.stops).remove(id) {
             all.cancel();
         }
-        lock(&self.0.active).remove(id);
-        self.stop_holds(id);
     }
 
     fn stop_holds(&self, id: &str) {

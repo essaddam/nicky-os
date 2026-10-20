@@ -83,7 +83,11 @@ impl Driver for Fake {
 }
 
 async fn setup() -> (Hub, Automations, CancellationToken) {
-    let hub = Hub::new(HubOptions::default()).unwrap();
+    let hub = Hub::new(HubOptions {
+        occurrence_clock: || 42,
+        ..HubOptions::default()
+    })
+    .unwrap();
     let cancel = CancellationToken::new();
     spawn_driver(
         &hub,
@@ -164,6 +168,255 @@ async fn approved(autos: &Automations, graph: serde_json::Value) -> Automation {
     let a = autos.save(automation(graph), HUMAN).await.unwrap();
     assert!(!a.is_live(), "saving alone never approves");
     autos.approve(&a.id, &a.fingerprint(), HUMAN).await.unwrap()
+}
+
+async fn add_event_button(hub: &Hub, cancel: &CancellationToken) {
+    let config = serde_json::from_value::<moli_helpers::Config>(serde_json::json!({
+        "helper": [{ "id": "button", "name": "Simulated button", "kind": "button" }]
+    }));
+    assert!(
+        config.is_ok(),
+        "the helpers driver accepts an explicit event button: {config:?}"
+    );
+    let config = config.unwrap();
+    spawn_driver(
+        hub,
+        InstanceId::from("helpers-h4"),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    for _ in 0..200 {
+        if hub
+            .snapshot()
+            .devices
+            .iter()
+            .any(|d| d.device.id.as_str() == "helpers-h4:button")
+        {
+            return;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    panic!("simulated button did not start");
+}
+
+fn button_graph() -> serde_json::Value {
+    serde_json::json!({
+        "nodes": [
+            { "id": "t", "type": "when_occurrence", "point": "helpers-h4:button/press" },
+            { "id": "s", "type": "set", "point": "fake:lamp/on", "value": true }
+        ],
+        "edges": [{ "from": "t", "to": "s" }]
+    })
+}
+
+#[tokio::test]
+async fn auto_h4_identical_presses_start_two_validated_runs() {
+    let (hub, autos, cancel) = setup().await;
+    add_event_button(&hub, &cancel).await;
+    let point = PointId::from("helpers-h4:button/press");
+    assert!(
+        hub.state(&point).is_none(),
+        "a button has no restored value"
+    );
+    let mut draft = automation(button_graph());
+    draft.mode = Mode::Queued;
+    let saved = autos.save(draft, HUMAN).await.unwrap();
+    let live = autos
+        .approve(&saved.id, &saved.fingerprint(), HUMAN)
+        .await
+        .unwrap();
+    for _ in 0..2 {
+        hub.command(&point, Value::Null, Origin::Ui, None)
+            .await
+            .unwrap();
+    }
+    for _ in 0..200 {
+        let runs = autos.runs(Some(&live.id), 10);
+        if runs.len() == 2 && runs.iter().all(|run| run.status == RunStatus::Done) {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    let runs = autos.runs(Some(&live.id), 10);
+    assert_eq!(runs.len(), 2, "two equal appuis are two occurrences");
+    assert!(runs.iter().all(|run| run.status == RunStatus::Done));
+    let target = PointId::from("fake:lamp/on");
+    assert_eq!(hub.journal(100).iter().filter(|entry| {
+        entry.origin == Origin::Automation
+            && matches!(&entry.action, moli_core::Action::Command { point, .. } if point == &target)
+    }).count(), 2, "both executions passed through the guarded, journaled hub");
+    cancel.cancel();
+}
+
+#[tokio::test]
+async fn auto_h4_button_initialization_and_agent_draft_do_not_run() {
+    let (hub, autos, cancel) = setup().await;
+    add_event_button(&hub, &cancel).await;
+    let draft = autos.save(automation(button_graph()), AGENT).await.unwrap();
+    assert!(!draft.is_live());
+    let point = PointId::from("helpers-h4:button/press");
+    assert!(hub.state(&point).is_none());
+    for _ in 0..2 {
+        hub.command(&point, Value::Null, Origin::Ui, None)
+            .await
+            .unwrap();
+    }
+    for _ in 0..10 {
+        tokio::task::yield_now().await;
+    }
+    assert!(autos.runs(Some(&draft.id), 10).is_empty());
+    cancel.cancel();
+}
+
+#[tokio::test]
+async fn auto_h4_request_retry_runs_once_and_carries_correlation() {
+    let (hub, autos, cancel) = setup().await;
+    add_event_button(&hub, &cancel).await;
+    let mut draft = automation(button_graph());
+    draft.mode = Mode::Queued;
+    let saved = autos.save(draft, HUMAN).await.unwrap();
+    let live = autos
+        .approve(&saved.id, &saved.fingerprint(), HUMAN)
+        .await
+        .unwrap();
+    let point = PointId::from("helpers-h4:button/press");
+    let request = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1".to_owned();
+    for _ in 0..2 {
+        hub.command_with_request_id(&point, Value::Null, Origin::Ui, None, Some(request.clone()))
+            .await
+            .unwrap();
+    }
+    for _ in 0..200 {
+        if autos
+            .runs(Some(&live.id), 10)
+            .iter()
+            .any(|r| r.status == RunStatus::Done)
+        {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    let runs = autos.runs(Some(&live.id), 10);
+    assert_eq!(runs.len(), 1, "a retry cannot become a second run");
+    assert_eq!(runs[0].status, RunStatus::Done);
+    assert!(runs[0].occurrence.is_some());
+    assert_eq!(runs[0].correlation.as_deref(), Some(request.as_str()));
+    let actions: Vec<_> = hub
+        .journal(100)
+        .into_iter()
+        .filter(|e| e.origin == Origin::Automation)
+        .collect();
+    assert_eq!(actions.len(), 1);
+    assert_eq!(actions[0].correlation.as_deref(), Some(request.as_str()));
+    assert!(hub.state(&point).is_none());
+    cancel.cancel();
+}
+
+#[tokio::test]
+async fn auto_h4_guard_retains_two_distinct_presses_and_deduplicates_retry() {
+    let hub = Hub::new(HubOptions {
+        guard: moli_runtime::guard::GuardPolicy {
+            protect_unassigned: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    })
+    .unwrap();
+    let cancel = CancellationToken::new();
+    add_event_button(&hub, &cancel).await;
+    let point = PointId::from("helpers-h4:button/press");
+    let mut events = hub.subscribe();
+    let mut approvals = Vec::new();
+    for seq in [1, 1, 2] {
+        let result = hub
+            .command_with_request_id(
+                &point,
+                Value::Null,
+                Origin::Mcp,
+                None,
+                Some(format!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:{seq}")),
+            )
+            .await;
+        let Err(moli_runtime::CommandError::NeedsApproval { id, .. }) = result else {
+            panic!("guard must hold appuis")
+        };
+        approvals.push(id);
+    }
+    assert_eq!(approvals[0], approvals[1]);
+    assert_ne!(approvals[0], approvals[2]);
+    assert_eq!(hub.approvals().len(), 2);
+    while let Ok(event) = events.try_recv() {
+        assert!(
+            !matches!(event, moli_core::Event::Occurrence { .. }),
+            "held appui is not published"
+        );
+    }
+    assert!(
+        hub.resolve_approval(approvals[0], &point, true, Origin::Mcp, None)
+            .await
+            .is_err()
+    );
+    for id in [approvals[0], approvals[2]] {
+        hub.resolve_approval(id, &point, true, Origin::Ui, None)
+            .await
+            .unwrap();
+    }
+    let mut count = 0;
+    while let Ok(event) = events.try_recv() {
+        count += usize::from(matches!(event, moli_core::Event::Occurrence { .. }));
+    }
+    assert_eq!(count, 2);
+    cancel.cancel();
+}
+
+#[tokio::test]
+async fn auto_h4_cached_button_state_and_restart_never_press() {
+    let root = std::env::temp_dir().join(format!(
+        "moli-h4-restore-{}-{}",
+        std::process::id(),
+        moli_core::now_ms()
+    ));
+    tokio::fs::create_dir_all(&root).await.unwrap();
+    let cache = root.join("state.json");
+    tokio::fs::write(
+        &cache,
+        br#"{"helpers-h4:button":{"press":{"value":true,"ts":1}}}"#,
+    )
+    .await
+    .unwrap();
+    let receipts = root.join("button-occurrences.json");
+    let request = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1".to_owned();
+    for boot in 0..2 {
+        let hub = Hub::new(HubOptions {
+            state_path: Some(cache.clone()),
+            button_state_path: Some(receipts.clone()),
+            ..Default::default()
+        })
+        .unwrap();
+        let cancel = CancellationToken::new();
+        let mut events = hub.subscribe();
+        add_event_button(&hub, &cancel).await;
+        let point = PointId::from("helpers-h4:button/press");
+        assert!(hub.state(&point).is_none());
+        while let Ok(event) = events.try_recv() {
+            assert!(!matches!(event, moli_core::Event::Occurrence { .. }));
+        }
+        hub.command_with_request_id(&point, Value::Null, Origin::Ui, None, Some(request.clone()))
+            .await
+            .unwrap();
+        let mut count = 0;
+        while let Ok(event) = events.try_recv() {
+            count += usize::from(matches!(event, moli_core::Event::Occurrence { .. }));
+        }
+        assert_eq!(
+            count,
+            usize::from(boot == 0),
+            "receipt survives restart without republishing"
+        );
+        hub.persist_state().await.unwrap();
+        cancel.cancel();
+    }
+    tokio::fs::remove_dir_all(root).await.unwrap();
 }
 
 #[tokio::test]

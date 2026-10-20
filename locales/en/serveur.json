@@ -1,4 +1,16 @@
 {
+  "serveur.occurrence.commande_echouee": "Press refused (HTTP {status}).",
+
+  "serveur.occurrence.requete_id": "invalid press request ID: 32 hexadecimal client characters, a colon and a positive integer sequence",
+  "serveur.occurrence.valeur": "a press has no value: send null",
+  "serveur.occurrence.source_invalide": "this point does not support this press",
+  "serveur.occurrence.conflit": "this request ID already identifies another button",
+  "serveur.occurrence.ancienne": "request outside the replay window: no press was replayed",
+  "serveur.occurrence.capacite": "button request client limit reached: no press added",
+  "serveur.occurrence.sequence_epuisee": "occurrence sequence exhausted: no press added",
+  "serveur.occurrence.corrompue": "invalid button business state: recovery required, no press added",
+  "serveur.occurrence.persistance": "button business state was not saved: no success acknowledged",
+  "serveur.occurrence.ambigue": "press outcome uncertain: the same request will not be replayed automatically",
   "serveur.acces.refuse": "access denied: home network or Cloudflare Access only",
   "serveur.limite.trop_de_demandes": "too many requests in a row: try again in a few seconds",
   "serveur.limite.trop_de_flux": "too many live streams open: close a tab or try again later",

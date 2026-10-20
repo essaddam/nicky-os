@@ -1,4 +1,12 @@
 {
+  "moteur.verif.bouton_occurrence": "un bouton n’a pas d’état : utiliser le déclencheur d’occurrence",
+  "moteur.verif.occurrence_valeur": "le filtre d’occurrence ne correspond pas au type du point",
+  "moteur.decrit.quand_occurrence": "Quand {appareil} émet une occurrence",
+  "moteur.decrit.quand_occurrence_valeur": "Quand {appareil} émet l’occurrence {valeur}",
+  "moteur.pourquoi.occurrence": "Appui ou événement de {nom}",
+  "moteur.occurrence.persistance": "Occurrence non exécutée : son état de consommation ne peut pas être enregistré.",
+  "moteur.occurrence.interruption": "Une occurrence interrompue reste sans confirmation ; aucune commande n’est rejouée.",
+  "moteur.occurrence.bus_perdu": "Des messages du bus n’ont pas été reçus. Les appuis manquants ne sont pas recréés depuis l’état des appareils.",
   "moteur.verif.trop_noeuds": "Trop de nœuds ({n} sur {max}).",
   "moteur.verif.id_double": "Deux nœuds portent le même identifiant.",
   "moteur.verif.sans_declencheur": "Il faut au moins un déclencheur (quand… ?).",

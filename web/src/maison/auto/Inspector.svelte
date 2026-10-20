@@ -15,6 +15,7 @@
   function defaultValue(point) {
     const spec = pointSpec(point);
     if (!spec) return null;
+    if (spec.kind.type === 'button') return null;
     if (spec.kind.type === 'binary') return true;
     if (spec.kind.type === 'enum') return spec.kind.values?.[0] ?? null;
     if (spec.kind.type === 'numeric') return spec.kind.min ?? 0;
@@ -94,9 +95,17 @@
   {/each}
 
   <div class="fields">
-    {#if node.type === 'when_state'}
+    {#if node.type === 'when_occurrence'}
+      <span class="lbl">{t('automatismes.inspecteur.source_occurrence')}</span>
+      <PointPicker point={node.point} mode="occurrence" onpick={(p) => set({ point: p, value: null })} />
+      <p class="muted">{t('automatismes.inspecteur.occurrence_aide')}</p>
+      {#if node.point && pointSpec(node.point)?.kind.type !== 'button'}
+        <Fields kind="value" point={node.point} value={node.value ?? defaultValue(node.point)} onchange={(v) => set({ value: v })} />
+        <button class="link" onclick={() => set({ value: null })}>{t('automatismes.inspecteur.toute_occurrence')}</button>
+      {/if}
+    {:else if node.type === 'when_state'}
       <span class="lbl">{t('automatismes.inspecteur.quel_appareil')}</span>
-      <PointPicker point={node.point} onpick={(p) => set({ point: p, to: defaultValue(p) })} />
+      <PointPicker point={node.point} mode="state" onpick={(p) => set({ point: p, to: defaultValue(p) })} />
       {#if node.point}
         <span class="lbl">{t('automatismes.inspecteur.quand_devient')}</span>
         <Fields kind="value" point={node.point} value={node.to} onchange={(v) => set({ to: v })} />

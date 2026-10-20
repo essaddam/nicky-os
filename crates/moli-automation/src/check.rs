@@ -223,11 +223,14 @@ impl Ctx<'_> {
     fn rule(&mut self, rule: &Rule) {
         match rule {
             Rule::State { point, op, value } => {
-                if let Some(spec) = self.need(point, false)
-                    && matches!(op, Op::Gt | Op::Ge | Op::Lt | Op::Le)
-                    && (!matches!(spec.kind, Kind::Numeric { .. }) || value.as_f64().is_none())
-                {
-                    self.push(Level::Error, tr!("moteur.verif.comparaison_nombres"));
+                if let Some(spec) = self.need(point, false) {
+                    if spec.kind == Kind::Button {
+                        self.push(Level::Error, tr!("moteur.verif.bouton_occurrence"));
+                    } else if matches!(op, Op::Gt | Op::Ge | Op::Lt | Op::Le)
+                        && (!matches!(spec.kind, Kind::Numeric { .. }) || value.as_f64().is_none())
+                    {
+                        self.push(Level::Error, tr!("moteur.verif.comparaison_nombres"));
+                    }
                 }
             }
             Rule::Time {
@@ -271,8 +274,21 @@ fn check_node(
         protected,
     };
     match &node.step {
+        Step::WhenOccurrence { point, value } => {
+            if let Some(spec) = c.need(point, false)
+                && value.as_ref().is_some_and(|value| {
+                    moli_core::validate(&spec.kind, &Value::from_json(value)).is_err()
+                })
+            {
+                c.push(Level::Error, tr!("moteur.verif.occurrence_valeur"));
+            }
+        }
         Step::WhenState { point, .. } => {
-            c.need(point, false);
+            if c.need(point, false)
+                .is_some_and(|spec| spec.kind == Kind::Button)
+            {
+                c.push(Level::Error, tr!("moteur.verif.bouton_occurrence"));
+            }
         }
         Step::WhenThreshold {
             point,
@@ -629,6 +645,18 @@ fn sun_words(event: SunEvent, offset_min: i32, days: &[u8]) -> String {
 
 fn trigger_words(step: &Step, hub: &Hub) -> String {
     match step {
+        Step::WhenOccurrence { point, value } => {
+            let source = said(hub, point);
+            if let Some(value) = value {
+                tr!(
+                    "moteur.decrit.quand_occurrence_valeur",
+                    appareil = source.device,
+                    valeur = value
+                )
+            } else {
+                tr!("moteur.decrit.quand_occurrence", appareil = source.device)
+            }
+        }
         Step::WhenState {
             point, to, for_s, ..
         } => {

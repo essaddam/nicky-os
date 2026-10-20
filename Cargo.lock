@@ -1190,6 +1190,7 @@ dependencies = [
  "moli-automation",
  "moli-core",
  "moli-energy",
+ "moli-helpers",
  "moli-history",
  "moli-host",
  "moli-i18n",
@@ -1282,6 +1283,7 @@ dependencies = [
  "anyhow",
  "jiff",
  "moli-core",
+ "moli-helpers",
  "moli-i18n",
  "moli-runtime",
  "ring",
@@ -1393,6 +1395,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "moli-core",
+ "moli-i18n",
  "moli-runtime",
  "serde",
  "tokio",

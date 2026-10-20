@@ -21,6 +21,7 @@ thiserror.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+moli-helpers.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
 
 [lints]

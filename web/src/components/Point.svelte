@@ -2,6 +2,7 @@
   import { hub, command } from '../lib/hub.svelte.js';
   import { formatValue, unitOf, isAlarm } from '../lib/format.js';
   import { t, locale } from '../lib/i18n.svelte.js';
+  import PressButton from './PressButton.svelte';
 
   let { device, point, big = false } = $props();
 
@@ -22,7 +23,9 @@
 <div class="point" class:big class:pending>
   <span class="label">{point.label}</span>
 
-  {#if writable && kind === 'binary'}
+  {#if writable && kind === 'button'}
+    <PressButton point={id} label={point.label} disabled={device.online === false} />
+  {:else if writable && kind === 'binary'}
     <button
       class="switch"
       role="switch"

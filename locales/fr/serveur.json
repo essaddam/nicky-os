@@ -1,4 +1,16 @@
 {
+  "serveur.occurrence.commande_echouee": "Appui refusé (HTTP {status}).",
+
+  "serveur.occurrence.requete_id": "identifiant d’appui invalide : client hexadécimal de 32 caractères, deux-points et séquence entière positive",
+  "serveur.occurrence.valeur": "un appui n’a pas de valeur : envoyer null",
+  "serveur.occurrence.source_invalide": "ce point ne permet pas cet appui",
+  "serveur.occurrence.conflit": "cet identifiant de requête désigne déjà un autre bouton",
+  "serveur.occurrence.ancienne": "requête trop ancienne : aucun appui rejoué",
+  "serveur.occurrence.capacite": "limite de clients d’appui atteinte : aucun appui ajouté",
+  "serveur.occurrence.sequence_epuisee": "séquence d’occurrences épuisée : aucun appui ajouté",
+  "serveur.occurrence.corrompue": "état métier des boutons invalide : restauration nécessaire, aucun appui ajouté",
+  "serveur.occurrence.persistance": "état métier des boutons non enregistré : aucun succès acquitté",
+  "serveur.occurrence.ambigue": "résultat de l’appui incertain : la même requête ne sera pas rejouée automatiquement",
   "serveur.acces.refuse": "accès refusé : réseau de la maison, ou Cloudflare Access",
   "serveur.limite.trop_de_demandes": "trop de demandes à la suite : réessaie dans quelques secondes",
   "serveur.limite.trop_de_flux": "trop de flux en direct ouverts : ferme un onglet ou réessaie plus tard",

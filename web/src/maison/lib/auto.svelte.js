@@ -34,6 +34,7 @@ function kind(type, family, icon, defaults) {
 
 /** Every kind of node: family (colour), words, icon, outputs, defaults. */
 export const CATALOG = {
+  when_occurrence: kind('when_occurrence', 'trigger', 'hand', { point: '' }),
   when_state: kind('when_state', 'trigger', 'flash', { point: '', to: true, for_s: 0 }),
   when_threshold: kind('when_threshold', 'trigger', 'thermometer', { point: '', above: 0, for_s: 0 }),
   at_time: kind('at_time', 'trigger', 'clock', { at: '07:00', days: [] }),
@@ -177,6 +178,8 @@ const SPOKEN_CHANNELS = ['telegram', 'voix', 'telephone'];
 /** The one line under a node's title. */
 export function nodeText(node) {
   switch (node.type) {
+    case 'when_occurrence':
+      return node.value == null ? pointName(node.point) : `${pointName(node.point)} · ${valueText(node.point, node.value)}`;
     case 'when_state': {
       const base = `${pointName(node.point)} → ${node.to != null ? valueText(node.point, node.to) : t('automatismes.texte.change')}`;
       return node.for_s ? t('automatismes.texte.depuis', { texte: base, duree: duration(node.for_s) }) : base;

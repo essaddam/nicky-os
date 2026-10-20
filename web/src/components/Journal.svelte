@@ -25,6 +25,12 @@
     if (a.kind === 'automation') {
       return { target: t('systeme.journal.automatisme', { name: a.name }), detail: word(CHANGE, 'changement', a.change) };
     }
+    if (a.kind === 'occurrence') {
+      const id = a.point.slice(0, a.point.indexOf('/'));
+      const d = hub.devices[id];
+      return { target: d ? deviceName(d) : id,
+        detail: t(`systeme.bouton.journal.${a.status}`, { sequence: a.occurrence.sequence }) };
+    }
     if (a.kind === 'approval') {
       const id = a.point.slice(0, a.point.indexOf('/'));
       const d = hub.devices[id];

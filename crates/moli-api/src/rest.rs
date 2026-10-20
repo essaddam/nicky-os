@@ -63,6 +63,8 @@ pub(crate) struct CommandBody {
     value: Value,
     #[serde(default)]
     actor: Option<String>,
+    #[serde(default)]
+    request_id: Option<String>,
 }
 
 /// Who is acting. Declaring is not proving: `ui` with a human session (PIN)
@@ -120,7 +122,10 @@ pub(crate) async fn command(
     }
     let origin = origin(&hub, &headers, &humans, &caller);
     let actor = journal_actor(origin, body.actor, &caller);
-    match hub.command(&body.point, body.value, origin, actor).await {
+    match hub
+        .command_with_request_id(&body.point, body.value, origin, actor, body.request_id)
+        .await
+    {
         Ok(()) => Json(json!({ "ok": true })).into_response(),
         // Accepted, not executed: a human decides.
         Err(CommandError::NeedsApproval { id, reason }) => (
@@ -252,6 +257,19 @@ pub(crate) fn command_status(e: &CommandError) -> StatusCode {
         CommandError::DriverUnavailable | CommandError::Busy => StatusCode::SERVICE_UNAVAILABLE,
         CommandError::Timeout => StatusCode::GATEWAY_TIMEOUT,
         CommandError::Driver(_) => StatusCode::BAD_GATEWAY,
+        CommandError::Occurrence(error) => match error {
+            moli_runtime::OccurrenceError::RequestId
+            | moli_runtime::OccurrenceError::Value
+            | moli_runtime::OccurrenceError::Source => StatusCode::UNPROCESSABLE_ENTITY,
+            moli_runtime::OccurrenceError::Conflict
+            | moli_runtime::OccurrenceError::Stale
+            | moli_runtime::OccurrenceError::Uncertain => StatusCode::CONFLICT,
+            moli_runtime::OccurrenceError::Capacity | moli_runtime::OccurrenceError::Sequence => {
+                StatusCode::SERVICE_UNAVAILABLE
+            }
+            moli_runtime::OccurrenceError::Storage
+            | moli_runtime::OccurrenceError::CorruptState => StatusCode::INTERNAL_SERVER_ERROR,
+        },
     }
 }
 

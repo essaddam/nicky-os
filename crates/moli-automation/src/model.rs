@@ -160,6 +160,12 @@ fn out() -> String {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Step {
     // ---- triggers ----
+    /// A published occurrence, independently of the point's last value.
+    WhenOccurrence {
+        point: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        value: Option<Json>,
+    },
     /// A point changes (to a value, from a value), maybe held for a while.
     WhenState {
         point: String,
@@ -253,7 +259,8 @@ impl Step {
     pub fn is_trigger(&self) -> bool {
         matches!(
             self,
-            Self::WhenState { .. }
+            Self::WhenOccurrence { .. }
+                | Self::WhenState { .. }
                 | Self::WhenThreshold { .. }
                 | Self::AtTime { .. }
                 | Self::AtSun { .. }
@@ -274,6 +281,7 @@ impl Step {
 
     pub fn kind(&self) -> &'static str {
         match self {
+            Self::WhenOccurrence { .. } => "when_occurrence",
             Self::WhenState { .. } => "when_state",
             Self::WhenThreshold { .. } => "when_threshold",
             Self::AtTime { .. } => "at_time",

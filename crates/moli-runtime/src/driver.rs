@@ -6,13 +6,22 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::time::Instant;
 
-use moli_core::{Device, DeviceId, DriverStatus, InstanceId, PointId, Value};
+use moli_core::{Device, DeviceId, DriverStatus, InstanceId, Origin, PointId, RequestId, Value};
 use tokio::sync::{mpsc, oneshot};
 use tokio_util::sync::CancellationToken;
 
 use crate::Hub;
 
 pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
+
+/// Trusted transport context, assigned by the hub rather than the caller's body.
+#[derive(Clone, Debug)]
+pub struct CommandMetadata {
+    pub origin: Origin,
+    pub actor: Option<String>,
+    pub request_id: Option<RequestId>,
+    pub correlation: Option<String>,
+}
 
 /// A driver connects one external system to the hub.
 ///
@@ -42,7 +51,8 @@ pub struct CommandRequest {
     /// When the hub stopped waiting: an order past it must never run (a
     /// lamp switched on hours after « failed » is worse than a refusal).
     pub deadline: Instant,
-    pub(crate) reply: oneshot::Sender<Result<(), String>>,
+    pub metadata: CommandMetadata,
+    pub(crate) reply: oneshot::Sender<Result<(), crate::CommandError>>,
     /// Who has the order: still queued, taken by the driver, or given up by
     /// its caller. Decided once, atomically (see [`Claim`]).
     pub(crate) claim: Arc<AtomicU8>,
@@ -90,6 +100,11 @@ impl CommandRequest {
     /// Reports the outcome. Dropping the request without replying is
     /// reported to the caller as a driver failure.
     pub fn reply(self, result: Result<(), String>) {
+        let _ = self.reply.send(result.map_err(crate::CommandError::Driver));
+    }
+
+    /// Returns a structured business-command error without losing its HTTP class.
+    pub fn reply_result(self, result: Result<(), crate::CommandError>) {
         let _ = self.reply.send(result);
     }
 }
@@ -181,6 +196,14 @@ impl DriverCtx {
         if self.owns(device) {
             self.hub.pulse_state(device, key, value);
         }
+    }
+
+    /// Publishes a virtual button command once, after its business-state commit.
+    pub async fn press_button(&self, command: &CommandRequest) -> Result<(), crate::CommandError> {
+        if !self.owns(&command.device.id) {
+            return Err(crate::OccurrenceError::Source.into());
+        }
+        self.hub.press_button(command).await
     }
 
     /// Publishes or replaces a device. Devices of other instances are refused.

@@ -59,6 +59,7 @@ pub struct Helper {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HelperKind {
+    Button,
     Select,
     Switch,
     Number,
@@ -69,6 +70,7 @@ impl Helper {
     /// The point that holds its value.
     fn spec(&self) -> PointSpec {
         let (key, kind, semantic) = match self.kind {
+            HelperKind::Button => ("press", Kind::Button, Semantic::Other),
             HelperKind::Select => (
                 "state",
                 Kind::Enum {
@@ -93,7 +95,7 @@ impl Helper {
             label: self.name.as_str().into(),
             kind,
             access: Access {
-                read: true,
+                read: self.kind != HelperKind::Button,
                 write: true,
             },
             unit: None,
@@ -103,6 +105,18 @@ impl Helper {
 
     /// The starting value, checked against the point.
     fn initial_value(&self) -> anyhow::Result<Value> {
+        if self.kind == HelperKind::Button {
+            ensure!(
+                self.initial.is_none()
+                    && self.options.is_empty()
+                    && self.min.is_none()
+                    && self.max.is_none()
+                    && self.step.is_none(),
+                "{}",
+                moli_i18n::tr!("pilotes.aides.bouton_sans_valeur")
+            );
+            return Ok(Value::Null);
+        }
         let raw = match (&self.initial, self.kind) {
             (Some(toml::Value::String(s)), _) => Value::Text(s.as_str().into()),
             (Some(toml::Value::Boolean(b)), _) => Value::Bool(*b),
@@ -116,6 +130,7 @@ impl Helper {
             (None, HelperKind::Switch) => Value::Bool(false),
             (None, HelperKind::Number) => Value::Float(self.min.unwrap_or(0.0)),
             (None, HelperKind::Text) => Value::Text("".into()),
+            (None, HelperKind::Button) => Value::Null,
         };
         validate(&self.spec().kind, &raw)
             .map_err(|e| anyhow::anyhow!("helper {}: initial value: {e}", self.id))
@@ -130,6 +145,16 @@ pub struct Helpers {
 impl Helpers {
     /// Checks the configuration (ids, options, initial values).
     pub fn new(config: Config) -> anyhow::Result<Self> {
+        ensure!(
+            config
+                .helpers
+                .iter()
+                .filter(|helper| helper.kind == HelperKind::Button)
+                .count()
+                <= 128,
+            "{}",
+            moli_i18n::tr!("pilotes.aides.boutons_max")
+        );
         let mut seen = std::collections::HashSet::new();
         for h in &config.helpers {
             ensure!(
@@ -171,13 +196,22 @@ impl Driver for Helpers {
                     points: vec![spec.clone()],
                 });
                 // Kept across restarts by the state cache; set only once.
-                if ctx.current(&id, &spec.key).is_none() {
+                if h.kind != HelperKind::Button && ctx.current(&id, &spec.key).is_none() {
                     ctx.set_state(&id, &spec.key, h.initial_value()?);
                 }
                 ctx.set_availability(&id, true);
             }
             ctx.ready();
             while let Some(command) = ctx.next_command().await {
+                if command
+                    .device
+                    .point(&command.key)
+                    .is_some_and(|point| point.kind == Kind::Button)
+                {
+                    let result = ctx.press_button(&command).await;
+                    command.reply_result(result);
+                    continue;
+                }
                 // Already validated against the point by the hub.
                 ctx.set_state(&command.device.id, &command.key, command.value.clone());
                 command.reply(Ok(()));

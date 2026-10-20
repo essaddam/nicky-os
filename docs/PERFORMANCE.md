@@ -45,6 +45,14 @@ après restauration, y compris les imports anciens dont les lignes ont été pur
   est mis en cache et recalculé seulement quand il change (ex. : la liste des automatismes
   actifs, voir ci-dessous).
 - Une brique inactive ne coûte rien : pas de tâche, pas de minuterie, pas de mémoire.
+- AUTO-H4 : l'index `when_occurrence` est construit lors des changements de
+  définitions, à partir de la même liste active partagée. Un appui consulte les
+  seuls déclencheurs de son point ; aucune empreinte globale n'est recalculée.
+  Les fichiers métier restent bornés à 1 Mio chacun ; fenêtres de reçus et de
+  consommation bornées, chargement paresseux, aucun sondage ni nouvelle tâche
+  permanente. Les synchronisations avant publication/admission font partie de
+  la latence de l'appui ; aucune mesure de latence physique ou de production
+  n'est déduite des tests simulés.
 - Les pilotes écoutent (MQTT, SSE, websockets) plutôt que d'interroger quand l'appareil le
   permet ; sinon intervalle le plus long qui reste utile.
 - Le LLM n'est jamais sur un chemin chaud : seulement à la demande d'une personne ou d'un

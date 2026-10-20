@@ -70,6 +70,13 @@ enum Command {
     /// Exit 0 if the local instance answers `/api/health` (container
     /// healthcheck: the image has no curl).
     Health,
+    /// Press an event button through the running local API (never starts drivers).
+    Press {
+        point: String,
+        /// Reuse this identity only when retrying the same intent.
+        #[arg(long)]
+        request_id: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -176,6 +183,7 @@ fn main() -> anyhow::Result<()> {
             unreachable!("handled above")
         }
         Command::Backup { dir } => backup::backup(&config.server.data_dir, &dir),
+        Command::Press { point, request_id } => press(&config, &point, request_id.as_deref()),
         Command::Restore { dir, force } => backup::restore(&config.server.data_dir, &dir, force),
         Command::Tuya(TuyaCommand::Import {
             instance,
@@ -307,23 +315,7 @@ async fn serve(config: Config, boot: Instant) -> anyhow::Result<()> {
     if !moli_i18n::set_language(&language) {
         tracing::warn!(%language, "unknown language: Moli speaks {}", moli_i18n::FALLBACK);
     }
-    // The master key comes from the environment (a secrets manager), or a
-    // new house's key file.
-    let secrets = master_key(&config.server.data_dir, true)?
-        .map(|key| (config.server.data_dir.join("secrets.enc"), key));
-    if secrets.is_none() {
-        tracing::warn!("no master key: drivers cannot persist pairing credentials");
-    }
-    let hub = Hub::new(HubOptions {
-        labels_path: Some(config.server.data_dir.join("labels.toml")),
-        state_path: Some(config.server.data_dir.join("state.json")),
-        journal_path: Some(config.server.data_dir.join("journal.jsonl")),
-        addresses_path: Some(config.server.data_dir.join("addresses.json")),
-        secrets,
-        guard: config.guard.policy()?,
-        ..HubOptions::default()
-    })
-    .context("cannot open the data directory (labels, journal, secrets)")?;
+    let hub = open_hub(&config)?;
     let cancel = CancellationToken::new();
 
     // History first: it must be listening before drivers publish anything.
@@ -409,6 +401,28 @@ async fn serve(config: Config, boot: Instant) -> anyhow::Result<()> {
         .await
         .context("final state cache write")?;
     Ok(())
+}
+
+/// Opens the hub's state files and encrypted vault before drivers start.
+fn open_hub(config: &Config) -> anyhow::Result<Hub> {
+    // The master key comes from the environment (a secrets manager), or a
+    // new house's key file.
+    let secrets = master_key(&config.server.data_dir, true)?
+        .map(|key| (config.server.data_dir.join("secrets.enc"), key));
+    if secrets.is_none() {
+        tracing::warn!("no master key: drivers cannot persist pairing credentials");
+    }
+    Hub::new(HubOptions {
+        labels_path: Some(config.server.data_dir.join("labels.toml")),
+        state_path: Some(config.server.data_dir.join("state.json")),
+        button_state_path: Some(config.server.data_dir.join("button-occurrences.json")),
+        journal_path: Some(config.server.data_dir.join("journal.jsonl")),
+        addresses_path: Some(config.server.data_dir.join("addresses.json")),
+        secrets,
+        guard: config.guard.policy()?,
+        ..HubOptions::default()
+    })
+    .context("cannot open the data directory (labels, journal, secrets)")
 }
 
 /// The sky over the house (the dashboard's forecast and weather map):
@@ -1149,6 +1163,42 @@ fn health() -> anyhow::Result<()> {
     let (status, _) = runtime.block_on(moli_net::plain("127.0.0.1", 8790, request))?;
     if !status.is_success() {
         bail!("health: {status}");
+    }
+    Ok(())
+}
+
+fn press(config: &Config, point: &str, request_id: Option<&str>) -> anyhow::Result<()> {
+    if let Some(id) = request_id {
+        let _: moli_core::RequestId = id
+            .parse()
+            .map_err(|_| moli_runtime::OccurrenceError::RequestId)?;
+    }
+    let address = config.server.listen;
+    let host = if address.ip().is_unspecified() {
+        "127.0.0.1".to_owned()
+    } else {
+        address.ip().to_string()
+    };
+    let request = moli_net::json_body(
+        http::Request::builder()
+            .method(http::Method::POST)
+            .uri("/api/command")
+            .header(http::header::HOST, &host),
+        &serde_json::json!({ "point": point, "value": null, "request_id": request_id, "actor": "moli-os press" }),
+    )?;
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?;
+    let (status, body) = runtime.block_on(moli_net::plain(&host, address.port(), request))?;
+    println!("{}", String::from_utf8_lossy(&body));
+    if !status.is_success() {
+        bail!(
+            "{}",
+            moli_i18n::tr!(
+                "serveur.occurrence.commande_echouee",
+                status = status.as_u16()
+            )
+        );
     }
     Ok(())
 }

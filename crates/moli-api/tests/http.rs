@@ -178,6 +178,72 @@ async fn rest_command_round_trip() {
 }
 
 #[tokio::test]
+async fn auto_h4_rest_retries_do_not_publish_a_second_press() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let cancel = CancellationToken::new();
+    let config = serde_json::from_value(json!({ "helper": [
+        { "id": "button", "name": "Simulated button", "kind": "button" },
+        { "id": "other", "name": "Another button", "kind": "button" }
+    ] }))
+    .unwrap();
+    spawn_driver(
+        &hub,
+        "fixture".into(),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    for _ in 0..200 {
+        if hub.stats().drivers_running == 1 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    assert_eq!(hub.stats().drivers_running, 1);
+    let addr = serve(&hub, &moli_api::Options::default()).await;
+    let mut events = hub.subscribe();
+    let order = json!({ "point": "fixture:button/press", "value": null,
+                        "request_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1" });
+    for _ in 0..2 {
+        let (status, body) = request(&addr, "POST", "/api/command", Some(&order)).await;
+        assert_eq!(status, 200, "{body}");
+    }
+    let mut invalid = order.clone();
+    invalid["value"] = true.into();
+    assert_eq!(
+        request(&addr, "POST", "/api/command", Some(&invalid))
+            .await
+            .0,
+        422
+    );
+    invalid = order.clone();
+    invalid["request_id"] = "invalid".into();
+    assert_eq!(
+        request(&addr, "POST", "/api/command", Some(&invalid))
+            .await
+            .0,
+        422
+    );
+    invalid = order;
+    invalid["point"] = "fixture:other/press".into();
+    assert_eq!(
+        request(&addr, "POST", "/api/command", Some(&invalid))
+            .await
+            .0,
+        409
+    );
+    let mut count = 0;
+    while let Ok(event) = events.try_recv() {
+        count += usize::from(matches!(event, moli_core::Event::Occurrence { .. }));
+    }
+    assert_eq!(
+        count, 1,
+        "REST forwards the request identity through the real hub and driver"
+    );
+    assert!(hub.state(&"fixture:button/press".into()).is_none());
+    cancel.cancel();
+}
+
+#[tokio::test]
 async fn an_approved_routine_runs_from_the_household_dashboard_without_a_code() {
     use moli_automation::{Actor, Author, Automation, Automations};
     let hub = lamp_hub().await;

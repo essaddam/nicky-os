@@ -1,4 +1,18 @@
 {
+  "systeme.bouton.valider": "Valider l’appui en attente",
+
+  "systeme.bouton.identite_indisponible": "Appui non envoyé : le stockage de son identité est indisponible.",
+  "systeme.bouton.journal.published": "Appui {sequence} publié",
+  "systeme.bouton.journal.replayed": "Appui {sequence} déjà transmis, sans rejeu",
+  "systeme.bouton.journal.ambiguous": "Appui {sequence} sans confirmation",
+
+  "systeme.bouton.appuyer": "Appuyer",
+  "systeme.bouton.envoye": "Appui transmis",
+  "systeme.bouton.reessayer": "Réessayer la requête",
+  "systeme.bouton.incertain": "La réponse manque. Réessayer conserve le même appui.",
+  "systeme.bouton.attendre": "Attends la fin des appuis en cours.",
+  "systeme.bouton.refus": "Appui refusé.",
+
   "systeme.approbations.origine.mcp": "Un agent",
   "systeme.approbations.origine.api": "Un script",
   "systeme.approbations.origine.cli": "La ligne de commande",

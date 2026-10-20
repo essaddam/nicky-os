@@ -156,3 +156,74 @@ Garde-fous de l'import (détail dans [moli.md](moli.md)) :
 
 Annonces vocales Sonos (TTS + `audioClip`), présence
 (appli mobile), suggestions d'automatismes tirées de l'historique, Telegram testé en réel.
+
+## Extension des primitives et reprise HA : cadrage
+
+Le [cadrage des primitives](automatismes-primitives.md) distingue les capacités présentes
+des travaux à réaliser : aides temporelles, compteur, bouton, planning, scènes, points
+calculés et traduction des usages HA. Il décrit les contrats de reprise et les critères
+de test de chaque lot. **Ce document n'annonce pas leur disponibilité** : les aides
+à valeur restent `select`, `switch`, `number` et `text`. Le bouton événementiel
+du lot AUTO-H4 est décrit ci-dessous ; les autres lots restent des propositions.
+Les contrats proposés restent à relire avant implémentation ; leur publication ne
+modifie aucune des règles de validation et d'exécution décrites ci-dessus.
+
+## Bouton et occurrences (AUTO-H4)
+
+Une aide `button` expose `instance:id/press`. Son ordre est JSON `null`, sans
+changement artificiel d'un booléen ou d'un texte horodaté. L'événement
+`occurrence` porte une identité `{source, sequence}` indépendante de son heure
+et de sa valeur. Un pilote appelle `DriverCtx::pulse_state` pour une occurrence
+réelle ; ses lectures initiales, son cache et ses reconnexions restent des
+`set_state`. Hue distingue déjà la lecture initiale des événements de sa liaison.
+
+Un nœud `{"id":"appui","type":"when_occurrence","point":"aides:depart/press"}`
+déclenche chaque appui. Pour un autre point événementiel, `value` est un filtre
+facultatif, selon la même comparaison que le moteur. Le mode de l'automatisme
+reste applicable : `queued` conserve deux appuis successifs, `single` ignore
+ceux reçus pendant un lancement, `restart` remplace le lancement précédent.
+La limite de file et le coupe-circuit des boucles sont conservés. Un brouillon
+ne tourne jamais ; une validation humaine porte toujours sur l'empreinte exacte.
+Un événement déjà publié avant validation ou modification ne lance pas la
+nouvelle version lorsqu'il est lu avec retard.
+Une admission capture aussi l'activation courante avant toute attente de
+persistance. Couper puis réactiver le même contenu ne réveille pas cet ancien
+appui : sa lignée d'annulation reste fermée, même si l'empreinte est identique.
+La définition reste verrouillée jusqu'à la publication de son index et de son
+activation. L'arrêt nettoie l'ancienne activation dans cette même transition ;
+une requête d'arrêt qui termine plus tard ne révoque pas une validation plus récente.
+
+La livraison est **en direct, au plus une fois**, pas une file de commandes à
+rejouer après panne. Le moteur enregistre la consommation avant de programmer
+les actions. Une interruption laisse une trace non confirmée ; elle est signalée
+au redémarrage, sans relancer les effets. Le bus perdu est signalé sans inventer
+les appuis manquants à partir d'un instantané. Les événements d'un ancien
+processus sont refusés. Les actions, lancements, demandes retenues et lignes de
+journal conservent la corrélation de la requête source.
+
+Deux fichiers métier indépendants de `moli.db` portent la version 1 :
+`button-occurrences.json` (identités et reçus des requêtes) et
+`automation-occurrences.json` (fenêtres de consommation et lancements non
+confirmés). Un seul écrivain par fichier ; écriture bornée à 1 Mio, temporaire,
+`fsync`, renommage atomique, puis synchronisation du dossier avant acquittement.
+Une erreur ou une version inconnue bloque le chemin concerné, sans effacer les
+preuves ni remettre les séquences à zéro. Après un renommage dont la durabilité
+est incertaine, le chemin est fermé jusqu'à reprise. Aucune transaction physique
+exactement une fois n'est annoncée.
+La sauvegarde officielle inclut ces deux fichiers et la restauration vérifie
+leur présence/taille selon son manifeste avant toute écriture. Un réessai d'une
+requête déjà acquittée avant la sauvegarde garde son reçu après restauration ;
+une sauvegarde antérieure à cette requête ne peut en contenir la preuve.
+
+Les requêtes explicites ont une identité client de 32 caractères hexadécimaux
+et une séquence entière positive, sous forme de texte `client:sequence`.
+Une nouvelle intention utilise une nouvelle séquence ; un réessai garde la
+même. Chaque client conserve une fenêtre de 32 reçus, au plus 64 clients ; une
+requête plus ancienne est refusée, jamais acceptée de nouveau après éviction.
+Les clients ne sont pas évincés silencieusement. Une identité réutilisée pour
+un autre point est un conflit. Sans identité de requête, chaque commande est
+un nouvel appui. Le navigateur réserve ses séquences dans une transaction
+IndexedDB persistante, commune aux onglets ; l'indisponibilité de ce stockage
+empêche l'envoi. Le moteur borne à 128 sources et 256 occurrences en cours sa
+fenêtre de 64 identités par source. Une borne atteinte est un refus visible,
+jamais un débordement de compteur ou un rejeu.

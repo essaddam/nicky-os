@@ -166,6 +166,7 @@ impl View {
         };
         let (device, moved) = match event {
             Event::State { point, .. } => (point.split().map(|(id, _)| id), false),
+            Event::Occurrence { occurrence } => (occurrence.point.split().map(|(id, _)| id), false),
             Event::Availability { device, .. } => (Some(device.clone()), false),
             Event::ApprovalRequested { request } => {
                 (request.point.split().map(|(id, _)| id), false)

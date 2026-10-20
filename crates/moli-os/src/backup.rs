@@ -19,7 +19,7 @@ use anyhow::{Context as _, bail};
 /// SQLite databases: copied through SQLite itself.
 const DATABASES: [&str; 2] = ["history.db", "energy.db"];
 /// Everything else worth keeping (missing ones are skipped).
-const FILES: [&str; 16] = [
+const FILES: [&str; 18] = [
     "moli.toml",
     "plan.json",
     "phones.json",
@@ -29,6 +29,8 @@ const FILES: [&str; 16] = [
     "tuya.json",
     "automations.json",
     "automation-runs.jsonl",
+    "button-occurrences.json",
+    "automation-occurrences.json",
     "journal.jsonl",
     "journal.jsonl.1",
     "state.json",
@@ -171,6 +173,104 @@ fn known_name(name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn auto_h4_backup_restore_does_not_republish_an_acknowledged_request() {
+        use moli_core::{Event, Origin, PointId, Value};
+        use moli_runtime::{Hub, HubOptions, StateFile, spawn_driver};
+        use std::sync::Arc;
+        use std::time::Duration;
+        use tokio_util::sync::CancellationToken;
+
+        let root = std::env::temp_dir().join(format!(
+            "moli-h4-backup-{}-{}",
+            std::process::id(),
+            moli_core::now_ms()
+        ));
+        let data = root.join("data");
+        let saved = root.join("saved");
+        let fresh = root.join("fresh");
+        std::fs::create_dir_all(&data).unwrap();
+        // A valid, empty consumer state also belongs to the official backup.
+        StateFile::new(Some(data.join("automation-occurrences.json")), 1024 * 1024)
+            .write(&serde_json::json!({ "version": 1, "windows": {}, "pending": {} }))
+            .await
+            .unwrap();
+        let point = PointId::from("fixture:button/press");
+        let request = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1".to_owned();
+        for (boot, directory) in [&data, &fresh].into_iter().enumerate() {
+            let hub = Hub::new(HubOptions {
+                button_state_path: Some(directory.join("button-occurrences.json")),
+                ..Default::default()
+            })
+            .unwrap();
+            let cancel = CancellationToken::new();
+            let config = serde_json::from_value(serde_json::json!({ "helper": [
+                { "id": "button", "name": "Simulated button", "kind": "button" }
+            ] }))
+            .unwrap();
+            spawn_driver(
+                &hub,
+                "fixture".into(),
+                Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+                cancel.clone(),
+            );
+            for _ in 0..200 {
+                if hub.device(&"fixture:button".into()).is_some() {
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+            assert!(hub.device(&"fixture:button".into()).is_some());
+            let mut events = hub.subscribe();
+            hub.command_with_request_id(
+                &point,
+                Value::Null,
+                Origin::Ui,
+                None,
+                Some(request.clone()),
+            )
+            .await
+            .unwrap();
+            let mut published = 0;
+            while let Ok(event) = events.try_recv() {
+                published += usize::from(matches!(event, Event::Occurrence { .. }));
+            }
+            assert_eq!(
+                published,
+                usize::from(boot == 0),
+                "a request acknowledged before backup is not new after restore"
+            );
+            if boot == 0 {
+                backup(&data, &saved).unwrap();
+                let manifest: serde_json::Value =
+                    serde_json::from_slice(&std::fs::read(saved.join("manifest.json")).unwrap())
+                        .unwrap();
+                for name in ["button-occurrences.json", "automation-occurrences.json"] {
+                    assert!(
+                        manifest["files"][name].is_u64(),
+                        "backup must include {name}"
+                    );
+                }
+                restore(&fresh, &saved, false).unwrap();
+                for name in ["button-occurrences.json", "automation-occurrences.json"] {
+                    assert_eq!(
+                        std::fs::read(data.join(name)).unwrap(),
+                        std::fs::read(fresh.join(name)).unwrap()
+                    );
+                }
+            }
+            cancel.cancel();
+        }
+        std::fs::write(saved.join("button-occurrences.json"), b"damaged").unwrap();
+        let other = root.join("other");
+        assert!(restore(&other, &saved, false).is_err());
+        assert!(
+            !other.exists(),
+            "validate all occurrence files before restoring anything"
+        );
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn a_backup_restores_into_an_empty_home() {

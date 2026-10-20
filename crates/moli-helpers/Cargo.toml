@@ -9,6 +9,7 @@ rust-version.workspace = true
 [dependencies]
 anyhow.workspace = true
 moli-core.workspace = true
+moli-i18n.workspace = true
 moli-runtime.workspace = true
 serde.workspace = true
 toml.workspace = true

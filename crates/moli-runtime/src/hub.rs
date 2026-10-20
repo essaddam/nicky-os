@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
 use crate::addresses::{self, KnownAddress};
-use crate::driver::{Claim, CommandRequest};
+use crate::driver::{Claim, CommandMetadata, CommandRequest};
 use crate::guard::{GuardPolicy, GuardStatus, Verdict};
 use crate::journal_log::JournalLog;
 use crate::secrets::{self, MasterKey, SecretStore};
@@ -31,6 +31,10 @@ pub struct HubOptions {
     pub labels_path: Option<PathBuf>,
     /// Where last known values are cached across restarts. `None` disables it.
     pub state_path: Option<PathBuf>,
+    /// Button identities and request receipts, independent of the state cache.
+    pub button_state_path: Option<PathBuf>,
+    /// Occurrence wall-clock metadata only; identities never depend on it.
+    pub occurrence_clock: fn() -> u64,
     /// Append-only journal file (JSON Lines). `None` keeps it in memory only.
     pub journal_path: Option<PathBuf>,
     /// Where drivers last reached their devices. `None` keeps it in memory only.
@@ -51,6 +55,8 @@ impl Default for HubOptions {
         Self {
             labels_path: None,
             state_path: None,
+            button_state_path: None,
+            occurrence_clock: now_ms,
             journal_path: None,
             addresses_path: None,
             journal_capacity: 500,
@@ -64,6 +70,8 @@ impl Default for HubOptions {
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum CommandError {
+    #[error(transparent)]
+    Occurrence(#[from] crate::OccurrenceError),
     #[error("unknown point")]
     UnknownPoint,
     #[error("point is read-only")]
@@ -232,13 +240,13 @@ type JournalLine = Box<dyn FnOnce(Outcome) + Send>;
 
 /// The driver's answer, until the deadline.
 async fn answer_of(
-    answer: &mut oneshot::Receiver<Result<(), String>>,
+    answer: &mut oneshot::Receiver<Result<(), CommandError>>,
     deadline: Instant,
 ) -> Result<(), CommandError> {
     match tokio::time::timeout_at(deadline.into(), answer).await {
         Err(_) => Err(CommandError::Timeout),
         Ok(Err(_)) => Err(CommandError::Driver("command dropped".into())),
-        Ok(Ok(result)) => result.map_err(CommandError::Driver),
+        Ok(Ok(result)) => result,
     }
 }
 
@@ -247,7 +255,7 @@ async fn answer_of(
 /// down), the line is still written: the answer if it has come, otherwise
 /// « outcome unknown ».
 struct Observer {
-    answer: oneshot::Receiver<Result<(), String>>,
+    answer: oneshot::Receiver<Result<(), CommandError>>,
     deadline: Instant,
     journal: Option<JournalLine>,
 }
@@ -269,7 +277,7 @@ impl Observer {
 impl Drop for Observer {
     fn drop(&mut self) {
         let outcome = match self.answer.try_recv() {
-            Ok(result) => outcome_of(&result.map_err(CommandError::Driver)),
+            Ok(result) => outcome_of(&result),
             Err(_) => Outcome::Err(moli_i18n::tr!("serveur.journal.inconnu")),
         };
         self.write(outcome);
@@ -332,6 +340,8 @@ struct Inner {
     /// Counts emissions in exactly the broadcast order. Also gates an
     /// ordered subscription so its first event cannot fall in a gap.
     event_position: Mutex<u64>,
+    occurrence_stream: crate::occurrences::Stream,
+    buttons: tokio::sync::Mutex<crate::occurrences::Buttons>,
     /// Serializes label writes so the file always matches the model.
     label_write: tokio::sync::Mutex<()>,
     /// Where each instance last reached its device.
@@ -460,6 +470,10 @@ impl Hub {
             secrets_problem,
             events,
             event_position: Mutex::new(0),
+            occurrence_stream: crate::occurrences::Stream::default(),
+            buttons: tokio::sync::Mutex::new(crate::occurrences::Buttons::new(
+                opts.button_state_path.clone(),
+            )),
             label_write: tokio::sync::Mutex::new(()),
             addresses: Mutex::new(book),
             address_write: tokio::sync::Mutex::new(()),
@@ -642,7 +656,47 @@ impl Hub {
         origin: Origin,
         actor: Option<String>,
     ) -> Result<(), CommandError> {
+        self.command_with_context(point, value, origin, actor, None, None)
+            .await
+    }
+
+    /// Optional idempotency identity for an explicit button press.
+    pub async fn command_with_request_id(
+        &self,
+        point: &PointId,
+        value: Value,
+        origin: Origin,
+        actor: Option<String>,
+        request_id: Option<String>,
+    ) -> Result<(), CommandError> {
+        self.command_with_context(point, value, origin, actor, request_id, None)
+            .await
+    }
+
+    /// Carries an occurrence's correlation through an approved graph's actions.
+    pub async fn command_correlated(
+        &self,
+        point: &PointId,
+        value: Value,
+        origin: Origin,
+        actor: Option<String>,
+        correlation: Option<String>,
+    ) -> Result<(), CommandError> {
+        self.command_with_context(point, value, origin, actor, None, correlation)
+            .await
+    }
+
+    async fn command_with_context(
+        &self,
+        point: &PointId,
+        value: Value,
+        origin: Origin,
+        actor: Option<String>,
+        request_id: Option<String>,
+        correlation: Option<String>,
+    ) -> Result<(), CommandError> {
         let started = Instant::now();
+        let actor = clean_actor(actor);
         if moli_core::privacy::code_point(point.as_str())
             || moli_core::privacy::private_value(&value)
         {
@@ -678,32 +732,56 @@ impl Hub {
             );
             return Err(error);
         }
-        let result = match self.prepare(point, &value) {
+        let mut journal_correlation = None;
+        let result = match self.prepare_context(
+            point,
+            &value,
+            origin,
+            actor.clone(),
+            request_id,
+            correlation,
+        ) {
             Err(e) => Err(e),
-            Ok(prepared) => match self.verdict(point, Some(&value), origin) {
-                Verdict::Allow => {
-                    let hub = self.clone();
-                    let action = Action::Command {
-                        point: point.clone(),
-                        value,
-                    };
-                    return self
-                        .send(
-                            prepared,
-                            Box::new(move |outcome| {
-                                hub.record(origin, actor, action, outcome, started);
-                            }),
-                        )
-                        .await;
+            Ok((prepared, metadata)) => {
+                journal_correlation = metadata.correlation.clone();
+                match self.verdict(point, Some(&value), origin) {
+                    Verdict::Allow => {
+                        let hub = self.clone();
+                        let action = Action::Command {
+                            point: point.clone(),
+                            value,
+                        };
+                        let correlation = metadata.correlation.clone();
+                        return self
+                            .send(
+                                prepared,
+                                Box::new(move |outcome| {
+                                    hub.record_correlated(
+                                        origin,
+                                        actor,
+                                        action,
+                                        outcome,
+                                        started,
+                                        correlation,
+                                    );
+                                }),
+                                metadata,
+                            )
+                            .await;
+                    }
+                    Verdict::Approval(reason) => {
+                        let button = prepared
+                            .device
+                            .point(&prepared.key)
+                            .is_some_and(|point| point.kind == moli_core::Kind::Button);
+                        let id = self.hold(point, &value, &metadata, &reason, button);
+                        Err(CommandError::NeedsApproval { id, reason })
+                    }
                 }
-                Verdict::Approval(reason) => {
-                    let id = self.hold(point, &value, origin, actor.clone(), &reason);
-                    Err(CommandError::NeedsApproval { id, reason })
-                }
-            },
+            }
         };
         let outcome = outcome_of(&result);
-        self.record(
+        self.record_correlated(
             origin,
             actor,
             Action::Command {
@@ -712,8 +790,60 @@ impl Hub {
             },
             outcome,
             started,
+            journal_correlation,
         );
         result
+    }
+
+    fn prepare_context(
+        &self,
+        point: &PointId,
+        value: &Value,
+        origin: Origin,
+        actor: Option<String>,
+        request_id: Option<String>,
+        correlation: Option<String>,
+    ) -> Result<(Prepared, CommandMetadata), CommandError> {
+        use crate::OccurrenceError;
+        let prepared = self.prepare(point, value)?;
+        let request_id = request_id
+            .map(|id| {
+                id.parse::<moli_core::RequestId>()
+                    .map_err(|_| OccurrenceError::RequestId)
+            })
+            .transpose()?;
+        let button = prepared
+            .device
+            .point(&prepared.key)
+            .is_some_and(|point| point.kind == moli_core::Kind::Button);
+        if request_id.is_some() && !button {
+            return Err(OccurrenceError::Source.into());
+        }
+        if correlation.as_ref().is_some_and(|id| {
+            id.parse::<moli_core::RequestId>().is_err()
+                && !(id.len() == 32 && id.bytes().all(|byte| byte.is_ascii_hexdigit()))
+        }) {
+            return Err(OccurrenceError::RequestId.into());
+        }
+        let correlation = correlation.or_else(|| request_id.as_ref().map(ToString::to_string));
+        let correlation = if button && correlation.is_none() {
+            Some(
+                crate::occurrences::random_id()
+                    .map_err(|_| OccurrenceError::Sequence)?
+                    .to_string(),
+            )
+        } else {
+            correlation
+        };
+        Ok((
+            prepared,
+            CommandMetadata {
+                origin,
+                actor,
+                request_id,
+                correlation,
+            },
+        ))
     }
 
     /// What the guard would say, now, about an order on this point from this
@@ -827,10 +957,12 @@ impl Hub {
         &self,
         point: &PointId,
         value: &Value,
-        origin: Origin,
-        actor: Option<String>,
+        metadata: &CommandMetadata,
         reason: &str,
+        button: bool,
     ) -> u64 {
+        let origin = metadata.origin;
+        let actor = metadata.actor.clone();
         let now = now_ms();
         let (device_name, native_name, rooms) = point
             .split()
@@ -858,6 +990,17 @@ impl Hub {
                 .approvals
                 .lock()
                 .unwrap_or_else(PoisonError::into_inner);
+            if button
+                && let Some(key) = &metadata.request_id
+                && let Some(existing) = approvals.pending.values().find(|request| {
+                    &request.point == point
+                        && request.origin == origin
+                        && request.expires > now
+                        && request.request_id.as_ref() == Some(key)
+                })
+            {
+                return existing.id;
+            }
             // Ids never repeat across restarts: a card left on a screen can
             // never approve a different, newer request.
             approvals.next_id = approvals.next_id.max(now).saturating_add(1);
@@ -866,7 +1009,7 @@ impl Hub {
             let mut superseded: Vec<Arc<ApprovalRequest>> = approvals
                 .pending
                 .values()
-                .filter(|r| &r.point == point && r.origin == origin)
+                .filter(|r| !button && &r.point == point && r.origin == origin)
                 .cloned()
                 .collect();
             for r in &superseded {
@@ -893,6 +1036,8 @@ impl Hub {
                 device_name,
                 native_name,
                 rooms,
+                request_id: metadata.request_id.clone(),
+                correlation: metadata.correlation.clone(),
             });
             approvals.pending.insert(request.id, Arc::clone(&request));
             request
@@ -994,6 +1139,12 @@ impl Hub {
         };
         // Like a command: one journal line, whatever becomes of the caller.
         let hub = self.clone();
+        let metadata = CommandMetadata {
+            origin: request.origin,
+            actor: request.actor.clone(),
+            request_id: request.request_id.clone(),
+            correlation: request.correlation.clone(),
+        };
         self.send(
             prepared,
             Box::new(move |outcome| {
@@ -1006,6 +1157,7 @@ impl Hub {
                     started,
                 );
             }),
+            metadata,
         )
         .await
         .map_err(ApprovalError::Command)
@@ -1062,7 +1214,14 @@ impl Hub {
             value: request.value.clone(),
             decision,
         };
-        self.record(origin, actor, action, outcome, started);
+        self.record_correlated(
+            origin,
+            actor,
+            action,
+            outcome,
+            started,
+            request.correlation.clone(),
+        );
     }
 
     /// Journals a change to an automation (they live in their own crate;
@@ -1346,7 +1505,13 @@ impl Hub {
                 slot.commands.clone(),
             )
         };
-        let value = validate(&kind, value)?;
+        let value = validate(&kind, value).map_err(|error| {
+            if error == ValueError::ExpectedPress {
+                crate::OccurrenceError::Value.into()
+            } else {
+                CommandError::Invalid(error)
+            }
+        })?;
         Ok(Prepared {
             point: point.clone(),
             device,
@@ -1358,7 +1523,12 @@ impl Hub {
 
     /// Hands a prepared order to its driver, waits for the answer, and has
     /// `journal` write its line (see [`Delivery`]).
-    async fn send(&self, prepared: Prepared, journal: JournalLine) -> Result<(), CommandError> {
+    async fn send(
+        &self,
+        prepared: Prepared,
+        journal: JournalLine,
+        metadata: CommandMetadata,
+    ) -> Result<(), CommandError> {
         let Prepared {
             point,
             device,
@@ -1375,6 +1545,7 @@ impl Hub {
             key,
             value,
             deadline,
+            metadata,
             reply,
             claim: Arc::clone(&claim),
         });
@@ -1406,6 +1577,18 @@ impl Hub {
         outcome: Outcome,
         started: Instant,
     ) {
+        self.record_correlated(origin, actor, action, outcome, started, None);
+    }
+
+    fn record_correlated(
+        &self,
+        origin: Origin,
+        actor: Option<String>,
+        action: Action,
+        outcome: Outcome,
+        started: Instant,
+        correlation: Option<String>,
+    ) {
         let actor = clean_actor(actor);
         let entry = {
             let mut journal = self
@@ -1421,6 +1604,7 @@ impl Hub {
                 action,
                 outcome,
                 duration_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
+                correlation,
             });
             journal.next_id += 1;
             if journal.entries.len() == self.0.opts.journal_capacity {
@@ -1593,9 +1777,19 @@ impl Hub {
             // definition (interview in progress) must not lose its history.
             let mut cached = model.restored.remove(&device.id).unwrap_or_default();
             let states = model.states.entry(device.id.clone()).or_default();
-            states.retain(|key, _| device.point(key).is_some());
+            states.retain(|key, _| {
+                device
+                    .point(key)
+                    .is_some_and(|point| point.kind != moli_core::Kind::Button)
+            });
             let mut restored = Vec::new();
             for point in &device.points {
+                if point.kind == moli_core::Kind::Button {
+                    if cached.remove(&point.key).is_some() {
+                        self.0.state_dirty.store(true, Ordering::Release);
+                    }
+                    continue;
+                }
                 if let Some(sample) = cached.remove(&point.key)
                     && !states.contains_key(&point.key)
                 {
@@ -1803,6 +1997,7 @@ impl Hub {
         if moli_core::privacy::code_property(key) || moli_core::privacy::private_value(&value) {
             return;
         }
+        let pulse = always.then(|| value.clone());
         let ts = now_ms();
         let event = {
             let mut model = self.write();
@@ -1810,25 +2005,192 @@ impl Hub {
                 return;
             };
             let key = spec.key.clone();
+            if spec.kind == moli_core::Kind::Button {
+                drop(model);
+                if always {
+                    let _ = self.publish_occurrence(device, &key, &value, None, None, false);
+                }
+                return;
+            }
             self.0.state_dirty.store(true, Ordering::Release);
             let states = model.states.entry(device.clone()).or_default();
             let changed = always || states.get(&key).is_none_or(|s| s.value != value);
-            states.insert(
-                key.clone(),
-                Sample {
-                    value: value.clone(),
-                    ts,
-                },
-            );
-            changed.then(|| Event::State {
+            let event = changed.then(|| Event::State {
                 point: PointId::new(device, &key),
-                value,
+                value: value.clone(),
                 ts,
-            })
+            });
+            states.insert(key, Sample { value, ts });
+            event
         };
         if let Some(event) = event {
             self.emit(event);
         }
+        if let Some(value) = pulse
+            && let Err(error) = self.publish_occurrence(device, key, &value, None, None, false)
+        {
+            tracing::warn!(%error, %device, key, "occurrence was not published");
+        }
+    }
+
+    #[must_use]
+    pub fn occurrence_position(&self) -> u64 {
+        self.0.occurrence_stream.position()
+    }
+
+    #[must_use]
+    pub fn occurrence_stream(&self) -> Option<Arc<str>> {
+        self.0.occurrence_stream.current()
+    }
+
+    /// A live occurrence was admitted but cannot be confirmed after an interruption.
+    /// This audit record never republishes the occurrence or retries its actions.
+    pub fn occurrence_problem(&self, event: &moli_core::Occurrence, message: String) {
+        self.record_correlated(
+            Origin::System,
+            None,
+            Action::Occurrence {
+                point: event.point.clone(),
+                occurrence: event.id.clone(),
+                status: moli_core::OccurrenceStatus::Ambiguous,
+            },
+            Outcome::Err(message.clone()),
+            Instant::now(),
+            event.correlation.clone(),
+        );
+        self.notice(moli_core::Notice {
+            title: None,
+            message,
+            from: None,
+            ts: now_ms(),
+        });
+    }
+
+    fn publish_occurrence(
+        &self,
+        device: &DeviceId,
+        key: &str,
+        value: &Value,
+        identity: Option<moli_core::OccurrenceId>,
+        correlation: Option<String>,
+        durable: bool,
+    ) -> Result<moli_core::Occurrence, crate::OccurrenceError> {
+        let value = {
+            let model = self.read();
+            let spec = model
+                .devices
+                .get(device)
+                .and_then(|d| d.point(key))
+                .ok_or(crate::OccurrenceError::Source)?;
+            validate(&spec.kind, value).map_err(|_| crate::OccurrenceError::Source)?
+        };
+        let occurrence = self
+            .0
+            .occurrence_stream
+            .event(
+                PointId::new(device, key),
+                value,
+                (self.0.opts.occurrence_clock)(),
+                identity,
+                correlation,
+                durable,
+            )
+            .map_err(|error| {
+                tracing::warn!(%error, "cannot allocate occurrence identity");
+                crate::OccurrenceError::Sequence
+            })?;
+        self.emit(Event::Occurrence {
+            occurrence: occurrence.clone(),
+        });
+        Ok(occurrence)
+    }
+
+    pub(crate) async fn press_button(&self, command: &CommandRequest) -> Result<(), CommandError> {
+        use crate::occurrences::{Dispatch, Reservation};
+        use moli_core::OccurrenceStatus;
+        if command
+            .device
+            .point(&command.key)
+            .is_none_or(|p| p.kind != moli_core::Kind::Button)
+            || command.value != Value::Null
+        {
+            return Err(crate::OccurrenceError::Source.into());
+        }
+        if command.abandoned() {
+            return Err(CommandError::Timeout);
+        }
+        let started = Instant::now();
+        let correlation = command
+            .metadata
+            .correlation
+            .clone()
+            .ok_or(crate::OccurrenceError::Source)?;
+        let mut buttons = self.0.buttons.lock().await;
+        let reservation = buttons
+            .reserve(
+                &command.point,
+                command.metadata.request_id.as_ref(),
+                &correlation,
+            )
+            .await?;
+        let (receipt, status, result) = match reservation {
+            Reservation::Duplicate(receipt) => {
+                let result = if receipt.status == Dispatch::Published {
+                    Ok(())
+                } else {
+                    Err(crate::OccurrenceError::Uncertain)
+                };
+                let status = if result.is_ok() {
+                    OccurrenceStatus::Replayed
+                } else {
+                    OccurrenceStatus::Ambiguous
+                };
+                (receipt, status, result)
+            }
+            Reservation::New(receipt) => {
+                let result = if command.abandoned() {
+                    Err(crate::OccurrenceError::Uncertain)
+                } else {
+                    self.publish_occurrence(
+                        &command.device.id,
+                        &command.key,
+                        &Value::Null,
+                        Some(receipt.id.clone()),
+                        Some(correlation.clone()),
+                        buttons.file.is_persistent(),
+                    )
+                    .map(|_| ())
+                };
+                let result = match result {
+                    Ok(()) => buttons
+                        .published(&receipt.id)
+                        .await
+                        .map_err(|_| crate::OccurrenceError::Uncertain),
+                    Err(error) => Err(error),
+                };
+                let status = if result.is_ok() {
+                    OccurrenceStatus::Published
+                } else {
+                    OccurrenceStatus::Ambiguous
+                };
+                (receipt, status, result)
+            }
+        };
+        self.record_correlated(
+            command.metadata.origin,
+            command.metadata.actor.clone(),
+            Action::Occurrence {
+                point: command.point.clone(),
+                occurrence: receipt.id,
+                status,
+            },
+            result
+                .as_ref()
+                .map_or_else(|error| Outcome::Err(error.to_string()), |()| Outcome::Ok),
+            started,
+            Some(receipt.correlation),
+        );
+        result.map_err(CommandError::from)
     }
 
     pub(crate) fn set_availability(&self, device: &DeviceId, online: bool) {

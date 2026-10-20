@@ -20,6 +20,10 @@ pub enum Event {
         value: Value,
         ts: u64,
     },
+    /// A real occurrence, never reconstructed from a cached state.
+    Occurrence {
+        occurrence: crate::Occurrence,
+    },
     Availability {
         device: DeviceId,
         online: bool,
@@ -81,6 +85,10 @@ pub struct ApprovalRequest {
     /// cannot change: shown beside the label on approval cards.
     pub native_name: String,
     pub rooms: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_id: Option<crate::RequestId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub correlation: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -133,6 +141,11 @@ pub enum Origin {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Action {
+    Occurrence {
+        point: PointId,
+        occurrence: crate::OccurrenceId,
+        status: crate::OccurrenceStatus,
+    },
     /// Audit only: no code, raw action or transaction can enter the public journal.
     KeypadInput {
         device: DeviceId,
@@ -204,4 +217,6 @@ pub struct JournalEntry {
     pub action: Action,
     pub outcome: Outcome,
     pub duration_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub correlation: Option<String>,
 }

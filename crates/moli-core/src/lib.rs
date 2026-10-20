@@ -9,6 +9,7 @@ pub mod color;
 mod event;
 mod id;
 mod model;
+mod occurrence;
 pub mod privacy;
 mod spec;
 mod value;
@@ -19,6 +20,10 @@ pub use event::{
 };
 pub use id::{DeviceId, InstanceId, PointId};
 pub use model::{Device, Label, Sample};
+pub use occurrence::{
+    InvalidRequestId, MAX_OCCURRENCE_SEQUENCE, Occurrence, OccurrenceId, OccurrenceStatus,
+    RequestId,
+};
 pub use spec::{Access, Kind, MAX_TEXT, PointSpec, Semantic, Unit, ValueError, validate};
 pub use value::Value;
 

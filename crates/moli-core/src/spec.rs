@@ -11,6 +11,8 @@ use crate::Value;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Kind {
+    /// An explicit press with no retained value.
+    Button,
     Binary,
     Numeric {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -234,6 +236,8 @@ pub struct PointSpec {
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum ValueError {
+    #[error("expected a button press (null)")]
+    ExpectedPress,
     #[error("expected a boolean")]
     ExpectedBool,
     #[error("expected a number")]
@@ -264,6 +268,8 @@ pub fn validate(kind: &Kind, value: &Value) -> Result<Value, ValueError> {
         return Err(ValueError::TooLong);
     }
     match (kind, value) {
+        (Kind::Button, Value::Null) => Ok(Value::Null),
+        (Kind::Button, _) => Err(ValueError::ExpectedPress),
         (Kind::Binary, Value::Bool(_)) | (Kind::Text, Value::Text(_)) => Ok(value.clone()),
         (Kind::Binary, _) => Err(ValueError::ExpectedBool),
         (Kind::Numeric { min, max, .. }, v) => {

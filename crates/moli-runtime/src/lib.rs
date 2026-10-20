@@ -16,20 +16,24 @@ mod journal_log;
 mod keypad;
 mod labels;
 pub mod media;
+mod occurrences;
 mod private_files;
 mod secrets;
 mod state_cache;
+mod state_file;
 mod stats;
 pub mod supervisor;
 pub mod voice;
 
 pub use addresses::KnownAddress;
-pub use driver::{BoxFuture, CommandRequest, Driver, DriverCtx, MediaPublisher};
+pub use driver::{BoxFuture, CommandMetadata, CommandRequest, Driver, DriverCtx, MediaPublisher};
 pub use hub::{
     ApprovalError, CORE_NAMESPACE, CommandError, DeviceView, DriverView, Hub, HubOptions,
     LabelError, LabelPatch, MAX_LABEL, Snapshot,
 };
 pub use keypad::{KeypadCode, KeypadInput, KeypadReceiver};
+pub use occurrences::OccurrenceError;
 pub use secrets::{MasterKey, forget_secret, set_secret};
+pub use state_file::{StateFile, StateFileError};
 pub use stats::Stats;
 pub use supervisor::spawn_driver;
