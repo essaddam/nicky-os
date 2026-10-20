@@ -15,7 +15,9 @@
 </script>
 
 {#if kind === 'value'}
-  {#if type === 'binary'}
+  {#if ['button', 'counter_command'].includes(type)}
+    <span>{spec.label}</span>
+  {:else if type === 'binary'}
     <div class="seg">
       {#each [true, false] as v (v)}
         <button class:on={value === v} onclick={() => onchange?.(v)}>{valueText(point, v)}</button>
@@ -34,14 +36,14 @@
         {#each values as v (v)}<option value={v}>{v}</option>{/each}
       </select>
     {/if}
-  {:else if type === 'numeric'}
+  {:else if ['numeric', 'counter'].includes(type)}
     <label class="num">
       <input
         type="number"
         value={value ?? ''}
-        min={spec.kind.min}
-        max={spec.kind.max}
-        step={spec.kind.step ?? 'any'}
+        min={spec.kind.min ?? spec.kind.spec?.min}
+        max={spec.kind.max ?? spec.kind.spec?.max}
+        step={type === 'counter' ? 1 : spec.kind.step ?? 'any'}
         onchange={(e) => onchange?.(e.currentTarget.value === '' ? null : Number(e.currentTarget.value))} />
       {#if spec.unit}<span>{spec.unit}</span>{/if}
     </label>

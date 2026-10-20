@@ -652,6 +652,11 @@ agent_sha256 = "<sha256 du jeton de l'agent : le jeton reste sur le PC>"
 
 ## `helpers` : aides de la maison (`crates/moli-helpers`)
 
+Le type `counter` ajoute un entier en lecture seule et les opérations atomiques
+`increment` / `reset` à null, persistées avec leurs reçus avant acquittement.
+Configuration, plafonds et reprise : [compteurs](compteurs.md). Il réutilise la garde
+et le journal ; les aides ci-dessous restent compatibles.
+
 - **Couvre** : les valeurs que la maison garde pour elle, comme les `input_select` /
   `input_boolean` / `input_number` / `input_text` de HA : mode de la maison, alarme active,
   budget… Chaque aide est un appareil `<instance>:<id>` avec un point inscriptible :

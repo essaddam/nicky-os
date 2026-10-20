@@ -23,8 +23,9 @@
 <div class="point" class:big class:pending>
   <span class="label">{point.label}</span>
 
-  {#if writable && kind === 'button'}
-    <PressButton point={id} label={point.label} disabled={device.online === false} />
+  {#if writable && ['button', 'counter_command'].includes(kind)}
+    <PressButton point={id} label={`${device.native_name}: ${point.label}`} disabled={device.online === false}
+      action={point.kind.operation ?? 'button'} caption={kind === 'counter_command' ? point.label : null} />
   {:else if writable && kind === 'binary'}
     <button
       class="switch"

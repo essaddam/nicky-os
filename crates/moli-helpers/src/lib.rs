@@ -20,7 +20,10 @@
 //! ```
 
 use anyhow::{bail, ensure};
-use moli_core::{Access, Device, DeviceId, Kind, PointSpec, Semantic, Value, validate};
+use moli_core::{
+    Access, CounterOperation, CounterSpec, Device, DeviceId, Kind, MAX_COUNTER_VALUE, PointSpec,
+    Semantic, Value, validate,
+};
 use moli_runtime::{BoxFuture, Driver, DriverCtx};
 use serde::Deserialize;
 
@@ -43,11 +46,11 @@ pub struct Helper {
     pub options: Vec<String>,
     /// `number`: bounds and step.
     #[serde(default)]
-    pub min: Option<f64>,
+    pub min: Option<Number>,
     #[serde(default)]
-    pub max: Option<f64>,
+    pub max: Option<Number>,
     #[serde(default)]
-    pub step: Option<f64>,
+    pub step: Option<Number>,
     /// The value before anyone set one.
     #[serde(default)]
     pub initial: Option<toml::Value>,
@@ -56,9 +59,34 @@ pub struct Helper {
     pub room: Option<String>,
 }
 
+/// Preserve the lexical integer/float distinction until the helper kind is known.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(untagged)]
+pub enum Number {
+    Integer(i64),
+    Float(f64),
+}
+
+impl Number {
+    #[allow(clippy::cast_precision_loss)]
+    fn as_f64(self) -> f64 {
+        match self {
+            Self::Integer(value) => value as f64,
+            Self::Float(value) => value,
+        }
+    }
+    fn integer(self) -> anyhow::Result<i64> {
+        match self {
+            Self::Integer(value) => Ok(value),
+            Self::Float(_) => bail!("{}", moli_i18n::tr!("pilotes.aides.compteur_entier")),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HelperKind {
+    Counter,
     Button,
     Select,
     Switch,
@@ -67,10 +95,79 @@ pub enum HelperKind {
 }
 
 impl Helper {
+    fn counter_spec(&self) -> anyhow::Result<CounterSpec> {
+        let initial = match &self.initial {
+            None => 0,
+            Some(toml::Value::Integer(value)) => *value,
+            Some(_) => bail!("{}", moli_i18n::tr!("pilotes.aides.compteur_entier")),
+        };
+        let spec = CounterSpec {
+            initial,
+            min: self
+                .min
+                .map(Number::integer)
+                .transpose()?
+                .unwrap_or(-MAX_COUNTER_VALUE),
+            max: self
+                .max
+                .map(Number::integer)
+                .transpose()?
+                .unwrap_or(MAX_COUNTER_VALUE),
+            step: self.step.map(Number::integer).transpose()?.unwrap_or(1),
+        };
+        ensure!(
+            spec.is_valid() && self.options.is_empty(),
+            "{}",
+            moli_i18n::tr!("pilotes.aides.compteur_definition")
+        );
+        Ok(spec)
+    }
+
+    fn specs(&self) -> Vec<PointSpec> {
+        let value = self.spec();
+        if self.kind != HelperKind::Counter {
+            return vec![value];
+        }
+        let definition = self.counter_spec().expect("validated counter definition");
+        let mut specs = vec![value];
+        for (key, operation, label) in [
+            (
+                "increment",
+                CounterOperation::Increment,
+                moli_i18n::tr!("pilotes.aides.compteur_increment", pas = definition.step),
+            ),
+            (
+                "reset",
+                CounterOperation::Reset,
+                moli_i18n::tr!("pilotes.aides.compteur_reset", valeur = definition.initial),
+            ),
+        ] {
+            specs.push(PointSpec {
+                key: key.into(),
+                label: label.into(),
+                kind: Kind::CounterCommand { operation },
+                access: Access {
+                    read: false,
+                    write: true,
+                },
+                unit: None,
+                semantic: Semantic::Other,
+            });
+        }
+        specs
+    }
+
     /// The point that holds its value.
     fn spec(&self) -> PointSpec {
         let (key, kind, semantic) = match self.kind {
             HelperKind::Button => ("press", Kind::Button, Semantic::Other),
+            HelperKind::Counter => (
+                "value",
+                Kind::Counter {
+                    spec: self.counter_spec().expect("validated counter definition"),
+                },
+                Semantic::Other,
+            ),
             HelperKind::Select => (
                 "state",
                 Kind::Enum {
@@ -82,9 +179,9 @@ impl Helper {
             HelperKind::Number => (
                 "value",
                 Kind::Numeric {
-                    min: self.min,
-                    max: self.max,
-                    step: self.step,
+                    min: self.min.map(Number::as_f64),
+                    max: self.max.map(Number::as_f64),
+                    step: self.step.map(Number::as_f64),
                 },
                 Semantic::Other,
             ),
@@ -96,7 +193,7 @@ impl Helper {
             kind,
             access: Access {
                 read: self.kind != HelperKind::Button,
-                write: true,
+                write: self.kind != HelperKind::Counter,
             },
             unit: None,
             semantic,
@@ -105,6 +202,9 @@ impl Helper {
 
     /// The starting value, checked against the point.
     fn initial_value(&self) -> anyhow::Result<Value> {
+        if self.kind == HelperKind::Counter {
+            return Ok(Value::Int(self.counter_spec()?.initial));
+        }
         if self.kind == HelperKind::Button {
             ensure!(
                 self.initial.is_none()
@@ -128,9 +228,9 @@ impl Helper {
                 None => Value::Null,
             },
             (None, HelperKind::Switch) => Value::Bool(false),
-            (None, HelperKind::Number) => Value::Float(self.min.unwrap_or(0.0)),
+            (None, HelperKind::Number) => Value::Float(self.min.map_or(0.0, Number::as_f64)),
             (None, HelperKind::Text) => Value::Text("".into()),
-            (None, HelperKind::Button) => Value::Null,
+            (None, HelperKind::Button | HelperKind::Counter) => Value::Null,
         };
         validate(&self.spec().kind, &raw)
             .map_err(|e| anyhow::anyhow!("helper {}: initial value: {e}", self.id))
@@ -154,6 +254,16 @@ impl Helpers {
                 <= 128,
             "{}",
             moli_i18n::tr!("pilotes.aides.boutons_max")
+        );
+        ensure!(
+            config
+                .helpers
+                .iter()
+                .filter(|h| h.kind == HelperKind::Counter)
+                .count()
+                <= 128,
+            "{}",
+            moli_i18n::tr!("pilotes.aides.compteurs_max")
         );
         let mut seen = std::collections::HashSet::new();
         for h in &config.helpers {
@@ -193,16 +303,26 @@ impl Driver for Helpers {
                     description: None,
                     native_room: h.room.as_deref().map(Into::into),
                     members: Vec::new(),
-                    points: vec![spec.clone()],
+                    points: h.specs(),
                 });
                 // Kept across restarts by the state cache; set only once.
-                if h.kind != HelperKind::Button && ctx.current(&id, &spec.key).is_none() {
+                if h.kind == HelperKind::Counter {
+                    ctx.initialize_counter(&id, h.counter_spec()?).await?;
+                } else if h.kind != HelperKind::Button && ctx.current(&id, &spec.key).is_none() {
                     ctx.set_state(&id, &spec.key, h.initial_value()?);
                 }
                 ctx.set_availability(&id, true);
             }
             ctx.ready();
             while let Some(command) = ctx.next_command().await {
+                if command
+                    .device
+                    .point(&command.key)
+                    .is_some_and(|point| matches!(point.kind, Kind::CounterCommand { .. }))
+                {
+                    ctx.counter_command(command).await;
+                    continue;
+                }
                 if command
                     .device
                     .point(&command.key)

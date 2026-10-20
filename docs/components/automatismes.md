@@ -163,8 +163,9 @@ Le [cadrage des primitives](automatismes-primitives.md) distingue les capacités
 des travaux à réaliser : aides temporelles, compteur, bouton, planning, scènes, points
 calculés et traduction des usages HA. Il décrit les contrats de reprise et les critères
 de test de chaque lot. **Ce document n'annonce pas leur disponibilité** : les aides
-à valeur restent `select`, `switch`, `number` et `text`. Le bouton événementiel
-du lot AUTO-H4 est décrit ci-dessous ; les autres lots restent des propositions.
+à valeur historiques restent `select`, `switch`, `number` et `text`. Le bouton
+événementiel AUTO-H4 et le compteur AUTO-H2 sont décrits ci-dessous ; les autres lots
+restent des propositions.
 Les contrats proposés restent à relire avant implémentation ; leur publication ne
 modifie aucune des règles de validation et d'exécution décrites ci-dessus.
 
@@ -227,3 +228,13 @@ IndexedDB persistante, commune aux onglets ; l'indisponibilité de ce stockage
 empêche l'envoi. Le moteur borne à 128 sources et 256 occurrences en cours sa
 fenêtre de 64 identités par source. Une borne atteinte est un refus visible,
 jamais un débordement de compteur ou un rejeu.
+
+## Compteurs (AUTO-H2)
+
+Les [compteurs durables](compteurs.md) exposent `value` comme état entier ; les
+changements peuvent alimenter `when_state`, `when_threshold` et les comparaisons.
+Un nœud `set` sur `increment` ou `reset` envoie `null` via le hub et sa garde ; il
+ne lit jamais la valeur pour calculer une affectation côté client. Ces opérations
+ne sont ni des états ni des occurrences. Les graphes créés par un agent ou un import
+restent soumis aux mêmes validations humaines. Les quatre aides historiques et
+le bouton AUTO-H4 conservent leur comportement.

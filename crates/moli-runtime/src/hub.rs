@@ -3,6 +3,10 @@
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
+
+#[cfg(test)]
+#[path = "counter_tests.rs"]
+mod counter_tests;
 use std::sync::{Arc, Mutex, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::{Duration, Instant};
 
@@ -33,6 +37,9 @@ pub struct HubOptions {
     pub state_path: Option<PathBuf>,
     /// Button identities and request receipts, independent of the state cache.
     pub button_state_path: Option<PathBuf>,
+    /// Atomic counter values and request receipts, shared by all helper instances.
+    /// `None` deliberately keeps them volatile (for isolated test/demo hubs).
+    pub counter_state_path: Option<PathBuf>,
     /// Occurrence wall-clock metadata only; identities never depend on it.
     pub occurrence_clock: fn() -> u64,
     /// Append-only journal file (JSON Lines). `None` keeps it in memory only.
@@ -56,6 +63,7 @@ impl Default for HubOptions {
             labels_path: None,
             state_path: None,
             button_state_path: None,
+            counter_state_path: None,
             occurrence_clock: now_ms,
             journal_path: None,
             addresses_path: None,
@@ -70,6 +78,8 @@ impl Default for HubOptions {
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum CommandError {
+    #[error(transparent)]
+    Counter(#[from] crate::CounterError),
     #[error(transparent)]
     Occurrence(#[from] crate::OccurrenceError),
     #[error("unknown point")]
@@ -342,6 +352,7 @@ struct Inner {
     event_position: Mutex<u64>,
     occurrence_stream: crate::occurrences::Stream,
     buttons: tokio::sync::Mutex<crate::occurrences::Buttons>,
+    counters: tokio::sync::Mutex<crate::counters::Counters>,
     /// Serializes label writes so the file always matches the model.
     label_write: tokio::sync::Mutex<()>,
     /// Where each instance last reached its device.
@@ -473,6 +484,9 @@ impl Hub {
             occurrence_stream: crate::occurrences::Stream::default(),
             buttons: tokio::sync::Mutex::new(crate::occurrences::Buttons::new(
                 opts.button_state_path.clone(),
+            )),
+            counters: tokio::sync::Mutex::new(crate::counters::Counters::new(
+                opts.counter_state_path.clone(),
             )),
             label_write: tokio::sync::Mutex::new(()),
             addresses: Mutex::new(book),
@@ -770,11 +784,11 @@ impl Hub {
                             .await;
                     }
                     Verdict::Approval(reason) => {
-                        let button = prepared
+                        let operation = prepared
                             .device
                             .point(&prepared.key)
-                            .is_some_and(|point| point.kind == moli_core::Kind::Button);
-                        let id = self.hold(point, &value, &metadata, &reason, button);
+                            .is_some_and(|point| point.kind.is_operation());
+                        let id = self.hold(point, &value, &metadata, &reason, operation);
                         Err(CommandError::NeedsApproval { id, reason })
                     }
                 }
@@ -812,11 +826,11 @@ impl Hub {
                     .map_err(|_| OccurrenceError::RequestId)
             })
             .transpose()?;
-        let button = prepared
+        let operation = prepared
             .device
             .point(&prepared.key)
-            .is_some_and(|point| point.kind == moli_core::Kind::Button);
-        if request_id.is_some() && !button {
+            .is_some_and(|point| point.kind.is_operation());
+        if request_id.is_some() && !operation {
             return Err(OccurrenceError::Source.into());
         }
         if correlation.as_ref().is_some_and(|id| {
@@ -826,7 +840,7 @@ impl Hub {
             return Err(OccurrenceError::RequestId.into());
         }
         let correlation = correlation.or_else(|| request_id.as_ref().map(ToString::to_string));
-        let correlation = if button && correlation.is_none() {
+        let correlation = if operation && correlation.is_none() {
             Some(
                 crate::occurrences::random_id()
                     .map_err(|_| OccurrenceError::Sequence)?
@@ -959,7 +973,7 @@ impl Hub {
         value: &Value,
         metadata: &CommandMetadata,
         reason: &str,
-        button: bool,
+        operation: bool,
     ) -> u64 {
         let origin = metadata.origin;
         let actor = metadata.actor.clone();
@@ -990,7 +1004,7 @@ impl Hub {
                 .approvals
                 .lock()
                 .unwrap_or_else(PoisonError::into_inner);
-            if button
+            if operation
                 && let Some(key) = &metadata.request_id
                 && let Some(existing) = approvals.pending.values().find(|request| {
                     &request.point == point
@@ -1009,7 +1023,7 @@ impl Hub {
             let mut superseded: Vec<Arc<ApprovalRequest>> = approvals
                 .pending
                 .values()
-                .filter(|r| !button && &r.point == point && r.origin == origin)
+                .filter(|r| !operation && &r.point == point && r.origin == origin)
                 .cloned()
                 .collect();
             for r in &superseded {
@@ -1492,6 +1506,9 @@ impl Hub {
                 .ok_or(CommandError::UnknownPoint)?;
             let spec = device.point(key).ok_or(CommandError::UnknownPoint)?;
             if !spec.access.write {
+                if matches!(spec.kind, moli_core::Kind::Counter { .. }) {
+                    return Err(crate::CounterError::ReadOnly.into());
+                }
                 return Err(CommandError::ReadOnly);
             }
             let slot = model
@@ -1506,7 +1523,11 @@ impl Hub {
             )
         };
         let value = validate(&kind, value).map_err(|error| {
-            if error == ValueError::ExpectedPress {
+            if error == ValueError::ExpectedPress
+                && matches!(kind, moli_core::Kind::CounterCommand { .. })
+            {
+                crate::CounterError::Value.into()
+            } else if error == ValueError::ExpectedPress {
                 crate::OccurrenceError::Value.into()
             } else {
                 CommandError::Invalid(error)
@@ -1780,11 +1801,11 @@ impl Hub {
             states.retain(|key, _| {
                 device
                     .point(key)
-                    .is_some_and(|point| point.kind != moli_core::Kind::Button)
+                    .is_some_and(|point| point.kind.uses_state_cache())
             });
             let mut restored = Vec::new();
             for point in &device.points {
-                if point.kind == moli_core::Kind::Button {
+                if !point.kind.uses_state_cache() {
                     if cached.remove(&point.key).is_some() {
                         self.0.state_dirty.store(true, Ordering::Release);
                     }
@@ -2005,9 +2026,10 @@ impl Hub {
                 return;
             };
             let key = spec.key.clone();
-            if spec.kind == moli_core::Kind::Button {
+            if spec.kind.is_operation() {
+                let button = spec.kind == moli_core::Kind::Button;
                 drop(model);
-                if always {
+                if always && button {
                     let _ = self.publish_occurrence(device, &key, &value, None, None, false);
                 }
                 return;
@@ -2103,6 +2125,111 @@ impl Hub {
             occurrence: occurrence.clone(),
         });
         Ok(occurrence)
+    }
+
+    pub(crate) async fn initialize_counter(
+        &self,
+        device: &DeviceId,
+        spec: moli_core::CounterSpec,
+    ) -> Result<(), crate::CounterError> {
+        let hub = self.clone();
+        let device = device.clone();
+        tokio::spawn(async move {
+            let mut counters = hub.0.counters.lock().await;
+            let value = counters.initialize(&device, spec).await?;
+            hub.set_state(&device, "value", Value::Int(value));
+            Ok(())
+        })
+        .await
+        .map_err(|_| crate::CounterError::Uncertain)?
+    }
+
+    pub(crate) async fn counter_command(
+        &self,
+        command: CommandRequest,
+        cancel: tokio_util::sync::CancellationToken,
+    ) {
+        let hub = self.clone();
+        // Dropping this JoinHandle (driver stop or caller cancellation) does not
+        // cancel a commit that has started. The task owns the reply and its audit.
+        let task = tokio::spawn(async move {
+            let result = hub.commit_counter(&command, &cancel).await;
+            command.reply_result(result.map_err(CommandError::from));
+        });
+        let _ = task.await;
+    }
+
+    async fn commit_counter(
+        &self,
+        command: &CommandRequest,
+        cancel: &tokio_util::sync::CancellationToken,
+    ) -> Result<(), crate::CounterError> {
+        use crate::CounterError;
+        let Some(moli_core::PointSpec {
+            kind: moli_core::Kind::CounterCommand { operation },
+            ..
+        }) = command.device.point(&command.key)
+        else {
+            return Err(CounterError::Definition);
+        };
+        let Some(moli_core::PointSpec {
+            kind: moli_core::Kind::Counter { spec },
+            ..
+        }) = command.device.point("value")
+        else {
+            return Err(CounterError::Definition);
+        };
+        let key = match operation {
+            moli_core::CounterOperation::Increment => "increment",
+            moli_core::CounterOperation::Reset => "reset",
+        };
+        if command.value != Value::Null
+            || command.key.as_ref() != key
+            || command.point != PointId::new(&command.device.id, key)
+        {
+            return Err(CounterError::Definition);
+        }
+        let started = Instant::now();
+        let mut counters = self.0.counters.lock().await;
+        let result = counters
+            .execute(
+                &command.device.id,
+                *spec,
+                *operation,
+                command.metadata.request_id.as_ref(),
+                || command.abandoned() || cancel.is_cancelled(),
+            )
+            .await;
+        let result = match result {
+            Ok(commit) => {
+                if let Some(value) = commit.change {
+                    self.set_state(&command.device.id, "value", Value::Int(value));
+                }
+                commit.result
+            }
+            Err(error) => {
+                if error == CounterError::Uncertain {
+                    self.set_availability(&command.device.id, false);
+                }
+                Err(error)
+            }
+        };
+        // Business outcomes follow the same order as commits, even when the
+        // transport response or its observer has already disappeared.
+        self.record_correlated(
+            command.metadata.origin,
+            command.metadata.actor.clone(),
+            Action::Counter {
+                point: command.point.clone(),
+            },
+            result
+                .as_ref()
+                .map_or_else(|error| Outcome::Err(error.to_string()), |()| Outcome::Ok),
+            started,
+            command.metadata.correlation.clone(),
+        );
+        drop(counters);
+        result
     }
 
     pub(crate) async fn press_button(&self, command: &CommandRequest) -> Result<(), CommandError> {

@@ -8,7 +8,7 @@
   let { id, name = null } = $props();
 
   const d = $derived(device(id));
-  const buttons = $derived((d?.points ?? []).filter((p) => p.kind.type === 'button' && p.access.write));
+  const buttons = $derived((d?.points ?? []).filter((p) => ['button', 'counter_command'].includes(p.kind.type) && p.access.write));
 
   // Said when read (t() inside), never once for all.
   const WORDS = {
@@ -50,7 +50,8 @@
     {#if last}<span class="muted when">{relative(last, home.now)}</span>{/if}
   </div>
   {#each buttons as point (point.key)}
-    <PressButton point={`${id}/${point.key}`} label={point.label} disabled={!reachable(id)}
+    <PressButton point={`${id}/${point.key}`} label={`${nameOf(id, name)}: ${point.label}`} disabled={!reachable(id)}
+      action={point.kind.operation ?? 'button'} caption={point.kind.type === 'counter_command' ? point.label : null}
       onheld={(request) => (home.held = { id: request.id, point: request.point, reason: request.reason, label: point.label })} />
   {/each}
   {#if rows.length}

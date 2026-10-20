@@ -11,6 +11,14 @@ use crate::Value;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Kind {
+    /// Business state, never assigned through a client command.
+    Counter {
+        spec: crate::CounterSpec,
+    },
+    /// An explicit operation at null; it never publishes an occurrence.
+    CounterCommand {
+        operation: crate::CounterOperation,
+    },
     /// An explicit press with no retained value.
     Button,
     Binary,
@@ -26,6 +34,20 @@ pub enum Kind {
         values: Vec<Arc<str>>,
     },
     Text,
+}
+
+impl Kind {
+    /// Commands whose identical contents may represent distinct intentions.
+    #[must_use]
+    pub fn is_operation(&self) -> bool {
+        matches!(self, Self::Button | Self::CounterCommand { .. })
+    }
+
+    /// Business-owned state cannot be restored from the periodic device cache.
+    #[must_use]
+    pub fn uses_state_cache(&self) -> bool {
+        !self.is_operation() && !matches!(self, Self::Counter { .. })
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -268,8 +290,12 @@ pub fn validate(kind: &Kind, value: &Value) -> Result<Value, ValueError> {
         return Err(ValueError::TooLong);
     }
     match (kind, value) {
-        (Kind::Button, Value::Null) => Ok(Value::Null),
-        (Kind::Button, _) => Err(ValueError::ExpectedPress),
+        (Kind::CounterCommand { .. } | Kind::Button, Value::Null) => Ok(Value::Null),
+        (Kind::CounterCommand { .. } | Kind::Button, _) => Err(ValueError::ExpectedPress),
+        (Kind::Counter { spec }, Value::Int(value)) if spec.is_valid() && spec.contains(*value) => {
+            Ok(Value::Int(*value))
+        }
+        (Kind::Counter { .. }, _) => Err(ValueError::ExpectedNumber),
         (Kind::Binary, Value::Bool(_)) | (Kind::Text, Value::Text(_)) => Ok(value.clone()),
         (Kind::Binary, _) => Err(ValueError::ExpectedBool),
         (Kind::Numeric { min, max, .. }, v) => {

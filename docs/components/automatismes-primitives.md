@@ -304,3 +304,11 @@ La revue vérifie aussi les délais et les plafonds, la reprise après coupure, 
 du bus, l'usage exclusif des versions validées, la confidentialité et le budget de
 performance. Elle distingue livraison des primitives, conversion privée et autorisation
 d'exécuter : aucune de ces étapes ne vaut automatiquement pour les suivantes.
+
+## Livraison AUTO-H2
+
+Le contrat du [compteur durable](compteurs.md) décrit l'implémentation ajoutée :
+valeur entière en lecture seule, opérations `increment` et `reset` à null, propriétaire
+unique au hub, valeurs et reçus atomiques, garde/journal et interfaces communes.
+Les autres lots de ce cadrage restent des propositions tant que leur propre livraison
+n'est pas décrite. Ce lot n'introduit pas de registre de dépendances exécutables.

@@ -25,6 +25,11 @@
     if (a.kind === 'automation') {
       return { target: t('systeme.journal.automatisme', { name: a.name }), detail: word(CHANGE, 'changement', a.change) };
     }
+    if (a.kind === 'counter') {
+      const [id, key] = a.point.split('/');
+      const d = hub.devices[id];
+      return { target: d ? deviceName(d) : id, detail: t('systeme.compteur.journal', { operation: d?.points.find((p) => p.key === key)?.label ?? t(key === 'reset' ? 'systeme.compteur.reset' : 'systeme.compteur.increment') }) };
+    }
     if (a.kind === 'occurrence') {
       const id = a.point.slice(0, a.point.indexOf('/'));
       const d = hub.devices[id];

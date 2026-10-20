@@ -1,6 +1,11 @@
 {
   "pilotes.aides.bouton_sans_valeur": "un bouton n’a ni valeur initiale, ni options, ni bornes numériques",
   "pilotes.aides.boutons_max": "128 boutons au plus par instance d’aides",
+  "pilotes.aides.compteur_definition": "Compteur invalide : vérifie l’initial, le pas non nul et les bornes dans ±9007199254740991.",
+  "pilotes.aides.compteur_entier": "Un compteur exige des paramètres entiers exacts.",
+  "pilotes.aides.compteur_increment": "Ajouter {pas}",
+  "pilotes.aides.compteur_reset": "Revenir à {valeur}",
+  "pilotes.aides.compteurs_max": "128 compteurs au maximum.",
   "pilotes.telegram.pas_de_jeton": "pas de jeton de bot : créer le bot avec @BotFather, ranger le jeton dans le fichier `token_file` de l'instance (un secret monté, hors du dépôt), puis redémarrer Moli",
   "pilotes.telegram.jeton_refuse": "{error} : vérifier le jeton du bot (fichier `token_file`)",
   "pilotes.telegram.injoignable": "Telegram injoignable ({cause})",

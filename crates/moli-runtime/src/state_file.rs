@@ -19,6 +19,8 @@ pub struct StateFile {
     max_bytes: usize,
     #[cfg(test)]
     failure: Option<WritePhase>,
+    #[cfg(test)]
+    pause: Option<WritePause>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -29,7 +31,29 @@ pub(crate) enum WritePhase {
     AfterRename,
 }
 
+#[cfg(test)]
+#[derive(Clone, Debug)]
+struct WritePause {
+    phase: WritePhase,
+    entered: std::sync::Arc<tokio::sync::Notify>,
+    resume: std::sync::Arc<tokio::sync::Notify>,
+}
+
 impl StateFile {
+    #[cfg(test)]
+    pub(crate) fn pause_at(
+        &mut self,
+        phase: WritePhase,
+        entered: std::sync::Arc<tokio::sync::Notify>,
+        resume: std::sync::Arc<tokio::sync::Notify>,
+    ) {
+        self.pause = Some(WritePause {
+            phase,
+            entered,
+            resume,
+        });
+    }
+
     #[cfg(test)]
     pub(crate) fn interrupt_at(&mut self, phase: Option<WritePhase>) {
         self.failure = phase;
@@ -42,6 +66,8 @@ impl StateFile {
             max_bytes,
             #[cfg(test)]
             failure: None,
+            #[cfg(test)]
+            pause: None,
         }
     }
 
@@ -98,17 +124,17 @@ impl StateFile {
                 return Err(std::io::Error::other("invalid temporary business state"));
             }
             #[cfg(test)]
-            self.checkpoint(WritePhase::BeforeWrite)?;
+            self.checkpoint(WritePhase::BeforeWrite).await?;
             let mut output = tokio::fs::File::create(&temporary).await?;
             output.write_all(&bytes).await?;
             output.sync_all().await?;
             drop(output);
             #[cfg(test)]
-            self.checkpoint(WritePhase::BeforeRename)?;
+            self.checkpoint(WritePhase::BeforeRename).await?;
             tokio::fs::rename(&temporary, path).await?;
             renamed = true;
             #[cfg(test)]
-            self.checkpoint(WritePhase::AfterRename)?;
+            self.checkpoint(WritePhase::AfterRename).await?;
             tokio::fs::File::open(parent).await?.sync_all().await
         }
         .await;
@@ -119,7 +145,13 @@ impl StateFile {
     }
 
     #[cfg(test)]
-    fn checkpoint(&self, phase: WritePhase) -> std::io::Result<()> {
+    async fn checkpoint(&self, phase: WritePhase) -> std::io::Result<()> {
+        if let Some(pause) = &self.pause
+            && pause.phase == phase
+        {
+            pause.entered.notify_one();
+            pause.resume.notified().await;
+        }
         if self.failure == Some(phase) {
             return Err(std::io::Error::other(
                 "simulated business-state interruption",

@@ -1,6 +1,11 @@
 {
   "pilotes.aides.bouton_sans_valeur": "a button has no initial value, options or numeric bounds",
   "pilotes.aides.boutons_max": "at most 128 buttons per helper instance",
+  "pilotes.aides.compteur_definition": "Invalid counter: check initial value, nonzero step and bounds within ±9007199254740991.",
+  "pilotes.aides.compteur_entier": "A counter requires exact integer parameters.",
+  "pilotes.aides.compteur_increment": "Add {pas}",
+  "pilotes.aides.compteur_reset": "Reset to {valeur}",
+  "pilotes.aides.compteurs_max": "At most 128 counters.",
   "pilotes.telegram.pas_de_jeton": "no bot token: create the bot with @BotFather, put the token in the instance’s `token_file` (a mounted secret, outside the repository), then restart Moli",
   "pilotes.telegram.jeton_refuse": "{error}: check the bot token (`token_file`)",
   "pilotes.telegram.injoignable": "Telegram unreachable ({cause})",

@@ -206,6 +206,9 @@ impl Ctx<'_> {
             );
             return None;
         };
+        if !writable && matches!(spec.kind, Kind::CounterCommand { .. }) {
+            self.push(Level::Error, tr!("moteur.verif.compteur_operation"));
+        }
         if writable {
             if !spec.access.write {
                 self.push(
@@ -227,7 +230,8 @@ impl Ctx<'_> {
                     if spec.kind == Kind::Button {
                         self.push(Level::Error, tr!("moteur.verif.bouton_occurrence"));
                     } else if matches!(op, Op::Gt | Op::Ge | Op::Lt | Op::Le)
-                        && (!matches!(spec.kind, Kind::Numeric { .. }) || value.as_f64().is_none())
+                        && (!matches!(spec.kind, Kind::Numeric { .. } | Kind::Counter { .. })
+                            || value.as_f64().is_none())
                     {
                         self.push(Level::Error, tr!("moteur.verif.comparaison_nombres"));
                     }
@@ -297,7 +301,7 @@ fn check_node(
             ..
         } => {
             if let Some(spec) = c.need(point, false)
-                && !matches!(spec.kind, Kind::Numeric { .. })
+                && !matches!(spec.kind, Kind::Numeric { .. } | Kind::Counter { .. })
             {
                 c.push(Level::Error, tr!("moteur.verif.seuil_nombre"));
             }

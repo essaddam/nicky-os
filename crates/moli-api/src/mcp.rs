@@ -131,7 +131,7 @@ struct DeviceArgs {
 struct CommandArgs {
     /// Point id: `<device_id>/<key>`, e.g. `z2m:0x00124b0000000003/state`.
     point: String,
-    /// Optional button idempotency key: 32 hexadecimal client characters, colon, positive sequence.
+    /// Optional button/counter idempotency key: 32 hexadecimal client characters, colon, positive sequence.
     /// A new physical intent needs a new key; a transport retry keeps the same key.
     request_id: Option<String>,
     /// New value: boolean for on/off points, number for numeric, string for enums.
@@ -259,7 +259,7 @@ impl MoliMcp {
     }
 
     #[tool(
-        description = "Write a value to a writable point. The order is validated against the point's spec, sent to the device and journaled. The device confirms by reporting its new state. Event buttons accept null and publish a distinct occurrence; request_id deduplicates a retry of that same press."
+        description = "Write a value to a writable point. The order is validated against the point's spec, sent to the device and journaled. The device confirms by reporting its new state. Event buttons accept null and publish a distinct occurrence. Counters expose read-only value plus increment/reset operations at null, serialized and durably committed on the server; request_id deduplicates retries of the same operation, including refused increments. Read value for current state."
     )]
     async fn send_command(
         &self,

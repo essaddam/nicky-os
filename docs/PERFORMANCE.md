@@ -53,6 +53,10 @@ après restauration, y compris les imports anciens dont les lignes ont été pur
   permanente. Les synchronisations avant publication/admission font partie de
   la latence de l'appui ; aucune mesure de latence physique ou de production
   n'est déduite des tests simulés.
+- AUTO-H2 : propriétaire unique chargé paresseusement, 128 valeurs et 64 fenêtres
+  de 32 reçus au plus, fichier plafonné à 1 Mio. Aucune minuterie ni tâche permanente.
+  Les mutations attendent le commit atomique ; les tests simulés ne constituent pas
+  une mesure de latence sur l'installation réelle.
 - Les pilotes écoutent (MQTT, SSE, websockets) plutôt que d'interroger quand l'appareil le
   permet ; sinon intervalle le plus long qui reste utile.
 - Le LLM n'est jamais sur un chemin chaud : seulement à la demande d'une personne ou d'un

@@ -1,7 +1,7 @@
 {
   "serveur.occurrence.commande_echouee": "Appui refusé (HTTP {status}).",
 
-  "serveur.occurrence.requete_id": "identifiant d’appui invalide : client hexadécimal de 32 caractères, deux-points et séquence entière positive",
+  "serveur.occurrence.requete_id": "identifiant de requête invalide : client hexadécimal de 32 caractères, deux-points et séquence entière positive",
   "serveur.occurrence.valeur": "un appui n’a pas de valeur : envoyer null",
   "serveur.occurrence.source_invalide": "ce point ne permet pas cet appui",
   "serveur.occurrence.conflit": "cet identifiant de requête désigne déjà un autre bouton",
@@ -174,5 +174,19 @@
   "serveur.personnes.point_nombre": "Personnes à la maison",
   "serveur.personnes.point_quelquun": "Quelqu'un à la maison",
   "serveur.personnes.point_tous_partis": "Tout le monde est parti",
-  "serveur.historique.reprise_redemarrage": "La suspension n’a pas pu être enregistrée. Répare le stockage puis redémarre Moli avant de valider la reprise."
+  "serveur.historique.reprise_redemarrage": "La suspension n’a pas pu être enregistrée. Répare le stockage puis redémarre Moli avant de valider la reprise.",
+
+  "serveur.compteur.definition": "La définition du compteur est invalide ou incompatible avec sa valeur restaurée.",
+  "serveur.compteur.bornes": "Cet incrément dépasse les bornes du compteur. La valeur reste inchangée.",
+  "serveur.compteur.debordement": "Dépassement arithmétique du compteur. La valeur reste inchangée.",
+  "serveur.compteur.corrompu": "État des compteurs illisible ou invalide : aucune remise à zéro automatique.",
+  "serveur.compteur.persistance": "L’état du compteur n’a pas pu être enregistré.",
+  "serveur.compteur.incertain": "Enregistrement incertain : redémarre Moli pour relire l’état avant toute nouvelle mutation.",
+  "serveur.compteur.conflit": "Cette identité désigne déjà une autre opération de compteur.",
+  "serveur.compteur.ancien": "Requête de compteur trop ancienne : elle ne sera pas rejouée.",
+  "serveur.compteur.capacite": "La capacité des compteurs ou de leurs clients est atteinte.",
+  "serveur.compteur.abandonne": "Commande abandonnée ou arrivée à échéance avant son engagement.",
+  "serveur.commande.echouee": "Commande refusée (HTTP {status}).",
+  "serveur.compteur.valeur": "Une opération de compteur n’a pas de valeur : envoie null.",
+  "serveur.compteur.lecture_seule": "La valeur du compteur se lit ; utilise incrémenter ou revenir à l’initial pour la modifier."
 }

@@ -198,6 +198,27 @@ impl DriverCtx {
         }
     }
 
+    /// Loads and publishes a counter from its authoritative business state.
+    pub async fn initialize_counter(
+        &self,
+        device: &DeviceId,
+        spec: moli_core::CounterSpec,
+    ) -> Result<(), crate::CounterError> {
+        if !self.owns(device) {
+            return Err(crate::CounterError::Definition);
+        }
+        self.hub.initialize_counter(device, spec).await
+    }
+
+    /// Hands an explicit counter operation to the shared, cancellation-safe owner.
+    pub async fn counter_command(&self, command: CommandRequest) {
+        if !self.owns(&command.device.id) {
+            command.reply_result(Err(crate::CounterError::Definition.into()));
+            return;
+        }
+        self.hub.counter_command(command, self.cancel.clone()).await;
+    }
+
     /// Publishes a virtual button command once, after its business-state commit.
     pub async fn press_button(&self, command: &CommandRequest) -> Result<(), crate::CommandError> {
         if !self.owns(&command.device.id) {

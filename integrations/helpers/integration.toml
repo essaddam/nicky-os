@@ -20,5 +20,5 @@ vars = []
 options = []
 
 [origin]
-reused = "même rôle que les input_select, input_boolean, input_number et input_text de HA"
+reused = "même rôle que les input_select, input_boolean, input_number, input_text et counter de HA"
 author = "agent"

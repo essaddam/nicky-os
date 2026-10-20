@@ -903,3 +903,10 @@ Restent ouverts (non urgents) :
 - le commentaire de `crates/moli-api/src/lib.rs` ne liste ni `/api/system`, ni
   `/api/home`, `/api/bench`, `/api/history`, `/api/devices/{id}/snapshot` ; la plupart des
   handlers de `rest.rs` et `automations.rs` n'ont pas de commentaire de documentation.
+
+## Compteurs AUTO-H2
+
+Le [contrat des compteurs](compteurs.md) détaille les valeurs, commandes, identités,
+limites et garanties de reprise. Le schéma [OpenAPI des commandes](../api/counter-command.openapi.yaml)
+complète `POST /api/command` : `value` en lecture seule, `increment` et `reset` à `null`,
+`request_id` conservé lors d’un retry. MCP `command` porte les mêmes champs.

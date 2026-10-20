@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: Moli — commandes de compteur
+  version: 1.0.0
+  description: Extension compatible de la commande existante ; voir components/api.md.
+paths:
+  /api/command:
+    post:
+      summary: Incrémenter ou remettre un compteur à sa valeur initiale
+      description: >-
+        Même garde, session et journal que les autres commandes. Une réussite attend
+        le commit métier durable. Un rejeu identifié ne republie aucune ancienne
+        valeur. Sans request_id, chaque appel est une nouvelle intention.
+      parameters:
+        - in: header
+          name: x-moli-origin
+          schema: { type: string, enum: [ui] }
+          description: La session et la politique du foyer déterminent la confiance.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [point, value]
+              properties:
+                point:
+                  type: string
+                  maxLength: 256
+                  pattern: '^[^:/]+:[^/]+/(increment|reset)$'
+                  examples: ['helpers:cycles/increment']
+                value: { type: 'null' }
+                request_id:
+                  type: string
+                  maxLength: 53
+                  pattern: '^[0-9a-fA-F]{32}:[1-9][0-9]{0,19}$'
+                  description: Séquence u64 positive, sans zéro initial ; 64 clients et fenêtre 32.
+                actor: { type: string }
+      responses:
+        '200': { description: Commit effectué ou reçu durable retrouvé, sans nouvelle mutation. }
+        '202': { description: Commande retenue par la garde, avec id et reason ; aucun effet. }
+        '403': { description: Écriture sur value interdite ou autorisation absente. }
+        '404': { description: Point inconnu. }
+        '409': { description: Identité conflictuelle, séquence ancienne ou commit incertain. }
+        '422': { description: Valeur, identité ou dépassement de compteur invalide. }
+        '500': { description: Persistance impossible ou état métier invalide. }
+        '503': { description: Pilote/file indisponible ou capacité métier atteinte. }
+        '504': { description: Échéance dépassée ; résultat à vérifier avec la même identité. }

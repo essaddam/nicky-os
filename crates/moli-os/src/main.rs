@@ -70,6 +70,14 @@ enum Command {
     /// Exit 0 if the local instance answers `/api/health` (container
     /// healthcheck: the image has no curl).
     Health,
+    /// Apply a counter operation through the running API, under its guard.
+    Counter {
+        device: String,
+        #[arg(value_enum)]
+        operation: CounterAction,
+        #[arg(long)]
+        request_id: Option<String>,
+    },
     /// Press an event button through the running local API (never starts drivers).
     Press {
         point: String,
@@ -77,6 +85,12 @@ enum Command {
         #[arg(long)]
         request_id: Option<String>,
     },
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum CounterAction {
+    Increment,
+    Reset,
 }
 
 #[derive(Subcommand)]
@@ -178,12 +192,32 @@ fn main() -> anyhow::Result<()> {
     } else {
         Config::load(&cli.config)?
     };
-    match cli.command.unwrap_or(Command::Serve) {
+    run_command(cli.command.unwrap_or(Command::Serve), config, boot)
+}
+
+fn run_command(command: Command, config: Config, boot: Instant) -> anyhow::Result<()> {
+    match command {
         Command::Profile(_) | Command::Catalogue(_) | Command::Health => {
             unreachable!("handled above")
         }
         Command::Backup { dir } => backup::backup(&config.server.data_dir, &dir),
         Command::Press { point, request_id } => press(&config, &point, request_id.as_deref()),
+        Command::Counter {
+            device,
+            operation,
+            request_id,
+        } => {
+            let operation = match operation {
+                CounterAction::Increment => "increment",
+                CounterAction::Reset => "reset",
+            };
+            send_operation(
+                &config,
+                &format!("{device}/{operation}"),
+                request_id.as_deref(),
+                "moli-os counter",
+            )
+        }
         Command::Restore { dir, force } => backup::restore(&config.server.data_dir, &dir, force),
         Command::Tuya(TuyaCommand::Import {
             instance,
@@ -416,6 +450,7 @@ fn open_hub(config: &Config) -> anyhow::Result<Hub> {
         labels_path: Some(config.server.data_dir.join("labels.toml")),
         state_path: Some(config.server.data_dir.join("state.json")),
         button_state_path: Some(config.server.data_dir.join("button-occurrences.json")),
+        counter_state_path: Some(config.server.data_dir.join("helper-counters.json")),
         journal_path: Some(config.server.data_dir.join("journal.jsonl")),
         addresses_path: Some(config.server.data_dir.join("addresses.json")),
         secrets,
@@ -1192,6 +1227,15 @@ fn health() -> anyhow::Result<()> {
 }
 
 fn press(config: &Config, point: &str, request_id: Option<&str>) -> anyhow::Result<()> {
+    send_operation(config, point, request_id, "moli-os press")
+}
+
+fn send_operation(
+    config: &Config,
+    point: &str,
+    request_id: Option<&str>,
+    actor: &str,
+) -> anyhow::Result<()> {
     if let Some(id) = request_id {
         let _: moli_core::RequestId = id
             .parse()
@@ -1208,7 +1252,7 @@ fn press(config: &Config, point: &str, request_id: Option<&str>) -> anyhow::Resu
             .method(http::Method::POST)
             .uri("/api/command")
             .header(http::header::HOST, &host),
-        &serde_json::json!({ "point": point, "value": null, "request_id": request_id, "actor": "moli-os press" }),
+        &serde_json::json!({ "point": point, "value": null, "request_id": request_id, "actor": actor }),
     )?;
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -1218,10 +1262,7 @@ fn press(config: &Config, point: &str, request_id: Option<&str>) -> anyhow::Resu
     if !status.is_success() {
         bail!(
             "{}",
-            moli_i18n::tr!(
-                "serveur.occurrence.commande_echouee",
-                status = status.as_u16()
-            )
+            moli_i18n::tr!("serveur.commande.echouee", status = status.as_u16())
         );
     }
     Ok(())

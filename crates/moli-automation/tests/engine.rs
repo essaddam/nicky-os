@@ -210,6 +210,81 @@ fn button_graph() -> serde_json::Value {
 }
 
 #[tokio::test]
+async fn auto_h2_validated_graph_increments_counter_and_threshold_reads_its_state() {
+    let (hub, autos, cancel) = setup().await;
+    let config = serde_json::from_value::<moli_helpers::Config>(serde_json::json!({
+        "helper": [{"id":"count", "name":"Counter", "kind":"counter"}]
+    }))
+    .unwrap();
+    spawn_driver(
+        &hub,
+        "helpers-h2".into(),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    let value_point = PointId::from("helpers-h2:count/value");
+    for _ in 0..200 {
+        if hub.state(&value_point).is_some() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    let draft = autos
+        .save(
+            automation(serde_json::json!({
+                "nodes": [
+                    {"id":"t", "type":"when_state", "point":"fake:switch/on", "to":true},
+                    {"id":"s", "type":"set", "point":"helpers-h2:count/increment", "value":null}
+                ], "edges":[{"from":"t", "to":"s"}]
+            })),
+            AGENT,
+        )
+        .await
+        .unwrap();
+    assert!(!draft.is_live());
+    assert!(
+        autos
+            .run_now(&draft.id, false, Some(&draft.fingerprint()), HUMAN)
+            .await
+            .is_err()
+    );
+    assert_eq!(hub.state(&value_point).unwrap().value, Value::Int(0));
+    autos
+        .approve(&draft.id, &draft.fingerprint(), HUMAN)
+        .await
+        .unwrap();
+    flip_switch(&hub, true).await;
+    for _ in 0..200 {
+        if hub.state(&value_point).unwrap().value == Value::Int(1) {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    assert_eq!(hub.state(&value_point).unwrap().value, Value::Int(1));
+    approved(
+        &autos,
+        serde_json::json!({
+            "nodes": [
+                {"id":"t", "type":"when_threshold", "point":"helpers-h2:count/value", "above":1},
+                {"id":"s", "type":"set", "point":"fake:lamp/on", "value":true}
+            ], "edges":[{"from":"t", "to":"s"}]
+        }),
+    )
+    .await;
+    hub.command(
+        &"helpers-h2:count/increment".into(),
+        Value::Null,
+        Origin::Ui,
+        None,
+    )
+    .await
+    .unwrap();
+    assert!(lamp_turns(&hub, true).await);
+    assert!(hub.journal(30).iter().any(|entry| entry.origin == Origin::Automation && matches!(&entry.action, moli_core::Action::Counter { point } if point.as_str() == "helpers-h2:count/increment")));
+    cancel.cancel();
+}
+
+#[tokio::test]
 async fn auto_h4_identical_presses_start_two_validated_runs() {
     let (hub, autos, cancel) = setup().await;
     add_event_button(&hub, &cancel).await;

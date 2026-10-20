@@ -178,6 +178,60 @@ async fn rest_command_round_trip() {
 }
 
 #[tokio::test]
+async fn auto_h2_rest_counter_operations_preserve_intent_and_refusal() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let config = serde_json::from_value(json!({ "helper": [{
+        "id": "count", "name": "Counter", "kind": "counter", "max": 1
+    }] }))
+    .unwrap();
+    let cancel = CancellationToken::new();
+    spawn_driver(
+        &hub,
+        "fixture".into(),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    for _ in 0..200 {
+        if hub.state(&"fixture:count/value".into()).is_some() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    let addr = serve(&hub, &moli_api::Options::default()).await;
+    let command = |operation: &str, sequence: u64| {
+        json!({
+            "point": format!("fixture:count/{operation}"), "value": null,
+            "request_id": format!("0123456789abcdef0123456789abcdef:{sequence}")
+        })
+    };
+    for (body, expected) in [
+        (command("increment", 1), 200),
+        (command("increment", 2), 422),
+        (command("reset", 3), 200),
+        (command("increment", 1), 200),
+        (command("increment", 2), 422),
+        (command("reset", 1), 409),
+        (json!({"point":"fixture:count/increment", "value":1}), 422),
+        (json!({"point":"fixture:count/value", "value":1}), 403),
+    ] {
+        let (status, response) = request_with(
+            &addr,
+            "POST",
+            "/api/command",
+            Some(&body),
+            "x-moli-origin: ui\r\n",
+        )
+        .await;
+        assert_eq!(status, expected, "{body}: {response}");
+    }
+    assert_eq!(
+        hub.state(&"fixture:count/value".into()).unwrap().value,
+        Value::Int(0)
+    );
+    cancel.cancel();
+}
+
+#[tokio::test]
 async fn auto_h4_rest_retries_do_not_publish_a_second_press() {
     let hub = Hub::new(HubOptions::default()).unwrap();
     let cancel = CancellationToken::new();

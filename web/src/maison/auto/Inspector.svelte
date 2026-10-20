@@ -15,10 +15,11 @@
   function defaultValue(point) {
     const spec = pointSpec(point);
     if (!spec) return null;
-    if (spec.kind.type === 'button') return null;
+    if (['button', 'counter_command'].includes(spec.kind.type)) return null;
     if (spec.kind.type === 'binary') return true;
     if (spec.kind.type === 'enum') return spec.kind.values?.[0] ?? null;
     if (spec.kind.type === 'numeric') return spec.kind.min ?? 0;
+    if (spec.kind.type === 'counter') return spec.kind.spec.initial;
     return '';
   }
 
@@ -50,10 +51,10 @@
       {/each}
     </div>
     {#if r.kind === 'state'}
-      <PointPicker point={r.point} onpick={(p) => change({ point: p, value: defaultValue(p) })} />
+      <PointPicker point={r.point} mode="state" onpick={(p) => change({ point: p, value: defaultValue(p) })} />
       {#if r.point}
         <div class="row">
-          {#if pointSpec(r.point)?.kind.type === 'numeric'}
+          {#if ['numeric', 'counter'].includes(pointSpec(r.point)?.kind.type)}
             <select value={r.op ?? 'eq'} onchange={(e) => change({ op: e.currentTarget.value })} aria-label={t('automatismes.inspecteur.comparaison')}>
               {#each OPS as [op, sign] (op)}<option value={op}>{sign}</option>{/each}
             </select>

@@ -9,6 +9,7 @@
 //! [`Event`]: moli_core::Event
 
 mod addresses;
+mod counters;
 mod driver;
 pub mod guard;
 mod hub;
@@ -26,6 +27,7 @@ pub mod supervisor;
 pub mod voice;
 
 pub use addresses::KnownAddress;
+pub use counters::CounterError;
 pub use driver::{BoxFuture, CommandMetadata, CommandRequest, Driver, DriverCtx, MediaPublisher};
 pub use hub::{
     ApprovalError, CORE_NAMESPACE, CommandError, DeviceView, DriverView, Hub, HubOptions,

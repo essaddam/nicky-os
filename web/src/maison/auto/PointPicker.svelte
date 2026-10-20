@@ -17,8 +17,8 @@
   const POWER = ['on', 'on_off', 'state', 'switch', 'switch_1', 'power'];
   const fits = (p) =>
     mode === 'write' ? p.access?.write
-      : mode === 'number' ? p.kind.type === 'numeric'
-      : mode === 'state' ? p.kind.type !== 'button'
+      : mode === 'number' ? ['numeric', 'counter'].includes(p.kind.type)
+      : mode === 'state' ? p.access?.read && !['button', 'counter_command'].includes(p.kind.type)
       : mode === 'occurrence' ? p.kind.type === 'button' || p.access?.read : true;
   const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 

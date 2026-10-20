@@ -174,5 +174,19 @@
   "serveur.personnes.point_nombre": "People at home",
   "serveur.personnes.point_quelquun": "Someone at home",
   "serveur.personnes.point_tous_partis": "Everyone has left",
-  "serveur.historique.reprise_redemarrage": "The suspension could not be recorded. Repair storage and restart Moli before validating the resume."
+  "serveur.historique.reprise_redemarrage": "The suspension could not be recorded. Repair storage and restart Moli before validating the resume.",
+
+  "serveur.compteur.definition": "The counter definition is invalid or incompatible with its restored value.",
+  "serveur.compteur.bornes": "This increment exceeds the counter bounds. The value is unchanged.",
+  "serveur.compteur.debordement": "Counter arithmetic overflow. The value is unchanged.",
+  "serveur.compteur.corrompu": "Counter state is unreadable or invalid: no automatic reset.",
+  "serveur.compteur.persistance": "The counter state could not be saved.",
+  "serveur.compteur.incertain": "Commit uncertain: restart Moli to reload its state before further changes.",
+  "serveur.compteur.conflit": "This identity already refers to another counter operation.",
+  "serveur.compteur.ancien": "Counter request is too old and will not be replayed.",
+  "serveur.compteur.capacite": "Counter or client capacity has been reached.",
+  "serveur.compteur.abandonne": "Command abandoned or expired before commit began.",
+  "serveur.commande.echouee": "Command refused (HTTP {status}).",
+  "serveur.compteur.valeur": "A counter operation has no value: send null.",
+  "serveur.compteur.lecture_seule": "The counter value is read-only; use increment or reset to change it."
 }

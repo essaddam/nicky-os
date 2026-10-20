@@ -842,7 +842,9 @@ fn check_write_map(map: &BTreeMap<String, String>, kind: &Kind) -> Result<(), St
             return Ok(());
         }
         Kind::Text => return Ok(()),
-        Kind::Button => return Err("button is not a mapped state".into()),
+        Kind::Button | Kind::CounterCommand { .. } | Kind::Counter { .. } => {
+            return Err("business point is not a mapped state".into());
+        }
     };
     if let Some(bad) = map.keys().find(|k| !expected.contains(k)) {
         return Err(format!("map key {bad:?} is not a value of the point"));
@@ -1148,7 +1150,7 @@ impl CompiledPoint {
                 }
             }
             Kind::Text => Value::Text(as_text.into()),
-            Kind::Button => return None,
+            Kind::Button | Kind::CounterCommand { .. } | Kind::Counter { .. } => return None,
         })
     }
 }

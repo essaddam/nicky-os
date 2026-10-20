@@ -6,6 +6,7 @@
 //! agree on one vocabulary.
 
 pub mod color;
+mod counter;
 mod event;
 mod id;
 mod model;
@@ -14,6 +15,7 @@ pub mod privacy;
 mod spec;
 mod value;
 
+pub use counter::{CounterOperation, CounterSpec, MAX_COUNTER_VALUE};
 pub use event::{
     Action, ApprovalRequest, AutomationChange, Decision, DriverStatus, Event, JournalEntry, Notice,
     Origin, Outcome,

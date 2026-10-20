@@ -19,7 +19,7 @@ use anyhow::{Context as _, bail};
 /// SQLite databases: copied through SQLite itself.
 const DATABASES: [&str; 2] = ["history.db", "energy.db"];
 /// Everything else worth keeping (missing ones are skipped).
-const FILES: [&str; 18] = [
+const FILES: [&str; 19] = [
     "moli.toml",
     "plan.json",
     "phones.json",
@@ -31,6 +31,7 @@ const FILES: [&str; 18] = [
     "automation-runs.jsonl",
     "button-occurrences.json",
     "automation-occurrences.json",
+    "helper-counters.json",
     "journal.jsonl",
     "journal.jsonl.1",
     "state.json",
@@ -173,6 +174,35 @@ fn known_name(name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn auto_h2_backup_restores_counter_values_and_receipts_together() {
+        let root = std::env::temp_dir().join(format!(
+            "moli-h2-backup-{}-{}",
+            std::process::id(),
+            moli_core::now_ms()
+        ));
+        let data = root.join("data");
+        let saved = root.join("saved");
+        let fresh = root.join("fresh");
+        std::fs::create_dir_all(&data).unwrap();
+        let contents = br#"{"version":1,"values":{"fixture:count":9},"clients":{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa":{"highest":1,"requests":{"1":{"point":"fixture:count/increment","outcome":"applied"}}}}}"#;
+        std::fs::write(data.join("helper-counters.json"), contents).unwrap();
+        backup(&data, &saved).unwrap();
+        assert_eq!(
+            std::fs::read(saved.join("helper-counters.json")).unwrap(),
+            contents
+        );
+        restore(&fresh, &saved, false).unwrap();
+        assert_eq!(
+            std::fs::read(fresh.join("helper-counters.json")).unwrap(),
+            contents
+        );
+        std::fs::write(saved.join("helper-counters.json"), b"damaged").unwrap();
+        assert!(restore(&root.join("other"), &saved, false).is_err());
+        assert!(!root.join("other").exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[tokio::test]
     async fn auto_h4_backup_restore_does_not_republish_an_acknowledged_request() {

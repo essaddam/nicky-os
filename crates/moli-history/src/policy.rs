@@ -93,7 +93,10 @@ pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind, key: &str) -
             Some(Unit::Celsius | Unit::HectoPascal | Unit::Lux | Unit::Ppm) => Family::Climate,
             Some(_) => Family::Other,
             None => match kind {
-                Kind::Numeric { .. } | Kind::Button => Family::Other,
+                Kind::Numeric { .. }
+                | Kind::Button
+                | Kind::Counter { .. }
+                | Kind::CounterCommand { .. } => Family::Other,
                 Kind::Binary | Kind::Enum { .. } | Kind::Text => Family::States,
             },
         },

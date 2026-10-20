@@ -141,6 +141,10 @@ pub enum Origin {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Action {
+    /// Final business outcome, including when the transport waiter disappeared.
+    Counter {
+        point: PointId,
+    },
     Occurrence {
         point: PointId,
         occurrence: crate::OccurrenceId,
