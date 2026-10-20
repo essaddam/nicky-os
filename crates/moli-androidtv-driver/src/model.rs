@@ -51,7 +51,12 @@ impl Observation {
     }
     pub(crate) fn cast(&mut self, event: cast::Event) {
         match event {
-            cast::Event::Playing(playing) => self.playing = playing,
+            cast::Event::Playing(playing) => {
+                if self.playing.state.is_some() && playing.state.is_none() {
+                    self.cast_epoch = self.cast_epoch.wrapping_add(1);
+                }
+                self.playing = playing;
+            }
             cast::Event::Lost => {
                 self.playing = cast::Playing::default();
                 self.cast_epoch = self.cast_epoch.wrapping_add(1);

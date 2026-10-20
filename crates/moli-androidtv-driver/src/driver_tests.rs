@@ -108,6 +108,13 @@ impl Connector for FakeConnector {
             events: receiver,
             run: Box::pin(async move {
                 events
+                    .send(Event::Cast(cast::Event::Playing(cast::Playing {
+                        state: Some("playing".into()),
+                        ..cast::Playing::default()
+                    })))
+                    .await
+                    .unwrap();
+                events
                     .send(Event::Remote(remote::Event::Ready))
                     .await
                     .unwrap();
@@ -337,4 +344,154 @@ async fn caller_leaving_after_emission_keeps_the_actual_result_in_the_hub_journa
         tokio::task::yield_now().await;
     }
     panic!("the emitted order lost its successful result");
+}
+
+#[tokio::test]
+async fn queued_cast_during_loss_cannot_move_to_the_next_connection() {
+    queued_cast_across_loss(false).await;
+}
+
+#[tokio::test]
+async fn queued_cast_from_a_live_connection_is_invalidated_by_loss() {
+    queued_cast_across_loss(true).await;
+}
+
+async fn queued_cast_across_loss(initially_available: bool) {
+    let h = Harness::new().await;
+    if initially_available {
+        h.event(Event::Cast(cast::Event::Playing(cast::Playing {
+            state: Some("playing".into()),
+            ..cast::Playing::default()
+        })))
+        .await;
+    } else {
+        h.event(Event::Cast(cast::Event::Lost)).await;
+    }
+    h.wire
+        .block
+        .store(true, std::sync::atomic::Ordering::SeqCst);
+    let hub = h.hub.clone();
+    let remote = tokio::spawn(async move {
+        hub.command(&point("power"), Value::Bool(true), Origin::Api, None)
+            .await
+    });
+    h.wire.entered.notified().await;
+    let hub = h.hub.clone();
+    let pause = tokio::spawn(async move {
+        hub.command(
+            &point("media_control"),
+            Value::from("pause"),
+            Origin::Api,
+            None,
+        )
+        .await
+    });
+    // Let the hub deliver the command while the Remote order is retained.
+    for _ in 0..30 {
+        tokio::task::yield_now().await;
+    }
+    h.event(Event::Cast(cast::Event::Lost)).await;
+    h.event(Event::Cast(cast::Event::Playing(cast::Playing {
+        state: Some("playing".into()),
+        ..cast::Playing::default()
+    })))
+    .await;
+    h.wire
+        .block
+        .store(false, std::sync::atomic::Ordering::SeqCst);
+    h.wire.release.notify_one();
+    remote.await.unwrap().unwrap();
+    assert!(
+        pause.await.unwrap().is_err(),
+        "old Pause reached a future Cast connection"
+    );
+    assert_eq!(*h.wire.sent.lock().unwrap(), ["Key(224)"]);
+    // A new command admitted to the healthy connection still works.
+    h.send("media_control", Value::from("pause")).await.unwrap();
+    assert_eq!(*h.wire.sent.lock().unwrap(), ["Key(224)", "CastPause"]);
+}
+
+struct CaptureCommand(mpsc::Sender<moli_runtime::CommandRequest>);
+impl moli_runtime::Driver for CaptureCommand {
+    fn kind(&self) -> &'static str {
+        "fake"
+    }
+    fn run<'a>(
+        &'a self,
+        ctx: &'a mut moli_runtime::DriverCtx,
+    ) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(async move {
+            ctx.upsert_device(crate::model::device(ctx.instance(), Some(60)));
+            ctx.set_availability(&ctx.device_id("tv"), true);
+            ctx.ready();
+            while let Some(command) = ctx.next_command().await {
+                self.0.send(command).await.unwrap();
+            }
+            Ok(())
+        })
+    }
+}
+
+#[tokio::test]
+async fn a_connection_change_before_the_first_job_poll_cannot_rebind_an_order() {
+    for cast_order in [false, true] {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let (tx, mut rx) = mpsc::channel(1);
+        let driver = spawn_driver(
+            &hub,
+            InstanceId::from("example"),
+            Arc::new(CaptureCommand(tx)),
+            cancel.clone(),
+        );
+        for _ in 0..100 {
+            if hub.state(&point("power")).is_some() || !hub.snapshot().devices.is_empty() {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        let caller = tokio::spawn(async move {
+            let (key, value) = if cast_order {
+                ("media_control", Value::from("pause"))
+            } else {
+                ("power", Value::Bool(true))
+            };
+            hub.command(&point(key), value, Origin::Api, None).await
+        });
+        let command = rx.recv().await.unwrap();
+        let initial = crate::model::Observation {
+            online: true,
+            playing: cast::Playing {
+                state: Some("playing".into()),
+                ..cast::Playing::default()
+            },
+            ..crate::model::Observation::default()
+        };
+        let (states, observations) = watch::channel(initial.clone());
+        let fake = Arc::new(FakeWire::default());
+        let wire: Arc<dyn Wire> = Arc::new(FakeAdapter(fake.clone()));
+        let plan = crate::commands::plan(&command.key, &command.value, &initial).unwrap();
+        let job = crate::driver::execute(wire, observations, command, plan);
+        // The future exists but has never been polled. Simulate loss and recovery.
+        let mut recovered = initial;
+        if cast_order {
+            recovered.cast(cast::Event::Lost);
+            recovered.cast(cast::Event::Playing(cast::Playing {
+                state: Some("playing".into()),
+                ..cast::Playing::default()
+            }));
+        } else {
+            recovered.remote(remote::Event::Lost);
+            recovered.remote(remote::Event::Ready);
+        }
+        states.send_replace(recovered);
+        job.await;
+        assert!(
+            caller.await.unwrap().is_err(),
+            "a not-yet-polled job rebound its session"
+        );
+        assert!(fake.sent.lock().unwrap().is_empty());
+        cancel.cancel();
+        driver.await.unwrap();
+    }
 }

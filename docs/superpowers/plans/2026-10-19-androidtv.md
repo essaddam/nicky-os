@@ -210,8 +210,8 @@ partagé, identité RSA/Polo, transports suivis, pilote et coffre, routes HTTP,
 interface traduite, câblage binaire et paquet de catalogue.
 
 Validation native Rust 1.99.1 avec deux jobs : fmt et Clippy workspace stricts
-verts ; 209 tests ciblés réussis, aucun échec : bibliothèque Android TV 35,
-pilote 28, API 66 (dont 20 HTTP), cibles partagées 13, binaire 13, Philips 5,
+verts ; 218 tests ciblés réussis, aucun échec : bibliothèque Android TV 41,
+pilote 31, API 66 (dont 20 HTTP), cibles partagées 13, binaire 13, Philips 5,
 runtime 49 (unitaires, hub et doctest). Les tests couvrent aussi la persistance
 acceptée avant redémarrage et l’ouverture native des sept applications.
 Le client HTTP de test accepte un reset TCP après réception d’une réponse
@@ -226,6 +226,14 @@ séparément au ticket 0983449d.
 Catalogue : 32 paquets, dont le pilote Android TV, contrôle réussi avec six
 avertissements préexistants sur les fixtures des profils. Contrôle de fuites
 propre sur les motifs génériques ; aucune liste noire privée disponible.
+
+Revue corrective : les demandes en attente sont liées à leur génération
+Remote/Cast dès l’admission et avant le premier poll du job. Les régressions
+sur vrai hub refusent une Pause reçue avant/pendant une perte Cast et
+autorisent le témoin sain après reconnexion. STOP accepte un statut vide
+strictement corrélé à cette opération, conserve la connexion et ne se rejoue
+pas ; faux identifiant/source/namespace, statuts incomplets et erreurs
+restent distincts. Aucun changement du chemin Philips.
 
 Le contrôle complet natif reste à faire une seule fois au tour de fusion,
 après approbation. Les procédures historiques de collecteurs, octrois et

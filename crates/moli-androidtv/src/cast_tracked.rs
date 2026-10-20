@@ -100,6 +100,7 @@ struct Pending<'a> {
     session: u64,
     id: u64,
     deadline: tokio::time::Instant,
+    operation: Order,
 }
 
 async fn response<W: AsyncWrite + Unpin>(
@@ -130,9 +131,13 @@ async fn response<W: AsyncWrite + Unpin>(
                 }
                 Some("MEDIA_STATUS")
                     if body["status"].as_array().is_some_and(|items| {
-                        items
-                            .iter()
-                            .any(|item| item["mediaSessionId"].as_u64() == Some(pending.session))
+                        // STOP unloads the media and invalidates mediaSessionId.
+                        // Only an explicit empty array, with the exact correlation
+                        // above, can acknowledge that terminal response.
+                        (pending.operation == Order::Stop && items.is_empty())
+                            || items.iter().any(|item| {
+                                item["mediaSessionId"].as_u64() == Some(pending.session)
+                            })
                     }) =>
                 {
                     Some(Delivery::Acknowledged)
@@ -206,7 +211,7 @@ pub(super) async fn stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
                         if matches!(sent, Delivery::Uncertain | Delivery::Unavailable) { bail!("Cast write lost; no replay"); }
                         continue;
                     }
-                    let pending = Pending { transport: &transport, session, id, deadline: order.deadline };
+                    let pending = Pending { transport: &transport, session, id, deadline: order.deadline, operation: order.payload };
                     let answer = tokio::time::timeout_at(order.deadline,
                         response(&mut frames, &mut write, &mut follow, &mut request, events, &pending))
                         .await.unwrap_or(Ok(Delivery::Uncertain));

@@ -33,6 +33,17 @@ Une perte après émission produit un résultat incertain, sans rejeu. Un volume
 absolu se règle par touches successives séparées par les observations reçues ;
 un volume ou une sourdine inconnus ne déclenchent pas de toggle supposé.
 
+La file conserve la génération de connexion dès la prise en charge. Une
+commande média reçue sans session Cast disponible est refusée ; une perte
+pendant l’attente invalide la demande, même si Cast revient avant son délai.
+Le job conserve aussi sa génération avant son premier lancement asynchrone.
+
+Un STOP peut se terminer par un statut média vide : il est acquitté seulement
+avec l’identifiant de requête, le transport source et le namespace attendus,
+conformément au [protocole Cast](https://developers.google.com/cast/docs/media/messages#stop).
+Les métadonnées sont alors effacées selon cette observation. Un statut
+spontané, incomplet ou d’une autre source ne prouve jamais cet acquittement.
+
 ## Services et niveau de preuve
 
 Le point `play_media` reçoit du texte JSON `{service,kind,target}`. Le résolveur

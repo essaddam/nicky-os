@@ -215,3 +215,197 @@ async fn new_cast_transport_in_the_same_app_clears_old_media() {
     task.abort();
     let _ = task.await;
 }
+
+struct ControlCase {
+    peer: tokio::io::DuplexStream,
+    orders: mpsc::Sender<TrackedOrder<Order>>,
+    incoming: mpsc::Receiver<Event>,
+    task: tokio::task::JoinHandle<anyhow::Result<()>>,
+    result: tokio::sync::oneshot::Receiver<Delivery>,
+    id: u64,
+}
+impl ControlCase {
+    async fn new(operation: Order) -> Self {
+        let (stream, mut peer) = tokio::io::duplex(8192);
+        let (orders, mut rx) = mpsc::channel(4);
+        let (events, mut incoming) = mpsc::channel(16);
+        let task = tokio::spawn(async move { tracked_stream(stream, &mut rx, &events).await });
+        media_ready(&mut peer, &mut incoming).await;
+        tell(&mut peer, "t-1", NS_MEDIA, json!({"type":"MEDIA_STATUS","status":[{"mediaSessionId":7,"playerState":"PLAYING","media":{"metadata":{"title":"Example title"}}}]})).await;
+        loop {
+            let Some(Event::Playing(playing)) = incoming.recv().await else {
+                panic!("media observation missing");
+            };
+            if playing.title.as_deref() == Some("Example title") {
+                break;
+            }
+        }
+        let (order, result) = TrackedOrder::new(
+            operation,
+            Instant::now() + Duration::from_secs(5),
+            Arc::new(|| false),
+        );
+        orders.send(order).await.unwrap();
+        let id = loop {
+            let (_, _, body) = next(&mut peer).await;
+            if body["type"]
+                == match operation {
+                    Order::Play => "PLAY",
+                    Order::Pause => "PAUSE",
+                    Order::Stop => "STOP",
+                }
+            {
+                break body["requestId"].as_u64().unwrap();
+            }
+        };
+        Self {
+            peer,
+            orders,
+            incoming,
+            task,
+            result,
+            id,
+        }
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn stop_acknowledges_an_exact_empty_status_and_keeps_the_connection_without_replay() {
+    let mut c = ControlCase::new(Order::Stop).await;
+    tell(
+        &mut c.peer,
+        "t-1",
+        NS_MEDIA,
+        json!({"type":"MEDIA_STATUS","requestId":c.id,"status":[]}),
+    )
+    .await;
+    assert_eq!((&mut c.result).await.unwrap(), Delivery::Acknowledged);
+    let Some(Event::Playing(playing)) = c.incoming.recv().await else {
+        panic!("terminal status missing");
+    };
+    assert_eq!(playing.app.as_deref(), Some("Example player"));
+    assert_eq!(playing.state, None);
+    assert_eq!(playing.title, None);
+    let (play, result) = TrackedOrder::new(
+        Order::Play,
+        Instant::now() + Duration::from_secs(5),
+        Arc::new(|| false),
+    );
+    c.orders.send(play).await.unwrap();
+    assert_eq!(result.await.unwrap(), Delivery::Unavailable);
+    // The connection can observe a new session; the completed STOP is never replayed.
+    tell(&mut c.peer, "t-1", NS_MEDIA, json!({"type":"MEDIA_STATUS","status":[{"mediaSessionId":8,"playerState":"PAUSED","media":{"metadata":{"title":"New title"}}}]})).await;
+    let Some(Event::Playing(playing)) = c.incoming.recv().await else {
+        panic!("new observation missing");
+    };
+    assert_eq!(playing.title.as_deref(), Some("New title"));
+    drop(c.orders);
+    c.task.await.unwrap().unwrap();
+    while let Ok(frame) = read_frame(&mut c.peer).await {
+        let (_, _, body) = envelope(&frame).unwrap();
+        assert_ne!(body["type"], "STOP", "the completed STOP was replayed");
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn stop_empty_status_from_another_source_or_namespace_is_not_an_ack() {
+    let mut c = ControlCase::new(Order::Stop).await;
+    for (source, ns) in [("other-transport", NS_MEDIA), ("t-1", NS_RECEIVER)] {
+        tell(
+            &mut c.peer,
+            source,
+            ns,
+            json!({"type":"MEDIA_STATUS","requestId":c.id,"status":[]}),
+        )
+        .await;
+        let Some(Event::Playing(playing)) = c.incoming.recv().await else {
+            panic!("observation missing");
+        };
+        assert_eq!(playing.title.as_deref(), Some("Example title"));
+        assert!(matches!(
+            c.result.try_recv(),
+            Err(tokio::sync::oneshot::error::TryRecvError::Empty)
+        ));
+    }
+    tell(
+        &mut c.peer,
+        "t-1",
+        NS_MEDIA,
+        json!({"type":"MEDIA_STATUS","requestId":c.id,"status":[]}),
+    )
+    .await;
+    assert_eq!((&mut c.result).await.unwrap(), Delivery::Acknowledged);
+    drop(c.orders);
+    c.task.await.unwrap().unwrap();
+}
+
+#[tokio::test(start_paused = true)]
+async fn stop_spontaneous_or_mismatched_empty_status_never_proves_completion() {
+    for id in [None, Some(0), Some(u64::MAX)] {
+        let mut c = ControlCase::new(Order::Stop).await;
+        let mut body = json!({"type":"MEDIA_STATUS","status":[]});
+        if let Some(id) = id {
+            body["requestId"] = json!(id);
+        }
+        tell(&mut c.peer, "t-1", NS_MEDIA, body).await;
+        assert_eq!(c.result.await.unwrap(), Delivery::Uncertain);
+        assert!(c.task.await.unwrap().is_err());
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn stop_missing_or_malformed_status_is_not_a_success() {
+    for status in [None, Some(Json::Null), Some(json!({})), Some(json!([{}]))] {
+        let mut c = ControlCase::new(Order::Stop).await;
+        let mut body = json!({"type":"MEDIA_STATUS","requestId":c.id});
+        if let Some(status) = status {
+            body["status"] = status;
+        }
+        tell(&mut c.peer, "t-1", NS_MEDIA, body).await;
+        assert_eq!(c.result.await.unwrap(), Delivery::Uncertain);
+        assert!(c.task.await.unwrap().is_err());
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn stop_protocol_errors_are_refused_without_fabricating_media_state() {
+    for kind in [
+        "INVALID_REQUEST",
+        "INVALID_PLAYER_STATE",
+        "LOAD_FAILED",
+        "ERROR",
+    ] {
+        let mut c = ControlCase::new(Order::Stop).await;
+        tell(
+            &mut c.peer,
+            "t-1",
+            NS_MEDIA,
+            json!({"type":kind,"requestId":c.id}),
+        )
+        .await;
+        assert_eq!(c.result.await.unwrap(), Delivery::Refused);
+        let Some(Event::Playing(playing)) = c.incoming.recv().await else {
+            panic!("observation missing");
+        };
+        assert_eq!(playing.title.as_deref(), Some("Example title"));
+        assert_eq!(playing.state.as_deref(), Some("playing"));
+        drop(c.orders);
+        c.task.await.unwrap().unwrap();
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn play_and_pause_do_not_accept_stops_empty_terminal_status() {
+    for operation in [Order::Play, Order::Pause] {
+        let mut c = ControlCase::new(operation).await;
+        tell(
+            &mut c.peer,
+            "t-1",
+            NS_MEDIA,
+            json!({"type":"MEDIA_STATUS","requestId":c.id,"status":[]}),
+        )
+        .await;
+        assert_eq!(c.result.await.unwrap(), Delivery::Uncertain);
+        assert!(c.task.await.unwrap().is_err());
+    }
+}

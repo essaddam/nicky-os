@@ -69,9 +69,36 @@ fn publish(ctx: &DriverCtx, observed: &Observation) {
         );
     }
 }
-fn refuse(queue: &mut VecDeque<CommandRequest>) {
-    for command in queue.drain(..) {
-        command.reply(Err(moli_i18n::tr!("pilotes.androidtv.indisponible")));
+/// Bind an unsent request to the connections observed at admission.
+#[derive(Clone, Copy)]
+struct Fence {
+    remote_epoch: u64,
+    cast_epoch: Option<u64>,
+}
+impl Fence {
+    fn capture(observed: &Observation, cast: bool) -> Option<Self> {
+        (observed.online && (!cast || observed.playing.state.is_some())).then_some(Self {
+            remote_epoch: observed.epoch,
+            cast_epoch: cast.then_some(observed.cast_epoch),
+        })
+    }
+    fn valid(self, observed: &Observation) -> bool {
+        observed.online
+            && self.remote_epoch == observed.epoch
+            && self.cast_epoch.is_none_or(|epoch| {
+                epoch == observed.cast_epoch && observed.playing.state.is_some()
+            })
+    }
+}
+struct Queued {
+    command: CommandRequest,
+    fence: Fence,
+}
+fn refuse(queue: &mut VecDeque<Queued>) {
+    for queued in queue.drain(..) {
+        queued
+            .command
+            .reply(Err(moli_i18n::tr!("pilotes.androidtv.indisponible")));
     }
 }
 pub(crate) async fn run(tv: &AndroidTv, ctx: &mut DriverCtx) -> anyhow::Result<()> {
@@ -96,19 +123,19 @@ pub(crate) async fn run(tv: &AndroidTv, ctx: &mut DriverCtx) -> anyhow::Result<(
     background.spawn(run);
     let mut observed = Observation::default();
     let (observations, reader) = watch::channel(observed.clone());
-    let mut queue = VecDeque::<CommandRequest>::new();
+    let mut queue = VecDeque::<Queued>::new();
     let mut jobs = tokio::task::JoinSet::new();
     publish(ctx, &observed);
     ctx.wait_for(moli_i18n::tr!("pilotes.androidtv.appairage"));
     loop {
-        queue.retain(|command| !command.abandoned());
+        queue.retain(|queued| !queued.command.abandoned());
         if jobs.is_empty() {
-            while let Some(command) = queue.pop_front() {
+            while let Some(Queued { command, fence }) = queue.pop_front() {
                 if command.abandoned() {
                     command.reply(Err(moli_i18n::tr!("pilotes.androidtv.delai")));
                     continue;
                 }
-                if !observed.online {
+                if !fence.valid(&observed) {
                     command.reply(Err(moli_i18n::tr!("pilotes.androidtv.indisponible")));
                     continue;
                 }
@@ -121,22 +148,22 @@ pub(crate) async fn run(tv: &AndroidTv, ctx: &mut DriverCtx) -> anyhow::Result<(
                 };
                 let wire = wire.clone();
                 let reader = reader.clone();
-                jobs.spawn(async move {
-                    execute(wire, reader, command, plan).await;
-                });
+                jobs.spawn(execute(wire, reader, command, plan));
                 break;
             }
         }
         let expiration = queue
             .iter()
-            .map(|command| Instant::from_std(command.deadline))
+            .map(|queued| Instant::from_std(queued.command.deadline))
             .min();
         tokio::select! {
             command=ctx.next_command()=> {
                 let Some(command)=command else {refuse(&mut queue);return Ok(());};
                 // One FIFO includes the running request and pending confirmations.
                 if queue.len()+jobs.len()>=4 {command.reply(Err(moli_i18n::tr!("pilotes.androidtv.file_pleine")));}
-                else {queue.push_back(command);}
+                else if let Some(fence)=Fence::capture(&observed,command.key.as_ref()=="media_control") {
+                    queue.push_back(Queued {command,fence});
+                } else {command.reply(Err(moli_i18n::tr!("pilotes.androidtv.indisponible")));}
             }
             event=events.recv()=> {
                 let Some(event)=event else {anyhow::bail!(moli_i18n::tr!("pilotes.androidtv.indisponible"));};
@@ -150,38 +177,40 @@ pub(crate) async fn run(tv: &AndroidTv, ctx: &mut DriverCtx) -> anyhow::Result<(
             _=jobs.join_next(),if !jobs.is_empty()=>{}
             _=background.join_next(),if !background.is_empty()=>{anyhow::bail!(moli_i18n::tr!("pilotes.androidtv.indisponible"));}
             ()=async { if let Some(deadline)=expiration {tokio::time::sleep_until(deadline).await;} else {std::future::pending::<()>().await;} }=> {
-                queue.retain(|command|!command.abandoned());
+                queue.retain(|queued|!queued.command.abandoned());
             }
         }
     }
 }
-async fn execute(
+pub(crate) fn execute(
     wire: Arc<dyn Wire>,
     observed: watch::Receiver<Observation>,
     command: CommandRequest,
     plan: commands::Plan,
-) {
-    let deadline = Instant::from_std(command.deadline);
-    let original = Arc::new(Mutex::new(Some(command)));
-    let epoch = observed.borrow().epoch;
-    let holder = original.clone();
-    let state = observed.clone();
-    let abandoned: Abandoned = Arc::new(move || {
-        let current = state.borrow();
-        !current.online
-            || current.epoch != epoch
-            || holder
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .as_ref()
-                .is_none_or(CommandRequest::abandoned)
-    });
-    let result = execution::run(wire, observed, deadline, abandoned, plan).await;
-    if let Some(command) = original
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-        .take()
-    {
-        command.reply(result);
+) -> impl std::future::Future<Output = ()> + Send {
+    // This runs before spawn/first poll, while the driver still owns admission.
+    let fence = Fence::capture(&observed.borrow(), matches!(plan, commands::Plan::Cast(_)));
+    async move {
+        let deadline = Instant::from_std(command.deadline);
+        let original = Arc::new(Mutex::new(Some(command)));
+        let holder = original.clone();
+        let state = observed.clone();
+        let abandoned: Abandoned = Arc::new(move || {
+            let current = state.borrow();
+            !fence.is_some_and(|fence| fence.valid(&current))
+                || holder
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .as_ref()
+                    .is_none_or(CommandRequest::abandoned)
+        });
+        let result = execution::run(wire, observed, deadline, abandoned, plan).await;
+        if let Some(command) = original
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .take()
+        {
+            command.reply(result);
+        }
     }
 }
