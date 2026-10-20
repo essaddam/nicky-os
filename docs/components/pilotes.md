@@ -437,6 +437,15 @@ kind = "frigate"
   simulé et le vrai hub (`src/tests.rs`) : relecture, ordre jamais confirmé, cloud lent,
   session expirée sans rejeu, identifiants refusés, plafond de consigne.
 
+## `asuswrt` : diagnostic réseau authentifié (`crates/moli-asuswrt`)
+
+Client JSON de lecture : `/login.cgi` puis trois hooks fixes `/appGet.cgi`, TLS
+épinglé avant secrets, sélection vide par défaut et <=32 clients. Aucun hook libre,
+administration, SSH/Telnet, scan ou présence. Corps1 Mio, JSON strict, inventaire512,
+5 s/échange, cycle30 s/16 échanges, un rafraîchissement de session. Au plus139 points
+RO, santé propre classée diagnostic. [Contrat, unités et limites](../../integrations/asuswrt/README.md),
+[onboarding](../../integrations/asuswrt/onboarding.md). Qualification réelle après H1.
+
 ## `bambu` : imprimante Bambu Lab (`crates/moli-bambu`)
 
 - **Couvre** : A1, P1, X1. Écritures : la lumière et `control` (`pause`, `resume`, `stop`, envoyés comme ha-bambulab : `{"print": {"command": …}}`), de sémantique `control` : **un agent qui les demande attend un humain** (garde du hub). Pas encore vu en vrai.
@@ -849,6 +858,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | Pilote | Crate | Protocole | Écriture possible | Vérifié sur du vrai matériel |
 |---|---|---|---|---|
 | `ariston` | `moli-ariston` | cloud Ariston NET (HTTPS, jeton de session) | oui : marche, mode, consigne, éco, plafond, anti-légionelle | pas encore (cible : Velis Evo 2) |
+| `asuswrt` | `moli-asuswrt` | HTTP(S) JSON authentifié, TLS épinglé | non | pas encore : contrats synthétiques, qualification après H1 |
 | `bambu` | `moli-bambu` | MQTT TLS 8883, épinglé | lumière, `control` (humain pour un agent) | pas encore (cible : Bambu Lab A1) |
 | `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
 | `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |

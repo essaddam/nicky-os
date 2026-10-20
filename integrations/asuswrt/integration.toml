@@ -1,0 +1,37 @@
+[integration]
+id = "asuswrt"
+name = "ASUSWRT"
+brands = ["ASUS"]
+models = ["ASUSWRT JSON appGet (qualification requise)"]
+transport = "http"
+driver = "asuswrt"
+crate = "moli-asuswrt"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = []
+
+[needs]
+secrets = ["username", "password"]
+vars = []
+options = ["host", "port", "transport"]
+
+[origin]
+reused = "Contrat AsusRouter a897f28e1e07229a16f3fb553035575fbf2b2328 (Apache-2.0), sans code tiers copié ; fixtures entièrement synthétiques"
+author = "agent"
+
+[[fixture]]
+file = "fixtures/info.json"
+[[fixture]]
+file = "fixtures/telemetry.json"
+[[fixture]]
+file = "fixtures/telemetry-next.json"
+[[fixture]]
+file = "fixtures/clients.json"
+[[fixture]]
+file = "fixtures/clients-empty.json"
+[[fixture]]
+file = "fixtures/duplicate-wan.json"
+[[fixture]]
+file = "fixtures/login-html.txt"

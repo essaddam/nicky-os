@@ -17,6 +17,7 @@ moli-androidtv-driver = { path = "crates/moli-androidtv-driver" }
 moli-api = { path = "crates/moli-api" }
 moli-ariston = { path = "crates/moli-ariston" }
 moli-assistant = { path = "crates/moli-assistant" }
+moli-asuswrt = { path = "crates/moli-asuswrt" }
 moli-audio = { path = "crates/moli-audio" }
 moli-automation = { path = "crates/moli-automation" }
 moli-bambu = { path = "crates/moli-bambu" }

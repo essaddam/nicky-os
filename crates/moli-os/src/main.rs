@@ -920,6 +920,7 @@ const KINDS: &[&str] = &[
     "alexa",
     "androidtv",
     "ariston",
+    "asuswrt",
     "bambu",
     "demo",
     "esphome",
@@ -1125,6 +1126,9 @@ fn build_driver(
         "ariston" => Arc::new(moli_ariston::Ariston::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "asuswrt" => Arc::new(moli_asuswrt::Asuswrt::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "bambu" => Arc::new(moli_bambu::Bambu::new(
             config.options.clone().try_into().with_context(context)?,
         )),
@@ -1375,6 +1379,18 @@ mod tests {
         config.options["auth"] = toml::Value::String("try-all".into());
         assert!(build_driver(&config, &data).is_err());
         config.options["auth"] = toml::Value::String("none".into());
+        config.options["transport"] = toml::Value::String("http".into());
+        assert!(build_driver(&config, &data).is_err());
+    }
+
+    #[test]
+    fn asuswrt_is_built_without_network_and_plain_auth_requires_consent() {
+        let mut config = driver("asuswrt");
+        config.options =
+            toml::from_str("host = 'router.example.invalid'\nport = 8443\ntransport = 'https'")
+                .unwrap();
+        let data = std::env::temp_dir();
+        assert_eq!(build_driver(&config, &data).unwrap().kind(), "asuswrt");
         config.options["transport"] = toml::Value::String("http".into());
         assert!(build_driver(&config, &data).is_err());
     }

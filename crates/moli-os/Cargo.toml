@@ -12,6 +12,7 @@ moli-androidtv-driver.workspace = true
 moli-api.workspace = true
 moli-ariston.workspace = true
 moli-assistant.workspace = true
+moli-asuswrt.workspace = true
 moli-automation.workspace = true
 moli-bambu.workspace = true
 moli-core.workspace = true

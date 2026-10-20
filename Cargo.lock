@@ -1442,6 +1442,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-asuswrt"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "http",
+ "http-body-util",
+ "moli-core",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "rcgen 0.14.10",
+ "rustls",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-rustls",
+ "tokio-util",
+]
+
+[[package]]
 name = "moli-audio"
 version = "0.1.0"
 dependencies = [
@@ -1862,6 +1883,7 @@ dependencies = [
  "moli-api",
  "moli-ariston",
  "moli-assistant",
+ "moli-asuswrt",
  "moli-automation",
  "moli-bambu",
  "moli-core",
