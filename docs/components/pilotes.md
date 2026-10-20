@@ -248,6 +248,34 @@ host = "192.168.1.x"
 - **Pièges** : le certificat est épinglé par une poignée de main nue **avant** tout envoi d'identifiants ; c'est un **X.509 v1**, vérifié à la main par `moli-net`. Une seule session (jeton) est gardée même à travers les redémarrages du pilote : les stations limitent les sessions simultanées. Codes `-6`/`-7` : nouvelle connexion. Le jeton voyage dans l'URL : aucune erreur ne cite l'URL. Une caméra sur batterie peut mettre ~10 s à se réveiller (14 s accordées à l'image). Station injoignable : toutes les détections passent à `null` (jamais de « personne vue » périmée).
 - **Tests** : `src/lib.rs` (événements lus aux deux niveaux `md`/`visitor` et `ai`, erreurs par commande, jeton masqué au débogage) ; `crates/moli-net/src/legacy.rs` sur le certificat public réel du Home Hub (`integrations/reolink/fixtures/home-hub-cert.b64`).
 
+## `samsung` : télé Tizen (`crates/moli-samsung`)
+
+- **Transports** : WebSocket TLS local 8002 pour les touches et les applications ;
+  SOAP UPnP RenderingControl sur l'hôte déclaré (9197) pour volume/sourdine absolus.
+  Aucun SSDP, aucune destination issue d'une réponse ; WoL pour allumer (MAC requise),
+  `KEY_POWEROFF` pour éteindre sans bascule.
+- **Configuration** : `host` obligatoire ; `mac` facultative, `port = 8002`,
+  `upnp_port = 9197`, `every = 30` secondes (10–3600). Options inconnues refusées.
+- **Appairage** : coffre obligatoire. Première poignée TLS nue, empreinte `cert`
+  persistée avant tout jeton, puis acceptation de Moli à l'écran et enregistrement
+  de `token`. Certificat différent : refus ; vérifier la télé avant d'oublier
+  `cert`. Jeton révoqué : oublier `token`, redémarrer et réaccepter Moli.
+- **Identité** : `device.id` natif, persisté dans le coffre (`native_id`), indépendant
+  du nom et de l'adresse ; une télé appairée peut redémarrer en veille.
+- **Points** : `power`, `volume` (0–100), `mute`, `key` (touches compatibles Philips),
+  `app` (identifiant Tizen en écriture seule). Pas de texte, URL, touche brute,
+  touche de maintenance, ni application courante inventée après un lancement.
+- **Ordres** : FIFO de quatre en attente, un en vol, échéance absolue, abandon
+  vérifié avant émission et après connexion ; aucun rejeu. Après émission, réponse
+  bornée et journal conservés même si l'appelant part ; échec ambigu signalé comme
+  non confirmé. Les relevés ne bloquent pas la réception des commandes.
+- **État** : observations seulement, `PowerState` explicite ; absence de réponse
+  signifie hors ligne, jamais « éteinte ». UPnP absent : audio inconnu. Arrêt :
+  tâches terminées, appareil hors ligne. Relevé toutes les 30 s sans rattrapage.
+- **Preuves et limites** : fixtures synthétiques, serveurs TLS/SOAP sur boucle locale
+  et contrats via le vrai hub ; aucune qualification matérielle avant H1.
+  [Détails, bornes et références](../../integrations/samsung/README.md).
+
 ## `sonos` : enceintes Sonos (`crates/moli-sonos`)
 
 - **Couvre** : un lecteur Sonos par instance.

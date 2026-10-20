@@ -19,7 +19,7 @@ Mesures sur une installation réelle, à côté de son Home Assistant (détail d
 
 Ce qui marche aujourd'hui :
 - 26 intégrations : Zigbee (Zigbee2MQTT), Hue, Tuya (local et cloud), Reolink, Sonos (et ses
-  annonces vocales), télé Philips, Frigate, Bambu (et son AMS), Klipper, serrures Nuki,
+  annonces vocales), télés Philips et Samsung Tizen (Samsung sur contrats simulés), Frigate, Bambu (et son AMS), Klipper, serrures Nuki,
   Somfy TaHoma (volets et portails, local et cloud), Tapo, box UPnP,
   imprimante IPP, l'hôte et les ordinateurs, la présence par Wi-Fi, les aides de la maison,
   **Telegram** (votre bot, sans relais), les **téléphones** (appli Moli), et des profils

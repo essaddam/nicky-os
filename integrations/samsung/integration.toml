@@ -1,0 +1,29 @@
+[integration]
+id = "samsung"
+name = "Télé Samsung Tizen"
+brands = ["Samsung"]
+models = ["Tizen (API v2)"]
+transport = "https"
+driver = "samsung"
+crate = "moli-samsung"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = [8002, 9197]
+
+[needs]
+# Obtained by the driver, never entered in configuration.
+secrets = []
+vars = []
+options = ["host"]
+
+[origin]
+reused = ""
+author = "agent"
+
+[[fixture]]
+file = "fixtures/info.json"
+
+[[fixture]]
+file = "fixtures/paired.json"

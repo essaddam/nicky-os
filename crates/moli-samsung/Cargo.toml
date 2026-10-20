@@ -1,0 +1,30 @@
+[package]
+name = "moli-samsung"
+description = "Moli OS local Samsung Tizen driver, pinned WebSocket and UPnP audio."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+futures.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+moli-core.workspace = true
+moli-i18n.workspace = true
+moli-net.workspace = true
+moli-runtime.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+rcgen = "0.14"
+ring.workspace = true
+rustls.workspace = true
+tokio-rustls.workspace = true
+tokio-util.workspace = true
+
+[lints]
+workspace = true

@@ -27,6 +27,7 @@ moli-net = { path = "crates/moli-net" }
 moli-netatmo = { path = "crates/moli-netatmo" }
 moli-reolink = { path = "crates/moli-reolink" }
 moli-sonos = { path = "crates/moli-sonos" }
+moli-samsung = { path = "crates/moli-samsung" }
 moli-bambu = { path = "crates/moli-bambu" }
 moli-frigate = { path = "crates/moli-frigate" }
 moli-philips = { path = "crates/moli-philips" }
