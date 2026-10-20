@@ -1,0 +1,864 @@
+{
+  "items": [
+    {
+      "key": {
+        "source": "fixture",
+        "id": "film-2001"
+      },
+      "kind": "movie",
+      "title": "Horizon de papier",
+      "year": 2001,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "netflix",
+          "namespace": "fixture.netflix",
+          "id": "fx-provider-film-2001",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "film-2001",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "film-2001",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "film-2021"
+      },
+      "kind": "movie",
+      "title": "Horizon de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "primevideo",
+          "namespace": "fixture.primevideo",
+          "id": "fx-provider-film-2021",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "film-2021",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "film-2021",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "series"
+      },
+      "kind": "series",
+      "title": "Horizon de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "crunchyroll",
+          "namespace": "fixture.crunchyroll",
+          "id": "fx-provider-series",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "series",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "series",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "season-2"
+      },
+      "kind": "season",
+      "title": "Saison de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": {
+        "source": "fixture",
+        "id": "series"
+      },
+      "season": null,
+      "channel": null,
+      "season_number": 2,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "crunchyroll",
+          "namespace": "fixture.crunchyroll",
+          "id": "fx-provider-season-2",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "season-2",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "season-2",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "episode-4"
+      },
+      "kind": "episode",
+      "title": "Les îles de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": {
+        "source": "fixture",
+        "id": "series"
+      },
+      "season": {
+        "source": "fixture",
+        "id": "season-2"
+      },
+      "channel": null,
+      "season_number": 2,
+      "episode_number": 4,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "crunchyroll",
+          "namespace": "fixture.crunchyroll",
+          "id": "fx-provider-episode-4",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "episode-4",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "episode-4",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "special"
+      },
+      "kind": "episode",
+      "title": "L'atelier de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": {
+        "source": "fixture",
+        "id": "series"
+      },
+      "season": {
+        "source": "fixture",
+        "id": "season-2"
+      },
+      "channel": null,
+      "season_number": 2,
+      "episode_number": 0,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "crunchyroll",
+          "namespace": "fixture.crunchyroll",
+          "id": "fx-provider-special",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "special",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "special",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "channel"
+      },
+      "kind": "channel",
+      "title": "Chaîne de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": "12",
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "freetv",
+          "namespace": "fixture.freetv",
+          "id": "fx-provider-channel",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "channel",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "channel",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "broadcast"
+      },
+      "kind": "broadcast",
+      "title": "Le journal de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": {
+        "source": "fixture",
+        "id": "channel"
+      },
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "freetv",
+          "namespace": "fixture.freetv",
+          "id": "fx-provider-broadcast",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "broadcast",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "broadcast",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "portal"
+      },
+      "kind": "replay_portal",
+      "title": "Portail de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "freetv",
+          "namespace": "fixture.freetv",
+          "id": "fx-provider-portal",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "portal",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "portal",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "collection"
+      },
+      "kind": "replay_collection",
+      "title": "Collection de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "freetv",
+          "namespace": "fixture.freetv",
+          "id": "fx-provider-collection",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "collection",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "collection",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "replay"
+      },
+      "kind": "replay_program",
+      "title": "Retour de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": {
+        "source": "fixture",
+        "id": "channel"
+      },
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "freetv",
+          "namespace": "fixture.freetv",
+          "id": "fx-provider-replay",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "replay",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "replay",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "disney-movie"
+      },
+      "kind": "movie",
+      "title": "Le jardin de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "disneyplus",
+          "namespace": "fixture.disneyplus",
+          "id": "fx-provider-disney-movie",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "disney-movie",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "disney-movie",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "molotov-movie"
+      },
+      "kind": "movie",
+      "title": "Le bateau de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": null,
+      "episode_number": null,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "molotov",
+          "namespace": "fixture.molotov",
+          "id": "fx-provider-molotov-movie",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "molotov-movie",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "molotov-movie",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "key": {
+        "source": "fixture",
+        "id": "apple-episode"
+      },
+      "kind": "episode",
+      "title": "L'oiseau de papier",
+      "year": 2021,
+      "metadata_language": "fr-FR",
+      "series": null,
+      "season": null,
+      "channel": null,
+      "season_number": 1,
+      "episode_number": 1,
+      "channel_number": null,
+      "summary": null,
+      "image": null,
+      "provider_refs": [
+        {
+          "provider": "appletv",
+          "namespace": "fixture.appletv",
+          "id": "fx-provider-apple-episode",
+          "provenance": {
+            "source": "fixture",
+            "record_id": "apple-episode",
+            "evidence_url": null,
+            "freshness": {
+              "fetched_at": 900,
+              "upstream_updated_at": null,
+              "freshness_until": 2000
+            }
+          }
+        }
+      ],
+      "provenance": {
+        "source": "fixture",
+        "record_id": "apple-episode",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    }
+  ],
+  "offers": [
+    {
+      "id": "fx-offer-netflix",
+      "content": {
+        "source": "fixture",
+        "id": "film-2001"
+      },
+      "provider": "netflix",
+      "country": "FR",
+      "mode": "subscription",
+      "plan": null,
+      "starts_at": null,
+      "expires_at": null,
+      "entitlement": "unknown",
+      "provenance": {
+        "source": "fixture",
+        "record_id": "offer-netflix",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "id": "fx-offer-crunchyroll",
+      "content": {
+        "source": "fixture",
+        "id": "episode-4"
+      },
+      "provider": "crunchyroll",
+      "country": "FR",
+      "mode": "subscription",
+      "plan": null,
+      "starts_at": null,
+      "expires_at": null,
+      "entitlement": "unknown",
+      "provenance": {
+        "source": "fixture",
+        "record_id": "offer-crunchyroll",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "id": "fx-offer-freetv",
+      "content": {
+        "source": "fixture",
+        "id": "channel"
+      },
+      "provider": "freetv",
+      "country": "FR",
+      "mode": "subscription",
+      "plan": null,
+      "starts_at": null,
+      "expires_at": null,
+      "entitlement": "unknown",
+      "provenance": {
+        "source": "fixture",
+        "record_id": "offer-freetv",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "id": "fx-offer-primevideo",
+      "content": {
+        "source": "fixture",
+        "id": "film-2021"
+      },
+      "provider": "primevideo",
+      "country": "FR",
+      "mode": "subscription",
+      "plan": null,
+      "starts_at": null,
+      "expires_at": null,
+      "entitlement": "unknown",
+      "provenance": {
+        "source": "fixture",
+        "record_id": "offer-primevideo",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "id": "fx-offer-disneyplus",
+      "content": {
+        "source": "fixture",
+        "id": "disney-movie"
+      },
+      "provider": "disneyplus",
+      "country": "FR",
+      "mode": "subscription",
+      "plan": null,
+      "starts_at": null,
+      "expires_at": null,
+      "entitlement": "unknown",
+      "provenance": {
+        "source": "fixture",
+        "record_id": "offer-disneyplus",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "id": "fx-offer-molotov",
+      "content": {
+        "source": "fixture",
+        "id": "molotov-movie"
+      },
+      "provider": "molotov",
+      "country": "FR",
+      "mode": "subscription",
+      "plan": null,
+      "starts_at": null,
+      "expires_at": null,
+      "entitlement": "unknown",
+      "provenance": {
+        "source": "fixture",
+        "record_id": "offer-molotov",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    },
+    {
+      "id": "fx-offer-appletv",
+      "content": {
+        "source": "fixture",
+        "id": "apple-episode"
+      },
+      "provider": "appletv",
+      "country": "FR",
+      "mode": "subscription",
+      "plan": null,
+      "starts_at": null,
+      "expires_at": null,
+      "entitlement": "unknown",
+      "provenance": {
+        "source": "fixture",
+        "record_id": "offer-appletv",
+        "evidence_url": null,
+        "freshness": {
+          "fetched_at": 900,
+          "upstream_updated_at": null,
+          "freshness_until": 2000
+        }
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source": "fixture",
+      "provider": "netflix",
+      "outcome": "available"
+    },
+    {
+      "source": "fixture",
+      "provider": "crunchyroll",
+      "outcome": "available"
+    },
+    {
+      "source": "fixture",
+      "provider": "freetv",
+      "outcome": "available"
+    },
+    {
+      "source": "fixture",
+      "provider": "primevideo",
+      "outcome": "available"
+    },
+    {
+      "source": "fixture",
+      "provider": "disneyplus",
+      "outcome": "available"
+    },
+    {
+      "source": "fixture",
+      "provider": "molotov",
+      "outcome": "available"
+    },
+    {
+      "source": "fixture",
+      "provider": "appletv",
+      "outcome": "available"
+    }
+  ],
+  "next_cursor": null,
+  "truncated": false
+}

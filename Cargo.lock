@@ -1602,6 +1602,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-media-catalog"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "moli-moonraker"
 version = "0.1.0"
 dependencies = [
