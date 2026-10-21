@@ -192,7 +192,7 @@ fixtures/*}`, `docs/components/pilotes.md`, documentation de contrat OpenAPI.
   ports, étapes humaines et restrictions par service, sans donnée de maison.
 - [x] Expliquer comment récupérer un lien de titre/épisode/replay et un ID interne
   Free TV ; ne pas figer de catalogue de chaînes ou de correspondance personnelle.
-- [ ] Exécuter le contrôle complet natif une seule fois au tour de fusion,
+- [x] Exécuter le contrôle complet natif une seule fois au tour de fusion,
   après approbation ; relever les résultats et les éventuelles exclusions.
 - [x] Relever séparément `npm test`, `npm run build` et i18n pour l'interface,
   ainsi que le périmètre exact du contrôle de fuites (liste privée disponible ou non).
@@ -210,7 +210,7 @@ Implémentation des six étapes prête pour revue dans ce worktree : résolveur
 partagé, identité RSA/Polo, transports suivis, pilote et coffre, routes HTTP,
 interface traduite, câblage binaire et paquet de catalogue.
 
-Validation native Rust 1.99.1 avec deux jobs : fmt et Clippy workspace stricts
+Validation ciblée avant le rebase final, Rust 1.99.1 avec deux jobs : fmt et Clippy workspace stricts
 verts ; 218 tests ciblés réussis, aucun échec : bibliothèque Android TV 41,
 pilote 31, API 66 (dont 20 HTTP), cibles partagées 13, binaire 13, Philips 5,
 runtime 49 (unitaires, hub et doctest). Les tests couvrent aussi la persistance
@@ -218,7 +218,7 @@ acceptée avant redémarrage et l’ouverture native des sept applications.
 Le client HTTP de test accepte un reset TCP après réception d’une réponse
 complète avec Content-Length ; une réponse tronquée ne passe pas.
 
-Web : 28 tests, build et traductions verts ; saisie/effacement du code,
+Web après rebase : 35 tests, build et traductions verts ; saisie/effacement du code,
 annulation pendant vérification et favoris vérifiés dans le navigateur sur
 réponses simulées. Aucun test sur téléviseur réel. Molotov précis et liens
 non qualifiés restent explicitement limités. Recherche transverse suivie
@@ -236,6 +236,15 @@ strictement corrélé à cette opération, conserve la connexion et ne se rejoue
 pas ; faux identifiant/source/namespace, statuts incomplets et erreurs
 restent distincts. Aucun changement du chemin Philips.
 
-Le contrôle complet natif reste à faire une seule fois au tour de fusion,
-après approbation. Les procédures historiques de collecteurs, octrois et
-manifestes ont été remplacées par les décisions natives du propriétaire.
+Après approbation et rebase sur `main` incluant Chaleur, contrôle complet
+natif exécuté une seule fois sur les sources finales : fmt, Clippy workspace
+strict, 1 143 tests Rust réussis, aucun échec ni test ignoré. Seuls les quatre
+tests `moli-profile` de bind Linux sont filtrés ; D13 et le test invité HTTP
+sont inclus. Catalogue : 38 paquets conformes, six avertissements préexistants.
+Fuites : motifs génériques propres, aucune liste privée disponible. Le client
+HTTP corrigé et le fsync coffre de `main` sont conservés ; les fabriques de
+pilotes découpées reçoivent Android TV à sa place alphabétique.
+
+Les procédures historiques de collecteurs, octrois et manifestes ont été
+remplacées par les décisions natives du propriétaire. Aucune qualification
+sur téléviseur réel ni publication distante.
