@@ -1899,3 +1899,6 @@ async fn reservations_ics_owner_reads_the_binding_needed_to_preserve_it_when_edi
     );
     let _ = std::fs::remove_dir_all(&house.dir);
 }
+
+#[path = "http/guest_policy.rs"]
+mod guest_policy;

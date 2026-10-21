@@ -785,7 +785,17 @@ pub(crate) fn window_ms(hours: f64) -> u64 {
 pub(crate) struct HomeFile(pub(crate) Option<std::path::PathBuf>);
 
 /// The dashboard layout; `{}` (automatic layout) when there is none.
-pub(crate) async fn home(Extension(HomeFile(path)): Extension<HomeFile>) -> Response {
+pub(crate) async fn home(
+    Extension(HomeFile(path)): Extension<HomeFile>,
+    caller: Caller,
+) -> Response {
+    if caller
+        .person
+        .as_ref()
+        .is_some_and(crate::people::PersonRef::is_guest)
+    {
+        return Json(json!({})).into_response();
+    }
     let Some(path) = path else {
         return Json(json!({})).into_response();
     };

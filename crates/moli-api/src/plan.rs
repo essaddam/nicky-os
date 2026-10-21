@@ -382,7 +382,14 @@ impl Plan {
     }
 }
 
-pub(crate) async fn get(Extension(PlanDir(dir)): Extension<PlanDir>) -> Response {
+pub(crate) async fn get(Extension(PlanDir(dir)): Extension<PlanDir>, caller: Caller) -> Response {
+    if caller
+        .person
+        .as_ref()
+        .is_some_and(crate::people::PersonRef::is_guest)
+    {
+        return axum::Json(Plan::default()).into_response();
+    }
     let Some(dir) = dir else {
         return axum::Json(Plan::default()).into_response();
     };

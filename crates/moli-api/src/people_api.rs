@@ -109,6 +109,7 @@ pub(crate) async fn list(
             if owner {
                 v["emails"] = json!(p.emails);
                 v["rooms"] = json!(p.rooms);
+                v["starts"] = json!(p.starts);
                 v["expires"] = json!(p.expires);
                 v["reservation"] = json!(p.reservation);
                 v["macs"] = json!(p.macs);

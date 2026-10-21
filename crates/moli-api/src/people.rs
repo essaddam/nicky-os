@@ -83,6 +83,9 @@ pub(crate) struct Person {
     /// A guest's rooms (the only ones it may command).
     #[serde(default)]
     pub(crate) rooms: Vec<String>,
+    /// A guest's inclusive start (ms), independent of any calendar binding.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) starts: Option<u64>,
     /// A guest's end (ms): past it, the person may no longer sign in.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) expires: Option<u64>,
@@ -141,6 +144,10 @@ pub(crate) struct PersonRef {
     pub(crate) id: String,
     pub(crate) name: String,
     pub(crate) role: Role,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) starts: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) expires: Option<u64>,
     /// A guest's rooms.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub(crate) rooms: Vec<String>,
@@ -411,8 +418,12 @@ fn text_ok(s: &str, max: usize) -> bool {
     !s.is_empty() && s.chars().count() <= max && !s.chars().any(char::is_control)
 }
 
+fn account_active_at(person: &Person, now: u64) -> bool {
+    person.starts.is_none_or(|start| start <= now) && person.expires.is_none_or(|end| now < end)
+}
+
 fn active(p: &Person, hub: &Hub) -> bool {
-    p.expires.is_none_or(|end| now_ms() < end)
+    account_active_at(p, now_ms())
         && (p.role != Role::Guest
             || p.reservation
                 .as_ref()
@@ -454,6 +465,7 @@ impl People {
                 emails: vec![email],
                 color: None,
                 rooms: Vec::new(),
+                starts: None,
                 expires: None,
                 reservation: None,
                 macs: Vec::new(),
@@ -542,6 +554,8 @@ impl People {
             id: p.id.clone(),
             name: p.name.clone(),
             role: p.role,
+            starts: p.starts,
+            expires: p.expires,
             rooms: p.rooms.clone(),
         }
     }
@@ -601,6 +615,14 @@ impl People {
             .flatten()
     }
 
+    fn account_reference(&self, id: &str) -> Option<PersonRef> {
+        lock(&self.book)
+            .people
+            .iter()
+            .find(|person| person.id == id && account_active_at(person, now_ms()))
+            .map(Self::reference)
+    }
+
     fn find_login(&self, login: &str) -> Option<Person> {
         let login = login.trim().to_lowercase();
         lock(&self.book)
@@ -622,7 +644,7 @@ impl People {
     ) -> Result<(String, PersonRef), LoginError> {
         let person = self
             .find_login(login)
-            .filter(|person| person.expires.is_none_or(|end| now_ms() < end));
+            .filter(|person| account_active_at(person, now_ms()));
         let stored = person
             .as_ref()
             .and_then(|p| self.hub.core_secret(&password_key(&p.id)));
@@ -633,7 +655,10 @@ impl People {
         })?;
         let person = person.ok_or(LoginError::Wrong)?;
         let token = self.open_session(&person.id).await?;
-        Ok((token, Self::reference(&person)))
+        let reference = self
+            .account_reference(&person.id)
+            .ok_or(LoginError::Wrong)?;
+        Ok((token, reference))
     }
 
     async fn open_session(&self, person: &str) -> Result<String, LoginError> {
@@ -793,27 +818,36 @@ impl People {
             .invite_key()
             .map(|house| invite_digest(&house, code))
             .unwrap_or_default();
-        let found = lock(&self.book)
-            .invites
-            .iter()
-            .find(|i| !typed.is_empty() && i.code_hmac == typed && i.expires > now_ms())
-            .map(|i| i.person.clone());
+        let found = {
+            let book = lock(&self.book);
+            let now = now_ms();
+            book.invites
+                .iter()
+                .find(|invite| {
+                    !typed.is_empty() && invite.code_hmac == typed && invite.expires > now
+                })
+                .and_then(|invite| {
+                    book.people
+                        .iter()
+                        .find(|person| person.id == invite.person && account_active_at(person, now))
+                })
+                .map(|person| person.id.clone())
+        };
         guard.attempt(caller, || found.is_some()).map_err(Ok)?;
         let person = found.ok_or(Ok(LoginError::Wrong))?;
         self.set_password(&person, password).await.map_err(Err)?;
+        self.account_reference(&person)
+            .ok_or(Ok(LoginError::Wrong))?;
         self.change(move |book| {
             book.invites.retain(|i| i.code_hmac != typed);
             Ok(())
         })
         .await
         .map_err(Err)?;
-        let reference = lock(&self.book)
-            .people
-            .iter()
-            .find(|known| known.id == person)
-            .map(Self::reference)
-            .ok_or(Err(Refused::NotFound))?;
         let token = self.open_session(&person).await.map_err(Ok)?;
+        let reference = self
+            .account_reference(&person)
+            .ok_or(Ok(LoginError::Wrong))?;
         Ok((token, reference))
     }
 
@@ -825,6 +859,9 @@ impl People {
                 return Err(Refused::Invalid(moli_i18n::tr!("serveur.personnes.trop")));
             }
             email_free(book, &draft.emails, None)?;
+            let starts = draft.starts.apply(None);
+            let expires = draft.expires.apply(None);
+            checked_period(starts, expires)?;
             let person = Person {
                 id: unique_id(book, &slug(&draft.name)),
                 name: draft.name,
@@ -832,10 +869,11 @@ impl People {
                 emails: draft.emails,
                 color: draft.color,
                 rooms: draft.rooms,
-                expires: draft.expires,
+                starts,
+                expires,
                 reservation: match draft.reservation {
-                    ReservationChange::Keep => None,
-                    ReservationChange::Set(binding) => binding,
+                    FieldChange::Keep => None,
+                    FieldChange::Set(binding) => binding,
                 },
                 macs: draft.macs,
                 created: now_ms(),
@@ -865,13 +903,17 @@ impl People {
                 if p.role == Role::Owner && draft.role != Role::Owner && owners_left == 0 {
                     return Err(Refused::LastOwner);
                 }
+                let starts = draft.starts.apply(p.starts);
+                let expires = draft.expires.apply(p.expires);
+                checked_period(starts, expires)?;
                 p.name = draft.name;
                 p.role = draft.role;
                 p.emails = draft.emails;
                 p.color = draft.color;
                 p.rooms = draft.rooms;
-                p.expires = draft.expires;
-                if let ReservationChange::Set(binding) = draft.reservation {
+                p.starts = starts;
+                p.expires = expires;
+                if let FieldChange::Set(binding) = draft.reservation {
                     p.reservation = binding;
                 }
                 p.macs = draft.macs;
@@ -977,24 +1019,49 @@ pub(crate) struct Draft {
     #[serde(default)]
     pub(crate) rooms: Vec<String>,
     #[serde(default)]
-    pub(crate) expires: Option<u64>,
+    pub(crate) starts: FieldChange<u64>,
     #[serde(default)]
-    pub(crate) reservation: ReservationChange,
+    pub(crate) expires: FieldChange<u64>,
+    #[serde(default)]
+    pub(crate) reservation: FieldChange<moli_runtime::ReservationRef>,
     #[serde(default)]
     pub(crate) macs: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default)]
-pub(crate) enum ReservationChange {
+pub(crate) enum FieldChange<T> {
     #[default]
     Keep,
-    Set(Option<moli_runtime::ReservationRef>),
+    Set(Option<T>),
+}
+impl<T> FieldChange<T> {
+    fn apply(self, previous: Option<T>) -> Option<T> {
+        match self {
+            Self::Keep => previous,
+            Self::Set(value) => value,
+        }
+    }
+}
+impl<'de, T: Deserialize<'de>> Deserialize<'de> for FieldChange<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Option::<T>::deserialize(deserializer).map(Self::Set)
+    }
 }
 
-impl<'de> Deserialize<'de> for ReservationChange {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Option::<moli_runtime::ReservationRef>::deserialize(deserializer).map(Self::Set)
+fn checked_period(starts: Option<u64>, expires: Option<u64>) -> Result<(), Refused> {
+    let bad_order = starts.zip(expires).is_some_and(|(start, end)| start >= end);
+    let invalid_time = starts.into_iter().chain(expires).any(|value| {
+        i64::try_from(value)
+            .ok()
+            .and_then(|value| jiff::Timestamp::from_millisecond(value).ok())
+            .is_none()
+    });
+    if bad_order || invalid_time {
+        return Err(Refused::Invalid(moli_i18n::tr!(
+            "serveur.personnes.periode_invalide"
+        )));
     }
+    Ok(())
 }
 
 impl Draft {
@@ -1044,10 +1111,10 @@ impl Draft {
         }
         if self.role != Role::Guest {
             self.rooms.clear();
-            self.expires = None;
-            self.reservation = ReservationChange::Set(None);
-        } else if matches!(&self.reservation, ReservationChange::Set(Some(binding)) if !binding.valid())
-        {
+            self.starts = FieldChange::Set(None);
+            self.expires = FieldChange::Set(None);
+            self.reservation = FieldChange::Set(None);
+        } else if matches!(&self.reservation, FieldChange::Set(Some(binding)) if !binding.valid()) {
             return bad("reservation");
         }
         Ok(self)
@@ -1096,8 +1163,9 @@ mod tests {
             emails: Vec::new(),
             color: None,
             rooms: Vec::new(),
-            expires: None,
-            reservation: ReservationChange::Keep,
+            starts: FieldChange::Keep,
+            expires: FieldChange::Keep,
+            reservation: FieldChange::Keep,
             macs: Vec::new(),
         }
     }
@@ -1192,7 +1260,7 @@ mod tests {
         let guard = Sessions::new(hub.clone(), None, &[]);
         let p = People::open(hub, None, &[]);
         let mut d = draft("Invité", Role::Guest);
-        d.expires = Some(1);
+        d.expires = FieldChange::Set(Some(1));
         let g = p.create(d).await.unwrap();
         p.set_password(&g.id, "un mot de passe long")
             .await
@@ -1277,5 +1345,39 @@ mod tests {
         let kept = std::fs::read_to_string(dir.join(FILE)).unwrap();
         assert!(!kept.contains("code_sha256"), "{kept}");
         let _ = std::fs::remove_dir_all(&dir);
+    }
+}
+
+#[cfg(test)]
+mod guest_starts_tests {
+    use super::*;
+    use serde_json::json;
+    fn visitor() -> Person {
+        serde_json::from_value(json!({"id":"visitor","name":"Synthetic guest","role":"guest","starts":1000,"expires":2000})).unwrap()
+    }
+    #[test]
+    fn guest_starts_is_inclusive_and_expiry_is_exclusive() {
+        let guest = visitor();
+        for (now, allowed) in [
+            (0, false),
+            (999, false),
+            (1000, true),
+            (1999, true),
+            (2000, false),
+            (u64::MAX, false),
+        ] {
+            assert_eq!(account_active_at(&guest, now), allowed, "timestamp {now}");
+        }
+    }
+    #[test]
+    fn optional_bounds_and_largest_timestamps_do_not_overflow() {
+        let mut guest = visitor();
+        guest.starts = None;
+        guest.expires = None;
+        assert!(account_active_at(&guest, 0));
+        assert!(account_active_at(&guest, u64::MAX));
+        guest.starts = Some(u64::MAX);
+        assert!(!account_active_at(&guest, u64::MAX - 1));
+        assert!(account_active_at(&guest, u64::MAX));
     }
 }

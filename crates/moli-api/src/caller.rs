@@ -79,7 +79,6 @@ fn guest_allowed(method: &Method, path: &str) -> bool {
                     | "/api/plan"
             )
             || (path.starts_with("/api/devices/") && !path.ends_with("/snapshot"))
-            || path.starts_with("/api/plan/images/")
             || path.starts_with("/api/weather/");
     }
     matches!(path, "/api/command" | "/api/ambiance" | "/api/session")
