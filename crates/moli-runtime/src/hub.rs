@@ -2048,6 +2048,23 @@ impl Hub {
             {
                 return;
             }
+            // A number observed under the previous unit is not a measurement
+            // under this descriptor, even before any calculation indexes it.
+            // Invalidate at the model boundary, without tracking dormant sources
+            // or renewing their age. No unit conversion can recover provenance.
+            let changed_units: Vec<_> = device
+                .points
+                .iter()
+                .filter(|point| {
+                    point.kind.uses_state_cache()
+                        && model
+                            .devices
+                            .get(&device.id)
+                            .and_then(|before| before.point(&point.key))
+                            .is_some_and(|before| before.unit != point.unit)
+                })
+                .map(|point| point.key.clone())
+                .collect();
             // Claim cached values for the points this definition declares.
             // The rest stays cached: a device first published without its
             // definition (interview in progress) must not lose its history.
@@ -2059,6 +2076,23 @@ impl Hub {
                     .is_some_and(|point| point.kind.uses_state_cache())
             });
             let mut restored = Vec::new();
+            for key in changed_units {
+                let discarded = cached.remove(&key).is_some();
+                if let Some(sample) = states.get_mut(&key) {
+                    if sample.value != Value::Null {
+                        sample.value = Value::Null;
+                        restored.push(Event::State {
+                            point: PointId::new(&device.id, &key),
+                            value: Value::Null,
+                            ts: now_ms(),
+                            source_ts: Some(sample.ts),
+                        });
+                    }
+                    self.0.state_dirty.store(true, Ordering::Release);
+                } else if discarded {
+                    self.0.state_dirty.store(true, Ordering::Release);
+                }
+            }
             for point in &device.points {
                 if !point.kind.uses_state_cache() {
                     if cached.remove(&point.key).is_some() {

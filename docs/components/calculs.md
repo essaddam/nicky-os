@@ -30,7 +30,12 @@ mesure. Une source calculée doit posséder un courant validé. Après publicati
 chaque lecture vérifie encore description, type et unité : une source supprimée ou
 devenue incompatible est exclue. Un changement d’unité ne réinterprète pas une ancienne
 observation, même avec des unités convertibles : une nouvelle observation dans la
-nouvelle unité est nécessaire.
+nouvelle unité est nécessaire. L’invalidation est faite sous le verrou du modèle du
+hub dès le changement de description, avant même le premier calcul ou l’ajout de
+cette source à un calcul existant. L’ancien échantillon devient indisponible, garde
+son horodatage d’origine et ne peut pas renaître si l’unité revient ensuite à sa
+valeur précédente. Les abonnés reçoivent cette indisponibilité ; une modification
+de nom à unité inchangée ne retire pas une mesure valide.
 
 Sont ignorés les points absents, les échantillons absents/nuls/non numériques/non
 finis, les sources explicitement hors ligne et les observations arrivées à leur

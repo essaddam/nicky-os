@@ -425,3 +425,111 @@ async fn auto_k1_draft_writer_cannot_block_current_projection_or_expiration() {
     drop(hub);
     std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
 }
+
+async fn unindexed_unit_change(already_active: bool, refresh: bool) -> Value {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    if already_active {
+        source(&hub, "unrelated", 10.0);
+        let unrelated = define(&hub, "already_active", spec(&["fixture:unrelated/value"])).await;
+        approve(&hub, &unrelated).await.unwrap();
+    }
+    let id = DeviceId::from("fixture:late_source");
+    let numeric = Kind::Numeric {
+        min: None,
+        max: None,
+        step: None,
+    };
+    hub.upsert_device(device(id.clone(), numeric.clone(), Some(Unit::WattHour)));
+    hub.set_state(&id, "value", Value::Float(1000.0));
+    // A compatible conversion does not prove the old observation's new unit.
+    hub.upsert_device(device(id.clone(), numeric, Some(Unit::KiloWattHour)));
+    if refresh {
+        hub.set_state(&id, "value", Value::Float(1.0));
+    }
+    let mut definition = spec(&["fixture:late_source/value"]);
+    definition.unit = Some(Unit::WattHour);
+    definition.max_age_s = 60;
+    let reference = define(&hub, "late", definition).await;
+    approve(&hub, &reference).await.unwrap();
+    value(&hub, &reference)
+}
+#[tokio::test]
+async fn auto_k1_r1_unit_change_before_first_calculation_requires_a_new_measurement() {
+    assert_eq!(
+        unindexed_unit_change(false, true).await,
+        Value::Float(1000.0),
+        "new measurement control"
+    );
+    assert_eq!(
+        unindexed_unit_change(false, false).await,
+        Value::Null,
+        "unit metadata before any calculation must invalidate the old number"
+    );
+}
+#[tokio::test]
+async fn auto_k1_r1_unit_change_of_not_yet_indexed_source_requires_a_new_measurement() {
+    assert_eq!(
+        unindexed_unit_change(true, true).await,
+        Value::Float(1000.0),
+        "new measurement control"
+    );
+    assert_eq!(
+        unindexed_unit_change(true, false).await,
+        Value::Null,
+        "adding a previously untracked source must not relabel its old number"
+    );
+}
+
+#[tokio::test]
+async fn auto_k1_r1_unit_invalidation_preserves_age_and_same_unit_metadata_keeps_value() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let id = DeviceId::from("fixture:source");
+    let numeric = Kind::Numeric {
+        min: None,
+        max: None,
+        step: None,
+    };
+    let original = device(id.clone(), numeric.clone(), Some(Unit::WattHour));
+    hub.upsert_device(original.clone());
+    hub.set_state(&id, "value", Value::Float(1000.0));
+    let point = PointId::new(&id, "value");
+    let before = hub.state(&point).unwrap();
+    let mut renamed = original.clone();
+    renamed.native_name = "Renamed synthetic source".into();
+    hub.upsert_device(renamed);
+    assert_eq!(
+        hub.state(&point).unwrap(),
+        before,
+        "same-unit labels do not invalidate measurements"
+    );
+    let mut events = hub.subscribe();
+    hub.upsert_device(device(id.clone(), numeric, Some(Unit::KiloWattHour)));
+    let invalid = hub.state(&point).unwrap();
+    assert_eq!(invalid.value, Value::Null);
+    assert_eq!(invalid.ts, before.ts, "metadata is not a new observation");
+    let mut found = false;
+    while let Ok(event) = events.try_recv() {
+        if let Event::State {
+            point: p,
+            value: Value::Null,
+            ts,
+            source_ts,
+        } = event
+            && p == point
+        {
+            assert_eq!(source_ts, Some(before.ts));
+            assert!(ts >= before.ts);
+            found = true;
+        }
+    }
+    assert!(
+        found,
+        "subscribers must also stop displaying the old number in the new unit"
+    );
+    hub.upsert_device(original);
+    assert_eq!(
+        hub.state(&point).unwrap().value,
+        Value::Null,
+        "changing back cannot resurrect the number"
+    );
+}

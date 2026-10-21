@@ -303,3 +303,8 @@ Ce lot étend le propriétaire de versions d’AUTO-H5 et sa validation PIN, ave
 des sources exécutables et consommateurs transitifs. Un agent édite un brouillon
 inerte ; la version courante validée seule produit des valeurs. Le correctif H5
 préservant la file de State consommés reste repris sans rechargement anticipé.
+
+Le contrat de provenance des unités des agrégats inclut les mesures reçues avant
+l’activation du premier calcul et les sources pas encore indexées : un changement
+d’unité les rend indisponibles dans le modèle du hub jusqu’à une vraie nouvelle
+mesure, sans renouveler leur âge. Voir [les points calculés](calculs.md).
