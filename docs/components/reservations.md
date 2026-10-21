@@ -69,7 +69,9 @@ le retrait de file, l’attente du transport et une approbation humaine en atten
 contournent pas la fermeture de la fenêtre. Les luminaires composés transmettent cette
 autorisation à leurs seuls membres déclarés, en vérifiant toujours le droit sur le
 luminaire parent ; la reprise différée après remise sous tension conserve ce droit.
-Après l’émission, le suivi du résultat et le
+Un transport détaché conserve le point et la même politique dans son `SendPermit` ;
+`wanted()` et `begin_send()` la revérifient avant tout premier envoi, même si la
+tâche du pilote n’a pas encore repris. Après l’émission, le suivi du résultat et le
 journal demeurent indépendants de la survie de l’appelant.
 
 ## Coordination facultative avec une serrure

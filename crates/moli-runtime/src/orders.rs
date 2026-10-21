@@ -391,6 +391,7 @@ mod tests {
                 request_id: None,
                 correlation: None,
             },
+            permit: None,
             reply: Arc::new(std::sync::Mutex::new(Some(tx))),
             claim: Arc::new(AtomicU8::new(Claim::TAKEN)),
         };

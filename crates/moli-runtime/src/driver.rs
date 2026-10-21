@@ -110,6 +110,8 @@ impl Claim {
 /// A command's live authorization, retained by its network task until emission.
 #[derive(Clone, Debug)]
 pub struct SendPermit {
+    point: PointId,
+    permit: Option<CommandPermit>,
     reply: CommandReply,
     claim: Arc<AtomicU8>,
     deadline: Instant,
@@ -119,14 +121,13 @@ pub struct SendPermit {
 impl SendPermit {
     #[must_use]
     pub fn wanted(&self) -> bool {
-        Instant::now() < self.deadline
-            && self.claim.load(Ordering::Acquire) != Claim::LEFT
-            && self
-                .reply
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .as_ref()
-                .is_some_and(|reply| !reply.is_closed())
+        command_wanted(
+            &self.reply,
+            &self.claim,
+            self.deadline,
+            &self.point,
+            self.permit.as_ref(),
+        )
     }
 
     /// Conservative emission boundary: no await may separate this from
@@ -151,6 +152,25 @@ impl SendPermit {
     }
 }
 
+// Both the driver's request and its detached transport enforce the same
+// live policy, caller lifetime and deadline without an extra allocation.
+fn command_wanted(
+    reply: &CommandReply,
+    claim: &AtomicU8,
+    deadline: Instant,
+    point: &PointId,
+    permit: Option<&CommandPermit>,
+) -> bool {
+    Instant::now() < deadline
+        && claim.load(Ordering::Acquire) != Claim::LEFT
+        && permit.is_none_or(|permit| permit.allows(point))
+        && reply
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .as_ref()
+            .is_some_and(|reply| !reply.is_closed())
+}
+
 impl CommandRequest {
     /// Nobody waits for the answer any more: the hub timed out, or the
     /// caller gave up. A driver checks it right before each step that sends
@@ -158,22 +178,21 @@ impl CommandRequest {
     /// it left must not leave.
     #[must_use]
     pub fn abandoned(&self) -> bool {
-        self.permit
-            .as_ref()
-            .is_some_and(|permit| !permit.allows(&self.point))
-            || self.reply
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .as_ref()
-            .is_none_or(oneshot::Sender::is_closed)
-            || Instant::now() >= self.deadline
-            || self.claim.load(Ordering::Acquire) == Claim::LEFT
+        !command_wanted(
+            &self.reply,
+            &self.claim,
+            self.deadline,
+            &self.point,
+            self.permit.as_ref(),
+        )
     }
 
     /// Authorization bounded by an earlier deadline chosen by the driver.
     #[must_use]
     pub fn send_permit(&self, deadline: Instant) -> SendPermit {
         SendPermit {
+            point: self.point.clone(),
+            permit: self.permit.clone(),
             reply: Arc::clone(&self.reply),
             claim: Arc::clone(&self.claim),
             deadline: deadline.min(self.deadline),
@@ -738,7 +757,7 @@ mod member_permission_tests {
                 correlation: None,
             },
             permit: Some(permit),
-            reply,
+            reply: Arc::new(std::sync::Mutex::new(Some(reply))),
             claim: Arc::new(AtomicU8::new(Claim::TAKEN)),
         };
         let child = command.member_permit().unwrap();
@@ -750,3 +769,7 @@ mod member_permission_tests {
         assert!(!child.allows(&"physical:member/on".into()));
     }
 }
+
+#[cfg(test)]
+#[path = "driver/send_permission_tests.rs"]
+mod send_permission_tests;
