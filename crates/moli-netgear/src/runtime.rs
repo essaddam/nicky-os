@@ -114,6 +114,10 @@ async fn timed_cycle(
 }
 pub(crate) async fn run(config: &Config, ctx: &mut DriverCtx) -> anyhow::Result<()> {
     let mut state = Published::new(ctx);
+    if let Err(error) = state.reconcile(&config.selected) {
+        waiting(state.ctx, error).await;
+        return Ok(());
+    }
     let prepared = tokio::select! {biased;()=state.ctx.cancelled()=>return Ok(()),result=prepare(config,state.ctx)=>result};
     let (wire, username, password, identity) = match prepared {
         Ok(value) => value,
@@ -171,6 +175,10 @@ pub(crate) async fn run(config: &Config, ctx: &mut DriverCtx) -> anyhow::Result<
             .identity
             .as_deref()
             .ok_or_else(|| anyhow::anyhow!(message(Failure::Identity)))?;
+        if let Err(error) = state.admit_router(identity) {
+            waiting(state.ctx, error).await;
+            return Ok(());
+        }
         if !persisted {
             let result = tokio::select! {biased;()=state.ctx.cancelled()=>return Ok(()),result=state.ctx.store_secret("device_identity",identity)=>result};
             if result.is_err() {
@@ -179,7 +187,10 @@ pub(crate) async fn run(config: &Config, ctx: &mut DriverCtx) -> anyhow::Result<
             }
             persisted = true;
         }
-        state.apply(identity, &config.selected, reads);
+        if let Err(error) = state.apply(identity, &config.selected, reads) {
+            waiting(state.ctx, error).await;
+            return Ok(());
+        }
         state.ctx.ready();
         let finished = Instant::now();
         if info_due {

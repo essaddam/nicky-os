@@ -117,3 +117,6 @@ mod runtime_tests;
 
 #[cfg(test)]
 mod tls_tests;
+
+#[cfg(test)]
+mod publication_tests;

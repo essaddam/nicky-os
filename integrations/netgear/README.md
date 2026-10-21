@@ -35,6 +35,10 @@ Les connexions ne suivent ni redirection ni adresse reçue dans un document.
 - Sélection humaine de 32 clients au plus, vide par défaut (aucune lecture d’inventaire). Les appareils sélectionnés
   ne sont créés que lorsqu'un inventaire valide les observe. Une absence n'est pas une
   déconnexion prouvée : leurs mesures deviennent inconnues, jamais `associated=false`.
+  Après reprise, les clés déclarées ou en cache sont conservées avec `Null` si manquantes.
+  Une capacité jamais observée n'est pas créée. Modifier la sélection retire les définitions
+  désélectionnées du registre publié, même avec un inventaire vide ; étiquettes et historique
+  restent conservés. Une autre identité routeur ou un cache incompatible bloque la publication.
 - Type de lien selon une liste fermée. Le signal reste brut sans unité inventée ; les
   débits nus (`866`, `1000`) ne prouvent pas une unité. Seul un débit explicitement
   marqué `Mbit/s` peut devenir une mesure de débit de lien.
@@ -67,7 +71,8 @@ Un seul relogin par cycle, puis attente humaine sur refus ; aucun retry de login
 Mesures 60 s, inventaire 300 s, informations 3600 s ; plancher 30 s et aucun rattrapage.
 Arrêt annulable, aucune tâche si l'instance est absente/désactivée. Points en lecture
 seule ; valeurs identiques sans événement d'état. Maximum contractuel 144 points
-(16 équipement + 4 par client), le sous-ensemble qualifié ici reste inférieur.
+(16 équipement + 4 par client) dans le registre publié ; le sous-ensemble implémenté
+reste à 101 (5 + 32 × 3), y compris après remplacements disjoints et reprises.
 
 ## Reste à qualifier
 

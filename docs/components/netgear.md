@@ -29,7 +29,14 @@ vérification d'identité à chaque authentification. Délais après achèvement
 Un échange en vol, 1 Mio/5 s, un cycle 30 s/16 échanges, un seul relogin. Sessions/cookies
 locaux et en mémoire (8/4 Kio). XML borné et strict, DTD et entités externes interdits.
 Sélection <=32, inventaire <=512 ; budget contractuel 144 points maximum, sous-ensemble
-qualifié inférieur ici. Valeurs identiques via `set_state`, sans événement d'état ajouté.
+qualifié limité à 101 ici (5 routeur + 3 × 32 clients). Ce plafond porte sur le registre
+publié, même après plusieurs changements de sélection. Au démarrage, la sélection humaine
+retire les définitions des clients désélectionnés ; une absence à l'inventaire ne les retire
+jamais. Étiquettes et historique restent conservés par le hub. Les clés déjà déclarées ou
+mises en cache sont reconstituées à la reprise : une mesure manquante reste `Null`, sans
+inventer une capacité jamais observée. Une autre identité routeur ou un cache incompatible
+bloque la publication avant de mémoriser une nouvelle identité.
+Valeurs identiques via `set_state`, sans événement d'état ajouté.
 
 Les preuves sont les tests natifs `cargo test -j 2 -p moli-netgear` sur fixtures synthétiques,
 transport scripté et serveurs HTTP/TLS éphémères. Les certificats de test sont créés en

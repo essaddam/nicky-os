@@ -1,7 +1,8 @@
 //! Publication happens only after the complete cycle passed validation.
 use crate::{
-    model::{Clients, Read, Samples},
+    model::{self, Clients, Read, Samples},
     protocol::Action,
+    xml::Failure,
 };
 use moli_core::{Access, Device, Kind, PointSpec, Semantic, Unit, Value};
 use moli_runtime::DriverCtx;
@@ -17,6 +18,20 @@ pub(crate) const KEYS: [&str; 8] = [
     "link",
     "rate",
 ];
+const ROUTER_KEYS: &[&str] = &["cpu", "memory", "firmware", "ethernet", "today_connection"];
+const CLIENT_KEYS: &[&str] = &["signal", "link", "rate"];
+fn legal_keys(native: &str) -> Option<&'static [&'static str]> {
+    if native.strip_prefix("router_").is_some_and(model::identity) {
+        Some(ROUTER_KEYS)
+    } else if native
+        .strip_prefix("client_")
+        .is_some_and(|id| model::mac(id).as_deref() == Some(id))
+    {
+        Some(CLIENT_KEYS)
+    } else {
+        None
+    }
+}
 fn group(action: Action) -> &'static [&'static str] {
     match action {
         Action::Info => &["firmware"],
@@ -75,15 +90,90 @@ fn specification(key: &str) -> PointSpec {
 pub(crate) struct Published<'a> {
     pub ctx: &'a mut DriverCtx,
     points: BTreeMap<String, BTreeSet<&'static str>>,
+    defined: BTreeSet<String>,
 }
 impl<'a> Published<'a> {
     pub fn new(ctx: &'a mut DriverCtx) -> Self {
+        let points = ctx
+            .known_devices()
+            .into_iter()
+            .filter_map(|id| {
+                let (_, native) = id.as_str().split_once(':')?;
+                let legal = legal_keys(native)?;
+                let keys = ctx.known_point_keys(&id);
+                let retained: BTreeSet<_> = legal
+                    .iter()
+                    .copied()
+                    .filter(|key| keys.iter().any(|known| known.as_ref() == *key))
+                    .collect();
+                (!retained.is_empty()).then(|| (native.to_owned(), retained))
+            })
+            .collect();
         let state = Self {
             ctx,
-            points: BTreeMap::new(),
+            points,
+            defined: BTreeSet::new(),
         };
         state.offline();
         state
+    }
+    /// Only an explicit human selection retires a client, never an inventory gap.
+    pub fn reconcile(&mut self, selected: &[String]) -> Result<(), Failure> {
+        let selection: BTreeSet<&str> = selected.iter().map(String::as_str).collect();
+        if selected.len() > 32
+            || selection.len() != selected.len()
+            || selected
+                .iter()
+                .any(|id| model::mac(id).as_deref() != Some(id.as_str()))
+        {
+            return Err(Failure::Identity);
+        }
+        let known = self.ctx.known_devices();
+        let mut routers = 0;
+        // Validate the entire retained namespace before changing any definition.
+        for id in &known {
+            let (_, native) = id.as_str().split_once(':').ok_or(Failure::Identity)?;
+            let legal = legal_keys(native).ok_or(Failure::Identity)?;
+            if self
+                .ctx
+                .known_point_keys(id)
+                .iter()
+                .any(|key| !legal.contains(&key.as_ref()))
+            {
+                return Err(Failure::Identity);
+            }
+            routers += usize::from(native.starts_with("router_"));
+        }
+        if routers > 1 {
+            return Err(Failure::Identity);
+        }
+        for id in known {
+            let (_, native) = id.as_str().split_once(':').ok_or(Failure::Identity)?;
+            if let Some(client) = native.strip_prefix("client_")
+                && !selection.contains(client)
+            {
+                self.ctx.remove_device(&id);
+                self.points.remove(native);
+                self.defined.remove(native);
+            }
+        }
+        Ok(())
+    }
+    /// Check the published/cache identity before persisting a freshly observed pin.
+    pub fn admit_router(&self, identity: &str) -> Result<(), Failure> {
+        if !model::identity(identity) {
+            return Err(Failure::Identity);
+        }
+        let target = self.ctx.device_id(&format!("router_{identity}"));
+        if self.ctx.known_devices().iter().any(|id| {
+            id.as_str()
+                .split_once(':')
+                .is_some_and(|(_, native)| native.starts_with("router_"))
+                && *id != target
+        }) {
+            return Err(Failure::Identity);
+        }
+        Ok(())
     }
     pub fn offline(&self) {
         for device in self.ctx.devices() {
@@ -110,7 +200,8 @@ impl<'a> Published<'a> {
         let previous = known.len();
         known.extend(values.keys().copied());
         let device = self.ctx.device_id(native);
-        if previous != known.len() {
+        let first = self.defined.insert(native.to_owned());
+        if previous != known.len() || first {
             self.ctx.upsert_device(Device {
                 id: device.clone(),
                 instance: self.ctx.instance().clone(),
@@ -146,7 +237,9 @@ impl<'a> Published<'a> {
         identity: &str,
         selected: &[String],
         reads: Vec<(Action, Option<Read>)>,
-    ) {
+    ) -> Result<(), Failure> {
+        self.admit_router(identity)?;
+        self.reconcile(selected)?;
         let mut values = Samples::new();
         let mut refreshed = BTreeSet::new();
         let mut inventory: Option<Option<Clients>> = None;
@@ -178,6 +271,7 @@ impl<'a> Published<'a> {
                 );
             }
         }
+        Ok(())
     }
 }
 impl Drop for Published<'_> {

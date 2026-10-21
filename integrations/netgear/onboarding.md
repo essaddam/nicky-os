@@ -26,6 +26,11 @@ Le numéro de série observé est enregistré dans `device_identity` ; s'il chan
 le pilote bloque. L'humain doit vérifier le remplacement avant d'oublier l'identité stockée.
 Ne jamais publier ce numéro ni les noms/IP/MAC/SSID dans un rapport ou au dépôt public.
 Sélectionner les clients utiles par identité native, sans fusion avec le pilote présence.
+Après redémarrage, retirer un client de `selected` retire sa définition publiée, sans effacer
+ses étiquettes ni son historique. Un client encore sélectionné mais absent reste déclaré
+avec des mesures inconnues. Les capacités déjà observées sont conservées à la reprise,
+sans créer de mesure jamais observée. Le registre reste à 101 points au plus (budget 144).
+Une identité routeur ou un cache incompatible bloque la reprise avant sa publication.
 
 La qualification se fait sur une cible neutre avec un humain, hors pièces protégées.
 Comparer identité, disponibilité, CPU/mémoire et lien avec la source existante ; contrôler
@@ -48,6 +53,12 @@ certificates. HTTP requires informed human consent through `allow_plain_auth=tru
 credentials and data cross the LAN in plaintext. No silent fallback. `device_identity`
 pins the native serial number in the vault. Investigate changes before resetting a pin.
 Sessions stay in memory. Missing secrets or rejected credentials park the driver.
+After restart, removing a client from `selected` retires its published definition while
+keeping labels and history. Inventory absence alone never retires a selected client.
+Known declared/cached capabilities survive restart with missing values set to Null;
+never-observed capabilities are not created. Repeated disjoint selections stay within
+101 published points (144-point budget). A different router identity or incompatible cache
+blocks publication before a new identity is pinned.
 
 This client only reads fixed SOAP actions. It never enables Traffic Meter, changes settings,
 blocks clients or performs speed tests. Bare traffic/rate values have no qualified unit;
