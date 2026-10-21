@@ -252,3 +252,9 @@ Les destinataires et leurs lignées validées sont figés au démarrage. Une act
 ultérieure ne reçoit pas cette génération ; redémarrer le minuteur après validation
 pour l'inclure. Sans destinataire, le reçu sans effet est durable avant acquittement.
 Le contrat live-only AUTO-H4 reste inchangé.
+
+Les ordres des actions portent un permis vivant lié à l'activation et, pour une
+expiration, à sa génération. Une annulation rend abandonné un ordre encore retenu
+par le pilote avant émission ; les étapes Set/Toggle et notifications cessent leur
+attente. Les luminaires composites conservent ce permis jusqu'aux membres physiques
+et à leur continuation bornée. Un envoi de transport déjà engagé n'est pas défait.

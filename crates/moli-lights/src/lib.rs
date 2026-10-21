@@ -29,7 +29,9 @@ use moli_core::{
     Access, Device, DeviceId, Event, InstanceId, Kind, Origin, PointId, PointSpec, Semantic, Unit,
     Value,
 };
-use moli_runtime::{BoxFuture, CommandPermit, CommandRequest, Driver, DriverCtx, Hub};
+use moli_runtime::{
+    BoxFuture, CommandMetadata, CommandPermit, CommandRequest, Driver, DriverCtx, Hub,
+};
 use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
 
@@ -468,21 +470,27 @@ fn actor(fixture: &Fixture) -> String {
 
 /// Gives the bulbs their orders, the bulbs side by side. Fine if one bulb
 /// obeyed entirely; otherwise the first error.
+#[derive(Clone)]
+struct ForwardContext {
+    permit: Option<CommandPermit>,
+    metadata: CommandMetadata,
+}
+
 async fn give(
     hub: &Hub,
     fixture: &Fixture,
     keyring: &[Keys],
     plan: Vec<(usize, Vec<Setting>)>,
-    permit: Option<CommandPermit>,
+    context: ForwardContext,
 ) -> Result<(), String> {
     let actor = actor(fixture);
-    let permit = permit.as_ref();
+    let context = &context;
     let runs = plan.into_iter().map(|(i, settings)| {
         let list = orders(&fixture.bulbs[i], &keyring[i], &settings);
         let actor = actor.clone();
         async move {
             for (point, value) in list {
-                forward(hub, &point, value, actor.clone(), permit.cloned()).await?;
+                forward(hub, &point, value, actor.clone(), context.clone()).await?;
             }
             Ok::<(), String>(())
         }
@@ -502,7 +510,7 @@ async fn power(
     hub: &Hub,
     fixture: &Fixture,
     on: bool,
-    permit: Option<CommandPermit>,
+    context: ForwardContext,
 ) -> Result<(), String> {
     let Some(point) = fixture.power_point() else {
         return Ok(());
@@ -516,7 +524,7 @@ async fn power(
         .is_some_and(|s| s.text);
     let value = on_value(text, on);
     let actor = actor(fixture);
-    forward(hub, &point, value, actor, permit).await
+    forward(hub, &point, value, actor, context).await
 }
 
 async fn forward(
@@ -524,12 +532,19 @@ async fn forward(
     point: &PointId,
     value: Value,
     actor: String,
-    permit: Option<CommandPermit>,
+    context: ForwardContext,
 ) -> Result<(), String> {
-    match permit {
+    match context.permit {
         Some(permit) => {
-            hub.command_with_permit(point, value, Origin::System, Some(actor), None, permit)
-                .await
+            hub.command_correlated_with_permit(
+                point,
+                value,
+                context.metadata.origin,
+                context.metadata.actor.or(Some(actor)),
+                context.metadata.correlation,
+                permit,
+            )
+            .await
         }
         None => hub.command(point, value, Origin::System, Some(actor)).await,
     }
@@ -542,7 +557,7 @@ async fn after_power_up(
     hub: Hub,
     fixture: Fixture,
     settings: Vec<Setting>,
-    permit: Option<CommandPermit>,
+    context: ForwardContext,
 ) {
     let until = Instant::now() + COMEBACK;
     let (reading, keyring) = loop {
@@ -555,7 +570,7 @@ async fn after_power_up(
     for setting in settings {
         match plan(&reading, &setting) {
             Plan::Bulbs(orders) => {
-                if let Err(e) = give(&hub, &fixture, &keyring, orders, permit.clone()).await {
+                if let Err(e) = give(&hub, &fixture, &keyring, orders, context.clone()).await {
                     tracing::warn!(fixture = %fixture.id, error = %e, "bulbs back, not set");
                 }
             }
@@ -764,19 +779,22 @@ impl Fixtures {
             return;
         };
         let (reading, keyring) = read(&self.hub, fixture);
-        let permit = command.member_permit();
+        let context = ForwardContext {
+            permit: command.member_permit(),
+            metadata: command.metadata.clone(),
+        };
         let result = match plan(&reading, &setting) {
             Plan::Nothing => Ok(()),
-            Plan::Bulbs(orders) => give(&self.hub, fixture, &keyring, orders, permit).await,
-            Plan::PowerDown => power(&self.hub, fixture, false, permit).await,
+            Plan::Bulbs(orders) => give(&self.hub, fixture, &keyring, orders, context).await,
+            Plan::PowerDown => power(&self.hub, fixture, false, context).await,
             Plan::PowerUp(then) => {
-                let result = power(&self.hub, fixture, true, permit.clone()).await;
+                let result = power(&self.hub, fixture, true, context.clone()).await;
                 if result.is_ok() && !fixture.bulbs.is_empty() {
                     tokio::spawn(after_power_up(
                         self.hub.clone(),
                         fixture.clone(),
                         then,
-                        permit,
+                        context,
                     ));
                 }
                 result

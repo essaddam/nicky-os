@@ -126,8 +126,19 @@ génération. Aucun verrou consommateur n'est gardé pendant cette reprise : pas
 de verrous inversé, ni de fenêtre de lancement entre commit et révocation.
 Le moteur vérifie ce jeton après son attente de persistance et avant lancement ; les
 exécutions déjà admises portent à la fois cette annulation et celle de leur activation.
-Une vieille diffusion ne commande donc pas la nouvelle génération. Une commande physique
-déjà engagée ne devient pas réversible par ce mécanisme.
+Une vieille diffusion ne commande donc pas la nouvelle génération. Un envoi de transport
+déjà engagé ne devient pas réversible par ce mécanisme.
+
+Le jeton de génération et celui de l'activation restent aussi attachés aux ordres
+adressés aux pilotes par `CommandPermit`. `CommandRequest::abandoned()` réévalue
+ce permis au contrôle précédant l'émission : prendre un ordre dans une file ne
+vaut pas encore émission. Les actions Set/Toggle et notifications interrompent
+leur attente sur révocation ; le journal suit néanmoins l'issue d'un ordre pris.
+Les luminaires composites transmettent le permis à leurs seuls membres en
+réévaluant le parent, y compris pour leur continuation bornée après remise sous
+tension. Origine, acteur et corrélation des actions autorisées sont conservés.
+Une commande sans permis conserve son chemin existant. Aucun observateur asynchrone
+n'est requis pour rendre la révocation visible au pilote.
 
 Une interruption après admission mais avant ou pendant un effet reste ambiguë. Les
 exécutions interrompues sont signalées et ne sont pas rejouées aveuglément. La promesse

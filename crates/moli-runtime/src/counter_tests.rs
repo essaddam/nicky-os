@@ -77,6 +77,7 @@ fn command(device: &Arc<Device>) -> (CommandRequest, oneshot::Receiver<Result<()
             key: "increment".into(),
             value: Value::Null,
             deadline: Instant::now() + Duration::from_secs(3600),
+            permit: None,
             metadata: CommandMetadata {
                 origin: Origin::Ui,
                 actor: None,

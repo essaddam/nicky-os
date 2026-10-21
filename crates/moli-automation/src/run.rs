@@ -126,6 +126,7 @@ struct Ctx {
 }
 
 /// Both lineages are checked directly, including after waits and before effects.
+#[derive(Clone)]
 pub(crate) struct RunCancellation {
     pub activation: CancellationToken,
     pub generation: Option<CancellationToken>,
@@ -141,6 +142,11 @@ impl From<CancellationToken> for RunCancellation {
 }
 
 impl RunCancellation {
+    fn permit(&self) -> moli_runtime::CommandPermit {
+        let token = self.clone();
+        moli_runtime::CommandPermit::new(move |_| !token.is_cancelled())
+    }
+
     pub fn is_cancelled(&self) -> bool {
         self.activation.is_cancelled()
             || self
@@ -329,6 +335,7 @@ async fn step(
                 Value::from_json(value),
                 dry,
                 run.correlation.clone(),
+                token,
             )
             .await
         }
@@ -346,7 +353,7 @@ async fn step(
                     );
                 }
             };
-            act(autos, a, point, next, dry, run.correlation.clone()).await
+            act(autos, a, point, next, dry, run.correlation.clone(), token).await
         }
         Step::Wait { seconds } => {
             if dry {
@@ -405,7 +412,12 @@ async fn step(
             if dry {
                 return (StepStatus::Simulated, Some(text), Some("out"));
             }
-            match notify(autos, a, title, &text, channels, run.correlation.clone()).await {
+            let result = tokio::select! {
+                biased;
+                () = token.cancelled() => return (StepStatus::Waiting, None, None),
+                result = notify(autos, a, title, &text, channels, run.correlation.clone(), token) => result,
+            };
+            match result {
                 Ok(()) => (StepStatus::Done, Some(text), Some("out")),
                 Err(e) => (StepStatus::Failed, Some(e.to_string()), Some("out")),
             }
@@ -457,6 +469,7 @@ async fn act(
     value: Value,
     dry: bool,
     correlation: Option<String>,
+    token: &RunCancellation,
 ) -> (StepStatus, Option<String>, Option<&'static str>) {
     if dry {
         return (
@@ -466,18 +479,15 @@ async fn act(
         );
     }
     let pid = PointId::from(point);
-    match autos
-        .0
-        .hub
-        .command_correlated(
-            &pid,
-            value.clone(),
-            Origin::Automation,
-            Some(a.name.clone()),
-            correlation,
-        )
-        .await
-    {
+    let result = tokio::select! {
+        biased;
+        () = token.cancelled() => return (StepStatus::Waiting, None, None),
+        result = autos.0.hub.command_correlated_with_permit(
+            &pid, value.clone(), Origin::Automation, Some(a.name.clone()),
+            correlation, token.permit(),
+        ) => result,
+    };
+    match result {
         Ok(()) => (
             StepStatus::Done,
             Some(format!("→ {}", show(&value))),
@@ -696,6 +706,7 @@ async fn notify(
     message: &str,
     channels: &[Channel],
     correlation: Option<String>,
+    token: &RunCancellation,
 ) -> anyhow::Result<()> {
     let messengers = autos.messengers();
     if channels.contains(&Channel::Maison) || messengers.is_empty() {
@@ -712,12 +723,13 @@ async fn notify(
             if let Err(e) = autos
                 .0
                 .hub
-                .command_correlated(
+                .command_correlated_with_permit(
                     &point,
                     Value::Text(text.clone().into()),
                     Origin::Automation,
                     Some(a.name.clone()),
                     correlation.clone(),
+                    token.permit(),
                 )
                 .await
             {

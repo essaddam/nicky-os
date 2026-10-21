@@ -97,6 +97,7 @@ fn command(
             key: key.into(),
             value,
             deadline: Instant::now() + Duration::from_secs(60),
+            permit: None,
             metadata: CommandMetadata {
                 origin: Origin::Ui,
                 actor: None,

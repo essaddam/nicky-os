@@ -785,6 +785,30 @@ impl Hub {
         .await
     }
 
+    /// A correlated graph action whose authorization remains live until emission.
+    pub async fn command_correlated_with_permit(
+        &self,
+        point: &PointId,
+        value: Value,
+        origin: Origin,
+        actor: Option<String>,
+        correlation: Option<String>,
+        permit: crate::CommandPermit,
+    ) -> Result<(), CommandError> {
+        self.command_with_context(
+            point,
+            value,
+            origin,
+            actor,
+            CommandContext {
+                correlation,
+                permit: Some(permit),
+                ..CommandContext::default()
+            },
+        )
+        .await
+    }
+
     async fn command_with_context(
         &self,
         point: &PointId,
@@ -862,11 +886,11 @@ impl Hub {
                             .await;
                     }
                     Verdict::Approval(reason) => {
-                        let operation = prepared
+                        let button = prepared
                             .device
                             .point(&prepared.key)
                             .is_some_and(|point| point.kind.is_operation());
-                        let id = self.hold(point, &value, &metadata, &reason, operation, permit)?;
+                        let id = self.hold(point, &value, &metadata, &reason, button, permit)?;
                         Err(CommandError::NeedsApproval { id, reason })
                     }
                 }
@@ -2657,6 +2681,38 @@ mod live_permit_tests {
         (hub, rx, PointId::new(&device, "state"))
     }
 
+    #[tokio::test]
+    async fn auto_h1_r1_queued_or_taken_orders_observe_revocation_without_a_task_wakeup() {
+        for taken in [false, true] {
+            let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+            let allowed = Arc::new(AtomicBool::new(true));
+            let check = allowed.clone();
+            let h = hub.clone();
+            let task = tokio::spawn(async move {
+                h.command_with_permit(
+                    &point,
+                    Value::Bool(true),
+                    Origin::Ui,
+                    None,
+                    None,
+                    crate::CommandPermit::new(move |_point| check.load(Ordering::Acquire)),
+                )
+                .await
+            });
+            let cmd = rx.recv().await.unwrap();
+            if taken {
+                assert!(Claim::settle(&cmd.claim, Claim::TAKEN));
+            }
+            assert!(!cmd.abandoned());
+            allowed.store(false, Ordering::Release);
+            assert!(
+                cmd.abandoned(),
+                "revocation is checked after dequeue, before emission"
+            );
+            cmd.reply(Err("simulated revocation".into()));
+            assert!(task.await.unwrap().is_err());
+        }
+    }
     #[tokio::test]
     async fn revocation_after_dequeue_still_prevents_emission() {
         let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);

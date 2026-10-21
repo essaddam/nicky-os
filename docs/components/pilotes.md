@@ -990,3 +990,14 @@ Aucun chemin direct vers une serrure. [Contrat et bornes](reservations.md).
 annuler via le hub ; état et reçu sont durables, le restant est une projection monotone.
 La terminaison utilise une identité de génération, pas une bascule artificielle.
 Configuration, limites et livraison au moteur : [minuteurs](minuteurs.md).
+
+### Permis vivant des commandes
+
+`CommandRequest::abandoned()` inclut un éventuel `CommandPermit` serveur : le pilote
+le contrôle avant chaque envoi, même après prise dans sa file. Le hub peut joindre
+ce permis par `command_with_permit` ou `command_correlated_with_permit` ; il ne
+provient jamais du corps REST/MCP. L'arrêt d'une activation ou génération ne doit
+pas laisser partir un ordre encore retenu. `member_permit()` limite la délégation
+aux membres déclarés et réévalue le parent ; une continuation composite bornée
+peut le conserver après réponse du parent. Préserver aussi origine et corrélation.
+Le permis n'annule pas rétroactivement un envoi de transport déjà engagé.
