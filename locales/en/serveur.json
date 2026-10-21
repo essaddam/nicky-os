@@ -24,7 +24,7 @@
   "serveur.dependance.conflit": "The version or affected automations changed: reload and review again.",
   "serveur.dependance.consommateurs": "Automation definitions are not durably saved: restore successful saving before publishing a dependency.",
   "serveur.dependance.corrompu": "Invalid dependency state: restoration is required.",
-  "serveur.dependance.definition": "Invalid schedule: IANA time zone, days 1 to 7, minutes 0 to 1440 and up to 256 non-overlapping slots.",
+  "serveur.dependance.definition": "Invalid definition: check its fields and their limits.",
   "serveur.dependance.humain": "Your PIN session is required to approve this definition.",
   "serveur.dependance.incertain": "Uncertain write: mutations and projections are suspended until restart and reload.",
   "serveur.dependance.inconnue": "Unknown or unconfigured dependency.",
@@ -218,5 +218,9 @@
   "serveur.compteur.valeur": "A counter operation has no value: send null.",
   "serveur.compteur.lecture_seule": "The counter value is read-only; use increment or reset to change it.",
   "serveur.commande.acces_expire": "Access has expired or was revoked.",
-  "serveur.personnes.periode_invalide": "The validity start must be before its end, and both dates must be valid."
+  "serveur.personnes.periode_invalide": "The validity start must be before its end, and both dates must be valid.",
+  "serveur.calcul.cycle": "Calculated dependency cycle refused.",
+  "serveur.calcul.unites": "Sources must be readable numeric points with compatible units and a validated current version for calculations.",
+  "serveur.calcul.budget": "Calculation limit exceeded: 128 definitions, depth 16 and bounded propagation.",
+  "serveur.calcul.definition": "Invalid calculation: up to 32 unique numeric sources, a compatible unit and integer freshness from 1 to 604800 seconds."
 }

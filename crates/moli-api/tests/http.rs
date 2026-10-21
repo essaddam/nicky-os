@@ -2039,3 +2039,104 @@ async fn auto_h5_http_ui_cannot_publish_without_pin_and_stale_preview_conflicts(
     );
     cancel.cancel();
 }
+
+async fn computed_fixture() -> (String, Hub, CancellationToken) {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let cancel = CancellationToken::new();
+    let config=serde_json::from_value(json!({"helper":[
+        {"id":"x","name":"Input X","kind":"number","initial":10},
+        {"id":"y","name":"Input Y","kind":"number","initial":30},
+        {"id":"a","name":"Average","kind":"computed","aggregate":{"operation":"mean","sources":["fixture:x/value","fixture:y/value"],"max_age_s":60}},
+        {"id":"b","name":"Downstream","kind":"computed","aggregate":{"operation":"max","sources":["fixture:a/value"],"max_age_s":60}}
+    ]})).unwrap();
+    spawn_driver(
+        &hub,
+        "fixture".into(),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while hub
+            .state(&moli_core::PointId::from("fixture:b/value"))
+            .is_none()
+        {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .unwrap();
+    let addr = serve(
+        &hub,
+        &moli_api::Options {
+            ui_pin: Some(moli_api::UiPin::new("482915")),
+            ..Default::default()
+        },
+    )
+    .await;
+    (addr, hub, cancel)
+}
+async fn dependency_preview(addr: &str, path: &str) -> Json {
+    let (status, body) = request(addr, "GET", &format!("{path}/preview"), None).await;
+    assert_eq!(status, 200, "{body}");
+    serde_json::from_str(&body).unwrap()
+}
+#[tokio::test]
+async fn auto_k1_http_binds_current_sources_and_ui_header_never_approves() {
+    let (addr, hub, cancel) = computed_fixture().await;
+    let a = "/api/dependencies/computed/fixture:a";
+    let b = "/api/dependencies/computed/fixture:b";
+    let shown = dependency_preview(&addr, a).await;
+    let (status, body) = request_with(
+        &addr,
+        "POST",
+        &format!("{a}/approve"),
+        Some(&shown),
+        "x-moli-origin: ui\r\n",
+    )
+    .await;
+    assert_eq!(status, 403, "{body}");
+    let pin = pin_session(&addr, "482915").await;
+    let (status, body) =
+        request_with(&addr, "POST", &format!("{a}/approve"), Some(&shown), &pin).await;
+    assert_eq!(status, 200, "{body}");
+    let shown = dependency_preview(&addr, b).await;
+    let (status, body) =
+        request_with(&addr, "POST", &format!("{b}/approve"), Some(&shown), &pin).await;
+    assert_eq!(status, 200, "{body}");
+    let old_b = dependency_preview(&addr, b).await;
+    let draft = json!({"expected":1,"definition":{"type":"aggregate","value":{"operation":"min","sources":["fixture:x/value","fixture:y/value"],"unit":null,"max_age_s":60}}});
+    let (status, body) = request(&addr, "PUT", a, Some(&draft)).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(
+        hub.state(&moli_core::PointId::from("fixture:a/value"))
+            .unwrap()
+            .value,
+        Value::Float(20.0)
+    );
+    let shown = dependency_preview(&addr, a).await;
+    assert!(
+        shown["related"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|r| r["reference"]["id"] == "fixture:b" && r["role"] == "affected")
+    );
+    let (status, body) =
+        request_with(&addr, "POST", &format!("{a}/approve"), Some(&shown), &pin).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(
+        hub.state(&moli_core::PointId::from("fixture:b/value"))
+            .unwrap()
+            .value,
+        Value::Float(10.0)
+    );
+    let (status, body) =
+        request_with(&addr, "POST", &format!("{b}/approve"), Some(&old_b), &pin).await;
+    assert_eq!(status, 409, "{body}");
+    let cycle = json!({"expected":2,"definition":{"type":"aggregate","value":{"operation":"min","sources":["fixture:b/value"],"unit":null,"max_age_s":60}}});
+    let (status, body) = request(&addr, "PUT", a, Some(&cycle)).await;
+    assert_eq!(status, 200, "{body}");
+    let (status, body) = request(&addr, "GET", &format!("{a}/preview"), None).await;
+    assert_eq!(status, 422, "{body}");
+    cancel.cancel();
+}

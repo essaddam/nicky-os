@@ -109,13 +109,19 @@ enum DependencyCommand {
     List,
     Get {
         device: String,
+        #[arg(long,default_value="schedule",value_parser=["schedule","computed"])]
+        kind: String,
     },
     Preview {
         device: String,
+        #[arg(long,default_value="schedule",value_parser=["schedule","computed"])]
+        kind: String,
     },
     /// Stage the typed JSON definition from a bounded file. Human publication uses the dashboard.
     Draft {
         device: String,
+        #[arg(long,default_value="schedule",value_parser=["schedule","computed"])]
+        kind: String,
         expected: u64,
         file: PathBuf,
     },
@@ -1334,18 +1340,19 @@ fn dependency_command(config: &Config, command: DependencyCommand) -> anyhow::Re
             "/api/dependencies".into(),
             serde_json::Value::Null,
         ),
-        DependencyCommand::Get { device } => (
+        DependencyCommand::Get { device, kind } => (
             http::Method::GET,
-            format!("/api/dependencies/schedule/{}", encode(&device)),
+            format!("/api/dependencies/{kind}/{}", encode(&device)),
             serde_json::Value::Null,
         ),
-        DependencyCommand::Preview { device } => (
+        DependencyCommand::Preview { device, kind } => (
             http::Method::GET,
-            format!("/api/dependencies/schedule/{}/preview", encode(&device)),
+            format!("/api/dependencies/{kind}/{}/preview", encode(&device)),
             serde_json::Value::Null,
         ),
         DependencyCommand::Draft {
             device,
+            kind,
             expected,
             file,
         } => {
@@ -1362,7 +1369,7 @@ fn dependency_command(config: &Config, command: DependencyCommand) -> anyhow::Re
             let definition: moli_runtime::DependencyDefinition = serde_json::from_slice(&bytes)?;
             (
                 http::Method::PUT,
-                format!("/api/dependencies/schedule/{}", encode(&device)),
+                format!("/api/dependencies/{kind}/{}", encode(&device)),
                 serde_json::json!({"expected": expected, "definition": definition}),
             )
         }

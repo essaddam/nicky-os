@@ -1041,3 +1041,11 @@ MCP et CLI ne peuvent pas valider. Éditions et validations périmées renvoient
 Voir [le contrat](plannings.md) et [OpenAPI](../api/dependencies.openapi.yaml) pour les
 schémas, erreurs, bornes et garanties de persistance. MCP : `list_dependencies`,
 `get_dependency`, `save_dependency_draft`. CLI : `moli-os dependency list|get|preview|draft`.
+
+
+Pour les points calculés AUTO-K1, les mêmes routes prennent `kind=computed` et une
+définition `aggregate`. L’aperçu ajoute `related` (sources courantes liées et calculs
+affectés), vérifié à nouveau avant publication. La confirmation est bornée à 512 Kio.
+Les événements `state` peuvent porter `source_ts` : `ts` date la publication, tandis
+que `source_ts` conserve l’âge de la donnée dérivée ; son absence garde le protocole
+habituel. Voir [calculs.md](calculs.md) et le schéma OpenAPI commun.

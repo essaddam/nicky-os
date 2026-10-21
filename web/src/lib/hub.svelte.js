@@ -69,7 +69,7 @@ function applyEvent(e) {
       const [id, key] = splitPoint(e.point);
       const device = hub.devices[id];
       if (!device) break;
-      device.state[key] = { value: e.value, ts: e.ts };
+      device.state[key] = { value: e.value, ts: e.source_ts ?? e.ts };
       hub.changed[e.point] = e.ts;
       // Only the requested value confirms a command; anything else may be
       // an older report still in flight. The timeout in command() is the net.

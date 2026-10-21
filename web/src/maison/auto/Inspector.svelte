@@ -20,7 +20,7 @@
     if (['button', 'counter_command'].includes(spec.kind.type)) return null;
     if (['binary', 'schedule'].includes(spec.kind.type)) return true;
     if (spec.kind.type === 'enum') return spec.kind.values?.[0] ?? null;
-    if (spec.kind.type === 'numeric') return spec.kind.min ?? 0;
+    if (['numeric', 'computed'].includes(spec.kind.type)) return spec.kind.min ?? 0;
     if (spec.kind.type === 'temporal') return spec.kind.spec.format === 'time' ? '00:00:00' : spec.kind.spec.format === 'date' ? '2000-01-01' : '2000-01-01T00:00:00Z';
     if (spec.kind.type === 'counter') return spec.kind.spec.initial;
     return '';
@@ -57,7 +57,7 @@
       <PointPicker point={r.point} mode="state" onpick={(p) => change({ point: p, value: defaultValue(p) })} />
       {#if r.point}
         <div class="row">
-          {#if ['numeric', 'counter'].includes(pointSpec(r.point)?.kind.type) || (pointSpec(r.point)?.kind.type === 'timer' && !['state', 'expired'].includes(pointSpec(r.point)?.kind.field))}
+          {#if ['numeric', 'counter', 'computed'].includes(pointSpec(r.point)?.kind.type) || (pointSpec(r.point)?.kind.type === 'timer' && !['state', 'expired'].includes(pointSpec(r.point)?.kind.field))}
             <select value={r.op ?? 'eq'} onchange={(e) => change({ op: e.currentTarget.value })} aria-label={t('automatismes.inspecteur.comparaison')}>
               {#each OPS as [op, sign] (op)}<option value={op}>{sign}</option>{/each}
             </select>

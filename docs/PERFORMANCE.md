@@ -111,3 +111,20 @@ du retard du bus. Le fichier métier est plafonné à 4 Mio et 128 définitions,
 têtes et 256 créneaux chacune. Le test `auto_h5_calendar_budget_at_maximum_slots` rend
 mesurables 100 recherches à la borne maximale ; cette mesure native debug ne remplace
 ni les mesures cgroup ni la qualification de production, hors périmètre de ce lot.
+
+
+### AUTO-K1 : propagation indexée simulée
+
+Les calculs réutilisent le registre borné de versions d’AUTO-H5. Une observation ne
+réveille que les racines de son index ; les calculs touchés sont triés par rang
+précalculé, sans balayage global des définitions. Les échéances ont deux files
+ordonnées (monotone et timestamps de cache futurs). La file sale contient 128
+identités au plus, les observations/index 4096 sources, et une propagation reste
+bornée à 8192 arêtes/lectures sur une profondeur maximale de 16.
+
+Les tests simulés mesurent le cas 128 calculs × 32 sources (4096 lectures), vérifient
+qu’un point non indexé ne provoque aucune lecture et qu’une chaîne ne renouvelle
+pas la fraîcheur. Ces mesures natives debug ne constituent pas une mesure cgroup
+ni une qualification de production. Sans calcul courant, aucune échéance ni
+observation de calcul n’est entretenue. Les valeurs dérivées ne sont pas écrites
+dans le cache périodique ; les définitions restent dans le fichier métier commun.

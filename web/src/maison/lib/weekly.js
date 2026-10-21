@@ -13,10 +13,4 @@ export function weeklyPayload(timezone, rows) {
   return { type: 'schedule', value: { timezone, slots } };
 }
 
-/** A server preview must describe exactly the definition currently shown. */
-export function previewMatchesShown(view, preview) {
-  return view?.reference.kind === preview?.reference.kind
-    && view?.reference.id === preview?.reference.id
-    && view?.versions.draft.version === preview?.versions.draft
-    && (view?.versions.current?.version ?? null) === preview?.versions.current;
-}
+export { previewMatchesShown } from '../../lib/dependency.js';

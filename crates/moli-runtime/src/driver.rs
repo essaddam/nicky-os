@@ -387,6 +387,18 @@ impl DriverCtx {
             .await;
     }
 
+    /// Loads the validated definition and initializes a calculated projection.
+    pub async fn initialize_computed(
+        &self,
+        device: &DeviceId,
+        spec: moli_core::AggregateSpec,
+    ) -> Result<(), crate::DependencyError> {
+        if !self.owns(device) {
+            return Err(crate::DependencyError::Definition);
+        }
+        self.hub.initialize_computed(device, spec).await
+    }
+
     /// Loads a schedule's draft/current heads from their authoritative file.
     pub async fn initialize_schedule(
         &self,

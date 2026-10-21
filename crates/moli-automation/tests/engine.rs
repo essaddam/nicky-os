@@ -1130,3 +1130,77 @@ async fn auto_h5_failed_graph_write_blocks_dependency_publication_until_saved_ag
     cancel.cancel();
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[tokio::test]
+async fn auto_k1_transitive_calculation_publication_shows_and_updates_its_graph() {
+    use moli_core::{DependencyKind, DependencyRef};
+    let (hub, autos, cancel) = setup().await;
+    let config=serde_json::from_value(serde_json::json!({"helper":[
+        {"id":"x","name":"Input X","kind":"number","initial":10},
+        {"id":"y","name":"Input Y","kind":"number","initial":30},
+        {"id":"a","name":"Average","kind":"computed","aggregate":{"operation":"mean","sources":["calc:x/value","calc:y/value"],"max_age_s":60}},
+        {"id":"b","name":"Downstream","kind":"computed","aggregate":{"operation":"max","sources":["calc:a/value"],"max_age_s":60}}
+    ]})).unwrap();
+    spawn_driver(
+        &hub,
+        "calc".into(),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while hub.state(&PointId::from("calc:b/value")).is_none() {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .unwrap();
+    let a = DependencyRef {
+        kind: DependencyKind::Computed,
+        id: "calc:a".into(),
+    };
+    let b = DependencyRef {
+        kind: DependencyKind::Computed,
+        id: "calc:b".into(),
+    };
+    for reference in [&a, &b] {
+        hub.publish_dependency(
+            hub.preview_dependency(reference).await.unwrap(),
+            true,
+            Origin::Ui,
+            None,
+        )
+        .await
+        .unwrap();
+    }
+    let graph=approved(&autos,serde_json::json!({"nodes":[{"id":"t","type":"when_state","point":"calc:b/value","to":10},{"id":"s","type":"set","point":"fake:lamp/on","value":true}],"edges":[{"from":"t","to":"s"}]})).await;
+    let mut draft = hub
+        .dependency(&a)
+        .await
+        .unwrap()
+        .versions
+        .draft()
+        .definition
+        .clone();
+    let moli_runtime::DependencyDefinition::Aggregate(ref mut spec) = draft else {
+        unreachable!()
+    };
+    spec.operation = moli_core::AggregateOp::Min;
+    hub.stage_dependency(a.clone(), 1, draft, Origin::Mcp, None)
+        .await
+        .unwrap();
+    assert_eq!(
+        hub.state(&PointId::from("calc:b/value")).unwrap().value,
+        Value::Float(20.0)
+    );
+    let shown = hub.preview_dependency(&a).await.unwrap();
+    assert!(shown.consumers.iter().any(|c| c.id == graph.id));
+    hub.publish_dependency(shown, true, Origin::Ui, None)
+        .await
+        .unwrap();
+    assert!(lamp_turns(&hub, true).await);
+    assert_eq!(
+        autos.get(&graph.id).unwrap().fingerprint(),
+        graph.fingerprint()
+    );
+    cancel.cancel();
+}

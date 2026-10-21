@@ -48,7 +48,7 @@
         {#each values as v (v)}<option value={v}>{v}</option>{/each}
       </select>
     {/if}
-  {:else if ['numeric', 'counter', 'timer'].includes(type)}
+  {:else if ['numeric', 'counter', 'timer', 'computed'].includes(type)}
     <label class="num">
       <input
         type="number"

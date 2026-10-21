@@ -33,6 +33,10 @@
       }) };
     }
     if (a.kind === 'temporal') return { target: a.point.split('/')[0], detail: t('systeme.date.journal', { point: a.point }) };
+    if (a.kind === 'computed') {
+      const id = a.point.split('/')[0];
+      return {target:hub.devices[id] ? deviceName(hub.devices[id]) : id, detail:t('systeme.calcul.journal',{version:a.version,value:a.value ?? '—',unit:a.unit ?? '',count:a.valid})};
+    }
     if (a.kind === 'dependency') {
       const d = hub.devices[a.reference.id];
       return {target:d ? deviceName(d) : a.reference.id, detail:t(`systeme.planning.journal.${a.operation}`, {version:a.version ?? '—'})};

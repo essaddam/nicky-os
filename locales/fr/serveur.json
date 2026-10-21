@@ -24,7 +24,7 @@
   "serveur.dependance.conflit": "La version ou les graphes concernés ont changé : rechargez et vérifiez à nouveau.",
   "serveur.dependance.consommateurs": "Les graphes ne sont pas enregistrés de façon certaine : rétablissez leur sauvegarde avant de publier une dépendance.",
   "serveur.dependance.corrompu": "État des dépendances invalide : restauration nécessaire.",
-  "serveur.dependance.definition": "Planning invalide : fuseau IANA, jours 1 à 7, minutes 0 à 1440 et 256 créneaux sans chevauchement au plus.",
+  "serveur.dependance.definition": "Définition invalide : vérifiez ses champs et leurs limites.",
   "serveur.dependance.humain": "Votre session PIN est nécessaire pour valider cette définition.",
   "serveur.dependance.incertain": "Écriture incertaine : mutations et projections suspendues jusqu’au redémarrage et à la relecture.",
   "serveur.dependance.inconnue": "Dépendance inconnue ou non configurée.",
@@ -218,5 +218,9 @@
   "serveur.compteur.valeur": "Une opération de compteur n’a pas de valeur : envoie null.",
   "serveur.compteur.lecture_seule": "La valeur du compteur se lit ; utilise incrémenter ou revenir à l’initial pour la modifier.",
   "serveur.commande.acces_expire": "L’accès a expiré ou a été retiré.",
-  "serveur.personnes.periode_invalide": "Le début de validité doit précéder la fin et les dates doivent être valides."
+  "serveur.personnes.periode_invalide": "Le début de validité doit précéder la fin et les dates doivent être valides.",
+  "serveur.calcul.cycle": "Cycle de dépendances calculées refusé.",
+  "serveur.calcul.unites": "Les sources doivent être des points numériques lisibles avec des unités compatibles et une version courante validée pour les calculs.",
+  "serveur.calcul.budget": "Limite des calculs dépassée : 128 définitions, profondeur 16 et propagation bornée.",
+  "serveur.calcul.definition": "Calcul invalide : 32 sources numériques au plus, sans doublons, une unité compatible et une fraîcheur entière de 1 à 604800 secondes."
 }

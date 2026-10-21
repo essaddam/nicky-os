@@ -3,6 +3,7 @@
   import { formatValue, unitOf, isAlarm } from '../lib/format.js';
   import { t, locale } from '../lib/i18n.svelte.js';
   import TemporalControl from './TemporalControl.svelte';
+  import ComputedEditor from './ComputedEditor.svelte';
   import ScheduleEditor from './ScheduleEditor.svelte';
   import PressButton from './PressButton.svelte';
   import TimerControl from './TimerControl.svelte';
@@ -102,6 +103,7 @@
       </button>
     {/key}
   {/if}
+  {#if kind === 'computed'}<ComputedEditor id={device.id} />{/if}
 </div>
 
 <style>

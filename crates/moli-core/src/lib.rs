@@ -6,6 +6,8 @@
 //! agree on one vocabulary.
 
 mod access_window;
+mod aggregate;
+mod aggregate_graph;
 pub mod color;
 mod counter;
 mod dependency;
@@ -21,6 +23,14 @@ mod value;
 mod weekly;
 
 pub use access_window::AccessWindow;
+pub use aggregate::{
+    AggregateOp, AggregateResult, AggregateSource, AggregateSpec, InvalidAggregate,
+    MAX_AGGREGATE_SOURCES, MAX_FRESHNESS_S, unit_ratio,
+};
+pub use aggregate_graph::{
+    AggregateGraphError, MAX_CALCULATION_DEPTH, MAX_CALCULATIONS, MAX_PROPAGATION_WORK,
+    aggregate_order,
+};
 pub use counter::{CounterOperation, CounterSpec, MAX_COUNTER_VALUE};
 pub use dependency::{
     DefinitionVersion, DependencyKind, DependencyRef, MAX_DEFINITION_VERSION, PublicationVersion,

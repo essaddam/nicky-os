@@ -21,6 +21,8 @@ pub enum Kind {
     Temporal {
         spec: crate::TemporalSpec,
     },
+    /// A numeric projection owned by the calculated-point engine.
+    Computed,
     /// Validated weekly definition, projected as a read-only boolean.
     Schedule,
     /// Business state, never assigned through a client command.
@@ -55,6 +57,7 @@ impl Kind {
             self,
             Self::Numeric { .. }
                 | Self::Counter { .. }
+                | Self::Computed
                 | Self::Timer {
                     field: crate::TimerField::Remaining
                         | crate::TimerField::Generation
@@ -65,8 +68,13 @@ impl Kind {
     /// Executable definitions resolve by stable device identity, never by version.
     #[must_use]
     pub fn dependency(&self, device: &crate::DeviceId) -> Option<crate::DependencyRef> {
-        matches!(self, Self::Schedule).then(|| crate::DependencyRef {
-            kind: crate::DependencyKind::Schedule,
+        let kind = match self {
+            Self::Schedule => crate::DependencyKind::Schedule,
+            Self::Computed => crate::DependencyKind::Computed,
+            _ => return None,
+        };
+        Some(crate::DependencyRef {
+            kind,
             id: device.clone(),
         })
     }
@@ -98,7 +106,7 @@ impl Kind {
         !self.is_operation()
             && !matches!(
                 self,
-                Self::Counter { .. } | Self::Timer { .. } | Self::Temporal { .. } | Self::Schedule
+                Self::Counter { .. } | Self::Timer { .. } | Self::Temporal { .. } | Self::Schedule | Self::Computed
             )
     }
 }
@@ -366,6 +374,11 @@ pub fn validate(kind: &Kind, value: &Value) -> Result<Value, ValueError> {
             Ok(value.clone())
         }
         (Kind::Binary | Kind::Schedule, _) => Err(ValueError::ExpectedBool),
+        (Kind::Computed, v) => v
+            .as_f64()
+            .filter(|n| n.is_finite())
+            .map(Value::Float)
+            .ok_or(ValueError::ExpectedNumber),
         (Kind::Numeric { min, max, .. }, v) => {
             let n = v
                 .as_f64()

@@ -22,7 +22,11 @@ pub enum Event {
     State {
         point: PointId,
         value: Value,
+        /// Publication time; restored raw samples retain their original time.
         ts: u64,
+        /// Oldest contributing observation for a calculated projection.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        source_ts: Option<u64>,
     },
     /// A real occurrence, never reconstructed from a cached state.
     Occurrence {
@@ -147,6 +151,14 @@ pub enum Origin {
 pub enum Action {
     Temporal {
         point: PointId,
+    },
+    Computed {
+        point: PointId,
+        version: u64,
+        value: Value,
+        source_ts: Option<u64>,
+        unit: Option<crate::Unit>,
+        valid: u8,
     },
     Dependency {
         reference: crate::DependencyRef,

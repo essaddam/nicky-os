@@ -55,7 +55,7 @@ paths:
         '404': { description: Définition non configurée. }
         '409': { description: Version attendue périmée ou épuisée ; relire. }
         '413': { description: Corps supérieur à 256 Kio. }
-        '422': { description: Fuseau, créneaux, chevauchement ou borne invalide. }
+        '422': { description: Définition, fuseau, créneaux, unité, source, fraîcheur, cycle ou budget invalide. }
         '500': { description: Persistance refusée avant renommage, ancien état conservé. }
         '503': { description: État corrompu ou issue incertaine ; ne pas réessayer aveuglément. }
   /api/dependencies/{kind}/{id}/preview:
@@ -96,7 +96,9 @@ paths:
               schema: { $ref: '#/components/schemas/View' }
         '403': { description: Session humaine absente, invité ou démonstration. }
         '404': { description: Définition non configurée. }
-        '409': { description: Identité, versions, définition ou graphes modifiés depuis l’aperçu. }
+        '409': { description: Identité, versions, sources exécutables, définition ou consommateurs modifiés depuis l’aperçu. }
+        '413': { description: Confirmation supérieure à 512 Kio. }
+        '422': { description: Sources, unités, topologie ou budget non validables. }
         '500': { description: Échec avant rename ; courant conservé. }
         '503': { description: Issue incertaine ou sauvegarde des graphes non certaine ; restaurer avant publication. }
 components:
@@ -105,7 +107,7 @@ components:
       in: path
       name: kind
       required: true
-      schema: { type: string, enum: [schedule] }
+      schema: { type: string, enum: [schedule, computed] }
     Id:
       in: path
       name: id
@@ -119,9 +121,13 @@ components:
       additionalProperties: false
       required: [kind, id]
       properties:
-        kind: { type: string, enum: [schedule] }
+        kind: { type: string, enum: [schedule, computed] }
         id: { type: string, maxLength: 240 }
     Definition:
+      oneOf:
+        - { $ref: '#/components/schemas/ScheduleDefinition' }
+        - { $ref: '#/components/schemas/AggregateDefinition' }
+    ScheduleDefinition:
       type: object
       additionalProperties: false
       required: [type, value]
@@ -145,6 +151,35 @@ components:
                   day: { type: integer, minimum: 1, maximum: 7 }
                   start: { type: integer, minimum: 0, maximum: 1439 }
                   end: { type: integer, minimum: 0, maximum: 1440 }
+    AggregateDefinition:
+      type: object
+      additionalProperties: false
+      required: [type, value]
+      properties:
+        type: { type: string, enum: [aggregate] }
+        value:
+          type: object
+          additionalProperties: false
+          required: [operation, sources, max_age_s]
+          properties:
+            operation: { type: string, enum: [min, max, mean] }
+            sources:
+              type: array
+              maxItems: 32
+              uniqueItems: true
+              items: { type: string, maxLength: 256 }
+              description: Identités de points numériques lisibles, descriptions connues à la validation. Liste vide = indisponible.
+            unit: { type: [string, 'null'], maxLength: 32 }
+            max_age_s: { type: integer, minimum: 1, maximum: 604800 }
+    Binding:
+      type: object
+      additionalProperties: false
+      required: [reference, role, current]
+      properties:
+        reference: { $ref: '#/components/schemas/Reference' }
+        role: { type: string, enum: [source, affected] }
+        current: { anyOf: [{ $ref: '#/components/schemas/Version' }, { type: 'null' }] }
+        draft: { $ref: '#/components/schemas/Version' }
     Head:
       type: object
       additionalProperties: false
@@ -188,3 +223,8 @@ components:
             current: { anyOf: [{ $ref: '#/components/schemas/Version' }, { type: 'null' }] }
         consumers: { type: array, maxItems: 400, items: { $ref: '#/components/schemas/Consumer' } }
         fingerprint: { type: string, pattern: '^[a-f0-9]{64}$' }
+        related:
+          type: array
+          maxItems: 254
+          items: { $ref: '#/components/schemas/Binding' }
+          description: Versions des sources exécutables et des calculs concernés, intégrées à l’empreinte. Absence compatible = liste vide.

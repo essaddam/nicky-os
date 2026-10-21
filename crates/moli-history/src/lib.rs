@@ -329,7 +329,7 @@ async fn record(
                     Err(RecvError::Closed) => 0,
                 };
                 match event {
-                Ok(Event::State { point, value, ts }) => {
+                Ok(Event::State { point, value, ts, .. }) => {
                     if !filter.records(point.as_str()) {
                         continue;
                     }

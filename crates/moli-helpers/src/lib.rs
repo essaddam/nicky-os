@@ -65,6 +65,9 @@ pub struct Helper {
     /// Initial weekly definition, always an inert draft on first creation.
     #[serde(default)]
     pub weekly: Option<moli_core::WeeklySchedule>,
+    /// Initial calculated definition, always a draft.
+    #[serde(default)]
+    pub aggregate: Option<moli_core::AggregateSpec>,
 }
 
 /// Preserve the lexical integer/float distinction until the helper kind is known.
@@ -99,6 +102,7 @@ pub enum HelperKind {
     Time,
     Datetime,
     Schedule,
+    Computed,
     Counter,
     Button,
     Select,
@@ -286,6 +290,7 @@ impl Helper {
                 Semantic::Other,
             ),
             HelperKind::Schedule => ("active", Kind::Schedule, Semantic::Other),
+            HelperKind::Computed => ("value", Kind::Computed, Semantic::Other),
             HelperKind::Button => ("press", Kind::Button, Semantic::Other),
             HelperKind::Counter => (
                 "value",
@@ -321,7 +326,7 @@ impl Helper {
                 read: self.kind != HelperKind::Button,
                 write: !matches!(
                     self.kind,
-                    HelperKind::Counter | HelperKind::Timer | HelperKind::Schedule
+                    HelperKind::Counter | HelperKind::Timer | HelperKind::Schedule | HelperKind::Computed
                 ),
             },
             unit: None,
@@ -351,6 +356,31 @@ impl Helper {
 
     /// The starting value, checked against the point.
     fn initial_value(&self) -> anyhow::Result<Value> {
+        if self.kind == HelperKind::Computed {
+            ensure!(
+                self.duration_s.is_none()
+                    && self.timezone.is_none()
+                    && self.initial.is_none()
+                    && self.options.is_empty()
+                    && self.min.is_none()
+                    && self.max.is_none()
+                    && self.step.is_none()
+                    && self.weekly.is_none(),
+                "{}",
+                moli_i18n::tr!("serveur.calcul.definition")
+            );
+            self.aggregate
+                .clone()
+                .ok_or_else(|| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?
+                .normalize()
+                .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?;
+            return Ok(Value::Null);
+        }
+        ensure!(
+            self.aggregate.is_none(),
+            "{}",
+            moli_i18n::tr!("serveur.calcul.definition")
+        );
         if self.kind == HelperKind::Schedule {
             return self.schedule_initial();
         }
@@ -436,7 +466,8 @@ impl Helper {
                 | HelperKind::Timer
                 | HelperKind::Date
                 | HelperKind::Time
-                | HelperKind::Datetime,
+                | HelperKind::Datetime
+                | HelperKind::Computed,
             ) => Value::Null,
         };
         validate(&self.spec().kind, &raw)
@@ -502,6 +533,16 @@ impl Helpers {
             "{}",
             moli_i18n::tr!("serveur.dependance.capacite")
         );
+        ensure!(
+            config
+                .helpers
+                .iter()
+                .filter(|h| h.kind == HelperKind::Computed)
+                .count()
+                <= 128,
+            "{}",
+            moli_i18n::tr!("serveur.calcul.budget")
+        );
         let mut seen = std::collections::HashSet::new();
         for h in &config.helpers {
             ensure!(
@@ -552,6 +593,14 @@ impl Driver for Helpers {
                 } else if let Some(spec) = h.temporal_spec() {
                     ctx.initialize_temporal(&id, spec, h.initial_value()?)
                         .await?;
+                } else if h.kind == HelperKind::Computed {
+                    ctx.initialize_computed(
+                        &id,
+                        h.aggregate
+                            .clone()
+                            .expect("validated calculated definition"),
+                    )
+                    .await?;
                 } else if h.kind == HelperKind::Schedule {
                     ctx.initialize_schedule(
                         &id,
@@ -729,5 +778,30 @@ mod weekly_config_tests {
         )
         .unwrap();
         assert!(Helpers::new(foreign).is_err());
+    }
+}
+
+#[cfg(test)]
+mod computed_config_tests {
+    use super::*;
+    #[test]
+    fn auto_k1_computed_configuration_is_explicit_and_read_only() {
+        let config:Config=toml::from_str("[[helper]]\nid='average'\nname='Average'\nkind='computed'\naggregate={operation='mean',sources=[],max_age_s=60}").unwrap();
+        let helpers = Helpers::new(config.clone()).unwrap();
+        assert_eq!(helpers.config.helpers[0].spec().kind, Kind::Computed);
+        assert!(!helpers.config.helpers[0].spec().access.write);
+        assert_eq!(
+            helpers.config.helpers[0].initial_value().unwrap(),
+            Value::Null
+        );
+        let mut wrong = config.clone();
+        wrong.helpers[0].initial = Some(toml::Value::Integer(0));
+        assert!(Helpers::new(wrong).is_err());
+        let mut wrong = config.clone();
+        wrong.helpers[0].kind = HelperKind::Number;
+        assert!(Helpers::new(wrong).is_err());
+        let mut wrong = config;
+        wrong.helpers[0].aggregate.as_mut().unwrap().max_age_s = 0;
+        assert!(Helpers::new(wrong).is_err());
     }
 }

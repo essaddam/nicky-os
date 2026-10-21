@@ -3,7 +3,7 @@
 use crate::{caller::Caller, session::Sessions};
 use axum::{
     Extension, Json, Router,
-    extract::{Path, State},
+    extract::{DefaultBodyLimit, Path, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
@@ -19,7 +19,10 @@ pub(crate) fn routes() -> Router<Hub> {
         .route("/api/dependencies", get(list))
         .route("/api/dependencies/{kind}/{id}", get(read).put(stage))
         .route("/api/dependencies/{kind}/{id}/preview", get(preview))
-        .route("/api/dependencies/{kind}/{id}/approve", post(approve))
+        .route(
+            "/api/dependencies/{kind}/{id}/approve",
+            post(approve).layer(DefaultBodyLimit::max(512 * 1024)),
+        )
 }
 fn reference((kind, id): (DependencyKind, String)) -> DependencyRef {
     DependencyRef {
@@ -30,7 +33,10 @@ fn reference((kind, id): (DependencyKind, String)) -> DependencyRef {
 fn failure(error: DependencyError) -> Response {
     let code = match error {
         DependencyError::Unknown => StatusCode::NOT_FOUND,
-        DependencyError::Definition => StatusCode::UNPROCESSABLE_ENTITY,
+        DependencyError::Definition
+        | DependencyError::Cycle
+        | DependencyError::Units
+        | DependencyError::Budget => StatusCode::UNPROCESSABLE_ENTITY,
         DependencyError::Human => StatusCode::FORBIDDEN,
         DependencyError::Conflict => StatusCode::CONFLICT,
         DependencyError::Capacity => StatusCode::INSUFFICIENT_STORAGE,

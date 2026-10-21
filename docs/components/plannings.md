@@ -81,8 +81,10 @@ Une nouvelle version ne rejoue pas une action physique déjà admise et n’annu
 rétroactivement une commande émise. Les étapes suivantes lisent le nouvel état courant.
 La garde, les échéances et les règles habituelles des commandes restent applicables.
 Les aides de valeur existantes ne reçoivent pas de version à chaque changement de valeur.
-Les futurs lots de scènes et calculs étendront l’énumération typée de définitions et
-réutiliseront l’enveloppe, l’aperçu et le verrou de publication, sans JSON exécutable libre.
+AUTO-K1 étend l’énumération typée avec les agrégats et réutilise cette enveloppe,
+l’aperçu et le verrou de publication. Ses sources versionnées et consommateurs
+transitifs sont liés dans l’aperçu commun, voir [calculs.md](calculs.md). Les scènes
+et autres calculs pourront suivre ce mécanisme, sans JSON exécutable libre.
 
 ## Persistance, reprise et journal
 

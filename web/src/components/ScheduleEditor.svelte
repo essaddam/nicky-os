@@ -2,6 +2,7 @@
   import { hub } from '../lib/hub.svelte.js';
   import { t, locale } from '../lib/i18n.svelte.js';
   import { minuteText, weeklyPayload, previewMatchesShown } from '../maison/lib/weekly.js';
+  import { dependencyRequest } from '../lib/dependency.js';
   import HumanSession from './HumanSession.svelte';
 
   let { id } = $props();
@@ -14,15 +15,9 @@
   let saved = $state('');
   let preview = $state(null);
   const dirty = $derived(JSON.stringify({timezone, rows}) !== saved);
-  const path = $derived(`/api/dependencies/schedule/${encodeURIComponent(id)}`);
   const days = $derived(Array.from({length: 7}, (_,i) => new Intl.DateTimeFormat(locale(), {weekday:'long', timeZone:'UTC'}).format(new Date(Date.UTC(2026, 0, 5 + i)))));
 
-  async function call(method, suffix = '', body) {
-    const response = await fetch(path + suffix, {method, headers: {'content-type':'application/json', 'x-moli-origin':'ui'}, body: body === undefined ? undefined : JSON.stringify(body)});
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || t('systeme.planning.refus'));
-    return data;
-  }
+  const call = (method, suffix = '', body) => dependencyRequest('schedule', id, method, suffix, body, t);
   function show(data) {
     view = data;
     const plan = data.versions.draft.definition.value;

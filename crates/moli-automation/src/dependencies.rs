@@ -126,6 +126,12 @@ impl moli_runtime::DependencyConsumerSource for ConsumerSource {
         &self,
         reference: &DependencyRef,
     ) -> Result<Vec<DependencyConsumer>, moli_runtime::DependencyError> {
+        self.consumers_for(std::slice::from_ref(reference))
+    }
+    fn consumers_for(
+        &self,
+        references: &[DependencyRef],
+    ) -> Result<Vec<DependencyConsumer>, moli_runtime::DependencyError> {
         let Some(inner) = self.0.upgrade() else {
             return Err(moli_runtime::DependencyError::Consumers);
         };
@@ -138,13 +144,18 @@ impl moli_runtime::DependencyConsumerSource for ConsumerSource {
         {
             return Err(moli_runtime::DependencyError::Consumers);
         }
+        let wanted: BTreeSet<_> = references.iter().cloned().collect();
         let list = inner
             .list
             .read()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         Ok(list
             .iter()
-            .filter(|a| references(&a.graph, &inner.hub).contains(reference))
+            .filter(|a| {
+                crate::dependencies::references(&a.graph, &inner.hub)
+                    .iter()
+                    .any(|r| wanted.contains(r))
+            })
             .map(|a| DependencyConsumer {
                 id: a.id.clone(),
                 name: a.name.clone(),

@@ -77,21 +77,27 @@ impl Dependencies {
                     let reference = &record.view.reference;
                     let versions = &record.view.versions;
                     valid_reference(reference)
-                        && reference.kind == DependencyKind::Schedule
                         && seen.insert(reference.clone())
                         && versions.is_valid()
                         && [Some(versions.draft()), versions.current()]
                             .into_iter()
                             .flatten()
                             .all(|v| {
-                                v.definition
-                                    .clone()
-                                    .normalized()
-                                    .is_ok_and(|d| d == v.definition)
+                                v.definition.kind() == reference.kind
+                                    && v.definition
+                                        .clone()
+                                        .normalized()
+                                        .is_ok_and(|d| d == v.definition)
                             })
-                        && versions.current().is_some() == record.projected.is_some()
+                        && (versions.current().is_some()
+                            && reference.kind == DependencyKind::Schedule)
+                            == record.projected.is_some()
                 })
             {
+                self.fenced = Some(Error::Corrupt);
+                return Err(Error::Corrupt);
+            }
+            if moli_core::aggregate_order(&state_aggregates(&state)).is_err() {
                 self.fenced = Some(Error::Corrupt);
                 return Err(Error::Corrupt);
             }
@@ -140,8 +146,9 @@ impl Dependencies {
     fn refresh_calendar(&mut self, reference: &DependencyRef, now: Timestamp) -> Result<(), Error> {
         self.calendars.remove(reference);
         self.next.remove(reference);
-        if let Some(current) = self.record(reference)?.view.versions.current() {
-            let calendar = current.definition.calendar()?;
+        if let Some(current) = self.record(reference)?.view.versions.current()
+            && let Some(calendar) = current.definition.calendar()?
+        {
             if let Some(next) = calendar.next(now) {
                 self.next.insert(reference.clone(), next);
             }
@@ -155,7 +162,7 @@ impl Dependencies {
         definition: DependencyDefinition,
         now: Timestamp,
     ) -> Result<DependencyView, Error> {
-        if !valid_reference(&reference) {
+        if !valid_reference(&reference) || definition.kind() != reference.kind {
             return Err(Error::Definition);
         }
         let definition = definition.normalized()?;
@@ -203,6 +210,9 @@ impl Dependencies {
         expected: u64,
         definition: DependencyDefinition,
     ) -> Result<DependencyView, Error> {
+        if definition.kind() != reference.kind {
+            return Err(Error::Definition);
+        }
         let definition = definition.normalized()?;
         self.record(reference)?;
         let mut state = self.state.clone().unwrap();
@@ -238,16 +248,15 @@ impl Dependencies {
             .publish(expected)
             .map_err(|_| Error::Conflict)?;
         if changed {
-            record.projected = Some(
-                record
-                    .view
-                    .versions
-                    .current()
-                    .unwrap()
-                    .definition
-                    .calendar()?
-                    .active(now),
-            );
+            record.projected = record
+                .view
+                .versions
+                .current()
+                .unwrap()
+                .definition
+                .calendar()?
+                .map(|calendar| calendar.active(now));
+            moli_core::aggregate_order(&state_aggregates(&state)).map_err(super::graph_error)?;
             self.persist(state).await?;
             self.refresh_calendar(reference, now)?;
         }
@@ -257,6 +266,26 @@ impl Dependencies {
     /// truth after its persistence failed. Restart reloads the durable head.
     pub(crate) fn suspend_projection(&mut self) {
         self.fenced = Some(Error::Projection);
+    }
+    pub(crate) fn aggregates(
+        &self,
+        registered_only: bool,
+    ) -> Result<BTreeMap<moli_core::DeviceId, moli_core::AggregateSpec>, Error> {
+        if let Some(error) = self.fenced {
+            return Err(error);
+        }
+        let mut result = BTreeMap::new();
+        for record in self.state.as_ref().into_iter().flat_map(|s| &s.records) {
+            if registered_only && !self.registered.contains(&record.view.reference) {
+                continue;
+            }
+            if let Some(current) = record.view.versions.current()
+                && let DependencyDefinition::Aggregate(spec) = &current.definition
+            {
+                result.insert(record.view.reference.id.clone(), spec.clone());
+            }
+        }
+        Ok(result)
     }
     pub(crate) fn projection(&self, reference: &DependencyRef) -> Result<Option<bool>, Error> {
         Ok(self.record(reference)?.projected)
@@ -312,4 +341,20 @@ impl Dependencies {
         }
         Ok(changes)
     }
+}
+
+fn state_aggregates(state: &State) -> BTreeMap<moli_core::DeviceId, moli_core::AggregateSpec> {
+    state
+        .records
+        .iter()
+        .filter_map(|record| {
+            let current = record.view.versions.current()?;
+            match &current.definition {
+                DependencyDefinition::Aggregate(spec) => {
+                    Some((record.view.reference.id.clone(), spec.clone()))
+                }
+                DependencyDefinition::Schedule(_) => None,
+            }
+        })
+        .collect()
 }

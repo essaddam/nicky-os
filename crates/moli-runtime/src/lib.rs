@@ -9,6 +9,7 @@
 //! [`Event`]: moli_core::Event
 
 mod addresses;
+mod computed;
 mod counters;
 mod dependencies;
 mod driver;
@@ -33,8 +34,8 @@ pub mod voice;
 pub use addresses::KnownAddress;
 pub use counters::CounterError;
 pub use dependencies::{
-    DependencyConsumer, DependencyConsumerSource, DependencyDefinition, DependencyError,
-    DependencyPreview, DependencyView,
+    BindingRole, DependencyBinding, DependencyConsumer, DependencyConsumerSource,
+    DependencyDefinition, DependencyError, DependencyPreview, DependencyView,
 };
 pub use driver::{
     BoxFuture, CommandMetadata, CommandPermit, CommandRequest, Driver, DriverCtx, MediaPublisher,

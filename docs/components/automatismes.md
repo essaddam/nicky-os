@@ -289,3 +289,17 @@ rejeu et les surfaces sont décrits dans [plannings.md](plannings.md). Le socle 
 brouillon/courant est isolé dans un commit ; cette première implémentation du contrat
 commun est soumise avec AUTO-H5 à la revue Rust. Elle ne change aucune valeur des aides
 existantes en dépendance versionnée et n’introduit aucun nouveau chemin de confiance.
+
+
+## Points calculés (AUTO-K1)
+
+L’aide `computed` publie un `value` numérique en lecture seule : minimum, maximum ou
+moyenne des seules sources utilisables, avec unité et fraîcheur configurées. Absences,
+nuls, non-finis, indisponibilités et péremptions sont exclus ; zéro n’est jamais inventé
+pour un ensemble vide. La propagation indexée, les échéances, les horodatages, les
+bornes et les surfaces sont décrits dans [calculs.md](calculs.md).
+
+Ce lot étend le propriétaire de versions d’AUTO-H5 et sa validation PIN, avec contrôle
+des sources exécutables et consommateurs transitifs. Un agent édite un brouillon
+inerte ; la version courante validée seule produit des valeurs. Le correctif H5
+préservant la file de State consommés reste repris sans rechargement anticipé.
