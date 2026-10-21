@@ -3,6 +3,7 @@
   import { formatValue, unitOf, isAlarm } from '../lib/format.js';
   import { t, locale } from '../lib/i18n.svelte.js';
   import PressButton from './PressButton.svelte';
+  import TimerControl from './TimerControl.svelte';
 
   let { device, point, big = false } = $props();
 
@@ -23,7 +24,9 @@
 <div class="point" class:big class:pending>
   <span class="label">{point.label}</span>
 
-  {#if writable && ['button', 'counter_command'].includes(kind)}
+  {#if writable && kind === 'timer_command'}
+    <TimerControl point={id} spec={point.kind} label={`${device.native_name}: ${point.label}`} disabled={device.online === false} />
+  {:else if writable && ['button', 'counter_command'].includes(kind)}
     <PressButton point={id} label={`${device.native_name}: ${point.label}`} disabled={device.online === false}
       action={point.kind.operation ?? 'button'} caption={kind === 'counter_command' ? point.label : null} />
   {:else if writable && kind === 'binary'}

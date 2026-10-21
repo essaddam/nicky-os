@@ -8,6 +8,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 
+#[cfg(test)]
+#[path = "timer_cli_tests.rs"]
+mod timer_cli_tests;
+
 use anyhow::{Context as _, bail};
 use clap::{Parser, Subcommand};
 use moli_core::InstanceId;
@@ -70,6 +74,14 @@ enum Command {
     /// Exit 0 if the local instance answers `/api/health` (container
     /// healthcheck: the image has no curl).
     Health,
+    /// Start or cancel a timer through the running server, under its guard.
+    Timer {
+        device: String,
+        #[command(subcommand)]
+        operation: TimerAction,
+        #[arg(long, global = true)]
+        request_id: Option<String>,
+    },
     /// Apply a counter operation through the running API, under its guard.
     Counter {
         device: String,
@@ -91,6 +103,12 @@ enum Command {
 enum CounterAction {
     Increment,
     Reset,
+}
+
+#[derive(Clone, Copy, Subcommand)]
+enum TimerAction {
+    Start { seconds: u32 },
+    Cancel,
 }
 
 #[derive(Subcommand)]
@@ -202,6 +220,11 @@ fn run_command(command: Command, config: Config, boot: Instant) -> anyhow::Resul
         }
         Command::Backup { dir } => backup::backup(&config.server.data_dir, &dir),
         Command::Press { point, request_id } => press(&config, &point, request_id.as_deref()),
+        Command::Timer {
+            device,
+            operation,
+            request_id,
+        } => timer_command(&config, &device, operation, request_id.as_deref()),
         Command::Counter {
             device,
             operation,
@@ -370,6 +393,9 @@ async fn serve(config: Config, boot: Instant) -> anyhow::Result<()> {
     };
 
     let (mut tasks, gates) = spawn_drivers(&config, &hub, &cancel)?;
+    if let Some(timer_task) = start_timer_scheduler(&config, &hub, &cancel) {
+        tasks.push(timer_task);
+    }
     tasks.extend(spawn_house_drivers(&config, &hub, energy.as_ref(), &cancel));
     let (household, whereabouts) = spawn_household(&config, &hub, gates.phones.clone(), &cancel);
     tasks.push(whereabouts);
@@ -451,6 +477,7 @@ fn open_hub(config: &Config) -> anyhow::Result<Hub> {
         state_path: Some(config.server.data_dir.join("state.json")),
         button_state_path: Some(config.server.data_dir.join("button-occurrences.json")),
         counter_state_path: Some(config.server.data_dir.join("helper-counters.json")),
+        timer_state_path: Some(config.server.data_dir.join("helper-timers.json")),
         journal_path: Some(config.server.data_dir.join("journal.jsonl")),
         addresses_path: Some(config.server.data_dir.join("addresses.json")),
         secrets,
@@ -1266,9 +1293,72 @@ fn press(config: &Config, point: &str, request_id: Option<&str>) -> anyhow::Resu
     send_operation(config, point, request_id, "moli-os press")
 }
 
+fn start_timer_scheduler(
+    config: &Config,
+    hub: &Hub,
+    cancel: &CancellationToken,
+) -> Option<tokio::task::JoinHandle<()>> {
+    let configured = config
+        .drivers
+        .iter()
+        .filter(|driver| driver.enabled != Some(false) && driver.kind == "helpers")
+        .any(|driver| {
+            driver
+                .options
+                .get("helper")
+                .and_then(toml::Value::as_array)
+                .is_some_and(|helpers| {
+                    helpers.iter().any(|helper| {
+                        helper.get("kind").and_then(toml::Value::as_str) == Some("timer")
+                    })
+                })
+        });
+    configured.then(|| {
+        let hub = hub.clone();
+        let cancel = cancel.clone();
+        tokio::spawn(async move {
+            hub.run_timers(cancel).await;
+        })
+    })
+}
+
 fn send_operation(
     config: &Config,
     point: &str,
+    request_id: Option<&str>,
+    actor: &str,
+) -> anyhow::Result<()> {
+    send_value_operation(config, point, &serde_json::Value::Null, request_id, actor)
+}
+
+fn timer_command(
+    config: &Config,
+    device: &str,
+    operation: TimerAction,
+    request_id: Option<&str>,
+) -> anyhow::Result<()> {
+    let (key, value) = match operation {
+        TimerAction::Start { seconds } => {
+            if !(1..=moli_core::MAX_TIMER_SECONDS).contains(&seconds) {
+                bail!("{}", moli_runtime::TimerError::Value);
+            }
+            ("start", serde_json::json!(seconds))
+        }
+        TimerAction::Cancel => ("cancel", serde_json::Value::Null),
+    };
+    send_value_operation(
+        config,
+        &format!("{device}/{key}"),
+        &value,
+        request_id,
+        "moli-os timer",
+    )
+}
+
+fn send_value_operation(
+    config: &Config,
+    point: &str,
+    value: &serde_json::Value,
     request_id: Option<&str>,
     actor: &str,
 ) -> anyhow::Result<()> {
@@ -1288,7 +1378,7 @@ fn send_operation(
             .method(http::Method::POST)
             .uri("/api/command")
             .header(http::header::HOST, &host),
-        &serde_json::json!({ "point": point, "value": null, "request_id": request_id, "actor": actor }),
+        &serde_json::json!({ "point": point, "value": value, "request_id": request_id, "actor": actor }),
     )?;
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()

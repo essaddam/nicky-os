@@ -125,6 +125,39 @@ struct Ctx {
     text: Option<String>,
 }
 
+/// Both lineages are checked directly, including after waits and before effects.
+pub(crate) struct RunCancellation {
+    pub activation: CancellationToken,
+    pub generation: Option<CancellationToken>,
+}
+
+impl From<CancellationToken> for RunCancellation {
+    fn from(activation: CancellationToken) -> Self {
+        Self {
+            activation,
+            generation: None,
+        }
+    }
+}
+
+impl RunCancellation {
+    pub fn is_cancelled(&self) -> bool {
+        self.activation.is_cancelled()
+            || self
+                .generation
+                .as_ref()
+                .is_some_and(CancellationToken::is_cancelled)
+    }
+
+    pub async fn cancelled(&self) {
+        if let Some(generation) = &self.generation {
+            tokio::select! { () = self.activation.cancelled() => {}, () = generation.cancelled() => {} }
+        } else {
+            self.activation.cancelled().await;
+        }
+    }
+}
+
 /// Runs `a` from the trigger `start`. Dry: conditions are read for real,
 /// nothing acts and nothing waits.
 #[allow(clippy::too_many_arguments)]
@@ -134,7 +167,7 @@ pub(crate) async fn execute(
     start: &str,
     why: String,
     dry: bool,
-    token: CancellationToken,
+    token: RunCancellation,
     id: u64,
     occurrence: Option<&Occurrence>,
 ) -> Run {
@@ -270,7 +303,7 @@ async fn step(
     node_id: &str,
     run: &Run,
     dry: bool,
-    token: &CancellationToken,
+    token: &RunCancellation,
     ctx: &mut Ctx,
 ) -> (StepStatus, Option<String>, Option<&'static str>) {
     let hub = &autos.0.hub;

@@ -255,6 +255,7 @@ async fn the_engine_speaks_the_language_of_the_house() {
                 author: Author::Human,
                 approved: None,
                 approved_version: None,
+                activation: None,
                 note: None,
                 created: 0,
                 updated: 0,

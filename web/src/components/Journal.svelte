@@ -25,6 +25,13 @@
     if (a.kind === 'automation') {
       return { target: t('systeme.journal.automatisme', { name: a.name }), detail: word(CHANGE, 'changement', a.change) };
     }
+    if (a.kind === 'timer') {
+      const [id, key] = a.point.split('/');
+      const d = hub.devices[id];
+      return { target: d ? deviceName(d) : id, detail: t('systeme.minuteur.journal', {
+        operation: d?.points.find((p) => p.key === key)?.label ?? t(key === 'start' ? 'systeme.minuteur.demarrer' : key === 'cancel' ? 'systeme.minuteur.annuler' : 'systeme.minuteur.expiration'),
+      }) };
+    }
     if (a.kind === 'counter') {
       const [id, key] = a.point.split('/');
       const d = hub.devices[id];

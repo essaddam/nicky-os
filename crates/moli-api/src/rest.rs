@@ -148,7 +148,10 @@ pub(crate) async fn command(
             Json(json!({ "ok": false, "pending": id, "reason": reason })),
         )
             .into_response(),
-        Err(e @ CommandError::Counter(moli_runtime::CounterError::Uncertain)) => (
+        Err(
+            e @ (CommandError::Counter(moli_runtime::CounterError::Uncertain)
+            | CommandError::Timer(moli_runtime::TimerError::Uncertain)),
+        ) => (
             command_status(&e),
             Json(json!({ "error": e.to_string(), "retryable": true })),
         )
@@ -277,6 +280,20 @@ pub(crate) async fn decide(
 
 pub(crate) fn command_status(e: &CommandError) -> StatusCode {
     match e {
+        CommandError::Timer(error) => match error {
+            moli_runtime::TimerError::Value
+            | moli_runtime::TimerError::Definition
+            | moli_runtime::TimerError::Generation
+            | moli_runtime::TimerError::Clock => StatusCode::UNPROCESSABLE_ENTITY,
+            moli_runtime::TimerError::Conflict
+            | moli_runtime::TimerError::Stale
+            | moli_runtime::TimerError::Uncertain => StatusCode::CONFLICT,
+            moli_runtime::TimerError::Storage | moli_runtime::TimerError::CorruptState => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+            moli_runtime::TimerError::Capacity => StatusCode::SERVICE_UNAVAILABLE,
+            moli_runtime::TimerError::Abandoned => StatusCode::GATEWAY_TIMEOUT,
+        },
         CommandError::Counter(error) => match error {
             moli_runtime::CounterError::ReadOnly => StatusCode::FORBIDDEN,
             moli_runtime::CounterError::Value

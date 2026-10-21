@@ -3,7 +3,9 @@
   import { t } from '../lib/i18n.svelte.js';
   import { hub } from '../lib/hub.svelte.js';
 
-  let { point, label, disabled = false, onheld, action = 'button', caption = null } = $props();
+  let { point, label, disabled = false, onheld, action = 'button', caption = null, value = null } = $props();
+  const area = $derived(action === 'button' ? 'systeme.bouton' : action === 'timer' ? 'systeme.minuteur' : 'systeme.compteur');
+  const word = (key) => t(`${area}.${key}`);
   const approvals = $derived(hub.approvals.filter((request) => request.point === point));
   let waiting = $state(0);
   let failures = $state([]);
@@ -11,24 +13,24 @@
   // Serial transport preserves the order of rapid appuis without merging them.
   let tail = Promise.resolve();
 
-  function enqueue(request, target = point) {
+  function enqueue(request, target = point, payload = value) {
     waiting += 1;
     tail = tail.then(async () => {
       try {
-        request ??= await buttonRequest(target);
+        request ??= await buttonRequest(target, undefined, payload);
         const result = await sendButton(request);
         if (!result.ok && result.status !== 202) {
-          message = result.error || t(action === 'button' ? 'systeme.bouton.refus' : 'systeme.compteur.refus');
+          message = result.error || word('refus');
           // An ambiguous/expired identity must never become a fresh press.
           if (result.status >= 500 || result.retryable) failures.push(request);
         } else {
           message = result.status === 202
             ? t('systeme.hub.retenu', { reason: result.reason })
-            : t(action === 'button' ? 'systeme.bouton.envoye' : 'systeme.compteur.envoye');
+            : word('envoye');
         }
       } catch {
         if (request) failures.push(request);
-        message = t(request ? (action === 'button' ? 'systeme.bouton.incertain' : 'systeme.compteur.incertain') : (action === 'button' ? 'systeme.bouton.identite_indisponible' : 'systeme.compteur.identite_indisponible'));
+        message = word(request ? 'incertain' : 'identite_indisponible');
       } finally {
         waiting -= 1;
       }
@@ -37,7 +39,7 @@
 
   function press() {
     if (waiting + failures.length + approvals.length >= 32) {
-      message = t(action === 'button' ? 'systeme.bouton.attendre' : 'systeme.compteur.attendre');
+      message = word('attendre');
       return;
     }
     enqueue(null);
@@ -56,7 +58,7 @@
   {#if failures.length}<button class="retry" onclick={retry}>{t('systeme.bouton.reessayer')}</button>{/if}
   {#if onheld}
     {#each approvals as request (request.id)}
-      <button onclick={() => onheld(request)}>{t(action === 'button' ? 'systeme.bouton.valider' : 'systeme.compteur.valider')}</button>
+      <button onclick={() => onheld(request)}>{word('valider')}</button>
     {/each}
   {/if}
   <span class="message" role="status">{message}</span>

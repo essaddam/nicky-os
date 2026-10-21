@@ -117,6 +117,7 @@ fn automation(graph: serde_json::Value) -> Automation {
         author: Author::Human,
         approved: None,
         approved_version: None,
+        activation: None,
         note: None,
         created: 0,
         updated: 0,

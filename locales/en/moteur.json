@@ -193,5 +193,6 @@
   "moteur.notice.boucle": "“{nom}” kept starting in a loop, so I stopped it. Check it in Automations.",
 
   "moteur.refus.nom_note": "Only a person (house code) can rename an approved automation or change its note.",
-  "moteur.verif.compteur_operation": "This counter operation has no state or occurrence: use its value point."
+  "moteur.verif.compteur_operation": "This counter operation has no state or occurrence: use its value point.",
+  "moteur.verif.minuteur_operation": "A timer operation cannot be read as state."
 }

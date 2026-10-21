@@ -958,3 +958,13 @@ valide ferme l’accès hors de sa fenêtre, si la source est hors ligne/annulé
 y compris pour une session et un SSE déjà ouverts. Les commandes gardent le contrôle
 jusqu’à leur émission. Les comptes membre/propriétaire ne conservent pas cette liaison.
 Voir le [contrat des réservations](reservations.md), notamment la fraîcheur et les limites.
+
+## Commandes de minuteur (AUTO-H1)
+
+Le transport `/api/command` et l'outil MCP `command` acceptent `start` (secondes
+entières de 1 à 604800) et `cancel` (null), avec le `request_id` commun. Le démarrage
+capture les activations validées à cet instant ; les retries ne réarment pas le minuteur.
+`state`, `remaining`, `generation`, `deadline` sont en lecture seule et `finished` est
+une occurrence interne, jamais une commande client. Une retenue 202 n'est pas un succès
+d'exécution. Schémas et erreurs : [OpenAPI](../api/timer-command.openapi.yaml) ;
+persistance et reprise : [minuteurs](minuteurs.md).

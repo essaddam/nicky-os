@@ -11,6 +11,13 @@ use crate::Value;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Kind {
+    Timer {
+        field: crate::TimerField,
+    },
+    TimerCommand {
+        operation: crate::TimerOperation,
+        default_seconds: u32,
+    },
     /// Business state, never assigned through a client command.
     Counter {
         spec: crate::CounterSpec,
@@ -37,16 +44,44 @@ pub enum Kind {
 }
 
 impl Kind {
+    #[must_use]
+    pub fn is_numeric(&self) -> bool {
+        matches!(
+            self,
+            Self::Numeric { .. }
+                | Self::Counter { .. }
+                | Self::Timer {
+                    field: crate::TimerField::Remaining
+                        | crate::TimerField::Generation
+                        | crate::TimerField::Deadline
+                }
+        )
+    }
     /// Commands whose identical contents may represent distinct intentions.
     #[must_use]
     pub fn is_operation(&self) -> bool {
-        matches!(self, Self::Button | Self::CounterCommand { .. })
+        matches!(
+            self,
+            Self::Button | Self::CounterCommand { .. } | Self::TimerCommand { .. }
+        )
+    }
+
+    /// Occurrences are never restored as sampled state.
+    #[must_use]
+    pub fn is_occurrence(&self) -> bool {
+        matches!(
+            self,
+            Self::Button
+                | Self::Timer {
+                    field: crate::TimerField::Expired
+                }
+        )
     }
 
     /// Business-owned state cannot be restored from the periodic device cache.
     #[must_use]
     pub fn uses_state_cache(&self) -> bool {
-        !self.is_operation() && !matches!(self, Self::Counter { .. })
+        !self.is_operation() && !matches!(self, Self::Counter { .. } | Self::Timer { .. })
     }
 }
 
@@ -289,13 +324,20 @@ pub fn validate(kind: &Kind, value: &Value) -> Result<Value, ValueError> {
     {
         return Err(ValueError::TooLong);
     }
+    if matches!(kind, Kind::Timer { .. } | Kind::TimerCommand { .. }) {
+        return valid_timer(kind, value)
+            .then(|| value.clone())
+            .ok_or(ValueError::ExpectedNumber);
+    }
     match (kind, value) {
         (Kind::CounterCommand { .. } | Kind::Button, Value::Null) => Ok(Value::Null),
         (Kind::CounterCommand { .. } | Kind::Button, _) => Err(ValueError::ExpectedPress),
         (Kind::Counter { spec }, Value::Int(value)) if spec.is_valid() && spec.contains(*value) => {
             Ok(Value::Int(*value))
         }
-        (Kind::Counter { .. }, _) => Err(ValueError::ExpectedNumber),
+        (Kind::Counter { .. } | Kind::Timer { .. } | Kind::TimerCommand { .. }, _) => {
+            Err(ValueError::ExpectedNumber)
+        }
         (Kind::Binary, Value::Bool(_)) | (Kind::Text, Value::Text(_)) => Ok(value.clone()),
         (Kind::Binary, _) => Err(ValueError::ExpectedBool),
         (Kind::Numeric { min, max, .. }, v) => {
@@ -320,6 +362,57 @@ pub fn validate(kind: &Kind, value: &Value) -> Result<Value, ValueError> {
             .then(|| value.clone())
             .ok_or_else(|| ValueError::NotAllowed(t.to_string())),
         (Kind::Enum { .. } | Kind::Text, _) => Err(ValueError::ExpectedText),
+    }
+}
+
+fn valid_timer(kind: &Kind, value: &Value) -> bool {
+    use crate::{MAX_TIMER_SECONDS, TimerField, TimerOperation};
+    match (kind, value) {
+        (
+            Kind::TimerCommand {
+                operation: TimerOperation::Start,
+                default_seconds,
+            },
+            Value::Int(seconds),
+        ) => {
+            (1..=MAX_TIMER_SECONDS).contains(default_seconds)
+                && (1..=i64::from(MAX_TIMER_SECONDS)).contains(seconds)
+        }
+        (
+            Kind::TimerCommand {
+                operation: TimerOperation::Cancel,
+                default_seconds,
+            },
+            Value::Null,
+        ) => (1..=MAX_TIMER_SECONDS).contains(default_seconds),
+        (
+            Kind::Timer {
+                field: TimerField::Expired | TimerField::Deadline,
+            },
+            Value::Null,
+        ) => true,
+        (
+            Kind::Timer {
+                field: TimerField::State,
+            },
+            Value::Text(state),
+        ) => matches!(
+            state.as_ref(),
+            "idle" | "running" | "cancelled" | "finished"
+        ),
+        (
+            Kind::Timer {
+                field: TimerField::Remaining,
+            },
+            Value::Int(seconds),
+        ) => (0..=i64::from(MAX_TIMER_SECONDS)).contains(seconds),
+        (
+            Kind::Timer {
+                field: TimerField::Generation | TimerField::Deadline,
+            },
+            Value::Int(number),
+        ) => (0..=crate::MAX_COUNTER_VALUE).contains(number),
+        _ => false,
     }
 }
 

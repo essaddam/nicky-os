@@ -19,6 +19,10 @@ const MAX_QUEUE: usize = 10;
 /// Let the drivers connect before « when Moli starts ».
 const START_DELAY: Duration = Duration::from_secs(15);
 
+#[cfg(test)]
+#[path = "engine_timer_tests.rs"]
+mod timer_tests;
+
 pub(crate) async fn run(autos: Automations) {
     let mut events = autos.0.hub.subscribe();
     let has_occurrences = !autos
@@ -58,6 +62,7 @@ pub(crate) async fn run(autos: Automations) {
     }
     remember_all(&autos);
     mark_this_minute(&autos);
+    autos.0.hub.timer_consumer_ready(true);
     let mut clock = tokio::time::interval(Duration::from_secs(1));
     clock.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let started = tokio::time::sleep(START_DELAY);
@@ -70,6 +75,7 @@ pub(crate) async fn run(autos: Automations) {
             event = events.recv() => match event {
                 Ok(Event::State { point, value, .. }) => on_state(&autos, &point, &value),
                 Ok(Event::Occurrence { occurrence }) => on_occurrence(&autos, occurrence).await,
+                Ok(Event::DeviceUpserted { device }) if device.points.iter().any(|point| matches!(point.kind,moli_core::Kind::Timer{field:moli_core::TimerField::Expired})) => autos.refresh_live(),
                 Ok(_) => {}
                 Err(RecvError::Lagged(missed)) => {
                     tracing::warn!(missed, "automations lagged behind the hub: some changes were not seen");
@@ -93,6 +99,7 @@ pub(crate) async fn run(autos: Automations) {
         }
     }
     // Shutdown: running automations stop here, and get a moment to record
+    autos.0.hub.timer_consumer_ready(false);
     // themselves (« interrompu ») before the process ends: a light switched
     // on for five minutes then left on must show in the history.
     autos
@@ -116,17 +123,24 @@ async fn on_occurrence(autos: &Automations, event: Occurrence) {
     {
         return;
     }
-    let targets = {
-        let index = autos
-            .0
-            .occurrence_index
-            .read()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        // Children come from the indexed activation, never from a newly looked-up
-        // parent after an off/on transition or a persistence wait.
-        index.targets(&event)
+    let generation = match autos.0.hub.timer_delivery(&event).await {
+        Ok(generation) => generation,
+        Err(moli_runtime::TimerError::Stale) => return,
+        Err(error) => {
+            autos.0.hub.occurrence_problem(&event, error.to_string());
+            return;
+        }
     };
-    if targets.is_empty() {
+    let recipients = if generation.is_some() {
+        match autos.0.hub.timer_recipients(&event).await {
+            Ok(recipients) => Some(recipients),
+            Err(_) => return,
+        }
+    } else {
+        None
+    };
+    let targets = eligible_targets(autos, &event, recipients.as_deref());
+    if targets.is_empty() && generation.is_none() {
         return;
     }
     let admitted = async {
@@ -137,20 +151,25 @@ async fn on_occurrence(autos: &Automations, event: Occurrence) {
                 .hub
                 .occurrence_problem(&interrupted, tr!("moteur.occurrence.interruption"));
         }
-        consumer
-            .claim(
-                &event,
-                targets
-                    .iter()
-                    .map(|(a, trigger, _)| (a.id.clone(), trigger.clone()))
-                    .collect(),
-            )
-            .await
+        let targets = targets
+            .iter()
+            .map(|(a, trigger, _)| (a.id.clone(), trigger.clone()))
+            .collect();
+        if generation.is_some() {
+            consumer.claim_timer(&event, targets).await
+        } else {
+            consumer.claim(&event, targets).await
+        }
     }
     .await;
     match admitted {
         Ok(true) => {}
-        Ok(false) => return,
+        Ok(false) => {
+            if generation.is_some() {
+                ack_timer(autos, &event).await;
+            }
+            return;
+        }
         Err(error) => {
             tracing::warn!(%error, "occurrence admission failed");
             autos
@@ -160,17 +179,91 @@ async fn on_occurrence(autos: &Automations, event: Occurrence) {
             return;
         }
     }
+    let skipped = if generation.is_some() {
+        match autos
+            .0
+            .hub
+            .with_timer_generation(&event, |token| {
+                launch_occurrences(autos, &event, &targets, Some(&token))
+            })
+            .await
+        {
+            Ok(skipped) => skipped,
+            Err(error) => {
+                if error != moli_runtime::TimerError::Stale {
+                    autos.0.hub.occurrence_problem(&event, error.to_string());
+                }
+                targets
+                    .iter()
+                    .map(|(a, trigger, _)| (a.id.clone(), trigger.clone()))
+                    .collect()
+            }
+        }
+    } else {
+        launch_occurrences(autos, &event, &targets, None)
+    };
+    for (automation, trigger) in skipped {
+        finish_occurrence(autos, &event, &automation, &trigger).await;
+    }
+
+    if generation.is_some() {
+        ack_timer(autos, &event).await;
+    }
+}
+
+fn eligible_targets(
+    autos: &Automations,
+    event: &Occurrence,
+    recipients: Option<&[moli_core::TimerRecipient]>,
+) -> Vec<(Automation, String, tokio_util::sync::CancellationToken)> {
+    let index = autos
+        .0
+        .occurrence_index
+        .read()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    // Children come from the indexed activation, never from a newly looked-up
+    // parent after an off/on transition or a persistence wait.
+    index
+        .targets(event)
+        .into_iter()
+        .filter(|(automation, trigger, _)| {
+            recipients.is_none_or(|recipients| {
+                recipients.iter().any(|recipient| {
+                    recipient.automation == automation.id
+                        && recipient.trigger == *trigger
+                        && automation.activation.as_ref() == Some(&recipient.activation)
+                })
+            })
+        })
+        .collect::<Vec<_>>()
+}
+
+fn launch_occurrences(
+    autos: &Automations,
+    event: &Occurrence,
+    targets: &[(Automation, String, tokio_util::sync::CancellationToken)],
+    generation: Option<&tokio_util::sync::CancellationToken>,
+) -> Vec<(String, String)> {
+    let mut skipped = Vec::new();
     for (a, trigger, token) in targets {
         let why = tr!("moteur.pourquoi.occurrence", nom = event.point);
         if token.is_cancelled()
-            || runaway(autos, &a)
+            || generation.is_some_and(tokio_util::sync::CancellationToken::is_cancelled)
+            || runaway(autos, a)
             || autos
-                .start_occurrence_run(&a, &trigger, why, &event, token)
+                .start_occurrence_run(a, trigger, why, event, token.clone(), generation.cloned())
                 .id
                 == 0
         {
-            finish_occurrence(autos, &event, &a.id, &trigger).await;
+            skipped.push((a.id.clone(), trigger.clone()));
         }
+    }
+    skipped
+}
+
+async fn ack_timer(autos: &Automations, event: &Occurrence) {
+    if let Err(error) = autos.0.hub.ack_timer(event).await {
+        autos.0.hub.occurrence_problem(event, error.to_string());
     }
 }
 
@@ -487,8 +580,19 @@ impl Automations {
         why: String,
         event: &Occurrence,
         token: tokio_util::sync::CancellationToken,
+        generation: Option<tokio_util::sync::CancellationToken>,
     ) -> crate::Run {
-        self.start_context_run(a, trigger, why, false, Some(event), Some(token))
+        self.start_context_run(
+            a,
+            trigger,
+            why,
+            false,
+            Some(event),
+            Some(crate::run::RunCancellation {
+                activation: token,
+                generation,
+            }),
+        )
     }
 
     fn start_context_run(
@@ -498,14 +602,9 @@ impl Automations {
         why: String,
         manual: bool,
         event: Option<&Occurrence>,
-        token: Option<tokio_util::sync::CancellationToken>,
+        token: Option<crate::run::RunCancellation>,
     ) -> crate::Run {
-        let skipped = |why: String| {
-            let mut run = crate::Run::new(a, trigger, why, 0, false, event);
-            run.ended = Some(moli_core::now_ms());
-            run.status = crate::RunStatus::Cancelled;
-            run
-        };
+        let skipped = |why: String| skipped_run(a, trigger, why, event);
         // Definition -> parents -> active/queues is the mutation lock order.
         // A definition cannot be replaced between admission and registration.
         let definitions = self
@@ -524,7 +623,13 @@ impl Automations {
         // cancels them all, the waiting ones too. Keep mode/queue registration
         // atomic with respect to invalidating this activation's parent.
         let mut parents = lock(&self.0.stops);
-        let token = token.unwrap_or_else(|| parents.entry(a.id.clone()).or_default().child_token());
+        let token = token.unwrap_or_else(|| {
+            parents
+                .entry(a.id.clone())
+                .or_default()
+                .child_token()
+                .into()
+        });
         if token.is_cancelled() {
             return skipped(why);
         }
@@ -554,7 +659,7 @@ impl Automations {
             }
         }
         let id = self.next_id();
-        lock(&self.0.active).insert(a.id.clone(), (id, token.clone()));
+        lock(&self.0.active).insert(a.id.clone(), (id, token.activation.clone()));
         let queue = (a.mode == Mode::Queued).then(|| {
             lock(&self.0.queues)
                 .entry(a.id.clone())
@@ -605,6 +710,18 @@ impl Automations {
         });
         crate::Run::new(a, trigger, why, id, false, event)
     }
+}
+
+fn skipped_run(
+    a: &Automation,
+    trigger: &str,
+    why: String,
+    event: Option<&Occurrence>,
+) -> crate::Run {
+    let mut run = crate::Run::new(a, trigger, why, 0, false, event);
+    run.ended = Some(moli_core::now_ms());
+    run.status = crate::RunStatus::Cancelled;
+    run
 }
 
 fn label(autos: &Automations, point: &str) -> String {
@@ -699,6 +816,7 @@ mod tests {
             author: crate::Author::Human,
             approved: None,
             approved_version: None,
+            activation: None,
             note: None,
             created: 0,
             updated: 0,

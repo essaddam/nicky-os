@@ -230,7 +230,23 @@ impl Automations {
         let tz = jiff::tz::TimeZone::get(&config.timezone)?;
         let path = data_dir.map(|d| d.join("automations.json"));
         let runs_path = data_dir.map(|d| d.join("automation-runs.jsonl"));
-        let list = store::load(path.as_deref()).await?;
+        let mut list = store::load(path.as_deref()).await?;
+        let mut migrated = false;
+        for automation in list.iter_mut().filter(|a| a.is_live()) {
+            if let Some(activation) = &automation.activation {
+                if activation.len() != 32
+                    || !activation.bytes().all(|byte| byte.is_ascii_hexdigit())
+                {
+                    anyhow::bail!("invalid automation activation identity");
+                }
+            } else {
+                automation.activation = Some(new_activation()?);
+                migrated = true;
+            }
+        }
+        if migrated {
+            store::save(path.as_deref(), &list).await?;
+        }
         let runs = store::load_runs(runs_path.as_deref()).await;
         let next = runs.iter().map(|r| r.id).max().unwrap_or(0) + 1;
         let (live, _) = broadcast::channel(256);
@@ -415,6 +431,7 @@ impl Automations {
                 a.author = old.author;
                 a.approved.clone_from(&old.approved);
                 a.approved_version.clone_from(&old.approved_version);
+                a.activation.clone_from(&old.activation);
                 a.enabled = if by.human {
                     old.enabled
                 } else {
@@ -439,6 +456,7 @@ impl Automations {
                 a.author = by.author;
                 a.approved = None;
                 a.approved_version = None;
+                a.activation = None;
                 a.enabled = false;
                 list.push(a.clone());
                 lock(&self.0.fingerprints).remove(&a.id);
@@ -521,8 +539,12 @@ impl Automations {
         if !self.check(&current.graph).ok() {
             return Err(AutomationError::Invalid("fix the problems first".into()));
         }
+        let activation = new_activation()?;
         let a = self.update(id, |a| {
             if a.fingerprint() == fingerprint {
+                if !a.is_live() || a.activation.is_none() {
+                    a.activation = Some(activation);
+                }
                 self.stop_holds(id);
                 a.approved = Some(a.fingerprint());
                 a.approved_version = Some(Version {
@@ -592,7 +614,9 @@ impl Automations {
             .ok_or(AutomationError::Unknown)?
             .approved_version
             .ok_or_else(|| AutomationError::Invalid("no approved version".into()))?;
+        let activation = new_activation()?;
         let a = self.update_with_stop(id, true, |a| {
+            a.activation = Some(activation);
             a.mode = version.mode;
             a.graph = version.graph;
         })?;
@@ -668,7 +692,7 @@ impl Automations {
                 &start,
                 tr!("moteur.pourquoi.essai"),
                 true,
-                CancellationToken::new(),
+                CancellationToken::new().into(),
                 id,
                 None,
             )
@@ -733,6 +757,43 @@ impl Automations {
         // publication and parent assignment. Never publish a detached snapshot.
         let live: Vec<Automation> = list.iter().filter(|a| a.is_live()).cloned().collect();
         let live = Arc::new(live);
+        let mut audience = std::collections::BTreeMap::new();
+        for automation in live.iter() {
+            let Some(activation) = &automation.activation else {
+                continue;
+            };
+            for node in automation.graph.triggers() {
+                if let Step::WhenOccurrence { point, .. } = &node.step {
+                    let timer = moli_core::PointId::from(point.clone())
+                        .split()
+                        .and_then(|(id, key)| {
+                            self.0.hub.describe(&id).map(|(device, _)| {
+                                device.point(key).is_some_and(|point| {
+                                    matches!(
+                                        point.kind,
+                                        moli_core::Kind::Timer {
+                                            field: moli_core::TimerField::Expired
+                                        }
+                                    )
+                                })
+                            })
+                        })
+                        .unwrap_or(false);
+                    if !timer {
+                        continue;
+                    }
+                    audience
+                        .entry(moli_core::PointId::from(point.clone()))
+                        .or_insert_with(Vec::new)
+                        .push(moli_core::TimerRecipient {
+                            automation: automation.id.clone(),
+                            trigger: node.id.clone(),
+                            activation: activation.clone(),
+                        });
+                }
+            }
+        }
+        self.0.hub.set_timer_audience(audience);
         {
             let mut index = self
                 .0
@@ -811,6 +872,20 @@ pub fn tidy_name(name: &str) -> String {
         .collect::<String>()
         .trim_end()
         .to_owned()
+}
+
+fn new_activation() -> Result<String, AutomationError> {
+    use ring::rand::{SecureRandom, SystemRandom};
+    use std::fmt::Write as _;
+    let mut bytes = [0; 16];
+    SystemRandom::new()
+        .fill(&mut bytes)
+        .map_err(|_| AutomationError::Io("cannot allocate activation identity".into()))?;
+    let mut id = String::with_capacity(32);
+    for byte in bytes {
+        let _ = write!(id, "{byte:02x}");
+    }
+    Ok(id)
 }
 
 /// Bounds on what is stored: duplicate edges dropped, long texts cut.
@@ -905,6 +980,7 @@ mod tests {
             author: Author::Human,
             approved: None,
             approved_version: None,
+            activation: None,
             note: None,
             created: 0,
             updated: 0,

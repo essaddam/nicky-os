@@ -15,7 +15,16 @@
 </script>
 
 {#if kind === 'value'}
-  {#if ['button', 'counter_command'].includes(type)}
+  {#if type === 'timer_command' && spec.kind.operation === 'start'}
+    <label class="num"><input type="number" min="1" max="604800" step="1" value={value ?? spec.kind.default_seconds}
+      onchange={(e) => onchange?.(Number(e.currentTarget.value))} /><span>{t('systeme.minuteur.secondes')}</span></label>
+  {:else if type === 'timer' && spec.kind.field === 'state'}
+    <div class="seg">
+      {#each ['idle', 'running', 'cancelled', 'finished'] as state (state)}
+        <button class:on={value === state} onclick={() => onchange?.(state)}>{t('systeme.minuteur.etat_' + state)}</button>
+      {/each}
+    </div>
+  {:else if ['button', 'counter_command', 'timer_command'].includes(type) || (type === 'timer' && spec.kind.field === 'expired')}
     <span>{spec.label}</span>
   {:else if type === 'binary'}
     <div class="seg">
@@ -36,14 +45,14 @@
         {#each values as v (v)}<option value={v}>{v}</option>{/each}
       </select>
     {/if}
-  {:else if ['numeric', 'counter'].includes(type)}
+  {:else if ['numeric', 'counter', 'timer'].includes(type)}
     <label class="num">
       <input
         type="number"
         value={value ?? ''}
         min={spec.kind.min ?? spec.kind.spec?.min}
         max={spec.kind.max ?? spec.kind.spec?.max}
-        step={type === 'counter' ? 1 : spec.kind.step ?? 'any'}
+        step={['counter', 'timer'].includes(type) ? 1 : spec.kind.step ?? 'any'}
         onchange={(e) => onchange?.(e.currentTarget.value === '' ? null : Number(e.currentTarget.value))} />
       {#if spec.unit}<span>{spec.unit}</span>{/if}
     </label>

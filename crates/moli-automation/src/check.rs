@@ -209,6 +209,9 @@ impl Ctx<'_> {
         if !writable && matches!(spec.kind, Kind::CounterCommand { .. }) {
             self.push(Level::Error, tr!("moteur.verif.compteur_operation"));
         }
+        if !writable && matches!(spec.kind, Kind::TimerCommand { .. }) {
+            self.push(Level::Error, tr!("moteur.verif.minuteur_operation"));
+        }
         if writable {
             if !spec.access.write {
                 self.push(
@@ -227,11 +230,10 @@ impl Ctx<'_> {
         match rule {
             Rule::State { point, op, value } => {
                 if let Some(spec) = self.need(point, false) {
-                    if spec.kind == Kind::Button {
+                    if spec.kind.is_occurrence() {
                         self.push(Level::Error, tr!("moteur.verif.bouton_occurrence"));
                     } else if matches!(op, Op::Gt | Op::Ge | Op::Lt | Op::Le)
-                        && (!matches!(spec.kind, Kind::Numeric { .. } | Kind::Counter { .. })
-                            || value.as_f64().is_none())
+                        && (!spec.kind.is_numeric() || value.as_f64().is_none())
                     {
                         self.push(Level::Error, tr!("moteur.verif.comparaison_nombres"));
                     }
@@ -289,7 +291,7 @@ fn check_node(
         }
         Step::WhenState { point, .. } => {
             if c.need(point, false)
-                .is_some_and(|spec| spec.kind == Kind::Button)
+                .is_some_and(|spec| spec.kind.is_occurrence())
             {
                 c.push(Level::Error, tr!("moteur.verif.bouton_occurrence"));
             }
@@ -301,7 +303,7 @@ fn check_node(
             ..
         } => {
             if let Some(spec) = c.need(point, false)
-                && !matches!(spec.kind, Kind::Numeric { .. } | Kind::Counter { .. })
+                && !spec.kind.is_numeric()
             {
                 c.push(Level::Error, tr!("moteur.verif.seuil_nombre"));
             }

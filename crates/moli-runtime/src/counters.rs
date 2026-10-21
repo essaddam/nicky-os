@@ -91,7 +91,7 @@ struct State {
     clients: BTreeMap<String, Client>,
 }
 
-fn valid_device(device: &DeviceId) -> bool {
+pub(crate) fn valid_device(device: &DeviceId) -> bool {
     device.as_str().len() <= 240
         && device
             .as_str()

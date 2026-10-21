@@ -41,6 +41,8 @@ export function isAlarm(point, value) {
 
 export function formatValue(point, value) {
   if (value === undefined || value === null) return '—';
+  if (point.kind.type === 'timer' && point.kind.field === 'state' && ['idle', 'running', 'cancelled', 'finished'].includes(value)) return t(`systeme.minuteur.etat_${value}`);
+  if (point.kind.type === 'timer' && point.kind.field === 'deadline' && typeof value === 'number') return new Date(value).toLocaleString(locale());
   if (point.kind.type === 'binary') {
     if (Object.hasOwn(BINARY_ALARM, point.semantic)) return t(`systeme.format.binaire.${point.semantic}.${value ? 'on' : 'off'}`);
     return value ? t('systeme.format.oui') : t('systeme.format.non');

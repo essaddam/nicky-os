@@ -34,10 +34,23 @@ pub(crate) async fn load(path: Option<&Path>) -> anyhow::Result<Vec<Automation>>
             // A damaged file must not keep the house from starting: the last
             // good copy, else nothing (the damaged file is kept aside).
             tracing::error!(error = %e, "automations file damaged: falling back to the backup");
-            let aside = path.with_extension(format!("json.damaged-{}", moli_core::now_ms()));
-            let _ = tokio::fs::copy(path, &aside).await;
+            let aside = path.with_extension(format!(
+                "json.damaged-{}-{}",
+                moli_core::now_ms(),
+                super::new_activation()?
+            ));
+            // Quarantine before migrating recovered lineages. A later save must
+            // not overwrite the good backup with this corrupt primary file.
+            tokio::fs::rename(path, &aside).await?;
             match read(&path.with_extension("json.bak")).await {
-                Ok(list) => Ok(list),
+                Ok(mut list) => {
+                    // A backup cannot prove which later activations were revoked.
+                    // Keep its validated graphs, but never reuse their old lineages.
+                    for automation in &mut list {
+                        automation.activation = None;
+                    }
+                    Ok(list)
+                }
                 Err(e) => {
                     tracing::error!(error = %e, "no usable backup: starting without automations");
                     Ok(Vec::new())
@@ -70,7 +83,12 @@ pub(crate) async fn save(path: Option<&Path>, list: &[Automation]) -> std::io::R
     if tokio::fs::try_exists(path).await.unwrap_or(false) {
         let _ = tokio::fs::copy(path, path.with_extension("json.bak")).await;
     }
-    tokio::fs::rename(&tmp, path).await
+    tokio::fs::rename(&tmp, path).await?;
+    let parent = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    tokio::fs::File::open(parent).await?.sync_all().await
 }
 
 pub(crate) async fn load_runs(path: Option<&Path>) -> VecDeque<Run> {

@@ -15,3 +15,8 @@ puis la reprise, sur cette seule aide virtuelle. Un retry garde son `request_id`
 une répétition volontaire en reçoit un nouveau. Les valeurs et reçus vivent ensemble
 dans `helper-counters.json`, inclus dans la sauvegarde. Ne pas le supprimer pour
 résoudre une erreur. Voir [le contrat compteur](../../docs/components/compteurs.md).
+
+Pour une attente durable, choisir `kind = "timer"` et une durée initiale entière
+`duration_s` de 1 à 604800 secondes. Faire valider les graphes avant de démarrer le
+minuteur : une validation ultérieure n'hérite pas de cette génération. Le démarrage
+et l'annulation restent sous garde ; aucun test réel dans une pièce protégée.

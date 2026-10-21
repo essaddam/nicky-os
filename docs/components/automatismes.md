@@ -164,7 +164,7 @@ des travaux à réaliser : aides temporelles, compteur, bouton, planning, scène
 calculés et traduction des usages HA. Il décrit les contrats de reprise et les critères
 de test de chaque lot. **Ce document n'annonce pas leur disponibilité** : les aides
 à valeur historiques restent `select`, `switch`, `number` et `text`. Le bouton
-événementiel AUTO-H4 et le compteur AUTO-H2 sont décrits ci-dessous ; les autres lots
+événementiel AUTO-H4, le compteur AUTO-H2 et le minuteur AUTO-H1 sont décrits ci-dessous ; les autres lots
 restent des propositions.
 Les contrats proposés restent à relire avant implémentation ; leur publication ne
 modifie aucune des règles de validation et d'exécution décrites ci-dessus.
@@ -238,3 +238,17 @@ ne lit jamais la valeur pour calculer une affectation côté client. Ces opérat
 ne sont ni des états ni des occurrences. Les graphes créés par un agent ou un import
 restent soumis aux mêmes validations humaines. Les quatre aides historiques et
 le bouton AUTO-H4 conservent leur comportement.
+
+## Minuteurs (AUTO-H1)
+
+Les [minuteurs durables](minuteurs.md) exposent état, restant, génération et échéance.
+`set` sur `start` porte une durée entière de 1 à 604800 secondes ; `cancel` porte null.
+`when_occurrence` sur `finished` traite l'expiration de la génération courante. Valeurs,
+reçus et expiration en attente sont persistés avant confirmation ; le moteur consomme
+l'identité avant lancement. Un retry ou un redémarrage n'alloue pas de nouvelle expiration.
+Une interruption après admission est signalée sans rejeu aveugle de commandes physiques.
+
+Les destinataires et leurs lignées validées sont figés au démarrage. Une activation
+ultérieure ne reçoit pas cette génération ; redémarrer le minuteur après validation
+pour l'inclure. Sans destinataire, le reçu sans effet est durable avant acquittement.
+Le contrat live-only AUTO-H4 reste inchangé.

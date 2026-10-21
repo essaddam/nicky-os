@@ -145,6 +145,10 @@ pub enum Action {
     Counter {
         point: PointId,
     },
+    Timer {
+        point: PointId,
+        generation: Option<u64>,
+    },
     Occurrence {
         point: PointId,
         occurrence: crate::OccurrenceId,

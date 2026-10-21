@@ -14,6 +14,7 @@ mod model;
 mod occurrence;
 pub mod privacy;
 mod spec;
+mod timer;
 mod value;
 
 pub use access_window::AccessWindow;
@@ -29,6 +30,10 @@ pub use occurrence::{
     RequestId,
 };
 pub use spec::{Access, Kind, MAX_TEXT, PointSpec, Semantic, Unit, ValueError, validate};
+pub use timer::{
+    DEFAULT_TIMER_SECONDS, MAX_TIMER_SECONDS, TimerField, TimerOperation, TimerRecipient,
+    TimerStatus,
+};
 pub use value::Value;
 
 /// Milliseconds since the Unix epoch.

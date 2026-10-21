@@ -152,6 +152,7 @@ impl Assistant {
             author: Author::Import,
             approved: None,
             approved_version: None,
+            activation: None,
             note: Some(note(item, draft.note.as_deref())),
             created: 0,
             updated: 0,

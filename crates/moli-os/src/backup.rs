@@ -19,7 +19,7 @@ use anyhow::{Context as _, bail};
 /// SQLite databases: copied through SQLite itself.
 const DATABASES: [&str; 2] = ["history.db", "energy.db"];
 /// Everything else worth keeping (missing ones are skipped).
-const FILES: [&str; 19] = [
+const FILES: [&str; 20] = [
     "moli.toml",
     "plan.json",
     "phones.json",
@@ -32,6 +32,7 @@ const FILES: [&str; 19] = [
     "button-occurrences.json",
     "automation-occurrences.json",
     "helper-counters.json",
+    "helper-timers.json",
     "journal.jsonl",
     "journal.jsonl.1",
     "state.json",
@@ -174,6 +175,36 @@ fn known_name(name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn auto_h1_backup_restores_both_delivery_horizons_and_activation_lineages() {
+        let root = std::env::temp_dir().join(format!(
+            "moli-h1-backup-{}-{}",
+            std::process::id(),
+            moli_core::now_ms()
+        ));
+        let data = root.join("data");
+        let saved = root.join("saved");
+        let fresh = root.join("fresh");
+        std::fs::create_dir_all(&data).unwrap();
+        let bundle = [
+            ("helper-timers.json", br#"{"version":1,"timers":{"fixture:clock":{"generation":1,"pending":true,"audience":[]}},"clients":{}}"#.as_slice()),
+            ("automation-occurrences.json", br#"{"version":1,"sources":{"fixture":{"highest":1}},"pending":{}}"#.as_slice()),
+            ("automations.json", br#"[{"id":"expiry","activation":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]"#.as_slice()),
+        ];
+        for (name, bytes) in bundle {
+            std::fs::write(data.join(name), bytes).unwrap();
+        }
+        backup(&data, &saved).unwrap();
+        restore(&fresh, &saved, false).unwrap();
+        for (name, bytes) in bundle {
+            assert_eq!(std::fs::read(fresh.join(name)).unwrap(), bytes, "{name}");
+        }
+        std::fs::write(saved.join("helper-timers.json"), b"damaged").unwrap();
+        assert!(restore(&root.join("other"), &saved, false).is_err());
+        assert!(!root.join("other").exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn auto_h2_backup_restores_counter_values_and_receipts_together() {

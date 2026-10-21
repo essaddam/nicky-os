@@ -312,3 +312,11 @@ valeur entière en lecture seule, opérations `increment` et `reset` à null, pr
 unique au hub, valeurs et reçus atomiques, garde/journal et interfaces communes.
 Les autres lots de ce cadrage restent des propositions tant que leur propre livraison
 n'est pas décrite. Ce lot n'introduit pas de registre de dépendances exécutables.
+
+## Livraison AUTO-H1
+
+Le contrat des [minuteurs](minuteurs.md) décrit commandes entières, restant monotone,
+échéance UTC, générations, reçus atomiques et expiration récupérable. Les lignées
+figées au démarrage protègent contre une nouvelle validation après crash. Le moteur
+persiste les consommations sans cible avant acquittement. Aucun LLM, nouveau chemin
+de confiance ou changement de la sémantique live-only AUTO-H4.

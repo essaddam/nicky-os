@@ -136,6 +136,8 @@ pub(crate) struct Consumer {
     file: StateFile,
     state: Option<State>,
     fenced: bool,
+    #[cfg(test)]
+    pause: Option<(Arc<tokio::sync::Notify>, Arc<tokio::sync::Notify>)>,
 }
 
 pub(crate) fn key(id: &OccurrenceId) -> String {
@@ -148,10 +150,17 @@ impl Consumer {
             file: StateFile::new(path, 1024 * 1024),
             state: None,
             fenced: false,
+            #[cfg(test)]
+            pause: None,
         }
     }
 
     async fn save(&mut self, state: State) -> std::io::Result<()> {
+        #[cfg(test)]
+        if let Some((entered, resume)) = self.pause.take() {
+            entered.notify_one();
+            resume.notified().await;
+        }
         match self.file.write(&state).await {
             Ok(()) => {
                 self.state = Some(state);
@@ -164,6 +173,15 @@ impl Consumer {
                 Err(error.error)
             }
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn pause_next_save(
+        &mut self,
+        entered: Arc<tokio::sync::Notify>,
+        resume: Arc<tokio::sync::Notify>,
+    ) {
+        self.pause = Some((entered, resume));
     }
 
     /// Old pending runs are ambiguous. They are surfaced before accepting more work.
@@ -222,17 +240,34 @@ impl Consumer {
         event: &Occurrence,
         targets: BTreeSet<(String, String)>,
     ) -> std::io::Result<bool> {
+        self.claim_inner(event, targets, false).await
+    }
+
+    pub async fn claim_timer(
+        &mut self,
+        event: &Occurrence,
+        targets: BTreeSet<(String, String)>,
+    ) -> std::io::Result<bool> {
+        self.claim_inner(event, targets, true).await
+    }
+
+    async fn claim_inner(
+        &mut self,
+        event: &Occurrence,
+        targets: BTreeSet<(String, String)>,
+        allow_empty: bool,
+    ) -> std::io::Result<bool> {
         if self.fenced {
             return Err(std::io::Error::other("occurrence consumer fenced"));
         }
-        if targets.is_empty() || targets.len() > 1024 {
+        if (!allow_empty && targets.is_empty()) || targets.len() > 1024 {
             return Err(std::io::Error::other("invalid occurrence targets"));
         }
         let mut state = self
             .state
             .clone()
             .ok_or_else(|| std::io::Error::other("consumer not recovered"))?;
-        if state.pending.len() >= MAX_PENDING {
+        if !targets.is_empty() && state.pending.len() >= MAX_PENDING {
             return Err(std::io::Error::other("too many pending occurrences"));
         }
         let source = event.id.source.to_string();
@@ -261,13 +296,15 @@ impl Consumer {
             return Ok(false);
         }
         window.seen |= 1_u64 << distance;
-        state.pending.insert(
-            key(&event.id),
-            Pending {
-                event: event.clone(),
-                remaining: targets,
-            },
-        );
+        if !targets.is_empty() {
+            state.pending.insert(
+                key(&event.id),
+                Pending {
+                    event: event.clone(),
+                    remaining: targets,
+                },
+            );
+        }
         self.save(state).await?;
         Ok(true)
     }
@@ -303,6 +340,48 @@ impl Consumer {
 mod tests {
     use super::*;
 
+    #[tokio::test]
+    async fn auto_h1_empty_admission_is_durable_before_any_ack_and_future_targets() {
+        let path = std::env::temp_dir().join(format!("moli-empty-timer-{}", moli_core::now_ms()));
+        tokio::fs::create_dir_all(&path).await.unwrap();
+        let file = path.join("consumer.json");
+        let mut event = Occurrence {
+            id: OccurrenceId {
+                source: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".into(),
+                sequence: 1,
+            },
+            stream: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".into(),
+            position: 1,
+            point: "fixture:clock/finished".into(),
+            value: moli_core::Value::Null,
+            ts: 1,
+            durable: true,
+            correlation: None,
+        };
+        let mut first = Consumer::new(Some(file.clone()));
+        first.recover(&event.stream).await.unwrap();
+        assert!(
+            first.claim(&event, BTreeSet::new()).await.is_err(),
+            "live-only H4 contract unchanged"
+        );
+        assert!(first.claim_timer(&event, BTreeSet::new()).await.unwrap());
+        drop(first); // Producer ACK was lost.
+        event.stream = "cccccccccccccccccccccccccccccccc".into();
+        let mut fresh = Consumer::new(Some(file));
+        fresh.recover(&event.stream).await.unwrap();
+        assert!(
+            !fresh
+                .claim_timer(
+                    &event,
+                    BTreeSet::from([("future".into(), "trigger".into())])
+                )
+                .await
+                .unwrap()
+        );
+        assert!(fresh.state.as_ref().unwrap().pending.is_empty());
+        tokio::fs::remove_dir_all(path).await.unwrap();
+    }
+
     fn event(sequence: u64, stream: &str) -> Occurrence {
         Occurrence {
             id: OccurrenceId {
@@ -337,6 +416,7 @@ mod tests {
             author: crate::Author::Human,
             approved: None,
             approved_version: None,
+            activation: None,
             note: None,
             created: 0,
             updated: 0,
@@ -408,6 +488,7 @@ mod tests {
             author: crate::Author::Human,
             approved: None,
             approved_version: None,
+            activation: None,
             note: None,
             created: 0,
             updated: 0,

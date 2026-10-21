@@ -346,6 +346,26 @@ impl DriverCtx {
         }
     }
 
+    /// Loads a timer from its authoritative business state.
+    pub async fn initialize_timer(
+        &self,
+        device: &DeviceId,
+        seconds: u32,
+    ) -> Result<(), crate::TimerError> {
+        if !self.owns(device) {
+            return Err(crate::TimerError::Definition);
+        }
+        self.hub.initialize_timer(device, seconds).await
+    }
+
+    pub async fn timer_command(&self, command: CommandRequest) {
+        if self.owns(&command.device.id) {
+            self.hub.timer_command(command, self.cancel.clone()).await;
+        } else {
+            command.reply_result(Err(crate::TimerError::Definition.into()));
+        }
+    }
+
     /// Loads and publishes a counter from its authoritative business state.
     pub async fn initialize_counter(
         &self,

@@ -14,3 +14,8 @@
 - `button` : occurrence distincte par appui, sans état restauré ; voir AUTO-H4.
 - Recette : [`recettes/ballon.md`](recettes/ballon.md), un ballon d'eau chaude sur relais
   (sélecteur et trois brouillons d'automatismes, repris d'un paquet HA).
+
+
+- `timer` : démarrage entier borné, annulation à null, restant monotone et expiration
+  récupérable par génération ; état/reçus dans `helper-timers.json`. Les destinataires
+  validés sont capturés au démarrage. Voir [minuteurs](../../docs/components/minuteurs.md).

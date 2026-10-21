@@ -17,9 +17,9 @@
   const POWER = ['on', 'on_off', 'state', 'switch', 'switch_1', 'power'];
   const fits = (p) =>
     mode === 'write' ? p.access?.write
-      : mode === 'number' ? ['numeric', 'counter'].includes(p.kind.type)
+      : mode === 'number' ? ['numeric', 'counter'].includes(p.kind.type) || (p.kind.type === 'timer' && !['state', 'expired'].includes(p.kind.field))
       : mode === 'state' ? p.access?.read && !['button', 'counter_command'].includes(p.kind.type)
-      : mode === 'occurrence' ? p.kind.type === 'button' || p.access?.read : true;
+      : mode === 'occurrence' ? p.kind.type === 'button' || (p.kind.type === 'timer' && p.kind.field === 'expired') || p.access?.read : true;
   const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
   const devices = $derived.by(() => {

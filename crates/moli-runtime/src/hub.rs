@@ -10,6 +10,9 @@ mod counter_tests;
 use std::sync::{Arc, Mutex, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::{Duration, Instant};
 
+#[path = "timer_hub.rs"]
+mod timer_hub;
+
 use moli_core::{
     Action, ApprovalRequest, Decision, Device, DeviceId, DriverStatus, Event, InstanceId,
     JournalEntry, Label, Origin, Outcome, PointId, Sample, Value, ValueError, now_ms, validate,
@@ -40,6 +43,9 @@ pub struct HubOptions {
     /// Atomic counter values and request receipts, shared by all helper instances.
     /// `None` deliberately keeps them volatile (for isolated test/demo hubs).
     pub counter_state_path: Option<PathBuf>,
+    /// Timer generations, deadlines and request receipts, independent of state.json.
+    pub timer_state_path: Option<PathBuf>,
+    pub timer_clock: fn() -> u64,
     /// Occurrence wall-clock metadata only; identities never depend on it.
     pub occurrence_clock: fn() -> u64,
     /// Append-only journal file (JSON Lines). `None` keeps it in memory only.
@@ -64,6 +70,8 @@ impl Default for HubOptions {
             state_path: None,
             button_state_path: None,
             counter_state_path: None,
+            timer_state_path: None,
+            timer_clock: now_ms,
             occurrence_clock: now_ms,
             journal_path: None,
             addresses_path: None,
@@ -78,6 +86,8 @@ impl Default for HubOptions {
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum CommandError {
+    #[error(transparent)]
+    Timer(#[from] crate::TimerError),
     #[error(transparent)]
     Counter(#[from] crate::CounterError),
     #[error(transparent)]
@@ -375,6 +385,10 @@ struct Inner {
     occurrence_stream: crate::occurrences::Stream,
     buttons: tokio::sync::Mutex<crate::occurrences::Buttons>,
     counters: tokio::sync::Mutex<crate::counters::Counters>,
+    timers: tokio::sync::Mutex<crate::timers::Timers>,
+    timer_notify: tokio::sync::Notify,
+    timer_consumer_ready: AtomicBool,
+    timer_audience: RwLock<BTreeMap<PointId, Vec<moli_core::TimerRecipient>>>,
     /// Serializes label writes so the file always matches the model.
     label_write: tokio::sync::Mutex<()>,
     /// Where each instance last reached its device.
@@ -511,6 +525,12 @@ impl Hub {
             counters: tokio::sync::Mutex::new(crate::counters::Counters::new(
                 opts.counter_state_path.clone(),
             )),
+            timers: tokio::sync::Mutex::new(crate::timers::Timers::new(
+                opts.timer_state_path.clone(),
+            )),
+            timer_notify: tokio::sync::Notify::new(),
+            timer_consumer_ready: AtomicBool::new(false),
+            timer_audience: RwLock::default(),
             label_write: tokio::sync::Mutex::new(()),
             addresses: Mutex::new(book),
             address_write: tokio::sync::Mutex::new(()),
@@ -846,7 +866,7 @@ impl Hub {
                             .device
                             .point(&prepared.key)
                             .is_some_and(|point| point.kind.is_operation());
-                        let id = self.hold(point, &value, &metadata, &reason, operation, permit);
+                        let id = self.hold(point, &value, &metadata, &reason, operation, permit)?;
                         Err(CommandError::NeedsApproval { id, reason })
                     }
                 }
@@ -1033,7 +1053,7 @@ impl Hub {
         reason: &str,
         operation: bool,
         permit: Option<crate::CommandPermit>,
-    ) -> u64 {
+    ) -> Result<u64, CommandError> {
         let origin = metadata.origin;
         let actor = metadata.actor.clone();
         let now = now_ms();
@@ -1072,7 +1092,10 @@ impl Hub {
                         && request.request_id.as_ref() == Some(key)
                 })
             {
-                return existing.id;
+                if existing.value != *value {
+                    return Err(crate::TimerError::Conflict.into());
+                }
+                return Ok(existing.id);
             }
             // Ids never repeat across restarts: a card left on a screen can
             // never approve a different, newer request.
@@ -1120,7 +1143,7 @@ impl Hub {
             approvals.pending.insert(request.id, Arc::clone(&request));
             request
         };
-        let id = request.id;
+        let id = Ok(request.id);
         for old in replaced {
             self.resolved(
                 &old,
@@ -1592,7 +1615,9 @@ impl Hub {
             )
         };
         let value = validate(&kind, value).map_err(|error| {
-            if error == ValueError::ExpectedPress
+            if matches!(kind, moli_core::Kind::TimerCommand { .. }) {
+                crate::TimerError::Value.into()
+            } else if error == ValueError::ExpectedPress
                 && matches!(kind, moli_core::Kind::CounterCommand { .. })
             {
                 crate::CounterError::Value.into()
@@ -1963,6 +1988,16 @@ impl Hub {
             let model = self.read();
             let mut all = model.restored.clone();
             all.extend(model.states.iter().map(|(k, v)| (k.clone(), v.clone())));
+            for (device, samples) in &mut all {
+                if let Some(definition) = model.devices.get(device) {
+                    samples.retain(|key, _| {
+                        definition
+                            .point(key)
+                            .is_none_or(|point| point.kind.uses_state_cache())
+                    });
+                }
+            }
+            all.retain(|_, samples| !samples.is_empty());
             all
         };
         if let Err(e) = state_cache::save(path, &all).await {
@@ -2163,7 +2198,7 @@ impl Hub {
                 return;
             };
             let key = spec.key.clone();
-            if spec.kind.is_operation() {
+            if spec.kind.is_operation() || spec.kind.is_occurrence() {
                 let button = spec.kind == moli_core::Kind::Button;
                 drop(model);
                 if always && button {
@@ -2171,7 +2206,9 @@ impl Hub {
                 }
                 return;
             }
-            self.0.state_dirty.store(true, Ordering::Release);
+            if spec.kind.uses_state_cache() {
+                self.0.state_dirty.store(true, Ordering::Release);
+            }
             let states = model.states.entry(device.clone()).or_default();
             let changed = always || states.get(&key).is_none_or(|s| s.value != value);
             let event = changed.then(|| Event::State {

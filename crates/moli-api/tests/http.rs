@@ -182,6 +182,53 @@ async fn rest_command_round_trip() {
 }
 
 #[tokio::test]
+async fn auto_h1_rest_timer_requests_validate_duration_and_preserve_retries() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let config = serde_json::from_value(
+        json!({"helper":[{"id":"clock","name":"Timer","kind":"timer","duration_s":3}]}),
+    )
+    .unwrap();
+    let cancel = CancellationToken::new();
+    spawn_driver(
+        &hub,
+        "fixture".into(),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    for _ in 0..200 {
+        if hub.state(&"fixture:clock/state".into()).is_some() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    let addr = serve(&hub, &moli_api::Options::default()).await;
+    let command = |operation: &str, value: Json, sequence: u64| json!({"point":format!("fixture:clock/{operation}"),"value":value,"request_id":format!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:{sequence}")});
+    for (body, expected) in [
+        (command("start", json!(3), 1), 200),
+        (command("start", json!(3), 1), 200),
+        (command("start", json!(4), 1), 409),
+        (command("start", json!(1.0), 2), 422),
+        (command("start", json!(0), 2), 422),
+        (command("start", json!(604_801), 2), 422),
+        (command("cancel", Json::Null, 2), 200),
+        (command("start", json!(3), 1), 200),
+        (command("state", json!("running"), 3), 403),
+    ] {
+        let (status, response) = request(&addr, "POST", "/api/command", Some(&body)).await;
+        assert_eq!(status, expected, "{body}: {response}");
+    }
+    assert_eq!(
+        hub.state(&"fixture:clock/state".into()).unwrap().value,
+        Value::Text("cancelled".into())
+    );
+    assert_eq!(
+        hub.state(&"fixture:clock/generation".into()).unwrap().value,
+        Value::Int(1)
+    );
+    cancel.cancel();
+}
+
+#[tokio::test]
 async fn auto_h2_rest_counter_operations_preserve_intent_and_refusal() {
     let hub = Hub::new(HubOptions::default()).unwrap();
     let config = serde_json::from_value(json!({ "helper": [{

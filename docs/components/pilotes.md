@@ -983,3 +983,10 @@ simulé ne la remplace.
 cinq prochaines fenêtres, cycle planifié et occurrences sans rejeu au démarrage.
 Le hub garde des fenêtres éphémères ; les invités peuvent y être liés par un humain.
 Aucun chemin direct vers une serrure. [Contrat et bornes](reservations.md).
+
+### Aides minuteur
+
+`kind = "timer"`, `duration_s = 300` par défaut. Démarrer avec une durée entière ou
+annuler via le hub ; état et reçu sont durables, le restant est une projection monotone.
+La terminaison utilise une identité de génération, pas une bascule artificielle.
+Configuration, limites et livraison au moteur : [minuteurs](minuteurs.md).

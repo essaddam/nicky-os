@@ -96,7 +96,9 @@ pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind, key: &str) -
                 Kind::Numeric { .. }
                 | Kind::Button
                 | Kind::Counter { .. }
-                | Kind::CounterCommand { .. } => Family::Other,
+                | Kind::CounterCommand { .. }
+                | Kind::Timer { .. }
+                | Kind::TimerCommand { .. } => Family::Other,
                 Kind::Binary | Kind::Enum { .. } | Kind::Text => Family::States,
             },
         },

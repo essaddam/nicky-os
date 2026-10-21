@@ -25,6 +25,9 @@ pub struct Automation {
     /// after someone else changed it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub approved_version: Option<Version>,
+    /// Server-owned lineage, persisted independently of the logical fingerprint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<String>,
     /// Why it stopped by itself, what an import could not translate…
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,

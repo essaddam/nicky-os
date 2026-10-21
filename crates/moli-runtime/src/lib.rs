@@ -26,6 +26,7 @@ mod state_cache;
 mod state_file;
 mod stats;
 pub mod supervisor;
+mod timers;
 pub mod voice;
 
 pub use addresses::KnownAddress;
@@ -45,3 +46,4 @@ pub use secrets::{MasterKey, forget_secret, set_secret};
 pub use state_file::{StateFile, StateFileError};
 pub use stats::Stats;
 pub use supervisor::spawn_driver;
+pub use timers::TimerError;

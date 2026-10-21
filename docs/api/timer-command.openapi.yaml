@@ -1,0 +1,49 @@
+openapi: 3.1.0
+info:
+  title: Moli — commandes de minuteur
+  version: 1.0.0
+  description: Extension du transport existant, sous la même garde et au journal.
+paths:
+  /api/command:
+    post:
+      summary: Démarrer ou annuler un minuteur durable
+      description: >-
+        Le démarrage capture les activations validées à cet instant. Une réussite
+        attend le commit durable. Le retry conserve point, valeur et request_id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [point, value]
+                  properties:
+                    point: { type: string, maxLength: 256, pattern: '^[^:/]+:[^/]+/start$' }
+                    value: { type: integer, minimum: 1, maximum: 604800 }
+                    request_id: { $ref: '#/components/schemas/RequestId' }
+                    actor: { type: string }
+                - type: object
+                  required: [point, value]
+                  properties:
+                    point: { type: string, maxLength: 256, pattern: '^[^:/]+:[^/]+/cancel$' }
+                    value: { type: 'null' }
+                    request_id: { $ref: '#/components/schemas/RequestId' }
+                    actor: { type: string }
+      responses:
+        '200': { description: Commit durable effectué ou reçu initial retrouvé, sans nouvelle mutation. }
+        '202': { description: Demande retenue, pending et reason présents ; aucun effet avant validation. }
+        '403': { description: Point en lecture seule ou accès refusé. }
+        '404': { description: Point inconnu. }
+        '409': { description: Identité conflictuelle, requête ancienne ou commit incertain (retryable=true pour ce dernier). }
+        '422': { description: Type, durée, définition, génération ou horloge invalide. }
+        '500': { description: Persistance impossible ou état durable invalide. }
+        '503': { description: Capacité, pilote ou file indisponible. }
+        '504': { description: Commande abandonnée ou expirée ; vérifier avec la même identité. }
+components:
+  schemas:
+    RequestId:
+      type: string
+      maxLength: 53
+      pattern: '^[0-9a-fA-F]{32}:[1-9][0-9]{0,19}$'
+      description: Séquence u64 positive dans un espace client hexadécimal de 32 caractères.

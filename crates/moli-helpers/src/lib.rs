@@ -57,6 +57,9 @@ pub struct Helper {
     /// Room, if it belongs to one (most belong to the whole house).
     #[serde(default)]
     pub room: Option<String>,
+    /// Timer default duration; commands may choose another bounded duration.
+    #[serde(default)]
+    pub duration_s: Option<u32>,
 }
 
 /// Preserve the lexical integer/float distinction until the helper kind is known.
@@ -86,6 +89,7 @@ impl Number {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HelperKind {
+    Timer,
     Counter,
     Button,
     Select,
@@ -95,6 +99,85 @@ pub enum HelperKind {
 }
 
 impl Helper {
+    fn timer_specs(&self) -> Vec<PointSpec> {
+        use moli_core::{TimerField, TimerOperation, Unit};
+        let default_seconds = self.duration_s.unwrap_or(moli_core::DEFAULT_TIMER_SECONDS);
+        let fields = [
+            (
+                "state",
+                TimerField::State,
+                moli_i18n::tr!("pilotes.aides.minuteur_etat"),
+                None,
+            ),
+            (
+                "remaining",
+                TimerField::Remaining,
+                moli_i18n::tr!("pilotes.aides.minuteur_restant"),
+                Some(Unit::Second),
+            ),
+            (
+                "generation",
+                TimerField::Generation,
+                moli_i18n::tr!("pilotes.aides.minuteur_generation"),
+                None,
+            ),
+            (
+                "deadline",
+                TimerField::Deadline,
+                moli_i18n::tr!("pilotes.aides.minuteur_echeance"),
+                None,
+            ),
+            (
+                "finished",
+                TimerField::Expired,
+                moli_i18n::tr!("pilotes.aides.minuteur_termine"),
+                None,
+            ),
+        ];
+        let mut specs: Vec<_> = fields
+            .into_iter()
+            .map(|(key, field, label, unit)| PointSpec {
+                key: key.into(),
+                label: label.into(),
+                kind: Kind::Timer { field },
+                access: Access {
+                    read: field != TimerField::Expired,
+                    write: false,
+                },
+                unit,
+                semantic: Semantic::Other,
+            })
+            .collect();
+        for (key, operation, label) in [
+            (
+                "start",
+                TimerOperation::Start,
+                moli_i18n::tr!("pilotes.aides.minuteur_demarrer"),
+            ),
+            (
+                "cancel",
+                TimerOperation::Cancel,
+                moli_i18n::tr!("pilotes.aides.minuteur_annuler"),
+            ),
+        ] {
+            specs.push(PointSpec {
+                key: key.into(),
+                label: label.into(),
+                kind: Kind::TimerCommand {
+                    operation,
+                    default_seconds,
+                },
+                access: Access {
+                    read: false,
+                    write: true,
+                },
+                unit: None,
+                semantic: Semantic::Other,
+            });
+        }
+        specs
+    }
+
     fn counter_spec(&self) -> anyhow::Result<CounterSpec> {
         let initial = match &self.initial {
             None => 0,
@@ -124,6 +207,9 @@ impl Helper {
     }
 
     fn specs(&self) -> Vec<PointSpec> {
+        if self.kind == HelperKind::Timer {
+            return self.timer_specs();
+        }
         let value = self.spec();
         if self.kind != HelperKind::Counter {
             return vec![value];
@@ -160,6 +246,13 @@ impl Helper {
     /// The point that holds its value.
     fn spec(&self) -> PointSpec {
         let (key, kind, semantic) = match self.kind {
+            HelperKind::Timer => (
+                "state",
+                Kind::Timer {
+                    field: moli_core::TimerField::State,
+                },
+                Semantic::Other,
+            ),
             HelperKind::Button => ("press", Kind::Button, Semantic::Other),
             HelperKind::Counter => (
                 "value",
@@ -193,7 +286,7 @@ impl Helper {
             kind,
             access: Access {
                 read: self.kind != HelperKind::Button,
-                write: self.kind != HelperKind::Counter,
+                write: !matches!(self.kind, HelperKind::Counter | HelperKind::Timer),
             },
             unit: None,
             semantic,
@@ -202,6 +295,25 @@ impl Helper {
 
     /// The starting value, checked against the point.
     fn initial_value(&self) -> anyhow::Result<Value> {
+        if self.kind == HelperKind::Timer {
+            ensure!(
+                self.initial.is_none()
+                    && self.options.is_empty()
+                    && self.min.is_none()
+                    && self.max.is_none()
+                    && self.step.is_none()
+                    && (1..=moli_core::MAX_TIMER_SECONDS)
+                        .contains(&self.duration_s.unwrap_or(moli_core::DEFAULT_TIMER_SECONDS)),
+                "{}",
+                moli_i18n::tr!("pilotes.aides.minuteur_definition")
+            );
+            return Ok(Value::Text("idle".into()));
+        }
+        ensure!(
+            self.duration_s.is_none(),
+            "{}",
+            moli_i18n::tr!("pilotes.aides.minuteur_definition")
+        );
         if self.kind == HelperKind::Counter {
             return Ok(Value::Int(self.counter_spec()?.initial));
         }
@@ -230,7 +342,7 @@ impl Helper {
             (None, HelperKind::Switch) => Value::Bool(false),
             (None, HelperKind::Number) => Value::Float(self.min.map_or(0.0, Number::as_f64)),
             (None, HelperKind::Text) => Value::Text("".into()),
-            (None, HelperKind::Button | HelperKind::Counter) => Value::Null,
+            (None, HelperKind::Button | HelperKind::Counter | HelperKind::Timer) => Value::Null,
         };
         validate(&self.spec().kind, &raw)
             .map_err(|e| anyhow::anyhow!("helper {}: initial value: {e}", self.id))
@@ -245,6 +357,16 @@ pub struct Helpers {
 impl Helpers {
     /// Checks the configuration (ids, options, initial values).
     pub fn new(config: Config) -> anyhow::Result<Self> {
+        ensure!(
+            config
+                .helpers
+                .iter()
+                .filter(|helper| helper.kind == HelperKind::Timer)
+                .count()
+                <= 128,
+            "{}",
+            moli_i18n::tr!("pilotes.aides.minuteurs_max")
+        );
         ensure!(
             config
                 .helpers
@@ -306,7 +428,13 @@ impl Driver for Helpers {
                     points: h.specs(),
                 });
                 // Kept across restarts by the state cache; set only once.
-                if h.kind == HelperKind::Counter {
+                if h.kind == HelperKind::Timer {
+                    ctx.initialize_timer(
+                        &id,
+                        h.duration_s.unwrap_or(moli_core::DEFAULT_TIMER_SECONDS),
+                    )
+                    .await?;
+                } else if h.kind == HelperKind::Counter {
                     ctx.initialize_counter(&id, h.counter_spec()?).await?;
                 } else if h.kind != HelperKind::Button && ctx.current(&id, &spec.key).is_none() {
                     ctx.set_state(&id, &spec.key, h.initial_value()?);
@@ -315,6 +443,14 @@ impl Driver for Helpers {
             }
             ctx.ready();
             while let Some(command) = ctx.next_command().await {
+                if command
+                    .device
+                    .point(&command.key)
+                    .is_some_and(|point| matches!(point.kind, Kind::TimerCommand { .. }))
+                {
+                    ctx.timer_command(command).await;
+                    continue;
+                }
                 if command
                     .device
                     .point(&command.key)

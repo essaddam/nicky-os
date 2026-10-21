@@ -2,6 +2,23 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buttonRequest, nextButtonReference, sendButton } from '../../lib/button.js';
 
+test('auto_h1 retries retain the original duration and request identity', async () => {
+  const reserve = async () => ({ client: 'a'.repeat(32), sequence: 7 });
+  const request = await buttonRequest('simulated:timer/start', reserve, 30);
+  assert.equal(request.value, 30);
+  assert.ok(Object.isFrozen(request));
+  const bodies = [];
+  const send = async (_url, options) => {
+    bodies.push(options.body);
+    if (bodies.length === 1) throw new Error('response lost');
+    return { ok: true, status: 200, json: async () => ({ ok: true }) };
+  };
+  await assert.rejects(sendButton(request, send));
+  await sendButton(request, send);
+  assert.equal(bodies[0], bodies[1]);
+  assert.equal(JSON.parse(bodies[1]).value, 30);
+});
+
 test('auto_h4 two presses share no identity even with an equal value', async () => {
   let state = { client: 'a'.repeat(32), sequence: 0 };
   const reserve = async () => (state = nextButtonReference(state));

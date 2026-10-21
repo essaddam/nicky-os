@@ -42,9 +42,9 @@ async function reserveReference() {
   });
 }
 
-export async function buttonRequest(point, reserve = reserveReference) {
+export async function buttonRequest(point, reserve = reserveReference, value = null) {
   const { client, sequence } = await reserve();
-  return Object.freeze({ point, value: null, request_id: `${client}:${sequence}` });
+  return Object.freeze({ point, value, request_id: `${client}:${sequence}` });
 }
 
 export async function sendButton(request, send = fetch) {

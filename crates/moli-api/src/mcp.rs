@@ -259,7 +259,7 @@ impl MoliMcp {
     }
 
     #[tool(
-        description = "Write a value to a writable point. The order is validated against the point's spec, sent to the device and journaled. The device confirms by reporting its new state. Event buttons accept null and publish a distinct occurrence. Counters expose read-only value plus increment/reset operations at null, serialized and durably committed on the server; request_id deduplicates retries of the same operation, including refused increments. Read value for current state."
+        description = "Write a value to a writable point. The order is validated against the point's spec, sent to the device and journaled. The device confirms by reporting its new state. Event buttons accept null and publish a distinct occurrence. Counters expose read-only value plus increment/reset operations at null, serialized and durably committed on the server; request_id deduplicates retries of the same operation, including refused increments. Read value for current state. Timers accept start with an integer duration in seconds (1..604800) and cancel with null; read state/remaining/generation/deadline, and use when_occurrence on finished. A start binds currently validated activation lineages, so a later approval does not inherit this generation."
     )]
     async fn send_command(
         &self,
