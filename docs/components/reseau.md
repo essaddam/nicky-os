@@ -150,6 +150,10 @@ RSSI, RSRP, RSRQ, SINR, octets reçus/émis, débit entrant/sortant et durée de
 selon disponibilité. Signal en `SignalStrength`, débit/compteurs/durée en `Diagnostic`.
 Les compteurs sont des octets, les débits des `B/s` : vérifier chaque champ amont,
 ne pas appliquer un facteur 8 par supposition. Valeur sentinelle/absente = `Null`.
+Le client implémenté conserve à la reprise les capacités déjà déclarées ou en cache
+pour la même identité (11 points au plus) : SIM absente ou méthode facultative absente
+ne supprime pas leurs définitions. Aucun point jamais observé n'est créé. Une identité
+ou une clé incompatible dans le cache bloque la publication.
 Garder les entiers bruts sans débordement pour calculer les différences. Au-delà de
 2^53−1, ne pas publier un faux compteur entier exact dans un `f64`.
 Une baisse de compteur réinitialise la référence ; aucun débit négatif ni pic calculé

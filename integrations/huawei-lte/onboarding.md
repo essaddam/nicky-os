@@ -49,3 +49,18 @@ Vérifier le compte et le contrat avant de redémarrer. Un changement de certifi
 ou d'identité exige une vérification humaine ; ne rien oublier automatiquement au
 coffre. Les identités/cache déjà connus empêchent l'admission d'un autre modem sous
 la même instance. Les erreurs ne recopient ni corps distant ni matériel de session.
+
+
+Après redémarrage, les capacités déjà observées (déclarations ou cache de l'instance)
+restent présentes avec des valeurs inconnues si la SIM ou une mesure manque. Un modem
+ne gagne pas de capacité jamais observée : plafond 11 points. Une identité ou une clé
+incompatible dans le cache bloque la reprise, sans effacement automatique.
+
+## English — restart behaviour
+
+Known declared/cached capabilities survive restart under the same native identity.
+Missing SIM or optional readings keep their existing points at Null. Returning readings
+reuse the same DeviceId/PointId, with at most 11 points and no never-observed capability
+created. Another cached identity or an unknown cached key blocks publication; no cache
+or identity is silently cleared. Contract tests do not qualify real hardware: human H1
+and explicit ownership validation remain required.

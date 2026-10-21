@@ -68,7 +68,12 @@ SIM absente : connexion fausse, signal/trafic non interrogés et anciennes valeu
 inconnues. Sans connexion de données prouvée, pas de trafic interrogé/publié comme
 frais ; le signal peut rester lisible. Une valeur absente, sentinelle, censurée
 (`<`/`>`) ou sans unité radio attestée reste inconnue. Pas de zéro inventé ni point
-pour une capacité jamais observée. Cycle entièrement validé avant publication ;
+pour une capacité jamais observée. À la reprise, les clés déjà déclarées ou mises en
+cache sont reconstituées pour la même identité : elles restent déclarées avec `Null`
+si la SIM ou une méthode facultative manque. Le retour des mesures réutilise les
+mêmes DeviceId/PointId sans duplication, avec au plus 11 points. Un cache comportant
+une autre identité ou une clé hors de ce vocabulaire bloque la publication.
+Cycle entièrement validé avant publication ;
 valeurs inchangées sans nouvel événement. Aucune présence humaine n'est déduite.
 
 ## Deviné et reste

@@ -100,17 +100,28 @@ pub(crate) struct Published<'a> {
     pub ctx: &'a mut DriverCtx,
     known: BTreeSet<DeviceId>,
     points: BTreeSet<&'static str>,
+    defined: bool,
     epoch: u64,
     tracker: Tracker,
     last: Option<Instant>,
 }
 impl<'a> Published<'a> {
     pub fn new(ctx: &'a mut DriverCtx) -> Self {
-        let known = ctx.known_devices().into_iter().collect();
+        let known: BTreeSet<_> = ctx.known_devices().into_iter().collect();
+        let points = known
+            .iter()
+            .flat_map(|id| ctx.known_point_keys(id))
+            .filter_map(|key| {
+                KEYS.iter()
+                    .copied()
+                    .find(|allowed| key.as_ref() == *allowed)
+            })
+            .collect();
         let state = Self {
             ctx,
             known,
-            points: BTreeSet::new(),
+            points,
+            defined: false,
             epoch: 0,
             tracker: Tracker::default(),
             last: None,
@@ -121,10 +132,15 @@ impl<'a> Published<'a> {
     pub fn check_known(&self) -> Result<(), Failure> {
         if self.known.len() > 1
             || self.known.iter().any(|id| {
-                !id.as_str()
-                    .split_once(':')
-                    .and_then(|(_, native)| native.strip_prefix("modem_"))
-                    .is_some_and(model::identity)
+                self.ctx
+                    .known_point_keys(id)
+                    .iter()
+                    .any(|key| !KEYS.contains(&key.as_ref()))
+                    || !id
+                        .as_str()
+                        .split_once(':')
+                        .and_then(|(_, native)| native.strip_prefix("modem_"))
+                        .is_some_and(model::identity)
             })
         {
             return Err(Failure::Identity);
@@ -132,6 +148,10 @@ impl<'a> Published<'a> {
         Ok(())
     }
     pub fn admit(&mut self, identity: &str) -> Result<(), Failure> {
+        self.check_known()?;
+        if !model::identity(identity) {
+            return Err(Failure::Identity);
+        }
         let target = self.ctx.device_id(&format!("modem_{identity}"));
         if self.known.iter().any(|id| id != &target) {
             return Err(Failure::Identity);
@@ -185,7 +205,7 @@ impl<'a> Published<'a> {
             return Ok(());
         }
         let id = self.ctx.device_id(&format!("modem_{identity}"));
-        if previous != self.points.len() {
+        if previous != self.points.len() || !self.defined {
             self.ctx.upsert_device(Device {
                 id: id.clone(),
                 instance: self.ctx.instance().clone(),
@@ -197,6 +217,7 @@ impl<'a> Published<'a> {
                 members: vec![],
                 points: self.points.iter().map(|key| spec(key)).collect(),
             });
+            self.defined = true;
         }
         for key in self.points.iter().filter(|key| refreshed.contains(*key)) {
             self.ctx
