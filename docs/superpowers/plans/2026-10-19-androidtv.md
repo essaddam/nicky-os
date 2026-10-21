@@ -39,8 +39,9 @@ Les contenus passent par le même hub que toute commande physique.
   seul à la fois selon la file du coordinateur. La soumission exige fmt et
   Clippy workspace, puis les tests ciblés verts des crates touchées. Le
   test `authenticated_d13_transport_handles_replay_conflict_gap_and_read`
-  est provisoirement exclu du contrôle complet des branches ne touchant
-  pas `moli-archive` (correction suivie dans le ticket 3b882cef).
+  est réintégré au contrôle complet depuis la fusion du correctif archive
+  dans `main` (`c5f2002`, décision du 21 octobre). Aucun skip D13 ni du test
+  invité HTTP pour cette branche, qui modifie `crates/moli-api/tests/`.
 - Après approbation du ticket (`done`), rebaser sur `main`, refaire le contrôle
   complet, puis fusionner localement par avance rapide. Ne pas pousser. Un
   conflit dans la logique d’un autre ticket revient au coordinateur. Les
