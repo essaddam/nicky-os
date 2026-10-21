@@ -108,18 +108,23 @@ mod tests {
     use super::*;
     use crate::Store;
     use moli_core::Value;
-    use std::{fs, path::PathBuf};
-    fn fixture() -> (PathBuf, String, Connection) {
+    use std::fs;
+    use tempfile::TempDir;
+    fn fixture() -> (TempDir, String, Connection) {
         let stamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let dir = std::env::temp_dir().join(format!(
-            "moli-history-private-{}-{stamp}",
-            std::process::id()
-        ));
-        fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("history.db");
+        fixture_with_stamp(stamp)
+    }
+
+    fn fixture_with_stamp(stamp: u128) -> (TempDir, String, Connection) {
+        // A timestamp is not an identity: the clock can repeat between test threads.
+        let dir = tempfile::Builder::new()
+            .prefix("moli-history-private-")
+            .tempdir()
+            .unwrap();
+        let path = dir.path().join("history.db");
         drop(Store::open(&path).unwrap());
         let conn = Connection::open(&path).unwrap();
         conn.execute_batch("PRAGMA wal_autocheckpoint=0; INSERT INTO points(id,point) VALUES(1,'fixture:panel/action_code'),(2,'fixture:panel/battery'),(3,'fixture:panel/action'),(4,'fixture:panel/settings.pin')").unwrap();
@@ -146,11 +151,52 @@ mod tests {
         .unwrap();
         (dir, code, conn)
     }
+
+    #[test]
+    fn simultaneous_fixtures_with_equal_timestamps_are_independent() {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        // Keep one fixture open while another test thread uses the same clock reading.
+        let first = fixture_with_stamp(stamp);
+        let second = std::thread::spawn(move || fixture_with_stamp(stamp))
+            .join()
+            .unwrap();
+        assert_ne!(first.2.path(), second.2.path());
+        for (_, _, writer) in [&first, &second] {
+            for table in ["points", "samples"] {
+                assert_eq!(
+                    writer
+                        .query_row(&format!("SELECT count(*) FROM {table}"), [], |row| row
+                            .get::<_, i64>(0))
+                        .unwrap(),
+                    4
+                );
+            }
+        }
+        first
+            .2
+            .execute("UPDATE samples SET num=82 WHERE point_id=2", [])
+            .unwrap();
+        assert_eq!(
+            second
+                .2
+                .query_row("SELECT num FROM samples WHERE point_id=2", [], |row| row
+                    .get::<_, f64>(0))
+                .unwrap(),
+            81.0
+        );
+        for (dir, _, writer) in [first, second] {
+            drop(writer);
+            drop(dir);
+        }
+    }
     #[test]
     fn startup_repairs_history_and_wal_and_preserves_legitimate_samples() {
         let (dir, code, old_writer) = fixture();
-        let store = Store::open(&dir.join("history.db")).unwrap();
-        let conn = Connection::open(dir.join("history.db")).unwrap();
+        let store = Store::open(&dir.path().join("history.db")).unwrap();
+        let conn = Connection::open(dir.path().join("history.db")).unwrap();
         assert_eq!(
             conn.query_row("SELECT COUNT(*) FROM samples", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
@@ -171,7 +217,7 @@ mod tests {
             0
         );
         for name in ["history.db", "history.db-wal"] {
-            if let Ok(bytes) = fs::read(dir.join(name)) {
+            if let Ok(bytes) = fs::read(dir.path().join(name)) {
                 assert!(
                     !bytes
                         .windows(code.len())
@@ -199,7 +245,7 @@ mod tests {
         drop(store);
         drop(conn);
         drop(old_writer);
-        let store = Store::open(&dir.join("history.db")).unwrap();
+        let store = Store::open(&dir.path().join("history.db")).unwrap();
         assert!(
             store
                 .insert(
@@ -214,30 +260,30 @@ mod tests {
             "new oversized text would poison the next restart"
         );
         drop(store);
-        drop(Store::open(&dir.join("history.db")).unwrap());
-        fs::remove_dir_all(dir).unwrap();
+        drop(Store::open(&dir.path().join("history.db")).unwrap());
+        dir.close().unwrap();
     }
     #[test]
     fn a_busy_wal_repair_fails_closed_then_recovers() {
         let (dir, _code, old_writer) = fixture();
-        let reader = Connection::open(dir.join("history.db")).unwrap();
+        let reader = Connection::open(dir.path().join("history.db")).unwrap();
         reader
             .execute_batch("BEGIN; SELECT point_id FROM samples LIMIT 1")
             .unwrap();
         assert!(
-            Store::open(&dir.join("history.db")).is_err(),
+            Store::open(&dir.path().join("history.db")).is_err(),
             "busy repair must stop startup"
         );
         reader.execute_batch("ROLLBACK").unwrap();
         drop(reader);
         drop(old_writer);
-        drop(Store::open(&dir.join("history.db")).unwrap());
-        fs::remove_dir_all(dir).unwrap();
+        drop(Store::open(&dir.path().join("history.db")).unwrap());
+        dir.close().unwrap();
     }
     #[test]
     fn repair_uses_bounded_keyset_scans_and_indexed_deletes() {
         let (dir, _code, old_writer) = fixture();
-        let mut conn = Connection::open(dir.join("history.db")).unwrap();
+        let mut conn = Connection::open(dir.path().join("history.db")).unwrap();
         repair(&mut conn).unwrap();
         let detail: String = conn
             .query_row(
@@ -259,7 +305,7 @@ mod tests {
         assert!(detail.contains("samples_private_text"), "{detail}");
         drop(conn);
         drop(old_writer);
-        fs::remove_dir_all(dir).unwrap();
+        dir.close().unwrap();
     }
 
     #[test]
@@ -278,8 +324,8 @@ mod tests {
         }
         drop(text);
         drop(writer);
-        let store = Store::open(&dir.join("history.db")).unwrap();
-        let conn = Connection::open(dir.join("history.db")).unwrap();
+        let store = Store::open(&dir.path().join("history.db")).unwrap();
+        let conn = Connection::open(dir.path().join("history.db")).unwrap();
         assert_eq!(
             conn.query_row("SELECT count(*) FROM samples WHERE point_id=3", [], |r| r
                 .get::<_, i64>(
@@ -290,7 +336,7 @@ mod tests {
         );
         drop(conn);
         drop(store);
-        fs::remove_dir_all(dir).unwrap();
+        dir.close().unwrap();
     }
 
     #[test]
@@ -304,10 +350,10 @@ mod tests {
             .unwrap();
         drop(writer);
         assert!(
-            Store::open(&dir.join("history.db")).is_err(),
+            Store::open(&dir.path().join("history.db")).is_err(),
             "oversized repair must refuse startup"
         );
-        let conn = Connection::open(dir.join("history.db")).unwrap();
+        let conn = Connection::open(dir.path().join("history.db")).unwrap();
         // Refusal is transactional: do not silently delete ordinary old data.
         assert_eq!(
             conn.query_row(
@@ -321,8 +367,8 @@ mod tests {
         conn.execute("DELETE FROM samples WHERE point_id=3 AND ts=2", [])
             .unwrap();
         drop(conn);
-        drop(Store::open(&dir.join("history.db")).unwrap());
-        fs::remove_dir_all(dir).unwrap();
+        drop(Store::open(&dir.path().join("history.db")).unwrap());
+        dir.close().unwrap();
     }
 
     #[test]
@@ -343,8 +389,8 @@ mod tests {
                 .unwrap();
         }
         drop(writer);
-        let store = Store::open(&dir.join("history.db")).unwrap();
-        let reader = Connection::open(dir.join("history.db")).unwrap();
+        let store = Store::open(&dir.path().join("history.db")).unwrap();
+        let reader = Connection::open(dir.path().join("history.db")).unwrap();
         assert_eq!(
             reader
                 .query_row("SELECT count(*) FROM samples WHERE point_id=3", [], |row| {
@@ -363,7 +409,7 @@ mod tests {
         );
         drop(reader);
         drop(store);
-        drop(Store::open(&dir.join("history.db")).unwrap());
-        fs::remove_dir_all(dir).unwrap();
+        drop(Store::open(&dir.path().join("history.db")).unwrap());
+        dir.close().unwrap();
     }
 }
