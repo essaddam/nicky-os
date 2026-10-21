@@ -1,13 +1,16 @@
 //! A demo house, reached from the Internet through the tunnel: visitors play
 //! with it, nothing they do stays for the next ones.
 
+#[path = "support/http.rs"]
+mod http_client;
+
 use std::sync::Arc;
 use std::time::Duration;
 
 use moli_core::{Access, Device, InstanceId, Kind, PointSpec, Semantic, Value};
 use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
 use serde_json::{Value as Json, json};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio_util::sync::CancellationToken;
 
 struct Lamp;
@@ -65,8 +68,9 @@ async fn visitor(addr: &str, method: &str, path: &str, body: &Json) -> (u16, Str
     );
     stream.write_all(head.as_bytes()).await.unwrap();
     stream.write_all(body.as_bytes()).await.unwrap();
-    let mut raw = Vec::new();
-    stream.read_to_end(&mut raw).await.unwrap();
+    let raw = http_client::read_response(&mut stream)
+        .await
+        .unwrap_or_else(|error| panic!("{method} {path}: {error}"));
     let raw = String::from_utf8_lossy(&raw).to_string();
     let status = raw[9..12].parse().unwrap();
     let body = raw

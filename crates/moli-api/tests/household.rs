@@ -2,6 +2,9 @@
 //! protected rooms. Anyone on the home network can claim to be the
 //! dashboard (`X-Moli-Origin: ui` is public); only the code proves a person.
 
+#[path = "support/http.rs"]
+mod http_client;
+
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -9,7 +12,7 @@ use moli_core::{Access, Device, InstanceId, Kind, Origin, PointSpec, Semantic, V
 use moli_runtime::guard::{Dashboard, GuardPolicy};
 use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, LabelPatch, spawn_driver};
 use serde_json::{Value as Json, json};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio_util::sync::CancellationToken;
 
 struct Lamp;
@@ -124,8 +127,9 @@ async fn request(
     );
     stream.write_all(head.as_bytes()).await.unwrap();
     stream.write_all(body.as_bytes()).await.unwrap();
-    let mut raw = Vec::new();
-    stream.read_to_end(&mut raw).await.unwrap();
+    let raw = http_client::read_response(&mut stream)
+        .await
+        .unwrap_or_else(|error| panic!("{method} {path}: {error}"));
     let raw = String::from_utf8_lossy(&raw).to_string();
     let status = raw[9..12].parse().unwrap();
     let (headers, body) = raw.split_once("\r\n\r\n").unwrap();
@@ -212,8 +216,7 @@ async fn a_page_from_another_site_cannot_command_and_nothing_frames_the_house() 
     let mut stream = tokio::net::TcpStream::connect(&addr).await.unwrap();
     let head = format!("GET /api/health HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n\r\n");
     stream.write_all(head.as_bytes()).await.unwrap();
-    let mut raw = Vec::new();
-    stream.read_to_end(&mut raw).await.unwrap();
+    let raw = http_client::read_response(&mut stream).await.unwrap();
     let raw = String::from_utf8_lossy(&raw).to_ascii_lowercase();
     assert!(raw.contains("x-frame-options: deny"), "{raw}");
     assert!(raw.contains("content-security-policy: frame-ancestors 'none'"));
