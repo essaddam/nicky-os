@@ -533,3 +533,31 @@ async fn auto_k1_r1_unit_invalidation_preserves_age_and_same_unit_metadata_keeps
         "changing back cannot resurrect the number"
     );
 }
+
+#[tokio::test]
+async fn auto_k1_timer_numeric_fields_contribute_but_states_and_occurrences_do_not() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let timer: DeviceId = "fixture:timer-source".into();
+    hub.upsert_device(device(
+        timer.clone(),
+        Kind::Timer {
+            field: moli_core::TimerField::Remaining,
+        },
+        None,
+    ));
+    hub.set_state(&timer, "value", Value::Float(13.0));
+    let mut definition = spec(&["fixture:timer-source/value"]);
+    definition.unit = None;
+    let reference = define(&hub, "timer-mean", definition.clone()).await;
+    approve(&hub, &reference).await.unwrap();
+    assert_eq!(value(&hub, &reference), Value::Float(13.0));
+    hub.set_state(&timer, "value", Value::Float(14.0));
+    hub.run_computations().unwrap();
+    assert_eq!(value(&hub, &reference), Value::Float(14.0));
+    for field in [moli_core::TimerField::State, moli_core::TimerField::Expired] {
+        hub.upsert_device(device(timer.clone(), Kind::Timer { field }, None));
+        hub.run_computations().unwrap();
+        assert_eq!(value(&hub, &reference), Value::Null);
+        assert_eq!(approve(&hub, &reference).await, Err(DependencyError::Units));
+    }
+}

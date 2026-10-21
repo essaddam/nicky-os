@@ -106,7 +106,11 @@ impl Kind {
         !self.is_operation()
             && !matches!(
                 self,
-                Self::Counter { .. } | Self::Timer { .. } | Self::Temporal { .. } | Self::Schedule | Self::Computed
+                Self::Counter { .. }
+                    | Self::Timer { .. }
+                    | Self::Temporal { .. }
+                    | Self::Schedule
+                    | Self::Computed
             )
     }
 }

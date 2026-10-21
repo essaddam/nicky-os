@@ -1231,7 +1231,7 @@ impl CompiledPoint {
             }
             Kind::Text => Value::Text(as_text.into()),
             Kind::Computed
-        | Kind::Schedule
+            | Kind::Schedule
             | Kind::Button
             | Kind::CounterCommand { .. }
             | Kind::Counter { .. }

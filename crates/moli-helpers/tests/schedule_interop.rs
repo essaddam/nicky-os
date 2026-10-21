@@ -4,6 +4,36 @@ use moli_helpers::{Config, Helpers};
 fn schedules_timers_and_temporal_helpers_keep_their_configuration_boundaries() {
     for (kind, fields, foreign) in [
         (
+            "computed",
+            "aggregate={operation='mean',sources=[],max_age_s=60}",
+            "duration_s=7",
+        ),
+        (
+            "computed",
+            "aggregate={operation='mean',sources=[],max_age_s=60}",
+            "timezone='UTC'",
+        ),
+        (
+            "computed",
+            "aggregate={operation='mean',sources=[],max_age_s=60}",
+            "weekly={timezone='UTC',slots=[]}",
+        ),
+        (
+            "timer",
+            "duration_s=7",
+            "aggregate={operation='min',sources=[],max_age_s=60}",
+        ),
+        (
+            "date",
+            "initial='2024-02-29'",
+            "aggregate={operation='min',sources=[],max_age_s=60}",
+        ),
+        (
+            "schedule",
+            "weekly={timezone='UTC',slots=[]}",
+            "aggregate={operation='min',sources=[],max_age_s=60}",
+        ),
+        (
             "schedule",
             "weekly={timezone='UTC',slots=[]}",
             "duration_s=7",

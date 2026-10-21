@@ -81,12 +81,7 @@ impl Hub {
                 .get(&device)
                 .and_then(|d| d.point(key))
                 .ok_or(DependencyError::Units)?;
-            if !point.access.read
-                || !matches!(
-                    point.kind,
-                    Kind::Numeric { .. } | Kind::Counter { .. } | Kind::Computed
-                )
-            {
+            if !point.access.read || !point.kind.is_numeric() {
                 return Err(DependencyError::Units);
             }
             let unit = if point.kind == Kind::Computed {
@@ -251,11 +246,7 @@ impl Projection for ProjectionModel<'_> {
                 .and_then(|(id, key)| self.model.states.get(&id)?.get(key).cloned()),
             unit: spec.unit.clone(),
             online: self.model.availability.get(&device) != Some(&false),
-            numeric: spec.access.read
-                && matches!(
-                    spec.kind,
-                    Kind::Numeric { .. } | Kind::Counter { .. } | Kind::Computed
-                ),
+            numeric: spec.access.read && spec.kind.is_numeric(),
         }
     }
     fn project(&mut self, evaluation: &Evaluation) {

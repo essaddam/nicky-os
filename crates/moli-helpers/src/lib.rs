@@ -326,7 +326,10 @@ impl Helper {
                 read: self.kind != HelperKind::Button,
                 write: !matches!(
                     self.kind,
-                    HelperKind::Counter | HelperKind::Timer | HelperKind::Schedule | HelperKind::Computed
+                    HelperKind::Counter
+                        | HelperKind::Timer
+                        | HelperKind::Schedule
+                        | HelperKind::Computed
                 ),
             },
             unit: None,
@@ -354,27 +357,31 @@ impl Helper {
         Ok(Value::Null)
     }
 
+    fn computed_initial(&self) -> anyhow::Result<Value> {
+        ensure!(
+            self.duration_s.is_none()
+                && self.timezone.is_none()
+                && self.initial.is_none()
+                && self.options.is_empty()
+                && self.min.is_none()
+                && self.max.is_none()
+                && self.step.is_none()
+                && self.weekly.is_none(),
+            "{}",
+            moli_i18n::tr!("serveur.calcul.definition")
+        );
+        self.aggregate
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?
+            .normalize()
+            .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?;
+        Ok(Value::Null)
+    }
+
     /// The starting value, checked against the point.
     fn initial_value(&self) -> anyhow::Result<Value> {
         if self.kind == HelperKind::Computed {
-            ensure!(
-                self.duration_s.is_none()
-                    && self.timezone.is_none()
-                    && self.initial.is_none()
-                    && self.options.is_empty()
-                    && self.min.is_none()
-                    && self.max.is_none()
-                    && self.step.is_none()
-                    && self.weekly.is_none(),
-                "{}",
-                moli_i18n::tr!("serveur.calcul.definition")
-            );
-            self.aggregate
-                .clone()
-                .ok_or_else(|| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?
-                .normalize()
-                .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?;
-            return Ok(Value::Null);
+            return self.computed_initial();
         }
         ensure!(
             self.aggregate.is_none(),
