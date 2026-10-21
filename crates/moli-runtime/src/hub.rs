@@ -7,6 +7,13 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
+#[path = "computed_clock.rs"]
+mod computed_clock;
+#[path = "computed_hub.rs"]
+mod computed_hub;
+#[cfg(test)]
+#[path = "computed/tests_hub.rs"]
+mod computed_tests;
 #[cfg(test)]
 #[path = "counter_tests.rs"]
 mod counter_tests;
@@ -15,6 +22,9 @@ mod dependency_hub;
 #[cfg(test)]
 #[path = "dependencies/tests.rs"]
 mod dependency_tests;
+#[cfg(test)]
+#[path = "scene_computed_tests.rs"]
+mod scene_computed_tests;
 #[cfg(test)]
 #[path = "scene_durability_tests.rs"]
 mod scene_durability_tests;
@@ -436,6 +446,9 @@ struct Inner {
     timer_audience: RwLock<BTreeMap<PointId, Vec<moli_core::TimerRecipient>>>,
     temporals: tokio::sync::Mutex<crate::temporal::Temporals>,
     dependencies: tokio::sync::Mutex<crate::dependencies::Dependencies>,
+    computed: crate::computed::Computed,
+    computed_wake: Arc<tokio::sync::Notify>,
+    computed_started: AtomicBool,
     scenes: Mutex<crate::scenes::Scenes>,
     scenes_active: AtomicBool,
     scene_leases_active: AtomicBool,
@@ -472,6 +485,7 @@ impl Drop for Inner {
     fn drop(&mut self) {
         // The clock owns only a weak hub; wake it so dropping a hub frees its task.
         self.dependency_wake.notify_one();
+        self.computed_wake.notify_one();
     }
 }
 
@@ -607,6 +621,9 @@ impl Hub {
             dependencies: tokio::sync::Mutex::new(crate::dependencies::Dependencies::new(
                 opts.dependency_state_path.clone(),
             )),
+            computed: crate::computed::Computed::default(),
+            computed_wake: Arc::new(tokio::sync::Notify::new()),
+            computed_started: AtomicBool::new(false),
             definition_gate: Arc::new(tokio::sync::Mutex::new(())),
             dependency_wake: Arc::new(tokio::sync::Notify::new()),
             dependency_started: AtomicBool::new(false),
@@ -1711,7 +1728,10 @@ impl Hub {
                 .get(&device_id)
                 .ok_or(CommandError::UnknownPoint)?;
             let spec = device.point(key).ok_or(CommandError::UnknownPoint)?;
-            if matches!(spec.kind, moli_core::Kind::Schedule) {
+            if matches!(
+                spec.kind,
+                moli_core::Kind::Schedule | moli_core::Kind::Computed
+            ) {
                 return Err(CommandError::ReadOnly);
             }
             if !spec.access.write {
@@ -2055,6 +2075,23 @@ impl Hub {
             {
                 return;
             }
+            // A number observed under the previous unit is not a measurement
+            // under this descriptor, even before any calculation indexes it.
+            // Invalidate at the model boundary, without tracking dormant sources
+            // or renewing their age. No unit conversion can recover provenance.
+            let changed_units: Vec<_> = device
+                .points
+                .iter()
+                .filter(|point| {
+                    point.kind.uses_state_cache()
+                        && model
+                            .devices
+                            .get(&device.id)
+                            .and_then(|before| before.point(&point.key))
+                            .is_some_and(|before| before.unit != point.unit)
+                })
+                .map(|point| point.key.clone())
+                .collect();
             self.scene_changed(&device.id);
             // Claim cached values for the points this definition declares.
             // The rest stays cached: a device first published without its
@@ -2067,6 +2104,23 @@ impl Hub {
                     .is_some_and(|point| point.kind.uses_state_cache())
             });
             let mut restored = Vec::new();
+            for key in changed_units {
+                let discarded = cached.remove(&key).is_some();
+                if let Some(sample) = states.get_mut(&key) {
+                    if sample.value != Value::Null {
+                        sample.value = Value::Null;
+                        restored.push(Event::State {
+                            point: PointId::new(&device.id, &key),
+                            value: Value::Null,
+                            ts: now_ms(),
+                            source_ts: Some(sample.ts),
+                        });
+                    }
+                    self.0.state_dirty.store(true, Ordering::Release);
+                } else if discarded {
+                    self.0.state_dirty.store(true, Ordering::Release);
+                }
+            }
             for point in &device.points {
                 if !point.kind.uses_state_cache() {
                     if cached.remove(&point.key).is_some() {
@@ -2081,6 +2135,7 @@ impl Hub {
                         point: PointId::new(&device.id, &point.key),
                         value: sample.value.clone(),
                         ts: sample.ts,
+                        source_ts: None,
                     });
                     states.insert(point.key.clone(), sample);
                 }
@@ -2325,11 +2380,12 @@ impl Hub {
             return;
         }
         let pulse = always.then(|| value.clone());
+        let observed_at = Instant::now();
         let scene_observed_at = self
             .0
             .scenes_active
             .load(Ordering::Acquire)
-            .then(Instant::now);
+            .then_some(observed_at);
         let ts = now_ms();
         let event = {
             let mut model = self.write();
@@ -2346,6 +2402,12 @@ impl Hub {
                 }
                 return;
             }
+            let computed_active = self.0.computed.active();
+            let unit = if computed_active {
+                spec.unit.clone()
+            } else {
+                None
+            };
             update(&mut model);
             if cached {
                 self.0.state_dirty.store(true, Ordering::Release);
@@ -2356,11 +2418,20 @@ impl Hub {
                 point: PointId::new(device, &key),
                 value: value.clone(),
                 ts,
+                source_ts: None,
             });
             if let Some(at) = scene_observed_at {
                 self.scene_observe(&PointId::new(device, &key), &value, at);
             }
-            states.insert(key, Sample { value, ts });
+            states.insert(key.clone(), Sample { value, ts });
+            if computed_active
+                && self
+                    .0
+                    .computed
+                    .sample(PointId::new(device, &key), ts, observed_at, unit)
+            {
+                self.0.computed_wake.notify_one();
+            }
             event
         };
         if let Some(event) = event {
@@ -2697,6 +2768,19 @@ impl Hub {
     // ---- internals -----------------------------------------------------------
 
     fn emit(&self, event: Event) {
+        let target = match &event {
+            Event::Availability { device, .. } | Event::DeviceRemoved { device } => Some(device),
+            Event::DeviceUpserted { device } => Some(&device.id),
+            _ => None,
+        };
+        if let Some(device) = target
+            && self
+                .0
+                .computed
+                .device(device, matches!(event, Event::DeviceRemoved { .. }))
+        {
+            self.0.computed_wake.notify_one();
+        }
         let mut position = self
             .0
             .event_position

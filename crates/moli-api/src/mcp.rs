@@ -57,25 +57,26 @@ pub(crate) struct MoliMcp {
     demo: bool,
 }
 
-fn schedule_kind() -> String {
-    "schedule".into()
-}
-
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct DependencyArgs {
-    #[serde(default = "schedule_kind")]
-    kind: String,
-    /// Configured schedule device identity.
+    /// Configured dependency device identity.
     id: String,
+    /// schedule (default), computed or scene.
+    #[serde(default)]
+    #[schemars(with = "Option<String>")]
+    kind: Option<moli_core::DependencyKind>,
 }
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct DependencyDraftArgs {
-    #[serde(default = "schedule_kind")]
-    kind: String,
     id: String,
+    /// schedule (default), computed or scene.
+    #[serde(default)]
+    #[schemars(with = "Option<String>")]
+    kind: Option<moli_core::DependencyKind>,
     expected: u64,
     /// Typed definition: {type: "schedule", value: {timezone, slots: [{day,start,end}]}}.
     /// Day 1=Monday..7; start/end are minutes, maximum 256 normalized slots.
+    /// Computed: {type:"aggregate",value:{operation:"min"|"max"|"mean",sources:[point ids],unit:"W"|null,max_age_s:1..604800}}; at most 32 sources.
     #[schemars(with = "serde_json::Value")]
     definition: Json,
 }
@@ -204,17 +205,14 @@ impl MoliMcp {
         }
     }
     #[tool(
-        description = "Read a typed schedule or scene dependency and its affected automation preview. Publishing requires the existing human PIN session in the dashboard; this tool cannot approve."
+        description = "Read a schedule, computed or scene dependency and its affected automation preview. Publishing requires the existing human PIN session in the dashboard; this tool cannot approve."
     )]
     async fn get_dependency(
         &self,
         Parameters(args): Parameters<DependencyArgs>,
     ) -> Result<CallToolResult, McpError> {
-        let Ok(kind) = serde_json::from_value(serde_json::Value::String(args.kind)) else {
-            return Ok(fail(&moli_runtime::DependencyError::Definition.to_string()));
-        };
         let reference = moli_core::DependencyRef {
-            kind,
+            kind: args.kind.unwrap_or(moli_core::DependencyKind::Schedule),
             id: args.id.into(),
         };
         match self.hub.inspect_dependency(&reference).await {
@@ -236,11 +234,8 @@ impl MoliMcp {
         let Ok(definition) = serde_json::from_value(args.definition) else {
             return Ok(fail(&moli_runtime::DependencyError::Definition.to_string()));
         };
-        let Ok(kind) = serde_json::from_value(serde_json::Value::String(args.kind)) else {
-            return Ok(fail(&moli_runtime::DependencyError::Definition.to_string()));
-        };
         let reference = moli_core::DependencyRef {
-            kind,
+            kind: args.kind.unwrap_or(moli_core::DependencyKind::Schedule),
             id: args.id.into(),
         };
         match self

@@ -111,21 +111,21 @@ enum DependencyCommand {
     List,
     Get {
         device: String,
-        #[arg(long, default_value="schedule", value_parser=["schedule","scene"])]
+        #[arg(long,default_value="schedule",value_parser=["schedule","computed","scene"])]
         kind: String,
     },
     Preview {
         device: String,
-        #[arg(long, default_value="schedule", value_parser=["schedule","scene"])]
+        #[arg(long,default_value="schedule",value_parser=["schedule","computed","scene"])]
         kind: String,
     },
     /// Stage the typed JSON definition from a bounded file. Human publication uses the dashboard.
     Draft {
         device: String,
+        #[arg(long,default_value="schedule",value_parser=["schedule","computed","scene"])]
+        kind: String,
         expected: u64,
         file: PathBuf,
-        #[arg(long, default_value="schedule", value_parser=["schedule","scene"])]
-        kind: String,
     },
 }
 
@@ -1363,9 +1363,9 @@ fn dependency_command(config: &Config, command: DependencyCommand) -> anyhow::Re
         ),
         DependencyCommand::Draft {
             device,
+            kind,
             expected,
             file,
-            kind,
         } => {
             use std::io::Read;
             let mut bytes = Vec::new();

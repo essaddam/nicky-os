@@ -73,7 +73,7 @@ async fn approve(
     .await
 }
 fn value(hub: &Hub, reference: &DependencyRef) -> Value {
-    hub.state(&reference.point()).unwrap().value
+    hub.state(&reference.point().unwrap()).unwrap().value
 }
 
 #[tokio::test]
@@ -107,8 +107,13 @@ async fn auto_k1_draft_is_inert_partial_inputs_and_missing_sources_are_not_zero(
     hub.run_computations().unwrap();
     assert_eq!(value(&hub, &reference), Value::Float(10.0));
     assert_eq!(
-        hub.command(&reference.point(), Value::Float(1.0), Origin::Ui, None)
-            .await,
+        hub.command(
+            &reference.point().unwrap(),
+            Value::Float(1.0),
+            Origin::Ui,
+            None
+        )
+        .await,
         Err(CommandError::ReadOnly)
     );
 }
@@ -300,7 +305,7 @@ async fn auto_k1_publication_time_does_not_backdate_a_definition_change() {
     let mut found = None;
     while let Ok(event) = events.try_recv() {
         if let Event::State { point, ts, .. } = event
-            && point == reference.point()
+            && point == reference.point().unwrap()
         {
             found = Some(ts);
         }
@@ -310,7 +315,7 @@ async fn auto_k1_publication_time_does_not_backdate_a_definition_change() {
         "the event represents the current publication, not a retrospective observation"
     );
     assert_eq!(
-        hub.state(&reference.point()).unwrap().ts,
+        hub.state(&reference.point().unwrap()).unwrap().ts,
         observed,
         "source age stays unchanged in the live model"
     );

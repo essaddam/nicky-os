@@ -86,21 +86,41 @@ impl Hub {
         });
     }
     pub(super) fn dependency_fence(&self) {
-        self.fence_scenes();
-        let references: Vec<_> = self.read().dependency_heads.keys().cloned().collect();
+        self.fence_dependencies(None);
+    }
+    pub(super) fn fence_dependencies(&self, kind: Option<DependencyKind>) {
+        if kind.is_none() || kind == Some(DependencyKind::Scene) {
+            self.fence_scenes();
+        }
+        if kind.is_none() || kind == Some(DependencyKind::Computed) {
+            self.0.computed.fence();
+            self.0.computed_wake.notify_one();
+        }
+        let references: Vec<_> = self
+            .read()
+            .dependency_heads
+            .keys()
+            .filter(|r| kind.is_none_or(|kind| r.kind == kind))
+            .cloned()
+            .collect();
         for reference in references {
             if reference.kind == DependencyKind::Scene {
-                {
-                    let mut model = self.write();
-                    model.dependency_heads.remove(&reference);
-                    model.scene_specs.remove(&reference.id);
-                }
+                let mut model = self.write();
+                model.dependency_heads.remove(&reference);
+                model.scene_specs.remove(&reference.id);
+                drop(model);
                 self.emit(Event::DependencyChanged { reference });
                 continue;
             }
-            self.record_state_update(&reference.id, "active", Value::Null, false, |model| {
-                model.dependency_heads.remove(&reference);
-            });
+            self.record_state_update(
+                &reference.id,
+                reference.key().expect("projected dependency"),
+                Value::Null,
+                false,
+                |model| {
+                    model.dependency_heads.remove(&reference);
+                },
+            );
             self.emit(Event::DependencyChanged { reference });
         }
     }
@@ -232,16 +252,25 @@ impl Hub {
     }
     fn dependency_preview_with(
         &self,
+        owner: &crate::dependencies::Dependencies,
         view: &DependencyView,
     ) -> Result<DependencyPreview, DependencyError> {
-        let mut consumers = self
-            .0
-            .dependency_consumers
-            .read()
-            .unwrap_or_else(PoisonError::into_inner)
-            .get(&view.reference)
+        let related = crate::dependencies::bindings(view, &owner.list()?);
+        let references: Vec<_> = crate::dependencies::affected(view, &related)
             .cloned()
-            .unwrap_or_default();
+            .collect();
+        let mut consumers: Vec<_> = {
+            let index = self
+                .0
+                .dependency_consumers
+                .read()
+                .unwrap_or_else(PoisonError::into_inner);
+            references
+                .iter()
+                .flat_map(|r| index.get(r).into_iter().flatten())
+                .cloned()
+                .collect()
+        };
         if let Some(source) = self
             .0
             .dependency_consumer_source
@@ -249,38 +278,49 @@ impl Hub {
             .unwrap_or_else(PoisonError::into_inner)
             .as_ref()
         {
-            consumers = source.consumers(&view.reference)?;
+            consumers = source.consumers_for(&references)?;
         }
         consumers.sort();
         consumers.dedup();
         let scene = match &view.versions.draft().definition {
             DependencyDefinition::Scene(scene) => Some(self.scene_scope(scene)?),
-            DependencyDefinition::Schedule(_) => None,
+            DependencyDefinition::Schedule(_) | DependencyDefinition::Aggregate(_) => None,
         };
-        let fingerprint = crate::dependencies::fingerprint(&(view, &consumers, &scene));
+        let fingerprint = crate::dependencies::fingerprint(&(view, &consumers, &related, &scene));
         Ok(DependencyPreview {
             reference: view.reference.clone(),
             versions: view.versions.versions(),
             consumers,
             scene,
             fingerprint,
+            related,
         })
     }
     pub async fn preview_dependency(
         &self,
         reference: &DependencyRef,
     ) -> Result<DependencyPreview, DependencyError> {
-        Ok(self.inspect_dependency(reference).await?.1)
+        Ok(self.inspect_dependency_checked(reference, true).await?.1)
     }
     /// Both heads and their preview from one consistent snapshot.
     pub async fn inspect_dependency(
         &self,
         reference: &DependencyRef,
     ) -> Result<(DependencyView, DependencyPreview), DependencyError> {
+        self.inspect_dependency_checked(reference, false).await
+    }
+    async fn inspect_dependency_checked(
+        &self,
+        reference: &DependencyRef,
+        validate: bool,
+    ) -> Result<(DependencyView, DependencyPreview), DependencyError> {
         let _gate = self.definition_gate().lock_owned().await;
         let owner = self.0.dependencies.lock().await;
         let view = owner.view(reference)?;
-        let preview = self.dependency_preview_with(&view)?;
+        if validate {
+            self.validate_computed(&owner, &view)?;
+        }
+        let preview = self.dependency_preview_with(&owner, &view)?;
         Ok((view, preview))
     }
     /// `human` is supplied only by trusted session-aware backend code, as with
@@ -303,9 +343,10 @@ impl Hub {
                     return Err(DependencyError::Human);
                 }
                 let current = owner.view(&reference)?;
-                if hub.dependency_preview_with(&current)? != preview {
+                if hub.dependency_preview_with(&owner, &current)? != preview {
                     return Err(DependencyError::Conflict);
                 }
+                hub.validate_computed(&owner, &current)?;
                 owner
                     .publish(
                         &reference,
@@ -318,7 +359,17 @@ impl Hub {
             .await;
             let active = owner.projection(&reference).ok().flatten();
             if let Ok(view) = &result {
-                hub.dependency_project(view, active);
+                match &view.versions.draft().definition {
+                    DependencyDefinition::Schedule(_) | DependencyDefinition::Scene(_) => {
+                        hub.dependency_project(view, active);
+                    }
+                    DependencyDefinition::Aggregate(_) => {
+                        hub.rebuild_computations(&owner)?;
+                        hub.emit(Event::DependencyChanged {
+                            reference: view.reference.clone(),
+                        });
+                    }
+                }
                 hub.0.dependency_wake.notify_one();
             } else if matches!(result, Err(DependencyError::Uncertain)) {
                 hub.dependency_fence();
@@ -383,7 +434,7 @@ impl Hub {
         }
     }
 
-    fn start_dependency_clock(&self) {
+    pub(super) fn start_dependency_clock(&self) {
         self.0.dependency_wake.notify_one();
         if self.0.dependency_started.swap(true, Ordering::AcqRel) {
             return;
@@ -402,6 +453,10 @@ impl Hub {
                 );
                 let jumped = now.as_millisecond().abs_diff(expected) > 1000;
                 let failed = hub.dependency_tick(&mut owner, now, jumped).await;
+                if let Err(error) = hub.run_computations() {
+                    hub.dependency_fence();
+                    tracing::warn!(%error,"calculated propagation suspended");
+                }
                 anchor = (Instant::now(), now);
                 let next = owner.next();
                 drop(owner);

@@ -1,6 +1,8 @@
 //! Bounded executable definitions, independently of the periodic state cache.
 mod calendar;
+mod context;
 mod store;
+pub(crate) use context::{affected, bindings};
 
 use moli_core::{DependencyRef, PublicationVersion, VersionedDefinition, WeeklySchedule};
 use serde::{Deserialize, Serialize};
@@ -20,6 +22,9 @@ pub enum DependencyError {
     Uncertain,
     Consumers,
     Projection,
+    Cycle,
+    Units,
+    Budget,
 }
 
 impl std::fmt::Display for DependencyError {
@@ -35,6 +40,9 @@ impl std::fmt::Display for DependencyError {
             Self::Uncertain => moli_i18n::tr!("serveur.dependance.incertain"),
             Self::Consumers => moli_i18n::tr!("serveur.dependance.consommateurs"),
             Self::Projection => moli_i18n::tr!("serveur.dependance.projection"),
+            Self::Cycle => moli_i18n::tr!("serveur.calcul.cycle"),
+            Self::Units => moli_i18n::tr!("serveur.calcul.unites"),
+            Self::Budget => moli_i18n::tr!("serveur.calcul.budget"),
         })
     }
 }
@@ -50,6 +58,7 @@ impl std::error::Error for DependencyError {}
 )]
 pub enum DependencyDefinition {
     Schedule(WeeklySchedule),
+    Aggregate(moli_core::AggregateSpec),
     Scene(moli_core::SceneSpec),
 }
 
@@ -57,22 +66,32 @@ impl DependencyDefinition {
     pub fn kind(&self) -> moli_core::DependencyKind {
         match self {
             Self::Schedule(_) => moli_core::DependencyKind::Schedule,
+            Self::Aggregate(_) => moli_core::DependencyKind::Computed,
             Self::Scene(_) => moli_core::DependencyKind::Scene,
         }
     }
     pub(crate) fn normalized(self) -> Result<Self, DependencyError> {
         match self {
             Self::Schedule(plan) => Ok(Self::Schedule(Calendar::new(plan)?.definition().clone())),
+            Self::Aggregate(spec) => Ok(Self::Aggregate(
+                spec.normalize().map_err(|_| DependencyError::Definition)?,
+            )),
             Self::Scene(scene) => scene
                 .normalized()
                 .map(Self::Scene)
                 .map_err(|_| DependencyError::Definition),
         }
     }
+    pub(crate) fn sources(&self) -> &[moli_core::PointId] {
+        match self {
+            Self::Schedule(_) | Self::Scene(_) => &[],
+            Self::Aggregate(spec) => &spec.sources,
+        }
+    }
     pub(crate) fn calendar(&self) -> Result<Option<Calendar>, DependencyError> {
         match self {
             Self::Schedule(plan) => Calendar::new(plan.clone()).map(Some),
-            Self::Scene(_) => Ok(None),
+            Self::Aggregate(_) | Self::Scene(_) => Ok(None),
         }
     }
 }
@@ -105,6 +124,25 @@ pub struct DependencyPreview {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scene: Option<crate::SceneScope>,
     pub fingerprint: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub related: Vec<DependencyBinding>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BindingRole {
+    Source,
+    Affected,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DependencyBinding {
+    pub reference: DependencyRef,
+    pub role: BindingRole,
+    pub current: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub draft: Option<u64>,
 }
 
 pub(crate) fn fingerprint(value: &impl Serialize) -> String {
@@ -123,4 +161,25 @@ pub trait DependencyConsumerSource: std::fmt::Debug + Send + Sync {
         &self,
         reference: &DependencyRef,
     ) -> Result<Vec<DependencyConsumer>, DependencyError>;
+    fn consumers_for(
+        &self,
+        references: &[DependencyRef],
+    ) -> Result<Vec<DependencyConsumer>, DependencyError> {
+        let mut result = Vec::new();
+        for reference in references {
+            result.extend(self.consumers(reference)?);
+        }
+        Ok(result)
+    }
+}
+
+pub(crate) fn graph_error(error: moli_core::AggregateGraphError) -> DependencyError {
+    match error {
+        moli_core::AggregateGraphError::Cycle => DependencyError::Cycle,
+        moli_core::AggregateGraphError::Units => DependencyError::Units,
+        moli_core::AggregateGraphError::Capacity | moli_core::AggregateGraphError::Depth => {
+            DependencyError::Budget
+        }
+        moli_core::AggregateGraphError::Definition => DependencyError::Definition,
+    }
 }

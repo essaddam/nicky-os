@@ -106,6 +106,10 @@ impl Dependencies {
                 self.fenced = Some(Error::Corrupt);
                 return Err(Error::Corrupt);
             }
+            if moli_core::aggregate_order(&state_aggregates(&state)).is_err() {
+                self.fenced = Some(Error::Corrupt);
+                return Err(Error::Corrupt);
+            }
             self.state = Some(state);
         }
         Ok(())
@@ -167,7 +171,7 @@ impl Dependencies {
         definition: DependencyDefinition,
         now: Timestamp,
     ) -> Result<DependencyView, Error> {
-        if !valid_reference(&reference) || reference.kind != definition.kind() {
+        if !valid_reference(&reference) || definition.kind() != reference.kind {
             return Err(Error::Definition);
         }
         let definition = definition.normalized()?;
@@ -216,6 +220,9 @@ impl Dependencies {
         expected: u64,
         definition: DependencyDefinition,
     ) -> Result<DependencyView, Error> {
+        if definition.kind() != reference.kind {
+            return Err(Error::Definition);
+        }
         let definition = definition.normalized()?;
         if reference.kind != definition.kind() {
             return Err(Error::Definition);
@@ -260,7 +267,7 @@ impl Dependencies {
         if changed {
             match (&record.view.versions.current().unwrap().definition, &scope) {
                 (DependencyDefinition::Scene(spec), Some(scope)) if scope.valid_for(spec) => {}
-                (DependencyDefinition::Schedule(_), None) => {}
+                (DependencyDefinition::Schedule(_) | DependencyDefinition::Aggregate(_), None) => {}
                 _ => return Err(Error::Definition),
             }
             record.view.scope = scope;
@@ -271,7 +278,8 @@ impl Dependencies {
                 .unwrap()
                 .definition
                 .calendar()?
-                .map(|c| c.active(now));
+                .map(|calendar| calendar.active(now));
+            moli_core::aggregate_order(&state_aggregates(&state)).map_err(super::graph_error)?;
             self.persist(state).await?;
             self.refresh_calendar(reference, now)?;
         }
@@ -281,6 +289,26 @@ impl Dependencies {
     /// truth after its persistence failed. Restart reloads the durable head.
     pub(crate) fn suspend_projection(&mut self) {
         self.fenced = Some(Error::Projection);
+    }
+    pub(crate) fn aggregates(
+        &self,
+        registered_only: bool,
+    ) -> Result<BTreeMap<moli_core::DeviceId, moli_core::AggregateSpec>, Error> {
+        if let Some(error) = self.fenced {
+            return Err(error);
+        }
+        let mut result = BTreeMap::new();
+        for record in self.state.as_ref().into_iter().flat_map(|s| &s.records) {
+            if registered_only && !self.registered.contains(&record.view.reference) {
+                continue;
+            }
+            if let Some(current) = record.view.versions.current()
+                && let DependencyDefinition::Aggregate(spec) = &current.definition
+            {
+                result.insert(record.view.reference.id.clone(), spec.clone());
+            }
+        }
+        Ok(result)
     }
     pub(crate) fn projection(&self, reference: &DependencyRef) -> Result<Option<bool>, Error> {
         Ok(self.record(reference)?.projected)
@@ -336,4 +364,20 @@ impl Dependencies {
         }
         Ok(changes)
     }
+}
+
+fn state_aggregates(state: &State) -> BTreeMap<moli_core::DeviceId, moli_core::AggregateSpec> {
+    state
+        .records
+        .iter()
+        .filter_map(|record| {
+            let current = record.view.versions.current()?;
+            match &current.definition {
+                DependencyDefinition::Aggregate(spec) => {
+                    Some((record.view.reference.id.clone(), spec.clone()))
+                }
+                DependencyDefinition::Schedule(_) | DependencyDefinition::Scene(_) => None,
+            }
+        })
+        .collect()
 }
