@@ -183,25 +183,28 @@ Les points des clients suivent exactement la sélection et les preuves décrites
 
 ## N4 : SMLIGHT
 
-Deux requêtes GET fixes : `/ha_info` à 1 h, `/ha_sensors` à 60 s. Aucun secret, query,
-`[[write]]`, fallback vers `/api`, SSE, MQTT ou accès au socket Zigbee.
-Ne pas désactiver l'authentification pour rendre le profil utilisable. 401/403 ou page
-de login = variante non prise en charge par ce profil ; laisser la supervision actuelle.
-Le constructeur documente HTTP sans HTTPS et conseille de rester sous une requête/s.
-Les deux lectures initiales du moteur sont séquentielles mais sans espacement garanti :
-vérifier ce point dans le lot N4, espacer si nécessaire sans ajouter un pilote natif
-uniquement pour contourner cette contrainte.
+Le [paquet déclaratif smlight](../../integrations/smlight/README.md) implémente deux GET
+publics fixes : `/ha_info` à1h et `/ha_sensors` à60s. Aucun secret, query, `[[write]]`,
+fallback vers `/api`/`api2`, SSE, MQTT, socket ou commande radio. 401/403/redirection/
+HTML de login invalident la variante sans désactiver la sécurité. Radio à Zigbee2MQTT.
 
-Identité proposée : `info.MAC`, identité native du coordinateur ; aucun repli IP/nom.
-Points ciblés (au plus 10) : températures techniques `esp32_temp`, `zb_temp`, durée
-`uptime`, mémoire `ram_usage`, liaison Ethernet/Wi-Fi et version logicielle. Les unités
-de durée et de mémoire restent à confirmer dans les fixtures ou la source firmware ;
-ne pas inférer un pourcentage du nom `ram_usage`. Radio multichip et champs absents :
-capacité facultative, sans création de points par index d'un tableau changeant.
-Ne reprendre aucun toggle, redémarrage, flash, changement de mode radio ou scan Wi-Fi.
-Le moteur actuel conserve la dernière valeur lorsqu'une clé disparaît d'une réponse.
-Le lot N4 doit tester ce cas et expliciter la fraîcheur des valeurs facultatives ;
-ne pas annoncer la garantie `Null` des clients natifs comme déjà acquise dans un profil.
+Le constructeur conseille au plus une requête/s et documente HTTP sans HTTPS. Le profil
+opte pour un intervalle1000ms : pause initiale, espacement de tous les départs et reprises,
+un seul échange en vol (1Mio/5s). Les autres profils gardent leur comportement par défaut.
+
+Identité `info.Info.MAC` obligatoire, chaîne MAC validée et normalisée, sans repli IP/nom.
+La cible reste exclusivement celle fournie par l'humain : aucun suivi LAN, ARP ou adresse
+apprise. Une autre identité connue/en cache bloque la publication ; chaque relecture
+d'identité est vérifiée avant toute publication issue de cette réponse.
+
+Sept liaisons fixes, explicitement Diagnostic : firmware, températures ESP32/puce Zigbee
+(°C), uptime(s), mémoire brute sans unité, booléens Ethernet/Wi-Fi du coordinateur.
+Celsius et secondes sont recoupés dans HAcore épinglé ; la base firmware de ram_usage
+n'est pas prouvée, aucun pourcentage ni facteur vers B inventé. Champs multichip/tableaux
+ignorés, aucune création par index. Définitions fixes conservées à la reprise, mesures
+absentes Null (`missing = "null"`), cache froid invalidé avant les observations fraîches.
+Arrêt/échec : Null/hors ligne. Pas de présence humaine déduite des booléens réseau.
+La supervision HA et la qualification firmware/budget matériel restent séparées après H1.
 
 ## Provenance et inconnues
 

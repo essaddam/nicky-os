@@ -25,6 +25,30 @@ pub struct Profile {
     pub writes: Vec<Write>,
 }
 
+fn localized(text: &str, key: Option<&str>) -> Result<String, String> {
+    let Some(key) = key else {
+        return Ok(text.to_owned());
+    };
+    if key.is_empty()
+        || key.len() > 128
+        || !key.contains('.')
+        || !key
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b"._".contains(&b))
+    {
+        return Err("invalid translation reference".into());
+    }
+    Ok(moli_i18n::tr!(key))
+}
+
+impl Meta {
+    pub(crate) fn display_name(&self) -> String {
+        self.name_key
+            .as_ref()
+            .map_or_else(|| self.name.clone(), |key| moli_i18n::tr!(key))
+    }
+}
+
 /// Where a profile comes from: what it may do with a secret depends on it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Source {
@@ -66,6 +90,8 @@ pub struct Meta {
     pub id: String,
     pub name: String,
     #[serde(default)]
+    pub name_key: Option<String>,
+    #[serde(default)]
     pub manufacturer: Option<String>,
     #[serde(default)]
     pub model: Option<String>,
@@ -95,6 +121,12 @@ pub struct Meta {
     /// a signing transport needs: `moli-os secrets set <instance> <name>`.
     #[serde(default)]
     pub secret: Option<String>,
+    /// Keep the human-supplied destination and require the same identity.
+    #[serde(default)]
+    pub fixed_target: bool,
+    /// Minimum time between read starts; opt-in, at most five seconds.
+    #[serde(default)]
+    pub min_request_interval_ms: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -140,6 +172,8 @@ pub enum Format {
 pub struct PointDef {
     pub key: String,
     pub label: String,
+    #[serde(default)]
+    pub label_key: Option<String>,
     /// `request_id.path.in.the.answer`
     pub from: String,
     pub kind: String,
@@ -166,6 +200,17 @@ pub struct PointDef {
     /// Increment offered to humans (numeric only).
     #[serde(default)]
     pub step: Option<f64>,
+    #[serde(default)]
+    pub missing: Missing,
+}
+
+/// What an absent field in a successful answer means for this binding.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Missing {
+    #[default]
+    Keep,
+    Null,
 }
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
@@ -286,6 +331,8 @@ pub struct CompiledPoint {
     pub spec: PointSpec,
     pub request: String,
     pub path: Vec<String>,
+    pub(crate) missing: Missing,
+    label_key: Option<String>,
     map: BTreeMap<String, Value>,
     scale: Option<f64>,
     round: Option<u32>,
@@ -337,6 +384,13 @@ impl Profile {
         if self.requests.is_empty() {
             return Err(fail("at least one [[request]] is required".into()));
         }
+        if self.profile.min_request_interval_ms > 5000 {
+            return Err(fail("min_request_interval_ms must be in 0..5000".into()));
+        }
+        if self.profile.fixed_target && self.profile.identity.is_none() {
+            return Err(fail("fixed_target requires identity".into()));
+        }
+        localized(&self.profile.name, self.profile.name_key.as_deref()).map_err(fail)?;
         let secrets = Secrets {
             declared: self.profile.secret.is_some(),
             https: self.profile.https,
@@ -740,7 +794,7 @@ fn compile_point(
     Ok(CompiledPoint {
         spec: PointSpec {
             key: p.key.as_str().into(),
-            label: p.label.as_str().into(),
+            label: localized(&p.label, p.label_key.as_deref())?.into(),
             kind,
             // Writable only through a declared [[write]].
             access: Access {
@@ -752,6 +806,8 @@ fn compile_point(
         },
         request,
         path,
+        missing: p.missing,
+        label_key: p.label_key.clone(),
         map,
         scale: p.scale,
         round: p.round,
@@ -1069,6 +1125,14 @@ impl Answer {
         }
     }
 
+    /// A fixed identity is a string exactly as supplied, without coercion.
+    pub(crate) fn identity_text(&self, path: &[String]) -> Option<String> {
+        match self.lookup(path)? {
+            Json::String(s) if !s.is_empty() => Some(s),
+            _ => None,
+        }
+    }
+
     /// The text at `path` (identity, names).
     pub fn text(&self, path: &[String]) -> Option<String> {
         match self.lookup(path)? {
@@ -1099,11 +1163,20 @@ fn matches(field: Option<&Json>, want: &str) -> bool {
 }
 
 impl CompiledPoint {
+    pub(crate) fn localized_spec(&self) -> PointSpec {
+        let mut spec = self.spec.clone();
+        if let Some(key) = &self.label_key {
+            spec.label = moli_i18n::tr!(key).into();
+        }
+        spec
+    }
     /// Converts the raw answer into this point's typed value. `None` when
     /// the answer does not contain it at all.
     #[must_use]
     pub fn read(&self, answer: &Answer) -> Option<Value> {
-        let raw = answer.lookup(&self.path)?;
+        let Some(raw) = answer.lookup(&self.path) else {
+            return (self.missing == Missing::Null).then_some(Value::Null);
+        };
         let as_text = match &raw {
             Json::String(s) => s.clone(),
             Json::Null => String::new(),
@@ -1186,12 +1259,13 @@ macro_rules! catalogue {
 /// checks the list against the folder both ways.
 pub const BUILTIN: &[(&str, &str)] = catalogue![
     "daikin-brp069",
-    "open-meteo",
-    "open-meteo-air",
-    "tempo",
     "iopool",
     "meross-em06",
     "moonraker",
+    "open-meteo",
+    "open-meteo-air",
+    "smlight",
+    "tempo",
 ];
 
 #[cfg(test)]

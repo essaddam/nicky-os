@@ -28,6 +28,7 @@ toml.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+hyper = { workspace = true, features = ["server"] }
 tokio-util.workspace = true
 
 [lints]

@@ -28,6 +28,7 @@ Quatre sections : `[profile]`, au moins une `[[request]]`, au moins un `[[point]
 |---|---|---|
 | `id` | oui | identifiant du profil, non vide, sans `/` ni `:` |
 | `name` | oui | nom lisible ; nom de l'appareil par défaut et sa description |
+| `name_key` | non | clé i18n explicite pour le nom, traduite à la publication ; sans elle, `name` reste littéral, y compris un préfixe `@` |
 | `manufacturer`, `model` | non | affichés sur l'appareil |
 | `https` | non (`false`) | HTTPS avec certificat **public** (API web, liste Mozilla embarquée) |
 | `host` | non | hôte par défaut (API web) ; un appareil du LAN reçoit le sien dans la config |
@@ -36,6 +37,28 @@ Quatre sections : `[profile]`, au moins une `[[request]]`, au moins un `[[point]
 | `mac` | non | `<requête>.<chemin>` de l'adresse MAC de l'appareil, pour le retrouver si son adresse change (voir « Une adresse qui change ») ; quand c'est aussi `identity`, l'appareil est retrouvable avant même d'avoir répondu une fois |
 | `name_from` | non | `<requête>.<chemin>` du nom que l'appareil se donne |
 | `secret` | non | nom du secret (par instance, dans le coffre chiffré) dont le profil a besoin. Un profil **fichier** qui en déclare un doit aussi déclarer `host` |
+
+### Supervision sur une cible fixe (options explicites)
+
+`fixed_target = true` (défautfalse) exige une identité déclarée : aucun suivi LAN,
+ARP/relocalisation ou réemploi d'adresse apprise. Une seule identité est admise,
+y compris depuis étiquettes/cache ; chaque réponse fraîche d'identité est validée
+avant publication. Si `mac` désigne aussi `identity`, la chaîne MAC est strictement
+validée et normalisée (12hex ou 6octets avec séparateurs réguliers `:`/`-` ; ni zéro
+ni broadcast). Sans cette option, le comportement des profils existants est inchangé.
+
+Pour cette supervision fixe, toutes les lectures initiales doivent réussir. Une erreur
+ultérieure invalide l'exécution ; arrêt/échec remet les points à Null/hors ligne, même
+si le superviseur abandonne la future. Le backoff ne tente que les lectures déclarées.
+
+`min_request_interval_ms` (défaut0, entier0..5000) impose un intervalle minimal entre
+les départs des lectures. La première lecture attend cet intervalle aussi ; les créneaux
+réservés sont partagés entre exécutions du même pilote et résistent à une annulation.
+Recréer un pilote attend de nouveau avant son premier départ. Une valeur0 préserve
+le rythme antérieur. Les périodes restent calculées après achèvement, sans rattrapage.
+L'intervalle est aussi conservé après la fin d'un échange : une connexion lente ne
+peut comprimer l'espacement vu par l'appareil. Espacement et échanges sont annulables ;
+aucune commande en lecture seule n'est envoyée.
 
 ### `[[request]]`
 
@@ -57,7 +80,9 @@ Il n'y a pas de transport « https » séparé : HTTP ou HTTPS dépend de `[prof
 | Clé | Rôle |
 |---|---|
 | `key` | clé du point, unique, non vide, sans `/` |
-| `label` | libellé non vide |
+| `label` | libellé non vide, littéral par défaut |
+| `label_key` | clé i18n explicite, résolue dans la langue active lors de la déclaration ; anciens libellés littéraux inchangés |
+| `missing` | `keep` (défaut historique) ou `null` : champ absent d’une réponse valide → mesure inconnue ; ce dernier choix efface aussi les anciennes valeurs du cache à la première déclaration |
 | `from` | `<requête>.<chemin>` dans la réponse (voir ci-dessous) |
 | `kind` | `binary`, `numeric`, `text` ou `enum` |
 | `values` | valeurs de l'enum (obligatoires pour `enum`, distinctes, non vides) |
@@ -175,6 +200,10 @@ lecture seule. Une clé d'API passée en query (`?appid={secret}`) demande aussi
 - Dans `path`, les valeurs sont encodées en `%XX` ; dans les en-têtes, elles sont brutes.
 - Transport `meross` : la clé ne voyage pas. Le message est signé
   `md5(messageId ‖ clé ‖ horodatage)`, envoyé en HTTP local, et la réponse doit être un `GETACK`.
+
+Les options `name_key`/`label_key` prennent une clé de catalogue non vide, bornée à128
+caractères ASCII alphanumériques, `_` ou `.` (au moins un point). Un nom commençant par
+`@` n'a aucune signification spéciale : la localisation est toujours explicitement choisie.
 
 ## Exécution
 
@@ -569,3 +598,11 @@ cité) et compte les points rejoués. `src/main.rs` : chaque `kind` de `KINDS` e
 par `build_driver`, un autre est inconnu ; le vrai catalogue passe sans erreur et décrit
 chaque pilote natif et chaque profil intégré.
 Aucun test ne touche le réseau.
+
+
+### Profil SMLIGHT public
+
+Le paquet [smlight](../../integrations/smlight/README.md) utilise ces options pour deux
+GET publics fixes et sept liaisons Diagnostic. Radio à Zigbee2MQTT, aucun secret/ordre,
+aucune adresse devinée. Les champs absents et le cache froid restent inconnus sans
+perdre leurs définitions fixes ; qualification réelle après H1.

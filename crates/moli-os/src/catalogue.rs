@@ -579,6 +579,21 @@ author="agent"
         assert_eq!(row.runs, "moli-androidtv-driver");
     }
 
+    #[test]
+    fn smlight_bindings_are_effectively_diagnostic_in_the_history_classifier() {
+        let profile = moli_profile::Profile::parse(moli_profile::builtin("smlight").unwrap())
+            .unwrap()
+            .compile(moli_profile::Source::Builtin)
+            .unwrap();
+        assert_eq!(profile.points.len(), 7);
+        for point in profile.points {
+            assert_eq!(
+                moli_history::Family::of(&point.spec),
+                moli_history::Family::Diagnostic
+            );
+        }
+    }
+
     const KINDS: &[&str] = &["hue", "profile"];
 
     const HUE: &str = r#"[integration]

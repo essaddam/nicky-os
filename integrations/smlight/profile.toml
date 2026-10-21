@@ -1,0 +1,88 @@
+# Synthetic-contract public monitoring only; radio remains owned by Zigbee2MQTT.
+[profile]
+id = "smlight"
+name = "SMLIGHT"
+name_key = "pilotes.smlight.name"
+manufacturer = "SMLIGHT"
+identity = "info.Info.MAC"
+mac = "info.Info.MAC"
+fixed_target = true
+min_request_interval_ms = 1000
+
+[[request]]
+id = "info"
+path = "/ha_info"
+format = "json"
+every = "1h"
+
+[[request]]
+id = "sensors"
+path = "/ha_sensors"
+format = "json"
+every = "60s"
+
+[[point]]
+key = "firmware"
+label = "firmware"
+label_key = "pilotes.smlight.firmware"
+from = "info.Info.sw_version"
+kind = "text"
+semantic = "diagnostic"
+missing = "null"
+
+[[point]]
+key = "esp32_temp"
+label = "esp32_temp"
+label_key = "pilotes.smlight.esp32_temp"
+from = "sensors.Sensors.esp32_temp"
+kind = "numeric"
+semantic = "diagnostic"
+missing = "null"
+unit = "°C"
+
+[[point]]
+key = "zb_temp"
+label = "zb_temp"
+label_key = "pilotes.smlight.zb_temp"
+from = "sensors.Sensors.zb_temp"
+kind = "numeric"
+semantic = "diagnostic"
+missing = "null"
+unit = "°C"
+
+[[point]]
+key = "uptime"
+label = "uptime"
+label_key = "pilotes.smlight.uptime"
+from = "sensors.Sensors.uptime"
+kind = "numeric"
+semantic = "diagnostic"
+missing = "null"
+unit = "s"
+
+[[point]]
+key = "ram_usage"
+label = "ram_usage"
+label_key = "pilotes.smlight.ram_usage"
+from = "sensors.Sensors.ram_usage"
+kind = "numeric"
+semantic = "diagnostic"
+missing = "null"
+
+[[point]]
+key = "ethernet"
+label = "ethernet"
+label_key = "pilotes.smlight.ethernet"
+from = "sensors.Sensors.ethernet"
+kind = "binary"
+semantic = "diagnostic"
+missing = "null"
+
+[[point]]
+key = "wifi_connected"
+label = "wifi_connected"
+label_key = "pilotes.smlight.wifi_connected"
+from = "sensors.Sensors.wifi_connected"
+kind = "binary"
+semantic = "diagnostic"
+missing = "null"

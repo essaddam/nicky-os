@@ -1,0 +1,45 @@
+[integration]
+id = "smlight"
+name = "SMLIGHT"
+brands = ["SMLIGHT"]
+models = ["SLZB-OS (public supervision contract)"]
+transport = "http"
+driver = "profile"
+
+[discovery]
+mdns = []
+ssdp = []
+ports = []
+
+[needs]
+secrets = []
+vars = []
+options = ["host", "port"]
+
+[origin]
+reused = "API publique SMLIGHT, pysmlight épinglé ; contrat synthétique, aucun code ni capture privée copiés"
+author = "agent"
+
+# Negative fixtures are exercised directly by the contract tests.
+[[fixture]]
+file = "fixtures/missing-identity.json"
+
+[[fixture]]
+file = "fixtures/login.html"
+
+[[fixture]]
+file = "fixtures/partial-info.json"
+request = "info"
+
+[[fixture]]
+file = "fixtures/partial-sensors.json"
+request = "sensors"
+
+# The catalogue retains the last answer per request: complete fixtures last.
+[[fixture]]
+file = "fixtures/info.json"
+request = "info"
+
+[[fixture]]
+file = "fixtures/sensors.json"
+request = "sensors"

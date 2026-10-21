@@ -12,6 +12,7 @@
 //! on the same network, checks its identity there, and talks to it at its
 //! new address, journaled and remembered (`data/addresses.json`).
 
+mod policies;
 mod profile;
 mod trust;
 
@@ -106,6 +107,26 @@ impl Target {
                 "this profile sends its key to {own}: it cannot be pointed at {given}"
             )));
         }
+        if profile.meta.fixed_target {
+            let valid = if let Ok(ip) = host.parse::<Ipv4Addr>() {
+                ip.is_private() || ip.is_loopback()
+            } else {
+                !host.is_empty()
+                    && host.len() <= 253
+                    && host.split('.').all(|label| {
+                        !label.is_empty()
+                            && label.len() <= 63
+                            && !label.starts_with('-')
+                            && !label.ends_with('-')
+                            && label
+                                .bytes()
+                                .all(|b| b.is_ascii_alphanumeric() || b == b'-')
+                    })
+            };
+            if !valid || config.port.or(profile.meta.port) == Some(0) {
+                return Err(fail(moli_i18n::tr!("pilotes.profile.cible_fixe_invalide")));
+            }
+        }
         let tls = profile.meta.https;
         Ok(Self {
             host,
@@ -147,6 +168,7 @@ pub struct ProfileDriver {
     /// When the device may next be looked for (kept across restarts).
     search: Mutex<Search>,
     lan: Lan,
+    pacer: policies::Pacer,
 }
 
 /// How the driver sees the home network: the real one, or a test's.
@@ -236,7 +258,8 @@ enum Ended {
 /// built-in profile that says who the device is. A profile file reaches
 /// only the host a person gave it.
 fn followable(config: &Config, profile: &Compiled, lan: Lan) -> bool {
-    profile.source == Source::Builtin
+    !profile.meta.fixed_target
+        && profile.source == Source::Builtin
         && profile.meta.identity.is_some()
         && profile.meta.host.is_none()
         && config
@@ -291,7 +314,9 @@ impl ProfileDriver {
     pub fn new(config: Config, trust_file: PathBuf) -> Result<Self, ProfileError> {
         let (profile, file) = open(&config.profile)?;
         Target::of(&config, &profile)?;
+        let pacer = policies::Pacer::new(profile.meta.min_request_interval_ms);
         Ok(Self {
+            pacer,
             config,
             profile: Arc::new(profile),
             file,
@@ -683,6 +708,7 @@ struct Session<'a> {
     offline: bool,
     /// Polls in a row that reached nobody at the address (any request).
     silent: u32,
+    pacer: policies::Pacer,
 }
 
 /// Nobody answered at the address (refused, unreachable, silent), as
@@ -693,7 +719,12 @@ fn unreachable(e: &anyhow::Error) -> bool {
 }
 
 impl<'a> Session<'a> {
-    fn new(target: &'a Target, profile: &'a Compiled, secret: Option<&'a str>) -> Self {
+    fn new(
+        target: &'a Target,
+        profile: &'a Compiled,
+        secret: Option<&'a str>,
+        pacer: policies::Pacer,
+    ) -> Self {
         Self {
             target,
             profile,
@@ -703,7 +734,15 @@ impl<'a> Session<'a> {
             failures: vec![0; profile.requests.len()],
             offline: false,
             silent: 0,
+            pacer,
         }
+    }
+
+    async fn fetch(&mut self, i: usize) -> anyhow::Result<Answer> {
+        self.pacer.wait().await;
+        let result = fetch(self.target, &self.profile.requests[i], self.secret).await;
+        self.pacer.finished();
+        result
     }
 
     /// Nobody has answered at the address for a while: it may have moved.
@@ -717,12 +756,14 @@ impl<'a> Session<'a> {
         let profile = self.profile;
         let needed = identity_requests(profile);
         for (i, request) in profile.requests.iter().enumerate() {
-            match fetch(self.target, request, self.secret).await {
+            match self.fetch(i).await {
                 Ok(answer) => {
                     self.answers.insert(request.id.clone(), answer);
                     self.due[i] = Instant::now() + request.every;
                 }
-                Err(e) if needed.contains(&request.id.as_str()) => return Err(e),
+                Err(e) if profile.meta.fixed_target || needed.contains(&request.id.as_str()) => {
+                    return Err(e);
+                }
                 Err(e) => {
                     tracing::debug!(error = %e, request = %request.id, "first poll failed, retrying soon");
                     self.failures[i] = 1;
@@ -746,7 +787,11 @@ impl<'a> Session<'a> {
     async fn poll(&mut self, ctx: &DriverCtx, device: &DeviceId, i: usize) -> anyhow::Result<()> {
         let profile = self.profile;
         let request = &profile.requests[i];
-        let result = match fetch(self.target, request, self.secret).await {
+        let fetched = self.fetch(i).await;
+        if let Ok(answer) = &fetched {
+            policies::verify_read(profile, ctx, device, &request.id, answer)?;
+        }
+        let result = match fetched {
             Ok(answer) => {
                 self.failures[i] = 0;
                 self.silent = 0;
@@ -862,6 +907,11 @@ fn identity_requests(profile: &Compiled) -> Vec<&str> {
 }
 
 async fn run(driver: &ProfileDriver, ctx: &mut DriverCtx) -> anyhow::Result<()> {
+    let mut state = policies::RunGuard::new(ctx, &driver.profile);
+    run_inner(driver, state.context()).await
+}
+
+async fn run_inner(driver: &ProfileDriver, ctx: &mut DriverCtx) -> anyhow::Result<()> {
     let profile = &*driver.profile;
     let configured = Target::of(&driver.config, profile)?;
     if let Some(file) = &driver.file
@@ -1056,17 +1106,24 @@ async fn serve(
     follow: Option<(Option<&str>, Option<&str>)>,
 ) -> anyhow::Result<Ended> {
     let profile = &*driver.profile;
-    let mut session = Session::new(target, profile, secret);
-    session.first_round().await?;
+    let mut session = Session::new(target, profile, secret, driver.pacer.clone());
+    tokio::select! {biased;() = ctx.cancelled() => return Ok(Ended::Shutdown), result = session.first_round() => result?};
     let lookup = |reference: &Option<String>| read(&session.answers, reference.as_deref());
     // A declared identity is mandatory: falling back to the address would
     // split one device in two the day the identity comes back.
-    let native = match &profile.meta.identity {
-        Some(reference) => lookup(&profile.meta.identity)
-            .with_context(|| format!("identity {reference} missing from the device's answer"))?,
-        None => format!("{}:{}", target.host, target.port),
+    let native = if profile.meta.fixed_target {
+        let native = policies::native(profile, &session.answers)?;
+        policies::admit(ctx, &native)?;
+        native
+    } else {
+        match &profile.meta.identity {
+            Some(reference) => lookup(&profile.meta.identity).with_context(|| {
+                format!("identity {reference} missing from the device's answer")
+            })?,
+            None => format!("{}:{}", target.host, target.port),
+        }
     };
-    let name = lookup(&profile.meta.name_from).unwrap_or_else(|| profile.meta.name.clone());
+    let name = lookup(&profile.meta.name_from).unwrap_or_else(|| profile.meta.display_name());
     let declared_mac = lookup(&profile.meta.mac).and_then(|m| moli_net::lan::mac_hex(&m));
     if let Some(wanted) = follow
         && let Some(host) = check(driver, ctx, target, configured, secret, wanted, &native).await?
@@ -1080,11 +1137,16 @@ async fn serve(
         native_name: name.as_str().into(),
         manufacturer: profile.meta.manufacturer.as_deref().map(Into::into),
         model: profile.meta.model.as_deref().map(Into::into),
-        description: Some(profile.meta.name.as_str().into()),
+        description: Some(profile.meta.display_name().into()),
         native_room: None,
         members: Vec::new(),
-        points: profile.points.iter().map(|p| p.spec.clone()).collect(),
+        points: profile
+            .points
+            .iter()
+            .map(profile::CompiledPoint::localized_spec)
+            .collect(),
     });
+    policies::clear_cache(ctx, profile, &id);
     for (request, answer) in &session.answers {
         publish(ctx, profile, &id, request, answer);
     }
@@ -1119,7 +1181,11 @@ async fn serve(
             session.command(ctx, &id, command).await;
             continue;
         }
-        let polled = session.poll(ctx, &id, next).await;
+        let polled = tokio::select! {biased;() = ctx.cancelled() => return Ok(Ended::Shutdown), result = session.poll(ctx, &id, next) => result};
+        let polled = match polled {
+            Err(error) if profile.meta.fixed_target => return Err(error),
+            result => result,
+        };
         if let Some(watch) = &mut watch
             && let Some(host) = watch
                 .polled(driver, ctx, &mut session, (next, &polled), configured)
@@ -1753,3 +1819,9 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod smlight_tests;
+
+#[cfg(test)]
+mod smlight_wire_tests;
