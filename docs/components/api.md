@@ -968,3 +968,49 @@ capture les activations validées à cet instant ; les retries ne réarment pas 
 une occurrence interne, jamais une commande client. Une retenue 202 n'est pas un succès
 d'exécution. Schémas et erreurs : [OpenAPI](../api/timer-command.openapi.yaml) ;
 persistance et reprise : [minuteurs](minuteurs.md).
+
+
+## Invitations datées et vue invitée
+
+Un propriétaire (ou le code de la maison tant qu'aucun propriétaire n'existe) gère
+les personnes. Les limites de compte sont indépendantes d'une éventuelle réservation.
+Toutes les dates sont des millisecondes Unix UTC ; le compte invité est actif dans
+`[starts, expires)` (une borne absente laisse ce côté ouvert). `starts < expires`
+est exigé quand les deux sont renseignés. Le serveur refuse les dates non représentables.
+Un membre/propriétaire ne conserve ni ces bornes ni les restrictions de réservation.
+
+| Méthode | Route | Entrée / résultat |
+|---|---|---|
+| GET | `/api/people` | Propriétaire : personnes avec `starts`, `expires`, `reservation`, `has_password` ; jamais de mot de passe ni de code d'invitation. Invité : sa propre référence seulement, pas les allées et venues du foyer. |
+| POST | `/api/people` | Corps humain : `name`, `role`, `rooms?`, `starts?`, `expires?`, `reservation?` ; `201`, ou `422` si invalide. |
+| PUT | `/api/people/{id}` | Même corps ; pour `starts`, `expires`, `reservation`, champ absent = conserver, `null` = retirer explicitement. Une période invalide ne modifie pas la personne. |
+| POST | `/api/people/{id}/invite` | Propriétaire : nouveau code existant à usage unique et son expiration (sept jours). Remplace l'invitation précédente. |
+| POST | `/api/invitation` | `{code, password}` : choisit le mot de passe et ouvre le cookie personnel ; `401` avant `starts`, après `expires`, code consommé/invalide. Un refus avant le début ne consomme pas l'invitation. |
+| POST | `/api/session` | `{login, password}` : `401` si le compte n'est pas encore ou plus actif ; le code PIN du foyer reste un mécanisme distinct. |
+
+Le lien `https://moli.example.org/#invite=ABCDEFGH` porte seulement le code existant.
+Son QR est calculé localement dans le navigateur (module chargé à la demande, aucun
+service tiers). Le fragment n'entre pas dans la requête HTTP et est retiré de l'entrée
+d'historique avant l'affichage du formulaire. Aucun code n'est ajouté à `people.json`,
+au stockage web ou aux journaux ; seul le HMAC existant persiste. Le lien reste une
+invitation secrète à remettre par le propriétaire ; Moli ne l'envoie à personne.
+L'adresse est celle de l'origine courante : elle doit être joignable par son destinataire.
+Une invitation créée plus de sept jours avant le début doit être renouvelée si elle expire.
+
+Le formulaire Personnes affiche les dates dans le fuseau du navigateur. Une édition
+sans changement préserve la milliseconde initiale, même pendant le repli d'heure ; une
+nouvelle heure locale ambiguë ou inexistante est refusée. La fin est exclusive.
+
+Les bornes sont recontrôlées sur chaque requête, pendant le SSE et avant l'émission d'un
+ordre déjà pris par un pilote ou retenu en approbation. Un compte hors période perd donc
+aussi l'accès par ses cookies existants. Les limites existantes suffisent : dix sessions
+actives au plus par personne, durée de trente jours, toujours interrompue par la période
+du compte et, si liée, celle de la réservation. Aucun quota cumulatif de visites ajouté.
+
+La vue web invitée ne propose que les pièces autorisées, le mot de passe personnel et
+la déconnexion, y compris si le fragment demande l'Atelier ou une autre page du foyer.
+`GET /api/home` renvoie `{}`, `GET /api/plan` un plan vide, les images du plan sont
+refusées. Les appareils/états/commandes restent filtrés côté serveur. La serrure garde
+la politique existante : un mot de passe d'invité n'est pas le PIN humain. Une ouverture
+demandée attend `202` ; l'invité ne peut pas l'approuver lui-même. La validation humaine
+recontrôle ses droits avant toute émission. Aucun appareil réel n'a servi aux tests.

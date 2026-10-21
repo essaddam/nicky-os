@@ -115,3 +115,15 @@ session ; `chrome --screenshot` ne rend jamais la main à cause du flux SSE.
 - Télé : applis et clavier non disponibles (JointSpace ne le permet pas ; protocole
   Android TV Remote v2 à faire).
 - Clims : lecture seule tant que les écritures Daikin n'ont pas été testées physiquement.
+
+
+### Invitation et écran invité
+
+Personnes propose pour un invité deux dates/heures locales (début inclus, fin exclue),
+les pièces et, séparément, la réservation facultative. L'invitation affiche le code,
+un lien copiable et un QR généré localement ; le code est prérempli à l'ouverture du
+lien, sans requête au foyer avant le choix du mot de passe. Le lien n'est pas envoyé
+par Moli. La vue invitée remplace toutes les pages Maison/Atelier par les seules pièces
+autorisées, le changement de mot de passe et la déconnexion. Les commandes restent
+inactives pendant une coupure du flux ; une restriction devenue inactive ferme l'accès.
+Voir [le contrat des invitations](api.md#invitations-datées-et-vue-invitée).

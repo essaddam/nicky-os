@@ -257,3 +257,151 @@ async fn guest_layout_and_plan_contain_no_other_rooms_or_house_configuration() {
     );
     let _ = std::fs::remove_dir_all(&house.dir);
 }
+
+/// A synthetic lock only: no bridge or physical device is contacted.
+struct GuestLock {
+    ready: Arc<tokio::sync::Notify>,
+    emissions: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl Driver for GuestLock {
+    fn kind(&self) -> &'static str {
+        "guest-lock-fixture"
+    }
+
+    fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>> {
+        Box::pin(async move {
+            let id = ctx.device_id("door");
+            ctx.upsert_device(Device {
+                id: id.clone(),
+                instance: ctx.instance().clone(),
+                native_name: "Synthetic lock".into(),
+                manufacturer: None,
+                model: None,
+                description: None,
+                native_room: Some(GUEST_ROOM.into()),
+                members: vec![],
+                points: vec![PointSpec {
+                    key: "locked".into(),
+                    label: "Locked".into(),
+                    kind: Kind::Binary,
+                    access: Access {
+                        read: true,
+                        write: true,
+                    },
+                    unit: None,
+                    semantic: Semantic::Lock,
+                }],
+            });
+            ctx.set_state(&id, "locked", Value::Bool(true));
+            ctx.ready();
+            self.ready.notify_one();
+            while let Some(cmd) = ctx.next_command().await {
+                if cmd.abandoned() {
+                    continue;
+                }
+                self.emissions
+                    .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                ctx.set_state(&id, &cmd.key, cmd.value.clone());
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+#[tokio::test]
+async fn a_password_guest_unlock_requires_a_human_and_rechecks_its_dates_at_approval() {
+    let house = guest_house("guest-lock-policy", |_| {}).await;
+    let cancel = CancellationToken::new();
+    let ready = Arc::new(tokio::sync::Notify::new());
+    let emissions = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let driver = spawn_driver(
+        &house.hub,
+        "lock".into(),
+        Arc::new(GuestLock {
+            ready: ready.clone(),
+            emissions: emissions.clone(),
+        }),
+        cancel.clone(),
+    );
+    tokio::time::timeout(Duration::from_secs(3), ready.notified())
+        .await
+        .unwrap();
+    let point = "lock:door/locked";
+    let order = json!({"point":point,"value":false});
+    let (status, body) = request_with(
+        &house.addr,
+        "POST",
+        "/api/command",
+        Some(&order),
+        &house.guest,
+    )
+    .await;
+    assert_eq!(status, 202, "{body}");
+    assert_eq!(emissions.load(std::sync::atomic::Ordering::Acquire), 0);
+    let id = serde_json::from_str::<Json>(&body).unwrap()["pending"]
+        .as_u64()
+        .unwrap();
+    let approval = format!("/api/approvals/{id}");
+    let decision = json!({"point":point,"approve":true});
+    assert_eq!(
+        request_with(
+            &house.addr,
+            "POST",
+            &approval,
+            Some(&decision),
+            &house.guest
+        )
+        .await
+        .0,
+        403
+    );
+    assert_eq!(emissions.load(std::sync::atomic::Ordering::Acquire), 0);
+    let (status, body) =
+        request_with(&house.addr, "POST", &approval, Some(&decision), &house.pin).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(emissions.load(std::sync::atomic::Ordering::Acquire), 1);
+    let (status, body) = request_with(
+        &house.addr,
+        "POST",
+        "/api/command",
+        Some(&order),
+        &house.guest,
+    )
+    .await;
+    assert_eq!(status, 202, "{body}");
+    let id = serde_json::from_str::<Json>(&body).unwrap()["pending"]
+        .as_u64()
+        .unwrap();
+    let future = json!({"name":"Invité","role":"guest","rooms":[GUEST_ROOM],"starts":moli_core::now_ms()+60_000});
+    assert_eq!(
+        request_with(
+            &house.addr,
+            "PUT",
+            "/api/people/invite",
+            Some(&future),
+            &house.pin
+        )
+        .await
+        .0,
+        200
+    );
+    let (status, body) = request_with(
+        &house.addr,
+        "POST",
+        &format!("/api/approvals/{id}"),
+        Some(&decision),
+        &house.pin,
+    )
+    .await;
+    assert_eq!(status, 403, "{body}");
+    assert_eq!(
+        emissions.load(std::sync::atomic::Ordering::Acquire),
+        1,
+        "revoked pending unlock must never emit"
+    );
+    cancel.cancel();
+    driver.await.unwrap();
+    let _ = std::fs::remove_dir_all(house.dir);
+}

@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte';
   import { t } from '../../lib/i18n.svelte.js';
   import { signIn, redeem } from '../lib/people.svelte.js';
   import Icon from './Icon.svelte';
@@ -6,11 +7,11 @@
   /** From the Internet, before anything of the house: a person signs in
    *  with their password, or sets it with the invitation code an owner gave
    *  them. Then the page reloads into the house. */
-  let { onclose = null } = $props();
-  let mode = $state('login');
+  let { onclose = null, initialCode = '' } = $props();
+  let mode = $state(untrack(() => initialCode ? 'invite' : 'login'));
   let login = $state('');
   let password = $state('');
-  let code = $state('');
+  let code = $state(untrack(() => initialCode));
   let again = $state('');
   let error = $state('');
   let busy = $state(false);

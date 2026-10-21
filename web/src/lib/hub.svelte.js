@@ -264,6 +264,9 @@ export async function refreshSession() {
     const res = await fetch('/api/session');
     if (res.ok) {
       hub.session = await res.json();
+      if (hub.session.login_required) {
+        hub.devices = {}; hub.drivers = []; hub.approvals = []; hub.journal = []; hub.notices = [];
+      }
       // The house speaks one language: the dashboard follows it.
       await setLanguage(hub.session.language);
     }

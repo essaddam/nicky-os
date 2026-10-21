@@ -5,6 +5,9 @@
   import { people, loadPeople, savePerson, removePerson, invite, setPassword, assignPhone, signOut, whereabouts, colorOf, ROLES } from '../lib/people.svelte.js';
   import Icon from './Icon.svelte';
   import Login from './Login.svelte';
+  import { invitationLink } from '../lib/invitation.js';
+  import { invitationQr } from '../lib/invitation-qr.js';
+  import { dateTimeInput, editedDateTime } from '../lib/guest-period.js';
   import { reservationBinding, reservationChoices } from '../lib/reservations.js';
 
   /** Système › Personnes: who lives here, what each may do, their phones.
@@ -14,6 +17,7 @@
 
   let editing = $state(null); // null, 'new' or a person id
   let draft = $state(empty());
+  let copied = $state(false);
   let invited = $state(null); // { name, code, expires }
   let message = $state('');
   let busy = $state(false);
@@ -22,7 +26,7 @@
   let signingIn = $state(false);
 
   function empty() {
-    return { name: '', role: 'member', emails: '', rooms: [], expires: '', reservation: '' };
+    return { name: '', role: 'member', emails: '', rooms: [], starts: '', expires: '', originalStarts: null, originalExpires: null, reservation: '' };
   }
 
   const rooms = $derived((home.config?.rooms ?? []).map((r) => r.name));
@@ -35,7 +39,7 @@
     invited = null;
     message = '';
     draft = p
-      ? { name: p.name, role: p.role, emails: (p.emails ?? []).join(', '), rooms: [...(p.rooms ?? [])], expires: p.expires ? new Date(p.expires).toISOString().slice(0, 10) : '', reservation: p.reservation ? `${p.reservation.instance}:${p.reservation.id}` : '' }
+      ? { name: p.name, role: p.role, emails: (p.emails ?? []).join(', '), rooms: [...(p.rooms ?? [])], starts: dateTimeInput(p.starts), expires: dateTimeInput(p.expires), originalStarts: p.starts ?? null, originalExpires: p.expires ?? null, reservation: p.reservation ? `${p.reservation.instance}:${p.reservation.id}` : '' }
       : empty();
   }
 
@@ -49,13 +53,23 @@
         try { reservation = reservationBinding(draft.reservation); }
         catch { throw new Error(t('personnes.carte.reservation_invalide')); }
       }
+      let starts = null;
+      let expires = null;
+      if (draft.role === 'guest') {
+        try {
+          starts = editedDateTime(draft.starts, draft.originalStarts);
+          expires = editedDateTime(draft.expires, draft.originalExpires);
+        } catch { throw new Error(t('personnes.carte.dates_invalides')); }
+        if (starts !== null && expires !== null && starts >= expires) throw new Error(t('personnes.carte.periode_invalide'));
+      }
       const body = {
         name: draft.name,
         role: draft.role,
         emails: draft.emails.split(/[\s,;]+/).filter(Boolean),
         rooms: draft.role === 'guest' ? draft.rooms : [],
         reservation,
-        expires: draft.role === 'guest' && draft.expires ? new Date(`${draft.expires}T23:59:59`).getTime() : null,
+        starts,
+        expires,
       };
       await savePerson(editing === 'new' ? null : editing, body);
       editing = null;
@@ -67,13 +81,25 @@
   }
 
   async function sendInvite(p) {
+    if (busy) return;
+    busy = true;
     message = '';
+    copied = false;
     try {
       const { code, expires } = await invite(p.id);
-      invited = { name: p.name, code, expires };
-    } catch (err) {
-      message = err.message;
-    }
+      const link = invitationLink(location.href, code);
+      invited = { name: p.name, code, expires, link, qr: null };
+      try {
+        const qr = await invitationQr(link);
+        if (invited?.code === code) invited = { ...invited, qr };
+      } catch { message = t('personnes.carte.qr_indisponible'); }
+    } catch (err) { message = err.message; }
+    finally { busy = false; }
+  }
+
+  async function copyLink() {
+    try { await navigator.clipboard.writeText(invited.link); copied = true; }
+    catch { message = t('personnes.carte.copier_impossible'); }
   }
 
   async function remove(p) {
@@ -100,7 +126,8 @@
 
   const phonesOf = (id) => people.phones.filter((ph) => ph.person === id);
   const unassigned = $derived(people.phones.filter((ph) => !ph.person));
-  const date = (ms) => new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
+  const date = (ms) => new Date(ms).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const reservationDate = (ms) => new Date(ms).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
 
@@ -141,7 +168,8 @@
           <b>{p.name}</b>
           <span class="muted">
             {t(`personnes.role.${p.role}`)} · {placeOf(p)}
-            {#if p.role === 'guest' && p.expires} · {t('personnes.carte.jusqu_au', { date: date(p.expires) })}{/if}
+            {#if p.role === 'guest' && p.starts != null} · {t('personnes.carte.a_partir', { date: date(p.starts) })}{/if}
+            {#if p.role === 'guest' && p.expires != null} · {t('personnes.carte.jusqu_au', { date: date(p.expires) })}{/if}
           </span>
           {#if phonesOf(p.id).length}
             <span class="phones">{#each phonesOf(p.id) as ph (ph.id)}<span class="chip"><Icon name="phone" size={14} />{ph.name}</span>{/each}</span>
@@ -149,7 +177,7 @@
         </div>
         {#if people.owner}
           <div class="actions">
-            <button class="ghost small" onclick={() => sendInvite(p)}>{p.has_password ? t('personnes.carte.reinviter') : t('personnes.carte.inviter')}</button>
+            <button class="ghost small" onclick={() => sendInvite(p)} disabled={busy}>{p.has_password ? t('personnes.carte.reinviter') : t('personnes.carte.inviter')}</button>
             <button class="ghost small" onclick={() => edit(p)}>{t('personnes.carte.modifier')}</button>
             <button class="ghost small danger" onclick={() => remove(p)} aria-label={t('personnes.carte.retirer')}><Icon name="trash" size={16} /></button>
           </div>
@@ -164,6 +192,20 @@
     <div class="invite" role="status">
       <b>{t('personnes.carte.invitation_pour', { name: invited.name })}</b>
       <code>{invited.code}</code>
+      <div class="invite-tools">
+        {#if invited.qr}
+          <svg class="invitation-qr" viewBox={`0 0 ${invited.qr.size} ${invited.qr.size}`} role="img" aria-label={t('personnes.carte.qr_label')} shape-rendering="crispEdges">
+            <rect width="100%" height="100%" fill="#fff" />
+            <path d={invited.qr.path} fill="#000" />
+          </svg>
+        {/if}
+        <div class="invite-link">
+          <label><span>{t('personnes.carte.lien')}</span><input value={invited.link} readonly onclick={(event) => event.currentTarget.select()} spellcheck="false" /></label>
+          <button class="ghost small" onclick={copyLink}>{t('personnes.carte.copier_lien')}</button>
+          {#if copied}<small role="status">{t('personnes.carte.lien_copie')}</small>{/if}
+          <small>{t('personnes.carte.lien_aide')}</small>
+        </div>
+      </div>
       <span>{t('personnes.carte.invitation_aide', { date: date(invited.expires) })}</span>
       {#if hub.session?.via === 'access'}<span class="muted">{t('personnes.carte.invitation_access')}</span>{/if}
       <button class="ghost small" onclick={() => (invited = null)}>{t('personnes.carte.fermer')}</button>
@@ -211,9 +253,14 @@
           <small>{t('personnes.carte.reservation_aide')}</small>
         </label>
         <label>
-          <span>{t('personnes.carte.fin')}</span>
-          <input bind:value={draft.expires} type="date" />
+          <span>{t('personnes.carte.debut')}</span>
+          <input bind:value={draft.starts} type="datetime-local" step="0.001" />
         </label>
+        <label>
+          <span>{t('personnes.carte.fin')}</span>
+          <input bind:value={draft.expires} type="datetime-local" step="0.001" />
+        </label>
+        <small>{t('personnes.carte.horaires_aide', { zone: timeZone })}</small>
       {/if}
       <div class="row">
         <button class="ghost" type="button" onclick={() => (editing = null)}>{t('personnes.carte.annuler')}</button>
@@ -254,6 +301,12 @@
 {/if}
 
 <style>
+  .invite-tools { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+  .invitation-qr { width: 184px; height: 184px; flex: none; background: #fff; border-radius: 12px; }
+  .invite-link { display: grid; gap: 10px; flex: 1; min-width: min(240px, 100%); }
+  .invite-link label { display: grid; gap: 6px; }
+  .invite-link input { min-width: 0; width: 100%; font-size: 13px; }
+
   .people {
     display: grid;
     gap: 14px;
