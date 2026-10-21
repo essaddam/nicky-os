@@ -44,6 +44,8 @@ struct Segment {
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+// Retain the last observation's origin even after expiry. It is no longer
+// coverage, but a delayed/equal refresh at the boundary may prove continuity.
 struct Open {
     matched: bool,
     entered: u64,
@@ -106,7 +108,6 @@ impl DurationLedger {
                     && o.entered <= self.last_event
                     && self.last_event <= o.expires
                     && o.expires - self.last_event <= MAX_FRESHNESS_S * 1000
-                    && self.cursor < o.expires
             })
     }
     /// Restart never extrapolates an open interval past its durable checkpoint.
@@ -164,9 +165,6 @@ impl DurationLedger {
                         matched,
                     });
                 }
-            }
-            if now >= open.expires {
-                self.open = None;
             }
         }
         self.cursor = now;
@@ -319,5 +317,68 @@ mod journal_tests {
             crate::Action::Computed { coverage: None, .. }
         ));
         assert_eq!(serde_json::to_value(action).unwrap(), old);
+    }
+}
+
+#[cfg(test)]
+mod review_tests {
+    use super::*;
+
+    #[test]
+    fn auto_k3_r1_expiration_order_preserves_only_continuous_entry() {
+        for refresh in [999, 1000, 1001] {
+            for checkpoint in [1000, 1100] {
+                for checkpoint_first in [false, true] {
+                    for window in [500, 10_000] {
+                        let mut ledger = DurationLedger::new(0);
+                        ledger.observe(0, Some(true), 1000);
+                        if checkpoint_first {
+                            ledger.advance(checkpoint);
+                            assert!(!ledger.stats(checkpoint, window).observing);
+                        }
+                        ledger.observe(refresh, Some(true), 1000);
+                        if !checkpoint_first {
+                            ledger.advance(checkpoint);
+                        }
+                        ledger.advance(1500);
+                        let summary = ledger.stats(1500, window);
+                        let gap = u64::from(refresh > 1000);
+                        assert_eq!(summary.entered_ms, Some(if gap == 0 { 0 } else { refresh }));
+                        assert_eq!(summary.unknown_ms, gap);
+                        assert_eq!(summary.known_ms, window.min(1500) - gap);
+                        assert_eq!(summary.acquired_ms, summary.known_ms);
+                        assert!(ledger.valid());
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn auto_k3_r1_expired_provenance_roundtrips_but_not_across_a_break() {
+        let mut expired = DurationLedger::new(0);
+        expired.observe(0, Some(true), 1000);
+        expired.advance(1100);
+        let encoded = serde_json::to_vec(&expired).unwrap();
+        let mut continuous: DurationLedger = serde_json::from_slice(&encoded).unwrap();
+        assert!(continuous.valid());
+        continuous.prune(500);
+        continuous.observe(1000, Some(true), 1000);
+        assert_eq!(continuous.stats(1000, 500).entered_ms, Some(0));
+        for restart in [false, true] {
+            let mut broken = expired.clone();
+            if restart {
+                broken.resume();
+            } else {
+                broken.observe(1100, None, 0);
+            }
+            broken.observe(1100, Some(true), 1000);
+            assert_eq!(broken.stats(1100, 10_000).entered_ms, Some(1100));
+            assert_eq!(broken.stats(1100, 10_000).unknown_ms, 100);
+        }
+        let mut changed = expired;
+        changed.observe(1000, Some(false), 1000);
+        changed.observe(1100, Some(true), 1000);
+        assert_eq!(changed.stats(1100, 10_000).entered_ms, Some(1100));
     }
 }

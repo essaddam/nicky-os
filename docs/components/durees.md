@@ -37,11 +37,18 @@ absence d’observation. Ce n’est pas la preuve que l’appareil n’a jamais 
 
 Les intervalles sont demi-ouverts : la péremption termine la couverture à
 `observation + max_age_s`, même sans événement suivant. Une observation égale renouvelle
-la fraîcheur sans doubler l’acquis. Un événement antérieur à la dernière observation
+la fraîcheur sans doubler l’acquis. L’entrée continue reste identique quel que soit
+l’ordre entre ce rafraîchissement et le checkpoint à l’expiration. La provenance
+d’un intervalle périmé est conservée à cette seule fin, sans prolonger sa couverture ;
+une invalidation explicite ou une reprise la retire. Un événement antérieur à la dernière observation
 est ignoré ; un événement retardé entre elle et un checkpoint corrige le suffixe
 supposé de cet intervalle. Les changements à la frontière ne créent pas de chevauchement.
 Un changement de description, une suppression, une valeur invalide ou un passage hors
-ligne ferme la couverture. Une remise en ligne seule ne la rouvre pas.
+ligne ferme la couverture. La perte de lisibilité la ferme aussi ; chaque capture
+revérifie le descripteur courant. Une remise en ligne ou le rétablissement de la
+lisibilité seul ne la rouvre pas : une nouvelle observation réelle est nécessaire.
+Retrait et invalidation sont sérialisés sous le même verrou du modèle que les
+producteurs, dans l’ordre modèle puis registre.
 
 Le temps interne suit une ancre monotone. Un recul de l’horloge civile dans le même
 processus ne double ni ne soustrait du temps. À la reprise avec une horloge antérieure

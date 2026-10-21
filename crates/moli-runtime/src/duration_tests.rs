@@ -381,16 +381,19 @@ fn auto_k3_bounded_capture_and_checkpoint_budget() {
     drop(book);
     durations.active.store(true, Ordering::Release);
     let start = Instant::now();
+    let descriptor = moli_core::PointSpec {
+        key: "on".into(),
+        label: "On".into(),
+        kind: Kind::Binary,
+        access: moli_core::Access {
+            read: true,
+            write: false,
+        },
+        unit: None,
+        semantic: moli_core::Semantic::OnOff,
+    };
     for _ in 0..1000 {
-        durations.sample(
-            &source,
-            &Value::Bool(true),
-            &Kind::Binary,
-            None,
-            true,
-            at,
-            Some(at),
-        );
+        durations.sample(&source, &Value::Bool(true), &descriptor, true, at, Some(at));
     }
     println!("AUTO-K3 capture 1000x128: {:?}", start.elapsed());
     assert_eq!(durations.book.lock().unwrap().records.len(), 128);
@@ -511,4 +514,99 @@ async fn auto_k3_projection_does_not_write_a_point_whose_kind_changed() {
         Value::Bool(false)
     );
     assert_eq!(hub.duration_stats(&r.id), Err(DependencyError::Unknown));
+}
+
+fn r1_clock(hub: &Hub, now: u64) {
+    hub.0.durations.book.lock().unwrap().test_now_ms = Some(now);
+}
+
+#[tokio::test]
+async fn auto_k3_r1_removal_serializes_invalidation_and_capture() {
+    let hub = hub(HubOptions::default());
+    r1_clock(&hub, 0);
+    let reference = define(&hub).await;
+    publish(&hub, &reference).await;
+    let source = DeviceId::from("fixture:lamp");
+    r1_clock(&hub, 1000);
+    hub.set_state(&source, "on", Value::Bool(true));
+    r1_clock(&hub, 2000);
+    let (entered_tx, entered_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let (probe_tx, probe_rx) = std::sync::mpsc::channel();
+    let remover = hub.clone();
+    let target = source.clone();
+    let measured = reference.id.clone();
+    let removal = std::thread::spawn(move || {
+        remover.remove_device_update(&target, || {
+            let book = remover.0.durations.book.lock().unwrap();
+            let record = &book.records[&measured];
+            let known = record.ledger.stats(record.ledger.cursor(), 10_000).known_ms;
+            drop(book);
+            entered_tx.send(known).unwrap();
+            release_rx.recv().unwrap();
+        });
+    });
+    let prefix = entered_rx.recv().unwrap();
+    let producer = hub.clone();
+    let updated = source.clone();
+    let update = std::thread::spawn(move || {
+        // Probe the actual lock, without a timed negative assertion. A producer
+        // admitted at this cut must wait, then find the point already removed.
+        let blocked = producer.0.model.try_write().is_err();
+        probe_tx.send(blocked).unwrap();
+        producer.set_state(&updated, "on", Value::Bool(true));
+    });
+    let blocked = probe_rx.recv().unwrap();
+    release_tx.send(()).unwrap();
+    removal.join().unwrap();
+    update.join().unwrap();
+    assert!(
+        blocked,
+        "removal must hold the model through invalidation and deletion"
+    );
+    r1_clock(&hub, 5000);
+    hub.checkpoint_durations().await.unwrap();
+    let summary = hub.duration_stats(&reference.id).unwrap();
+    assert_eq!(prefix, 1000);
+    assert_eq!(summary.known_ms, prefix);
+    assert_eq!(summary.acquired_ms, prefix);
+    assert!(!summary.observing);
+    assert!(hub.describe(&source).is_none());
+}
+
+#[tokio::test]
+async fn auto_k3_r1_unreadable_source_needs_a_new_readable_observation() {
+    let hub = hub(HubOptions::default());
+    r1_clock(&hub, 0);
+    let reference = define(&hub).await;
+    publish(&hub, &reference).await;
+    let source = DeviceId::from("fixture:lamp");
+    r1_clock(&hub, 1000);
+    hub.set_state(&source, "on", Value::Bool(true));
+    let mut descriptor = (*hub.describe(&source).unwrap().0).clone();
+    descriptor.points[0].access.read = false;
+    r1_clock(&hub, 1500);
+    hub.upsert_device(descriptor.clone());
+    r1_clock(&hub, 2000);
+    hub.set_state(&source, "on", Value::Bool(true));
+    r1_clock(&hub, 2500);
+    hub.checkpoint_durations().await.unwrap();
+    let unreadable = hub.duration_stats(&reference.id).unwrap();
+    assert_eq!(unreadable.known_ms, 500);
+    assert!(!unreadable.observing);
+    descriptor.points[0].access.read = true;
+    r1_clock(&hub, 3000);
+    hub.upsert_device(descriptor);
+    r1_clock(&hub, 3500);
+    hub.checkpoint_durations().await.unwrap();
+    assert_eq!(hub.duration_stats(&reference.id).unwrap().known_ms, 500);
+    r1_clock(&hub, 4000);
+    hub.set_state(&source, "on", Value::Bool(true));
+    r1_clock(&hub, 4500);
+    hub.checkpoint_durations().await.unwrap();
+    let fresh = hub.duration_stats(&reference.id).unwrap();
+    assert_eq!(fresh.known_ms, 1000);
+    assert_eq!(fresh.acquired_ms, 1000);
+    assert_eq!(fresh.entered_ms, Some(4000));
+    assert!(fresh.observing);
 }

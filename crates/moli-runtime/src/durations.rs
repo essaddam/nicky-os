@@ -1,7 +1,7 @@
 //! Synchronous indexed observation capture; one asynchronous durable checkpoint writer.
 use crate::StateFile;
 use moli_core::{
-    DeviceId, DurationLedger, DurationSpec, DurationStats, Kind, PointId, Unit, Value,
+    DeviceId, DurationLedger, DurationSpec, DurationStats, Kind, PointId, PointSpec, Value,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -52,6 +52,8 @@ pub(crate) struct Book {
     pub fenced: bool,
     pub anchor: Instant,
     pub wall: u64,
+    #[cfg(test)]
+    pub test_now_ms: Option<u64>,
 }
 impl Default for Book {
     fn default() -> Self {
@@ -65,11 +67,17 @@ impl Default for Book {
             fenced: false,
             anchor: Instant::now(),
             wall: moli_core::now_ms(),
+            #[cfg(test)]
+            test_now_ms: None,
         }
     }
 }
 impl Book {
     pub fn now(&self, at: Instant) -> u64 {
+        #[cfg(test)]
+        if let Some(now) = self.test_now_ms {
+            return now;
+        }
         self.wall.saturating_add(
             u64::try_from(at.saturating_duration_since(self.anchor).as_millis())
                 .unwrap_or(u64::MAX),
@@ -109,13 +117,11 @@ impl Durations {
         }
     }
     /// Called while the model is coherent. No IO, queue or task per event.
-    #[allow(clippy::too_many_arguments)]
     pub fn sample(
         &self,
         point: &PointId,
         value: &Value,
-        kind: &Kind,
-        unit: Option<&Unit>,
+        descriptor: &PointSpec,
         online: bool,
         at: Instant,
         source_at: Option<Instant>,
@@ -128,6 +134,9 @@ impl Durations {
             return;
         };
         let now = book.now(at);
+        let eligible = descriptor.access.read
+            && !descriptor.kind.is_operation()
+            && !descriptor.kind.is_occurrence();
         for id in roots {
             let record = book.records.get_mut(&id).expect("indexed duration exists");
             let remaining = source_at
@@ -138,19 +147,22 @@ impl Durations {
                     u64::try_from(expires.saturating_duration_since(at).as_millis()).unwrap_or(0)
                 });
             let normalize = |value: &Value| {
-                if *kind == Kind::Computed {
+                if descriptor.kind == Kind::Computed {
                     value.as_f64().filter(|n| n.is_finite()).map(Value::Float)
                 } else {
-                    crate::validate_point_value(kind, value).ok()
+                    crate::validate_point_value(&descriptor.kind, value).ok()
                 }
             };
-            let matched = (online && remaining > 0 && unit == record.spec.source_unit.as_ref())
-                .then(|| {
-                    normalize(value)
-                        .zip(normalize(&Value::from_json(&record.spec.value)))
-                        .map(|(a, b)| a == b)
-                })
-                .flatten();
+            let matched = (eligible
+                && online
+                && remaining > 0
+                && descriptor.unit.as_ref() == record.spec.source_unit.as_ref())
+            .then(|| {
+                normalize(value)
+                    .zip(normalize(&Value::from_json(&record.spec.value)))
+                    .map(|(a, b)| a == b)
+            })
+            .flatten();
             record.ledger.observe(now, matched, remaining);
         }
     }

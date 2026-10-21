@@ -327,3 +327,6 @@ Les aides calculées acceptent une définition `duration` validée par le mécan
 commun. Le bilan sépare temps mesuré, couverture connue et temps inconnu, ferme la
 couverture sur péremption ou interruption et reprend les acquis sans double compte.
 Contrats, limites, fichier durable et surfaces : [durées](durees.md).
+
+La capture des durées respecte la lisibilité courante de chaque source. Son retrait
+et la fermeture de sa couverture sont atomiques vis-à-vis des producteurs d’état.

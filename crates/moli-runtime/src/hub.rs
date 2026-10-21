@@ -2195,10 +2195,17 @@ impl Hub {
     }
 
     pub(crate) fn remove_device(&self, id: &DeviceId) {
-        self.0.durations.invalidate(id);
+        self.remove_device_update(id, || {});
+    }
+
+    fn remove_device_update(&self, id: &DeviceId, after_invalidation: impl FnOnce()) {
         self.scene_changed(id);
         let removed = {
             let mut model = self.write();
+            // Same model -> duration-book order as state capture. No producer
+            // may reopen coverage between invalidation and removal.
+            self.0.durations.invalidate(id);
+            after_invalidation();
             model.states.remove(id);
             model.availability.remove(id);
             model.snapshots.remove(id);
@@ -2408,8 +2415,7 @@ impl Hub {
                 self.0.durations.sample(
                     &PointId::new(device, &key),
                     &value,
-                    &spec.kind,
-                    spec.unit.as_ref(),
+                    spec,
                     model.availability.get(device) != Some(&false),
                     observed_at,
                     Some(observed_at),

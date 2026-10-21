@@ -334,11 +334,13 @@ impl Projection for ProjectionModel<'_> {
             .sample
             .as_ref()
             .map_or(Value::Null, |s| s.value.clone());
+        let descriptor = self.model.devices[&evaluation.id]
+            .point("value")
+            .expect("checked calculated point");
         self.durations.sample(
             &PointId::new(&evaluation.id, "value"),
             &value,
-            &Kind::Computed,
-            evaluation.unit.as_ref(),
+            descriptor,
             self.model.availability.get(&evaluation.id) != Some(&false),
             Instant::now(),
             evaluation.observed_at,
