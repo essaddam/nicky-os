@@ -92,6 +92,11 @@ ou commande sur leur portée. Aucun ordonnanceur de scène ne tourne au repos.
 
 ## Résultats et confirmation
 
+Les deux comparaisons d’état appliquent la même validation typée que la consigne.
+Sur un point numérique, un entier `42` et un flottant `42.0` représentent la même
+valeur ; un texte `"42"`, un booléen, un nombre non fini ou hors des bornes du point
+ne peuvent pas confirmer cette consigne.
+
 Chaque cible a un état propre :
 
 - `already_conform` : son échantillon courant correspond déjà à la valeur voulue,

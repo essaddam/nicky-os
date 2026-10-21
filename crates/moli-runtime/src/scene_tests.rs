@@ -779,3 +779,79 @@ async fn auto_s1_approval_acknowledgement_is_visible_while_state_is_still_unconf
         SceneStatus::Done
     );
 }
+
+fn numeric_fixture() -> (Hub, mpsc::Receiver<CommandRequest>, DeviceId, PointId) {
+    let (hub, rx, id, point) = fixture();
+    let mut device = (*hub.describe(&id).unwrap().0).clone();
+    device.points[0].kind = Kind::Numeric {
+        min: Some(0.0),
+        max: Some(100.0),
+        step: Some(1.0),
+    };
+    device.points[0].semantic = Semantic::Other;
+    hub.upsert_device(device);
+    (hub, rx, id, point)
+}
+fn numeric_scene(point: &PointId) -> SceneSpec {
+    let mut spec = scene(point);
+    spec.targets[0].value = json!(42);
+    spec
+}
+
+#[tokio::test]
+async fn auto_s1_numeric_recent_integer_and_float_need_no_order() {
+    for value in [Value::Float(42.0), Value::Int(42)] {
+        let (hub, mut rx, id, point) = numeric_fixture();
+        hub.set_state(&id, "on", value.clone());
+        let scene = publish(&hub, numeric_scene(&point)).await;
+        let run = start(&hub, &scene).await;
+        let ended = hub.wait_scene(&run.id).await.unwrap();
+        assert_eq!(ended.status, SceneStatus::Done, "{value:?}");
+        assert_eq!(ended.targets[0].status, TargetStatus::AlreadyConform);
+        assert!(!ended.targets[0].acknowledged);
+        assert!(rx.try_recv().is_err());
+    }
+}
+
+#[tokio::test]
+async fn auto_s1_numeric_integer_and_float_observations_confirm_after_order() {
+    for value in [Value::Float(42.0), Value::Int(42)] {
+        let (hub, mut rx, id, point) = numeric_fixture();
+        hub.set_state(&id, "on", Value::Int(0));
+        let scene = publish(&hub, numeric_scene(&point)).await;
+        let run = start(&hub, &scene).await;
+        let command = rx.recv().await.unwrap();
+        hub.set_state(&id, "on", value.clone());
+        command.reply(Ok(()));
+        let ended = hub.wait_scene(&run.id).await.unwrap();
+        assert_eq!(ended.status, SceneStatus::Done, "{value:?}");
+        assert_eq!(ended.targets[0].status, TargetStatus::Confirmed);
+        assert!(ended.targets[0].acknowledged);
+        assert!(rx.try_recv().is_err());
+    }
+}
+
+#[tokio::test]
+async fn auto_s1_numeric_different_or_invalid_observations_do_not_confirm() {
+    for value in [
+        Value::Int(43),
+        Value::Float(43.0),
+        Value::from("42"),
+        Value::Bool(true),
+        Value::Int(142),
+        Value::Float(f64::NAN),
+    ] {
+        let (hub, mut rx, id, point) = numeric_fixture();
+        hub.set_state(&id, "on", value.clone());
+        let scene = publish(&hub, numeric_scene(&point)).await;
+        let run = start(&hub, &scene).await;
+        let command = rx.recv().await.unwrap();
+        hub.set_state(&id, "on", value.clone());
+        command.reply(Ok(()));
+        let ended = hub.wait_scene(&run.id).await.unwrap();
+        assert_eq!(ended.status, SceneStatus::Partial, "{value:?}");
+        assert_eq!(ended.targets[0].status, TargetStatus::ConfirmationExpired);
+        assert!(ended.targets[0].acknowledged);
+        assert!(rx.try_recv().is_err());
+    }
+}

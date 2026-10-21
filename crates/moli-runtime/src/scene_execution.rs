@@ -300,7 +300,7 @@ impl Hub {
             let now = moli_core::now_ms();
             if sample.ts <= now
                 && now - sample.ts <= u64::from(confirmation_s) * 1000
-                && sample.value.to_json() == target.value
+                && self.scene_value_matches(target, &sample.value)
             {
                 return finish(result, TargetStatus::AlreadyConform);
             }
@@ -315,6 +315,21 @@ impl Hub {
             parent,
         )
         .await
+    }
+
+    fn scene_value_matches(&self, target: &crate::SceneScopeTarget, observed: &Value) -> bool {
+        let Some((id, key)) = target.point.split() else {
+            return false;
+        };
+        let model = self.read();
+        let Some(point) = model.devices.get(&id).and_then(|device| device.point(key)) else {
+            return false;
+        };
+        // The approved scope already contains the canonical wanted value. Apply
+        // the same point validation to observations: Numeric Int/Float agree,
+        // while wrong types, nonfinite numbers and values outside bounds fail.
+        crate::validate_point_value(&point.kind, observed)
+            .is_ok_and(|value| value.to_json() == target.value)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -438,19 +453,20 @@ impl Hub {
             if watch.cancel.is_cancelled() {
                 return finish(result, TargetStatus::Cancelled);
             }
-            {
+            let observed = {
                 let state = watch.state();
                 if state.superseded {
                     return finish(result, TargetStatus::Superseded);
                 }
-                if result.acknowledged
-                    && state
-                        .observed
-                        .as_ref()
-                        .is_some_and(|(v, at)| *at <= confirm_by && v.to_json() == target.value)
-                {
-                    return finish(result, TargetStatus::Confirmed);
-                }
+                state.observed.clone()
+            };
+            // Release the watch before reading point descriptors in the model.
+            if result.acknowledged
+                && observed
+                    .as_ref()
+                    .is_some_and(|(v, at)| *at <= confirm_by && self.scene_value_matches(target, v))
+            {
+                return finish(result, TargetStatus::Confirmed);
             }
             tokio::select! {
                 biased;
