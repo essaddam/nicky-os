@@ -32,6 +32,7 @@
         operation: d?.points.find((p) => p.key === key)?.label ?? t(key === 'start' ? 'systeme.minuteur.demarrer' : key === 'cancel' ? 'systeme.minuteur.annuler' : 'systeme.minuteur.expiration'),
       }) };
     }
+    if (a.kind === 'temporal') return { target: a.point.split('/')[0], detail: t('systeme.date.journal', { point: a.point }) };
     if (a.kind === 'counter') {
       const [id, key] = a.point.split('/');
       const d = hub.devices[id];

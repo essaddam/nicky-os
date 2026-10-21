@@ -1,8 +1,8 @@
 # Aides date et heure (AUTO-H3) — contrat proposé
 
-Statut : préparation du lot, à relire avant les changements de comportement.
+Statut : contrat de l'implémentation proposée à la revue AUTO-H3.
 Socle proposé : AUTO-H2 approuvé (`18cff345`). Le minuteur AUTO-H1 n'est pas un
-prérequis. Ce document ne livre ni aide exécutable ni activation.
+prérequis. La branche reste soumise à sa revue ; aucune activation ou installation réelle n'est effectuée.
 
 ## Intention et périmètre
 
@@ -20,8 +20,8 @@ humaine. Aucun LLM dans le chemin de commande ou de validation temporelle.
 
 ## Types et représentation
 
-Proposition : `HelperKind` date, time et datetime, avec un point `value` lisible
-et inscriptible. Un type de point temporel explicite porte le format ; le format
+`HelperKind` date, time et datetime, avec un point `value` lisible
+et inscriptible. Le type de point `temporal` avec sa `spec` porte le format ; le format
 datetime porte aussi le nom du fuseau. Les valeurs du protocole restent des
 chaînes, sans imposer de nouvel objet à tous les transports.
 
@@ -64,6 +64,8 @@ Exemple synthétique dans `Europe/Paris` : `2026-03-29T02:30:00` est inexistant 
 `2026-10-25T02:30:00` est ambigu. Ses formes `+02:00` et `+01:00` désignent deux
 instants distincts, respectivement `00:30:00Z` et `01:30:00Z`. Le nom du fuseau
 reste celui de la définition, quelle que soit la représentation UTC de la valeur.
+Si le navigateur ne connaît pas ce fuseau, il l'indique et propose explicitement
+la saisie UTC ; il ne choisit jamais son propre fuseau en remplacement.
 
 Les règles de calendrier et de forme restent pures dans le cœur. La résolution
 du fuseau utilise Jiff dans la couche qui possède déjà cette dépendance ; aucun
@@ -73,7 +75,7 @@ doit pas annoncer une saisie valide que le hub refuserait pour ambiguïté.
 
 ## Durabilité et reprise
 
-Fichier proposé `helper-datetimes.json`, versionné et borné à 1 Mio, au plus 128
+Fichier `helper-datetimes.json`, versionné et borné à 1 Mio, au plus 128
 aides temporelles au niveau du hub. Un propriétaire sérialise toutes les instances.
 Il conserve définition du format/fuseau et valeur canonique dans le même état.
 Pas de nouvelle base SQL, pas de dépendance à l'historique, pas d'ordonnanceur.
@@ -124,7 +126,7 @@ avec les déclencheurs existants. Ce lot n'introduit ni réveil à l'instant sai
 comparaisons calendaires implicites. L'initialisation/restauration ne vaut pas une
 nouvelle saisie ; les règles de brouillon et de validation humaine restent intactes.
 
-## Preuves à livrer
+## Vérifications
 
 - Calendrier : années bissextiles et siècles, fins de mois, minuit et changement de
   jour ; formats stricts, limites, valeurs numériques/null et secondes invalides.
@@ -142,3 +144,33 @@ Validation native Rust 1.99.1, deux tâches, fmt/Clippy workspace et suites cibl
 Interface : npm ci, tests et build, contrôle i18n ; catalogue et fuites. Soumission
 au relecteur affecté sur ces preuves ; contrôle complet au tour d'intégration après
 approbation. Aucun déploiement, effet physique, import privé, merge ou push ici.
+
+## Configuration et commandes
+
+```toml
+[[driver.options.helper]]
+id = "repere"
+name = "Repère"
+kind = "datetime"
+timezone = "Europe/Paris"
+initial = "2000-01-01T00:00:00Z"
+```
+
+Pour date seule : `kind = "date"`, `initial = "2024-02-29"`, sans timezone.
+Pour heure seule : `kind = "time"`, `initial = "23:59:59"`, sans timezone.
+Les littéraux temporels TOML sont également acceptés s'ils respectent ces formes.
+
+- REST : `POST /api/command` avec `{"point":"aides:repere/value","value":"2026-10-25T02:30:00+01:00"}`.
+- MCP : outil `command`, mêmes point et valeur.
+- CLI : `moli-os temporal aides:repere 2026-10-25T02:30:00+01:00`.
+- Lecture : `GET /api/devices`, valeur UTC et `kind.spec.timezone` ; événements SSE.
+- UI : saisie civile dans le fuseau du point, décalage explicite ou mode UTC. La
+  garde conserve la valeur canonique dans la demande à valider.
+
+Les comparaisons explicites `when_state`, `if` et `wait_for` normalisent les
+littéraux comme la commande ; deux décalages désignant le même instant comparent
+égaux. Les comparaisons numériques ne deviennent pas des comparaisons calendaires.
+La validation du graphe rejette les heures locales invalides ou ambiguës avant
+approbation. Aucun graphe existant ni empreinte n'est réécrit par cette normalisation.
+
+Le [schéma OpenAPI](../api/temporal-command.openapi.yaml) décrit les valeurs et erreurs.

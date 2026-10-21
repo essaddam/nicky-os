@@ -185,8 +185,8 @@ Preuves : année bissextile, changement de jour, heure d'été/hiver, sérialisa
 restauration, configuration antérieure toujours lisible, erreurs localisées.
 
 Le [contrat détaillé proposé](dates-heures.md) précise les formats, la distinction
-civil/instant, le refus des ambiguïtés et la durabilité. Sa préparation ne livre
-aucun comportement ; il reste soumis à la revue AUTO-H3 avant implémentation.
+civil/instant, le refus des ambiguïtés et la durabilité. L'implémentation candidate
+reste soumise à la revue AUTO-H3 ; sa présence sur une branche ne vaut pas activation.
 
 ### AUTO-H4 — Bouton
 

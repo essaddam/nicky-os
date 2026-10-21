@@ -1,0 +1,60 @@
+openapi: 3.1.0
+info:
+  title: Moli — affectations temporelles
+  version: 1.0.0
+  description: Extension de la commande existante, sous la garde et au journal.
+paths:
+  /api/command:
+    post:
+      summary: Affecter une date, une heure ou une date-heure
+      description: >-
+        Le type du point détermine le format. Date et heure sont civiles ; la
+        date-heure porte un fuseau explicite dans sa description et revient en
+        UTC. Une heure locale sautée ou répétée sans décalage est refusée.
+        Une réussite attend la durabilité. Aucune exécution horaire implicite.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [point, value]
+              properties:
+                point: { type: string, maxLength: 256, pattern: '^[^:/]+:[^/]+/value$' }
+                value:
+                  oneOf:
+                    - { type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' }
+                    - { type: string, pattern: '^[0-9]{2}:[0-9]{2}:[0-9]{2}$' }
+                    - { type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2})?$' }
+                  description: Calendrier réel, années 0001 à 9999 ; secondes entières, sans seconde intercalaire ni -00:00.
+                actor: { type: string }
+      responses:
+        '200': { description: Affectation durable confirmée ; valeur canonique dans GET /api/devices et SSE. }
+        '202': { description: Demande retenue avec pending et reason ; aucun effet avant validation humaine. }
+        '403': { description: Accès ou écriture refusé. }
+        '404': { description: Point inconnu. }
+        '409': { description: Issue incertaine avec retryable=true ; redémarrer et relire avant de décider une nouvelle affectation. }
+        '422': { description: Forme, calendrier, fuseau, décalage ou heure locale invalide/ambiguë. }
+        '500': { description: État durable invalide ou écriture impossible. }
+        '503': { description: Capacité, file ou pilote indisponible. }
+        '504': { description: Commande abandonnée ou expirée avant engagement. }
+components:
+  schemas:
+    TemporalKind:
+      type: object
+      required: [type, spec]
+      properties:
+        type: { const: temporal }
+        spec:
+          oneOf:
+            - type: object
+              required: [format]
+              additionalProperties: false
+              properties:
+                format: { enum: [date, time] }
+            - type: object
+              required: [format, timezone]
+              additionalProperties: false
+              properties:
+                format: { const: datetime }
+                timezone: { type: string, minLength: 1, maxLength: 80, description: Nom IANA reconnu ou UTC. }

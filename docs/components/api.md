@@ -1020,3 +1020,12 @@ refusées. Les appareils/états/commandes restent filtrés côté serveur. La se
 la politique existante : un mot de passe d'invité n'est pas le PIN humain. Une ouverture
 demandée attend `202` ; l'invité ne peut pas l'approuver lui-même. La validation humaine
 recontrôle ses droits avant toute émission. Aucun appareil réel n'a servi aux tests.
+
+### Affectations temporelles AUTO-H3
+
+`command` (REST/MCP) accepte les chaînes des points `temporal` : date `YYYY-MM-DD`,
+heure `HH:MM:SS`, date-heure avec fuseau déclaré dans `kind.spec.timezone`. La valeur
+canonique d'un instant est UTC avec suffixe Z ; les heures locales sautées ou
+ambiguës sans choix sont refusées (422). Succès après durabilité, garde et journal
+communs. CLI : `moli-os temporal <appareil> <valeur>`. Formats, refus et limites :
+[contrat](dates-heures.md), [OpenAPI](../api/temporal-command.openapi.yaml).

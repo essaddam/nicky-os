@@ -230,6 +230,12 @@ impl Ctx<'_> {
         match rule {
             Rule::State { point, op, value } => {
                 if let Some(spec) = self.need(point, false) {
+                    if let Kind::Temporal { spec: temporal } = &spec.kind
+                        && let Err(error) =
+                            moli_runtime::normalize_temporal(temporal, &Value::from_json(value))
+                    {
+                        self.push(Level::Error, error.to_string());
+                    }
                     if spec.kind.is_occurrence() {
                         self.push(Level::Error, tr!("moteur.verif.bouton_occurrence"));
                     } else if matches!(op, Op::Gt | Op::Ge | Op::Lt | Op::Le)
@@ -283,17 +289,29 @@ fn check_node(
         Step::WhenOccurrence { point, value } => {
             if let Some(spec) = c.need(point, false)
                 && value.as_ref().is_some_and(|value| {
-                    moli_core::validate(&spec.kind, &Value::from_json(value)).is_err()
+                    moli_runtime::validate_point_value(&spec.kind, &Value::from_json(value))
+                        .is_err()
                 })
             {
                 c.push(Level::Error, tr!("moteur.verif.occurrence_valeur"));
             }
         }
-        Step::WhenState { point, .. } => {
-            if c.need(point, false)
-                .is_some_and(|spec| spec.kind.is_occurrence())
-            {
-                c.push(Level::Error, tr!("moteur.verif.bouton_occurrence"));
+        Step::WhenState {
+            point, to, from, ..
+        } => {
+            if let Some(spec) = c.need(point, false) {
+                if spec.kind.is_occurrence() {
+                    c.push(Level::Error, tr!("moteur.verif.bouton_occurrence"));
+                }
+                if let Kind::Temporal { spec: temporal } = &spec.kind {
+                    for value in [to, from].into_iter().flatten() {
+                        if let Err(error) =
+                            moli_runtime::normalize_temporal(temporal, &Value::from_json(value))
+                        {
+                            c.push(Level::Error, error.to_string());
+                        }
+                    }
+                }
             }
         }
         Step::WhenThreshold {
@@ -344,7 +362,8 @@ fn check_node(
         }
         Step::Set { point, value } => {
             if let Some(spec) = c.need(point, true)
-                && let Err(e) = moli_core::validate(&spec.kind, &Value::from_json(value))
+                && let Err(e) =
+                    moli_runtime::validate_point_value(&spec.kind, &Value::from_json(value))
             {
                 c.push(
                     Level::Error,

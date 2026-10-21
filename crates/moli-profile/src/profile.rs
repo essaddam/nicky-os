@@ -902,7 +902,8 @@ fn check_write_map(map: &BTreeMap<String, String>, kind: &Kind) -> Result<(), St
         | Kind::CounterCommand { .. }
         | Kind::Counter { .. }
         | Kind::Timer { .. }
-        | Kind::TimerCommand { .. } => {
+        | Kind::TimerCommand { .. }
+        | Kind::Temporal { .. } => {
             return Err("business point is not a mapped state".into());
         }
     };
@@ -1231,7 +1232,8 @@ impl CompiledPoint {
             | Kind::CounterCommand { .. }
             | Kind::Counter { .. }
             | Kind::Timer { .. }
-            | Kind::TimerCommand { .. } => return None,
+            | Kind::TimerCommand { .. }
+            | Kind::Temporal { .. } => return None,
         })
     }
 }

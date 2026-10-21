@@ -89,3 +89,11 @@ fsync à chaque seconde. En activité, au plus 128 variations de restant par sec
 visibles en SSE et à l'historique selon B1 : jusqu'à 11 059 200 par jour au plafond.
 La rétention B1 n'est pas modifiée. Ces limites ne sont pas une mesure de charge
 ou de latence physique et ne remplacent pas une qualification de l'installation.
+
+## Budget des aides temporelles AUTO-H3
+
+128 aides au niveau du hub, fichier de 1 Mio, un seul rédacteur ; aucune éviction
+automatique d'une valeur durable. Aucun ordonnanceur, poll ou calcul au repos.
+Normalisation aux mutations et comparaisons explicites, publication aux changements ;
+aucune écriture du cache périodique pour ces projections. Ces limites ne remplacent
+pas une mesure de charge sur une installation réelle.

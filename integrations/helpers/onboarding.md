@@ -20,3 +20,8 @@ Pour une attente durable, choisir `kind = "timer"` et une durée initiale entiè
 `duration_s` de 1 à 604800 secondes. Faire valider les graphes avant de démarrer le
 minuteur : une validation ultérieure n'hérite pas de cette génération. Le démarrage
 et l'annulation restent sous garde ; aucun test réel dans une pièce protégée.
+
+Pour une date ou une heure, demander une valeur initiale explicite. Pour datetime,
+demander aussi le fuseau IANA ; ne jamais déduire celui du navigateur. Refuser les
+heures sautées et faire préciser le décalage d'une heure répétée. Une saisie ne
+programme aucune action ; tout graphe créé par un agent reste à valider.

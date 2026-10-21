@@ -1001,3 +1001,11 @@ pas laisser partir un ordre encore retenu. `member_permit()` limite la délégat
 aux membres déclarés et réévalue le parent ; une continuation composite bornée
 peut le conserver après réponse du parent. Préserver aussi origine et corrélation.
 Le permis n'annule pas rétroactivement un envoi de transport déjà engagé.
+
+### Aides temporelles
+
+`helpers` accepte `date`, `time`, `datetime`, avec `initial` explicite. Seul datetime
+porte `timezone`, obligatoire. Le propriétaire partagé dans le hub conserve format,
+fuseau et valeur dans `helper-datetimes.json` avant confirmation ; les aides ne
+créent aucun ordonnanceur. Changer le format/fuseau d'une valeur restaurée est un
+refus visible. Voir [dates et heures](dates-heures.md).

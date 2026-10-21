@@ -82,6 +82,8 @@ enum Command {
         #[arg(long, global = true)]
         request_id: Option<String>,
     },
+    /// Assign a civil date/time or zoned datetime through the running server.
+    Temporal { device: String, value: String },
     /// Apply a counter operation through the running API, under its guard.
     Counter {
         device: String,
@@ -219,6 +221,13 @@ fn run_command(command: Command, config: Config, boot: Instant) -> anyhow::Resul
             unreachable!("handled above")
         }
         Command::Backup { dir } => backup::backup(&config.server.data_dir, &dir),
+        Command::Temporal { device, value } => send_value_operation(
+            &config,
+            &format!("{device}/value"),
+            &serde_json::Value::String(value),
+            None,
+            "moli-os temporal",
+        ),
         Command::Press { point, request_id } => press(&config, &point, request_id.as_deref()),
         Command::Timer {
             device,
@@ -478,6 +487,7 @@ fn open_hub(config: &Config) -> anyhow::Result<Hub> {
         button_state_path: Some(config.server.data_dir.join("button-occurrences.json")),
         counter_state_path: Some(config.server.data_dir.join("helper-counters.json")),
         timer_state_path: Some(config.server.data_dir.join("helper-timers.json")),
+        temporal_state_path: Some(config.server.data_dir.join("helper-datetimes.json")),
         journal_path: Some(config.server.data_dir.join("journal.jsonl")),
         addresses_path: Some(config.server.data_dir.join("addresses.json")),
         secrets,
@@ -1583,5 +1593,23 @@ mod tests {
         let builtin: std::collections::BTreeSet<&str> =
             moli_profile::BUILTIN.iter().map(|(id, _)| *id).collect();
         assert_eq!(profiles, builtin, "one package per built-in profile");
+    }
+}
+
+#[cfg(test)]
+mod temporal_cli_tests {
+    use super::*;
+    #[test]
+    fn auto_h3_cli_sends_an_explicit_string_to_the_running_server() {
+        let cli = Cli::try_parse_from([
+            "moli-os",
+            "temporal",
+            "fixture:sample",
+            "2026-10-25T02:30:00+01:00",
+        ])
+        .unwrap();
+        assert!(
+            matches!(cli.command,Some(Command::Temporal {device,value}) if device=="fixture:sample" && value=="2026-10-25T02:30:00+01:00")
+        );
     }
 }

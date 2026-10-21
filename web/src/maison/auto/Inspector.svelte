@@ -21,6 +21,7 @@
     if (spec.kind.type === 'binary') return true;
     if (spec.kind.type === 'enum') return spec.kind.values?.[0] ?? null;
     if (spec.kind.type === 'numeric') return spec.kind.min ?? 0;
+    if (spec.kind.type === 'temporal') return spec.kind.spec.format === 'time' ? '00:00:00' : spec.kind.spec.format === 'date' ? '2000-01-01' : '2000-01-01T00:00:00Z';
     if (spec.kind.type === 'counter') return spec.kind.spec.initial;
     return '';
   }

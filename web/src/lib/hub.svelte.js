@@ -226,9 +226,14 @@ export async function command(point, value) {
     if (res.status === 202) {
       // Held by the guard: this dashboard is not (yet) recognized as human.
       delete hub.pending[point];
-      const { reason } = await res.json();
+      const { reason, pending } = await res.json();
       toast(t('systeme.hub.retenu', { reason }));
-      return;
+      return { status: 202, pending, reason };
+    }
+    const [device, key] = splitPoint(point);
+    if (hub.devices[device]?.points.find((p) => p.key === key)?.kind.type === 'temporal') {
+      delete hub.pending[point]; // Canonical UTC may differ from the local input; HTTP confirms its durable commit.
+      return { status: 200 };
     }
     // Confirmation arrives as a state event; give up waiting after a while.
     setTimeout(() => {
@@ -237,6 +242,7 @@ export async function command(point, value) {
   } catch (err) {
     delete hub.pending[point];
     toast(t('systeme.hub.commande_refusee', { message: err.message }));
+    return { error: err.message };
   }
 }
 

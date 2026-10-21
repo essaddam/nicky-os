@@ -258,3 +258,13 @@ expiration, à sa génération. Une annulation rend abandonné un ordre encore r
 par le pilote avant émission ; les étapes Set/Toggle et notifications cessent leur
 attente. Les luminaires composites conservent ce permis jusqu'aux membres physiques
 et à leur continuation bornée. Un envoi de transport déjà engagé n'est pas défait.
+
+## Dates et heures (AUTO-H3)
+
+Les [aides temporelles](dates-heures.md) portent une date civile, une heure civile
+ou un instant UTC avec fuseau explicite. `set` affecte une chaîne validée et durable
+avant confirmation ; les comparaisons et changements explicites résolvent les mêmes
+instants. La saisie n'ajoute aucun réveil à l'heure indiquée. Heures sautées refusées,
+heures répétées refusées sans désambiguïsation. Une définition d'agent/import ne
+contourne ni la garde ni la validation humaine des graphes. Le cache périodique ne
+restaure pas ces valeurs : leur fichier métier est l'autorité à la reprise.

@@ -19,7 +19,7 @@ use anyhow::{Context as _, bail};
 /// SQLite databases: copied through SQLite itself.
 const DATABASES: [&str; 2] = ["history.db", "energy.db"];
 /// Everything else worth keeping (missing ones are skipped).
-const FILES: [&str; 20] = [
+const FILES: [&str; 21] = [
     "moli.toml",
     "plan.json",
     "phones.json",
@@ -32,6 +32,7 @@ const FILES: [&str; 20] = [
     "button-occurrences.json",
     "automation-occurrences.json",
     "helper-counters.json",
+    "helper-datetimes.json",
     "helper-timers.json",
     "journal.jsonl",
     "journal.jsonl.1",
@@ -175,6 +176,28 @@ fn known_name(name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn auto_h3_backup_keeps_temporal_definitions_and_canonical_values() {
+        let root = std::env::temp_dir().join(format!(
+            "moli-h3-backup-{}-{}",
+            std::process::id(),
+            moli_core::now_ms()
+        ));
+        let data = root.join("data");
+        let saved = root.join("saved");
+        let fresh = root.join("fresh");
+        std::fs::create_dir_all(&data).unwrap();
+        let bytes=br#"{"version":1,"values":{"fixture:sample":{"spec":{"format":"datetime","timezone":"Europe/Paris"},"value":"2026-10-25T01:30:00Z"}}}"#;
+        std::fs::write(data.join("helper-datetimes.json"), bytes).unwrap();
+        backup(&data, &saved).unwrap();
+        restore(&fresh, &saved, false).unwrap();
+        assert_eq!(
+            std::fs::read(fresh.join("helper-datetimes.json")).unwrap(),
+            bytes
+        );
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn auto_h1_backup_restores_both_delivery_horizons_and_activation_lineages() {

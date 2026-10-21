@@ -1,5 +1,8 @@
 //! The hub: single source of truth for the live model of the home.
 
+#[path = "temporal_hub.rs"]
+mod temporal_hub;
+
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -46,6 +49,7 @@ pub struct HubOptions {
     /// Timer generations, deadlines and request receipts, independent of state.json.
     pub timer_state_path: Option<PathBuf>,
     pub timer_clock: fn() -> u64,
+    pub temporal_state_path: Option<PathBuf>,
     /// Occurrence wall-clock metadata only; identities never depend on it.
     pub occurrence_clock: fn() -> u64,
     /// Append-only journal file (JSON Lines). `None` keeps it in memory only.
@@ -72,6 +76,7 @@ impl Default for HubOptions {
             counter_state_path: None,
             timer_state_path: None,
             timer_clock: now_ms,
+            temporal_state_path: None,
             occurrence_clock: now_ms,
             journal_path: None,
             addresses_path: None,
@@ -88,6 +93,8 @@ impl Default for HubOptions {
 pub enum CommandError {
     #[error(transparent)]
     Timer(#[from] crate::TimerError),
+    #[error(transparent)]
+    Temporal(#[from] crate::TemporalError),
     #[error(transparent)]
     Counter(#[from] crate::CounterError),
     #[error(transparent)]
@@ -175,6 +182,20 @@ struct Prepared {
     key: Arc<str>,
     value: Value,
     commands: mpsc::Sender<CommandRequest>,
+}
+
+impl Prepared {
+    fn approval_value<'a>(&'a self, original: &'a Value) -> &'a Value {
+        if self
+            .device
+            .point(&self.key)
+            .is_some_and(|p| matches!(p.kind, moli_core::Kind::Temporal { .. }))
+        {
+            &self.value
+        } else {
+            original
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -389,6 +410,7 @@ struct Inner {
     timer_notify: tokio::sync::Notify,
     timer_consumer_ready: AtomicBool,
     timer_audience: RwLock<BTreeMap<PointId, Vec<moli_core::TimerRecipient>>>,
+    temporals: tokio::sync::Mutex<crate::temporal::Temporals>,
     /// Serializes label writes so the file always matches the model.
     label_write: tokio::sync::Mutex<()>,
     /// Where each instance last reached its device.
@@ -531,6 +553,9 @@ impl Hub {
             timer_notify: tokio::sync::Notify::new(),
             timer_consumer_ready: AtomicBool::new(false),
             timer_audience: RwLock::default(),
+            temporals: tokio::sync::Mutex::new(crate::temporal::Temporals::new(
+                opts.temporal_state_path.clone(),
+            )),
             label_write: tokio::sync::Mutex::new(()),
             addresses: Mutex::new(book),
             address_write: tokio::sync::Mutex::new(()),
@@ -890,7 +915,14 @@ impl Hub {
                             .device
                             .point(&prepared.key)
                             .is_some_and(|point| point.kind.is_operation());
-                        let id = self.hold(point, &value, &metadata, &reason, button, permit)?;
+                        let id = self.hold(
+                            point,
+                            prepared.approval_value(&value),
+                            &metadata,
+                            &reason,
+                            button,
+                            permit,
+                        )?;
                         Err(CommandError::NeedsApproval { id, reason })
                     }
                 }
@@ -1638,19 +1670,23 @@ impl Hub {
                 slot.commands.clone(),
             )
         };
-        let value = validate(&kind, value).map_err(|error| {
-            if matches!(kind, moli_core::Kind::TimerCommand { .. }) {
-                crate::TimerError::Value.into()
-            } else if error == ValueError::ExpectedPress
-                && matches!(kind, moli_core::Kind::CounterCommand { .. })
-            {
-                crate::CounterError::Value.into()
-            } else if error == ValueError::ExpectedPress {
-                crate::OccurrenceError::Value.into()
-            } else {
-                CommandError::Invalid(error)
-            }
-        })?;
+        let value = if let moli_core::Kind::Temporal { spec } = &kind {
+            crate::normalize_temporal(spec, value)?
+        } else {
+            validate(&kind, value).map_err(|error| {
+                if matches!(kind, moli_core::Kind::TimerCommand { .. }) {
+                    crate::TimerError::Value.into()
+                } else if error == ValueError::ExpectedPress
+                    && matches!(kind, moli_core::Kind::CounterCommand { .. })
+                {
+                    crate::CounterError::Value.into()
+                } else if error == ValueError::ExpectedPress {
+                    crate::OccurrenceError::Value.into()
+                } else {
+                    CommandError::Invalid(error)
+                }
+            })?
+        };
         Ok(Prepared {
             point: point.clone(),
             device,

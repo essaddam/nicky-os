@@ -502,6 +502,24 @@ async fn act(
     }
 }
 
+/// Normalize a temporal literal exactly as the point's command path does.
+pub(crate) fn canonical_expected(autos: &Automations, point: &str, value: &Json) -> Option<Json> {
+    let temporal = PointId::from(point).split().and_then(|(id, key)| {
+        autos
+            .0
+            .hub
+            .describe(&id)
+            .and_then(|(d, _)| d.point(key).map(|p| p.kind.clone()))
+    });
+    if let Some(moli_core::Kind::Temporal { spec }) = temporal {
+        moli_runtime::normalize_temporal(&spec, &Value::from_json(value))
+            .ok()
+            .map(|v| v.to_json())
+    } else {
+        Some(value.clone())
+    }
+}
+
 fn show(v: &Value) -> String {
     match v {
         Value::Bool(b) => yes_no(*b),
@@ -549,9 +567,12 @@ pub(crate) fn holds(autos: &Automations, rule: &Rule) -> bool {
             if matches!(current, Value::Null) {
                 return false;
             }
+            let Some(value) = canonical_expected(autos, point, value) else {
+                return false;
+            };
             match op {
-                Op::Eq => same(&current, value),
-                Op::Ne => !same(&current, value),
+                Op::Eq => same(&current, &value),
+                Op::Ne => !same(&current, &value),
                 _ => {
                     let (Some(c), Some(v)) = (current.as_f64(), value.as_f64()) else {
                         return false;

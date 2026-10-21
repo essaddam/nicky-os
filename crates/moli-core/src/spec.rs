@@ -18,6 +18,9 @@ pub enum Kind {
         operation: crate::TimerOperation,
         default_seconds: u32,
     },
+    Temporal {
+        spec: crate::TemporalSpec,
+    },
     /// Business state, never assigned through a client command.
     Counter {
         spec: crate::CounterSpec,
@@ -81,7 +84,11 @@ impl Kind {
     /// Business-owned state cannot be restored from the periodic device cache.
     #[must_use]
     pub fn uses_state_cache(&self) -> bool {
-        !self.is_operation() && !matches!(self, Self::Counter { .. } | Self::Timer { .. })
+        !self.is_operation()
+            && !matches!(
+                self,
+                Self::Counter { .. } | Self::Timer { .. } | Self::Temporal { .. }
+            )
     }
 }
 
@@ -293,6 +300,8 @@ pub struct PointSpec {
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum ValueError {
+    #[error("invalid temporal value")]
+    InvalidTemporal,
     #[error("expected a button press (null)")]
     ExpectedPress,
     #[error("expected a boolean")]
@@ -330,6 +339,10 @@ pub fn validate(kind: &Kind, value: &Value) -> Result<Value, ValueError> {
             .ok_or(ValueError::ExpectedNumber);
     }
     match (kind, value) {
+        (Kind::Temporal { spec }, Value::Text(text)) if spec.accepts_shape(text) => {
+            Ok(value.clone())
+        }
+        (Kind::Temporal { .. }, _) => Err(ValueError::InvalidTemporal),
         (Kind::CounterCommand { .. } | Kind::Button, Value::Null) => Ok(Value::Null),
         (Kind::CounterCommand { .. } | Kind::Button, _) => Err(ValueError::ExpectedPress),
         (Kind::Counter { spec }, Value::Int(value)) if spec.is_valid() && spec.contains(*value) => {

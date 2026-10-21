@@ -2,10 +2,10 @@
 //! Assistant's `input_select` / `input_boolean` / `input_number` / `input_text`
 //! (« mode de la maison », « alarme active »…).
 //!
-//! Each helper is a device of this instance with one writable point. A
-//! command simply becomes its new value (guard and journal apply, as for any
-//! device); the value survives restarts through the hub's state cache, and a
-//! helper never seen before starts at its `initial` value.
+//! Conventional helpers expose a writable value, restored from the periodic
+//! state cache. Counters use explicit operations, and temporal helpers validate
+//! civil values/instants; both have an authoritative business-state owner.
+//! Guard and journal apply to all commands.
 //!
 //! ```toml
 //! [[driver]]
@@ -60,6 +60,8 @@ pub struct Helper {
     /// Timer default duration; commands may choose another bounded duration.
     #[serde(default)]
     pub duration_s: Option<u32>,
+    #[serde(default)]
+    pub timezone: Option<String>,
 }
 
 /// Preserve the lexical integer/float distinction until the helper kind is known.
@@ -90,6 +92,9 @@ impl Number {
 #[serde(rename_all = "lowercase")]
 pub enum HelperKind {
     Timer,
+    Date,
+    Time,
+    Datetime,
     Counter,
     Button,
     Select,
@@ -98,6 +103,16 @@ pub enum HelperKind {
     Text,
 }
 
+impl HelperKind {
+    fn temporal(self) -> Option<moli_core::TemporalFormat> {
+        match self {
+            Self::Date => Some(moli_core::TemporalFormat::Date),
+            Self::Time => Some(moli_core::TemporalFormat::Time),
+            Self::Datetime => Some(moli_core::TemporalFormat::Datetime),
+            _ => None,
+        }
+    }
+}
 impl Helper {
     fn timer_specs(&self) -> Vec<PointSpec> {
         use moli_core::{TimerField, TimerOperation, Unit};
@@ -178,6 +193,12 @@ impl Helper {
         specs
     }
 
+    fn temporal_spec(&self) -> Option<moli_core::TemporalSpec> {
+        self.kind.temporal().map(|format| moli_core::TemporalSpec {
+            format,
+            timezone: self.timezone.as_deref().map(Into::into),
+        })
+    }
     fn counter_spec(&self) -> anyhow::Result<CounterSpec> {
         let initial = match &self.initial {
             None => 0,
@@ -253,6 +274,13 @@ impl Helper {
                 },
                 Semantic::Other,
             ),
+            HelperKind::Date | HelperKind::Time | HelperKind::Datetime => (
+                "value",
+                Kind::Temporal {
+                    spec: self.temporal_spec().expect("temporal helper kind"),
+                },
+                Semantic::Other,
+            ),
             HelperKind::Button => ("press", Kind::Button, Semantic::Other),
             HelperKind::Counter => (
                 "value",
@@ -297,7 +325,8 @@ impl Helper {
     fn initial_value(&self) -> anyhow::Result<Value> {
         if self.kind == HelperKind::Timer {
             ensure!(
-                self.initial.is_none()
+                self.timezone.is_none()
+                    && self.initial.is_none()
                     && self.options.is_empty()
                     && self.min.is_none()
                     && self.max.is_none()
@@ -313,6 +342,27 @@ impl Helper {
             self.duration_s.is_none(),
             "{}",
             moli_i18n::tr!("pilotes.aides.minuteur_definition")
+        );
+        if let Some(spec) = self.temporal_spec() {
+            ensure!(
+                self.options.is_empty()
+                    && self.min.is_none()
+                    && self.max.is_none()
+                    && self.step.is_none(),
+                "{}",
+                moli_i18n::tr!("pilotes.aides.date_definition")
+            );
+            let value = match &self.initial {
+                Some(toml::Value::String(text)) => Value::Text(text.as_str().into()),
+                Some(toml::Value::Datetime(value)) => Value::Text(value.to_string().into()),
+                _ => bail!("{}", moli_i18n::tr!("pilotes.aides.date_initiale")),
+            };
+            return moli_runtime::normalize_temporal(&spec, &value).map_err(Into::into);
+        }
+        ensure!(
+            self.timezone.is_none(),
+            "{}",
+            moli_i18n::tr!("pilotes.aides.date_definition")
         );
         if self.kind == HelperKind::Counter {
             return Ok(Value::Int(self.counter_spec()?.initial));
@@ -342,7 +392,15 @@ impl Helper {
             (None, HelperKind::Switch) => Value::Bool(false),
             (None, HelperKind::Number) => Value::Float(self.min.map_or(0.0, Number::as_f64)),
             (None, HelperKind::Text) => Value::Text("".into()),
-            (None, HelperKind::Button | HelperKind::Counter | HelperKind::Timer) => Value::Null,
+            (
+                None,
+                HelperKind::Button
+                | HelperKind::Counter
+                | HelperKind::Timer
+                | HelperKind::Date
+                | HelperKind::Time
+                | HelperKind::Datetime,
+            ) => Value::Null,
         };
         validate(&self.spec().kind, &raw)
             .map_err(|e| anyhow::anyhow!("helper {}: initial value: {e}", self.id))
@@ -386,6 +444,16 @@ impl Helpers {
                 <= 128,
             "{}",
             moli_i18n::tr!("pilotes.aides.compteurs_max")
+        );
+        ensure!(
+            config
+                .helpers
+                .iter()
+                .filter(|h| h.kind.temporal().is_some())
+                .count()
+                <= 128,
+            "{}",
+            moli_i18n::tr!("pilotes.aides.dates_max")
         );
         let mut seen = std::collections::HashSet::new();
         for h in &config.helpers {
@@ -434,6 +502,9 @@ impl Driver for Helpers {
                         h.duration_s.unwrap_or(moli_core::DEFAULT_TIMER_SECONDS),
                     )
                     .await?;
+                } else if let Some(spec) = h.temporal_spec() {
+                    ctx.initialize_temporal(&id, spec, h.initial_value()?)
+                        .await?;
                 } else if h.kind == HelperKind::Counter {
                     ctx.initialize_counter(&id, h.counter_spec()?).await?;
                 } else if h.kind != HelperKind::Button && ctx.current(&id, &spec.key).is_none() {
@@ -449,6 +520,14 @@ impl Driver for Helpers {
                     .is_some_and(|point| matches!(point.kind, Kind::TimerCommand { .. }))
                 {
                     ctx.timer_command(command).await;
+                    continue;
+                }
+                if command
+                    .device
+                    .point(&command.key)
+                    .is_some_and(|p| matches!(p.kind, Kind::Temporal { .. }))
+                {
+                    ctx.temporal_command(command).await;
                     continue;
                 }
                 if command

@@ -19,3 +19,8 @@
 - `timer` : démarrage entier borné, annulation à null, restant monotone et expiration
   récupérable par génération ; état/reçus dans `helper-timers.json`. Les destinataires
   validés sont capturés au démarrage. Voir [minuteurs](../../docs/components/minuteurs.md).
+
+
+Dates et heures : `date`, `time`, `datetime`, avec valeur `initial` explicite ;
+`timezone` obligatoire pour datetime. État métier durable avant confirmation,
+aucun déclencheur horaire implicite. Voir `docs/components/dates-heures.md`.

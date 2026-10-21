@@ -366,6 +366,27 @@ impl DriverCtx {
         }
     }
 
+    pub async fn initialize_temporal(
+        &self,
+        device: &DeviceId,
+        spec: moli_core::TemporalSpec,
+        initial: Value,
+    ) -> Result<(), crate::TemporalError> {
+        if !self.owns(device) {
+            return Err(crate::TemporalError::Definition);
+        }
+        self.hub.initialize_temporal(device, spec, initial).await
+    }
+    pub async fn temporal_command(&self, command: CommandRequest) {
+        if !self.owns(&command.device.id) {
+            command.reply_result(Err(crate::TemporalError::Definition.into()));
+            return;
+        }
+        self.hub
+            .temporal_command(command, self.cancel.clone())
+            .await;
+    }
+
     /// Loads and publishes a counter from its authoritative business state.
     pub async fn initialize_counter(
         &self,

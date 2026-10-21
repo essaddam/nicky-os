@@ -2,6 +2,8 @@
   import { device, nameOf, reachable, since, relative, home, num } from '../lib/home.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from './Icon.svelte';
+  import TemporalControl from '../../components/TemporalControl.svelte';
+  import { formatValue } from '../../lib/format.js';
   import PressButton from '../../components/PressButton.svelte';
   import TimerControl from '../../components/TimerControl.svelte';
   import { formatValue } from '../../lib/format.js';
@@ -32,6 +34,7 @@
   function say(p, v) {
     if (v == null) return null;
     if (p.kind.type === 'timer') return `${formatValue(p, v)}${p.unit ? ` ${p.unit}` : ''}`;
+    if (p.kind.type === 'temporal') return formatValue(p, v);
     if (WORDS[p.key] && (typeof v === 'boolean' || typeof v === 'string')) return WORDS[p.key](v);
     if (typeof v === 'boolean') return v ? t('commun.oui') : t('commun.non');
     if (typeof v === 'number') return `${num(v, Math.abs(v) < 10 && !Number.isInteger(v) ? 1 : 0)}${p.unit ? ` ${p.unit}` : ''}`;
@@ -52,6 +55,10 @@
     <h2><Icon name="info" size={18} />{nameOf(id, name)}</h2>
     {#if last}<span class="muted when">{relative(last, home.now)}</span>{/if}
   </div>
+  {#each (d?.points ?? []).filter((p) => p.kind.type === 'temporal' && p.access.write) as point (point.key)}
+    <TemporalControl point={`${id}/${point.key}`} spec={point.kind.spec} value={d.state?.[point.key]?.value} label={point.label} disabled={!reachable(id)}
+      onheld={(request) => (home.held = { id: request.id, point: request.point, reason: request.reason, label: point.label })} />
+  {/each}
   {#each buttons as point (point.key)}
     {#if point.kind.type === 'timer_command'}
       <TimerControl point={`${id}/${point.key}`} spec={point.kind} label={`${nameOf(id, name)}: ${point.label}`} disabled={!reachable(id)}

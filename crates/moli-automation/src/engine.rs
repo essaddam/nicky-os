@@ -9,7 +9,7 @@ use moli_i18n::tr;
 use tokio::sync::broadcast::error::RecvError;
 
 use crate::model::{Automation, Mode, Step, SunEvent, minutes_of};
-use crate::run::{day_ok, execute, same};
+use crate::run::{canonical_expected, day_ok, execute, same};
 use crate::{Automations, clock, decimal, lock, yes_no};
 
 /// Runs per minute beyond which an automation is switched off.
@@ -338,10 +338,14 @@ fn on_state(autos: &Automations, point: &PointId, value: &Value) {
                     from,
                     for_s,
                 } if *p == key => {
-                    let to_ok = to.as_ref().is_none_or(|to| same(value, to));
-                    let from_ok = from
-                        .as_ref()
-                        .is_none_or(|from| prev.as_ref().is_some_and(|p| same(p, from)));
+                    let to_ok = to.as_ref().is_none_or(|to| {
+                        canonical_expected(autos, &key, to).is_some_and(|to| same(value, &to))
+                    });
+                    let from_ok = from.as_ref().is_none_or(|from| {
+                        prev.as_ref().is_some_and(|p| {
+                            canonical_expected(autos, &key, from).is_some_and(|from| same(p, &from))
+                        })
+                    });
                     // A point seen for the first time is not a change.
                     if prev.is_none() {
                         continue;
@@ -414,6 +418,13 @@ fn hold(
     point: String,
     to: Option<serde_json::Value>,
 ) {
+    let to = match to {
+        Some(value) => match canonical_expected(autos, &point, &value) {
+            Some(value) => Some(value),
+            None => return,
+        },
+        None => None,
+    };
     hold_until(autos, a, trigger, for_s, why, point, move |v| {
         to.as_ref().is_none_or(|to| same(v, to))
     });

@@ -150,7 +150,8 @@ pub(crate) async fn command(
             .into_response(),
         Err(
             e @ (CommandError::Counter(moli_runtime::CounterError::Uncertain)
-            | CommandError::Timer(moli_runtime::TimerError::Uncertain)),
+            | CommandError::Timer(moli_runtime::TimerError::Uncertain)
+            | CommandError::Temporal(moli_runtime::TemporalError::Uncertain)),
         ) => (
             command_status(&e),
             Json(json!({ "error": e.to_string(), "retryable": true })),
@@ -293,6 +294,19 @@ pub(crate) fn command_status(e: &CommandError) -> StatusCode {
             }
             moli_runtime::TimerError::Capacity => StatusCode::SERVICE_UNAVAILABLE,
             moli_runtime::TimerError::Abandoned => StatusCode::GATEWAY_TIMEOUT,
+        },
+        CommandError::Temporal(error) => match error {
+            moli_runtime::TemporalError::Value
+            | moli_runtime::TemporalError::Definition
+            | moli_runtime::TemporalError::Gap
+            | moli_runtime::TemporalError::Fold
+            | moli_runtime::TemporalError::Offset => StatusCode::UNPROCESSABLE_ENTITY,
+            moli_runtime::TemporalError::Storage | moli_runtime::TemporalError::Corrupt => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+            moli_runtime::TemporalError::Uncertain => StatusCode::CONFLICT,
+            moli_runtime::TemporalError::Capacity => StatusCode::SERVICE_UNAVAILABLE,
+            moli_runtime::TemporalError::Abandoned => StatusCode::GATEWAY_TIMEOUT,
         },
         CommandError::Counter(error) => match error {
             moli_runtime::CounterError::ReadOnly => StatusCode::FORBIDDEN,

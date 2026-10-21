@@ -2,6 +2,7 @@
   // Small editors shared by the inspector: a value for a point, days of the
   // week, a duration, a time.
   import { pointSpec, valueText, dayInitials } from '../lib/auto.svelte.js';
+  import TemporalInput from '../../components/TemporalInput.svelte';
   import { t } from '../../lib/i18n.svelte.js';
 
   /** kind: value | days | duration | time */
@@ -15,7 +16,9 @@
 </script>
 
 {#if kind === 'value'}
-  {#if type === 'timer_command' && spec.kind.operation === 'start'}
+  {#if type === 'temporal'}
+    <TemporalInput spec={spec.kind.spec} {value} {onchange} label={spec.label} />
+  {:else if type === 'timer_command' && spec.kind.operation === 'start'}
     <label class="num"><input type="number" min="1" max="604800" step="1" value={value ?? spec.kind.default_seconds}
       onchange={(e) => onchange?.(Number(e.currentTarget.value))} /><span>{t('systeme.minuteur.secondes')}</span></label>
   {:else if type === 'timer' && spec.kind.field === 'state'}

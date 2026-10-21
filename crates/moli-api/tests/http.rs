@@ -1902,3 +1902,62 @@ async fn reservations_ics_owner_reads_the_binding_needed_to_preserve_it_when_edi
 
 #[path = "http/guest_policy.rs"]
 mod guest_policy;
+
+#[tokio::test]
+async fn auto_h3_rest_temporal_values_are_typed_and_canonical() {
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let config=serde_json::from_value(json!({"helper":[{"id":"sample","name":"Synthetic instant","kind":"datetime","timezone":"Europe/Paris","initial":"2000-01-01T00:00:00Z"}]})).unwrap();
+    let cancel = CancellationToken::new();
+    let driver = spawn_driver(
+        &hub,
+        "fixture".into(),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    let point = "fixture:sample/value".into();
+    for _ in 0..200 {
+        if hub.state(&point).is_some() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    let addr = serve(&hub, &moli_api::Options::default()).await;
+    for value in [
+        json!(null),
+        json!(0),
+        json!("2026-02-29T00:00:00"),
+        json!("2026-03-29T02:30:00"),
+        json!("2026-10-25T02:30:00"),
+        json!("2026-10-25T02:30:00+03:00"),
+    ] {
+        let (status, body) = request(
+            &addr,
+            "POST",
+            "/api/command",
+            Some(&json!({"point":point,"value":value})),
+        )
+        .await;
+        assert_eq!(status, 422, "{body}");
+    }
+    let (status, body) = request(
+        &addr,
+        "POST",
+        "/api/command",
+        Some(&json!({"point":point,"value":"2026-10-25T02:30:00+01:00"})),
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(
+        hub.state(&point).unwrap().value,
+        Value::Text("2026-10-25T01:30:00Z".into())
+    );
+    let (status, body) = request(&addr, "GET", "/api/devices", None).await;
+    assert_eq!(status, 200);
+    let snapshot: Json = serde_json::from_str(&body).unwrap();
+    assert_eq!(
+        snapshot["devices"][0]["points"][0]["kind"]["spec"]["timezone"],
+        "Europe/Paris"
+    );
+    cancel.cancel();
+    driver.await.unwrap();
+}

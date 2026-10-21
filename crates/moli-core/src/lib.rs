@@ -14,6 +14,7 @@ mod model;
 mod occurrence;
 pub mod privacy;
 mod spec;
+mod temporal;
 mod timer;
 mod value;
 
@@ -30,6 +31,7 @@ pub use occurrence::{
     RequestId,
 };
 pub use spec::{Access, Kind, MAX_TEXT, PointSpec, Semantic, Unit, ValueError, validate};
+pub use temporal::{TemporalFormat, TemporalSpec};
 pub use timer::{
     DEFAULT_TIMER_SECONDS, MAX_TIMER_SECONDS, TimerField, TimerOperation, TimerRecipient,
     TimerStatus,

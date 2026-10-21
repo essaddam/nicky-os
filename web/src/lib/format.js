@@ -1,5 +1,6 @@
 // Presentation rules: meaning first, brand never.
 
+import { formatTemporal } from './temporal.js';
 import { t, locale } from './i18n.svelte.js';
 
 // One formatter per language, built when first needed (the language arrives
@@ -43,6 +44,7 @@ export function formatValue(point, value) {
   if (value === undefined || value === null) return '—';
   if (point.kind.type === 'timer' && point.kind.field === 'state' && ['idle', 'running', 'cancelled', 'finished'].includes(value)) return t(`systeme.minuteur.etat_${value}`);
   if (point.kind.type === 'timer' && point.kind.field === 'deadline' && typeof value === 'number') return new Date(value).toLocaleString(locale());
+  if (point.kind.type === 'temporal') return formatTemporal(point.kind.spec, value, locale());
   if (point.kind.type === 'binary') {
     if (Object.hasOwn(BINARY_ALARM, point.semantic)) return t(`systeme.format.binaire.${point.semantic}.${value ? 'on' : 'off'}`);
     return value ? t('systeme.format.oui') : t('systeme.format.non');
