@@ -310,6 +310,7 @@ impl Config {
                 moli_energy::points::INSTANCE,
                 moli_lights::INSTANCE,
                 moli_api::PEOPLE_INSTANCE,
+                moli_api::ALARM_SECRET_NAMESPACE,
             ]
             .contains(&driver.id.as_str())
             {
@@ -359,6 +360,12 @@ mod tests {
         let again = Config::load(&path).unwrap();
         assert_eq!(again.server.data_dir, config.server.data_dir);
         let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn alarm_credential_namespace_cannot_be_given_to_a_driver() {
+        let config: Config = toml::from_str("[[driver]]\nid = \"alarm\"\nkind = \"z2m\"").unwrap();
+        assert!(config.check().is_err());
     }
 
     #[test]

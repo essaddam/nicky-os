@@ -1,0 +1,5 @@
+{
+  "alarme.codes.verrouille_titre": "Codes d’alarme verrouillés",
+  "alarme.codes.verrouille": "La source {source} a été verrouillée après cinq codes refusés.",
+  "alarme.codes.proprietaire_humain": "Un propriétaire en session humaine est requis pour les profils d’alarme."
+}

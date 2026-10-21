@@ -240,6 +240,7 @@ pub(crate) struct People {
     book: Mutex<Book>,
     sessions: Mutex<HashMap<String, PersonSession>>,
     write: tokio::sync::Mutex<()>,
+    pub(crate) alarm_profiles: tokio::sync::Mutex<Option<moli_alarm_access::ProfileRevoker>>,
 }
 
 impl std::fmt::Debug for People {
@@ -512,6 +513,7 @@ impl People {
             book: Mutex::new(book),
             sessions: Mutex::new(sessions),
             write: tokio::sync::Mutex::new(()),
+            alarm_profiles: tokio::sync::Mutex::new(None),
         };
         if changed && let Err(e) = people.save_now() {
             tracing::error!(error = %e, "people.json not written");
@@ -534,6 +536,14 @@ impl People {
         f: impl FnOnce(&mut Book) -> Result<T, Refused>,
     ) -> Result<T, Refused> {
         let _guard = self.write.lock().await;
+        self.change_locked(f)
+    }
+
+    /// Caller holds `write`, including any alarm-profile revocation barrier.
+    fn change_locked<T>(
+        &self,
+        f: impl FnOnce(&mut Book) -> Result<T, Refused>,
+    ) -> Result<T, Refused> {
         let before = lock(&self.book).clone();
         let out = {
             let mut book = lock(&self.book);
@@ -544,6 +554,28 @@ impl People {
             return Err(Refused::Store);
         }
         Ok(out)
+    }
+
+    pub(crate) fn alarm_setup(&self) -> Option<(Hub, PathBuf)> {
+        self.path
+            .as_ref()?
+            .parent()
+            .map(|path| (self.hub.clone(), path.to_owned()))
+    }
+
+    pub(crate) fn alarm_person(&self, id: &str, now: u64) -> Option<moli_alarm_access::Person> {
+        let book = lock(&self.book);
+        let person = book.people.iter().find(|person| person.id == id)?;
+        Some(moli_alarm_access::Person {
+            guest: person.role == Role::Guest,
+            from: person.starts,
+            until: person.expires,
+            reservation_active: person
+                .reservation
+                .as_ref()
+                .is_none_or(|binding| self.hub.reservation_allows(binding))
+                && account_active_at(person, now),
+        })
     }
 
     pub(crate) fn book(&self) -> Book {
@@ -943,28 +975,61 @@ impl People {
     }
 
     pub(crate) async fn remove(&self, id: &str) -> Result<(), Refused> {
-        let gone = id.to_owned();
-        self.change(move |book| {
-            let p = book
-                .people
-                .iter()
-                .find(|p| p.id == gone)
-                .ok_or(Refused::NotFound)?;
-            if p.role == Role::Owner
-                && !book
-                    .people
-                    .iter()
-                    .any(|o| o.role == Role::Owner && o.id != gone)
-            {
-                return Err(Refused::LastOwner);
+        let _write = self.write.lock().await;
+        Self::removable(&lock(&self.book), id)?;
+        // Serialize registration too: a dormant alarm cannot be opened between
+        // revoking its profiles and committing the person removal.
+        let registration = self.alarm_profiles.lock().await;
+        let removal = if let Some(service) = registration
+            .as_ref()
+            .and_then(moli_alarm_access::ProfileRevoker::upgrade)
+        {
+            Some(
+                service
+                    .begin_person_removal(id)
+                    .await
+                    .map_err(|_| Refused::Store)?,
+            )
+        } else if let Some((hub, path)) = self.alarm_setup() {
+            match std::fs::symlink_metadata(path.join("alarm-profiles.json")) {
+                Ok(_) => Some(
+                    moli_alarm_access::ProfileService::begin_person_removal_at(hub, &path, id)
+                        .await
+                        .map_err(|_| Refused::Store)?,
+                ),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+                Err(_) => return Err(Refused::Store),
             }
-            book.people.retain(|p| p.id != gone);
-            book.invites.retain(|i| i.person != gone);
+        } else {
+            None
+        };
+        self.change_locked(|book| {
+            Self::removable(book, id)?;
+            book.people.retain(|person| person.id != id);
+            book.invites.retain(|invite| invite.person != id);
             Ok(())
-        })
-        .await?;
+        })?;
+        drop(removal);
+        drop(registration);
         self.end_sessions(id).await;
         let _ = self.hub.forget_core_secret(&password_key(id)).await;
+        Ok(())
+    }
+
+    fn removable(book: &Book, id: &str) -> Result<(), Refused> {
+        let person = book
+            .people
+            .iter()
+            .find(|p| p.id == id)
+            .ok_or(Refused::NotFound)?;
+        if person.role == Role::Owner
+            && !book
+                .people
+                .iter()
+                .any(|p| p.role == Role::Owner && p.id != id)
+        {
+            return Err(Refused::LastOwner);
+        }
         Ok(())
     }
 

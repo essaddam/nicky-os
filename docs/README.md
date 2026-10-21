@@ -54,6 +54,7 @@ téléphones passent sans Access, avec leur propre jeton.
 |---|---|
 | [alarme.md](components/alarme.md) | centrale d'alarme : spécification validée et moteur pur livré ; raccordement, sorties et qualification à venir |
 | [api.md](components/api.md) | REST, SSE, MCP, CLI, sécurité des routes |
+| [alarme-profils.md](components/alarme-profils.md) | profils privés, codes HMAC, validité invitée et verrous par source (lot 3/9) |
 | [automatismes.md](components/automatismes.md) | modèle de graphe, validation humaine, moteur, éditeur, import HA |
 | [capteurs-lumieres.md](components/capteurs-lumieres.md) | cadrage : Xiaomi BLE, pont EnOcean MQTT, Netatmo météo ; Twinkly natif sur contrats simulés, qualification H1 encore requise |
 | [durees.md](components/durees.md) | durée mesurée dans un état, couverture connue et inconnue, checkpoints durables |

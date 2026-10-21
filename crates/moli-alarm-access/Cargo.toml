@@ -1,0 +1,25 @@
+[package]
+name = "moli-alarm-access"
+description = "Private alarm credentials, profiles and persistent source lockouts."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+moli-alarm = { path = "../moli-alarm" }
+moli-core.workspace = true
+moli-i18n.workspace = true
+moli-runtime.workspace = true
+ring.workspace = true
+rustix.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

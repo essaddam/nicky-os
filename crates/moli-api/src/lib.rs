@@ -15,6 +15,9 @@
 //! person Cloudflare Access let in through the tunnel).
 
 mod access;
+mod alarm_access;
+pub use alarm_access::AlarmOwner;
+pub use moli_alarm_access::SECRET_NAMESPACE as ALARM_SECRET_NAMESPACE;
 mod androidtv;
 mod assets;
 mod assistant;

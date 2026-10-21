@@ -10,6 +10,7 @@ repository = "https://github.com/rudy-io/moli-os"
 rust-version = "1.88"
 
 [workspace.dependencies]
+moli-alarm-access = { path = "crates/moli-alarm-access" }
 moli-alexa = { path = "crates/moli-alexa" }
 moli-ambiance = { path = "crates/moli-ambiance" }
 moli-androidtv = { path = "crates/moli-androidtv" }

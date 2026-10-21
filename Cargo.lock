@@ -1272,6 +1272,23 @@ name = "moli-alarm"
 version = "0.1.0"
 
 [[package]]
+name = "moli-alarm-access"
+version = "0.1.0"
+dependencies = [
+ "moli-alarm",
+ "moli-core",
+ "moli-i18n",
+ "moli-runtime",
+ "ring",
+ "rustix",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "moli-alexa"
 version = "0.1.0"
 dependencies = [
@@ -1348,6 +1365,8 @@ dependencies = [
  "http",
  "jiff",
  "mime_guess",
+ "moli-alarm",
+ "moli-alarm-access",
  "moli-ambiance",
  "moli-androidtv-driver",
  "moli-assistant",
@@ -1372,6 +1391,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "tokio-util",
  "tower-http",
