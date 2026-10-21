@@ -275,3 +275,42 @@ fn manual_targets_share_address_exclusion_without_colliding_on_their_local_key()
     drop(second_lease);
     assert!(owners.claim(&candidate()).is_some());
 }
+
+#[tokio::test]
+async fn durable_revocation_requires_a_new_discovery_and_explicit_activation() {
+    let h = Harness::new(Ownership::default()).await;
+    let first = h.discover().await;
+    h.gateway
+        .approve(first.generation, candidate().id, true)
+        .await
+        .unwrap();
+    let idle = h.gateway.revoke(first.generation).await.unwrap();
+    assert_eq!(idle.phase, Phase::Idle);
+    assert!(idle.candidates.is_empty());
+    assert!(idle.generation > first.generation);
+    assert!(h.gateway.selected().borrow().is_none());
+    let stored: serde_json::Value = serde_json::from_str(&h.vault.get().unwrap()).unwrap();
+    assert!(stored["approved"].is_null());
+    let fresh = h.discover().await;
+    assert!(fresh.generation > idle.generation);
+    assert_eq!(fresh.phase, Phase::Ready);
+    assert!(h.gateway.selected().borrow().is_none());
+    assert_eq!(
+        h.gateway
+            .approve(first.generation, candidate().id, true)
+            .await
+            .unwrap_err(),
+        Error::Stale
+    );
+    let active = h
+        .gateway
+        .approve(fresh.generation, candidate().id, true)
+        .await
+        .unwrap();
+    assert_eq!(active.phase, Phase::Active);
+    assert_eq!(
+        h.gateway.selected().borrow().as_ref().unwrap().generation,
+        fresh.generation
+    );
+    assert_eq!(h.vault.writes.load(Ordering::SeqCst), 3);
+}

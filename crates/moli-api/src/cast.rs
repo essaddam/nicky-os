@@ -107,15 +107,9 @@ fn public(view: View) -> Json<serde_json::Value> {
     view["message"] = json!(message);
     Json(view)
 }
-fn answer(result: Result<View, Error>, success: StatusCode) -> Response {
+fn answer(result: Result<View, Error>) -> Response {
     match result {
-        Ok(view) => {
-            if success == StatusCode::NO_CONTENT {
-                success.into_response()
-            } else {
-                (success, public(view)).into_response()
-            }
-        }
+        Ok(view) => public(view).into_response(),
         Err(error) => {
             let status = match error {
                 Error::Unavailable | Error::Vault => StatusCode::SERVICE_UNAVAILABLE,
@@ -172,7 +166,7 @@ async fn discover(
         Err(error) => error.into_response(),
         Ok(gateway) => match body(payload) {
             Err(error) => error.into_response(),
-            Ok(_) => answer(gateway.discover().await, StatusCode::OK),
+            Ok(_) => answer(gateway.discover().await),
         },
     };
     audit(&caller, &id, "discover", response)
@@ -194,7 +188,6 @@ async fn approve(
                 gateway
                     .approve(payload.generation, payload.candidate, payload.exclusive)
                     .await,
-                StatusCode::OK,
             ),
         },
     };
@@ -213,10 +206,7 @@ async fn revoke(
         Err(error) => error.into_response(),
         Ok(gateway) => match body(payload) {
             Err(error) => error.into_response(),
-            Ok(payload) => answer(
-                gateway.revoke(payload.generation).await,
-                StatusCode::NO_CONTENT,
-            ),
+            Ok(payload) => answer(gateway.revoke(payload.generation).await),
         },
     };
     audit(&caller, &id, "revoke", response)

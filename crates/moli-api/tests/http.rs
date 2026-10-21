@@ -2318,3 +2318,86 @@ async fn cast_activation_is_not_available_in_demo_even_to_a_pin_session() {
     .await;
     assert_eq!(status, 403);
 }
+
+#[tokio::test]
+async fn cast_successful_revocation_returns_a_renderable_view_and_fresh_discovery() {
+    let dir = std::env::temp_dir().join(format!("moli-cast-http-revoke-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let hub = Hub::new(HubOptions {
+        secrets: Some((
+            dir.join("secrets.enc"),
+            moli_runtime::MasterKey::generate().unwrap(),
+        )),
+        ..HubOptions::default()
+    })
+    .unwrap();
+    let native =
+        moli_cast::Cast::new(serde_json::from_value(json!({"host":"192.168.1.10"})).unwrap())
+            .unwrap();
+    let gateway = native.gateway();
+    let cancel = CancellationToken::new();
+    let driver = spawn_driver(&hub, "example".into(), Arc::new(native), cancel.clone());
+    tokio::time::timeout(Duration::from_secs(1), async {
+        while gateway.state().phase != moli_cast::gateway::Phase::Idle {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .unwrap();
+    let addr = serve(
+        &hub,
+        &moli_api::Options {
+            ui_pin: Some(moli_api::UiPin::new("482915")),
+            cast: std::collections::BTreeMap::from([("example".into(), gateway)]),
+            ..moli_api::Options::default()
+        },
+    )
+    .await;
+    let human = pin_session(&addr, "482915").await;
+    let discovery = "/api/integrations/cast/example/discovery";
+    let activation = "/api/integrations/cast/example/activation";
+    // A configured manual proposal performs no scan or appliance connection.
+    let (status, raw) = request_with(&addr, "POST", discovery, Some(&json!({})), &human).await;
+    assert_eq!(status, 200, "{raw}");
+    let offered: Json = serde_json::from_str(&raw).unwrap();
+    assert_eq!(offered["phase"], "ready");
+    let (status, raw) = request_with(
+        &addr,
+        "DELETE",
+        activation,
+        Some(&json!({"generation":offered["generation"]})),
+        &human,
+    )
+    .await;
+    assert_eq!(
+        status, 200,
+        "successful revocation must return the documented JSON View: {raw}"
+    );
+    let revoked: Json = serde_json::from_str(&raw).unwrap();
+    assert_eq!(revoked["phase"], "idle");
+    assert!(revoked["generation"].as_u64().unwrap() > offered["generation"].as_u64().unwrap());
+    assert!(revoked["candidates"].as_array().unwrap().is_empty());
+    assert!(revoked["error"].is_null());
+    let (status, raw) = request(&addr, "GET", "/api/integrations/cast/example", None).await;
+    assert_eq!(status, 200);
+    assert_eq!(serde_json::from_str::<Json>(&raw).unwrap(), revoked);
+    let (status, raw) = request_with(&addr, "POST", discovery, Some(&json!({})), &human).await;
+    assert_eq!(status, 200, "{raw}");
+    let fresh: Json = serde_json::from_str(&raw).unwrap();
+    assert_eq!(fresh["phase"], "ready");
+    assert!(fresh["generation"].as_u64().unwrap() > revoked["generation"].as_u64().unwrap());
+    assert_eq!(fresh["candidates"][0]["id"], "receiver");
+    let (status, _) = request_with(
+        &addr,
+        "PUT",
+        activation,
+        Some(&json!({"generation":offered["generation"],"candidate":"receiver","exclusive":true})),
+        &human,
+    )
+    .await;
+    assert_eq!(status, 409);
+    assert!(hub.snapshot().devices.is_empty());
+    cancel.cancel();
+    driver.await.unwrap();
+    std::fs::remove_dir_all(dir).unwrap();
+}
