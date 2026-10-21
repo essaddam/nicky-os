@@ -8,6 +8,7 @@
 mod access_window;
 pub mod color;
 mod counter;
+mod dependency;
 mod event;
 mod id;
 mod model;
@@ -20,6 +21,10 @@ mod value;
 
 pub use access_window::AccessWindow;
 pub use counter::{CounterOperation, CounterSpec, MAX_COUNTER_VALUE};
+pub use dependency::{
+    DefinitionVersion, DependencyKind, DependencyRef, MAX_DEFINITION_VERSION, PublicationVersion,
+    VersionError, VersionedDefinition,
+};
 pub use event::{
     Action, ApprovalRequest, AutomationChange, Decision, DriverStatus, Event, JournalEntry, Notice,
     Origin, Outcome,
