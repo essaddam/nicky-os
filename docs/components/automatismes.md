@@ -78,6 +78,10 @@ lui fait perdre sa validation, la maison est prévenue (notice dans le dashboard
 - Abonné au bus du hub : changements d'état (le hub n'émet qu'en cas de changement),
   valeur précédente gardée pour `from` et les franchissements de seuil. `for_s` = minuterie
   annulée si la valeur repart (sans `to` : chaque nouveau changement relance la minuterie).
+- Une métadonnée de dépendance actualise l’index exécutable sans relire les valeurs
+  du hub dans la mémoire des transitions consommées : elle ne doit pas avaler un
+  `State` encore en attente. La reprise globale des valeurs reste réservée au démarrage
+  et à la récupération explicite d’une perte du bus (`Lagged`).
 - Horloge : un tic par seconde en heure locale (jiff, fuseau de la config) ; chaque
   déclencheur horaire retient la dernière minute où il a tiré (jamais deux fois, y compris
   après un redémarrage dans la même minute). L'heure sautée au passage à l'heure d'été ne

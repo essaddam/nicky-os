@@ -73,11 +73,7 @@ pub(crate) async fn run(autos: Automations) {
         tokio::select! {
             () = cancel.cancelled() => break,
             event = events.recv() => match event {
-                Ok(Event::DependencyChanged { .. }) => { autos.refresh_live(); remember_all(&autos); },
-                Ok(Event::State { point, value, .. }) => on_state(&autos, &point, &value),
-                Ok(Event::Occurrence { occurrence }) => on_occurrence(&autos, occurrence).await,
-                Ok(Event::DeviceUpserted { device }) if device.points.iter().any(|point| matches!(point.kind,moli_core::Kind::Timer{field:moli_core::TimerField::Expired})) => autos.refresh_live(),
-                Ok(_) => {}
+                Ok(event) => on_event(&autos, event).await,
                 Err(RecvError::Lagged(missed)) => {
                     tracing::warn!(missed, "automations lagged behind the hub: some changes were not seen");
                     autos.refresh_live();
@@ -116,6 +112,33 @@ pub(crate) async fn run(autos: Automations) {
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     }
 }
+
+async fn on_event(autos: &Automations, event: Event) {
+    match event {
+        // Metadata changes the executable index, not the State events already
+        // consumed. The hub can be ahead of a lossless subscriber's queue.
+        Event::DependencyChanged { .. } => autos.refresh_live(),
+        Event::State { point, value, .. } => on_state(autos, &point, &value),
+        Event::Occurrence { occurrence } => on_occurrence(autos, occurrence).await,
+        Event::DeviceUpserted { device }
+            if device.points.iter().any(|point| {
+                matches!(
+                    point.kind,
+                    moli_core::Kind::Timer {
+                        field: moli_core::TimerField::Expired
+                    }
+                )
+            }) =>
+        {
+            autos.refresh_live()
+        }
+        _ => {}
+    }
+}
+
+#[cfg(test)]
+#[path = "dependency_event_tests.rs"]
+mod dependency_event_tests;
 
 async fn on_occurrence(autos: &Automations, event: Occurrence) {
     if !event.id.is_valid()
