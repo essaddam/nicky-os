@@ -1,4 +1,30 @@
 use moli_helpers::{Config, Helpers};
+
+#[test]
+fn timer_and_temporal_helpers_reject_each_others_configuration_fields() {
+    for (kind, fields, foreign) in [
+        ("timer", "duration_s=7", "timezone='UTC'"),
+        ("date", "initial='2024-02-29'", "duration_s=7"),
+        ("time", "initial='23:59:59'", "duration_s=7"),
+        (
+            "datetime",
+            "initial='2000-01-01T00:00:00Z'\ntimezone='UTC'",
+            "duration_s=7",
+        ),
+    ] {
+        let valid =
+            format!("[[helper]]\nid='sample'\nname='Synthetic value'\nkind='{kind}'\n{fields}");
+        assert!(
+            Helpers::new(toml::from_str(&valid).unwrap()).is_ok(),
+            "{kind}"
+        );
+        let invalid = format!("{valid}\n{foreign}");
+        assert!(
+            Helpers::new(toml::from_str(&invalid).unwrap()).is_err(),
+            "{kind} accepted {foreign}"
+        );
+    }
+}
 #[test]
 fn auto_h3_temporal_configuration_is_explicit_and_legacy_configuration_survives() {
     for (kind, initial, extra) in [
@@ -173,4 +199,70 @@ async fn auto_h3_guard_holds_the_canonical_instant_and_invalid_times_do_not_chan
     );
     cancel.cancel();
     task.await.unwrap();
+}
+
+#[tokio::test]
+async fn temporal_approval_keeps_its_live_permit_with_the_canonical_instant() {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    for revoked in [false, true] {
+        let hub = Hub::new(HubOptions {
+            guard: moli_runtime::guard::GuardPolicy {
+                protect_unassigned: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .unwrap();
+        let cancel = CancellationToken::new();
+        let task = spawn_driver(
+            &hub,
+            "fixture".into(),
+            Arc::new(Helpers::new(datetime_config()).unwrap()),
+            cancel.clone(),
+        );
+        let point: moli_core::PointId = "fixture:sample/value".into();
+        wait(&hub, &point).await;
+        let live = Arc::new(AtomicBool::new(true));
+        let check = live.clone();
+        let target = point.clone();
+        let error = hub
+            .command_with_permit(
+                &point,
+                Value::Text("2026-10-25T02:30:00+01:00".into()),
+                Origin::Mcp,
+                None,
+                None,
+                moli_runtime::CommandPermit::new(move |point| {
+                    point == &target && check.load(Ordering::Acquire)
+                }),
+            )
+            .await
+            .unwrap_err();
+        let moli_runtime::CommandError::NeedsApproval { id, .. } = error else {
+            panic!("temporal command was not held");
+        };
+        let canonical = Value::Text("2026-10-25T01:30:00Z".into());
+        assert_eq!(hub.approvals()[0].value, canonical);
+        live.store(!revoked, Ordering::Release);
+        let result = hub
+            .resolve_approval(id, &point, true, Origin::Ui, None)
+            .await;
+        if revoked {
+            assert!(matches!(
+                result,
+                Err(moli_runtime::ApprovalError::Command(
+                    moli_runtime::CommandError::AccessDenied
+                ))
+            ));
+            assert_eq!(
+                hub.state(&point).unwrap().value,
+                Value::Text("2000-01-01T00:00:00Z".into())
+            );
+        } else {
+            result.unwrap();
+            assert_eq!(hub.state(&point).unwrap().value, canonical);
+        }
+        cancel.cancel();
+        task.await.unwrap();
+    }
 }

@@ -3,7 +3,6 @@
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from './Icon.svelte';
   import TemporalControl from '../../components/TemporalControl.svelte';
-  import { formatValue } from '../../lib/format.js';
   import PressButton from '../../components/PressButton.svelte';
   import TimerControl from '../../components/TimerControl.svelte';
   import { formatValue } from '../../lib/format.js';

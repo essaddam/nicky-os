@@ -74,7 +74,8 @@ async fn auto_h3_a_started_commit_survives_its_waiter_and_never_uses_the_periodi
             request_id: None,
             correlation: None,
         },
-        reply,
+        permit: None,
+        reply: Arc::new(std::sync::Mutex::new(Some(reply))),
         claim: Arc::new(AtomicU8::new(Claim::TAKEN)),
     };
     let waiting = {

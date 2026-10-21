@@ -185,6 +185,12 @@ struct Prepared {
 }
 
 impl Prepared {
+    fn is_operation(&self) -> bool {
+        self.device
+            .point(&self.key)
+            .is_some_and(|point| point.kind.is_operation())
+    }
+
     fn approval_value<'a>(&'a self, original: &'a Value) -> &'a Value {
         if self
             .device
@@ -911,16 +917,13 @@ impl Hub {
                             .await;
                     }
                     Verdict::Approval(reason) => {
-                        let button = prepared
-                            .device
-                            .point(&prepared.key)
-                            .is_some_and(|point| point.kind.is_operation());
+                        let operation = prepared.is_operation();
                         let id = self.hold(
                             point,
                             prepared.approval_value(&value),
                             &metadata,
                             &reason,
-                            button,
+                            operation,
                             permit,
                         )?;
                         Err(CommandError::NeedsApproval { id, reason })

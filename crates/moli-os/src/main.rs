@@ -221,13 +221,7 @@ fn run_command(command: Command, config: Config, boot: Instant) -> anyhow::Resul
             unreachable!("handled above")
         }
         Command::Backup { dir } => backup::backup(&config.server.data_dir, &dir),
-        Command::Temporal { device, value } => send_value_operation(
-            &config,
-            &format!("{device}/value"),
-            &serde_json::Value::String(value),
-            None,
-            "moli-os temporal",
-        ),
+        Command::Temporal { device, value } => temporal_command(&config, &device, value),
         Command::Press { point, request_id } => press(&config, &point, request_id.as_deref()),
         Command::Timer {
             device,
@@ -1339,6 +1333,16 @@ fn send_operation(
     actor: &str,
 ) -> anyhow::Result<()> {
     send_value_operation(config, point, &serde_json::Value::Null, request_id, actor)
+}
+
+fn temporal_command(config: &Config, device: &str, value: String) -> anyhow::Result<()> {
+    send_value_operation(
+        config,
+        &format!("{device}/value"),
+        &serde_json::Value::String(value),
+        None,
+        "moli-os temporal",
+    )
 }
 
 fn timer_command(
