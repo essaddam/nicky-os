@@ -329,3 +329,140 @@ async fn inventory_of_512_creates_only_selected_points_under_the_hard_ceiling() 
         task.await.unwrap();
     }
 }
+
+fn selection(first: usize) -> Vec<String> {
+    (first..first + 32)
+        .map(|i| format!("aa:bb:cc:dd:00:{i:02x}"))
+        .collect()
+}
+async fn settled(hub: &Hub) {
+    until(|| {
+        hub.snapshot().drivers.iter().any(|d| {
+            matches!(
+                d.status,
+                moli_core::DriverStatus::Running | moli_core::DriverStatus::Waiting { .. }
+            )
+        })
+    })
+    .await;
+}
+fn point_count(hub: &Hub) -> usize {
+    hub.snapshot()
+        .devices
+        .iter()
+        .map(|d| d.device.points.len())
+        .sum()
+}
+#[tokio::test]
+async fn retained_clients_bound_two_disjoint_selections_without_deleting_on_error() {
+    let server = Server::start().await;
+    server.mode.store(6, Ordering::SeqCst);
+    let vault = vault().await;
+    let hub = &vault.hub;
+    for first in [0, 32, 0] {
+        let before = server.calls.lock().unwrap().len();
+        let mut config = server.config();
+        config.selected = selection(first);
+        let cancel = CancellationToken::new();
+        let task = spawn_driver(
+            hub,
+            InstanceId::from("network"),
+            Arc::new(Asuswrt::new(config).unwrap()),
+            cancel.clone(),
+        );
+        settled(hub).await;
+        let status = hub.snapshot().drivers[0].status.clone();
+        let devices = hub.snapshot().devices.len();
+        let points = point_count(hub);
+        let requests = server.calls.lock().unwrap().len() - before;
+        cancel.cancel();
+        task.await.unwrap();
+        assert!(
+            points <= 139,
+            "retained and new clients exceeded the instance ceiling: {points}"
+        );
+        assert_eq!(
+            devices, 33,
+            "capacity refusal preserves previously known devices"
+        );
+        if first == 32 {
+            assert!(
+                matches!(status, moli_core::DriverStatus::Waiting { reason } if reason == moli_i18n::tr!("pilotes.asuswrt.capacite_atteinte"))
+            );
+            assert_eq!(requests, 0, "refuse the changed selection before network");
+        } else {
+            assert!(matches!(status, moli_core::DriverStatus::Running));
+            assert!(requests > 0, "the admitted selection still works");
+        }
+    }
+}
+#[tokio::test]
+async fn cached_client_identities_reserve_slots_before_the_first_publication() {
+    let server = Server::start().await;
+    server.mode.store(6, Ordering::SeqCst);
+    let vault = vault().await;
+    let path = vault.path.join("synthetic-cache.json");
+    let cached = selection(0)
+        .iter()
+        .map(|id| {
+            (
+                format!("network:client_{}", id.replace(':', "")),
+                serde_json::json!({"signal":{"value":-55,"ts":1}}),
+            )
+        })
+        .collect::<serde_json::Map<_, _>>();
+    std::fs::write(&path, serde_json::to_vec(&cached).unwrap()).unwrap();
+    let hub = Hub::new(HubOptions {
+        state_path: Some(path),
+        secrets: Some((
+            vault.path.join("restored-vault.enc"),
+            MasterKey::generate().unwrap(),
+        )),
+        ..HubOptions::default()
+    })
+    .unwrap();
+    for key in ["username", "password"] {
+        hub.store_secret(
+            &InstanceId::from("network"),
+            key,
+            &format!("synthetic-{key}"),
+        )
+        .await
+        .unwrap();
+    }
+    assert!(
+        hub.snapshot().devices.is_empty(),
+        "cache holds identities before publication"
+    );
+    for first in [32, 0] {
+        let before = server.calls.lock().unwrap().len();
+        let mut config = server.config();
+        config.selected = selection(first);
+        let cancel = CancellationToken::new();
+        let task = spawn_driver(
+            &hub,
+            InstanceId::from("network"),
+            Arc::new(Asuswrt::new(config).unwrap()),
+            cancel.clone(),
+        );
+        settled(&hub).await;
+        let status = hub.snapshot().drivers[0].status.clone();
+        let devices = hub.snapshot().devices.len();
+        let requests = server.calls.lock().unwrap().len() - before;
+        let points = point_count(&hub);
+        cancel.cancel();
+        task.await.unwrap();
+        assert!(points <= 139);
+        if first == 32 {
+            assert!(
+                matches!(status, moli_core::DriverStatus::Waiting { reason } if reason == moli_i18n::tr!("pilotes.asuswrt.capacite_atteinte"))
+            );
+            assert_eq!(requests, 0);
+            assert_eq!(devices, 0);
+        } else {
+            assert!(matches!(status, moli_core::DriverStatus::Running));
+            assert_eq!(devices, 33);
+            assert!(requests > 0);
+        }
+    }
+}

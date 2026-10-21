@@ -45,6 +45,7 @@
   "pilotes.ariston.session": "la session Ariston venait d'expirer : l'ordre n'est pas parti, réessayer",
   "pilotes.ariston.temperature": "Température de l'eau",
   "pilotes.asuswrt.authentification_refusee": "ASUSWRT refuse la session : vérifier le compte, le verrouillage ou le captcha puis redémarrer l’instance",
+  "pilotes.asuswrt.capacite_atteinte": "plafond ASUSWRT atteint : les identités déjà connues, même hors ligne ou restaurées, réservent leurs places ; limiter la sélection à 32 identités au total et conserver un seul routeur par instance",
   "pilotes.asuswrt.certificat_modifie": "le certificat ASUSWRT a changé : vérifier humainement la cible avant toute nouvelle connexion",
   "pilotes.asuswrt.client": "Client réseau sélectionné",
   "pilotes.asuswrt.client_count": "Clients inventoriés",

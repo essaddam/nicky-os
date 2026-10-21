@@ -1,9 +1,10 @@
 //! Publish a validated cycle; never turn an unseen client into a presence fact.
 use crate::{
+    Failure,
     model::{Action, Reading, Samples},
     tracker::Tracker,
 };
-use moli_core::{Access, Device, Kind, PointSpec, Semantic, Unit, Value};
+use moli_core::{Access, Device, DeviceId, Kind, PointSpec, Semantic, Unit, Value};
 use moli_runtime::DriverCtx;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -117,6 +118,7 @@ fn specification(key: &str) -> PointSpec {
 pub(crate) struct Published<'a> {
     pub ctx: &'a mut DriverCtx,
     points: BTreeMap<String, BTreeSet<&'static str>>,
+    admitted: BTreeSet<DeviceId>,
     model: Option<String>,
     tracker: Tracker,
     last: Option<Instant>,
@@ -124,8 +126,10 @@ pub(crate) struct Published<'a> {
 }
 impl<'a> Published<'a> {
     pub fn new(ctx: &'a mut DriverCtx) -> Self {
+        let admitted = ctx.known_devices().into_iter().collect();
         let state = Self {
             ctx,
+            admitted,
             points: BTreeMap::new(),
             model: None,
             tracker: Tracker::default(),
@@ -134,6 +138,46 @@ impl<'a> Published<'a> {
         };
         state.offline();
         state
+    }
+    /// Known/cache identities consume slots even when they are offline or deselected.
+    /// A new configuration never deletes devices to make room implicitly.
+    pub fn admit(&mut self, identity: Option<&str>, selected: &[String]) -> Result<(), Failure> {
+        let mut admitted = self.admitted.clone();
+        admitted.extend(
+            selected
+                .iter()
+                .map(|id| self.ctx.device_id(&format!("client_{id}"))),
+        );
+        if let Some(identity) = identity {
+            admitted.insert(self.ctx.device_id(&format!("router_{identity}")));
+        }
+        let mut clients = 0;
+        let mut routers = 0;
+        for id in &admitted {
+            let native = id
+                .as_str()
+                .split_once(':')
+                .map(|(_, native)| native)
+                .ok_or(Failure::Capacity)?;
+            if native
+                .strip_prefix("client_")
+                .is_some_and(|id| crate::model::mac(id).as_deref() == Some(id))
+            {
+                clients += 1;
+            } else if native
+                .strip_prefix("router_")
+                .is_some_and(|id| crate::model::mac(id).as_deref() == Some(id))
+            {
+                routers += 1;
+            } else {
+                return Err(Failure::Capacity);
+            }
+            if clients > 32 || routers > 1 {
+                return Err(Failure::Capacity);
+            }
+        }
+        self.admitted = admitted;
+        Ok(())
     }
     pub fn offline(&self) {
         for device in self.ctx.devices() {
@@ -206,7 +250,8 @@ impl<'a> Published<'a> {
         selected: &[String],
         reads: Vec<(Action, Option<Reading>, u64)>,
         epoch: u64,
-    ) {
+    ) -> Result<(), Failure> {
+        self.admit(Some(identity), selected)?;
         if self.epoch != epoch {
             self.tracker = Tracker::default();
             self.last = None;
@@ -271,6 +316,7 @@ impl<'a> Published<'a> {
                 );
             }
         }
+        Ok(())
     }
 }
 impl Drop for Published<'_> {

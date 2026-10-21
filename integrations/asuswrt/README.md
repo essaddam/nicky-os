@@ -38,6 +38,10 @@ Aucun code tiers copié et aucune capture d'installation utilisée.
 Au plus **11 points routeur +4 par client**, 32 clients sélectionnés au plus :
 **139 points**, sous le plafond144. L'inventaire reste interne (512 entrées max,
 rejet intégral au-delà) ; sélection vide par défaut, seul `client_count` est agrégé.
+Les identités déjà connues (cache et anciennes sélections inclus) réservent leurs
+places : au plus32 clients et un routeur par instance sur les relances. Une sélection
+qui dépasserait cette capacité reste en attente, avant toute requête. Aucune suppression
+automatique ne libère une place, notamment après une panne ou un inventaire invalide.
 Les nœuds AiMesh `amesh_isRe` sont exclus de ce compte. Ce compte décrit les
 entrées inventoriées, pas des personnes présentes ni des associations Wi-Fi.
 

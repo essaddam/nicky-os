@@ -45,6 +45,7 @@
   "pilotes.ariston.session": "the Ariston session had just expired: the order did not leave, try again",
   "pilotes.ariston.temperature": "Water temperature",
   "pilotes.asuswrt.authentification_refusee": "ASUSWRT refused the session: check the account, lock or captcha, then restart the instance",
+  "pilotes.asuswrt.capacite_atteinte": "ASUSWRT capacity reached: known identities reserve their slots, including offline or restored devices; keep the selection within 32 total identities and one router per instance",
   "pilotes.asuswrt.certificat_modifie": "the ASUSWRT certificate changed: have a person verify the target before reconnecting",
   "pilotes.asuswrt.client": "Selected network client",
   "pilotes.asuswrt.client_count": "Inventoried clients",

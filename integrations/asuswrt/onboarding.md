@@ -20,6 +20,10 @@ jamais dans une pièce protégée. HA garde ses usages jusqu'à validation sépa
 5. Laisser `selected = []`, puis sélectionner seulement les clients utiles par
    leur identité native fournie/validée par le propriétaire, au plus32. Ne pas
    transformer la liste DHCP/ARP en présence ni retirer la présence existante.
+   Les anciens clients connus et le cache réservent leurs places : un changement
+   qui dépasserait32 identités cumulées reste en attente sans réseau. Le pilote
+   ne retire aucun ancien appareil pour faire de la place ; réduire la sélection
+   aux identités admises avant de redémarrer. Un seul routeur est admis par instance.
 6. Contrôler les points de lecture, les unités et la charge ; remettre la cible
    dans son état initial. Une seule solution possède un usage après validation.
 

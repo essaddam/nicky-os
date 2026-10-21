@@ -15,6 +15,7 @@ pub(crate) enum Failure {
     Secrets,
     Vault,
     Budget,
+    Capacity,
 }
 pub use config::{Config, Transport};
 mod api;
