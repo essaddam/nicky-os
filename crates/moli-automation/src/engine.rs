@@ -130,7 +130,7 @@ async fn on_event(autos: &Automations, event: Event) {
                 )
             }) =>
         {
-            autos.refresh_live()
+            autos.refresh_live();
         }
         _ => {}
     }

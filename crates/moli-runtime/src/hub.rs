@@ -2856,3 +2856,60 @@ mod live_permit_tests {
         assert!(rx.try_recv().is_err());
     }
 }
+
+#[cfg(test)]
+mod schedule_timer_interop_tests {
+    use super::*;
+    use moli_core::{Access, Kind, PointSpec, Semantic, TimerField};
+
+    #[test]
+    fn schedule_projection_updates_never_turn_timer_expiry_into_a_cached_state() {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let device = DeviceId::from("fixture:business");
+        hub.upsert_device(Device {
+            id: device.clone(),
+            instance: "fixture".into(),
+            native_name: "Synthetic business state".into(),
+            manufacturer: None,
+            model: None,
+            description: None,
+            native_room: None,
+            members: vec![],
+            points: [
+                (
+                    "finished",
+                    Kind::Timer {
+                        field: TimerField::Expired,
+                    },
+                ),
+                ("active", Kind::Schedule),
+            ]
+            .into_iter()
+            .map(|(key, kind)| PointSpec {
+                key: key.into(),
+                label: key.into(),
+                kind,
+                access: Access {
+                    read: true,
+                    write: false,
+                },
+                unit: None,
+                semantic: Semantic::Other,
+            })
+            .collect(),
+        });
+        hub.record_state_update(&device, "finished", Value::Null, false, |_| {
+            panic!("an occurrence must not enter projection updates");
+        });
+        assert!(hub.state(&PointId::new(&device, "finished")).is_none());
+        let updated = AtomicBool::new(false);
+        hub.record_state_update(&device, "active", Value::Bool(true), false, |_| {
+            updated.store(true, Ordering::Release);
+        });
+        assert!(updated.load(Ordering::Acquire));
+        assert_eq!(
+            hub.state(&PointId::new(&device, "active")).unwrap().value,
+            Value::Bool(true)
+        );
+    }
+}
