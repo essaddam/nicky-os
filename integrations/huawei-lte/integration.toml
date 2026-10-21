@@ -1,0 +1,33 @@
+[integration]
+id = "huawei-lte"
+name = "Huawei LTE"
+brands = ["Huawei"]
+models = ["HiLink XML (qualification requise)"]
+transport = "http"
+driver = "huawei-lte"
+crate = "moli-huawei-lte"
+[discovery]
+mdns = []
+ssdp = []
+ports = []
+[needs]
+secrets = ["username", "password"]
+vars = []
+options = ["auth", "host", "port", "transport"]
+[origin]
+reused = "Connaissance du protocole huawei-lte-api f416c63d2a01d7e1d743a2d039ae2d1ff6b71df5 (LGPL-3.0), sans code tiers copié ; unités recoupées HA core cbbd58b4ca6b657168339661a638136ce4387a02 (Apache-2.0), fixtures intégralement synthétiques"
+author = "agent"
+[[fixture]]
+file = "fixtures/information.xml"
+[[fixture]]
+file = "fixtures/status.xml"
+[[fixture]]
+file = "fixtures/signal.xml"
+[[fixture]]
+file = "fixtures/traffic.xml"
+[[fixture]]
+file = "fixtures/no-sim.xml"
+[[fixture]]
+file = "fixtures/expired.xml"
+[[fixture]]
+file = "fixtures/locked.xml"

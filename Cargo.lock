@@ -1617,6 +1617,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-huawei-lte"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "http",
+ "http-body-util",
+ "moli-core",
+ "moli-history",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "rcgen 0.14.10",
+ "ring",
+ "roxmltree",
+ "rustls",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-rustls",
+ "tokio-util",
+]
+
+[[package]]
 name = "moli-hue"
 version = "0.1.0"
 dependencies = [
@@ -1847,6 +1871,7 @@ dependencies = [
  "moli-helpers",
  "moli-history",
  "moli-host",
+ "moli-huawei-lte",
  "moli-hue",
  "moli-i18n",
  "moli-igd",

@@ -926,6 +926,7 @@ const KINDS: &[&str] = &[
     "frigate",
     "helpers",
     "host",
+    "huawei-lte",
     "hue",
     "igd",
     "ipp",
@@ -1141,6 +1142,9 @@ fn build_driver(
         "host" => Arc::new(moli_host::Host::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "huawei-lte" => Arc::new(moli_huawei_lte::HuaweiLte::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "hue" => Arc::new(moli_hue::Hue::new(
             config.options.clone().try_into().with_context(context)?,
         )),
@@ -1353,6 +1357,22 @@ mod tests {
             enabled: None,
             options: toml::Value::Table(toml::Table::new()),
         }
+    }
+
+    #[test]
+    fn hilink_is_built_offline_and_rejects_implicit_plaintext_or_unknown_auth() {
+        let mut config = driver("huawei-lte");
+        config.options = toml::from_str(
+            "host = 'modem.example.invalid'\nport = 8443\ntransport = 'https'\nauth = 'sha256-v4'",
+        )
+        .unwrap();
+        let data = std::env::temp_dir();
+        assert_eq!(build_driver(&config, &data).unwrap().kind(), "huawei-lte");
+        config.options["auth"] = toml::Value::String("try-all".into());
+        assert!(build_driver(&config, &data).is_err());
+        config.options["auth"] = toml::Value::String("none".into());
+        config.options["transport"] = toml::Value::String("http".into());
+        assert!(build_driver(&config, &data).is_err());
     }
 
     fn netatmo_config(enabled: bool) -> Config {

@@ -178,6 +178,16 @@ base_topic = "zigbee2mqtt"  # défaut
 - **Pièges** : Z2M ne rejoue pas les états aux nouveaux abonnés. Les appareils sur secteur (routeurs) sont donc interrogés une fois par exécution via `/get`, un toutes les 500 ms pour ne pas saturer le réseau ; les appareils endormis restent couverts par le cache d'état du hub. Taille de paquet portée à 4 Mio (`bridge/devices` grossit avec le réseau). Les propres `/set` et `/get` de Moli reviennent par `#` : ignorés. Une commande reçue avant que le broker ait accepté la connexion (`ConnAck`) est **refusée** (`broker injoignable`) au lieu d'être acquittée puis perdue ; toute erreur de connexion termine l'exécution (le superviseur vide la file et reconnecte).
 - **Tests** : `src/catalog.rs` sur des fixtures réelles `integrations/z2m/fixtures/bridge_devices.json` (7 appareils) et `state.json` : typage, décodage, encodage des commandes, composites, lectures à la demande.
 
+## `huawei-lte` : lecture HiLink (`crates/moli-huawei-lte`)
+
+Client XML natif à routes fixes, sessions/jetons bornés, seul POST de login type4
+explicitement choisi. TLS épinglé avant secrets ; pas d'autre variante tentée,
+administration, SMS ou présence. Au plus11 points RO, tous en famille Diagnostic
+(B1), signaux dBm/dB, compteurs B/débits B/s et durée s, grands entiers protégés.
+Corps1 Mio, échange5 s/cycle30 s/16 requêtes, un rétablissement. La SIM absente et
+la connexion non prouvée ne produisent pas de trafic frais. [Contrat et limites](../../integrations/huawei-lte/README.md),
+[onboarding](../../integrations/huawei-lte/onboarding.md). Qualification réelle après H1.
+
 ## `hue` : Philips Hue (`crates/moli-hue`)
 
 - **Couvre** : lumières, interrupteurs (boutons), détecteurs (mouvement, température, luminosité, contact), batteries, pièces et zones Hue.
@@ -843,6 +853,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
 | `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |
 | `host` | `moli-host` | /proc, /sys ; WoL ; agent HTTP sortant | allumer, éteindre, veille, Claude et Codex pour le téléphone (PIN) | hôte Linux ; PC Windows avec l'agent |
+| `huawei-lte` | `moli-huawei-lte` | HTTP(S) XML HiLink, TLS épinglé | non | pas encore : contrats synthétiques, H1 requis |
 | `hue` | `moli-hue` | HTTPS CLIP v2 + SSE, local, épinglé | oui : lumières, pièces ; zones non | pont Philips Hue (CLIP v2) |
 | `igd` | `moli-igd` | UPnP IGD (SSDP + SOAP) | non | Livebox |
 | `ipp` | `moli-ipp` | IPP 2.0 HTTP 631 | identifier, annuler, imprimer (tableau de bord) | Canon MG3600 |

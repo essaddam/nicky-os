@@ -22,6 +22,7 @@ moli-frigate.workspace = true
 moli-helpers.workspace = true
 moli-history.workspace = true
 moli-host.workspace = true
+moli-huawei-lte.workspace = true
 moli-hue.workspace = true
 moli-i18n.workspace = true
 moli-igd.workspace = true

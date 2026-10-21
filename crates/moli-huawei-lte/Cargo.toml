@@ -1,0 +1,30 @@
+[package]
+name = "moli-huawei-lte"
+description = "Moli OS: bounded read-only Huawei HiLink telemetry."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+[dependencies]
+anyhow.workspace = true
+base64.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+moli-core.workspace = true
+moli-i18n.workspace = true
+moli-net.workspace = true
+moli-runtime.workspace = true
+ring.workspace = true
+roxmltree = "=0.21.1"
+serde.workspace = true
+tokio.workspace = true
+[dev-dependencies]
+moli-history.workspace = true
+rcgen = { version = "=0.14.10", default-features = false, features = ["ring", "crypto"] }
+rustls.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["test-util"] }
+tokio-rustls.workspace = true
+tokio-util.workspace = true
+[lints]
+workspace = true
