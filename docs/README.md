@@ -63,7 +63,7 @@ téléphones passent sans Access, avec leur propre jeton.
 | [medias.md](components/medias.md) | contrats purs de découverte média R1 : identités, validation et sélection, sans catalogue réel ni lancement raccordé |
 | [moli.md](components/moli.md) | l'assistant : conversation, outils, garde, création d'automatismes, filtres |
 | [netgear.md](components/netgear.md) | client Netgear SOAP en lecture, contrats synthétiques et limites de qualification |
-| [pilotes.md](components/pilotes.md) | trait `Driver`, pilotes natifs dont ASUSWRT et Huawei LTE en lecture et Netatmo météo, `moli-net` |
+| [pilotes.md](components/pilotes.md) | trait `Driver`, pilotes natifs dont Google Cast à activation explicite, ASUSWRT et Huawei LTE en lecture et Netatmo météo, `moli-net` |
 | [profils.md](components/profils.md) | moteur de profils déclaratifs, format TOML, ajouter un appareil sans code |
 | [reseau.md](components/reseau.md) | cadrage réseau : diagnostic, ASUSWRT, Huawei LTE, Netgear et SMLIGHT ; ASUSWRT, Huawei LTE et Netgear natifs sur fixtures ; SMLIGHT public sur contrats simulés |
 | [reseau-qualification.md](components/reseau-qualification.md) | preuves de contrat réseau, fixtures, bornes et porte de qualification humaine |

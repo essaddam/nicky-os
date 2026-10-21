@@ -229,5 +229,15 @@
   "serveur.calcul.cycle": "Cycle de dépendances calculées refusé.",
   "serveur.calcul.unites": "Les sources doivent être des points numériques lisibles avec des unités compatibles et une version courante validée pour les calculs.",
   "serveur.calcul.budget": "Limite des calculs dépassée : 128 définitions, profondeur 16 et propagation bornée.",
-  "serveur.calcul.definition": "Calcul invalide : 32 sources numériques au plus, sans doublons, une unité compatible et une fraîcheur entière de 1 à 604800 secondes."
+  "serveur.calcul.definition": "Calcul invalide : 32 sources numériques au plus, sans doublons, une unité compatible et une fraîcheur entière de 1 à 604800 secondes.",
+  "serveur.cast.body": "Corps JSON invalide ou trop volumineux.",
+  "serveur.cast.busy": "Une opération Cast est déjà en cours.",
+  "serveur.cast.human": "Une validation humaine par PIN est nécessaire.",
+  "serveur.cast.invalid": "Le candidat ou la validation explicite est invalide.",
+  "serveur.cast.network": "La découverte Cast a échoué. Vérifie le réseau local.",
+  "serveur.cast.owned": "Cet appareil appartient déjà à un autre pilote.",
+  "serveur.cast.stale": "Cette sélection a changé. Recharge les candidats avant de valider.",
+  "serveur.cast.unavailable": "La passerelle Cast est indisponible.",
+  "serveur.cast.unknown": "Cette instance Cast est inconnue.",
+  "serveur.cast.vault": "La validation ne peut pas être enregistrée dans le coffre."
 }

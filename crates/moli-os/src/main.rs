@@ -992,6 +992,7 @@ const KINDS: &[&str] = &[
     "ariston",
     "asuswrt",
     "bambu",
+    "cast",
     "demo",
     "esphome",
     "frigate",
@@ -1086,6 +1087,7 @@ fn spawn_household(
 /// the computers' agents.
 #[derive(Default)]
 struct Gateways {
+    cast: std::collections::BTreeMap<String, moli_cast::gateway::Gateway>,
     androidtv: std::collections::BTreeMap<String, moli_androidtv_driver::pairing::PairingGateway>,
     phones: Option<moli_phones::Gateway>,
     machines: Option<moli_host::agents::Agents>,
@@ -1097,6 +1099,7 @@ impl Gateways {
     fn into_api_options(self) -> moli_api::Options {
         moli_api::Options {
             androidtv: self.androidtv,
+            cast: self.cast,
             machines: self.machines,
             netatmo: self.netatmo,
             phones: self.phones,
@@ -1112,6 +1115,7 @@ fn spawn_drivers(
 ) -> anyhow::Result<(Vec<tokio::task::JoinHandle<()>>, Gateways)> {
     let mut tasks = Vec::new();
     let mut gates = Gateways::default();
+    let cast_owners = cast_ownership(config);
     for driver in config.drivers.iter().filter(|d| d.enabled != Some(false)) {
         let context = || format!("driver {:?} options", driver.id);
         let built: Arc<dyn Driver> = match driver.kind.as_str() {
@@ -1120,6 +1124,12 @@ fn spawn_drivers(
                 let tv = moli_androidtv_driver::AndroidTv::new(options)?;
                 gates.androidtv.insert(driver.id.clone(), tv.gateway());
                 Arc::new(tv)
+            }
+            "cast" => {
+                let options = driver.options.clone().try_into().with_context(context)?;
+                let cast = moli_cast::Cast::with_ownership(options, cast_owners.clone())?;
+                gates.cast.insert(driver.id.clone(), cast.gateway());
+                Arc::new(cast)
             }
             "netatmo" => {
                 let (native, endpoint) = netatmo_driver(driver)?;
@@ -1150,6 +1160,34 @@ fn spawn_drivers(
         ));
     }
     Ok((tasks, gates))
+}
+
+/// Reserve configured TV hosts before starting any Cast actor. This never
+/// probes the network or transfers an existing driver's ownership.
+fn cast_ownership(config: &Config) -> moli_cast::ownership::Ownership {
+    let owners = moli_cast::ownership::Ownership::default();
+    for driver in config
+        .drivers
+        .iter()
+        .filter(|driver| driver.enabled != Some(false))
+    {
+        if matches!(driver.kind.as_str(), "androidtv" | "philips" | "samsung")
+            && let Some(host) = driver.options.get("host").and_then(toml::Value::as_str)
+        {
+            let _ = owners.reserve_external("", host);
+        }
+        if driver.kind == "cast"
+            && let Some(ids) = driver
+                .options
+                .get("external_ids")
+                .and_then(toml::Value::as_array)
+        {
+            for id in ids.iter().filter_map(toml::Value::as_str) {
+                let _ = owners.reserve_external(&id.replace('-', ""), "");
+            }
+        }
+    }
+    owners
 }
 
 /// Configuration checking and startup use the same callback identity rules.
@@ -1202,6 +1240,9 @@ fn build_driver(
         "bambu" => Arc::new(moli_bambu::Bambu::new(
             config.options.clone().try_into().with_context(context)?,
         )),
+        "cast" => Arc::new(moli_cast::Cast::new(
+            config.options.clone().try_into().with_context(context)?,
+        )?),
         "demo" => Arc::new(moli_demo::Demo::new(
             config.options.clone().try_into().with_context(context)?,
         )?),
@@ -1603,6 +1644,80 @@ async fn wait_for_signal() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cast_builder_is_network_free_and_requires_an_explicit_scope() {
+        let mut config = driver("cast");
+        config.options = toml::from_str("host='192.168.1.10'").unwrap();
+        assert_eq!(
+            build_driver(&config, &std::env::temp_dir()).unwrap().kind(),
+            "cast"
+        );
+        config.options = toml::from_str("interface='192.168.1.2'\nprefix=24").unwrap();
+        assert!(build_driver(&config, &std::env::temp_dir()).is_ok());
+        config.options = toml::from_str("host='203.0.113.10'").unwrap();
+        assert!(build_driver(&config, &std::env::temp_dir()).is_err());
+        config.options = toml::Value::Table(toml::Table::new());
+        assert!(build_driver(&config, &std::env::temp_dir()).is_err());
+    }
+
+    #[tokio::test]
+    async fn cast_enabled_and_disabled_gateways_follow_the_configuration() {
+        let config: Config = toml::from_str("[[driver]]\nid='example'\nkind='cast'\n[driver.options]\nhost='192.168.1.10'\n[[driver]]\nid='disabled'\nkind='cast'\nenabled=false\n[driver.options]\nhost='192.168.1.11'\n").unwrap();
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let (tasks, gates) = spawn_drivers(&config, &hub, &cancel).unwrap();
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(gates.cast.len(), 1);
+        let options = gates.into_api_options();
+        assert!(options.cast.contains_key("example"));
+        assert!(!options.cast.contains_key("disabled"));
+        assert!(hub.snapshot().devices.is_empty());
+        cancel.cancel();
+        for task in tasks {
+            task.await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn cast_cannot_activate_a_host_configured_as_a_television() {
+        let config: Config = toml::from_str(
+            "[[driver]]\nid='tv'\nkind='androidtv'\n[driver.options]\nhost='192.168.1.10'\n",
+        )
+        .unwrap();
+        let native = moli_cast::Cast::with_ownership(
+            toml::from_str("host='192.168.1.10'").unwrap(),
+            cast_ownership(&config),
+        )
+        .unwrap();
+        let gateway = native.gateway();
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        // Only Cast is started: the television's transport is never contacted.
+        let task = spawn_driver(
+            &hub,
+            InstanceId::from("cast"),
+            Arc::new(native),
+            cancel.clone(),
+        );
+        for _ in 0..1000 {
+            if gateway.state().phase != moli_cast::gateway::Phase::Unavailable {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        let candidates = gateway.discover().await.unwrap();
+        assert_eq!(
+            gateway
+                .approve(candidates.generation, "receiver".into(), true)
+                .await
+                .unwrap_err(),
+            moli_cast::gateway::Error::OwnedElsewhere
+        );
+        assert!(hub.snapshot().devices.is_empty());
+        cancel.cancel();
+        task.await.unwrap();
+    }
 
     #[test]
     fn androidtv_builder_is_network_free() {

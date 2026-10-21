@@ -2,8 +2,10 @@
 
 use super::*;
 use crate::tracked::{Delivery, ReaderTask, TrackedOrder, write_packet};
+#[path = "cast_receiver.rs"]
+mod receiver;
 
-fn reject_pending(orders: &mut mpsc::Receiver<TrackedOrder<Order>>) {
+fn reject_pending<T>(orders: &mut mpsc::Receiver<TrackedOrder<T>>) {
     while let Ok(order) = orders.try_recv() {
         order.complete(Delivery::Unavailable);
     }
@@ -55,6 +57,7 @@ async fn observe<W: AsyncWrite + Unpin>(
     follow: &mut Follow,
     request: &mut u64,
     events: &mpsc::Sender<Event>,
+    volumes: Option<&mpsc::Sender<ReceiverVolume>>,
 ) -> anyhow::Result<()> {
     let Some((source, namespace, body)) = envelope(frame) else {
         return Ok(());
@@ -64,7 +67,14 @@ async fn observe<W: AsyncWrite + Unpin>(
             control(write, &source, NS_HEARTBEAT, &json!({"type":"PONG"})).await?;
         }
         (NS_RECEIVER, Some("RECEIVER_STATUS")) if source == RECEIVER => {
-            if let Some(transport) = follow.receiver(&body) {
+            if let Some(volumes) = volumes
+                && let Some(volume) = receiver::observation(&body)
+            {
+                volumes.send(volume).await?;
+            }
+            if body["status"]["applications"].is_array()
+                && let Some(transport) = follow.receiver(&body)
+            {
                 follow.playing = Playing {
                     app: follow.playing.app.take(),
                     ..Playing::default()
@@ -84,9 +94,7 @@ async fn observe<W: AsyncWrite + Unpin>(
             follow.media(&body);
         }
         (NS_CONNECTION, Some("CLOSE")) if follow.transport.as_deref() == Some(&source) => {
-            follow.transport = None;
-            follow.session = None;
-            follow.playing = Playing::default();
+            follow.clear();
         }
         _ => {}
     }
@@ -110,6 +118,7 @@ async fn response<W: AsyncWrite + Unpin>(
     request: &mut u64,
     events: &mpsc::Sender<Event>,
     pending: &Pending<'_>,
+    volumes: Option<&mpsc::Sender<ReceiverVolume>>,
 ) -> anyhow::Result<Delivery> {
     loop {
         if tokio::time::Instant::now() >= pending.deadline {
@@ -144,7 +153,7 @@ async fn response<W: AsyncWrite + Unpin>(
                 }
                 _ => None,
             });
-        observe(&frame, write, follow, request, events).await?;
+        observe(&frame, write, follow, request, events, volumes).await?;
         if let Some(outcome) = outcome {
             return Ok(outcome);
         }
@@ -161,6 +170,28 @@ pub(super) async fn stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
     orders: &mut mpsc::Receiver<TrackedOrder<Order>>,
     events: &mpsc::Sender<Event>,
 ) -> anyhow::Result<()> {
+    run(stream, orders, events, None, None).await
+}
+pub(super) async fn receiver_stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
+    stream: S,
+    orders: &mut mpsc::Receiver<TrackedOrder<ReceiverOrder>>,
+    events: &mpsc::Sender<Event>,
+    volumes: &mpsc::Sender<ReceiverVolume>,
+    generation: std::sync::Arc<std::sync::atomic::AtomicU64>,
+) -> anyhow::Result<()> {
+    run(stream, orders, events, Some(volumes), Some(generation)).await
+}
+async fn run<S, O>(
+    stream: S,
+    orders: &mut mpsc::Receiver<TrackedOrder<O>>,
+    events: &mpsc::Sender<Event>,
+    volumes: Option<&mpsc::Sender<ReceiverVolume>>,
+    generation: Option<std::sync::Arc<std::sync::atomic::AtomicU64>>,
+) -> anyhow::Result<()>
+where
+    S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+    O: Copy + Into<ReceiverOrder> + Send,
+{
     let (mut read, mut write) = tokio::io::split(stream);
     let (frames_tx, mut frames) = mpsc::channel(16);
     let reader = ReaderTask::new(tokio::spawn(async move {
@@ -171,7 +202,7 @@ pub(super) async fn stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
         }
     }));
     let result = async {
-        let mut follow = Follow::default();
+        let mut follow = Follow { generation, ..Follow::default() };
         let mut request = 0;
         let mut quiet = tokio::time::Instant::now() + QUIET;
         control(&mut write, RECEIVER, NS_CONNECTION, &json!({"type":"CONNECT"})).await?;
@@ -192,18 +223,26 @@ pub(super) async fn stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
                 frame = tokio::time::timeout_at(quiet, frames.recv()) => {
                     let frame = frame.context("Cast went quiet")?.context("Cast disconnected")?;
                     quiet = tokio::time::Instant::now() + QUIET;
-                    observe(&frame, &mut write, &mut follow, &mut request, events).await?;
+                    observe(&frame, &mut write, &mut follow, &mut request, events, volumes).await?;
                 }
                 order = orders.recv() => {
                     let Some(order) = order else { return Ok(()) };
                     if let Some(reason) = order.unsent_reason() { order.complete(reason); continue; }
+                    let ReceiverOrder::Media(operation) = order.payload.into() else {
+                            let result=receiver::execute(&mut write,&mut frames,&mut follow,&mut request,events,volumes,&order).await;
+                            let delivery=result.as_ref().copied().unwrap_or(Delivery::Uncertain);
+                            order.complete(delivery);
+                            result?;
+                            if delivery==Delivery::Uncertain {bail!("Cast receiver response lost; no replay");}
+                            continue;
+                    };
                     let (Some(transport), Some(session)) = (follow.transport.clone(), follow.session) else {
                         order.complete(Delivery::Unavailable);
                         continue;
                     };
                     request += 1;
                     let id = request;
-                    let kind = match order.payload { Order::Play => "PLAY", Order::Pause => "PAUSE", Order::Stop => "STOP" };
+                    let kind = match operation { Order::Play => "PLAY", Order::Pause => "PAUSE", Order::Stop => "STOP" };
                     let bytes = packet(&transport, NS_MEDIA, &json!({"type":kind,"mediaSessionId":session,"requestId":id}));
                     let sent = write_packet(&mut write, &bytes, &order).await;
                     if sent != Delivery::Sent {
@@ -211,9 +250,9 @@ pub(super) async fn stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
                         if matches!(sent, Delivery::Uncertain | Delivery::Unavailable) { bail!("Cast write lost; no replay"); }
                         continue;
                     }
-                    let pending = Pending { transport: &transport, session, id, deadline: order.deadline, operation: order.payload };
+                    let pending = Pending { transport: &transport, session, id, deadline: order.deadline, operation };
                     let answer = tokio::time::timeout_at(order.deadline,
-                        response(&mut frames, &mut write, &mut follow, &mut request, events, &pending))
+                        response(&mut frames, &mut write, &mut follow, &mut request, events, &pending, volumes))
                         .await.unwrap_or(Ok(Delivery::Uncertain));
                     let delivery = answer.as_ref().copied().unwrap_or(Delivery::Uncertain);
                     order.complete(delivery);

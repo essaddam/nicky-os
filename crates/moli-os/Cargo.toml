@@ -15,6 +15,7 @@ moli-assistant.workspace = true
 moli-asuswrt.workspace = true
 moli-automation.workspace = true
 moli-bambu.workspace = true
+moli-cast.workspace = true
 moli-core.workspace = true
 moli-demo.workspace = true
 moli-energy.workspace = true

@@ -752,5 +752,12 @@
   "pilotes.reservations.identifiant": "Reservation reference",
   "pilotes.reservations.observe": "Last read",
   "pilotes.reservations.prochaine": "Reservation {numero}",
-  "pilotes.reservations.url_manquante": "Add the chosen HTTPS ICS URL to this instance’s vault."
+  "pilotes.reservations.url_manquante": "Add the chosen HTTPS ICS URL to this instance’s vault.",
+  "pilotes.cast.commande": "Invalid Cast command.",
+  "pilotes.cast.configuration": "Configure a private IPv4 address, or a private interface and its subnet; using both is not allowed.",
+  "pilotes.cast.incertain": "The command may have been sent; its result is unconfirmed.",
+  "pilotes.cast.indisponible": "The Cast receiver or its media session is unavailable.",
+  "pilotes.cast.receiver": "Cast receiver",
+  "pilotes.cast.refusee": "The Cast receiver refused the command.",
+  "pilotes.cast.validation": "Approve the receiver in System."
 }

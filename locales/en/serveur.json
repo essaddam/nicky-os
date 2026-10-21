@@ -229,5 +229,15 @@
   "serveur.calcul.cycle": "Calculated dependency cycle refused.",
   "serveur.calcul.unites": "Sources must be readable numeric points with compatible units and a validated current version for calculations.",
   "serveur.calcul.budget": "Calculation limit exceeded: 128 definitions, depth 16 and bounded propagation.",
-  "serveur.calcul.definition": "Invalid calculation: up to 32 unique numeric sources, a compatible unit and integer freshness from 1 to 604800 seconds."
+  "serveur.calcul.definition": "Invalid calculation: up to 32 unique numeric sources, a compatible unit and integer freshness from 1 to 604800 seconds.",
+  "serveur.cast.body": "Invalid or oversized JSON body.",
+  "serveur.cast.busy": "A Cast operation is already in progress.",
+  "serveur.cast.human": "Human approval with a PIN is required.",
+  "serveur.cast.invalid": "Invalid candidate or explicit approval.",
+  "serveur.cast.network": "Cast discovery failed. Check the local network.",
+  "serveur.cast.owned": "This device already belongs to another driver.",
+  "serveur.cast.stale": "This selection has changed. Reload the candidates before approving.",
+  "serveur.cast.unavailable": "The Cast gateway is unavailable.",
+  "serveur.cast.unknown": "Unknown Cast instance.",
+  "serveur.cast.vault": "The approval could not be saved in the vault."
 }

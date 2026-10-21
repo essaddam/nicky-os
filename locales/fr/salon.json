@@ -210,5 +210,11 @@
   "salon.media.full": "Cette télé possède déjà 50 favoris. Supprimez-en un pour en ajouter un autre.",
   "salon.media.version": "Ces favoris viennent d’une version plus récente de Moli. Ils sont conservés.",
   "salon.media.save_error": "Le favori n’a pas pu être enregistré. Vérifiez son nom et sa cible.",
-  "salon.media.qualify": "Certaines applications peuvent refuser un lien selon leur version. Un lien transmis ne confirme pas le démarrage du programme."
+  "salon.media.qualify": "Certaines applications peuvent refuser un lien selon leur version. Un lien transmis ne confirme pas le démarrage du programme.",
+  "salon.cast.empty": "Aucun média en lecture. Lance un contenu depuis ton application Cast.",
+  "salon.cast.offline": "Cast hors ligne",
+  "salon.cast.offline_help": "Les commandes reviendront dès que le récepteur sera connecté.",
+  "salon.cast.playback": "Commandes de lecture Cast",
+  "salon.cast.ready": "Cast connecté",
+  "salon.cast.stop": "Arrêter"
 }

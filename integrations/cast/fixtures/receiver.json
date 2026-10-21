@@ -1,0 +1,8 @@
+{
+  "type": "RECEIVER_STATUS",
+  "requestId": 42,
+  "status": {
+    "applications": [],
+    "volume": { "level": 0.25, "muted": false }
+  }
+}

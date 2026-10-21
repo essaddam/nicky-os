@@ -2217,3 +2217,104 @@ async fn auto_s1_http_pin_exact_scope_and_current_execution() {
         Value::Bool(true)
     );
 }
+
+fn cast_gateway() -> moli_cast::gateway::Gateway {
+    moli_cast::gateway::Gateway::new(
+        moli_cast::Config {
+            host: Some("192.168.1.10".parse().unwrap()),
+            interface: None,
+            prefix: 24,
+            external_ids: Vec::new(),
+        },
+        moli_cast::ownership::Ownership::default(),
+    )
+}
+#[tokio::test]
+async fn cast_discovery_state_is_readable_without_activating_any_receiver() {
+    let hub = lamp_hub().await;
+    let gateway = cast_gateway();
+    let options = moli_api::Options {
+        cast: std::collections::BTreeMap::from([("example".into(), gateway.clone())]),
+        ..moli_api::Options::default()
+    };
+    let addr = serve(&hub, &options).await;
+    let (status, body) = request(&addr, "GET", "/api/integrations/cast/example", None).await;
+    assert_eq!(status, 200);
+    assert!(body.contains("unavailable"));
+    assert_eq!(gateway.state().generation, 0);
+    let (status, _) = request(&addr, "GET", "/api/integrations/cast/unknown", None).await;
+    assert_eq!(status, 404);
+}
+#[tokio::test]
+async fn cast_activation_and_discovery_require_a_human_pin_and_closed_bounded_json() {
+    let hub = lamp_hub().await;
+    let options = moli_api::Options {
+        ui_pin: Some(moli_api::UiPin::new("482915")),
+        cast: std::collections::BTreeMap::from([("example".into(), cast_gateway())]),
+        ..moli_api::Options::default()
+    };
+    let addr = serve(&hub, &options).await;
+    for (method, path) in [
+        ("POST", "/api/integrations/cast/example/discovery"),
+        ("PUT", "/api/integrations/cast/example/activation"),
+        ("DELETE", "/api/integrations/cast/example/activation"),
+    ] {
+        let (status, _) = request(&addr, method, path, Some(&json!({}))).await;
+        assert_eq!(status, 403);
+    }
+    let human = pin_session(&addr, "482915").await;
+    let (status, _) = request_with(
+        &addr,
+        "POST",
+        "/api/integrations/cast/example/discovery",
+        Some(&json!({})),
+        &human,
+    )
+    .await;
+    assert_eq!(status, 503);
+    for payload in [
+        json!({"generation":1,"candidate":"receiver","exclusive":true,"host":"SECRET-MARKER"}),
+        json!({"generation":1,"candidate":"receiver","exclusive":false}),
+    ] {
+        let (status, body) = request_with(
+            &addr,
+            "PUT",
+            "/api/integrations/cast/example/activation",
+            Some(&payload),
+            &human,
+        )
+        .await;
+        assert_eq!(status, 422);
+        assert!(!body.contains("SECRET-MARKER"));
+    }
+    let (status, _) = request_with(
+        &addr,
+        "PUT",
+        "/api/integrations/cast/example/activation",
+        Some(&json!({"generation":1,"candidate":"x".repeat(1200),"exclusive":true})),
+        &human,
+    )
+    .await;
+    assert_eq!(status, 413);
+}
+#[tokio::test]
+async fn cast_activation_is_not_available_in_demo_even_to_a_pin_session() {
+    let hub = lamp_hub().await;
+    let options = moli_api::Options {
+        demo: true,
+        ui_pin: Some(moli_api::UiPin::new("482915")),
+        cast: std::collections::BTreeMap::from([("example".into(), cast_gateway())]),
+        ..moli_api::Options::default()
+    };
+    let addr = serve(&hub, &options).await;
+    let human = pin_session(&addr, "482915").await;
+    let (status, _) = request_with(
+        &addr,
+        "PUT",
+        "/api/integrations/cast/example/activation",
+        Some(&json!({"generation":0,"candidate":"receiver","exclusive":true})),
+        &human,
+    )
+    .await;
+    assert_eq!(status, 403);
+}

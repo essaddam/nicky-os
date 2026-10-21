@@ -860,6 +860,7 @@ ni pièce native). Il ne déplace jamais rien. Sans argument : plan à blanc ; `
 | `ariston` | `moli-ariston` | cloud Ariston NET (HTTPS, jeton de session) | oui : marche, mode, consigne, éco, plafond, anti-légionelle | pas encore (cible : Velis Evo 2) |
 | `asuswrt` | `moli-asuswrt` | HTTP(S) JSON authentifié, TLS épinglé | non | pas encore : contrats synthétiques, qualification après H1 |
 | `bambu` | `moli-bambu` | MQTT TLS 8883, épinglé | lumière, `control` (humain pour un agent) | pas encore (cible : Bambu Lab A1) |
+| `cast` | `moli-cast` | mDNS privé, TLS Cast 8009 épinglé | lecture/pause/arrêt, volume récepteur et sourdine après activation explicite | contrats synthétiques ; H1 requis |
 | `frigate` | `moli-frigate` | MQTT + HTTP interne 5000 | oui : détection, enregistrement, instantanés | Frigate |
 | `helpers` | `moli-helpers` | aucun (valeurs gardées par Moli) | oui | sans objet |
 | `host` | `moli-host` | /proc, /sys ; WoL ; agent HTTP sortant | allumer, éteindre, veille, Claude et Codex pour le téléphone (PIN) | hôte Linux ; PC Windows avec l'agent |
@@ -1009,3 +1010,23 @@ porte `timezone`, obligatoire. Le propriétaire partagé dans le hub conserve fo
 fuseau et valeur dans `helper-datetimes.json` avant confirmation ; les aides ne
 créent aucun ordonnanceur. Changer le format/fuseau d'une valeur restaurée est un
 refus visible. Voir [dates et heures](dates-heures.md).
+
+## Récepteurs vidéo Google Cast (`moli-cast`)
+
+Le pilote `cast` réutilise `moli-androidtv::cast` et conserve les API Philips et
+Android TV. Chaque instance gère un récepteur IPv4 privé, validé explicitement
+dans **Système**. La découverte mDNS ne publie aucun appareil et ne lance aucune
+connexion TLS. Sélection et pin sont durables au coffre avant émission.
+
+Après validation : volume récepteur, sourdine absolue, play/pause/stop pour la
+session média observée, métadonnées en lecture et disponibilité réelle. Sans
+observation ou après perte, les valeurs restent inconnues. FIFO quatre, un ordre
+en vol, génération capturée dès admission et aucun rejeu après coupure. La
+révocation retire l’appareil du hub et bloque les ordres non partis.
+
+Les instances partagent une propriété exclusive ; les hôtes TV activés sont
+réservés avant leur démarrage. Les enceintes restent dans Music Assistant,
+leurs IDs peuvent être exclus explicitement. Aucun arbitrage automatique de
+propriété. [Paquet et limites](../../integrations/cast/README.md),
+[configuration](../../integrations/cast/onboarding.md). Contrats synthétiques
+uniquement ; aucun appareil réel qualifié.

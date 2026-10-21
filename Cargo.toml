@@ -21,6 +21,7 @@ moli-asuswrt = { path = "crates/moli-asuswrt" }
 moli-audio = { path = "crates/moli-audio" }
 moli-automation = { path = "crates/moli-automation" }
 moli-bambu = { path = "crates/moli-bambu" }
+moli-cast = { path = "crates/moli-cast" }
 moli-core = { path = "crates/moli-core" }
 moli-demo = { path = "crates/moli-demo" }
 moli-energy = { path = "crates/moli-energy" }

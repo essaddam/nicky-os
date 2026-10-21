@@ -2,11 +2,15 @@
   import { home, hub, value, reachable, nameOf, act, since, clock } from '../lib/home.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from '../ui/Icon.svelte';
+  import CastPlayer from '../ui/CastPlayer.svelte';
   import MediaLauncher from '../ui/MediaLauncher.svelte';
   import Remote from '../ui/Remote.svelte';
   import LightTile from '../ui/LightTile.svelte';
   import SpeakerCard from '../ui/SpeakerCard.svelte';
   import AmbiancePicker from '../ui/AmbiancePicker.svelte';
+
+  const castInstances = $derived(new Set(hub.drivers.filter(driver => driver.kind === 'cast').map(driver => driver.instance)));
+  const castDevices = $derived(Object.values(hub.devices).filter(device => castInstances.has(device.instance)));
 
   const s = $derived(home.config?.salon ?? {});
   const tv = $derived(s.tv);
@@ -108,6 +112,8 @@
       {#if hub.devices[tv]?.points?.some(point => point.key === 'play_media' && point.access?.write)}
         {#key tv}<MediaLauncher {tv} />{/key}
       {/if}
+
+      {#each castDevices as device (device.id)}<CastPlayer id={device.id} />{/each}
 
       {#if sp}<SpeakerCard id={sp} name={nameOf(sp, t('salon.barre_de_son'))} />{/if}
 

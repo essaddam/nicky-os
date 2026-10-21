@@ -1,6 +1,7 @@
 <script>
   import { onMount, tick } from 'svelte';
   import Icon from '../ui/Icon.svelte';
+  import CastActivation from '../ui/CastActivation.svelte';
   import AndroidTvPairing from '../ui/AndroidTvPairing.svelte';
   import TuyaCloudKeys from '../ui/TuyaCloudKeys.svelte';
   import RetentionCard from '../ui/RetentionCard.svelte';
@@ -100,7 +101,7 @@
   // ---- words ------------------------------------------------------------------
   // Driver kinds: their name and description are in the catalog
   // (systeme.pilotes.<kind>.nom / .desc); a kind not listed shows as it is.
-  const KINDS = ['androidtv', 'bambu', 'frigate', 'helpers', 'hue', 'igd', 'netatmo', 'philips', 'phones', 'presence', 'profile', 'reolink', 'sonos', 'tapo', 'telegram', 'tuya', 'z2m'];
+  const KINDS = ['androidtv', 'bambu', 'cast', 'frigate', 'helpers', 'hue', 'igd', 'netatmo', 'philips', 'phones', 'presence', 'profile', 'reolink', 'sonos', 'tapo', 'telegram', 'tuya', 'z2m'];
   const kindWord = (kind, part) => (KINDS.includes(kind) ? t(`systeme.pilotes.${kind}.${part}`) : null);
   const driverName = (d) => (d.kind === 'profile' ? d.instance.charAt(0).toUpperCase() + d.instance.slice(1) : (kindWord(d.kind, 'nom') ?? d.kind));
 
@@ -187,6 +188,9 @@
 
   {#each hub.drivers.filter(driver => driver.kind === 'androidtv') as driver (driver.instance)}
     <AndroidTvPairing instance={driver.instance} />
+  {/each}
+  {#each hub.drivers.filter(driver => driver.kind === 'cast') as driver (driver.instance)}
+    <CastActivation instance={driver.instance} />
   {/each}
   {#if sys?.drivers?.some((driver) => driver.kind === 'netatmo')}
     <NetatmoAuthorization instances={sys.drivers.filter((driver) => driver.kind === 'netatmo').map((driver) => driver.instance)} />

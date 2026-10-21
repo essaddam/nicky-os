@@ -752,5 +752,12 @@
   "pilotes.reservations.identifiant": "Référence de réservation",
   "pilotes.reservations.observe": "Dernière lecture",
   "pilotes.reservations.prochaine": "Réservation {numero}",
-  "pilotes.reservations.url_manquante": "Ajoutez l’URL ICS HTTPS choisie au coffre de cette instance."
+  "pilotes.reservations.url_manquante": "Ajoutez l’URL ICS HTTPS choisie au coffre de cette instance.",
+  "pilotes.cast.commande": "Commande Cast invalide.",
+  "pilotes.cast.configuration": "Configurer une adresse IPv4 privée, ou une interface privée et son sous-réseau ; les deux à la fois sont refusés.",
+  "pilotes.cast.incertain": "La commande a pu être transmise ; son résultat reste non confirmé.",
+  "pilotes.cast.indisponible": "Le récepteur Cast ou sa session média est indisponible.",
+  "pilotes.cast.receiver": "Récepteur Cast",
+  "pilotes.cast.refusee": "Le récepteur Cast a refusé la commande.",
+  "pilotes.cast.validation": "Valider le récepteur depuis Système."
 }

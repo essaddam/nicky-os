@@ -210,5 +210,11 @@
   "salon.media.full": "This TV already has 50 favorites. Remove one to add another.",
   "salon.media.version": "These favorites come from a newer version of Moli. They are preserved.",
   "salon.media.save_error": "The favorite could not be saved. Check its name and target.",
-  "salon.media.qualify": "Some apps may refuse a link depending on their version. A transmitted link does not confirm that the programme started."
+  "salon.media.qualify": "Some apps may refuse a link depending on their version. A transmitted link does not confirm that the programme started.",
+  "salon.cast.empty": "No media playing. Start content from your Cast app.",
+  "salon.cast.offline": "Cast offline",
+  "salon.cast.offline_help": "Controls will return when the receiver reconnects.",
+  "salon.cast.playback": "Cast playback controls",
+  "salon.cast.ready": "Cast connected",
+  "salon.cast.stop": "Stop"
 }

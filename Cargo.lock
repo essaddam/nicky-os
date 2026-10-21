@@ -1352,6 +1352,7 @@ dependencies = [
  "moli-androidtv-driver",
  "moli-assistant",
  "moli-automation",
+ "moli-cast",
  "moli-core",
  "moli-energy",
  "moli-helpers",
@@ -1516,6 +1517,24 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "moli-cast"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "moli-androidtv",
+ "moli-core",
+ "moli-i18n",
+ "moli-net",
+ "moli-runtime",
+ "serde",
+ "serde_json",
+ "socket2",
+ "tokio",
+ "tokio-util",
  "tracing",
 ]
 
@@ -1898,6 +1917,7 @@ dependencies = [
  "moli-asuswrt",
  "moli-automation",
  "moli-bambu",
+ "moli-cast",
  "moli-core",
  "moli-demo",
  "moli-energy",

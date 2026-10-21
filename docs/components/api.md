@@ -1069,3 +1069,22 @@ MCP : `preview_scene`, `run_scene`, `get_scene_run`, `cancel_scene_run` ;
 [Contrats et limites](scenes.md) ; [OpenAPI des scènes](../api/scenes.openapi.yaml)
 et [définitions communes](../api/dependencies.openapi.yaml). Aucun accès invité
 ni mutation de démonstration sur ces opérations.
+
+## Activation explicite Google Cast
+
+Contrat : [`integrations/cast/openapi.json`](../../integrations/cast/openapi.json).
+Seules les instances `cast` activées dans la configuration ont une passerelle.
+
+| Route | Effet |
+|---|---|
+| `GET /api/integrations/cast/{instance}` | Phase, génération, candidats et erreur traduite ; aucun scan, pin ou identifiant de coffre. |
+| `POST /api/integrations/cast/{instance}/discovery` | Corps `{}` ; recherche bornée de candidats, aucune activation. |
+| `PUT /api/integrations/cast/{instance}/activation` | `{generation,candidate,exclusive:true}` ; cible issue de la génération exacte, confirmation de propriété et persistance préalable. |
+| `DELETE /api/integrations/cast/{instance}/activation` | `{generation}` ; retrait et invalidation immédiats, succès après persistance. |
+
+Lecture réservée au foyer, invités refusés ; mutations liées à la session PIN
+humaine, démo refusée. Corps JSON fermés de 1 Kio. Aucun hôte, URL, pin ou
+certificat n’est accepté comme cible par HTTP. Une ancienne génération donne
+409, une cible invalide 422, un conflit de propriété 409 et un coffre
+indisponible 503. Les mutations sont auditées avec instance, acteur, opération
+et résultat, sans contenu sensible.

@@ -61,6 +61,41 @@ pub enum Order {
     Stop,
 }
 
+/// Additive receiver controls; the legacy media-only Order stays unchanged.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ReceiverOrder {
+    Media(Order),
+    Volume(f64),
+    Mute(bool),
+}
+impl From<Order> for ReceiverOrder {
+    fn from(order: Order) -> Self {
+        Self::Media(order)
+    }
+}
+/// Fields actually present in a receiver volume observation.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct ReceiverVolume {
+    pub level: Option<f64>,
+    pub muted: Option<bool>,
+}
+/// Tracked controls for a generic receiver, including its own volume.
+/// `generation` advances whenever the observed transport or media session changes;
+/// callers capture it at admission to invalidate orders still waiting to emit.
+pub async fn tracked_receiver_stream<S: AsyncRead + AsyncWrite + Unpin + Send + 'static>(
+    stream: S,
+    orders: &mut mpsc::Receiver<crate::tracked::TrackedOrder<ReceiverOrder>>,
+    events: &mpsc::Sender<Event>,
+    volumes: &mpsc::Sender<ReceiverVolume>,
+    generation: std::sync::Arc<std::sync::atomic::AtomicU64>,
+) -> anyhow::Result<()> {
+    tracked_transport::receiver_stream(stream, orders, events, volumes, generation).await
+}
+
+#[cfg(test)]
+#[path = "cast_receiver_tests.rs"]
+mod receiver_tests;
+
 #[path = "cast_tracked.rs"]
 mod tracked_transport;
 
@@ -89,6 +124,7 @@ struct Follow {
     transport: Option<String>,
     session: Option<u64>,
     playing: Playing,
+    generation: Option<std::sync::Arc<std::sync::atomic::AtomicU64>>,
 }
 
 /// One connection, until it fails or `orders` closes (`Ok`).
@@ -178,6 +214,19 @@ pub async fn session(
 }
 
 impl Follow {
+    fn changed(&self) {
+        if let Some(generation) = &self.generation {
+            generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+    fn clear(&mut self) {
+        if self.transport.is_some() || self.session.is_some() {
+            self.changed();
+        }
+        self.transport = None;
+        self.session = None;
+        self.playing = Playing::default();
+    }
     /// The receiver's status: which app runs. Returns the app's transport
     /// when it is new (to connect to and ask).
     fn receiver(&mut self, body: &Json) -> Option<String> {
@@ -187,7 +236,7 @@ impl Follow {
             .flatten()
             .find(|a| a["isIdleScreen"].as_bool() != Some(true));
         let Some(app) = app else {
-            *self = Self::default();
+            self.clear();
             return None;
         };
         let name = app["displayName"].as_str().map(str::to_owned);
@@ -209,6 +258,7 @@ impl Follow {
         if transport == self.transport {
             return None;
         }
+        self.changed();
         self.transport.clone_from(&transport);
         self.session = None;
         transport
@@ -219,6 +269,9 @@ impl Follow {
     fn media(&mut self, body: &Json) {
         let Some(status) = body["status"].as_array().and_then(|s| s.first()) else {
             // Nothing loaded any more.
+            if self.session.is_some() {
+                self.changed();
+            }
             self.session = None;
             self.playing = Playing {
                 app: self.playing.app.take(),
@@ -226,7 +279,15 @@ impl Follow {
             };
             return;
         };
-        self.session = status["mediaSessionId"].as_u64().or(self.session);
+        let session = status["mediaSessionId"].as_u64().or(self.session);
+        if session != self.session {
+            self.changed();
+            self.playing = Playing {
+                app: self.playing.app.take(),
+                ..Playing::default()
+            };
+        }
+        self.session = session;
         let p = &mut self.playing;
         if let Some(state) = status["playerState"].as_str() {
             p.state = Some(state.to_ascii_lowercase());

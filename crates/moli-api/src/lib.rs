@@ -20,6 +20,7 @@ mod assets;
 mod assistant;
 mod automations;
 mod caller;
+mod cast;
 mod dependencies;
 mod guard;
 mod integrations;
@@ -97,6 +98,8 @@ impl Household {
 /// Surface settings.
 #[derive(Clone, Debug, Default)]
 pub struct Options {
+    /// Explicit Cast activation endpoints for configured receivers.
+    pub cast: std::collections::BTreeMap<String, moli_cast::gateway::Gateway>,
     /// Host names (or IPs) this instance is reached by, besides localhost.
     pub allowed_hosts: Vec<String>,
     /// Pairing controls for enabled Android TV instances only.
@@ -293,6 +296,7 @@ pub fn router(hub: Hub, shutdown: CancellationToken, options: &Options) -> Route
     Router::new()
         .route("/api/health", get(rest::health))
         .merge(device_routes())
+        .merge(cast::routes(options.cast.clone(), options.demo))
         .merge(dependencies::routes())
         .merge(scenes::routes())
         .merge(androidtv::routes(options.androidtv.clone(), options.demo))

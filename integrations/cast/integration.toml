@@ -1,0 +1,27 @@
+[integration]
+id = "cast"
+name = "Google Cast : récepteurs vidéo"
+brands = ["Google Cast", "Chromecast"]
+models = []
+transport = "tcp"
+driver = "cast"
+crate = "moli-cast"
+
+[discovery]
+mdns = ["_googlecast._tcp"]
+ssdp = []
+ports = [8009]
+
+[needs]
+# host OR interface is required; see onboarding for their exclusive alternatives.
+# approval (selection and TLS pin) is written by the driver, never copied here.
+secrets = []
+vars = []
+options = []
+
+[origin]
+reused = "Moli's Google Cast library; receiver volume protocol documented by PyChromecast; mDNS RFC 6762"
+author = "agent"
+
+[[fixture]]
+file = "fixtures/receiver.json"
