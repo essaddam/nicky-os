@@ -184,6 +184,10 @@ de saisie ne déclenche pas à elle seule un automatisme.
 Preuves : année bissextile, changement de jour, heure d'été/hiver, sérialisation et
 restauration, configuration antérieure toujours lisible, erreurs localisées.
 
+Le [contrat détaillé proposé](dates-heures.md) précise les formats, la distinction
+civil/instant, le refus des ambiguïtés et la durabilité. Sa préparation ne livre
+aucun comportement ; il reste soumis à la revue AUTO-H3 avant implémentation.
+
 ### AUTO-H4 — Bouton
 
 Chaque commande d'appui produit une occurrence distincte, y compris deux appuis de
