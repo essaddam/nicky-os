@@ -418,6 +418,18 @@ fn text_ok(s: &str, max: usize) -> bool {
     !s.is_empty() && s.chars().count() <= max && !s.chars().any(char::is_control)
 }
 
+fn invitation_person(book: &Book, code: &str, now: u64) -> Option<String> {
+    book.invites
+        .iter()
+        .find(|invite| !code.is_empty() && invite.code_hmac == code && invite.expires > now)
+        .and_then(|invite| {
+            book.people
+                .iter()
+                .find(|person| person.id == invite.person && account_active_at(person, now))
+        })
+        .map(|person| person.id.clone())
+}
+
 fn account_active_at(person: &Person, now: u64) -> bool {
     person.starts.is_none_or(|start| start <= now) && person.expires.is_none_or(|end| now < end)
 }
@@ -737,6 +749,11 @@ impl People {
 
     /// A new password: the person's sessions end, except the one that set it.
     pub(crate) async fn set_password(&self, id: &str, password: &str) -> Result<(), Refused> {
+        let stored = self.prepare_password(id, password)?;
+        self.replace_password(id, &stored).await
+    }
+
+    fn prepare_password(&self, id: &str, password: &str) -> Result<String, Refused> {
         let n = password.chars().count();
         if !(MIN_PASSWORD..=MAX_PASSWORD).contains(&n) {
             return Err(Refused::Invalid(moli_i18n::tr!(
@@ -747,9 +764,12 @@ impl People {
         if self.get(id).is_none() {
             return Err(Refused::NotFound);
         }
-        let stored = hash_password(password).ok_or(Refused::Store)?;
+        hash_password(password).ok_or(Refused::Store)
+    }
+
+    async fn replace_password(&self, id: &str, stored: &str) -> Result<(), Refused> {
         self.hub
-            .store_core_secret(&password_key(id), &stored)
+            .store_core_secret(&password_key(id), stored)
             .await
             .map_err(|_| Refused::Store)?;
         self.end_sessions(id).await;
@@ -818,32 +838,31 @@ impl People {
             .invite_key()
             .map(|house| invite_digest(&house, code))
             .unwrap_or_default();
-        let found = {
-            let book = lock(&self.book);
-            let now = now_ms();
-            book.invites
-                .iter()
-                .find(|invite| {
-                    !typed.is_empty() && invite.code_hmac == typed && invite.expires > now
-                })
-                .and_then(|invite| {
-                    book.people
-                        .iter()
-                        .find(|person| person.id == invite.person && account_active_at(person, now))
-                })
-                .map(|person| person.id.clone())
-        };
+        let found = invitation_person(&lock(&self.book), &typed, now_ms());
         guard.attempt(caller, || found.is_some()).map_err(Ok)?;
         let person = found.ok_or(Ok(LoginError::Wrong))?;
-        self.set_password(&person, password).await.map_err(Err)?;
-        self.account_reference(&person)
-            .ok_or(Ok(LoginError::Wrong))?;
-        self.change(move |book| {
+        let stored = self.prepare_password(&person, password).map_err(Err)?;
+        // Reserve this use in the book under its writer before any
+        // asynchronous password mutation. A competing request, cancellation
+        // or later storage failure can never admit the same code twice.
+        self.change(|book| {
+            let current = invitation_person(book, &typed, now_ms());
+            if current.as_deref() != Some(person.as_str()) {
+                return Err(Refused::NotFound);
+            }
             book.invites.retain(|i| i.code_hmac != typed);
             Ok(())
         })
         .await
-        .map_err(Err)?;
+        .map_err(|error| match error {
+            Refused::NotFound => Ok(LoginError::Wrong),
+            other => Err(other),
+        })?;
+        self.account_reference(&person)
+            .ok_or(Ok(LoginError::Wrong))?;
+        self.replace_password(&person, &stored).await.map_err(Err)?;
+        self.account_reference(&person)
+            .ok_or(Ok(LoginError::Wrong))?;
         let token = self.open_session(&person).await.map_err(Ok)?;
         let reference = self
             .account_reference(&person)
@@ -1131,7 +1150,7 @@ mod tests {
     }
 
     /// Someone on the Internet, where invitations and passwords come from.
-    fn stranger(key: &str) -> Caller {
+    pub(super) fn stranger(key: &str) -> Caller {
         Caller {
             via: crate::caller::Via::Outside,
             key: key.to_owned(),
@@ -1141,7 +1160,7 @@ mod tests {
 
     /// A hub with an encrypted store (passwords need one), each its own
     /// (two tests in the same millisecond would share a file).
-    fn hub_with_store() -> Hub {
+    pub(super) fn hub_with_store() -> Hub {
         static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let path = std::env::temp_dir().join(format!(
             "moli-people-secrets-{}-{}-{}.enc",
@@ -1156,7 +1175,7 @@ mod tests {
         .unwrap()
     }
 
-    fn draft(name: &str, role: Role) -> Draft {
+    pub(super) fn draft(name: &str, role: Role) -> Draft {
         Draft {
             name: name.into(),
             role,
@@ -1381,3 +1400,7 @@ mod guest_starts_tests {
         assert!(account_active_at(&guest, u64::MAX));
     }
 }
+
+#[cfg(test)]
+#[path = "people/redemption_tests.rs"]
+mod redemption_tests;

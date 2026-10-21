@@ -405,3 +405,76 @@ async fn a_password_guest_unlock_requires_a_human_and_rechecks_its_dates_at_appr
     driver.await.unwrap();
     let _ = std::fs::remove_dir_all(house.dir);
 }
+
+#[tokio::test]
+async fn concurrent_http_redemptions_accept_one_password_without_revoking_the_winner() {
+    let house = guest_house("guest-concurrent-invitation", |_| {}).await;
+    let (status, body) = request_with(
+        &house.addr,
+        "POST",
+        "/api/people/invite/invite",
+        None,
+        &house.pin,
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    let code = serde_json::from_str::<Json>(&body).unwrap()["code"].clone();
+    let barrier = Arc::new(tokio::sync::Barrier::new(3));
+    let mut calls = Vec::new();
+    for password in ["synthetic parallel alpha", "synthetic parallel beta"] {
+        let addr = house.addr.clone();
+        let code = code.clone();
+        let barrier = Arc::clone(&barrier);
+        calls.push(tokio::spawn(async move {
+            barrier.wait().await;
+            let (status, cookie, body) = request_cookie(
+                &addr,
+                "POST",
+                "/api/invitation",
+                &json!({"code":code,"password":password}),
+                "X-Forwarded-For: 203.0.113.9\r\n",
+                "moli_person",
+            )
+            .await;
+            (password, status, cookie, body)
+        }));
+    }
+    barrier.wait().await;
+    let mut results = Vec::new();
+    for call in calls {
+        results.push(call.await.unwrap());
+    }
+    let mut statuses = results.iter().map(|r| r.1).collect::<Vec<_>>();
+    statuses.sort_unstable();
+    assert_eq!(statuses, [200, 401]);
+    let winner = results.iter().find(|r| r.1 == 200).unwrap();
+    let loser = results.iter().find(|r| r.1 == 401).unwrap();
+    assert!(loser.2.is_none());
+    let headers = format!(
+        "X-Forwarded-For: 203.0.113.9\r\nCookie: {}\r\n",
+        winner.2.as_ref().unwrap()
+    );
+    assert_eq!(
+        request_with(&house.addr, "GET", "/api/devices", None, &headers)
+            .await
+            .0,
+        200,
+        "loser must not revoke winner session"
+    );
+    for (password, expected) in [(winner.0, 200), (loser.0, 401)] {
+        assert_eq!(
+            request_cookie(
+                &house.addr,
+                "POST",
+                "/api/session",
+                &json!({"login":"invite","password":password}),
+                "X-Forwarded-For: 203.0.113.9\r\n",
+                "moli_person"
+            )
+            .await
+            .0,
+            expected
+        );
+    }
+    let _ = std::fs::remove_dir_all(house.dir);
+}

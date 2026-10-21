@@ -997,6 +997,12 @@ invitation secrète à remettre par le propriétaire ; Moli ne l'envoie à perso
 L'adresse est celle de l'origine courante : elle doit être joignable par son destinataire.
 Une invitation créée plus de sept jours avant le début doit être renouvelée si elle expire.
 
+Le rachat réserve l'usage sous le verrou d'écriture du livre et sauvegarde le retrait
+du code avant toute mutation asynchrone du mot de passe. Le concurrent est refusé
+avant de modifier le coffre ou les sessions. Un échec après cette admission ne
+réactive pas le code : le propriétaire renouvelle l'invitation. Un refus avant le
+début ou un mot de passe invalide ne consomme rien.
+
 Le formulaire Personnes affiche les dates dans le fuseau du navigateur. Une édition
 sans changement préserve la milliseconde initiale, même pendant le repli d'heure ; une
 nouvelle heure locale ambiguë ou inexistante est refusée. La fin est exclusive.
