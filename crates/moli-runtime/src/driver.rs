@@ -181,6 +181,23 @@ impl CommandRequest {
         }
     }
 
+    /// Delegates live authorization to this composite's declared members.
+    /// The policy still evaluates the parent's point: a roomless physical
+    /// bulb is controlled through its fixture, not by a new guest grant.
+    /// This lease can outlive the parent's reply for a bounded follow-up.
+    #[must_use]
+    pub fn member_permit(&self) -> Option<CommandPermit> {
+        let permit = self.permit.clone()?;
+        let parent = self.point.clone();
+        let members = self.device.members.clone();
+        Some(CommandPermit::new(move |child| {
+            child
+                .split()
+                .is_some_and(|(device, _)| members.contains(&device))
+                && permit.allows(&parent)
+        }))
+    }
+
     /// Reports the outcome. Dropping the request without replying is
     /// reported to the caller as a driver failure.
     pub fn reply(self, result: Result<(), String>) {
@@ -682,5 +699,54 @@ mod reconciliation_tests {
                 .is_empty()
         );
         std::fs::remove_file(path).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod member_permission_tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+    #[test]
+    fn delegated_policy_remains_parent_bound_member_scoped_and_live_after_reply() {
+        let point = PointId::from("fixtures:light/on");
+        let allowed = Arc::new(AtomicBool::new(true));
+        let check = allowed.clone();
+        let parent = point.clone();
+        let permit =
+            CommandPermit::new(move |target| target == &parent && check.load(Ordering::Acquire));
+        let (reply, _answer) = oneshot::channel();
+        let command = CommandRequest {
+            point,
+            device: Arc::new(Device {
+                id: "fixtures:light".into(),
+                instance: "fixtures".into(),
+                native_name: "Synthetic composite".into(),
+                manufacturer: None,
+                model: None,
+                description: None,
+                native_room: None,
+                members: vec!["physical:member".into()],
+                points: Vec::new(),
+            }),
+            key: "on".into(),
+            value: Value::Bool(true),
+            deadline: Instant::now() + std::time::Duration::from_secs(5),
+            metadata: CommandMetadata {
+                origin: Origin::Ui,
+                actor: None,
+                request_id: None,
+                correlation: None,
+            },
+            permit: Some(permit),
+            reply,
+            claim: Arc::new(AtomicU8::new(Claim::TAKEN)),
+        };
+        let child = command.member_permit().unwrap();
+        assert!(child.allows(&"physical:member/on".into()));
+        assert!(!child.allows(&"physical:unrelated/on".into()));
+        command.reply(Ok(()));
+        assert!(child.allows(&"physical:member/on".into()));
+        allowed.store(false, Ordering::Release);
+        assert!(!child.allows(&"physical:member/on".into()));
     }
 }

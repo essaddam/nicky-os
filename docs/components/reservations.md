@@ -66,7 +66,10 @@ mais inactive est refusée plutôt que traitée comme un visiteur Access non ré
 Les flux SSE vérifient les droits avant chaque donnée, première image comprise, et chaque
 seconde au repos. Un ordre invité, direct ou d’ambiance, conserve une autorisation vivante :
 le retrait de file, l’attente du transport et une approbation humaine en attente ne
-contournent pas la fermeture de la fenêtre. Après l’émission, le suivi du résultat et le
+contournent pas la fermeture de la fenêtre. Les luminaires composés transmettent cette
+autorisation à leurs seuls membres déclarés, en vérifiant toujours le droit sur le
+luminaire parent ; la reprise différée après remise sous tension conserve ce droit.
+Après l’émission, le suivi du résultat et le
 journal demeurent indépendants de la survie de l’appelant.
 
 ## Coordination facultative avec une serrure

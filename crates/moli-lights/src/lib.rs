@@ -29,7 +29,7 @@ use moli_core::{
     Access, Device, DeviceId, Event, InstanceId, Kind, Origin, PointId, PointSpec, Semantic, Unit,
     Value,
 };
-use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, Hub};
+use moli_runtime::{BoxFuture, CommandPermit, CommandRequest, Driver, DriverCtx, Hub};
 use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
 
@@ -473,16 +473,16 @@ async fn give(
     fixture: &Fixture,
     keyring: &[Keys],
     plan: Vec<(usize, Vec<Setting>)>,
+    permit: Option<CommandPermit>,
 ) -> Result<(), String> {
     let actor = actor(fixture);
+    let permit = permit.as_ref();
     let runs = plan.into_iter().map(|(i, settings)| {
         let list = orders(&fixture.bulbs[i], &keyring[i], &settings);
         let actor = actor.clone();
         async move {
             for (point, value) in list {
-                hub.command(&point, value, Origin::System, Some(actor.clone()))
-                    .await
-                    .map_err(|e| e.to_string())?;
+                forward(hub, &point, value, actor.clone(), permit.cloned()).await?;
             }
             Ok::<(), String>(())
         }
@@ -498,7 +498,12 @@ async fn give(
     }
 }
 
-async fn power(hub: &Hub, fixture: &Fixture, on: bool) -> Result<(), String> {
+async fn power(
+    hub: &Hub,
+    fixture: &Fixture,
+    on: bool,
+    permit: Option<CommandPermit>,
+) -> Result<(), String> {
     let Some(point) = fixture.power_point() else {
         return Ok(());
     };
@@ -511,14 +516,34 @@ async fn power(hub: &Hub, fixture: &Fixture, on: bool) -> Result<(), String> {
         .is_some_and(|s| s.text);
     let value = on_value(text, on);
     let actor = actor(fixture);
-    hub.command(&point, value, Origin::System, Some(actor))
-        .await
-        .map_err(|e| e.to_string())
+    forward(hub, &point, value, actor, permit).await
+}
+
+async fn forward(
+    hub: &Hub,
+    point: &PointId,
+    value: Value,
+    actor: String,
+    permit: Option<CommandPermit>,
+) -> Result<(), String> {
+    match permit {
+        Some(permit) => {
+            hub.command_with_permit(point, value, Origin::System, Some(actor), None, permit)
+                .await
+        }
+        None => hub.command(point, value, Origin::System, Some(actor)).await,
+    }
+    .map_err(|error| error.to_string())
 }
 
 /// After the relay came back: once the bulbs answer (or time is up),
 /// they get what was asked.
-async fn after_power_up(hub: Hub, fixture: Fixture, settings: Vec<Setting>) {
+async fn after_power_up(
+    hub: Hub,
+    fixture: Fixture,
+    settings: Vec<Setting>,
+    permit: Option<CommandPermit>,
+) {
     let until = Instant::now() + COMEBACK;
     let (reading, keyring) = loop {
         tokio::time::sleep(LOOK_AGAIN).await;
@@ -530,7 +555,7 @@ async fn after_power_up(hub: Hub, fixture: Fixture, settings: Vec<Setting>) {
     for setting in settings {
         match plan(&reading, &setting) {
             Plan::Bulbs(orders) => {
-                if let Err(e) = give(&hub, &fixture, &keyring, orders).await {
+                if let Err(e) = give(&hub, &fixture, &keyring, orders, permit.clone()).await {
                     tracing::warn!(fixture = %fixture.id, error = %e, "bulbs back, not set");
                 }
             }
@@ -739,14 +764,20 @@ impl Fixtures {
             return;
         };
         let (reading, keyring) = read(&self.hub, fixture);
+        let permit = command.member_permit();
         let result = match plan(&reading, &setting) {
             Plan::Nothing => Ok(()),
-            Plan::Bulbs(orders) => give(&self.hub, fixture, &keyring, orders).await,
-            Plan::PowerDown => power(&self.hub, fixture, false).await,
+            Plan::Bulbs(orders) => give(&self.hub, fixture, &keyring, orders, permit).await,
+            Plan::PowerDown => power(&self.hub, fixture, false, permit).await,
             Plan::PowerUp(then) => {
-                let result = power(&self.hub, fixture, true).await;
+                let result = power(&self.hub, fixture, true, permit.clone()).await;
                 if result.is_ok() && !fixture.bulbs.is_empty() {
-                    tokio::spawn(after_power_up(self.hub.clone(), fixture.clone(), then));
+                    tokio::spawn(after_power_up(
+                        self.hub.clone(),
+                        fixture.clone(),
+                        then,
+                        permit,
+                    ));
                 }
                 result
             }

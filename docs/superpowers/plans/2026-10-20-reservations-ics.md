@@ -86,3 +86,17 @@ personnes si nécessaire pour une liaison humaine utilisable, avec traductions f
   contrôle de fuites générique propre, sans liste privée disponible.
 - Le contrôle complet du workspace est réservé au créneau de fusion après approbation,
   conformément à la règle propriétaire ; aucun push, calendrier réel ou appareil utilisé.
+
+## Correction de revue ICS-R1-001
+
+Le droit vivant du parent accompagne les enfants du luminaire et la reprise différée
+après alimentation, borné aux membres déclarés. La portée du parent reste évaluée : une
+ampoule physique sans pièce ne reçoit pas de nouveau droit indépendant. L’origine interne
+System et le suivi/journal d’un ordre déjà émis restent conservés.
+
+Sept tests du vrai Hub/Fixtures : quatre garanties étaient rouges (calendrier révoqué,
+ampoule/relais à fin de fenêtre, continuation différée), trois témoins verts ; sept verts
+après correction. Un test runtime vérifie la portée des membres et le droit après réponse.
+84 tests runtime/luminaires/Nuki verts, Clippy workspace/all-targets et format verts,
+fuites génériques propres. Tokio io-util est explicitement déclaré par le runtime pour
+sa compilation isolée. Les contrôles web et domaine précédemment relus ne sont pas rejoués.
