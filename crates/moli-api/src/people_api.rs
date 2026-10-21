@@ -110,6 +110,7 @@ pub(crate) async fn list(
                 v["emails"] = json!(p.emails);
                 v["rooms"] = json!(p.rooms);
                 v["expires"] = json!(p.expires);
+                v["reservation"] = json!(p.reservation);
                 v["macs"] = json!(p.macs);
                 v["has_password"] = json!(persons.has_password(&p.id));
                 v["created"] = json!(p.created);

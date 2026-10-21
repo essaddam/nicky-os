@@ -1805,3 +1805,50 @@ async fn reservations_ics_revoke_an_order_waiting_before_transport_emission() {
     calendar.await.unwrap();
     let _ = std::fs::remove_dir_all(&house.dir);
 }
+
+#[tokio::test]
+async fn reservations_ics_owner_reads_the_binding_needed_to_preserve_it_when_editing() {
+    let house = guest_house("reservation-owner-edit", |_| {}).await;
+    let reservation = json!({"instance":"calendar","id":RESERVATION_FIXTURE_ID});
+    let draft =
+        json!({"name":"Invité","role":"guest","rooms":[GUEST_ROOM],"reservation":reservation});
+    assert_eq!(
+        request_with(
+            &house.addr,
+            "PUT",
+            "/api/people/invite",
+            Some(&draft),
+            &house.pin
+        )
+        .await
+        .0,
+        200
+    );
+    let (status, body) = request_with(&house.addr, "GET", "/api/people", None, &house.pin).await;
+    assert_eq!(status, 200);
+    let book: Json = serde_json::from_str(&body).unwrap();
+    assert_eq!(
+        book["people"][0]["reservation"], reservation,
+        "the edit form must receive the stored binding"
+    );
+    let returned = &book["people"][0];
+    let edited = json!({"name":"Invité exemple","role":returned["role"],"rooms":returned["rooms"],"reservation":returned["reservation"]});
+    assert_eq!(
+        request_with(
+            &house.addr,
+            "PUT",
+            "/api/people/invite",
+            Some(&edited),
+            &house.pin
+        )
+        .await
+        .0,
+        200
+    );
+    let (_, body) = request_with(&house.addr, "GET", "/api/people", None, &house.pin).await;
+    assert_eq!(
+        serde_json::from_str::<Json>(&body).unwrap()["people"][0]["reservation"],
+        reservation
+    );
+    let _ = std::fs::remove_dir_all(&house.dir);
+}
