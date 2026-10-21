@@ -1268,6 +1268,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-alarm"
+version = "0.1.0"
+
+[[package]]
 name = "moli-alexa"
 version = "0.1.0"
 dependencies = [

@@ -1,0 +1,10 @@
+[package]
+name = "moli-alarm"
+description = "Pure deterministic alarm state machine. No IO, clock, async or credentials."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
