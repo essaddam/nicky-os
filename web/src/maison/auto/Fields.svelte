@@ -29,7 +29,7 @@
     </div>
   {:else if ['button', 'counter_command', 'timer_command'].includes(type) || (type === 'timer' && spec.kind.field === 'expired')}
     <span>{spec.label}</span>
-  {:else if type === 'binary'}
+  {:else if ['binary', 'schedule'].includes(type)}
     <div class="seg">
       {#each [true, false] as v (v)}
         <button class:on={value === v} onclick={() => onchange?.(v)}>{valueText(point, v)}</button>

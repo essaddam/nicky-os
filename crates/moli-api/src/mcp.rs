@@ -58,6 +58,21 @@ pub(crate) struct MoliMcp {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct DependencyArgs {
+    /// Configured schedule device identity.
+    id: String,
+}
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct DependencyDraftArgs {
+    id: String,
+    expected: u64,
+    /// Typed definition: {type: "schedule", value: {timezone, slots: [{day,start,end}]}}.
+    /// Day 1=Monday..7; start/end are minutes, maximum 256 normalized slots.
+    #[schemars(with = "serde_json::Value")]
+    definition: Json,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct AutomationIdArgs {
     /// Automation id (from list_automations).
     id: String,
@@ -165,6 +180,59 @@ struct JournalArgs {
 
 #[tool_router]
 impl MoliMcp {
+    #[tool(
+        description = "List configured executable dependencies with separate draft and validated current heads. Drafts never affect execution."
+    )]
+    async fn list_dependencies(&self) -> Result<CallToolResult, McpError> {
+        match self.hub.dependencies().await {
+            Ok(items) => ok(&json!({"dependencies": items})),
+            Err(e) => Ok(fail(&e.to_string())),
+        }
+    }
+    #[tool(
+        description = "Read a schedule dependency and its affected automation preview. Publishing requires the existing human PIN session in the dashboard; this tool cannot approve."
+    )]
+    async fn get_dependency(
+        &self,
+        Parameters(args): Parameters<DependencyArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        let reference = moli_core::DependencyRef {
+            kind: moli_core::DependencyKind::Schedule,
+            id: args.id.into(),
+        };
+        match self.hub.inspect_dependency(&reference).await {
+            Ok((view, preview)) => ok(&json!({"dependency": view, "preview": preview})),
+            Err(e) => Ok(fail(&e.to_string())),
+        }
+    }
+
+    #[tool(
+        description = "Save an inert schedule DRAFT with expected draft version (409/conflict if stale). A human must review affected automations and explicitly approve its exact version. Does not change the validated current definition."
+    )]
+    async fn save_dependency_draft(
+        &self,
+        Parameters(args): Parameters<DependencyDraftArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        if self.demo {
+            return Ok(fail(&moli_i18n::tr!("serveur.demo.reserve")));
+        }
+        let Ok(definition) = serde_json::from_value(args.definition) else {
+            return Ok(fail(&moli_runtime::DependencyError::Definition.to_string()));
+        };
+        let reference = moli_core::DependencyRef {
+            kind: moli_core::DependencyKind::Schedule,
+            id: args.id.into(),
+        };
+        match self
+            .hub
+            .stage_dependency(reference, args.expected, definition, Origin::Mcp, None)
+            .await
+        {
+            Ok(view) => ok(&json!(view)),
+            Err(e) => Ok(fail(&e.to_string())),
+        }
+    }
+
     #[tool(
         description = "Health of the system: uptime, memory, devices, points and driver statuses."
     )]

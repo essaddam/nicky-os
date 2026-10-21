@@ -9,6 +9,10 @@ use crate::{Device, DeviceId, InstanceId, Label, PointId, Value};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Event {
+    /// Validated dependency metadata changed; re-resolve executable consumers.
+    DependencyChanged {
+        reference: crate::DependencyRef,
+    },
     DeviceUpserted {
         device: Arc<Device>,
     },
@@ -144,6 +148,12 @@ pub enum Action {
     Temporal {
         point: PointId,
     },
+    Dependency {
+        reference: crate::DependencyRef,
+        operation: DependencyChange,
+        version: Option<u64>,
+        active: Option<bool>,
+    },
     /// Final business outcome, including when the transport waiter disappeared.
     Counter {
         point: PointId,
@@ -193,6 +203,15 @@ pub enum Action {
         from: String,
         to: String,
     },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DependencyChange {
+    Initialized,
+    Drafted,
+    Published,
+    Transition,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

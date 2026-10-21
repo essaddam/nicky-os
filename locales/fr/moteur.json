@@ -1,5 +1,6 @@
 {
   "moteur.verif.bouton_occurrence": "un bouton n’a pas d’état : utiliser le déclencheur d’occurrence",
+  "moteur.verif.dependance_brouillon": "Cette dépendance doit avoir une version validée avant l’activation du graphe.",
   "moteur.verif.occurrence_valeur": "le filtre d’occurrence ne correspond pas au type du point",
   "moteur.decrit.quand_occurrence": "Quand {appareil} émet une occurrence",
   "moteur.decrit.quand_occurrence_valeur": "Quand {appareil} émet l’occurrence {valeur}",

@@ -919,3 +919,214 @@ async fn said_aloud_through_every_speaker() {
         Some(Value::Text("Quelqu'un est à la porte".into()))
     );
 }
+
+async fn add_weekly_schedule(hub: &Hub, cancel: &CancellationToken) {
+    let config = serde_json::from_value(serde_json::json!({"helper":[{"id":"weekly","name":"Weekly","kind":"schedule","weekly":{"timezone":"UTC","slots":[]}}]})).unwrap();
+    spawn_driver(
+        hub,
+        InstanceId::from("fixture"),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    for _ in 0..200 {
+        if hub.state(&PointId::from("fixture:weekly/active")).is_some() {
+            return;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    panic!("simulated schedule did not initialize");
+}
+
+#[tokio::test]
+async fn auto_h5_validated_graph_resolves_current_and_draft_cannot_trigger_it() {
+    use moli_core::{DependencyKind, DependencyRef, WeeklySchedule, WeeklySlot};
+    use moli_runtime::DependencyDefinition;
+    let (hub, autos, cancel) = setup().await;
+    let reference = DependencyRef {
+        kind: DependencyKind::Schedule,
+        id: "fixture:weekly".into(),
+    };
+    add_weekly_schedule(&hub, &cancel).await;
+    let graph = serde_json::json!({"nodes":[{"id":"t","type":"when_state","point":"fixture:weekly/active","to":true},{"id":"s","type":"set","point":"fake:lamp/on","value":true}],"edges":[{"from":"t","to":"s"}]});
+    let draft = autos.save(automation(graph), AGENT).await.unwrap();
+    assert!(
+        autos
+            .approve(&draft.id, &draft.fingerprint(), HUMAN)
+            .await
+            .is_err(),
+        "a dependency without current cannot be activated"
+    );
+    let shown = hub.preview_dependency(&reference).await.unwrap();
+    assert_eq!(shown.consumers.len(), 1);
+    assert_eq!(shown.consumers[0].id, draft.id);
+    hub.publish_dependency(shown, true, Origin::Ui, None)
+        .await
+        .unwrap();
+    let active = autos
+        .approve(&draft.id, &draft.fingerprint(), HUMAN)
+        .await
+        .unwrap();
+    let fingerprint = active.fingerprint();
+    let on = WeeklySchedule {
+        timezone: "UTC".into(),
+        slots: (1..=7)
+            .map(|day| WeeklySlot {
+                day,
+                start: 0,
+                end: 1440,
+            })
+            .collect(),
+    };
+    hub.stage_dependency(
+        reference.clone(),
+        1,
+        DependencyDefinition::Schedule(on),
+        Origin::Mcp,
+        None,
+    )
+    .await
+    .unwrap();
+    // A barrier through the engine's own clock lets pending metadata be consumed.
+    tokio::time::sleep(Duration::from_millis(30)).await;
+    assert_eq!(
+        hub.state(&PointId::from("fake:lamp/on")).unwrap().value,
+        Value::Bool(false)
+    );
+    assert_eq!(
+        hub.state(&PointId::from("fixture:weekly/active"))
+            .unwrap()
+            .value,
+        Value::Bool(false)
+    );
+    let shown = hub.preview_dependency(&reference).await.unwrap();
+    hub.publish_dependency(shown, true, Origin::Ui, None)
+        .await
+        .unwrap();
+    assert!(
+        lamp_turns(&hub, true).await,
+        "validated current publication is an explicit state change"
+    );
+    assert_eq!(
+        autos.get(&draft.id).unwrap().fingerprint(),
+        fingerprint,
+        "dependency revisions are not pinned in graph fingerprint"
+    );
+    assert!(autos.get(&draft.id).unwrap().is_live());
+    cancel.cancel();
+}
+
+#[tokio::test]
+async fn auto_h5_graph_mutation_uses_publication_gate_and_invalidates_preview() {
+    use moli_core::{DependencyKind, DependencyRef};
+    let (hub, autos, cancel) = setup().await;
+    let reference = DependencyRef {
+        kind: DependencyKind::Schedule,
+        id: "fixture:weekly".into(),
+    };
+    add_weekly_schedule(&hub, &cancel).await;
+    let shown = hub.preview_dependency(&reference).await.unwrap();
+    let held = hub.definition_gate().lock_owned().await;
+    let a = automation(
+        serde_json::json!({"nodes":[{"id":"t","type":"when_state","point":"fixture:weekly/active","to":true}],"edges":[]}),
+    );
+    let writer = autos.clone();
+    let mut save = tokio::spawn(async move { writer.save(a, AGENT).await });
+    assert!(
+        tokio::time::timeout(Duration::from_millis(20), &mut save)
+            .await
+            .is_err()
+    );
+    drop(held);
+    save.await.unwrap().unwrap();
+    assert_eq!(
+        hub.publish_dependency(shown, true, Origin::Ui, None).await,
+        Err(moli_runtime::DependencyError::Conflict)
+    );
+    assert_eq!(
+        hub.preview_dependency(&reference)
+            .await
+            .unwrap()
+            .consumers
+            .len(),
+        1
+    );
+    cancel.cancel();
+}
+
+#[tokio::test]
+async fn auto_h5_preview_includes_template_consumers_and_never_trusts_late_bus_index() {
+    use moli_core::{DependencyKind, DependencyRef};
+    let (hub, autos, cancel) = setup().await;
+    let reference = DependencyRef {
+        kind: DependencyKind::Schedule,
+        id: "fixture:weekly".into(),
+    };
+    let graph = automation(
+        serde_json::json!({"nodes":[{"id":"t","type":"manual"},{"id":"n","type":"notify","message":"{{fixture:weekly/active}}","channels":["maison"]}],"edges":[{"from":"t","to":"n"}]}),
+    );
+    let draft = autos.save(graph, AGENT).await.unwrap();
+    add_weekly_schedule(&hub, &cancel).await;
+    hub.set_dependency_consumers(std::collections::BTreeMap::new());
+    let shown = hub.preview_dependency(&reference).await.unwrap();
+    assert_eq!(
+        shown.consumers.len(),
+        1,
+        "the owner's fresh snapshot resolves newly registered points even with an empty bus index"
+    );
+    assert_eq!(shown.consumers[0].id, draft.id);
+    assert!(!autos.check(&draft.graph).ok());
+    cancel.cancel();
+}
+
+#[tokio::test]
+async fn auto_h5_failed_graph_write_blocks_dependency_publication_until_saved_again() {
+    let root = std::env::temp_dir().join(format!(
+        "moli-h5-graph-save-{}-{}",
+        std::process::id(),
+        moli_core::now_ms()
+    ));
+    std::fs::create_dir_all(&root).unwrap();
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let cancel = CancellationToken::new();
+    add_weekly_schedule(&hub, &cancel).await;
+    let (autos, _) = Automations::start(&hub, Config::default(), Some(&root), cancel.clone())
+        .await
+        .unwrap();
+    let reference = moli_core::DependencyRef {
+        kind: moli_core::DependencyKind::Schedule,
+        id: "fixture:weekly".into(),
+    };
+    let graph = automation(
+        serde_json::json!({"nodes":[{"id":"t","type":"manual"},{"id":"n","type":"notify","message":"{{fixture:weekly/active}}","channels":["maison"]}],"edges":[{"from":"t","to":"n"}]}),
+    );
+    let mut saved = autos.save(graph, AGENT).await.unwrap();
+    let shown = hub.preview_dependency(&reference).await.unwrap();
+    saved.graph = serde_json::from_value(
+        serde_json::json!({"nodes":[{"id":"t","type":"manual"}],"edges":[]}),
+    )
+    .unwrap();
+    std::fs::create_dir(root.join("automations.json.tmp")).unwrap();
+    assert!(matches!(
+        autos.save(saved.clone(), AGENT).await,
+        Err(AutomationError::Io(_))
+    ));
+    assert_eq!(
+        hub.preview_dependency(&reference).await,
+        Err(moli_runtime::DependencyError::Consumers)
+    );
+    assert_eq!(
+        hub.publish_dependency(shown, true, Origin::Ui, None).await,
+        Err(moli_runtime::DependencyError::Consumers)
+    );
+    std::fs::remove_dir(root.join("automations.json.tmp")).unwrap();
+    autos.save(saved, AGENT).await.unwrap();
+    assert!(
+        hub.preview_dependency(&reference)
+            .await
+            .unwrap()
+            .consumers
+            .is_empty()
+    );
+    cancel.cancel();
+    std::fs::remove_dir_all(root).unwrap();
+}

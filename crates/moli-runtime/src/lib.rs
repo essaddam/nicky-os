@@ -10,6 +10,7 @@
 
 mod addresses;
 mod counters;
+mod dependencies;
 mod driver;
 pub mod guard;
 mod hub;
@@ -31,6 +32,10 @@ pub mod voice;
 
 pub use addresses::KnownAddress;
 pub use counters::CounterError;
+pub use dependencies::{
+    DependencyConsumer, DependencyConsumerSource, DependencyDefinition, DependencyError,
+    DependencyPreview, DependencyView,
+};
 pub use driver::{
     BoxFuture, CommandMetadata, CommandPermit, CommandRequest, Driver, DriverCtx, MediaPublisher,
     ScopedSecrets, SendPermit,
@@ -50,3 +55,10 @@ pub use timers::TimerError;
 
 mod temporal;
 pub use temporal::{TemporalError, normalize_temporal, validate_point_value};
+
+/// Normalize and validate the configured civil schedule and its IANA time zone.
+pub fn validate_weekly_schedule(
+    plan: moli_core::WeeklySchedule,
+) -> Result<moli_core::WeeklySchedule, DependencyError> {
+    Ok(dependencies::Calendar::new(plan)?.definition().clone())
+}

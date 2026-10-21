@@ -3,6 +3,7 @@
   import { formatValue, unitOf, isAlarm } from '../lib/format.js';
   import { t, locale } from '../lib/i18n.svelte.js';
   import TemporalControl from './TemporalControl.svelte';
+  import ScheduleEditor from './ScheduleEditor.svelte';
   import PressButton from './PressButton.svelte';
   import TimerControl from './TimerControl.svelte';
 
@@ -29,6 +30,9 @@
     <TimerControl point={id} spec={point.kind} label={`${device.native_name}: ${point.label}`} disabled={device.online === false} />
   {:else if writable && kind === 'temporal'}
     <TemporalControl point={id} spec={point.kind.spec} {value} label={point.label} disabled={device.online === false} />
+  {:else if kind === 'schedule'}
+    <span>{value == null ? '—' : t(value ? 'commun.oui' : 'commun.non')}</span>
+    <ScheduleEditor id={device.id} />
   {:else if writable && ['button', 'counter_command'].includes(kind)}
     <PressButton point={id} label={`${device.native_name}: ${point.label}`} disabled={device.online === false}
       action={point.kind.operation ?? 'button'} caption={kind === 'counter_command' ? point.label : null} />
@@ -103,6 +107,7 @@
 <style>
   .point {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px;

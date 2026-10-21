@@ -79,7 +79,7 @@ fn view_with(
         "problems": check.problems,
         "protected": check.protected,
         "approved": approved,
-        "live": a.enabled && approved,
+        "live": a.enabled && approved && autos.dependencies_ready(&a.graph),
         // What a person approves: the version they are looking at.
         "fingerprint": fingerprint,
         "can_restore": a.approved_version.is_some() && !approved,

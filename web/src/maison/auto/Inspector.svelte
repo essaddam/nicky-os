@@ -18,7 +18,7 @@
     if (spec.kind.type === 'timer_command') return spec.kind.operation === 'start' ? spec.kind.default_seconds : null;
     if (spec.kind.type === 'timer') return spec.kind.field === 'state' ? 'running' : spec.kind.field === 'expired' ? null : 0;
     if (['button', 'counter_command'].includes(spec.kind.type)) return null;
-    if (spec.kind.type === 'binary') return true;
+    if (['binary', 'schedule'].includes(spec.kind.type)) return true;
     if (spec.kind.type === 'enum') return spec.kind.values?.[0] ?? null;
     if (spec.kind.type === 'numeric') return spec.kind.min ?? 0;
     if (spec.kind.type === 'temporal') return spec.kind.spec.format === 'time' ? '00:00:00' : spec.kind.spec.format === 'date' ? '2000-01-01' : '2000-01-01T00:00:00Z';

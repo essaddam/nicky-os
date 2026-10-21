@@ -8,6 +8,7 @@
 //! See `docs/AUTOMATIONS.md`.
 
 mod check;
+mod dependencies;
 mod engine;
 mod model;
 mod occurrences;
@@ -171,6 +172,8 @@ struct Inner {
     rate: Mutex<HashMap<String, VecDeque<Instant>>>,
     writer: RwLock<Option<Arc<dyn Writer>>>,
     saving: tokio::sync::Mutex<()>,
+    dependency_generation: AtomicU64,
+    dependency_persisted: AtomicU64,
     cancel: CancellationToken,
 }
 
@@ -280,8 +283,13 @@ impl Automations {
             rate: Mutex::default(),
             writer: RwLock::new(None),
             saving: tokio::sync::Mutex::new(()),
+            dependency_generation: AtomicU64::new(0),
+            dependency_persisted: AtomicU64::new(0),
             cancel,
         }));
+        hub.set_dependency_consumer_source(Arc::new(dependencies::ConsumerSource(Arc::downgrade(
+            &this.0,
+        ))));
         this.refresh_live();
         let task = tokio::spawn(engine::run(this.clone()));
         Ok((this, task))
@@ -407,6 +415,7 @@ impl Automations {
     /// approved. A change of logic stops what the previous version had
     /// started.
     pub async fn save(&self, mut a: Automation, by: Actor) -> Result<Automation, AutomationError> {
+        let _gate = self.0.hub.definition_gate().lock_owned().await;
         let now = moli_core::now_ms();
         if a.name.trim().is_empty() {
             return Err(AutomationError::Invalid("give it a name".into()));
@@ -441,6 +450,7 @@ impl Automations {
                 if changed_logic || (old.enabled && !a.enabled) {
                     self.stop_locked(&a.id);
                 }
+                self.mark_dependency_definitions_dirty();
                 list[i] = a.clone();
                 lock(&self.0.fingerprints).remove(&a.id);
                 (a, changed_logic, before)
@@ -458,6 +468,7 @@ impl Automations {
                 a.approved_version = None;
                 a.activation = None;
                 a.enabled = false;
+                self.mark_dependency_definitions_dirty();
                 list.push(a.clone());
                 lock(&self.0.fingerprints).remove(&a.id);
                 (a, false, None)
@@ -532,6 +543,7 @@ impl Automations {
         if !by.human {
             return Err(AutomationError::NeedsHuman);
         }
+        let _gate = self.0.hub.definition_gate().lock_owned().await;
         let current = self.get(id).ok_or(AutomationError::Unknown)?;
         if current.fingerprint() != fingerprint {
             return Err(AutomationError::Conflict);
@@ -609,6 +621,7 @@ impl Automations {
         if !by.human {
             return Err(AutomationError::NeedsHuman);
         }
+        let _gate = self.0.hub.definition_gate().lock_owned().await;
         let version = self
             .get(id)
             .ok_or(AutomationError::Unknown)?
@@ -630,6 +643,7 @@ impl Automations {
         if !by.human {
             return Err(AutomationError::NeedsHuman);
         }
+        let _gate = self.0.hub.definition_gate().lock_owned().await;
         let gone = {
             let mut list = self.0.list.write().unwrap_or_else(PoisonError::into_inner);
             let i = list
@@ -638,6 +652,7 @@ impl Automations {
                 .ok_or(AutomationError::Unknown)?;
             lock(&self.0.fingerprints).remove(id);
             self.stop_locked(id);
+            self.mark_dependency_definitions_dirty();
             let gone = list.remove(i);
             self.refresh_live_from(&list);
             gone
@@ -732,6 +747,7 @@ impl Automations {
             self.stop_locked(id);
         }
         f(a);
+        self.mark_dependency_definitions_dirty();
         if !force_stop && (!a.is_live() || a.fingerprint() != previous) {
             self.stop_locked(id);
         }
@@ -755,7 +771,17 @@ impl Automations {
     fn refresh_live_from(&self, list: &[Automation]) {
         // Caller retains the definition read/write guard through both index
         // publication and parent assignment. Never publish a detached snapshot.
-        let live: Vec<Automation> = list.iter().filter(|a| a.is_live()).cloned().collect();
+        self.index_dependencies(list);
+        let live: Vec<Automation> = list
+            .iter()
+            .filter(|a| {
+                a.is_live()
+                    && dependencies::references(&a.graph, &self.0.hub)
+                        .iter()
+                        .all(|r| self.0.hub.dependency_ready(r))
+            })
+            .cloned()
+            .collect();
         let live = Arc::new(live);
         let mut audience = std::collections::BTreeMap::new();
         for automation in live.iter() {
@@ -823,12 +849,32 @@ impl Automations {
             .clone()
     }
 
+    fn mark_dependency_definitions_dirty(&self) {
+        self.0
+            .dependency_generation
+            .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+    }
+
     async fn persist(&self) -> Result<(), AutomationError> {
         let _one = self.0.saving.lock().await;
-        let list = self.list();
+        let (list, generation) = {
+            let list = self.0.list.read().unwrap_or_else(PoisonError::into_inner);
+            (
+                list.clone(),
+                self.0
+                    .dependency_generation
+                    .load(std::sync::atomic::Ordering::Acquire),
+            )
+        };
         store::save(self.0.path.as_deref(), &list)
             .await
-            .map_err(|e| AutomationError::Io(e.to_string()))
+            .map_err(|e| AutomationError::Io(e.to_string()))?;
+        // Only this exact snapshot was saved. A newer edit may have lost its
+        // caller while waiting for the writer; this commit cannot certify it.
+        self.0
+            .dependency_persisted
+            .store(generation, std::sync::atomic::Ordering::Release);
+        Ok(())
     }
 
     fn changed(&self, id: &str) {

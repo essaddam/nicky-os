@@ -387,6 +387,18 @@ impl DriverCtx {
             .await;
     }
 
+    /// Loads a schedule's draft/current heads from their authoritative file.
+    pub async fn initialize_schedule(
+        &self,
+        device: &DeviceId,
+        plan: moli_core::WeeklySchedule,
+    ) -> Result<(), crate::DependencyError> {
+        if !self.owns(device) {
+            return Err(crate::DependencyError::Definition);
+        }
+        self.hub.initialize_schedule(device, plan).await
+    }
+
     /// Loads and publishes a counter from its authoritative business state.
     pub async fn initialize_counter(
         &self,

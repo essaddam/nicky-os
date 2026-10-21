@@ -268,3 +268,20 @@ instants. La saisie n'ajoute aucun réveil à l'heure indiquée. Heures sautées
 heures répétées refusées sans désambiguïsation. Une définition d'agent/import ne
 contourne ni la garde ni la validation humaine des graphes. Le cache périodique ne
 restaure pas ces valeurs : leur fichier métier est l'autorité à la reprise.
+
+
+## Plannings hebdomadaires et dépendances validées (AUTO-H5)
+
+L’aide `schedule` publie un booléen `active` en lecture seule depuis une définition
+hebdomadaire versionnée : fuseau IANA, jours 1..7, créneaux semi-ouverts et 256 créneaux
+au plus après découpage de minuit. Le brouillon est inerte ; seule une publication
+humaine explicite, avec la session PIN et l’aperçu exact des graphes concernés, remplace
+le courant. Un agent ne peut pas modifier silencieusement un graphe validé par une
+édition de planning. Le graphe conserve son empreinte d’identités stables et résout
+la version validée courante, sans y figer son numéro.
+
+Le contrat réutilisable, le calendrier DST, les bornes, le journal, la reprise sans
+rejeu et les surfaces sont décrits dans [plannings.md](plannings.md). Le socle pur
+brouillon/courant est isolé dans un commit ; cette première implémentation du contrat
+commun est soumise avec AUTO-H5 à la revue Rust. Elle ne change aucune valeur des aides
+existantes en dépendance versionnée et n’introduit aucun nouveau chemin de confiance.

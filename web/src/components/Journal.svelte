@@ -33,6 +33,10 @@
       }) };
     }
     if (a.kind === 'temporal') return { target: a.point.split('/')[0], detail: t('systeme.date.journal', { point: a.point }) };
+    if (a.kind === 'dependency') {
+      const d = hub.devices[a.reference.id];
+      return {target:d ? deviceName(d) : a.reference.id, detail:t(`systeme.planning.journal.${a.operation}`, {version:a.version ?? '—'})};
+    }
     if (a.kind === 'counter') {
       const [id, key] = a.point.split('/');
       const d = hub.devices[id];

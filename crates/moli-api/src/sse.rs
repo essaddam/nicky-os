@@ -188,7 +188,9 @@ impl View {
             // A driver's state, a decision on a request: no room in them.
             Event::DriverStatus { .. } | Event::ApprovalResolved { .. } => return Pass::Event,
             // The house's journal and notices are the household's.
-            Event::Journal { .. } | Event::Notice { .. } => return Pass::Drop,
+            Event::DependencyChanged { .. } | Event::Journal { .. } | Event::Notice { .. } => {
+                return Pass::Drop;
+            }
         };
         // Described anew, moved, gone: what the guest sees may have changed.
         if moved && guest.guest_devices(hub, &hub.snapshot()) != self.sight {

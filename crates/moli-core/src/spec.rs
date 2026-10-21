@@ -21,6 +21,8 @@ pub enum Kind {
     Temporal {
         spec: crate::TemporalSpec,
     },
+    /// Validated weekly definition, projected as a read-only boolean.
+    Schedule,
     /// Business state, never assigned through a client command.
     Counter {
         spec: crate::CounterSpec,
@@ -60,6 +62,15 @@ impl Kind {
                 }
         )
     }
+    /// Executable definitions resolve by stable device identity, never by version.
+    #[must_use]
+    pub fn dependency(&self, device: &crate::DeviceId) -> Option<crate::DependencyRef> {
+        matches!(self, Self::Schedule).then(|| crate::DependencyRef {
+            kind: crate::DependencyKind::Schedule,
+            id: device.clone(),
+        })
+    }
+
     /// Commands whose identical contents may represent distinct intentions.
     #[must_use]
     pub fn is_operation(&self) -> bool {
@@ -87,7 +98,7 @@ impl Kind {
         !self.is_operation()
             && !matches!(
                 self,
-                Self::Counter { .. } | Self::Timer { .. } | Self::Temporal { .. }
+                Self::Counter { .. } | Self::Timer { .. } | Self::Temporal { .. } | Self::Schedule
             )
     }
 }
@@ -351,8 +362,10 @@ pub fn validate(kind: &Kind, value: &Value) -> Result<Value, ValueError> {
         (Kind::Counter { .. } | Kind::Timer { .. } | Kind::TimerCommand { .. }, _) => {
             Err(ValueError::ExpectedNumber)
         }
-        (Kind::Binary, Value::Bool(_)) | (Kind::Text, Value::Text(_)) => Ok(value.clone()),
-        (Kind::Binary, _) => Err(ValueError::ExpectedBool),
+        (Kind::Binary | Kind::Schedule, Value::Bool(_)) | (Kind::Text, Value::Text(_)) => {
+            Ok(value.clone())
+        }
+        (Kind::Binary | Kind::Schedule, _) => Err(ValueError::ExpectedBool),
         (Kind::Numeric { min, max, .. }, v) => {
             let n = v
                 .as_f64()

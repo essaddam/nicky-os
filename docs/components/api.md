@@ -1029,3 +1029,15 @@ canonique d'un instant est UTC avec suffixe Z ; les heures locales sautées ou
 ambiguës sans choix sont refusées (422). Succès après durabilité, garde et journal
 communs. CLI : `moli-os temporal <appareil> <valeur>`. Formats, refus et limites :
 [contrat](dates-heures.md), [OpenAPI](../api/temporal-command.openapi.yaml).
+
+
+### Dépendances exécutables et plannings
+
+`/api/dependencies` liste les définitions configurées ;
+`/api/dependencies/schedule/{device}` lit les deux versions (GET) ou prépare un brouillon
+(PUT avec `expected`, `definition`). `/preview` renvoie l’aperçu des versions et graphes
+concernés ; `/approve` le publie seulement avec une session PIN vérifiée. UI sans PIN,
+MCP et CLI ne peuvent pas valider. Éditions et validations périmées renvoient 409.
+Voir [le contrat](plannings.md) et [OpenAPI](../api/dependencies.openapi.yaml) pour les
+schémas, erreurs, bornes et garanties de persistance. MCP : `list_dependencies`,
+`get_dependency`, `save_dependency_draft`. CLI : `moli-os dependency list|get|preview|draft`.

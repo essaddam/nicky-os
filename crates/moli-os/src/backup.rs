@@ -19,7 +19,7 @@ use anyhow::{Context as _, bail};
 /// SQLite databases: copied through SQLite itself.
 const DATABASES: [&str; 2] = ["history.db", "energy.db"];
 /// Everything else worth keeping (missing ones are skipped).
-const FILES: [&str; 21] = [
+const FILES: [&str; 22] = [
     "moli.toml",
     "plan.json",
     "phones.json",
@@ -34,6 +34,7 @@ const FILES: [&str; 21] = [
     "helper-counters.json",
     "helper-datetimes.json",
     "helper-timers.json",
+    "dependencies.json",
     "journal.jsonl",
     "journal.jsonl.1",
     "state.json",
@@ -408,5 +409,30 @@ mod tests {
         assert!(!other.join("history.db").exists(), "nothing half-restored");
         drop((db, back));
         let _ = std::fs::remove_dir_all(base);
+    }
+}
+
+#[cfg(test)]
+mod weekly_backup_tests {
+    #[test]
+    fn auto_h5_backup_keeps_dependency_heads_and_projection_together() {
+        let root = std::env::temp_dir().join(format!(
+            "moli-h5-backup-{}-{}",
+            std::process::id(),
+            moli_core::now_ms()
+        ));
+        let data = root.join("data");
+        let saved = root.join("saved");
+        let fresh = root.join("fresh");
+        std::fs::create_dir_all(&data).unwrap();
+        let bytes = br#"{"schema":1,"records":[]}"#;
+        std::fs::write(data.join("dependencies.json"), bytes).unwrap();
+        super::backup(&data, &saved).unwrap();
+        super::restore(&fresh, &saved, false).unwrap();
+        assert_eq!(
+            std::fs::read(fresh.join("dependencies.json")).unwrap(),
+            bytes
+        );
+        std::fs::remove_dir_all(root).unwrap();
     }
 }

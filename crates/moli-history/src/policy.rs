@@ -94,6 +94,7 @@ pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind, key: &str) -
             Some(_) => Family::Other,
             None => match kind {
                 Kind::Numeric { .. }
+                | Kind::Schedule
                 | Kind::Button
                 | Kind::Counter { .. }
                 | Kind::CounterCommand { .. }

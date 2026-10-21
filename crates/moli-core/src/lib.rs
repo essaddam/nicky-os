@@ -18,6 +18,7 @@ mod spec;
 mod temporal;
 mod timer;
 mod value;
+mod weekly;
 
 pub use access_window::AccessWindow;
 pub use counter::{CounterOperation, CounterSpec, MAX_COUNTER_VALUE};
@@ -26,8 +27,8 @@ pub use dependency::{
     VersionError, VersionedDefinition,
 };
 pub use event::{
-    Action, ApprovalRequest, AutomationChange, Decision, DriverStatus, Event, JournalEntry, Notice,
-    Origin, Outcome,
+    Action, ApprovalRequest, AutomationChange, Decision, DependencyChange, DriverStatus, Event,
+    JournalEntry, Notice, Origin, Outcome,
 };
 pub use id::{DeviceId, InstanceId, PointId};
 pub use model::{Device, Label, Sample};
@@ -42,6 +43,7 @@ pub use timer::{
     TimerStatus,
 };
 pub use value::Value;
+pub use weekly::{InvalidSchedule, MAX_WEEKLY_SLOTS, WeeklySchedule, WeeklySlot};
 
 /// Milliseconds since the Unix epoch.
 #[must_use]

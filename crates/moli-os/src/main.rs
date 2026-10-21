@@ -12,7 +12,7 @@ use std::time::Instant;
 #[path = "timer_cli_tests.rs"]
 mod timer_cli_tests;
 
-use anyhow::{Context as _, bail};
+use anyhow::{Context as _, bail, ensure};
 use clap::{Parser, Subcommand};
 use moli_core::InstanceId;
 use moli_runtime::{Driver, Hub, HubOptions, MasterKey, spawn_driver};
@@ -84,6 +84,9 @@ enum Command {
     },
     /// Assign a civil date/time or zoned datetime through the running server.
     Temporal { device: String, value: String },
+    /// Read or edit executable definitions through the running API. Drafts stay inert.
+    #[command(subcommand)]
+    Dependency(DependencyCommand),
     /// Apply a counter operation through the running API, under its guard.
     Counter {
         device: String,
@@ -98,6 +101,23 @@ enum Command {
         /// Reuse this identity only when retrying the same intent.
         #[arg(long)]
         request_id: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+enum DependencyCommand {
+    List,
+    Get {
+        device: String,
+    },
+    Preview {
+        device: String,
+    },
+    /// Stage the typed JSON definition from a bounded file. Human publication uses the dashboard.
+    Draft {
+        device: String,
+        expected: u64,
+        file: PathBuf,
     },
 }
 
@@ -220,6 +240,7 @@ fn run_command(command: Command, config: Config, boot: Instant) -> anyhow::Resul
         Command::Profile(_) | Command::Catalogue(_) | Command::Health => {
             unreachable!("handled above")
         }
+        Command::Dependency(command) => dependency_command(&config, command),
         Command::Backup { dir } => backup::backup(&config.server.data_dir, &dir),
         Command::Temporal { device, value } => temporal_command(&config, &device, value),
         Command::Press { point, request_id } => press(&config, &point, request_id.as_deref()),
@@ -482,6 +503,7 @@ fn open_hub(config: &Config) -> anyhow::Result<Hub> {
         counter_state_path: Some(config.server.data_dir.join("helper-counters.json")),
         timer_state_path: Some(config.server.data_dir.join("helper-timers.json")),
         temporal_state_path: Some(config.server.data_dir.join("helper-datetimes.json")),
+        dependency_state_path: Some(config.server.data_dir.join("dependencies.json")),
         journal_path: Some(config.server.data_dir.join("journal.jsonl")),
         addresses_path: Some(config.server.data_dir.join("addresses.json")),
         secrets,
@@ -1290,6 +1312,85 @@ fn health() -> anyhow::Result<()> {
     if !status.is_success() {
         bail!("health: {status}");
     }
+    Ok(())
+}
+
+fn dependency_command(config: &Config, command: DependencyCommand) -> anyhow::Result<()> {
+    let encode = |device: &str| {
+        device
+            .bytes()
+            .map(|b| {
+                if b.is_ascii_alphanumeric() || b"-_.~".contains(&b) {
+                    char::from(b).to_string()
+                } else {
+                    format!("%{b:02X}")
+                }
+            })
+            .collect::<String>()
+    };
+    let (method, path, body) = match command {
+        DependencyCommand::List => (
+            http::Method::GET,
+            "/api/dependencies".into(),
+            serde_json::Value::Null,
+        ),
+        DependencyCommand::Get { device } => (
+            http::Method::GET,
+            format!("/api/dependencies/schedule/{}", encode(&device)),
+            serde_json::Value::Null,
+        ),
+        DependencyCommand::Preview { device } => (
+            http::Method::GET,
+            format!("/api/dependencies/schedule/{}/preview", encode(&device)),
+            serde_json::Value::Null,
+        ),
+        DependencyCommand::Draft {
+            device,
+            expected,
+            file,
+        } => {
+            use std::io::Read;
+            let mut bytes = Vec::new();
+            std::fs::File::open(file)?
+                .take(64 * 1024 + 1)
+                .read_to_end(&mut bytes)?;
+            ensure!(
+                bytes.len() <= 64 * 1024,
+                "{}",
+                moli_i18n::tr!("serveur.dependance.definition")
+            );
+            let definition: moli_runtime::DependencyDefinition = serde_json::from_slice(&bytes)?;
+            (
+                http::Method::PUT,
+                format!("/api/dependencies/schedule/{}", encode(&device)),
+                serde_json::json!({"expected": expected, "definition": definition}),
+            )
+        }
+    };
+    let address = config.server.listen;
+    let host = if address.ip().is_unspecified() {
+        "127.0.0.1".to_owned()
+    } else {
+        address.ip().to_string()
+    };
+    let request = moli_net::json_body(
+        http::Request::builder()
+            .method(method)
+            .uri(path)
+            .header("x-moli-origin", "cli")
+            .header(http::header::HOST, &host),
+        &body,
+    )?;
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?;
+    let (status, body) = runtime.block_on(moli_net::plain(&host, address.port(), request))?;
+    println!("{}", String::from_utf8_lossy(&body));
+    ensure!(
+        status.is_success(),
+        "{}",
+        moli_i18n::tr!("serveur.commande.echouee", status = status.as_u16())
+    );
     Ok(())
 }
 

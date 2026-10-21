@@ -62,6 +62,9 @@ pub struct Helper {
     pub duration_s: Option<u32>,
     #[serde(default)]
     pub timezone: Option<String>,
+    /// Initial weekly definition, always an inert draft on first creation.
+    #[serde(default)]
+    pub weekly: Option<moli_core::WeeklySchedule>,
 }
 
 /// Preserve the lexical integer/float distinction until the helper kind is known.
@@ -95,6 +98,7 @@ pub enum HelperKind {
     Date,
     Time,
     Datetime,
+    Schedule,
     Counter,
     Button,
     Select,
@@ -281,6 +285,7 @@ impl Helper {
                 },
                 Semantic::Other,
             ),
+            HelperKind::Schedule => ("active", Kind::Schedule, Semantic::Other),
             HelperKind::Button => ("press", Kind::Button, Semantic::Other),
             HelperKind::Counter => (
                 "value",
@@ -314,15 +319,46 @@ impl Helper {
             kind,
             access: Access {
                 read: self.kind != HelperKind::Button,
-                write: !matches!(self.kind, HelperKind::Counter | HelperKind::Timer),
+                write: !matches!(
+                    self.kind,
+                    HelperKind::Counter | HelperKind::Timer | HelperKind::Schedule
+                ),
             },
             unit: None,
             semantic,
         }
     }
 
+    fn schedule_initial(&self) -> anyhow::Result<Value> {
+        ensure!(
+            self.duration_s.is_none()
+                && self.timezone.is_none()
+                && self.initial.is_none()
+                && self.options.is_empty()
+                && self.min.is_none()
+                && self.max.is_none()
+                && self.step.is_none(),
+            "{}",
+            moli_i18n::tr!("serveur.dependance.definition")
+        );
+        let plan = self
+            .weekly
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!(moli_i18n::tr!("serveur.dependance.definition")))?;
+        moli_runtime::validate_weekly_schedule(plan)?;
+        Ok(Value::Null)
+    }
+
     /// The starting value, checked against the point.
     fn initial_value(&self) -> anyhow::Result<Value> {
+        if self.kind == HelperKind::Schedule {
+            return self.schedule_initial();
+        }
+        ensure!(
+            self.weekly.is_none(),
+            "{}",
+            moli_i18n::tr!("serveur.dependance.definition")
+        );
         if self.kind == HelperKind::Timer {
             ensure!(
                 self.timezone.is_none()
@@ -396,6 +432,7 @@ impl Helper {
                 None,
                 HelperKind::Button
                 | HelperKind::Counter
+                | HelperKind::Schedule
                 | HelperKind::Timer
                 | HelperKind::Date
                 | HelperKind::Time
@@ -455,6 +492,16 @@ impl Helpers {
             "{}",
             moli_i18n::tr!("pilotes.aides.dates_max")
         );
+        ensure!(
+            config
+                .helpers
+                .iter()
+                .filter(|h| h.kind == HelperKind::Schedule)
+                .count()
+                <= 128,
+            "{}",
+            moli_i18n::tr!("serveur.dependance.capacite")
+        );
         let mut seen = std::collections::HashSet::new();
         for h in &config.helpers {
             ensure!(
@@ -505,6 +552,12 @@ impl Driver for Helpers {
                 } else if let Some(spec) = h.temporal_spec() {
                     ctx.initialize_temporal(&id, spec, h.initial_value()?)
                         .await?;
+                } else if h.kind == HelperKind::Schedule {
+                    ctx.initialize_schedule(
+                        &id,
+                        h.weekly.clone().expect("validated schedule definition"),
+                    )
+                    .await?;
                 } else if h.kind == HelperKind::Counter {
                     ctx.initialize_counter(&id, h.counter_spec()?).await?;
                 } else if h.kind != HelperKind::Button && ctx.current(&id, &spec.key).is_none() {
@@ -648,5 +701,33 @@ mod tests {
             .await;
         assert!(refused.is_err(), "only the listed options");
         cancel.cancel();
+    }
+}
+
+#[cfg(test)]
+mod weekly_config_tests {
+    use super::*;
+    #[test]
+    fn auto_h5_schedule_configuration_is_explicit_bounded_and_always_a_draft() {
+        fn config(extra: &str) -> Config {
+            toml::from_str(&format!("[[helper]]\nid='weekly'\nname='Weekly'\nkind='schedule'\nweekly={{timezone='UTC',slots=[{{day=7,start=1380,end=60}}]}}\n{extra}")).unwrap()
+        }
+        let helper = Helpers::new(config("")).unwrap();
+        assert_eq!(helper.config.helpers[0].spec().kind, Kind::Schedule);
+        assert!(!helper.config.helpers[0].spec().access.write);
+        assert_eq!(
+            helper.config.helpers[0].initial_value().unwrap(),
+            Value::Null
+        );
+        for extra in ["initial=true", "min=0", "max=1", "step=1", "options=['a']"] {
+            assert!(Helpers::new(config(extra)).is_err());
+        }
+        let bad:Config = toml::from_str("[[helper]]\nid='weekly'\nname='Weekly'\nkind='schedule'\nweekly={timezone='Invalid/Example',slots=[]}").unwrap();
+        assert!(Helpers::new(bad).is_err());
+        let foreign: Config = toml::from_str(
+            "[[helper]]\nid='other'\nname='Other'\nkind='switch'\nweekly={timezone='UTC',slots=[]}",
+        )
+        .unwrap();
+        assert!(Helpers::new(foreign).is_err());
     }
 }

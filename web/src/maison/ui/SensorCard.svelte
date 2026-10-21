@@ -3,6 +3,7 @@
   import { t } from '../../lib/i18n.svelte.js';
   import Icon from './Icon.svelte';
   import TemporalControl from '../../components/TemporalControl.svelte';
+  import ScheduleEditor from '../../components/ScheduleEditor.svelte';
   import PressButton from '../../components/PressButton.svelte';
   import TimerControl from '../../components/TimerControl.svelte';
   import { formatValue } from '../../lib/format.js';
@@ -68,6 +69,7 @@
       onheld={(request) => (home.held = { id: request.id, point: request.point, reason: request.reason, label: point.label })} />
     {/if}
   {/each}
+  {#if d?.points.some((p) => p.kind.type === 'schedule')}<ScheduleEditor {id} />{/if}
   {#if rows.length}
     <dl>
       {#each rows as r (r.p.key)}

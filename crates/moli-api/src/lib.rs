@@ -20,6 +20,7 @@ mod assets;
 mod assistant;
 mod automations;
 mod caller;
+mod dependencies;
 mod guard;
 mod integrations;
 mod limit;
@@ -291,6 +292,7 @@ pub fn router(hub: Hub, shutdown: CancellationToken, options: &Options) -> Route
     Router::new()
         .route("/api/health", get(rest::health))
         .merge(device_routes())
+        .merge(dependencies::routes())
         .merge(androidtv::routes(options.androidtv.clone(), options.demo))
         .merge(netatmo::routes(&humans, options))
         .route("/api/media/{name}", get(rest::media))

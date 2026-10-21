@@ -155,12 +155,26 @@ pub fn check(graph: &Graph, hub: &Hub, can: Abilities) -> Check {
             });
         }
     }
+    check_dependencies(graph, hub, &mut problems);
     protected.sort();
     protected.dedup();
     Check {
         summary: describe(graph, hub),
         problems,
         protected,
+    }
+}
+
+fn check_dependencies(graph: &Graph, hub: &Hub, problems: &mut Vec<Problem>) {
+    if crate::dependencies::references(graph, hub)
+        .iter()
+        .any(|r| !hub.dependency_ready(r))
+    {
+        problems.push(Problem {
+            node: None,
+            level: Level::Error,
+            message: tr!("moteur.verif.dependance_brouillon"),
+        });
     }
 }
 
@@ -206,6 +220,13 @@ impl Ctx<'_> {
             );
             return None;
         };
+        if spec
+            .kind
+            .dependency(&device)
+            .is_some_and(|r| !self.hub.dependency_ready(&r))
+        {
+            self.push(Level::Error, tr!("moteur.verif.dependance_brouillon"));
+        }
         if !writable && matches!(spec.kind, Kind::CounterCommand { .. }) {
             self.push(Level::Error, tr!("moteur.verif.compteur_operation"));
         }

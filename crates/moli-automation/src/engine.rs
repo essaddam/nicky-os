@@ -73,12 +73,14 @@ pub(crate) async fn run(autos: Automations) {
         tokio::select! {
             () = cancel.cancelled() => break,
             event = events.recv() => match event {
+                Ok(Event::DependencyChanged { .. }) => { autos.refresh_live(); remember_all(&autos); },
                 Ok(Event::State { point, value, .. }) => on_state(&autos, &point, &value),
                 Ok(Event::Occurrence { occurrence }) => on_occurrence(&autos, occurrence).await,
                 Ok(Event::DeviceUpserted { device }) if device.points.iter().any(|point| matches!(point.kind,moli_core::Kind::Timer{field:moli_core::TimerField::Expired})) => autos.refresh_live(),
                 Ok(_) => {}
                 Err(RecvError::Lagged(missed)) => {
                     tracing::warn!(missed, "automations lagged behind the hub: some changes were not seen");
+                    autos.refresh_live();
                     remember_all(&autos);
                     if !autos.0.occurrence_index.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty() {
                         autos.0.hub.notice(Notice { title: None,
@@ -626,7 +628,7 @@ impl Automations {
         if definitions
             .iter()
             .find(|current| current.id == a.id)
-            .is_none_or(|current| !current.is_live() || current.fingerprint() != a.fingerprint())
+            .is_none_or(|current| !self.runnable_version(current, a))
         {
             return skipped(why);
         }
@@ -695,7 +697,7 @@ impl Automations {
             // After waiting its turn, it runs only if that same version is
             // still approved and on.
             let current = this.get(&a2.id);
-            let still = current.is_some_and(|c| c.is_live() && c.fingerprint() == a2.fingerprint());
+            let still = current.is_some_and(|c| this.runnable_version(&c, &a2));
             if still && !token.is_cancelled() {
                 execute(
                     &this,

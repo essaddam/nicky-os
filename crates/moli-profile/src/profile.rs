@@ -898,7 +898,8 @@ fn check_write_map(map: &BTreeMap<String, String>, kind: &Kind) -> Result<(), St
             return Ok(());
         }
         Kind::Text => return Ok(()),
-        Kind::Button
+        Kind::Schedule
+        | Kind::Button
         | Kind::CounterCommand { .. }
         | Kind::Counter { .. }
         | Kind::Timer { .. }
@@ -1228,7 +1229,8 @@ impl CompiledPoint {
                 }
             }
             Kind::Text => Value::Text(as_text.into()),
-            Kind::Button
+            Kind::Schedule
+            | Kind::Button
             | Kind::CounterCommand { .. }
             | Kind::Counter { .. }
             | Kind::Timer { .. }

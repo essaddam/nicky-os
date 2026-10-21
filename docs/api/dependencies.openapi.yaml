@@ -1,0 +1,190 @@
+openapi: 3.1.0
+info:
+  title: Moli — dépendances exécutables versionnées
+  version: 1.0.0
+  description: Brouillon inerte, courant humain et contrôle CAS. Voir components/plannings.md.
+paths:
+  /api/dependencies:
+    get:
+      summary: Lire les définitions configurées (128 au plus)
+      responses:
+        '200':
+          description: Liste des deux têtes, jamais de définition retirée de la configuration.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dependencies: { type: array, maxItems: 128, items: { $ref: '#/components/schemas/View' } }
+        '403': { description: Réservé au foyer, aucun accès invité. }
+        '503': { description: État corrompu ou issue de persistance incertaine. }
+  /api/dependencies/{kind}/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/Kind' }
+      - { $ref: '#/components/parameters/Id' }
+    get:
+      summary: Lire le brouillon et la version courante validée
+      responses:
+        '200':
+          description: Définition configurée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/View' }
+        '404': { description: Identité inconnue ou non configurée. }
+        '503': { description: Restauration nécessaire ou sauvegarde des graphes non certaine. }
+    put:
+      summary: Enregistrer un brouillon sans modifier l’exécution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [expected, definition]
+              properties:
+                expected: { $ref: '#/components/schemas/Version' }
+                definition: { $ref: '#/components/schemas/Definition' }
+      responses:
+        '200':
+          description: Brouillon durable, version incrémentée ; courant inchangé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/View' }
+        '403': { description: Invité ou mutation de démonstration interdite. }
+        '404': { description: Définition non configurée. }
+        '409': { description: Version attendue périmée ou épuisée ; relire. }
+        '413': { description: Corps supérieur à 256 Kio. }
+        '422': { description: Fuseau, créneaux, chevauchement ou borne invalide. }
+        '500': { description: Persistance refusée avant renommage, ancien état conservé. }
+        '503': { description: État corrompu ou issue incertaine ; ne pas réessayer aveuglément. }
+  /api/dependencies/{kind}/{id}/preview:
+    parameters:
+      - { $ref: '#/components/parameters/Kind' }
+      - { $ref: '#/components/parameters/Id' }
+    get:
+      summary: Examiner la version et tous les graphes concernés avant confirmation
+      responses:
+        '200':
+          description: Instantané cohérent sous le verrou commun des définitions.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Preview' }
+        '404': { description: Définition non configurée. }
+        '503': { description: Restauration nécessaire ou sauvegarde des graphes non certaine. }
+  /api/dependencies/{kind}/{id}/approve:
+    parameters:
+      - { $ref: '#/components/parameters/Kind' }
+      - { $ref: '#/components/parameters/Id' }
+    post:
+      summary: Publier l’aperçu exact avec une session PIN existante vérifiée
+      description: >-
+        Cookie moli_session lié au client. Le seul en-tête ui ne suffit pas.
+        Le corps est l’aperçu lu et montré avant confirmation. Versions, empreinte
+        et consommateurs sont revérifiés sous le verrou commun, conservé jusqu’au
+        commit durable. Aucune autorité humaine n’est acceptée dans le corps.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Preview' }
+      responses:
+        '200':
+          description: Courant durable remplacé, projection calculée ; graphes validés utilisant le courant.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/View' }
+        '403': { description: Session humaine absente, invité ou démonstration. }
+        '404': { description: Définition non configurée. }
+        '409': { description: Identité, versions, définition ou graphes modifiés depuis l’aperçu. }
+        '500': { description: Échec avant rename ; courant conservé. }
+        '503': { description: Issue incertaine ou sauvegarde des graphes non certaine ; restaurer avant publication. }
+components:
+  parameters:
+    Kind:
+      in: path
+      name: kind
+      required: true
+      schema: { type: string, enum: [schedule] }
+    Id:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, maxLength: 240 }
+      description: Identité stable d’une aide configurée, encodée dans le chemin.
+  schemas:
+    Version: { type: integer, minimum: 1, maximum: 9007199254740991 }
+    Reference:
+      type: object
+      additionalProperties: false
+      required: [kind, id]
+      properties:
+        kind: { type: string, enum: [schedule] }
+        id: { type: string, maxLength: 240 }
+    Definition:
+      type: object
+      additionalProperties: false
+      required: [type, value]
+      properties:
+        type: { type: string, enum: [schedule] }
+        value:
+          type: object
+          additionalProperties: false
+          required: [timezone, slots]
+          properties:
+            timezone: { type: string, minLength: 1, maxLength: 128 }
+            slots:
+              type: array
+              maxItems: 256
+              description: Jours lundi=1 à dimanche=7 ; 256 après découpage de minuit aussi ; sans chevauchement.
+              items:
+                type: object
+                additionalProperties: false
+                required: [day, start, end]
+                properties:
+                  day: { type: integer, minimum: 1, maximum: 7 }
+                  start: { type: integer, minimum: 0, maximum: 1439 }
+                  end: { type: integer, minimum: 0, maximum: 1440 }
+    Head:
+      type: object
+      additionalProperties: false
+      required: [version, definition]
+      properties:
+        version: { $ref: '#/components/schemas/Version' }
+        definition: { $ref: '#/components/schemas/Definition' }
+    View:
+      type: object
+      additionalProperties: false
+      required: [reference, versions]
+      properties:
+        reference: { $ref: '#/components/schemas/Reference' }
+        versions:
+          type: object
+          additionalProperties: false
+          required: [draft, current]
+          properties:
+            draft: { $ref: '#/components/schemas/Head' }
+            current: { anyOf: [{ $ref: '#/components/schemas/Head' }, { type: 'null' }] }
+    Consumer:
+      type: object
+      additionalProperties: false
+      required: [id, name, fingerprint]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        fingerprint: { type: string, pattern: '^[a-f0-9]{64}$' }
+    Preview:
+      type: object
+      additionalProperties: false
+      required: [reference, versions, consumers, fingerprint]
+      properties:
+        reference: { $ref: '#/components/schemas/Reference' }
+        versions:
+          type: object
+          additionalProperties: false
+          required: [draft, current]
+          properties:
+            draft: { $ref: '#/components/schemas/Version' }
+            current: { anyOf: [{ $ref: '#/components/schemas/Version' }, { type: 'null' }] }
+        consumers: { type: array, maxItems: 400, items: { $ref: '#/components/schemas/Consumer' } }
+        fingerprint: { type: string, pattern: '^[a-f0-9]{64}$' }

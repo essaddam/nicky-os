@@ -10,6 +10,11 @@ use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 #[cfg(test)]
 #[path = "counter_tests.rs"]
 mod counter_tests;
+#[path = "dependency_hub.rs"]
+mod dependency_hub;
+#[cfg(test)]
+#[path = "dependencies/tests.rs"]
+mod dependency_tests;
 use std::sync::{Arc, Mutex, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::{Duration, Instant};
 
@@ -50,6 +55,8 @@ pub struct HubOptions {
     pub timer_state_path: Option<PathBuf>,
     pub timer_clock: fn() -> u64,
     pub temporal_state_path: Option<PathBuf>,
+    /// Validated executable definitions, separate from cached values.
+    pub dependency_state_path: Option<PathBuf>,
     /// Occurrence wall-clock metadata only; identities never depend on it.
     pub occurrence_clock: fn() -> u64,
     /// Append-only journal file (JSON Lines). `None` keeps it in memory only.
@@ -77,6 +84,7 @@ impl Default for HubOptions {
             timer_state_path: None,
             timer_clock: now_ms,
             temporal_state_path: None,
+            dependency_state_path: None,
             occurrence_clock: now_ms,
             journal_path: None,
             addresses_path: None,
@@ -417,6 +425,13 @@ struct Inner {
     timer_consumer_ready: AtomicBool,
     timer_audience: RwLock<BTreeMap<PointId, Vec<moli_core::TimerRecipient>>>,
     temporals: tokio::sync::Mutex<crate::temporal::Temporals>,
+    dependencies: tokio::sync::Mutex<crate::dependencies::Dependencies>,
+    definition_gate: Arc<tokio::sync::Mutex<()>>,
+    dependency_wake: Arc<tokio::sync::Notify>,
+    dependency_started: AtomicBool,
+    dependency_consumer_source: RwLock<Option<Arc<dyn crate::DependencyConsumerSource>>>,
+    dependency_consumers:
+        RwLock<BTreeMap<moli_core::DependencyRef, Vec<crate::DependencyConsumer>>>,
     /// Serializes label writes so the file always matches the model.
     label_write: tokio::sync::Mutex<()>,
     /// Where each instance last reached its device.
@@ -437,6 +452,13 @@ struct Inner {
     voice: std::sync::OnceLock<Arc<dyn crate::voice::VoiceBrain>>,
     opts: HubOptions,
     started: Instant,
+}
+
+impl Drop for Inner {
+    fn drop(&mut self) {
+        // The clock owns only a weak hub; wake it so dropping a hub frees its task.
+        self.dependency_wake.notify_one();
+    }
 }
 
 /// Two screens showing the same camera live cost one fetch, not two.
@@ -468,6 +490,7 @@ struct Model {
     reservations: crate::reservations::Book,
     snapshots: HashMap<DeviceId, Arc<dyn crate::media::SnapshotSource>>,
     printers: HashMap<DeviceId, Arc<dyn crate::media::PrintSink>>,
+    dependency_heads: BTreeMap<moli_core::DependencyRef, u64>,
 }
 
 #[derive(Debug)]
@@ -562,6 +585,14 @@ impl Hub {
             temporals: tokio::sync::Mutex::new(crate::temporal::Temporals::new(
                 opts.temporal_state_path.clone(),
             )),
+            dependencies: tokio::sync::Mutex::new(crate::dependencies::Dependencies::new(
+                opts.dependency_state_path.clone(),
+            )),
+            definition_gate: Arc::new(tokio::sync::Mutex::new(())),
+            dependency_wake: Arc::new(tokio::sync::Notify::new()),
+            dependency_started: AtomicBool::new(false),
+            dependency_consumer_source: RwLock::new(None),
+            dependency_consumers: RwLock::new(BTreeMap::new()),
             label_write: tokio::sync::Mutex::new(()),
             addresses: Mutex::new(book),
             address_write: tokio::sync::Mutex::new(()),
@@ -1656,6 +1687,9 @@ impl Hub {
                 .get(&device_id)
                 .ok_or(CommandError::UnknownPoint)?;
             let spec = device.point(key).ok_or(CommandError::UnknownPoint)?;
+            if matches!(spec.kind, moli_core::Kind::Schedule) {
+                return Err(CommandError::ReadOnly);
+            }
             if !spec.access.write {
                 if matches!(spec.kind, moli_core::Kind::Counter { .. }) {
                     return Err(crate::CounterError::ReadOnly.into());
@@ -2250,6 +2284,17 @@ impl Hub {
     }
 
     fn record_state(&self, device: &DeviceId, key: &str, value: Value, always: bool) {
+        self.record_state_update(device, key, value, always, |_| {});
+    }
+
+    fn record_state_update(
+        &self,
+        device: &DeviceId,
+        key: &str,
+        value: Value,
+        always: bool,
+        update: impl FnOnce(&mut Model),
+    ) {
         if moli_core::privacy::code_property(key) || moli_core::privacy::private_value(&value) {
             return;
         }
@@ -2261,6 +2306,7 @@ impl Hub {
                 return;
             };
             let key = spec.key.clone();
+            let cached = spec.kind.uses_state_cache();
             if spec.kind.is_operation() || spec.kind.is_occurrence() {
                 let button = spec.kind == moli_core::Kind::Button;
                 drop(model);
@@ -2269,7 +2315,8 @@ impl Hub {
                 }
                 return;
             }
-            if spec.kind.uses_state_cache() {
+            update(&mut model);
+            if cached {
                 self.0.state_dirty.store(true, Ordering::Release);
             }
             let states = model.states.entry(device.clone()).or_default();

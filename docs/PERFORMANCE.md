@@ -97,3 +97,17 @@ automatique d'une valeur durable. Aucun ordonnanceur, poll ou calcul au repos.
 Normalisation aux mutations et comparaisons explicites, publication aux changements ;
 aucune écriture du cache périodique pour ces projections. Ces limites ne remplacent
 pas une mesure de charge sur une installation réelle.
+
+### AUTO-H5 : chemins simulés et bornes
+
+Les définitions sont chargées paresseusement : sans planning configuré, aucun
+ordonnanceur supplémentaire ne démarre. Un seul ordonnanceur couvre les plannings
+courants ; les brouillons ne produisent aucune échéance. Le battement de 60 secondes
+ne parcourt les prédicats qu’en cas de saut d’horloge ; sinon seuls les plannings dus
+sont recalculés. Aucune empreinte de graphe n’est recalculée à chaque tick de planning.
+L’index des consommateurs est rafraîchi aux mutations de définitions ; un aperçu humain
+revérifie son instantané directement auprès du propriétaire des graphes, sans dépendre
+du retard du bus. Le fichier métier est plafonné à 4 Mio et 128 définitions, avec deux
+têtes et 256 créneaux chacune. Le test `auto_h5_calendar_budget_at_maximum_slots` rend
+mesurables 100 recherches à la borne maximale ; cette mesure native debug ne remplace
+ni les mesures cgroup ni la qualification de production, hors périmètre de ce lot.

@@ -33,32 +33,32 @@
 
 Fichiers : `crates/moli-core/src/dependency.rs`, exports et tests de contrat.
 
-- [ ] Tests rouges : édition concurrente, brouillon inerte, publication de la version exacte, version maximale, restauration invalide.
-- [ ] Enveloppe `VersionedDefinition<T>` à deux têtes, `DefinitionVersion<T>`, préconditions de publication et identités typées réutilisables.
-- [ ] Exécuter les contrats purs et Clippy ; commit séparé du planning.
+- [x] Tests rouges : édition concurrente, brouillon inerte, publication de la version exacte, version maximale, restauration invalide.
+- [x] Enveloppe `VersionedDefinition<T>` à deux têtes, `DefinitionVersion<T>`, préconditions de publication et identités typées réutilisables.
+- [x] Exécuter les contrats purs et Clippy ; commit séparé du planning.
 
 ## 2. Planning, propriétaire durable et projection
 
 Fichiers : domaine `weekly.rs`, runtime `dependencies/`, point `Kind::Schedule`, `moli-helpers` et intégration du démarrage.
 
-- [ ] Tests rouges : dimanche/minuit, chevauchements, limite après découpage, DST, redémarrage et coupures.
-- [ ] Normalisation pure ; validation de fuseau et recherche du prochain changement incluant les transitions de fuseau dans Jiff.
-- [ ] Propriétaire global paresseux, chargement validé, éditions CAS, publication durable et journalisée ; un ordonnanceur global borné.
-- [ ] Projection sans cache périodique ni commande directe ; le brouillon ne publie aucun état.
+- [x] Tests rouges : dimanche/minuit, chevauchements, limite après découpage, DST, redémarrage et coupures.
+- [x] Normalisation pure ; validation de fuseau et recherche du prochain changement incluant les transitions de fuseau dans Jiff.
+- [x] Propriétaire global paresseux, chargement validé, éditions CAS, publication durable et journalisée ; un ordonnanceur global borné.
+- [x] Projection sans cache périodique ni commande directe ; le brouillon ne publie aucun état.
 
 ## 3. Dépendances des graphes et confirmation humaine
 
 Fichiers : `moli-automation` (index et vérification), `moli-runtime` (verrou de définition et instantané des consommateurs).
 
-- [ ] Tests rouges : brouillon sans effet, graphe sans version courante inexécutable, mutation concurrente des consommateurs.
-- [ ] Index par identité ; graphe validé utilisant le courant ; verrou partagé pour save/approve/restore/delete et publication.
-- [ ] Aperçu signé par empreinte des versions et consommateurs ; tout changement pertinent exige un nouvel aperçu.
+- [x] Tests rouges : brouillon sans effet, graphe sans version courante inexécutable, mutation concurrente des consommateurs.
+- [x] Index par identité ; graphe validé utilisant le courant ; verrou partagé pour save/approve/restore/delete et publication.
+- [x] Aperçu signé par empreinte des versions et consommateurs ; tout changement pertinent exige un nouvel aperçu.
 
 ## 4. Surfaces et vérification finale
 
 Fichiers : API dépendances/MCP/OpenAPI, CLI, sauvegarde, éditeur web, locales, documentation automatismes.
 
-- [ ] Contrats API pour brouillon/CAS/aperçu/publication PIN et refus invité ; CLI et MCP ne contournent aucune validation.
-- [ ] Éditeur avec fuseau, créneaux, versions, conflits et graphes concernés avant confirmation ; tests de conversion des horaires.
-- [ ] fmt, Clippy workspace strict, suites Rust ciblées (-j2), npm ci/test/build, i18n, catalogue et fuites.
+- [x] Contrats API pour brouillon/CAS/aperçu/publication PIN et refus invité ; CLI et MCP ne contournent aucune validation.
+- [x] Éditeur avec fuseau, créneaux, versions, conflits et graphes concernés avant confirmation ; tests de conversion des horaires.
+- [x] fmt, Clippy workspace strict, suites Rust ciblées (-j2), npm ci/test/build, i18n, catalogue et fuites.
 - [ ] Commit final et soumission à Rust avec preuves ; contrôle complet au tour d’intégration selon la file existante.

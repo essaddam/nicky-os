@@ -1,5 +1,6 @@
 {
   "moteur.verif.bouton_occurrence": "a button has no state: use an occurrence trigger",
+  "moteur.verif.dependance_brouillon": "This dependency needs a validated current version before the automation can be enabled.",
   "moteur.verif.occurrence_valeur": "the occurrence filter does not match the point type",
   "moteur.decrit.quand_occurrence": "When {appareil} emits an occurrence",
   "moteur.decrit.quand_occurrence_valeur": "When {appareil} emits occurrence {valeur}",

@@ -1961,3 +1961,81 @@ async fn auto_h3_rest_temporal_values_are_typed_and_canonical() {
     cancel.cancel();
     driver.await.unwrap();
 }
+
+#[tokio::test]
+async fn auto_h5_http_ui_cannot_publish_without_pin_and_stale_preview_conflicts() {
+    let hub = lamp_hub().await;
+    let cancel = CancellationToken::new();
+    let config = serde_json::from_value(json!({"helper":[{"id":"weekly","name":"Weekly","kind":"schedule","weekly":{"timezone":"UTC","slots":[]}}]})).unwrap();
+    spawn_driver(
+        &hub,
+        InstanceId::from("fixture"),
+        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
+        cancel.clone(),
+    );
+    let point = moli_core::PointId::from("fixture:weekly/active");
+    for _ in 0..200 {
+        if hub.state(&point).is_some() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+    assert!(hub.state(&point).is_some());
+    let addr = serve(
+        &hub,
+        &moli_api::Options {
+            ui_pin: Some(moli_api::UiPin::new("482915")),
+            ..Default::default()
+        },
+    )
+    .await;
+    let path = "/api/dependencies/schedule/fixture:weekly";
+    let ui = "x-moli-origin: ui\r\n";
+    let (status, body) = request(&addr, "GET", &format!("{path}/preview"), None).await;
+    assert_eq!(status, 200, "{body}");
+    let preview: Json = serde_json::from_str(&body).unwrap();
+    let (status, body) = request_with(
+        &addr,
+        "POST",
+        &format!("{path}/approve"),
+        Some(&preview),
+        ui,
+    )
+    .await;
+    assert_eq!(status, 403, "{body}");
+    let pin = pin_session(&addr, "482915").await;
+    let draft = json!({"expected":1,"definition":{"type":"schedule","value":{"timezone":"UTC","slots":[{"day":1,"start":0,"end":1440}]}}});
+    let (status, body) = request_with(&addr, "PUT", path, Some(&draft), ui).await;
+    assert_eq!(status, 200, "{body}");
+    let (status, body) = request_with(&addr, "PUT", path, Some(&draft), ui).await;
+    assert_eq!(status, 409, "{body}");
+    let (status, body) = request_with(
+        &addr,
+        "POST",
+        &format!("{path}/approve"),
+        Some(&preview),
+        &pin,
+    )
+    .await;
+    assert_eq!(status, 409, "{body}");
+    let (_, body) = request(&addr, "GET", &format!("{path}/preview"), None).await;
+    let preview: Json = serde_json::from_str(&body).unwrap();
+    let (status, body) = request_with(
+        &addr,
+        "POST",
+        &format!("{path}/approve"),
+        Some(&preview),
+        &pin,
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    let view: Json = serde_json::from_str(&body).unwrap();
+    assert_eq!(view["versions"]["current"]["version"], 2);
+    assert_eq!(view["versions"]["draft"]["version"], 2);
+    assert!(
+        hub.command(&point, Value::Bool(true), moli_core::Origin::Ui, None)
+            .await
+            .is_err()
+    );
+    cancel.cancel();
+}
