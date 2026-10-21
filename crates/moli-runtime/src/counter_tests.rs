@@ -83,7 +83,7 @@ fn command(device: &Arc<Device>) -> (CommandRequest, oneshot::Receiver<Result<()
                 request_id: Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1".parse().unwrap()),
                 correlation: Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1".into()),
             },
-            reply,
+            reply: Arc::new(std::sync::Mutex::new(Some(reply))),
             claim: Arc::new(AtomicU8::new(Claim::TAKEN)),
         },
         receive,

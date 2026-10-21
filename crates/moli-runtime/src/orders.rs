@@ -361,7 +361,12 @@ mod tests {
     use super::*;
     use crate::driver::Claim;
 
-    fn order(within: Duration) -> (CommandRequest, oneshot::Receiver<Result<(), String>>) {
+    fn order(
+        within: Duration,
+    ) -> (
+        CommandRequest,
+        oneshot::Receiver<Result<(), crate::CommandError>>,
+    ) {
         let (tx, rx) = oneshot::channel();
         let id = DeviceId::new(&InstanceId::from("cloud"), "d1");
         let command = CommandRequest {
@@ -380,14 +385,35 @@ mod tests {
             key: "on".into(),
             value: Value::Bool(true),
             deadline: Instant::now() + within,
+            metadata: crate::CommandMetadata {
+                origin: moli_core::Origin::Api,
+                actor: None,
+                request_id: None,
+                correlation: None,
+            },
             reply: Arc::new(std::sync::Mutex::new(Some(tx))),
             claim: Arc::new(AtomicU8::new(Claim::TAKEN)),
         };
         (command, rx)
     }
 
-    fn answer(rx: &mut oneshot::Receiver<Result<(), String>>) -> Option<Result<(), String>> {
+    fn answer(
+        rx: &mut oneshot::Receiver<Result<(), crate::CommandError>>,
+    ) -> Option<Result<(), crate::CommandError>> {
         rx.try_recv().ok()
+    }
+
+    #[test]
+    fn structured_counter_error_survives_a_retained_send_permit() {
+        let (command, mut reply) = order(Duration::from_secs(5));
+        let permit = command.send_permit(command.deadline);
+        assert!(permit.wanted());
+        command.reply_result(Err(crate::CounterError::Bounds.into()));
+        assert_eq!(
+            reply.try_recv().unwrap(),
+            Err(crate::CommandError::Counter(crate::CounterError::Bounds))
+        );
+        assert!(!permit.wanted());
     }
 
     #[test]
@@ -425,7 +451,10 @@ mod tests {
         // Less than the margin and a second left: refused at once.
         let (late, mut rl) = order(REPLY_MARGIN + MIN_LEFT);
         line.push(late, 0);
-        assert_eq!(answer(&mut rl), Some(Err("expired".into())));
+        assert_eq!(
+            answer(&mut rl),
+            Some(Err(crate::CommandError::Driver("expired".into())))
+        );
         // Queued in time, then its time runs out behind a slow one.
         let (a, _ra) = order(Duration::from_secs(5));
         let (b, mut rb) = order(REPLY_MARGIN + MIN_LEFT + Duration::from_millis(30));
@@ -438,6 +467,7 @@ mod tests {
             answer(&mut rb)
                 .unwrap()
                 .unwrap_err()
+                .to_string()
                 .contains("ordre non envoyé")
         );
         line.sent();
@@ -473,6 +503,7 @@ mod tests {
             answer(&mut ra)
                 .unwrap()
                 .unwrap_err()
+                .to_string()
                 .contains("jamais renvoyé")
         );
         assert!(line.sending(), "still on its way");
@@ -489,8 +520,20 @@ mod tests {
         let (_, permit) = line.to_send().unwrap();
         assert!(permit.begin_send());
         line.close();
-        assert!(answer(&mut ra).unwrap().unwrap_err().contains("peut-être"));
-        assert!(answer(&mut rb).unwrap().unwrap_err().contains("non envoyé"));
+        assert!(
+            answer(&mut ra)
+                .unwrap()
+                .unwrap_err()
+                .to_string()
+                .contains("peut-être")
+        );
+        assert!(
+            answer(&mut rb)
+                .unwrap()
+                .unwrap_err()
+                .to_string()
+                .contains("non envoyé")
+        );
     }
 
     #[test]

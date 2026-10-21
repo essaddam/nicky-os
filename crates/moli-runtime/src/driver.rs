@@ -3,7 +3,7 @@
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::time::Instant;
 
 use moli_core::{Device, DeviceId, DriverStatus, InstanceId, Origin, PointId, RequestId, Value};
@@ -38,6 +38,8 @@ pub trait Driver: Send + Sync + 'static {
     fn run<'a>(&'a self, ctx: &'a mut DriverCtx) -> BoxFuture<'a, anyhow::Result<()>>;
 }
 
+type CommandReply = Arc<std::sync::Mutex<Option<oneshot::Sender<Result<(), crate::CommandError>>>>>;
+
 /// A validated write addressed to a driver. The driver must answer through
 /// [`CommandRequest::reply`] once the order has been handed to the device
 /// (state confirmation arrives later as a regular state update).
@@ -52,7 +54,7 @@ pub struct CommandRequest {
     /// lamp switched on hours after « failed » is worse than a refusal).
     pub deadline: Instant,
     pub metadata: CommandMetadata,
-    pub(crate) reply: oneshot::Sender<Result<(), crate::CommandError>>,
+    pub(crate) reply: CommandReply,
     /// Who has the order: still queued, taken by the driver, or given up by
     /// its caller. Decided once, atomically (see [`Claim`]).
     pub(crate) claim: Arc<AtomicU8>,
@@ -85,6 +87,50 @@ impl Claim {
     }
 }
 
+/// A command's live authorization, retained by its network task until emission.
+#[derive(Clone, Debug)]
+pub struct SendPermit {
+    reply: CommandReply,
+    claim: Arc<AtomicU8>,
+    deadline: Instant,
+    emitted: Arc<AtomicBool>,
+}
+
+impl SendPermit {
+    #[must_use]
+    pub fn wanted(&self) -> bool {
+        Instant::now() < self.deadline
+            && self.claim.load(Ordering::Acquire) != Claim::LEFT
+            && self
+                .reply
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .as_ref()
+                .is_some_and(|reply| !reply.is_closed())
+    }
+
+    /// Conservative emission boundary: no await may separate this from
+    /// handing the request to the transport. After it, retain the outcome.
+    #[must_use]
+    pub fn begin_send(&self) -> bool {
+        if !self.wanted() {
+            return false;
+        }
+        self.emitted.store(true, Ordering::Release);
+        true
+    }
+
+    #[must_use]
+    pub fn emitted(&self) -> bool {
+        self.emitted.load(Ordering::Acquire)
+    }
+
+    #[must_use]
+    pub fn deadline(&self) -> Instant {
+        self.deadline
+    }
+}
+
 impl CommandRequest {
     /// Nobody waits for the answer any more: the hub timed out, or the
     /// caller gave up. A driver checks it right before each step that sends
@@ -92,20 +138,42 @@ impl CommandRequest {
     /// it left must not leave.
     #[must_use]
     pub fn abandoned(&self) -> bool {
-        self.reply.is_closed()
+        self.reply
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .as_ref()
+            .is_none_or(oneshot::Sender::is_closed)
             || Instant::now() >= self.deadline
             || self.claim.load(Ordering::Acquire) == Claim::LEFT
+    }
+
+    /// Authorization bounded by an earlier deadline chosen by the driver.
+    #[must_use]
+    pub fn send_permit(&self, deadline: Instant) -> SendPermit {
+        SendPermit {
+            reply: Arc::clone(&self.reply),
+            claim: Arc::clone(&self.claim),
+            deadline: deadline.min(self.deadline),
+            emitted: Arc::new(AtomicBool::new(false)),
+        }
     }
 
     /// Reports the outcome. Dropping the request without replying is
     /// reported to the caller as a driver failure.
     pub fn reply(self, result: Result<(), String>) {
-        let _ = self.reply.send(result.map_err(crate::CommandError::Driver));
+        self.reply_result(result.map_err(crate::CommandError::Driver));
     }
 
     /// Returns a structured business-command error without losing its HTTP class.
     pub fn reply_result(self, result: Result<(), crate::CommandError>) {
-        let _ = self.reply.send(result);
+        if let Some(reply) = self
+            .reply
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .take()
+        {
+            let _ = reply.send(result);
+        }
     }
 }
 

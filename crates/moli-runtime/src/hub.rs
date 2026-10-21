@@ -1567,7 +1567,7 @@ impl Hub {
             value,
             deadline,
             metadata,
-            reply,
+            reply: Arc::new(Mutex::new(Some(reply))),
             claim: Arc::clone(&claim),
         });
         if let Err(e) = queued {

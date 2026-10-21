@@ -18,8 +18,8 @@ mod keypad;
 mod labels;
 pub mod media;
 mod occurrences;
-mod private_files;
 pub mod orders;
+mod private_files;
 mod secrets;
 mod state_cache;
 mod state_file;
@@ -29,7 +29,9 @@ pub mod voice;
 
 pub use addresses::KnownAddress;
 pub use counters::CounterError;
-pub use driver::{BoxFuture, CommandMetadata, CommandRequest, Driver, DriverCtx, MediaPublisher};
+pub use driver::{
+    BoxFuture, CommandMetadata, CommandRequest, Driver, DriverCtx, MediaPublisher, SendPermit,
+};
 pub use hub::{
     ApprovalError, CORE_NAMESPACE, CommandError, DeviceView, DriverView, Hub, HubOptions,
     LabelError, LabelPatch, MAX_LABEL, Snapshot,
