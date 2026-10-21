@@ -52,9 +52,8 @@ complet ci-dessous se fait une seule fois, après approbation, au tour de fusion
 Un seul contrôle complet tourne à la fois. Docker est réservé aux quatre cas
 `moli-profile` propres à Linux, au tour de fusion, avec un volume cible neuf et
 un seul job Docker Moli. Ces cas ne bloquent ni soumission ni fusion ; leur
-rattrapage commun sur `main` appartient à l'agent désigné. Le test de transport
-`authenticated_d13_transport_handles_replay_conflict_gap_and_read` est également
-exclu provisoirement du complet Chaleur, qui ne touche pas `moli-archive`.
+rattrapage commun sur `main` appartient à l'agent désigné. Les tests de transport
+D13 et de commandes invitées sont inclus depuis la fusion de leurs correctifs.
 
 ### Garde-fou natif
 
@@ -67,7 +66,7 @@ commune ou au tour de fusion, selon la file coordonnée.
 RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR="$PWD/target" CARGO_BUILD_JOBS=2 sh -c '
 cargo() {
     if test "$1" = test; then
-        command cargo "$@" -- --skip tests::a_device_that_changed_address_is_found_and_followed --skip tests::the_device_whose_address_another_one_took_is_found_elsewhere --skip tests::another_device_at_its_configured_address_is_not_taken_before_a_long_search --skip tests::an_address_a_person_changed_is_obeyed --skip authenticated_d13_transport_handles_replay_conflict_gap_and_read
+        command cargo "$@" -- --skip tests::a_device_that_changed_address_is_found_and_followed --skip tests::the_device_whose_address_another_one_took_is_found_elsewhere --skip tests::another_device_at_its_configured_address_is_not_taken_before_a_long_search --skip tests::an_address_a_person_changed_is_obeyed
     else
         command cargo "$@"
     fi
