@@ -20,7 +20,7 @@ roxmltree = "=0.21.1"
 serde.workspace = true
 
 [dev-dependencies]
-rcgen = { version = "=0.14.7", default-features = false, features = ["ring", "crypto"] }
+rcgen = { version = "=0.14.10", default-features = false, features = ["ring", "crypto"] }
 rustls.workspace = true
 tokio-rustls.workspace = true
 tokio = { workspace = true, features = ["test-util"] }

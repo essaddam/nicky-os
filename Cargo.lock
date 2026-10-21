@@ -1792,7 +1792,7 @@ dependencies = [
  "moli-i18n",
  "moli-net",
  "moli-runtime",
- "rcgen 0.14.7",
+ "rcgen 0.14.10",
  "ring",
  "roxmltree",
  "rustls",
@@ -2551,19 +2551,6 @@ dependencies = [
  "ring",
  "rustls-pki-types",
  "time",
- "yasna 0.5.2",
-]
-
-[[package]]
-name = "rcgen"
-version = "0.14.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10b99e0098aa4082912d4c649628623db6aba77335e4f4569ff5083a6448b32e"
-dependencies = [
- "ring",
- "rustls-pki-types",
- "time",
- "x509-parser",
  "yasna 0.5.2",
 ]
 
