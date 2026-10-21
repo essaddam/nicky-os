@@ -38,6 +38,14 @@ son profil : si le séjour ne fournit pas de fin, le propriétaire la fixe. Les 
 compte et sa réservation éventuelle sont relus à chaque autorisation ; l’expiration, la
 fermeture ou la disparition de la personne ferment aussi son code.
 
+Si le séjour évolue et que son intersection avec la période enregistrée devient vide,
+la vue représente cette fermeture par `[t, t)` (`from == until`). Elle reste listable,
+même pour un profil révoqué, et ne réécrit pas les droits persistés. Un invité devenu
+sans fin définie reçoit aussi une fenêtre d’affichage vide. Les nouveaux brouillons
+restent strictement validés : une fenêtre vide ou non bornée pour un invité est refusée.
+Après une écriture durable cohérente, le service publie son état avant de consulter le
+séjour vivant pour l’affichage ; cette consultation ne ferme pas les autres codes.
+
 Révoquer est définitif pour cet identifiant. Les codes révoqués restent réservés : un
 autre profil ne les récupère pas. Modifier un code invalide les reçus préparés avec son
 ancien emplacement de coffre. Les autres changements de droits sont relus vivants.

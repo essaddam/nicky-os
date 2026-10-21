@@ -299,27 +299,28 @@ impl ProfileService {
         self.0.ready()?;
         let data = self.0.read();
         let now = self.0.clock.now_ms();
-        data.profiles
+        Ok(data
+            .profiles
             .profiles
             .iter()
             .map(|(id, p)| self.view(id, p, now))
-            .collect()
+            .collect())
     }
-    pub(crate) fn view(&self, id: &str, p: &Record, now: u64) -> Result<ProfileView, Error> {
+    pub(crate) fn view(&self, id: &str, p: &Record, now: u64) -> ProfileView {
         let mut draft = p.profile.clone();
         let mut revoked = p.revoked;
         if let Some(person) = &draft.person {
             if let Some(person) = self.0.directory.person(person, now) {
-                super::validation::bound(&mut draft, &person)?;
+                super::validation::display_window(&mut draft, &person, now);
             } else {
                 revoked = true;
             }
         }
-        Ok(ProfileView {
+        ProfileView {
             id: id.into(),
             profile: draft,
             revoked,
-        })
+        }
     }
 }
 

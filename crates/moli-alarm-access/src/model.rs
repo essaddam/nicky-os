@@ -63,6 +63,8 @@ pub struct ProfileDraft {
     pub until: Option<u64>,
 }
 
+/// Output metadata: an empty live window is represented by `from == until`.
+/// It is not a valid new draft and never changes the stored authorization window.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ProfileView {
     pub id: String,

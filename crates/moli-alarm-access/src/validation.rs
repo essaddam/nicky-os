@@ -24,14 +24,31 @@ pub(crate) fn draft(profile: &ProfileDraft) -> Result<(), Error> {
     Ok(())
 }
 pub(crate) fn bound(profile: &mut ProfileDraft, person: &Person) -> Result<(), Error> {
+    intersect(profile, person);
+    if person.guest && profile.until.is_none() {
+        return Err(Error::InvalidProfile);
+    }
+    draft(profile)
+}
+
+fn intersect(profile: &mut ProfileDraft, person: &Person) {
     if person.guest {
         profile.from = profile.from.into_iter().chain(person.from).max();
         profile.until = profile.until.into_iter().chain(person.until).min();
-        if profile.until.is_none() {
-            return Err(Error::InvalidProfile);
-        }
     }
-    draft(profile)
+}
+
+/// A live stay can close a previously valid window. Represent it as [t, t)
+/// for display, without validating a new draft or changing persisted rights.
+pub(crate) fn display_window(profile: &mut ProfileDraft, person: &Person, now: u64) {
+    intersect(profile, person);
+    if person.guest
+        && (profile.until.is_none() || profile.from.zip(profile.until).is_some_and(|(a, b)| a >= b))
+    {
+        let boundary = profile.from.unwrap_or(now);
+        profile.from = Some(boundary);
+        profile.until = Some(boundary);
+    }
 }
 pub(crate) fn files(profiles: &ProfileFile, alarm: &AlarmFile) -> Result<(), Error> {
     if profiles.version != state::VERSION

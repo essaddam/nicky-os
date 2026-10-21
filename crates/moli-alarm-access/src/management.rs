@@ -121,9 +121,11 @@ impl ProfileService {
         {
             return Err(self.0.fail(e));
         }
-        let view = self.view(&id, &next.profiles.profiles[&id], now)?;
+        let record = next.profiles.profiles[&id].clone();
+        // Storage is coherent: release the transient fence before consulting
+        // the live directory for display. A stay change cannot undo publication.
         self.0.publish(next);
-        Ok(view)
+        Ok(self.view(&id, &record, self.0.clock.now_ms()))
     }
     pub async fn revoke(&self, owner: &OwnerPermit, id: &str) -> Result<(), Error> {
         owner.check()?;

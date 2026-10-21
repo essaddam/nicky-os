@@ -61,3 +61,19 @@ Validation avant soumission : fmt et Clippy workspace stricts ; 189 tests ciblé
 (`moli-alarm-access`, `moli-api`, `moli-os`) sans exclusion ; i18n et fuites propres.
 Les 22 tests du moteur pur étaient verts avant le travail ; ses sources sont inchangées.
 Le contrôle complet et la fusion restent soumis à l’approbation indépendante.
+
+## Correction de revue ALARM3-R1-001
+
+- L’affichage n’appelle plus le validateur d’un nouveau brouillon. Il projette une
+  intersection devenue vide sur `[t, t)` sans modifier les droits enregistrés ni
+  bloquer la liste des profils, y compris les profils révoqués.
+- La publication de l’état durable et la levée de la barrière transitoire précèdent
+  la lecture du séjour pour l’affichage. Les vraies erreurs de stockage ferment
+  toujours le service.
+- `tests/stay_changes.rs` couvre le témoin stable, le séjour disjoint, le profil
+  révoqué, le déplacement entre les lectures pendant publication et le passage
+  membre → invité sans fin définie. Les nouveaux brouillons invalides restent refusés.
+- Régression reproduite avant correction : un témoin vert et trois échecs. Après
+  correction : 163 tests ciblés accès/API sans filtre, fmt et Clippy workspace verts,
+  traductions et fuites propres. Les scénarios originaux de la sonde Rust restent
+  inchangés et passent en contre-épreuve auteur ; leur avis indépendant reste requis.
