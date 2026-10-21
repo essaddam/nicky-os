@@ -87,6 +87,8 @@ enum Command {
     /// Read or edit executable definitions through the running API. Drafts stay inert.
     #[command(subcommand)]
     Dependency(DependencyCommand),
+    #[command(subcommand)]
+    Scene(SceneCommand),
     /// Apply a counter operation through the running API, under its guard.
     Counter {
         device: String,
@@ -109,22 +111,30 @@ enum DependencyCommand {
     List,
     Get {
         device: String,
-        #[arg(long,default_value="schedule",value_parser=["schedule","computed"])]
+        #[arg(long, default_value="schedule", value_parser=["schedule","scene"])]
         kind: String,
     },
     Preview {
         device: String,
-        #[arg(long,default_value="schedule",value_parser=["schedule","computed"])]
+        #[arg(long, default_value="schedule", value_parser=["schedule","scene"])]
         kind: String,
     },
     /// Stage the typed JSON definition from a bounded file. Human publication uses the dashboard.
     Draft {
         device: String,
-        #[arg(long,default_value="schedule",value_parser=["schedule","computed"])]
-        kind: String,
         expected: u64,
         file: PathBuf,
+        #[arg(long, default_value="schedule", value_parser=["schedule","scene"])]
+        kind: String,
     },
+}
+
+#[derive(Subcommand)]
+enum SceneCommand {
+    Preview { device: String },
+    Run { device: String, file: PathBuf },
+    Status { run: String },
+    Cancel { run: String },
 }
 
 #[derive(Clone, Copy, clap::ValueEnum)]
@@ -247,6 +257,7 @@ fn run_command(command: Command, config: Config, boot: Instant) -> anyhow::Resul
             unreachable!("handled above")
         }
         Command::Dependency(command) => dependency_command(&config, command),
+        Command::Scene(command) => scene_command(&config, command),
         Command::Backup { dir } => backup::backup(&config.server.data_dir, &dir),
         Command::Temporal { device, value } => temporal_command(&config, &device, value),
         Command::Press { point, request_id } => press(&config, &point, request_id.as_deref()),
@@ -1352,17 +1363,17 @@ fn dependency_command(config: &Config, command: DependencyCommand) -> anyhow::Re
         ),
         DependencyCommand::Draft {
             device,
-            kind,
             expected,
             file,
+            kind,
         } => {
             use std::io::Read;
             let mut bytes = Vec::new();
             std::fs::File::open(file)?
-                .take(64 * 1024 + 1)
+                .take(256 * 1024 + 1)
                 .read_to_end(&mut bytes)?;
             ensure!(
-                bytes.len() <= 64 * 1024,
+                bytes.len() <= 256 * 1024,
                 "{}",
                 moli_i18n::tr!("serveur.dependance.definition")
             );
@@ -1374,6 +1385,65 @@ fn dependency_command(config: &Config, command: DependencyCommand) -> anyhow::Re
             )
         }
     };
+    dependency_http(config, method, path, &body)
+}
+
+fn scene_command(config: &Config, command: SceneCommand) -> anyhow::Result<()> {
+    fn encode(id: &str) -> String {
+        id.bytes()
+            .map(|b| {
+                if b.is_ascii_alphanumeric() || b"-_.~".contains(&b) {
+                    char::from(b).to_string()
+                } else {
+                    format!("%{b:02X}")
+                }
+            })
+            .collect()
+    }
+    let (method, path, body) = match command {
+        SceneCommand::Preview { device } => (
+            http::Method::GET,
+            format!("/api/scenes/{}/preview", encode(&device)),
+            serde_json::Value::Null,
+        ),
+        SceneCommand::Status { run } => (
+            http::Method::GET,
+            format!("/api/scene-runs/{}", encode(&run)),
+            serde_json::Value::Null,
+        ),
+        SceneCommand::Cancel { run } => (
+            http::Method::POST,
+            format!("/api/scene-runs/{}/cancel", encode(&run)),
+            serde_json::json!({}),
+        ),
+        SceneCommand::Run { device, file } => {
+            use std::io::Read;
+            let mut bytes = Vec::new();
+            std::fs::File::open(file)?
+                .take(256 * 1024 + 1)
+                .read_to_end(&mut bytes)?;
+            ensure!(
+                bytes.len() <= 256 * 1024,
+                "{}",
+                moli_i18n::tr!("serveur.scene.definition")
+            );
+            let preview: moli_runtime::ScenePreview = serde_json::from_slice(&bytes)?;
+            (
+                http::Method::POST,
+                format!("/api/scenes/{}/run", encode(&device)),
+                serde_json::to_value(preview)?,
+            )
+        }
+    };
+    dependency_http(config, method, path, &body)
+}
+
+fn dependency_http(
+    config: &Config,
+    method: http::Method,
+    path: String,
+    body: &serde_json::Value,
+) -> anyhow::Result<()> {
     let address = config.server.listen;
     let host = if address.ip().is_unspecified() {
         "127.0.0.1".to_owned()
@@ -1386,7 +1456,7 @@ fn dependency_command(config: &Config, command: DependencyCommand) -> anyhow::Re
             .uri(path)
             .header("x-moli-origin", "cli")
             .header(http::header::HOST, &host),
-        &body,
+        body,
     )?;
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()

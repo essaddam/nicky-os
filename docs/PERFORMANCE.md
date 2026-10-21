@@ -128,3 +128,13 @@ pas la fraîcheur. Ces mesures natives debug ne constituent pas une mesure cgrou
 ni une qualification de production. Sans calcul courant, aucune échéance ni
 observation de calcul n’est entretenue. Les valeurs dérivées ne sont pas écrites
 dans le cache périodique ; les définitions restent dans le fichier métier commun.
+### Scènes (AUTO-S1)
+
+Aucune tâche ni horloge de scène sans lancement. Un index des points n’observe
+que les cibles actives ; les portées de continuations utilisent des références
+faibles bornées à 512 appareils. Quatre scènes et quatre voies au total ; 32 cibles
+et 128 appareils de portée par scène. Les portées communes partagent une voie
+séquentielle. Les validations, empreintes et écritures de définitions restent
+hors du chemin d’observation ; le suivi d’une valeur égale ne fabrique pas un
+événement State. Les seules attentes actives sont bornées par le lancement
+(120 s au plus). Les 64 résultats éphémères ne déclenchent aucun rejeu.

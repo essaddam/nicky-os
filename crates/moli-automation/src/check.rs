@@ -381,6 +381,25 @@ fn check_node(
                 c.rule(rule);
             }
         }
+        Step::Scene { scene } => {
+            let id = DeviceId::from(scene.as_str());
+            if let Some(spec) = hub.current_scene(&id) {
+                match hub.scene_scope(&spec) {
+                    Ok(scope) => {
+                        for target in scope.targets {
+                            for device in target.devices {
+                                if let Some(room) = hub.protected_room(&device) {
+                                    c.protected.push(room);
+                                }
+                            }
+                        }
+                    }
+                    Err(error) => c.push(Level::Error, error.to_string()),
+                }
+            } else {
+                c.push(Level::Error, tr!("moteur.verif.scene_courant"));
+            }
+        }
         Step::Set { point, value } => {
             if let Some(spec) = c.need(point, true)
                 && let Err(e) =
@@ -867,6 +886,7 @@ pub(crate) fn rule_words(rule: &Rule, hub: &Hub) -> String {
 
 fn action_words(step: &Step, hub: &Hub) -> String {
     match step {
+        Step::Scene { scene } => tr!("moteur.action.scene", scene = scene),
         Step::Set { point, value } => {
             let s = said(hub, point);
             let key = point.rsplit('/').next().unwrap_or_default();

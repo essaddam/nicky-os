@@ -53,6 +53,7 @@ Une automatisation = un **graphe** de nœuds reliés (comme n8n), stocké dans
 | Logique | `if` | `rules[]` (état / plage horaire / jour-nuit), `all` (ET) ou OU |
 | Actions | `set` | `point`, `value` |
 | | `toggle` | `point` |
+| | `scene` | `scene` : identité du courant validé, affectations et confirmations bornées |
 | | `wait` | `seconds` |
 | | `wait_for` | `rule`, `timeout_s` → `ok` / `timeout` |
 | | `notify` | `title?`, `message`, `channels` (`maison`, `telegram`) |
@@ -308,3 +309,14 @@ Le contrat de provenance des unités des agrégats inclut les mesures reçues av
 l’activation du premier calcul et les sources pas encore indexées : un changement
 d’unité les rend indisponibles dans le modèle du hub jusqu’à une vraie nouvelle
 mesure, sans renouveler leur âge. Voir [les points calculés](calculs.md).
+## Scènes versionnées (AUTO-S1)
+
+Une scène applique des valeurs cibles typées et suit leur résultat individuel,
+avec garde, acquittement pilote et confirmation d’état distincts. Elle réutilise
+les versions et la publication PIN d’AUTO-H5 ; les graphes nomment une identité
+stable, jamais un brouillon. Un état récent déjà conforme évite un ordre inutile.
+Les portées communes sont ordonnées, quatre voies au plus sont actives au total,
+les intentions non émises restent révocables jusqu’à leur échéance, y compris
+dans une continuation composée. Aucune transaction physique, aucun rollback ni
+rejeu au redémarrage. Contrats, configuration, bornes et surfaces :
+[scènes](scenes.md), [OpenAPI](../api/scenes.openapi.yaml).

@@ -12,7 +12,7 @@ pub const MAX_DEFINITION_VERSION: u64 = (1_u64 << 53) - 1;
 #[serde(rename_all = "snake_case")]
 pub enum DependencyKind {
     Schedule,
-    Computed,
+    Scene,
 }
 
 /// Stable identity, independent of any revision, label or time zone.
@@ -122,19 +122,5 @@ impl<T: Clone + PartialEq> VersionedDefinition<T> {
         }
         self.current = Some(self.draft.clone());
         Ok(true)
-    }
-}
-
-impl DependencyRef {
-    #[must_use]
-    pub fn point(&self) -> crate::PointId {
-        crate::PointId::new(&self.id, self.key())
-    }
-    #[must_use]
-    pub fn key(&self) -> &'static str {
-        match self.kind {
-            DependencyKind::Schedule => "active",
-            DependencyKind::Computed => "value",
-        }
     }
 }

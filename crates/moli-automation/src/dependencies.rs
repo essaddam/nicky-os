@@ -60,7 +60,7 @@ fn template_points(graph: &Graph) -> Vec<&str> {
 }
 
 pub(crate) fn references(graph: &Graph, hub: &Hub) -> BTreeSet<DependencyRef> {
-    points(graph)
+    let mut references: BTreeSet<_> = points(graph)
         .into_iter()
         .chain(template_points(graph))
         .filter_map(|p| {
@@ -68,7 +68,16 @@ pub(crate) fn references(graph: &Graph, hub: &Hub) -> BTreeSet<DependencyRef> {
             let (found, _) = hub.describe(&device)?;
             found.point(&key)?.kind.dependency(&device)
         })
-        .collect()
+        .collect();
+    for node in &graph.nodes {
+        if let Step::Scene { scene } = &node.step {
+            references.insert(DependencyRef {
+                kind: moli_core::DependencyKind::Scene,
+                id: scene.as_str().into(),
+            });
+        }
+    }
+    references
 }
 
 impl Automations {

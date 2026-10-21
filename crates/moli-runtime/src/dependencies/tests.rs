@@ -271,6 +271,7 @@ async fn auto_h5_transition_persistence_is_deduplicated_and_does_not_replay_miss
             &reference,
             owner.view(&reference).unwrap().versions.versions(),
             midnight,
+            None,
         )
         .await
         .unwrap();

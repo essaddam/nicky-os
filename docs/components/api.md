@@ -1049,3 +1049,23 @@ affectés), vérifié à nouveau avant publication. La confirmation est bornée 
 Les événements `state` peuvent porter `source_ts` : `ts` date la publication, tandis
 que `source_ts` conserve l’âge de la donnée dérivée ; son absence garde le protocole
 habituel. Voir [calculs.md](calculs.md) et le schéma OpenAPI commun.
+### Scènes d’état voulu
+
+`GET /api/scenes/{id}/preview` lit le courant validé et sa portée réelle ;
+`POST /api/scenes/{id}/run` accepte cet aperçu exact (202, aucune autorité dans le
+corps). `GET /api/scene-runs/{id}` expose les résultats par cible ;
+`POST /api/scene-runs/{id}/cancel` révoque ce qui n’est pas émis. Les résultats
+sont éphémères, sans rejeu après redémarrage. L’origine du client est conservée
+et chaque commande passe par la garde ; acquittement et confirmation sont distincts.
+
+Publication : les routes communes `/api/dependencies/scene/{id}` manipulent
+brouillon, CAS, aperçu des graphes/portée et validation humaine PIN. La publication
+d’un aperçu est bornée à 512 Kio ; les autres corps JSON restent bornés à 256 Kio.
+MCP : `preview_scene`, `run_scene`, `get_scene_run`, `cancel_scene_run` ;
+`get_dependency` et `save_dependency_draft` acceptent `kind` (`schedule` par défaut,
+`scene` ajouté), sans faculté de publier. CLI : `dependency … --kind scene` et
+`scene preview|run|status|cancel`, uniquement vers le serveur lancé.
+
+[Contrats et limites](scenes.md) ; [OpenAPI des scènes](../api/scenes.openapi.yaml)
+et [définitions communes](../api/dependencies.openapi.yaml). Aucun accès invité
+ni mutation de démonstration sur ces opérations.

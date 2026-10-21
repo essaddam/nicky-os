@@ -228,6 +228,9 @@ pub enum Step {
     Toggle {
         point: String,
     },
+    Scene {
+        scene: String,
+    },
     Wait {
         seconds: u64,
     },
@@ -294,6 +297,7 @@ impl Step {
             Self::Manual => "manual",
             Self::If { .. } => "if",
             Self::Set { .. } => "set",
+            Self::Scene { .. } => "scene",
             Self::Toggle { .. } => "toggle",
             Self::Wait { .. } => "wait",
             Self::WaitFor { .. } => "wait_for",

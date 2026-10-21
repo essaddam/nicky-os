@@ -29,6 +29,7 @@ mod mcp;
 mod netatmo;
 mod people;
 mod people_api;
+mod scenes;
 mod whereabouts;
 
 pub use whereabouts::INSTANCE as PEOPLE_INSTANCE;
@@ -293,6 +294,7 @@ pub fn router(hub: Hub, shutdown: CancellationToken, options: &Options) -> Route
         .route("/api/health", get(rest::health))
         .merge(device_routes())
         .merge(dependencies::routes())
+        .merge(scenes::routes())
         .merge(androidtv::routes(options.androidtv.clone(), options.demo))
         .merge(netatmo::routes(&humans, options))
         .route("/api/media/{name}", get(rest::media))

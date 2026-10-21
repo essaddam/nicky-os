@@ -363,5 +363,8 @@
   "automatismes.routines.titre": "Routines",
   "automatismes.routines.tous": "All automations",
   "automatismes.routines.lancee": "“{nom}” started",
-  "automatismes.routines.erreur": "{nom}: {message}"
+  "automatismes.routines.erreur": "{nom}: {message}",
+  "automatismes.noeud.scene.court": "Scene",
+  "automatismes.noeud.scene.indice": "Apply the validated current definition and wait for confirmation.",
+  "automatismes.noeud.scene.label": "Apply a scene"
 }

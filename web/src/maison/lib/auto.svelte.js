@@ -43,6 +43,7 @@ export const CATALOG = {
   on_start: kind('on_start', 'trigger', 'power', {}),
   manual: kind('manual', 'trigger', 'hand', {}),
   if: kind('if', 'logic', 'branch', { rules: [{ kind: 'sun', is: 'night' }], all: true }),
+  scene: kind('scene', 'action', 'tune', { scene: '' }),
   set: kind('set', 'action', 'tune', { point: '', value: true }),
   toggle: kind('toggle', 'action', 'swap', { point: '' }),
   wait: kind('wait', 'wait', 'timer', { seconds: 300 }),
@@ -216,6 +217,7 @@ export function nodeText(node) {
         (node.rules ?? []).map(ruleText).join(` ${t(node.all === false ? 'automatismes.texte.ou' : 'automatismes.texte.et')} `) ||
         t('automatismes.texte.aucune_condition')
       );
+    case 'scene': return node.scene || t('scenes.identite');
     case 'set': {
       const key = splitPoint(node.point)[1];
       if (key === 'key') return t('automatismes.texte.touche', { nom: pointName(node.point), valeur: node.value });

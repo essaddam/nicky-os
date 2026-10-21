@@ -63,3 +63,9 @@ pub fn validate_weekly_schedule(
 ) -> Result<moli_core::WeeklySchedule, DependencyError> {
     Ok(dependencies::Calendar::new(plan)?.definition().clone())
 }
+
+mod scenes;
+pub use scenes::{
+    SceneError, ScenePreview, SceneRun, SceneScope, SceneScopeTarget, SceneStatus,
+    SceneTargetResult, TargetStatus,
+};

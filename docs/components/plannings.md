@@ -83,8 +83,8 @@ La garde, les échéances et les règles habituelles des commandes restent appli
 Les aides de valeur existantes ne reçoivent pas de version à chaque changement de valeur.
 AUTO-K1 étend l’énumération typée avec les agrégats et réutilise cette enveloppe,
 l’aperçu et le verrou de publication. Ses sources versionnées et consommateurs
-transitifs sont liés dans l’aperçu commun, voir [calculs.md](calculs.md). Les scènes
-et autres calculs pourront suivre ce mécanisme, sans JSON exécutable libre.
+transitifs sont liés dans l’aperçu commun, voir [calculs.md](calculs.md). Les scènes AUTO-S1 étendent le même propriétaire et l’aperçu avec leur portée
+validée, sans projection de point ni JSON exécutable libre ; voir [scenes.md](scenes.md).
 
 ## Persistance, reprise et journal
 
@@ -129,7 +129,11 @@ moli-os dependency preview helpers:weekly
 moli-os dependency draft helpers:weekly 1 definition.json
 ```
 
-Le fichier JSON borné à 64 Kio contient la définition typée
+Le fichier JSON borné à 256 Kio contient la définition typée
 `{"type":"schedule","value":{"timezone":"UTC","slots":[]}}`. CLI et MCP préparent
 un brouillon ; la publication se fait dans l’éditeur ou par REST avec une session humaine
 valide, liée au client selon les règles existantes. Aucun PIN sur la ligne de commande.
+
+AUTO-S1 réutilise ce même propriétaire pour `DependencyKind::Scene`, sans point
+booléen ni tâche d’horloge. Son aperçu inclut sa portée physique et son courant
+reste séparé du brouillon. Voir [scenes.md](scenes.md).

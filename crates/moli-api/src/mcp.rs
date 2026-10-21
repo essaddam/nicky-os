@@ -57,28 +57,33 @@ pub(crate) struct MoliMcp {
     demo: bool,
 }
 
+fn schedule_kind() -> String {
+    "schedule".into()
+}
+
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct DependencyArgs {
-    /// Configured dependency device identity.
+    #[serde(default = "schedule_kind")]
+    kind: String,
+    /// Configured schedule device identity.
     id: String,
-    /// schedule (default) or computed.
-    #[serde(default)]
-    #[schemars(with = "Option<String>")]
-    kind: Option<moli_core::DependencyKind>,
 }
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct DependencyDraftArgs {
+    #[serde(default = "schedule_kind")]
+    kind: String,
     id: String,
-    /// schedule (default) or computed.
-    #[serde(default)]
-    #[schemars(with = "Option<String>")]
-    kind: Option<moli_core::DependencyKind>,
     expected: u64,
     /// Typed definition: {type: "schedule", value: {timezone, slots: [{day,start,end}]}}.
     /// Day 1=Monday..7; start/end are minutes, maximum 256 normalized slots.
-    /// Computed: {type:"aggregate",value:{operation:"min"|"max"|"mean",sources:[point ids],unit:"W"|null,max_age_s:1..604800}}; at most 32 sources.
     #[schemars(with = "serde_json::Value")]
     definition: Json,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+#[serde(deny_unknown_fields)]
+struct SceneRunArgs {
+    preview: Json,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -199,14 +204,17 @@ impl MoliMcp {
         }
     }
     #[tool(
-        description = "Read a schedule or computed dependency and its affected automation preview. Publishing requires the existing human PIN session in the dashboard; this tool cannot approve."
+        description = "Read a typed schedule or scene dependency and its affected automation preview. Publishing requires the existing human PIN session in the dashboard; this tool cannot approve."
     )]
     async fn get_dependency(
         &self,
         Parameters(args): Parameters<DependencyArgs>,
     ) -> Result<CallToolResult, McpError> {
+        let Ok(kind) = serde_json::from_value(serde_json::Value::String(args.kind)) else {
+            return Ok(fail(&moli_runtime::DependencyError::Definition.to_string()));
+        };
         let reference = moli_core::DependencyRef {
-            kind: args.kind.unwrap_or(moli_core::DependencyKind::Schedule),
+            kind,
             id: args.id.into(),
         };
         match self.hub.inspect_dependency(&reference).await {
@@ -216,7 +224,7 @@ impl MoliMcp {
     }
 
     #[tool(
-        description = "Save an inert schedule/computed DRAFT with expected draft version (409/conflict if stale). A human must review affected automations and explicitly approve its exact version. Does not change the validated current definition."
+        description = "Save an inert typed dependency DRAFT with expected draft version (409/conflict if stale). A human must review affected automations and explicitly approve its exact version. Does not change the validated current definition."
     )]
     async fn save_dependency_draft(
         &self,
@@ -228,8 +236,11 @@ impl MoliMcp {
         let Ok(definition) = serde_json::from_value(args.definition) else {
             return Ok(fail(&moli_runtime::DependencyError::Definition.to_string()));
         };
+        let Ok(kind) = serde_json::from_value(serde_json::Value::String(args.kind)) else {
+            return Ok(fail(&moli_runtime::DependencyError::Definition.to_string()));
+        };
         let reference = moli_core::DependencyRef {
-            kind: args.kind.unwrap_or(moli_core::DependencyKind::Schedule),
+            kind,
             id: args.id.into(),
         };
         match self
@@ -238,6 +249,64 @@ impl MoliMcp {
             .await
         {
             Ok(view) => ok(&json!(view)),
+            Err(e) => Ok(fail(&e.to_string())),
+        }
+    }
+
+    #[tool(
+        description = "Read the exact validated scene and real target/member scope. Copy this preview into run_scene; it never runs or publishes a draft."
+    )]
+    async fn preview_scene(
+        &self,
+        Parameters(args): Parameters<AutomationIdArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        match self.hub.preview_scene(&args.id.into()).await {
+            Ok(p) => ok(&json!(p)),
+            Err(e) => Ok(fail(&e.to_string())),
+        }
+    }
+    #[tool(
+        description = "Apply the exact validated scene preview with bounded concurrency. Origin stays MCP; each target/member passes the guard. Returns an ephemeral run id; driver acknowledgement is distinct from fresh state confirmation. Never publishes definitions."
+    )]
+    async fn run_scene(
+        &self,
+        Parameters(args): Parameters<SceneRunArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        if self.demo {
+            return Ok(fail(&moli_i18n::tr!("serveur.demo.reserve")));
+        }
+        let Ok(preview) = serde_json::from_value(args.preview) else {
+            return Ok(fail(&moli_runtime::SceneError::Definition.to_string()));
+        };
+        match self.hub.start_scene(preview, Origin::Mcp, None, None).await {
+            Ok(r) => ok(&json!(r)),
+            Err(e) => Ok(fail(&e.to_string())),
+        }
+    }
+    #[tool(
+        description = "Read per-target scene status: held, acknowledged, confirmed, failed, confirmation_expired, superseded or cancelled. Runs are not replayed after restart."
+    )]
+    async fn get_scene_run(
+        &self,
+        Parameters(args): Parameters<AutomationIdArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        match self.hub.scene_run(&args.id) {
+            Some(r) => ok(&json!(r)),
+            None => Ok(fail(&moli_runtime::SceneError::Unknown.to_string())),
+        }
+    }
+    #[tool(
+        description = "Cancel a scene run and revoke unsent orders and held approvals. Already emitted effects are not rolled back."
+    )]
+    async fn cancel_scene_run(
+        &self,
+        Parameters(args): Parameters<AutomationIdArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        if self.demo {
+            return Ok(fail(&moli_i18n::tr!("serveur.demo.reserve")));
+        }
+        match self.hub.cancel_scene(&args.id, Origin::Mcp, None) {
+            Ok(()) => ok(&json!({"cancelled":true})),
             Err(e) => Ok(fail(&e.to_string())),
         }
     }

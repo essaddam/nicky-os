@@ -3,6 +3,7 @@
   import Icon from '../ui/Icon.svelte';
   import Orb from '../moli/Orb.svelte';
   import Editor from '../auto/Editor.svelte';
+  import Scenes from '../../components/Scenes.svelte';
   import { home, note, relative } from '../lib/home.svelte.js';
   import { api, asHuman, pending, liveRuns, CATALOG, CANCELLED } from '../lib/auto.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
@@ -137,6 +138,8 @@
       <h1 class="page-title">{t('automatismes.titre')}</h1>
       <p class="page-sub">{t('automatismes.liste.sous_titre')}</p>
     </header>
+
+    <Scenes />
 
     <form class="ask" onsubmit={(e) => (e.preventDefault(), draft())}>
       <Orb size={46} state={drafting ? 'thinking' : 'idle'} />

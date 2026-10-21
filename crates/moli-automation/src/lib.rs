@@ -40,6 +40,8 @@ pub use run::{Live, Run, RunStatus, StepLog, StepStatus};
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
+    #[serde(default, rename = "scene")]
+    pub scenes: Vec<SceneConfig>,
     /// For sunrise and sunset (rounded is fine).
     #[serde(default)]
     pub latitude: Option<f64>,
@@ -49,6 +51,13 @@ pub struct Config {
     pub timezone: String,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SceneConfig {
+    pub id: moli_core::DeviceId,
+    pub definition: moli_core::SceneSpec,
+}
+
 fn default_timezone() -> String {
     "Europe/Paris".into()
 }
@@ -56,6 +65,7 @@ fn default_timezone() -> String {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            scenes: Vec::new(),
             latitude: None,
             longitude: None,
             timezone: default_timezone(),
@@ -230,6 +240,17 @@ impl Automations {
         data_dir: Option<&std::path::Path>,
         cancel: CancellationToken,
     ) -> anyhow::Result<(Self, tokio::task::JoinHandle<()>)> {
+        if config.scenes.len() > 128 {
+            anyhow::bail!("{}", tr!("serveur.scene.definition"));
+        }
+        let mut seen = std::collections::BTreeSet::new();
+        for scene in &config.scenes {
+            if !seen.insert(scene.id.clone()) {
+                anyhow::bail!("{}", tr!("serveur.scene.definition"));
+            }
+            hub.initialize_scene(scene.id.clone(), scene.definition.clone())
+                .await?;
+        }
         let tz = jiff::tz::TimeZone::get(&config.timezone)?;
         let path = data_dir.map(|d| d.join("automations.json"));
         let runs_path = data_dir.map(|d| d.join("automation-runs.jsonl"));

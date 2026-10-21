@@ -195,5 +195,7 @@
 
   "moteur.refus.nom_note": "Only a person (house code) can rename an approved automation or change its note.",
   "moteur.verif.compteur_operation": "This counter operation has no state or occurrence: use its value point.",
-  "moteur.verif.minuteur_operation": "A timer operation cannot be read as state."
+  "moteur.verif.minuteur_operation": "A timer operation cannot be read as state.",
+  "moteur.action.scene": "apply scene {scene}",
+  "moteur.verif.scene_courant": "The scene needs a validated version whose scope still matches the current devices."
 }

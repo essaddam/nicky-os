@@ -1,6 +1,7 @@
 <script>
   import Icon from '../ui/Icon.svelte';
   import PointPicker from './PointPicker.svelte';
+  import ScenePicker from './ScenePicker.svelte';
   import Fields from './Fields.svelte';
   import { CATALOG, pointSpec, ruleText } from '../lib/auto.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
@@ -165,6 +166,8 @@
         </div>
       {/each}
       <button class="link" onclick={() => set({ rules: [...node.rules, ruleOf('state')] })}>{t('automatismes.inspecteur.autre_condition')}</button>
+    {:else if node.type === 'scene'}
+      <ScenePicker value={node.scene ?? ''} onchange={(scene)=>set({scene})} />
     {:else if node.type === 'set'}
       <span class="lbl">{t('automatismes.inspecteur.quel_appareil')}</span>
       <PointPicker point={node.point} mode="write" onpick={(p) => set({ point: p, value: defaultValue(p) })} />

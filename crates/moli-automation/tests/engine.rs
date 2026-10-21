@@ -1132,75 +1132,102 @@ async fn auto_h5_failed_graph_write_blocks_dependency_publication_until_saved_ag
 }
 
 #[tokio::test]
-async fn auto_k1_transitive_calculation_publication_shows_and_updates_its_graph() {
-    use moli_core::{DependencyKind, DependencyRef};
+async fn auto_s1_scene_graph_uses_current_head_and_agent_drafts_are_inert() {
     let (hub, autos, cancel) = setup().await;
-    let config=serde_json::from_value(serde_json::json!({"helper":[
-        {"id":"x","name":"Input X","kind":"number","initial":10},
-        {"id":"y","name":"Input Y","kind":"number","initial":30},
-        {"id":"a","name":"Average","kind":"computed","aggregate":{"operation":"mean","sources":["calc:x/value","calc:y/value"],"max_age_s":60}},
-        {"id":"b","name":"Downstream","kind":"computed","aggregate":{"operation":"max","sources":["calc:a/value"],"max_age_s":60}}
-    ]})).unwrap();
-    spawn_driver(
-        &hub,
-        "calc".into(),
-        Arc::new(moli_helpers::Helpers::new(config).unwrap()),
-        cancel.clone(),
+    let id = moli_core::DeviceId::from("scenes:desired");
+    let definition = |value| {
+        serde_json::from_value(serde_json::json!({"targets":[{"point":"fake:lamp/on","value":value}],"parallel":2,"timeout_s":10,"confirmation_s":2})).unwrap()
+    };
+    hub.initialize_scene(id.clone(), definition(true))
+        .await
+        .unwrap();
+    let draft=autos.save(automation(serde_json::json!({"nodes":[{"id":"t","type":"manual"},{"id":"s","type":"scene","scene":"scenes:desired"}],"edges":[{"from":"t","to":"s"}]})),AGENT).await.unwrap();
+    assert!(
+        autos
+            .approve(&draft.id, &draft.fingerprint(), HUMAN)
+            .await
+            .is_err()
     );
-    tokio::time::timeout(Duration::from_secs(5), async {
-        while hub.state(&PointId::from("calc:b/value")).is_none() {
+    let reference = moli_core::DependencyRef {
+        kind: moli_core::DependencyKind::Scene,
+        id,
+    };
+    let preview = hub.preview_dependency(&reference).await.unwrap();
+    assert_eq!(preview.consumers.len(), 1);
+    assert_eq!(preview.consumers[0].id, draft.id);
+    assert_eq!(
+        hub.publish_dependency(preview.clone(), false, Origin::Mcp, None)
+            .await,
+        Err(moli_runtime::DependencyError::Human)
+    );
+    hub.publish_dependency(preview, true, Origin::Ui, None)
+        .await
+        .unwrap();
+    let approved = autos
+        .approve(&draft.id, &draft.fingerprint(), HUMAN)
+        .await
+        .unwrap();
+    let fingerprint = approved.fingerprint();
+    hub.stage_dependency(
+        reference.clone(),
+        1,
+        moli_runtime::DependencyDefinition::Scene(definition(false)),
+        Origin::Mcp,
+        None,
+    )
+    .await
+    .unwrap();
+    assert!(autos.get(&draft.id).unwrap().is_approved());
+    assert_eq!(autos.get(&draft.id).unwrap().fingerprint(), fingerprint);
+    let run = autos
+        .run_now(&draft.id, false, Some(&fingerprint), HUMAN)
+        .await
+        .unwrap();
+    scene_graph_completed(&autos, &draft.id, run.id).await;
+    assert_eq!(
+        hub.state(&"fake:lamp/on".into()).unwrap().value,
+        Value::Bool(true)
+    );
+    hub.publish_dependency(
+        hub.preview_dependency(&reference).await.unwrap(),
+        true,
+        Origin::Ui,
+        None,
+    )
+    .await
+    .unwrap();
+    assert_eq!(autos.get(&draft.id).unwrap().fingerprint(), fingerprint);
+    let run = autos
+        .run_now(&draft.id, false, Some(&fingerprint), HUMAN)
+        .await
+        .unwrap();
+    scene_graph_completed(&autos, &draft.id, run.id).await;
+    assert_eq!(
+        hub.state(&"fake:lamp/on".into()).unwrap().value,
+        Value::Bool(false)
+    );
+    assert!(
+        hub.journal(100)
+            .iter()
+            .any(|entry| entry.origin == Origin::Automation
+                && matches!(entry.action, moli_core::Action::Scene { .. }))
+    );
+    cancel.cancel();
+}
+
+async fn scene_graph_completed(autos: &Automations, id: &str, run: u64) {
+    tokio::time::timeout(Duration::from_secs(3), async {
+        loop {
+            if autos
+                .runs(Some(id), 10)
+                .iter()
+                .any(|r| r.id == run && r.status == RunStatus::Done)
+            {
+                break;
+            }
             tokio::task::yield_now().await;
         }
     })
     .await
     .unwrap();
-    let a = DependencyRef {
-        kind: DependencyKind::Computed,
-        id: "calc:a".into(),
-    };
-    let b = DependencyRef {
-        kind: DependencyKind::Computed,
-        id: "calc:b".into(),
-    };
-    for reference in [&a, &b] {
-        hub.publish_dependency(
-            hub.preview_dependency(reference).await.unwrap(),
-            true,
-            Origin::Ui,
-            None,
-        )
-        .await
-        .unwrap();
-    }
-    let graph=approved(&autos,serde_json::json!({"nodes":[{"id":"t","type":"when_state","point":"calc:b/value","to":10},{"id":"s","type":"set","point":"fake:lamp/on","value":true}],"edges":[{"from":"t","to":"s"}]})).await;
-    let mut draft = hub
-        .dependency(&a)
-        .await
-        .unwrap()
-        .versions
-        .draft()
-        .definition
-        .clone();
-    let moli_runtime::DependencyDefinition::Aggregate(ref mut spec) = draft else {
-        unreachable!()
-    };
-    spec.operation = moli_core::AggregateOp::Min;
-    hub.stage_dependency(a.clone(), 1, draft, Origin::Mcp, None)
-        .await
-        .unwrap();
-    assert_eq!(
-        hub.state(&PointId::from("calc:b/value")).unwrap().value,
-        Value::Float(20.0)
-    );
-    let shown = hub.preview_dependency(&a).await.unwrap();
-    assert!(shown.consumers.iter().any(|c| c.id == graph.id));
-    hub.publish_dependency(shown, true, Origin::Ui, None)
-        .await
-        .unwrap();
-    assert!(lamp_turns(&hub, true).await);
-    assert_eq!(
-        autos.get(&graph.id).unwrap().fingerprint(),
-        graph.fingerprint()
-    );
-    cancel.cancel();
 }

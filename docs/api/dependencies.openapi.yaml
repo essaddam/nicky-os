@@ -55,7 +55,7 @@ paths:
         '404': { description: Définition non configurée. }
         '409': { description: Version attendue périmée ou épuisée ; relire. }
         '413': { description: Corps supérieur à 256 Kio. }
-        '422': { description: Définition, fuseau, créneaux, unité, source, fraîcheur, cycle ou budget invalide. }
+        '422': { description: Définition, fuseau, créneaux, unité, source, fraîcheur, cycle, budget, cible ou portée invalide. }
         '500': { description: Persistance refusée avant renommage, ancien état conservé. }
         '503': { description: État corrompu ou issue incertaine ; ne pas réessayer aveuglément. }
   /api/dependencies/{kind}/{id}/preview:
@@ -82,7 +82,7 @@ paths:
         Cookie moli_session lié au client. Le seul en-tête ui ne suffit pas.
         Le corps est l’aperçu lu et montré avant confirmation. Versions, empreinte
         et consommateurs sont revérifiés sous le verrou commun, conservé jusqu’au
-        commit durable. Aucune autorité humaine n’est acceptée dans le corps.
+        commit durable. Corps borné à 512 Kio. Aucune autorité humaine n’est acceptée dans le corps.
       requestBody:
         required: true
         content:
@@ -107,7 +107,7 @@ components:
       in: path
       name: kind
       required: true
-      schema: { type: string, enum: [schedule, computed] }
+      schema: { type: string, enum: [schedule, computed, scene] }
     Id:
       in: path
       name: id
@@ -121,12 +121,18 @@ components:
       additionalProperties: false
       required: [kind, id]
       properties:
-        kind: { type: string, enum: [schedule, computed] }
+        kind: { type: string, enum: [schedule, computed, scene] }
         id: { type: string, maxLength: 240 }
     Definition:
       oneOf:
         - { $ref: '#/components/schemas/ScheduleDefinition' }
         - { $ref: '#/components/schemas/AggregateDefinition' }
+        - type: object
+          additionalProperties: false
+          required: [type, value]
+          properties:
+            type: { const: scene }
+            value: { $ref: 'scenes.openapi.yaml#/components/schemas/Scene' }
     ScheduleDefinition:
       type: object
       additionalProperties: false
@@ -193,6 +199,9 @@ components:
       required: [reference, versions]
       properties:
         reference: { $ref: '#/components/schemas/Reference' }
+        scope:
+          $ref: 'scenes.openapi.yaml#/components/schemas/Scope'
+          description: Portée durable du courant validé d’une scène ; absente pour un planning ou un premier brouillon.
         versions:
           type: object
           additionalProperties: false
@@ -221,6 +230,9 @@ components:
           properties:
             draft: { $ref: '#/components/schemas/Version' }
             current: { anyOf: [{ $ref: '#/components/schemas/Version' }, { type: 'null' }] }
+        scene:
+          $ref: 'scenes.openapi.yaml#/components/schemas/Scope'
+          description: Présent pour une scène ; portée du brouillon à montrer avant publication.
         consumers: { type: array, maxItems: 400, items: { $ref: '#/components/schemas/Consumer' } }
         fingerprint: { type: string, pattern: '^[a-f0-9]{64}$' }
         related:

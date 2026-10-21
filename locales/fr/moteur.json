@@ -195,5 +195,7 @@
 
   "moteur.refus.nom_note": "Seule une personne (code de la maison) peut renommer un automatisme validé ou changer sa note.",
   "moteur.verif.compteur_operation": "Cette opération de compteur ne possède pas d’état ni d’occurrence : utilise son point value.",
-  "moteur.verif.minuteur_operation": "Une opération de minuteur ne se lit pas comme un état."
+  "moteur.verif.minuteur_operation": "Une opération de minuteur ne se lit pas comme un état.",
+  "moteur.action.scene": "appliquer la scène {scene}",
+  "moteur.verif.scene_courant": "La scène doit avoir une version validée dont la portée correspond encore aux appareils actuels."
 }

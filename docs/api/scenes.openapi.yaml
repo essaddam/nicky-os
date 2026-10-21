@@ -1,0 +1,168 @@
+openapi: 3.1.0
+info:
+  title: Moli — scènes d’état voulu
+  version: 1.0.0
+  description: >-
+    Définitions publiées par le mécanisme commun des dépendances ; lancement
+    éphémère sans rejeu au redémarrage, sans rollback physique. Routes réservées
+    au foyer. Origine dérivée du client par le serveur, jamais du corps JSON.
+paths:
+  /api/scenes/{id}/preview:
+    parameters: [{ $ref: '#/components/parameters/SceneId' }]
+    get:
+      summary: Lire le courant validé et sa portée réelle avant application
+      responses:
+        '200':
+          description: Aperçu exact du courant, racines et membres compris.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Preview' }
+        '403': { description: Aucun accès invité. }
+        '404': { description: Scène non configurée. }
+        '409': { description: Aucun courant validé. }
+        '422': { description: Cible absente, incompatible ou portée hors borne. }
+        '503': { description: Propriétaire des définitions indisponible. }
+  /api/scenes/{id}/run:
+    parameters: [{ $ref: '#/components/parameters/SceneId' }]
+    post:
+      summary: Appliquer l’aperçu exact du courant avec la garde sur chaque ordre
+      description: >-
+        La réponse est une admission, pas une confirmation physique. En-tête ui
+        sans session PIN : origine household ou api selon la politique existante.
+        Une cible peut donc rester retenue par la garde. Concurrence globale de
+        quatre voies, ordre par portée, aucune file supplémentaire. Corps 256 Kio.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Preview' }
+      responses:
+        '202':
+          description: Exécution admise ; consulter son résultat par cible.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Run' }
+        '403': { description: Invité ou mutation de démonstration interdite. }
+        '404': { description: Scène non configurée. }
+        '409': { description: Courant, définition ou portée différents de l’aperçu. }
+        '413': { description: Corps trop grand. }
+        '422': { description: Prévalidation des cibles refusée, aucun ordre envoyé. }
+        '429': { description: Quatre scènes actives, portée chevauchante ou capacité des continuations atteinte. }
+        '503': { description: Propriétaire des définitions indisponible. }
+  /api/scene-runs/{id}:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    get:
+      summary: Lire les acquittements et confirmations par cible
+      responses:
+        '200':
+          description: Exécution active ou parmi les 64 résultats récents en mémoire.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Run' }
+        '403': { description: Aucun accès invité. }
+        '404': { description: Inconnue, évincée des résultats ou antérieure au redémarrage. }
+  /api/scene-runs/{id}/cancel:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    post:
+      summary: Révoquer les ordres non émis et les continuations encore vivantes
+      description: >-
+        Autorisé aussi sur un résultat récent pour révoquer une continuation
+        composée après confirmation du parent. Les effets déjà émis et résultats
+        déjà observés ne sont pas réécrits ou annulés physiquement. Toute demande
+        retenue de cette exécution est retirée et journalisée comme expirée.
+      responses:
+        '200':
+          description: Annulation demandée et autorité non émise révoquée.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cancelled]
+                properties:
+                  cancelled: { const: true }
+        '403': { description: Invité ou mutation de démonstration interdite. }
+        '404': { description: Exécution inconnue. }
+components:
+  parameters:
+    SceneId: { in: path, name: id, required: true, schema: { type: string, maxLength: 240 } }
+    RunId: { in: path, name: id, required: true, schema: { type: string, pattern: '^[a-f0-9]{32}$' } }
+  schemas:
+    Scalar:
+      description: Valeur scalaire ; validation supplémentaire contre le type et les bornes du point. Texte borné à 2000 octets.
+      oneOf: [{ type: boolean }, { type: number }, { type: string, maxLength: 2000 }]
+    Scene:
+      type: object
+      additionalProperties: false
+      required: [targets, parallel, timeout_s, confirmation_s]
+      description: JSON encodé de 64 Kio au plus. Doublons égaux normalisés, contradictions refusées, ordre déclaré conservé.
+      properties:
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 32
+          items:
+            type: object
+            additionalProperties: false
+            required: [point, value]
+            properties:
+              point: { type: string, maxLength: 256 }
+              value: { $ref: '#/components/schemas/Scalar' }
+        parallel: { type: integer, minimum: 1, maximum: 4 }
+        timeout_s: { type: integer, minimum: 1, maximum: 120 }
+        confirmation_s: { type: integer, minimum: 1, maximum: 30, description: Au plus timeout_s. }
+    Scope:
+      type: object
+      additionalProperties: false
+      required: [targets]
+      description: 128 appareils au total et 64 Kio de JSON encodé au plus ; membres directs seulement.
+      properties:
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 32
+          items:
+            type: object
+            additionalProperties: false
+            required: [point, value, name, native_name, label, devices, rooms, fingerprint]
+            properties:
+              point: { type: string, maxLength: 256 }
+              value: { $ref: '#/components/schemas/Scalar' }
+              name: { type: string, maxLength: 240 }
+              native_name: { type: string, maxLength: 240 }
+              label: { type: string, maxLength: 240 }
+              unit: { type: string }
+              devices: { type: array, minItems: 1, maxItems: 128, items: { type: string } }
+              rooms: { type: array, maxItems: 256, items: { type: string, maxLength: 240 } }
+              fingerprint: { type: string, pattern: '^[a-f0-9]{64}$' }
+    Preview:
+      type: object
+      additionalProperties: false
+      required: [id, version, scope, fingerprint]
+      properties:
+        id: { type: string, maxLength: 240 }
+        version: { type: integer, minimum: 1, maximum: 9007199254740991 }
+        scope: { $ref: '#/components/schemas/Scope' }
+        fingerprint: { type: string, pattern: '^[a-f0-9]{64}$' }
+    Run:
+      type: object
+      required: [id, scene, version, status, started, ended, targets]
+      properties:
+        id: { type: string, pattern: '^[a-f0-9]{32}$' }
+        scene: { type: string }
+        version: { type: integer }
+        parent_correlation: { type: string, description: Lien interne à l’occurrence du graphe ; jamais accepté dans le corps de lancement. }
+        status: { type: string, enum: [running, done, partial, cancelled] }
+        started: { type: integer, description: Millisecondes UTC. }
+        ended: { type: [integer, 'null'] }
+        targets:
+          type: array
+          maxItems: 32
+          items:
+            type: object
+            required: [point, status, acknowledged, approval, detail]
+            properties:
+              point: { type: string }
+              status: { type: string, enum: [waiting, held, acknowledged, confirmed, already_conform, failed, confirmation_expired, superseded, cancelled] }
+              acknowledged: { type: boolean, description: Acquittement du pilote, distinct de l’état confirmé. }
+              approval: { type: [integer, 'null'], description: Demande de garde associée. }
+              detail: { type: [string, 'null'], maxLength: 512 }

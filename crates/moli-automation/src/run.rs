@@ -327,6 +327,44 @@ async fn step(
                 (StepStatus::No, None, Some("no"))
             }
         }
+        Step::Scene { scene } => {
+            if dry {
+                return (
+                    StepStatus::Simulated,
+                    Some(tr!("moteur.action.scene", scene = scene)),
+                    Some("out"),
+                );
+            }
+            let preview = match hub.preview_scene(&scene.as_str().into()).await {
+                Ok(p) => p,
+                Err(e) => return (StepStatus::Failed, Some(e.to_string()), None),
+            };
+            let active = match hub
+                .start_scene_correlated(
+                    preview,
+                    Origin::Automation,
+                    Some(a.name.clone()),
+                    Some(token.permit()),
+                    run.correlation.clone(),
+                )
+                .await
+            {
+                Ok(r) => r,
+                Err(e) => return (StepStatus::Failed, Some(e.to_string()), None),
+            };
+            let result = tokio::select! {
+                biased;
+                () = token.cancelled() => {let _ = hub.cancel_scene(&active.id, Origin::Automation, Some(a.name.clone())); return (StepStatus::Failed, Some(tr!("serveur.scene.annulee")), None);}
+                result = hub.wait_scene(&active.id) => result,
+            };
+            match result {
+                Ok(r) if r.status == moli_runtime::SceneStatus::Done => {
+                    (StepStatus::Done, Some(r.id), Some("out"))
+                }
+                Ok(r) => (StepStatus::Failed, Some(r.id), None),
+                Err(e) => (StepStatus::Failed, Some(e.to_string()), None),
+            }
+        }
         Step::Set { point, value } => {
             act(
                 autos,
