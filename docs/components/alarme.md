@@ -1,7 +1,8 @@
-# La centrale d'alarme (`crates/moli-alarm`, à construire)
+# La centrale d'alarme (`crates/moli-alarm`)
 
-> **Statut** : spécification validée par le propriétaire le 18 octobre 2026 (§ 20), pas
-> encore de code. Référence de parité : Alarmo 1.10 et son clavier Zigbee
+> **Statut** : spécification validée par le propriétaire le 18 octobre 2026 (§ 20).
+> Le moteur pur est livré (lot 2/9) ; la centrale complète reste à raccorder.
+> Référence de parité : Alarmo 1.10 et son clavier Zigbee
 > piloté par MQTT. Tant que la centrale de Moli n'est pas qualifiée sur place, **Alarmo
 > reste le moteur** de la maison (§ 15).
 
@@ -9,6 +10,16 @@ Une aide booléenne « alarme active » (`helpers`) n'est pas une centrale : ni 
 délais, ni codes, ni couverture, ni sirène. Cette page décrit la centrale qui la remplace :
 une machine d'états **déterministe** (aucun LLM), sous la garde, au journal, qui survit
 aux redémarrages sans ouvrir de trou.
+
+**État de livraison au 21 octobre 2026** : le prérequis de confidentialité des codes
+clavier (lot 1/9, § 8.1) et le [moteur pur](../../crates/moli-alarm/README.md) (lot 2/9)
+sont dans `main`. Le moteur calcule les transitions, la couverture, les exclusions et
+les données de reprise, puis renvoie des effets typés. Il ne lit ni n'écrit de fichier,
+ne commande aucun appareil et ne reçoit aucun code secret. Les codes et profils, le
+pilote, la persistance réelle, les sorties, les surfaces et la qualification restent
+aux lots suivants. Les points, routes et exemples de configuration ci-dessous décrivent
+la **cible validée**, pas des surfaces déjà raccordées. Aucun de ces deux lots ne vaut
+bascule depuis Alarmo ni qualification matérielle.
 
 ## 1. Principes
 
@@ -93,6 +104,12 @@ armée, et une minuterie d'une génération passée est ignorée.
 | `ExitExpired` · `EntryExpired` · `TriggerExpired` · `SirenExpired` | minuteries |
 | `ArmOnClose(s)` | capteur `arm_on_close` refermé depuis 5 s pendant `arming` |
 | `Restore(sauvegarde)` | démarrage (§ 12) |
+
+Les champs `code` de ces demandes décrivent l'entrée privée de la centrale. Dans le
+moteur pur livré, ils sont remplacés par un identifiant interne de demande (`RequestId`) :
+l'adaptateur `Profiles` réévalue les droits et la validité au temps fourni à `step`.
+Ni code ni empreinte de code ne traversent cette interface ; l'identifiant seul ne
+prouve aucune autorisation.
 
 ### 4.3 Transitions
 
@@ -257,13 +274,14 @@ injoignable.
 
 ### 8.1 Le code n'est jamais une valeur
 
-Aujourd'hui, `moli-z2m` publie chaque propriété d'un appareil en point ; pour un clavier,
-le code tapé (`action_code`) deviendrait un point texte : état en mémoire, `state.json`,
-historique lisible en SQL par les agents, SSE. **Prérequis de sécurité, indépendant du
-reste** : tout champ qui porte un code (sémantique dédiée) n'est jamais publié en point ;
-le pilote le remet par un canal privé au seul consommateur inscrit (la centrale), et le
-journal n'en garde que « code saisi au clavier X ». Le même canal servira à tout autre
-clavier (ESPHome, Z-Wave plus tard).
+**Prérequis de sécurité livré (lot 1/9), indépendant du reste** : les champs qui portent
+un code, dont `action_code`, sont exclus des points publics, de l'état, du bus, du SSE,
+de l'historique et du journal. Le pilote remet l'entrée par un canal privé borné à un seul
+consommateur (`Hub::take_keypad_inputs`) ; absent ou saturé, le canal jette l'entrée.
+L'audit public ne garde que l'identité du clavier. Les copies actives anciennes sont
+réparées au démarrage ; un échec de cette réparation empêche le démarrage. Les sauvegardes
+externes ne sont pas modifiées. Le raccordement du consommateur de la centrale reste à
+faire ; le même canal pourra servir à d'autres claviers (ESPHome, Z-Wave plus tard).
 
 ### 8.2 Entrée
 
