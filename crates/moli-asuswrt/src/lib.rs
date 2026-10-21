@@ -55,3 +55,6 @@ mod runtime;
 
 #[cfg(test)]
 mod tls_tests;
+
+#[cfg(test)]
+mod publication_tests;

@@ -131,6 +131,11 @@ uniquement dans ce premier lot ; autre variante = erreur de compatibilité expli
 Un refus, un cookie expiré, une réponse HTML de login avec statut 200 ou un résultat
 partiel ne valent pas une liste vide de clients. Aucun `apply*.cgi`, `netool.cgi`,
 scan, ping ou shell distant. Les sessions de l'humain ne sont jamais déconnectées.
+À la reprise, le client conserve les capacités déclarées ou en cache pour chaque
+appareil/rôle, les mesures manquantes restent `Null`. Une ancienne valeur du cache
+ne devient jamais fraîche, même si son groupe n'est pas relu au premier cycle.
+Aucune capacité jamais observée n'est créée ; les mêmes identités et l'admission
+conservatrice sont maintenues, au plus 139 points (11 routeur + 32 × 4 clients).
 
 ## N2 : Huawei LTE
 

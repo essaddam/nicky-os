@@ -118,6 +118,7 @@ fn specification(key: &str) -> PointSpec {
 pub(crate) struct Published<'a> {
     pub ctx: &'a mut DriverCtx,
     points: BTreeMap<String, BTreeSet<&'static str>>,
+    defined: BTreeSet<String>,
     admitted: BTreeSet<DeviceId>,
     model: Option<String>,
     tracker: Tracker,
@@ -126,11 +127,32 @@ pub(crate) struct Published<'a> {
 }
 impl<'a> Published<'a> {
     pub fn new(ctx: &'a mut DriverCtx) -> Self {
-        let admitted = ctx.known_devices().into_iter().collect();
+        let admitted: BTreeSet<_> = ctx.known_devices().into_iter().collect();
+        let points = admitted
+            .iter()
+            .filter_map(|id| {
+                let (_, native) = id.as_str().split_once(':')?;
+                let legal = if native.starts_with("client_") {
+                    CLIENT
+                } else if native.starts_with("router_") {
+                    ROUTER
+                } else {
+                    return None;
+                };
+                let keys = ctx.known_point_keys(id);
+                let retained: BTreeSet<_> = legal
+                    .iter()
+                    .copied()
+                    .filter(|key| keys.iter().any(|known| known.as_ref() == *key))
+                    .collect();
+                (!retained.is_empty()).then(|| (native.to_owned(), retained))
+            })
+            .collect();
         let state = Self {
             ctx,
             admitted,
-            points: BTreeMap::new(),
+            points,
+            defined: BTreeSet::new(),
             model: None,
             tracker: Tracker::default(),
             last: None,
@@ -209,7 +231,8 @@ impl<'a> Published<'a> {
             return;
         }
         let device = self.ctx.device_id(native);
-        if previous != known.len() {
+        let first = self.defined.insert(native.to_owned());
+        if previous != known.len() || first {
             self.ctx.upsert_device(Device {
                 id: device.clone(),
                 instance: self.ctx.instance().clone(),
@@ -230,7 +253,9 @@ impl<'a> Published<'a> {
                 points: known.iter().map(|key| specification(key)).collect(),
             });
         }
-        for key in known.iter().filter(|key| refreshed.contains(*key)) {
+        // On a cold cache, even groups not polled in this first cycle are
+        // unknown. Never promote restored values to fresh observations.
+        for key in known.iter().filter(|key| first || refreshed.contains(*key)) {
             let value = match values.get(key) {
                 Some(Value::Text(text)) if *key == "link" && text.as_ref() == "wired" => {
                     Value::from(moli_i18n::tr!("pilotes.asuswrt.filaire").as_str())

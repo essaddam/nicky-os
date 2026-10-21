@@ -61,7 +61,14 @@ unité supposée). Aucun point `associated` ou de présence : `isOnline/isWL` ne
 prouve pas une association. `curRx/curTx` suivent la convention **Mibit/s** amont,
 convertie en **Mbit/s** (×1,048576) ; cela ne mesure pas un débit Internet.
 Les champs absents deviennent Null après observation ; aucun point inventé pour
-une métrique jamais prouvée. Un reset de compteur/session ou un changement de
+une métrique jamais prouvée. À la reprise, les clés déjà déclarées ou mises en cache
+sont reconstituées par appareil et par rôle (routeur/client), sans inventer de capacité.
+La première déclaration conserve l'ensemble connu, même si le relevé est partiel ;
+les mesures manquantes restent `Null`. Les anciennes valeurs du cache ne deviennent
+jamais des observations fraîches, y compris un compte client non relu au premier cycle.
+Le retour des mesures garde les mêmes DeviceId/PointId et le plafond139, sans doublon.
+L'admission conservatrice reste inchangée : aucune identité connue n'est supprimée.
+Un reset de compteur/session ou un changement de
 cœurs empêche un faux delta. Les valeurs identiques n'émettent pas de nouvel état.
 Un cycle est entièrement validé avant publication ; une liste invalide n'est
 jamais publiée comme un inventaire vide.

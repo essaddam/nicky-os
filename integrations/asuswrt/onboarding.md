@@ -52,3 +52,20 @@ humainement le compte/firmware puis redémarrer l'instance. Une empreinte ou ide
 changée reste bloquée : vérifier la cible avant toute suppression manuelle d'une
 empreinte au coffre, jamais l'oublier automatiquement. Aucun corps distant ni
 secret n'est recopié dans les diagnostics.
+
+
+Après reprise, les capacités déjà déclarées ou mises en cache restent présentes pour
+chaque appareil. Une mesure manquante reste `Null`, sans valeur périmée présentée comme
+fraîche ; le compte client reste inconnu si le premier cycle ne relit pas l'inventaire.
+Aucun point jamais observé n'est créé. Les identités admises conservent leurs places,
+même hors sélection, avec au plus 11 points routeur et 4 par client (139 au total).
+
+## English — restart behaviour
+
+Declared/cached capabilities survive restart for each router or selected client.
+Missing measurements remain Null; cached values never become fresh observations,
+including a client count that the first cycle does not poll. Returning measurements
+reuse the same DeviceId/PointId. Never-observed capabilities are not created. The
+conservative admission rule is unchanged: known identities reserve their slots,
+even when deselected, with at most 11 router points and 4 per client (139 total).
+Human H1 and explicit ownership validation remain separate from contract tests.
