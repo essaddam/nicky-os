@@ -114,3 +114,50 @@ fn a_detached_send_permit_still_obeys_caller_departure_and_earlier_deadlines() {
     assert!(!permit.wanted());
     assert!(!permit.begin_send());
 }
+
+// The callback is deliberately held until the real deadline has passed.
+// No caller/driver task needs to wake up for the final decision to refuse.
+fn policy_crosses_deadline(decide: impl FnOnce(CommandRequest) -> bool) -> bool {
+    let (mut command, _answer, _allowed) = request();
+    command.deadline = Instant::now() + Duration::from_millis(250);
+    let deadline = command.deadline;
+    let (entered, entered_rx) = std::sync::mpsc::channel();
+    let release = Arc::new(std::sync::Barrier::new(2));
+    let policy_release = Arc::clone(&release);
+    let worker = std::thread::spawn(move || {
+        entered_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+        std::thread::sleep(deadline.saturating_duration_since(Instant::now()));
+        release.wait();
+    });
+    command.permit = Some(CommandPermit::new(move |_| {
+        entered.send(()).unwrap();
+        policy_release.wait();
+        true
+    }));
+    let decision = decide(command);
+    worker.join().unwrap();
+    assert!(Instant::now() >= deadline);
+    decision
+}
+
+#[test]
+fn a_policy_crossing_the_deadline_cannot_leave_a_detached_permit_wanted() {
+    assert!(!policy_crosses_deadline(|command| command
+        .send_permit(command.deadline)
+        .wanted()));
+}
+
+#[test]
+fn a_policy_crossing_the_deadline_cannot_begin_emission() {
+    assert!(!policy_crosses_deadline(|command| {
+        let permit = command.send_permit(command.deadline);
+        let accepted = permit.begin_send();
+        assert_eq!(permit.emitted(), accepted);
+        accepted
+    }));
+}
+
+#[test]
+fn a_policy_crossing_the_deadline_also_abandons_the_request() {
+    assert!(policy_crosses_deadline(|command| command.abandoned()));
+}

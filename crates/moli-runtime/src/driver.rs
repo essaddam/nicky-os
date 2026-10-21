@@ -169,6 +169,8 @@ fn command_wanted(
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .as_ref()
             .is_some_and(|reply| !reply.is_closed())
+        // Policy evaluation or response-lock contention may cross the deadline.
+        && Instant::now() < deadline
 }
 
 impl CommandRequest {
