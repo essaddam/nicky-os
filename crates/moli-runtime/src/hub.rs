@@ -2002,6 +2002,27 @@ impl Hub {
         ids.into_iter().cloned().collect()
     }
 
+    /// Declared keys and cached keys not yet claimed by the driver. Values are
+    /// deliberately not exposed: the next read must establish their freshness.
+    pub(crate) fn known_point_keys(&self, device: &DeviceId) -> Vec<Arc<str>> {
+        let model = self.read();
+        let keys: std::collections::BTreeSet<&Arc<str>> = model
+            .devices
+            .get(device)
+            .into_iter()
+            .flat_map(|d| d.points.iter().map(|p| &p.key))
+            .chain(model.states.get(device).into_iter().flat_map(|s| s.keys()))
+            .chain(
+                model
+                    .restored
+                    .get(device)
+                    .into_iter()
+                    .flat_map(|s| s.keys()),
+            )
+            .collect();
+        keys.into_iter().cloned().collect()
+    }
+
     /// Records a value. Unknown devices/points are ignored (the model only
     /// holds what drivers declared). Only actual changes are broadcast.
     pub(crate) fn set_state(&self, device: &DeviceId, key: &str, value: Value) {

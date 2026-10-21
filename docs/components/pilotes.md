@@ -35,6 +35,7 @@ Le contexte est limité à **sa** instance : un appareil d'une autre instance es
 |---|---|
 | `instance()`, `device_id(native)` | identité de l'instance, fabrique `<instance>:<native>` |
 | `upsert_device(Device)` / `remove_device(id)` / `devices()` | publier, retirer, lister ses appareils |
+| `known_devices()` / `known_point_keys(device)` | retrouver les identités et clés déclarées ou mises en cache de sa seule instance, sans en déduire leur fraîcheur |
 | `set_state(device, key, value)` | enregistrer une valeur ; diffusée seulement si elle change ; clé inconnue ignorée |
 | `pulse_state(...)` | idem mais toujours diffusée (appui de bouton : deux appuis = deux événements) |
 | `set_availability(device, online)` | en ligne / hors ligne |

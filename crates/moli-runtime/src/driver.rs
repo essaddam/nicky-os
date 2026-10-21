@@ -363,6 +363,16 @@ impl DriverCtx {
         self.hub.known_device_ids_of(&self.instance)
     }
 
+    /// Keys declared or cached for one of this instance's devices.
+    #[must_use]
+    pub fn known_point_keys(&self, device: &DeviceId) -> Vec<Arc<str>> {
+        if self.owns(device) {
+            self.hub.known_point_keys(device)
+        } else {
+            Vec::new()
+        }
+    }
+
     /// Where this instance last reached its device.
     #[must_use]
     pub fn known_address(&self) -> Option<crate::KnownAddress> {
@@ -566,5 +576,78 @@ impl MediaPublisher {
             from: Some(from.to_owned()),
             ts: moli_core::now_ms(),
         });
+    }
+}
+
+#[cfg(test)]
+mod reconciliation_tests {
+    use super::*;
+    use crate::HubOptions;
+    use moli_core::{Access, Kind, PointSpec, Semantic};
+    #[test]
+    fn point_keys_cover_definition_cache_and_state_but_never_another_instance() {
+        let suffix = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!(
+            "moli-owned-keys-{}-{suffix}.json",
+            std::process::id()
+        ));
+        std::fs::write(&path,br#"{"own:cached":{"cached":{"value":12,"ts":1}},"foreign:cached":{"foreign":{"value":20,"ts":1}}}"#).unwrap();
+        let hub = Hub::new(HubOptions {
+            state_path: Some(path.clone()),
+            ..HubOptions::default()
+        })
+        .unwrap();
+        let (_, commands) = mpsc::channel(1);
+        let ctx = DriverCtx::new(
+            hub.clone(),
+            InstanceId::from("own"),
+            commands,
+            CancellationToken::new(),
+        );
+        let id = ctx.device_id("cached");
+        assert_eq!(ctx.known_point_keys(&id), vec![Arc::<str>::from("cached")]);
+        assert!(
+            ctx.known_point_keys(&DeviceId::from("foreign:cached"))
+                .is_empty()
+        );
+        ctx.upsert_device(Device {
+            id: id.clone(),
+            instance: ctx.instance().clone(),
+            native_name: "synthetic".into(),
+            manufacturer: None,
+            model: None,
+            description: None,
+            native_room: None,
+            members: vec![],
+            points: vec![PointSpec {
+                key: "declared".into(),
+                label: "synthetic".into(),
+                kind: Kind::Numeric {
+                    min: None,
+                    max: None,
+                    step: None,
+                },
+                unit: None,
+                access: Access {
+                    read: true,
+                    write: false,
+                },
+                semantic: Semantic::Other,
+            }],
+        });
+        assert_eq!(
+            ctx.known_point_keys(&id),
+            vec![Arc::<str>::from("cached"), Arc::<str>::from("declared")]
+        );
+        ctx.set_state(&id, "declared", Value::Int(7));
+        assert_eq!(ctx.known_point_keys(&id).len(), 2);
+        assert!(
+            ctx.known_point_keys(&DeviceId::from("foreign:cached"))
+                .is_empty()
+        );
+        std::fs::remove_file(path).unwrap();
     }
 }
