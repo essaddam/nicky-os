@@ -167,6 +167,8 @@ pub enum Action {
         source_ts: Option<u64>,
         unit: Option<crate::Unit>,
         valid: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        coverage: Option<crate::DurationStats>,
     },
     Dependency {
         reference: crate::DependencyRef,

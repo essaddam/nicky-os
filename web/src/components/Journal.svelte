@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { hub } from '../lib/hub.svelte.js';
   import { ago, deviceName } from '../lib/format.js';
-  import { t } from '../lib/i18n.svelte.js';
+  import { t, locale } from '../lib/i18n.svelte.js';
 
   const ORIGIN = ['ui', 'household', 'api', 'mcp', 'cli', 'system', 'assistant', 'automation'];
   const CHANGE = ['created', 'updated', 'approved', 'switched_off', 'restored', 'deleted'];
@@ -36,6 +36,10 @@
     if (a.kind === 'temporal') return { target: a.point.split('/')[0], detail: t('systeme.date.journal', { point: a.point }) };
     if (a.kind === 'computed') {
       const id = a.point.split('/')[0];
+      if (a.coverage) {
+        const seconds=(ms)=>(ms/1000).toLocaleString(locale(),{maximumFractionDigits:3});
+        return {target:hub.devices[id] ? deviceName(hub.devices[id]) : id,detail:t('systeme.duree.journal',{version:a.version,seconds:seconds(a.coverage.acquired_ms),known:seconds(a.coverage.known_ms),unknown:seconds(a.coverage.unknown_ms)})};
+      }
       return {target:hub.devices[id] ? deviceName(hub.devices[id]) : id, detail:t('systeme.calcul.journal',{version:a.version,value:a.value ?? '—',unit:a.unit ?? '',count:a.valid})};
     }
     if (a.kind === 'dependency') {

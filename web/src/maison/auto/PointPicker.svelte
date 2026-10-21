@@ -16,7 +16,8 @@
 
   const POWER = ['on', 'on_off', 'state', 'switch', 'switch_1', 'power'];
   const fits = (p) =>
-    mode === 'scene' ? p.access?.read && p.access?.write && ['binary','numeric','enum','text','temporal'].includes(p.kind.type)
+    mode === 'duration' ? p.access?.read && !['button','timer_command','counter_command'].includes(p.kind.type) && !(p.kind.type==='timer' && p.kind.field==='expired')
+      : mode === 'scene' ? p.access?.read && p.access?.write && ['binary','numeric','enum','text','temporal'].includes(p.kind.type)
       : mode === 'write' ? p.access?.write
       : mode === 'number' ? p.access?.read && (['numeric', 'counter', 'computed'].includes(p.kind.type) || (p.kind.type === 'timer' && !['state', 'expired'].includes(p.kind.field)))
       : mode === 'state' ? p.access?.read && !['button', 'counter_command'].includes(p.kind.type)

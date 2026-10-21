@@ -17,6 +17,7 @@ use std::sync::Arc;
 pub(crate) fn routes() -> Router<Hub> {
     Router::new()
         .route("/api/dependencies", get(list))
+        .route("/api/durations/{id}", get(duration))
         .route("/api/dependencies/{kind}/{id}", get(read).put(stage))
         .route("/api/dependencies/{kind}/{id}/preview", get(preview))
         .route(
@@ -116,6 +117,13 @@ async fn approve(
         .await
     {
         Ok(view) => Json(view).into_response(),
+        Err(e) => failure(e),
+    }
+}
+
+async fn duration(State(hub): State<Hub>, Path(id): Path<String>) -> Response {
+    match hub.duration_stats(&id.into()) {
+        Ok(stats) => Json(stats).into_response(),
         Err(e) => failure(e),
     }
 }

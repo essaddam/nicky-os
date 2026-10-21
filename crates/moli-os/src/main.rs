@@ -108,6 +108,10 @@ enum Command {
 
 #[derive(Subcommand)]
 enum DependencyCommand {
+    /// Read the durable duration and its known/unknown coverage.
+    Duration {
+        device: String,
+    },
     List,
     Get {
         device: String,
@@ -521,6 +525,7 @@ fn open_hub(config: &Config) -> anyhow::Result<Hub> {
         timer_state_path: Some(config.server.data_dir.join("helper-timers.json")),
         temporal_state_path: Some(config.server.data_dir.join("helper-datetimes.json")),
         dependency_state_path: Some(config.server.data_dir.join("dependencies.json")),
+        duration_state_path: Some(config.server.data_dir.join("durations.json")),
         journal_path: Some(config.server.data_dir.join("journal.jsonl")),
         addresses_path: Some(config.server.data_dir.join("addresses.json")),
         secrets,
@@ -1387,6 +1392,11 @@ fn dependency_command(config: &Config, command: DependencyCommand) -> anyhow::Re
             .collect::<String>()
     };
     let (method, path, body) = match command {
+        DependencyCommand::Duration { device } => (
+            http::Method::GET,
+            format!("/api/durations/{}", encode(&device)),
+            serde_json::Value::Null,
+        ),
         DependencyCommand::List => (
             http::Method::GET,
             "/api/dependencies".into(),

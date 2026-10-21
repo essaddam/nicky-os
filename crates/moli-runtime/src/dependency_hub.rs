@@ -94,6 +94,7 @@ impl Hub {
         }
         if kind.is_none() || kind == Some(DependencyKind::Computed) {
             self.0.computed.fence();
+            self.fence_durations();
             self.0.computed_wake.notify_one();
         }
         let references: Vec<_> = self
@@ -284,7 +285,9 @@ impl Hub {
         consumers.dedup();
         let scene = match &view.versions.draft().definition {
             DependencyDefinition::Scene(scene) => Some(self.scene_scope(scene)?),
-            DependencyDefinition::Schedule(_) | DependencyDefinition::Aggregate(_) => None,
+            DependencyDefinition::Schedule(_)
+            | DependencyDefinition::Aggregate(_)
+            | DependencyDefinition::Duration(_) => None,
         };
         let fingerprint = crate::dependencies::fingerprint(&(view, &consumers, &related, &scene));
         Ok(DependencyPreview {
@@ -338,7 +341,7 @@ impl Hub {
             let _gate = hub.definition_gate().lock_owned().await;
             let mut owner = hub.0.dependencies.lock().await;
             let reference = preview.reference.clone();
-            let result = async {
+            let mut result = async {
                 if !human {
                     return Err(DependencyError::Human);
                 }
@@ -358,16 +361,25 @@ impl Hub {
             }
             .await;
             let active = owner.projection(&reference).ok().flatten();
-            if let Ok(view) = &result {
+            if let Ok(view) = result.clone() {
                 match &view.versions.draft().definition {
                     DependencyDefinition::Schedule(_) | DependencyDefinition::Scene(_) => {
-                        hub.dependency_project(view, active);
+                        hub.dependency_project(&view, active);
                     }
-                    DependencyDefinition::Aggregate(_) => {
-                        hub.rebuild_computations(&owner)?;
-                        hub.emit(Event::DependencyChanged {
-                            reference: view.reference.clone(),
-                        });
+                    DependencyDefinition::Aggregate(_) | DependencyDefinition::Duration(_) => {
+                        let projection = async {
+                            hub.rebuild_computations(&owner)?;
+                            hub.install_durations(&owner).await
+                        }
+                        .await;
+                        if let Err(error) = projection {
+                            hub.fence_dependencies(Some(DependencyKind::Computed));
+                            result = Err(error);
+                        } else {
+                            hub.emit(Event::DependencyChanged {
+                                reference: view.reference,
+                            });
+                        }
                     }
                 }
                 hub.0.dependency_wake.notify_one();

@@ -320,3 +320,10 @@ les intentions non émises restent révocables jusqu’à leur échéance, y com
 dans une continuation composée. Aucune transaction physique, aucun rollback ni
 rejeu au redémarrage. Contrats, configuration, bornes et surfaces :
 [scènes](scenes.md), [OpenAPI](../api/scenes.openapi.yaml).
+
+## Temps observé dans un état (AUTO-K3)
+
+Les aides calculées acceptent une définition `duration` validée par le mécanisme
+commun. Le bilan sépare temps mesuré, couverture connue et temps inconnu, ferme la
+couverture sur péremption ou interruption et reprend les acquis sans double compte.
+Contrats, limites, fichier durable et surfaces : [durées](durees.md).

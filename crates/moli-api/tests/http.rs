@@ -2401,3 +2401,46 @@ async fn cast_successful_revocation_returns_a_renderable_view_and_fresh_discover
     driver.await.unwrap();
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[tokio::test]
+async fn auto_k3_http_duration_is_draft_until_pin_and_exposes_durable_coverage() {
+    let (addr, _hub, cancel) = computed_fixture().await;
+    let path = "/api/dependencies/computed/fixture:a";
+    let draft = json!({"expected":1,"definition":{"type":"duration","value":{"source":"fixture:x/value","source_unit":null,"value":10,"window_s":60,"max_age_s":30}}});
+    let (status, body) = request(&addr, "PUT", path, Some(&draft)).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(
+        request(&addr, "GET", "/api/durations/fixture:a", None)
+            .await
+            .0,
+        404
+    );
+    let preview = dependency_preview(&addr, path).await;
+    let (status, body) = request_with(
+        &addr,
+        "POST",
+        &format!("{path}/approve"),
+        Some(&preview),
+        "x-moli-origin: ui\r\n",
+    )
+    .await;
+    assert_eq!(status, 403, "{body}");
+    let pin = pin_session(&addr, "482915").await;
+    let (status, body) = request_with(
+        &addr,
+        "POST",
+        &format!("{path}/approve"),
+        Some(&preview),
+        &pin,
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    let (status, body) = request(&addr, "GET", "/api/durations/fixture:a", None).await;
+    assert_eq!(status, 200, "{body}");
+    let summary: Json = serde_json::from_str(&body).unwrap();
+    assert_eq!(summary["acquired_ms"], 0);
+    assert_eq!(summary["known_ms"], 0);
+    assert_eq!(summary["observing"], false);
+    assert!(summary["as_of_ms"].as_u64().is_some());
+    cancel.cancel();
+}

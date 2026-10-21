@@ -106,7 +106,7 @@ impl Dependencies {
                 self.fenced = Some(Error::Corrupt);
                 return Err(Error::Corrupt);
             }
-            if moli_core::aggregate_order(&state_aggregates(&state)).is_err() {
+            if moli_core::calculation_order(&state_calculations(&state)).is_err() {
                 self.fenced = Some(Error::Corrupt);
                 return Err(Error::Corrupt);
             }
@@ -267,7 +267,12 @@ impl Dependencies {
         if changed {
             match (&record.view.versions.current().unwrap().definition, &scope) {
                 (DependencyDefinition::Scene(spec), Some(scope)) if scope.valid_for(spec) => {}
-                (DependencyDefinition::Schedule(_) | DependencyDefinition::Aggregate(_), None) => {}
+                (
+                    DependencyDefinition::Schedule(_)
+                    | DependencyDefinition::Aggregate(_)
+                    | DependencyDefinition::Duration(_),
+                    None,
+                ) => {}
                 _ => return Err(Error::Definition),
             }
             record.view.scope = scope;
@@ -279,7 +284,8 @@ impl Dependencies {
                 .definition
                 .calendar()?
                 .map(|calendar| calendar.active(now));
-            moli_core::aggregate_order(&state_aggregates(&state)).map_err(super::graph_error)?;
+            moli_core::calculation_order(&state_calculations(&state))
+                .map_err(super::graph_error)?;
             self.persist(state).await?;
             self.refresh_calendar(reference, now)?;
         }
@@ -289,6 +295,42 @@ impl Dependencies {
     /// truth after its persistence failed. Restart reloads the durable head.
     pub(crate) fn suspend_projection(&mut self) {
         self.fenced = Some(Error::Projection);
+    }
+    pub(crate) fn calculations(
+        &self,
+    ) -> Result<BTreeMap<moli_core::DeviceId, moli_core::CalculationSpec>, Error> {
+        if let Some(error) = self.fenced {
+            return Err(error);
+        }
+        Ok(self
+            .state
+            .as_ref()
+            .map(state_calculations)
+            .unwrap_or_default())
+    }
+    pub(crate) fn durations(
+        &self,
+    ) -> Result<BTreeMap<moli_core::DeviceId, (u64, moli_core::DurationSpec)>, Error> {
+        if let Some(error) = self.fenced {
+            return Err(error);
+        }
+        Ok(self
+            .state
+            .as_ref()
+            .into_iter()
+            .flat_map(|s| &s.records)
+            .filter_map(|r| {
+                if !self.registered.contains(&r.view.reference) {
+                    return None;
+                }
+                let current = r.view.versions.current()?;
+                if let DependencyDefinition::Duration(spec) = &current.definition {
+                    Some((r.view.reference.id.clone(), (current.version, spec.clone())))
+                } else {
+                    None
+                }
+            })
+            .collect())
     }
     pub(crate) fn aggregates(
         &self,
@@ -366,16 +408,21 @@ impl Dependencies {
     }
 }
 
-fn state_aggregates(state: &State) -> BTreeMap<moli_core::DeviceId, moli_core::AggregateSpec> {
+fn state_calculations(state: &State) -> BTreeMap<moli_core::DeviceId, moli_core::CalculationSpec> {
     state
         .records
         .iter()
         .filter_map(|record| {
             let current = record.view.versions.current()?;
             match &current.definition {
-                DependencyDefinition::Aggregate(spec) => {
-                    Some((record.view.reference.id.clone(), spec.clone()))
-                }
+                DependencyDefinition::Aggregate(spec) => Some((
+                    record.view.reference.id.clone(),
+                    moli_core::CalculationSpec::Aggregate(spec.clone()),
+                )),
+                DependencyDefinition::Duration(spec) => Some((
+                    record.view.reference.id.clone(),
+                    moli_core::CalculationSpec::Duration(spec.clone()),
+                )),
                 DependencyDefinition::Schedule(_) | DependencyDefinition::Scene(_) => None,
             }
         })

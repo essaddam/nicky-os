@@ -68,6 +68,8 @@ pub struct Helper {
     /// Initial calculated definition, always a draft.
     #[serde(default)]
     pub aggregate: Option<moli_core::AggregateSpec>,
+    #[serde(default)]
+    pub duration: Option<moli_core::DurationSpec>,
 }
 
 /// Preserve the lexical integer/float distinction until the helper kind is known.
@@ -370,11 +372,19 @@ impl Helper {
             "{}",
             moli_i18n::tr!("serveur.calcul.definition")
         );
-        self.aggregate
-            .clone()
-            .ok_or_else(|| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?
-            .normalize()
-            .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?;
+        match (&self.aggregate, &self.duration) {
+            (Some(spec), None) => {
+                spec.clone()
+                    .normalize()
+                    .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?;
+            }
+            (None, Some(spec)) => {
+                spec.clone()
+                    .normalize()
+                    .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("serveur.calcul.definition")))?;
+            }
+            _ => bail!("{}", moli_i18n::tr!("serveur.calcul.definition")),
+        }
         Ok(Value::Null)
     }
 
@@ -384,7 +394,7 @@ impl Helper {
             return self.computed_initial();
         }
         ensure!(
-            self.aggregate.is_none(),
+            self.aggregate.is_none() && self.duration.is_none(),
             "{}",
             moli_i18n::tr!("serveur.calcul.definition")
         );
@@ -601,13 +611,17 @@ impl Driver for Helpers {
                     ctx.initialize_temporal(&id, spec, h.initial_value()?)
                         .await?;
                 } else if h.kind == HelperKind::Computed {
-                    ctx.initialize_computed(
-                        &id,
-                        h.aggregate
-                            .clone()
-                            .expect("validated calculated definition"),
-                    )
-                    .await?;
+                    if let Some(spec) = &h.duration {
+                        ctx.initialize_duration(&id, spec.clone()).await?;
+                    } else {
+                        ctx.initialize_computed(
+                            &id,
+                            h.aggregate
+                                .clone()
+                                .expect("validated calculated definition"),
+                        )
+                        .await?;
+                    }
                 } else if h.kind == HelperKind::Schedule {
                     ctx.initialize_schedule(
                         &id,
@@ -810,5 +824,31 @@ mod computed_config_tests {
         let mut wrong = config;
         wrong.helpers[0].aggregate.as_mut().unwrap().max_age_s = 0;
         assert!(Helpers::new(wrong).is_err());
+    }
+}
+
+#[cfg(test)]
+mod duration_tests {
+    use super::*;
+    #[test]
+    fn auto_k3_helper_requires_exactly_one_typed_definition() {
+        let text = "[[helper]]\nid='duration'\nname='Observed time'\nkind='computed'\nduration={source='fixture:lamp/on',value=true,window_s=60,max_age_s=10}";
+        let config: Config = toml::from_str(text).unwrap();
+        let helpers = Helpers::new(config.clone()).unwrap();
+        assert_eq!(helpers.config.helpers[0].spec().kind, Kind::Computed);
+        let mut invalid = config.clone();
+        invalid.helpers[0].duration.as_mut().unwrap().window_s = 0;
+        assert!(Helpers::new(invalid).is_err());
+        let mut invalid = config.clone();
+        invalid.helpers[0].kind = HelperKind::Switch;
+        assert!(Helpers::new(invalid).is_err());
+        let mut invalid = config;
+        invalid.helpers[0].aggregate = Some(moli_core::AggregateSpec {
+            operation: moli_core::AggregateOp::Min,
+            sources: vec![],
+            unit: None,
+            max_age_s: 60,
+        });
+        assert!(Helpers::new(invalid).is_err());
     }
 }

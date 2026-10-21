@@ -22,6 +22,11 @@ mod dependency_hub;
 #[cfg(test)]
 #[path = "dependencies/tests.rs"]
 mod dependency_tests;
+#[path = "duration_hub.rs"]
+mod duration_hub;
+#[cfg(test)]
+#[path = "duration_tests.rs"]
+mod duration_tests;
 #[cfg(test)]
 #[path = "scene_computed_tests.rs"]
 mod scene_computed_tests;
@@ -77,6 +82,7 @@ pub struct HubOptions {
     pub temporal_state_path: Option<PathBuf>,
     /// Validated executable definitions, separate from cached values.
     pub dependency_state_path: Option<PathBuf>,
+    pub duration_state_path: Option<PathBuf>,
     /// Occurrence wall-clock metadata only; identities never depend on it.
     pub occurrence_clock: fn() -> u64,
     /// Append-only journal file (JSON Lines). `None` keeps it in memory only.
@@ -105,6 +111,7 @@ impl Default for HubOptions {
             timer_clock: now_ms,
             temporal_state_path: None,
             dependency_state_path: None,
+            duration_state_path: None,
             occurrence_clock: now_ms,
             journal_path: None,
             addresses_path: None,
@@ -447,6 +454,7 @@ struct Inner {
     temporals: tokio::sync::Mutex<crate::temporal::Temporals>,
     dependencies: tokio::sync::Mutex<crate::dependencies::Dependencies>,
     computed: crate::computed::Computed,
+    durations: crate::durations::Durations,
     computed_wake: Arc<tokio::sync::Notify>,
     computed_started: AtomicBool,
     scenes: Mutex<crate::scenes::Scenes>,
@@ -622,6 +630,7 @@ impl Hub {
                 opts.dependency_state_path.clone(),
             )),
             computed: crate::computed::Computed::default(),
+            durations: crate::durations::Durations::new(opts.duration_state_path.clone()),
             computed_wake: Arc::new(tokio::sync::Notify::new()),
             computed_started: AtomicBool::new(false),
             definition_gate: Arc::new(tokio::sync::Mutex::new(())),
@@ -2093,6 +2102,7 @@ impl Hub {
                 .map(|point| point.key.clone())
                 .collect();
             self.scene_changed(&device.id);
+            self.0.durations.invalidate(&device.id);
             // Claim cached values for the points this definition declares.
             // The rest stays cached: a device first published without its
             // definition (interview in progress) must not lose its history.
@@ -2185,6 +2195,7 @@ impl Hub {
     }
 
     pub(crate) fn remove_device(&self, id: &DeviceId) {
+        self.0.durations.invalidate(id);
         self.scene_changed(id);
         let removed = {
             let mut model = self.write();
@@ -2393,6 +2404,17 @@ impl Hub {
                 return;
             };
             let key = spec.key.clone();
+            if self.0.durations.active.load(Ordering::Acquire) {
+                self.0.durations.sample(
+                    &PointId::new(device, &key),
+                    &value,
+                    &spec.kind,
+                    spec.unit.as_ref(),
+                    model.availability.get(device) != Some(&false),
+                    observed_at,
+                    Some(observed_at),
+                );
+            }
             let cached = spec.kind.uses_state_cache();
             if spec.kind.is_operation() || spec.kind.is_occurrence() {
                 let button = spec.kind == moli_core::Kind::Button;
@@ -2717,6 +2739,9 @@ impl Hub {
             }
             // The driver speaks for it again.
             model.held_offline.remove(device);
+            if !online {
+                self.0.durations.invalidate(device);
+            }
             model.availability.insert(device.clone(), online) != Some(online)
         };
         if changed {
@@ -2743,6 +2768,7 @@ impl Hub {
                 .collect();
             ids.into_iter()
                 .filter(|id| {
+                    self.0.durations.invalidate(id);
                     let before = model.availability.insert(id.clone(), false);
                     if before == Some(false) {
                         return false;

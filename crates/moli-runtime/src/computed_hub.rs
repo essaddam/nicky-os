@@ -14,6 +14,22 @@ impl Hub {
         device: &DeviceId,
         spec: AggregateSpec,
     ) -> Result<(), DependencyError> {
+        self.initialize_calculation(device, DependencyDefinition::Aggregate(spec))
+            .await
+    }
+    pub async fn initialize_duration(
+        &self,
+        device: &DeviceId,
+        spec: moli_core::DurationSpec,
+    ) -> Result<(), DependencyError> {
+        self.initialize_calculation(device, DependencyDefinition::Duration(spec))
+            .await
+    }
+    async fn initialize_calculation(
+        &self,
+        device: &DeviceId,
+        definition: DependencyDefinition,
+    ) -> Result<(), DependencyError> {
         let reference = DependencyRef {
             kind: DependencyKind::Computed,
             id: device.clone(),
@@ -30,18 +46,23 @@ impl Hub {
             let _gate = hub.definition_gate().lock_owned().await;
             let started = Instant::now();
             let mut owner = hub.0.dependencies.lock().await;
-            let result = owner
-                .initialize(
-                    reference.clone(),
-                    DependencyDefinition::Aggregate(spec),
-                    jiff::Timestamp::now(),
-                )
+            let mut result = owner
+                .initialize(reference.clone(), definition, jiff::Timestamp::now())
                 .await;
-            if let Ok(view) = &result {
-                hub.rebuild_computations(&owner)?;
-                hub.emit(Event::DependencyChanged {
-                    reference: view.reference.clone(),
-                });
+            if let Ok(view) = result.clone() {
+                let projection = async {
+                    hub.rebuild_computations(&owner)?;
+                    hub.install_durations(&owner).await
+                }
+                .await;
+                if let Err(error) = projection {
+                    hub.fence_dependencies(Some(DependencyKind::Computed));
+                    result = Err(error);
+                } else {
+                    hub.emit(Event::DependencyChanged {
+                        reference: view.reference,
+                    });
+                }
             } else if matches!(
                 result,
                 Err(DependencyError::Uncertain | DependencyError::Corrupt)
@@ -67,21 +88,33 @@ impl Hub {
         owner: &crate::dependencies::Dependencies,
         view: &DependencyView,
     ) -> Result<(), DependencyError> {
-        let DependencyDefinition::Aggregate(spec) = &view.versions.draft().definition else {
-            return Ok(());
+        let definition = &view.versions.draft().definition;
+        let calculation = match definition {
+            DependencyDefinition::Aggregate(spec) => {
+                moli_core::CalculationSpec::Aggregate(spec.clone())
+            }
+            DependencyDefinition::Duration(spec) => {
+                moli_core::CalculationSpec::Duration(spec.clone())
+            }
+            _ => return Ok(()),
         };
-        let mut prospective = owner.aggregates(false)?;
-        prospective.insert(view.reference.id.clone(), spec.clone());
-        moli_core::aggregate_order(&prospective).map_err(crate::dependencies::graph_error)?;
+        let mut prospective = owner.calculations()?;
+        prospective.insert(view.reference.id.clone(), calculation);
+        moli_core::calculation_order(&prospective).map_err(crate::dependencies::graph_error)?;
         let model = self.read();
-        for source in &spec.sources {
+        for source in definition.sources() {
             let (device, key) = source.split().ok_or(DependencyError::Units)?;
             let point = model
                 .devices
                 .get(&device)
                 .and_then(|d| d.point(key))
                 .ok_or(DependencyError::Units)?;
-            if !point.access.read || !point.kind.is_numeric() {
+            if !point.access.read || point.kind.is_operation() || point.kind.is_occurrence() {
+                return Err(DependencyError::Units);
+            }
+            if let Some(reference) = point.kind.dependency(&device)
+                && owner.view(&reference)?.versions.current().is_none()
+            {
                 return Err(DependencyError::Units);
             }
             let unit = if point.kind == Kind::Computed {
@@ -95,13 +128,31 @@ impl Hub {
                 prospective
                     .get(&device)
                     .ok_or(DependencyError::Units)?
-                    .unit
-                    .as_ref()
+                    .unit()
             } else {
                 point.unit.as_ref()
             };
-            if moli_core::unit_ratio(unit, spec.unit.as_ref()).is_none() {
-                return Err(DependencyError::Units);
+            match definition {
+                DependencyDefinition::Aggregate(spec)
+                    if !point.kind.is_numeric()
+                        || moli_core::unit_ratio(unit, spec.unit.as_ref()).is_none() =>
+                {
+                    return Err(DependencyError::Units);
+                }
+                DependencyDefinition::Duration(spec) => {
+                    if unit != spec.source_unit.as_ref() {
+                        return Err(DependencyError::Units);
+                    }
+                    if point.kind == Kind::Computed {
+                        if spec.value.as_f64().is_none_or(|n| !n.is_finite()) {
+                            return Err(DependencyError::Definition);
+                        }
+                    } else {
+                        crate::validate_point_value(&point.kind, &Value::from_json(&spec.value))
+                            .map_err(|_| DependencyError::Definition)?;
+                    }
+                }
+                _ => {}
             }
         }
         Ok(())
@@ -168,6 +219,7 @@ impl Hub {
                 .install(&mut engine, &mut signals, definitions)?;
         }
         let mut projection = ProjectionModel {
+            durations: &self.0.durations,
             model: &mut model,
             events: Vec::new(),
             changed: Vec::new(),
@@ -200,6 +252,7 @@ impl Hub {
                     source_ts: evaluation.sample.as_ref().map(|s| s.ts),
                     unit: evaluation.unit,
                     valid: u8::try_from(evaluation.valid).unwrap_or(0),
+                    coverage: None,
                 },
                 Outcome::Ok,
                 started,
@@ -219,6 +272,7 @@ impl Hub {
 }
 
 struct ProjectionModel<'a> {
+    durations: &'a crate::durations::Durations,
     model: &'a mut Model,
     events: Vec<Event>,
     changed: Vec<(Evaluation, u64)>,
@@ -280,6 +334,15 @@ impl Projection for ProjectionModel<'_> {
             .sample
             .as_ref()
             .map_or(Value::Null, |s| s.value.clone());
+        self.durations.sample(
+            &PointId::new(&evaluation.id, "value"),
+            &value,
+            &Kind::Computed,
+            evaluation.unit.as_ref(),
+            self.model.availability.get(&evaluation.id) != Some(&false),
+            Instant::now(),
+            evaluation.observed_at,
+        );
         let states = self.model.states.entry(evaluation.id.clone()).or_default();
         let changed = states
             .get("value")
@@ -313,6 +376,7 @@ impl Projection for ProjectionModel<'_> {
                         sample: evaluation.sample.clone(),
                         unit: evaluation.unit.clone(),
                         valid: evaluation.valid,
+                        observed_at: evaluation.observed_at,
                     },
                     *version,
                 ));

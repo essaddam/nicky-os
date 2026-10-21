@@ -3,6 +3,10 @@
   import { t } from '../lib/i18n.svelte.js';
   import { dependencyRequest, previewMatchesShown } from '../lib/dependency.js';
   import { computedEditor, computedPayload } from '../maison/lib/computed.js';
+  import {durationEditor,durationPayload} from '../maison/lib/durations.js';
+  import {pointSpec,valueText} from '../maison/lib/auto.svelte.js';
+  import Fields from '../maison/auto/Fields.svelte';
+  import DurationStatus from './DurationStatus.svelte';
   import PointPicker from '../maison/auto/PointPicker.svelte';
   import HumanSession from './HumanSession.svelte';
 
@@ -13,7 +17,7 @@
   const sample = $derived(hub.devices[id]?.state?.value);
   const call = (method, suffix = '', body) => dependencyRequest('computed', id, method, suffix, body, t);
   function show(data) {
-    view = data; form = computedEditor(data.versions.draft.definition.value);
+    view = data; form = data.versions.draft.definition.type==='duration' ? durationEditor(data.versions.draft.definition.value) : computedEditor(data.versions.draft.definition.value);
     saved = JSON.stringify(form); preview = null;
   }
   async function work(action) {
@@ -24,7 +28,7 @@
   const load = () => work(async () => show(await call('GET')));
   async function toggle() { open = !open; if (open) await load(); }
   async function save() {
-    const definition = computedPayload(form);
+    const definition = form.duration ? durationPayload(form) : computedPayload(form);
     if (!definition) { error = t('systeme.calcul.invalide'); return; }
     await work(async () => show(await call('PUT', '', {expected:view.versions.draft.version,definition})));
   }
@@ -54,11 +58,23 @@
         {#if view.versions.current}
           {@const current=view.versions.current.definition.value}
           <details><summary>{t('systeme.calcul.courant')}</summary>
+            {#if view.versions.current.definition.type==='duration'}
+              <p>{current.source} · {valueText(current.source,current.value)} · {t('systeme.duree.fenetre',{seconds:current.window_s})}</p>
+              <DurationStatus {id} />
+            {:else}
             <p>{t(`systeme.calcul.operation.${current.operation}`)} · {current.unit || t('systeme.calcul.sans_unite')} · {t('systeme.calcul.age',{seconds:current.max_age_s})}</p>
             <ul>{#each current.sources as source (source)}<li class="identity">{source}</li>{/each}</ul>
+            {/if}
           </details>
         {/if}
         <fieldset disabled={busy}>
+          {#if form.duration}
+            <p class="hint">{t('systeme.duree.aide')}</p>
+            <PointPicker point={form.source} mode="duration" onpick={(point)=>{const spec=pointSpec(point);form.source=point;form.source_unit=spec?.unit ?? null;form.value=['binary','schedule'].includes(spec?.kind.type)?true:['numeric','computed','counter'].includes(spec?.kind.type)?0:spec?.kind.values?.[0] ?? '';}} />
+            <Fields kind="value" point={form.source} value={form.value} onchange={(v)=>form.value=v} />
+            <label>{t('systeme.duree.fenetre_label')}<input type="number" min="1" max="604800" step="1" bind:value={form.window_s} /></label>
+            <label>{t('systeme.calcul.fraicheur')}<input type="number" min="1" max="604800" step="1" bind:value={form.max_age_s} /></label>
+          {:else}
           <label>{t('systeme.calcul.operation')}<select bind:value={form.operation}>{#each ['min','max','mean'] as operation}<option value={operation}>{t(`systeme.calcul.operation.${operation}`)}</option>{/each}</select></label>
           <div class="pair">
             <label>{t('systeme.calcul.unite')}<input bind:value={form.unit} maxlength="32" list="units-{id}" placeholder={t('systeme.calcul.sans_unite')} /></label>
@@ -69,8 +85,9 @@
           {#each form.sources as source, index}
             <div class="source"><PointPicker point={source} mode="number" onpick={(point) => {form.sources[index]=point;}} /><button type="button" aria-label={t('systeme.calcul.retirer')} onclick={() => form.sources=form.sources.filter((_,i)=>i!==index)}>×</button></div>
           {/each}
+          {/if}
           <div class="actions">
-            <button disabled={form.sources.length>=32} onclick={() => form.sources.push('')}>{t('systeme.calcul.ajouter')}</button>
+            {#if !form.duration}<button disabled={form.sources.length>=32} onclick={() => form.sources.push('')}>{t('systeme.calcul.ajouter')}</button>{/if}
             <button disabled={!dirty} onclick={save}>{t('systeme.planning.enregistrer')}</button>
             <button disabled={dirty} onclick={inspect}>{t('systeme.planning.examiner')}</button>
           </div>

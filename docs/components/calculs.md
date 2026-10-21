@@ -142,7 +142,10 @@ opération, unité, fraîcheur, courant/brouillon et portée avant confirmation 
 Textes et erreurs existent en français et en anglais. Les invités n’accèdent pas aux
 métadonnées du registre ; les mutations sont interdites en démonstration.
 
+[AUTO-K3](durees.md) utilise désormais ce socle pour le temps dans un état, avec
+couverture connue/inconnue et checkpoints durables.
+
 Ce lot fournit les identités de projection, le suivi des dépendances et la validation
-que pourront réutiliser les compteurs périodiques et le temps dans un état. Ces
+que pourront réutiliser les compteurs périodiques ; les autres
 algorithmes, les modèles d’estimation et les reprises de configurations restent dans
 leurs tickets respectifs.

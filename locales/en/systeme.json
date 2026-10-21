@@ -539,5 +539,18 @@
   "systeme.cast.revoke": "Deactivate this receiver",
   "systeme.cast.title": "Activate a Cast receiver",
   "systeme.pilotes.cast.desc": "Explicitly approved Cast video receivers: playback, volume and mute.",
-  "systeme.pilotes.cast.nom": "Google Cast"
+  "systeme.pilotes.cast.nom": "Google Cast",
+  "systeme.duree.bilan": "Observed duration",
+  "systeme.duree.acquis": "Measured time in this state: {seconds} s",
+  "systeme.duree.couverture": "Known coverage: {known} s · unknown: {unknown} s",
+  "systeme.duree.fenetre_connue": "From {start} to the checkpoint at {end}",
+  "systeme.duree.observation": "A fresh observation covers this instant.",
+  "systeme.duree.inconnu": "Coverage is interrupted; the following time remains unknown.",
+  "systeme.duree.entree": "Entered this state: {date}",
+  "systeme.duree.limite": "The segment limit was reached: discarded periods are unknown.",
+  "systeme.duree.indisponible": "The durable summary is unavailable.",
+  "systeme.duree.fenetre": "Rolling window of {seconds} s",
+  "systeme.duree.fenetre_label": "Rolling window (seconds)",
+  "systeme.duree.aide": "Only observed periods count. An outage, stale or offline source, or restart creates unknown time. A newly approved version starts a new measurement.",
+  "systeme.duree.journal": "Measured duration: {seconds} s · known coverage: {known} s · unknown: {unknown} s · version {version}"
 }

@@ -23,6 +23,7 @@ pub(crate) struct Engine {
     started: Instant,
     anchors: BTreeMap<PointId, Anchor>,
     provenance: BTreeMap<DeviceId, Option<u64>>,
+    live: BTreeMap<DeviceId, bool>,
     deadlines: BTreeSet<(u64, DeviceId)>,
     future: BTreeSet<(u64, DeviceId)>,
     wakes: BTreeMap<DeviceId, (Option<u64>, Option<u64>)>,
@@ -37,6 +38,7 @@ impl Default for Engine {
             started: Instant::now(),
             anchors: BTreeMap::new(),
             provenance: BTreeMap::new(),
+            live: BTreeMap::new(),
             deadlines: BTreeSet::new(),
             future: BTreeSet::new(),
             wakes: BTreeMap::new(),
@@ -57,6 +59,7 @@ pub(crate) struct Evaluation {
     pub sample: Option<Sample>,
     pub unit: Option<Unit>,
     pub valid: usize,
+    pub observed_at: Option<Instant>,
 }
 
 impl Engine {
@@ -73,6 +76,7 @@ impl Engine {
             .map(|(rank, id)| (id.clone(), rank))
             .collect();
         self.order = order;
+        self.live.retain(|id, _| self.definitions.contains_key(id));
         self.wakes.clear();
         self.deadlines.clear();
         self.future.clear();
@@ -181,7 +185,18 @@ impl Engine {
                 .filter(|(index, _)| computed.used & (1_u32 << index) != 0)
                 .filter_map(|(_, ts)| *ts)
                 .min();
+            let live =
+                computed.valid > 0 && self.live_inputs(&spec.sources, signals, computed.used);
+            self.live.insert(id.clone(), live);
+            let observed_at = live
+                .then(|| {
+                    computed.sample.as_ref().and_then(|s| {
+                        at.checked_sub(Duration::from_millis(now.saturating_sub(s.ts)))
+                    })
+                })
+                .flatten();
             let evaluation = Evaluation {
+                observed_at,
                 id,
                 sample: computed.sample.map(|s| Sample {
                     ts: source_ts.expect("valid input has a timestamp"),
@@ -195,6 +210,18 @@ impl Engine {
         }
         self.last_work = work;
         Ok(result)
+    }
+    fn live_inputs(&self, sources: &[PointId], signals: &Signals, used: u32) -> bool {
+        sources
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| used & (1_u32 << i) != 0)
+            .all(|(_, p)| {
+                signals.observed.contains_key(p)
+                    || p.split().is_some_and(|(id, key)| {
+                        key == "value" && self.live.get(&id) == Some(&true)
+                    })
+            })
     }
     fn set_wake(&mut self, id: &DeviceId, mono: Option<u64>, wall: Option<u64>) {
         if let Some((old_mono, old_wall)) = self.wakes.remove(id) {

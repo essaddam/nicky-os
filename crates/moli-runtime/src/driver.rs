@@ -399,6 +399,17 @@ impl DriverCtx {
         self.hub.initialize_computed(device, spec).await
     }
 
+    pub async fn initialize_duration(
+        &self,
+        device: &DeviceId,
+        spec: moli_core::DurationSpec,
+    ) -> Result<(), crate::DependencyError> {
+        if !self.owns(device) {
+            return Err(crate::DependencyError::Definition);
+        }
+        self.hub.initialize_duration(device, spec).await
+    }
+
     /// Loads a schedule's draft/current heads from their authoritative file.
     pub async fn initialize_schedule(
         &self,

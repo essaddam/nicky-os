@@ -19,7 +19,7 @@ use anyhow::{Context as _, bail};
 /// SQLite databases: copied through SQLite itself.
 const DATABASES: [&str; 2] = ["history.db", "energy.db"];
 /// Everything else worth keeping (missing ones are skipped).
-const FILES: [&str; 22] = [
+const FILES: [&str; 23] = [
     "moli.toml",
     "plan.json",
     "phones.json",
@@ -35,6 +35,7 @@ const FILES: [&str; 22] = [
     "helper-datetimes.json",
     "helper-timers.json",
     "dependencies.json",
+    "durations.json",
     "journal.jsonl",
     "journal.jsonl.1",
     "state.json",

@@ -138,3 +138,20 @@ séquentielle. Les validations, empreintes et écritures de définitions restent
 hors du chemin d’observation ; le suivi d’une valeur égale ne fabrique pas un
 événement State. Les seules attentes actives sont bornées par le lancement
 (120 s au plus). Les 64 résultats éphémères ne déclenchent aucun rejeu.
+
+### AUTO-K3 — couverture et durée bornées
+
+Sans courant `duration`, aucun ordonnanceur ni travail de capture n’est activé.
+L’index inverse visite au plus 128 durées dépendantes d’un même point, sans file de
+transitions à croissance libre. Chaque durée garde 256 segments au plus ; la perte
+par saturation est explicitement de la couverture inconnue. Le rédacteur sérialise
+au plus un fichier de 4 Mio par checkpoint ordinaire d’une seconde.
+
+Sonde simulée `auto_k3_bounded_capture_and_checkpoint_budget` : 128 définitions,
+256 segments chacune, JSON de **1 263 914 octets**. Sur le poste natif en debug,
+une passe a mesuré **50,65 ms** de sérialisation et **86,54 ms** pour 1 000 captures
+visant chacune les 128 définitions. Ces chiffres décrivent cette fixture et ce
+poste, sans extrapolation à une machine de déploiement. Le test rejoue la borne et
+imprime les temps ; il n’impose pas une limite murale instable en CI. L’écriture
+réelle inclut fsync et reste hors du verrou de capture. Le bilan conserve sa date
+pour rendre un checkpoint lent visible ; les échecs rendent la projection indisponible.

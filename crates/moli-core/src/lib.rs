@@ -28,8 +28,8 @@ pub use aggregate::{
     MAX_AGGREGATE_SOURCES, MAX_FRESHNESS_S, unit_ratio,
 };
 pub use aggregate_graph::{
-    AggregateGraphError, MAX_CALCULATION_DEPTH, MAX_CALCULATIONS, MAX_PROPAGATION_WORK,
-    aggregate_order,
+    AggregateGraphError, CalculationSpec, MAX_CALCULATION_DEPTH, MAX_CALCULATIONS,
+    MAX_PROPAGATION_WORK, aggregate_order, calculation_order,
 };
 pub use counter::{CounterOperation, CounterSpec, MAX_COUNTER_VALUE};
 pub use dependency::{
@@ -65,3 +65,6 @@ pub fn now_ms() -> u64 {
 
 mod scene;
 pub use scene::{SceneSpec, SceneTarget};
+
+mod duration;
+pub use duration::{DurationLedger, DurationSpec, DurationStats, MAX_DURATION_SEGMENTS};

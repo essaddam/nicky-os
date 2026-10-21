@@ -1,5 +1,5 @@
 //! Stable bounded ordering of current calculated definitions.
-use crate::{AggregateSpec, DeviceId, unit_ratio};
+use crate::{AggregateSpec, DeviceId, DurationSpec, PointId, Unit, unit_ratio};
 use std::collections::{BTreeMap, BTreeSet};
 pub const MAX_CALCULATIONS: usize = 128;
 pub const MAX_CALCULATION_DEPTH: usize = 16;
@@ -14,8 +14,37 @@ pub enum AggregateGraphError {
     Definition,
 }
 
+#[derive(Clone, Debug)]
+pub enum CalculationSpec {
+    Aggregate(AggregateSpec),
+    Duration(DurationSpec),
+}
+impl CalculationSpec {
+    pub fn sources(&self) -> &[PointId] {
+        match self {
+            Self::Aggregate(s) => &s.sources,
+            Self::Duration(s) => std::slice::from_ref(&s.source),
+        }
+    }
+    pub fn unit(&self) -> Option<&Unit> {
+        match self {
+            Self::Aggregate(s) => s.unit.as_ref(),
+            Self::Duration(_) => Some(&Unit::Second),
+        }
+    }
+}
 pub fn aggregate_order(
     definitions: &BTreeMap<DeviceId, AggregateSpec>,
+) -> Result<Vec<DeviceId>, AggregateGraphError> {
+    calculation_order(
+        &definitions
+            .iter()
+            .map(|(id, s)| (id.clone(), CalculationSpec::Aggregate(s.clone())))
+            .collect(),
+    )
+}
+pub fn calculation_order(
+    definitions: &BTreeMap<DeviceId, CalculationSpec>,
 ) -> Result<Vec<DeviceId>, AggregateGraphError> {
     if definitions.len() > MAX_CALCULATIONS {
         return Err(AggregateGraphError::Capacity);
@@ -24,14 +53,21 @@ pub fn aggregate_order(
         definitions.keys().map(|id| (id.clone(), 0)).collect();
     let mut children: BTreeMap<DeviceId, BTreeSet<DeviceId>> = BTreeMap::new();
     for (id, spec) in definitions {
-        spec.clone()
-            .normalize()
-            .map_err(|_| AggregateGraphError::Definition)?;
-        for point in &spec.sources {
+        match spec {
+            CalculationSpec::Aggregate(s) => s.clone().normalize().map(|_| ()),
+            CalculationSpec::Duration(s) => s.clone().normalize().map(|_| ()),
+        }
+        .map_err(|_| AggregateGraphError::Definition)?;
+        for point in spec.sources() {
             if let Some((parent, "value")) = point.split()
                 && let Some(source) = definitions.get(&parent)
             {
-                if unit_ratio(source.unit.as_ref(), spec.unit.as_ref()).is_none() {
+                if match spec {
+                    CalculationSpec::Aggregate(_) => {
+                        unit_ratio(source.unit(), spec.unit()).is_none()
+                    }
+                    CalculationSpec::Duration(s) => s.source_unit.as_ref() != source.unit(),
+                } {
                     return Err(AggregateGraphError::Units);
                 }
                 if children.entry(parent).or_default().insert(id.clone()) {

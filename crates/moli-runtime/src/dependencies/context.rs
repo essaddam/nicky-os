@@ -5,10 +5,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 fn reference(point: &PointId) -> Option<DependencyRef> {
     let (id, key) = point.split()?;
-    (key == "value").then_some(DependencyRef {
-        kind: DependencyKind::Computed,
-        id,
-    })
+    let kind = match key {
+        "value" => DependencyKind::Computed,
+        "active" => DependencyKind::Schedule,
+        _ => return None,
+    };
+    Some(DependencyRef { kind, id })
 }
 
 pub(crate) fn bindings(root: &DependencyView, views: &[DependencyView]) -> Vec<DependencyBinding> {

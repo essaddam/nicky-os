@@ -59,6 +59,7 @@ impl std::error::Error for DependencyError {}
 pub enum DependencyDefinition {
     Schedule(WeeklySchedule),
     Aggregate(moli_core::AggregateSpec),
+    Duration(moli_core::DurationSpec),
     Scene(moli_core::SceneSpec),
 }
 
@@ -66,7 +67,7 @@ impl DependencyDefinition {
     pub fn kind(&self) -> moli_core::DependencyKind {
         match self {
             Self::Schedule(_) => moli_core::DependencyKind::Schedule,
-            Self::Aggregate(_) => moli_core::DependencyKind::Computed,
+            Self::Aggregate(_) | Self::Duration(_) => moli_core::DependencyKind::Computed,
             Self::Scene(_) => moli_core::DependencyKind::Scene,
         }
     }
@@ -76,6 +77,10 @@ impl DependencyDefinition {
             Self::Aggregate(spec) => Ok(Self::Aggregate(
                 spec.normalize().map_err(|_| DependencyError::Definition)?,
             )),
+            Self::Duration(spec) => spec
+                .normalize()
+                .map(Self::Duration)
+                .map_err(|_| DependencyError::Definition),
             Self::Scene(scene) => scene
                 .normalized()
                 .map(Self::Scene)
@@ -86,12 +91,13 @@ impl DependencyDefinition {
         match self {
             Self::Schedule(_) | Self::Scene(_) => &[],
             Self::Aggregate(spec) => &spec.sources,
+            Self::Duration(spec) => std::slice::from_ref(&spec.source),
         }
     }
     pub(crate) fn calendar(&self) -> Result<Option<Calendar>, DependencyError> {
         match self {
             Self::Schedule(plan) => Calendar::new(plan.clone()).map(Some),
-            Self::Aggregate(_) | Self::Scene(_) => Ok(None),
+            Self::Aggregate(_) | Self::Duration(_) | Self::Scene(_) => Ok(None),
         }
     }
 }

@@ -539,5 +539,18 @@
   "systeme.cast.revoke": "Désactiver ce récepteur",
   "systeme.cast.title": "Activer un récepteur Cast",
   "systeme.pilotes.cast.desc": "Récepteurs vidéo Cast validés explicitement : lecture, volume et sourdine.",
-  "systeme.pilotes.cast.nom": "Google Cast"
+  "systeme.pilotes.cast.nom": "Google Cast",
+  "systeme.duree.bilan": "Temps observé",
+  "systeme.duree.acquis": "Durée mesurée dans cet état : {seconds} s",
+  "systeme.duree.couverture": "Couverture connue : {known} s · inconnue : {unknown} s",
+  "systeme.duree.fenetre_connue": "Du {start} au checkpoint du {end}",
+  "systeme.duree.observation": "Une observation fraîche couvre cet instant.",
+  "systeme.duree.inconnu": "La couverture est interrompue ; la suite reste inconnue.",
+  "systeme.duree.entree": "Entrée dans cet état : {date}",
+  "systeme.duree.limite": "La limite de segments est atteinte : les périodes écartées sont inconnues.",
+  "systeme.duree.indisponible": "Le bilan durable est indisponible.",
+  "systeme.duree.fenetre": "Fenêtre glissante de {seconds} s",
+  "systeme.duree.fenetre_label": "Fenêtre glissante (secondes)",
+  "systeme.duree.aide": "Seules les périodes observées sont comptées. Une panne, une source périmée ou hors ligne et un redémarrage créent du temps inconnu. Une nouvelle version validée recommence la mesure.",
+  "systeme.duree.journal": "Durée mesurée : {seconds} s · couverture connue : {known} s · inconnue : {unknown} s · version {version}"
 }

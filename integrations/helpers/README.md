@@ -24,3 +24,8 @@
 Dates et heures : `date`, `time`, `datetime`, avec valeur `initial` explicite ;
 `timezone` obligatoire pour datetime. État métier durable avant confirmation,
 aucun déclencheur horaire implicite. Voir `docs/components/dates-heures.md`.
+
+- `computed` : agrégat `aggregate` (min/max/moyenne) ou `duration` (temps dans un
+  état, couverture connue et inconnue). Les définitions restent des brouillons
+  jusqu’à publication humaine ; [calculs](../../docs/components/calculs.md) et
+  [durées](../../docs/components/durees.md).

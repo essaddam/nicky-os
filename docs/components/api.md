@@ -1088,3 +1088,8 @@ certificat n’est accepté comme cible par HTTP. Une ancienne génération donn
 409, une cible invalide 422, un conflit de propriété 409 et un coffre
 indisponible 503. Les mutations sont auditées avec instance, acteur, opération
 et résultat, sans contenu sensible.
+
+AUTO-K3 : `GET /api/durations/{id}` expose le dernier bilan durable en millisecondes
+(acquis, connu, inconnu, fenêtre, entrée et checkpoint). Définitions `duration` sous
+`kind=computed`, même validation humaine. MCP `get_duration` et CLI `dependency duration`.
+Voir [durées](durees.md) et [OpenAPI](../api/dependencies.openapi.yaml).

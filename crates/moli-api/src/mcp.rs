@@ -222,6 +222,19 @@ impl MoliMcp {
     }
 
     #[tool(
+        description = "Read the durable measured duration, known and unknown coverage, entry time and checkpoint of a configured computed duration. Never treats cached values or downtime as observation."
+    )]
+    async fn get_duration(
+        &self,
+        Parameters(args): Parameters<DependencyArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        match self.hub.duration_stats(&args.id.into()) {
+            Ok(stats) => ok(&json!(stats)),
+            Err(e) => Ok(fail(&e.to_string())),
+        }
+    }
+
+    #[tool(
         description = "Save an inert typed dependency DRAFT with expected draft version (409/conflict if stale). A human must review affected automations and explicitly approve its exact version. Does not change the validated current definition."
     )]
     async fn save_dependency_draft(

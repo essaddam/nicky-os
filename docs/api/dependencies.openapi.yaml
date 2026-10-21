@@ -4,6 +4,20 @@ info:
   version: 1.0.0
   description: Brouillon inerte, courant humain et contrôle CAS. Voir components/plannings.md.
 paths:
+  /api/durations/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/Id' }
+    get:
+      summary: Lire le dernier checkpoint durable du temps dans un état
+      responses:
+        '200':
+          description: Temps mesuré et couverture explicites, sans extrapolation de l’interruption.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DurationStats' }
+        '403': { description: Réservé au foyer, aucun accès invité. }
+        '404': { description: Aucun courant de durée configuré. }
+        '503': { description: Brique suspendue après une erreur de persistance. }
   /api/dependencies:
     get:
       summary: Lire les définitions configurées (128 au plus)
@@ -127,6 +141,7 @@ components:
       oneOf:
         - { $ref: '#/components/schemas/ScheduleDefinition' }
         - { $ref: '#/components/schemas/AggregateDefinition' }
+        - { $ref: '#/components/schemas/DurationDefinition' }
         - type: object
           additionalProperties: false
           required: [type, value]
@@ -240,3 +255,37 @@ components:
           maxItems: 254
           items: { $ref: '#/components/schemas/Binding' }
           description: Versions des sources exécutables et des calculs concernés, intégrées à l’empreinte. Absence compatible = liste vide.
+
+    DurationDefinition:
+      type: object
+      additionalProperties: false
+      required: [type, value]
+      properties:
+        type: { const: duration }
+        value:
+          type: object
+          additionalProperties: false
+          required: [source, value, window_s, max_age_s]
+          properties:
+            source: { type: string, maxLength: 256 }
+            source_unit: { type: [string, 'null'], maxLength: 32, default: null }
+            value:
+              oneOf:
+                - { type: boolean }
+                - { type: number }
+                - { type: string, maxLength: 2000 }
+            window_s: { type: integer, minimum: 1, maximum: 604800 }
+            max_age_s: { type: integer, minimum: 1, maximum: 604800 }
+    DurationStats:
+      type: object
+      additionalProperties: false
+      required: [window_start_ms, as_of_ms, acquired_ms, known_ms, unknown_ms, entered_ms, observing, limited]
+      properties:
+        window_start_ms: { type: integer, minimum: 0 }
+        as_of_ms: { type: integer, minimum: 0 }
+        acquired_ms: { type: integer, minimum: 0 }
+        known_ms: { type: integer, minimum: 0 }
+        unknown_ms: { type: integer, minimum: 0 }
+        entered_ms: { type: [integer, 'null'], minimum: 0 }
+        observing: { type: boolean }
+        limited: { type: boolean }
