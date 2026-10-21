@@ -1,6 +1,6 @@
 //! Revocation reaches a driver that took an order but has not emitted it.
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 
 use moli_automation::{Actor, Author, Automation, Automations, Config, RunStatus};
@@ -17,11 +17,15 @@ const HUMAN: Actor = Actor {
 
 #[derive(Default)]
 struct Sink {
+    detached: bool,
+    engage_before_hold: bool,
+    permit: std::sync::Mutex<Option<moli_runtime::SendPermit>>,
     taken: Notify,
     release: Notify,
     done: Notify,
     emitted: AtomicBool,
     abandoned: AtomicBool,
+    emissions: AtomicUsize,
 }
 
 impl Driver for Sink {
@@ -63,15 +67,30 @@ impl Driver for Sink {
             ctx.set_state(&id, "on", Value::Bool(false));
             ctx.ready();
             while let Some(command) = ctx.next_command().await {
+                let permit = self.detached.then(|| command.send_permit(command.deadline));
+                if self.engage_before_hold {
+                    assert!(permit.as_ref().unwrap().begin_send());
+                    self.emissions.fetch_add(1, Ordering::SeqCst);
+                }
+                self.permit.lock().unwrap().clone_from(&permit);
                 self.taken.notify_one();
                 self.release.notified().await;
-                let abandoned = command.abandoned();
+                let abandoned = permit.as_ref().map_or_else(
+                    || command.abandoned(),
+                    |permit| !permit.emitted() && !permit.wanted(),
+                );
                 self.abandoned.store(abandoned, Ordering::SeqCst);
                 if abandoned {
                     command.reply(Err("simulated cancellation".into()));
                 } else {
                     assert_eq!(command.metadata.origin, Origin::Automation);
                     assert!(command.metadata.correlation.is_some());
+                    if let Some(permit) = &permit
+                        && !permit.emitted()
+                    {
+                        assert!(permit.begin_send());
+                        self.emissions.fetch_add(1, Ordering::SeqCst);
+                    }
                     self.emitted.store(true, Ordering::SeqCst);
                     command.reply(Ok(()));
                 }
@@ -92,9 +111,17 @@ struct Fixture {
 }
 impl Fixture {
     async fn new(effect: Json) -> Self {
+        Self::with_transport(effect, false, false).await
+    }
+
+    async fn with_transport(effect: Json, detached: bool, engage_before_hold: bool) -> Self {
         let hub = Hub::new(HubOptions::default()).unwrap();
         let cancel = CancellationToken::new();
-        let sink = Arc::new(Sink::default());
+        let sink = Arc::new(Sink {
+            detached,
+            engage_before_hold,
+            ..Sink::default()
+        });
         let config = serde_json::from_value(json!({"helper":[
             {"id":"clock","name":"Timer","kind":"timer"}
         ]}))
@@ -202,6 +229,49 @@ impl Fixture {
                 .unwrap()
                 .unwrap();
         }
+    }
+}
+
+#[tokio::test]
+async fn auto_h1_detached_transport_rechecks_revocation_before_its_task_wakes() {
+    for action in ["control", "cancel", "replace", "off", "already_engaged"] {
+        let effect = json!({"id":"send","type":"set","point":"sink:target/on","value":true});
+        let engaged = action == "already_engaged";
+        let fixture = Fixture::with_transport(effect, true, engaged).await;
+        fixture
+            .revoke(if engaged { "cancel" } else { action })
+            .await;
+        // The transport is still held: the synchronous permit must already
+        // reflect generation/activation revocation without its task waking.
+        let permit = fixture.sink.permit.lock().unwrap().clone().unwrap();
+        if action == "control" {
+            assert!(permit.wanted());
+        } else {
+            assert!(!permit.wanted());
+            assert!(!permit.begin_send());
+        }
+        assert_eq!(permit.emitted(), engaged);
+        assert_eq!(
+            fixture.sink.emissions.load(Ordering::SeqCst),
+            usize::from(engaged)
+        );
+        fixture.release().await;
+        let expected = usize::from(action == "control" || engaged);
+        assert_eq!(fixture.sink.emissions.load(Ordering::SeqCst), expected);
+        if expected == 1 {
+            tokio::time::timeout(Duration::from_secs(3), async {
+                while !fixture.hub.journal(100).iter().any(|entry| {
+                    matches!(&entry.action, moli_core::Action::Command { point, .. }
+                        if point.as_str() == "sink:target/on")
+                        && matches!(entry.outcome, moli_core::Outcome::Ok)
+                }) {
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await
+            .unwrap();
+        }
+        fixture.stop().await;
     }
 }
 

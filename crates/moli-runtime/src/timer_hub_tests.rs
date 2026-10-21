@@ -108,7 +108,7 @@ fn command(
                 ),
                 correlation: Some(format!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:{sequence}")),
             },
-            reply,
+            reply: Arc::new(std::sync::Mutex::new(Some(reply))),
             claim: Arc::new(AtomicU8::new(Claim::TAKEN)),
         },
         receive,
