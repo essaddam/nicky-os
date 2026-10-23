@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Proposition de consolidation de la structure des données de Moli OS : valeurs, instants, filtres, conservation, valeurs cumulées, fraîcheur, équipements logiques, double écriture, travaux de nuit et changements de base.">
+<title>Valeurs, appareils et stockage</title>
+<style>
+:root{--paper:#f7f3eb;--ink:#202b28;--muted:#56625c;--line:#d3d9cf;--accent:#216c55;--soft:#e6eee5;--warm:#a64f2a;--card:#fffdf8;--ok:#2f7d4f;--warn:#8f600e;--bad:#b0413e;--okbg:#e2f0e6;--warnbg:#f7ecd6;--badbg:#f6e0de;--mast:#202b28;--mastfg:#f7f3eb;--mastmuted:#c9d6cb;--code:#e9eee6;--sans:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;--serif:"Iowan Old Style",Palatino,"Book Antiqua",Georgia,serif;--mono:"SFMono-Regular",Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#121715;--ink:#e6ebe5;--muted:#a3afa8;--line:#323e39;--accent:#6cc19f;--soft:#1c2622;--warm:#e39466;--card:#18201c;--ok:#67c48d;--warn:#e2b24f;--bad:#e5807a;--okbg:#1d3326;--warnbg:#3a2f17;--badbg:#3d2120;--mast:#0b0f0d;--mastfg:#e6ebe5;--mastmuted:#a9b8ae;--code:#1f2a25}}
+:root[data-theme="dark"]{--paper:#121715;--ink:#e6ebe5;--muted:#a3afa8;--line:#323e39;--accent:#6cc19f;--soft:#1c2622;--warm:#e39466;--card:#18201c;--ok:#67c48d;--warn:#e2b24f;--bad:#e5807a;--okbg:#1d3326;--warnbg:#3a2f17;--badbg:#3d2120;--mast:#0b0f0d;--mastfg:#e6ebe5;--mastmuted:#a9b8ae;--code:#1f2a25}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.62}
+a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+a:focus-visible,summary:focus-visible{outline:3px solid var(--warm);outline-offset:3px}
+.skip{position:absolute;left:1rem;top:-4rem;background:var(--card);color:var(--ink);padding:.6rem .9rem;z-index:10}
+.skip:focus{top:1rem}
+.mast{background:var(--mast);color:var(--mastfg);padding:44px clamp(16px,5vw,88px) 36px}
+.eyebrow{letter-spacing:.14em;text-transform:uppercase;font-size:.75rem;color:var(--mastmuted)}
+.mast h1{font-family:var(--serif);font-size:clamp(2.1rem,5vw,4.2rem);line-height:1.05;letter-spacing:-.03em;margin:16px 0 14px;max-width:1000px}
+.mast p{max-width:820px;color:var(--mastmuted);margin:0 0 10px}
+.mast a{color:var(--mastfg)}
+.facts{display:flex;flex-wrap:wrap;gap:28px;margin-top:26px}
+.fact{border-top:1px solid var(--mastmuted);padding-top:8px;min-width:150px;max-width:230px}
+.fact strong{display:block;font-family:var(--serif);font-size:1.9rem;line-height:1.15;color:var(--mastfg)}
+.fact span{font-size:.8rem;color:var(--mastmuted)}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1500px;margin:0 auto}
+.toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:30px 18px}
+.toc p{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.toc a{display:block;padding:7px 0;border-bottom:1px solid var(--line);color:var(--muted);text-decoration:none;font-size:.86rem}
+.toc a:hover{color:var(--accent)}
+main{min-width:0;background:var(--card);border-left:1px solid var(--line);padding:30px clamp(16px,4vw,60px) 70px}
+section{max-width:980px}
+h2{font-family:var(--serif);font-size:1.85rem;line-height:1.2;margin:56px 0 12px;padding-top:16px;border-top:2px solid var(--ink)}
+section:first-child h2{margin-top:6px}
+h3{font-size:1.1rem;margin:30px 0 8px}
+p,li{max-width:92ch}
+li{margin-bottom:.45rem}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);border-radius:3px;padding:.1em .3em;overflow-wrap:anywhere}
+pre{background:var(--code);border:1px solid var(--line);padding:16px;overflow:auto;line-height:1.45;font-size:.85rem}
+pre code{background:none;padding:0}
+th code,.mast code{background:rgba(255,255,255,.16);color:inherit}
+.lead{font-size:1.08rem}
+.note{color:var(--muted);font-size:.9rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{border:1px solid var(--line);background:var(--paper);padding:14px 16px;border-radius:6px}
+.card h3{margin:0 0 6px;font-size:1rem}
+.card p{margin:0;font-size:.92rem}
+.num{display:inline-block;min-width:1.6em;height:1.6em;line-height:1.6em;text-align:center;border-radius:50%;background:var(--accent);color:var(--card);font-size:.8rem;font-weight:700;margin-right:6px}
+.tw{max-width:100%;overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;line-height:1.5}
+th{background:var(--ink);color:var(--card);text-align:left;vertical-align:top;padding:10px 12px;font-size:.8rem;letter-spacing:.02em}
+td{padding:10px 12px;vertical-align:top;border-top:1px solid var(--line);min-width:120px}
+tr:nth-child(even) td{background:var(--paper)}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.t-ok{background:var(--okbg);color:var(--ok)}.t-warn{background:var(--warnbg);color:var(--warn)}.t-bad{background:var(--badbg);color:var(--bad)}
+figure{margin:20px 0 26px;border:1px solid var(--line);background:var(--card);padding:14px}
+.fig{overflow-x:auto}
+figcaption{color:var(--muted);font-size:.86rem;margin-top:8px}
+details{border:1px solid var(--line);padding:10px 14px;margin:12px 0;background:var(--paper)}
+summary{cursor:pointer;font-weight:700}
+.rule{border-left:4px solid var(--accent);background:var(--soft);padding:12px 16px;margin:16px 0}
+.warnbox{border-left:4px solid var(--warn);background:var(--warnbg);padding:12px 16px;margin:16px 0}
+footer{max-width:1500px;margin:0 auto;padding:20px clamp(16px,4vw,40px);color:var(--muted);font-size:.82rem}
+svg.dia{display:block;width:100%;height:auto;min-width:640px}
+.dia text{font-family:var(--sans)}
+.dia .box{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.dia .box-a{fill:var(--soft);stroke:var(--accent);stroke-width:1.5}
+.dia .h{fill:var(--accent);font-size:13px;font-weight:700;letter-spacing:.04em}
+.dia .title{fill:var(--ink);font-size:14px;font-weight:700}
+.dia .txt{fill:var(--ink);font-size:13px}
+.dia .big{fill:var(--ink);font-size:17px;font-weight:700}
+.dia .mono{fill:var(--ink);font-size:13px;font-family:var(--mono)}
+.dia .muted{fill:var(--muted);font-size:12px}
+.dia .arrow{stroke:var(--accent);stroke-width:2;fill:none}
+.dia .head{fill:var(--accent)}
+.dia .axis{stroke:var(--muted);stroke-width:1;fill:none}
+.dia .grid{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.dia .mark{stroke:var(--warm);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.dia .markt{fill:var(--warm);font-size:12px;font-weight:700}
+.dia .line{stroke:var(--accent);stroke-width:2.5;fill:none}
+.dia .gap{stroke:var(--muted);stroke-width:2;stroke-dasharray:4 5;fill:none}
+.dia .rep{fill:var(--card);stroke:var(--accent);stroke-width:1.5}
+.dia .repc{fill:var(--accent)}
+.dia .zok{fill:var(--okbg);stroke:var(--ok)}
+.dia .zwarn{fill:var(--warnbg);stroke:var(--warn)}
+.dia .zbad{fill:var(--badbg);stroke:var(--bad)}
+.dia .tok{fill:var(--ok);font-size:12px;font-weight:700}
+.dia .twarn{fill:var(--warn);font-size:12px;font-weight:700}
+.dia .tbad{fill:var(--bad);font-size:12px;font-weight:700}
+.dia .thr{stroke:var(--bad);stroke-width:1.5;stroke-dasharray:6 4}
+.dia .below{fill:var(--okbg)}
+.dia .seg{fill:var(--soft);stroke:var(--accent);stroke-width:1}
+.dia .red{fill:var(--badbg);stroke:var(--bad);stroke-width:1}
+.dia .bar{fill:var(--accent)}
+.dia .bar2{fill:var(--warm)}
+.dia .spread{fill:var(--soft);stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 3}
+.dia .st{fill:var(--ink);font-size:11.5px}
+.dia .tot{fill:var(--ink);font-size:14px;font-weight:700}
+@media (max-width:900px){.layout{display:block}.toc{position:static;max-height:none;display:flex;gap:14px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid var(--line)}.toc p{display:none}.toc a{border:0;white-space:nowrap}main{border-left:0;padding:22px 16px 60px}h2{font-size:1.55rem;margin-top:40px}.facts{gap:18px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{.toc,.skip{display:none}.layout{display:block}main{border:0;padding:0}.mast{background:none;color:#000;padding:0 0 12px;border-bottom:2px solid #000}.mast p,.eyebrow,.fact span,.fact strong{color:#333}figure,table,pre{break-inside:avoid}.fig,.tw{overflow:visible}svg.dia{min-width:0}}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="mast">
+  <div class="eyebrow">Moli OS · version 1, remplacée par la <a href="valeurs-appareils-stockage-v3.html">V3</a> · 21 octobre 2026 · références vérifiées sur <code>d0ce806</code></div>
+  <h1>Valeurs, appareils et stockage</h1>
+  <p>Comment consolider la structure des données pour lire plus vite, écrire moins et stocker plus petit, sans perdre d'information. Chaque donnée a une seule copie, sauf un recouvrement voulu et borné : la dernière valeur de chaque point, dans l'état courant et dans l'historique. Aucun code n'a été modifié pour écrire cette proposition.</p>
+  <p>Version détaillée, avec toutes les références au code : <a href="valeurs-appareils-stockage.md">valeurs-appareils-stockage.md</a>.</p>
+  <div class="facts">
+    <div class="fact"><strong>≈&nbsp;39 → 21&nbsp;o</strong><span>par relevé, en retirant ce que la clé contient déjà (estimation, à mesurer)</span></div>
+    <div class="fact"><strong>3 instants</strong><span>observé, reçu, changé : aujourd'hui un seul <code>ts</code> à double sens</span></div>
+    <div class="fact"><strong>0 copie</strong><span>un équipement logique lie ses sources, il ne les recopie pas</span></div>
+    <div class="fact"><strong>2 bases</strong><span>l'historique d'un côté, le fonctionnement direct de l'autre : deux rédacteurs en parallèle</span></div>
+    <div class="fact"><strong>÷&nbsp;10</strong><span>octets écrits par jour, double écriture comprise : ≈&nbsp;0,3&nbsp;Go contre ≈&nbsp;3,1&nbsp;Go (mesuré sur une vraie journée, proxy SQLite)</span></div>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Sommaire">
+  <p>Sommaire</p>
+  <a href="#idee">L'idée</a>
+  <a href="#existant">Ce qui existe</a>
+  <a href="#valeur">Une valeur, quatre états</a>
+  <a href="#instants">Trois instants</a>
+  <a href="#filtres">Filtrer sans perdre</a>
+  <a href="#conserver">Garder sans grossir</a>
+  <a href="#cumuls">Valeurs cumulées</a>
+  <a href="#fraicheur">Fraîcheur et pannes</a>
+  <a href="#equipements">Physique et logique</a>
+  <a href="#usages">Conditions avec durée</a>
+  <a href="#familles">Familles à part</a>
+  <a href="#algorithmes">Les algorithmes</a>
+  <a href="#deux-bases">Deux bases</a>
+  <a href="#double-ecriture">Double écriture et nuit</a>
+  <a href="#base">Changements de base</a>
+  <a href="#suite">Garde-fous et décisions</a>
+</nav>
+
+<main id="contenu">
+
+<section id="idee">
+<h2>L'idée</h2>
+<p class="lead"><strong>Le point source porte la donnée ; tout le reste la référence.</strong> Une valeur est transformée une fois, au bord, en valeur canonique. Elle est stockée sous sa forme la plus compacte, consolidée en agrégats quand elle vieillit, et traduite seulement à l'affichage. Les équipements logiques, les écrans et les automatismes la lisent par liaison.</p>
+<div class="cards">
+  <div class="card"><h3><span class="num">1</span>Valeur canonique</h3><p>Sens, échelle, unité et code d'énumération fixés au bord. On stocke le code, jamais le libellé.</p></div>
+  <div class="card"><h3><span class="num">2</span>Trois instants</h3><p>Observé à la source, reçu au dernier rapport, changé au dernier changement.</p></div>
+  <div class="card"><h3><span class="num">3</span>Politique par valeur</h3><p>Défaut par famille, surcharge par point : filtres, fraîcheur, durées, consolidation.</p></div>
+  <div class="card"><h3><span class="num">4</span>Consolider</h3><p>Agrégats horaires au fil de l'eau, moyenne pondérée par le temps, min, max, couverture.</p></div>
+  <div class="card"><h3><span class="num">5</span>Valeurs cumulées</h3><p>Un index s'agrège en différences réparties, jamais en moyenne ; les périodes s'additionnent.</p></div>
+  <div class="card"><h3><span class="num">6</span>Fraîcheur et qualité</h3><p>Rapport attendu par appareil ; qualité bonne, incertaine ou mauvaise ; panne en cascade.</p></div>
+  <div class="card"><h3><span class="num">7</span>Équipements logiques</h3><p>Des rôles liés aux points sources, comme le luminaire D12, généralisé ; mode dégradé explicite.</p></div>
+  <div class="card"><h3><span class="num">8</span>Durées qui survivent</h3><p><code>for_s</code> existe ; il lui faut fraîcheur, hystérésis et reprise après redémarrage.</p></div>
+  <div class="card"><h3><span class="num">9</span>Algorithmes revus</h3><p>Rapport identique sans écriture disque, rédacteur filtré, purge après consolidation, moyennes pondérées, échéancier unique.</p></div>
+  <div class="card"><h3><span class="num">10</span>Deux bases</h3><p><code>moli.db</code> pour l'historique, <code>maison.db</code> pour le fonctionnement direct : le multithread de Turso sans fonction expérimentale.</p></div>
+  <div class="card"><h3><span class="num">11</span>Base consolidée</h3><p>Relevé amaigri, vocabulaire, dictionnaires, agrégats, équipements, état métier en tables.</p></div>
+  <div class="card"><h3><span class="num">12</span>Double écriture et nuit</h3><p>L'état courant complet dans <code>maison.db</code>, l'historique en parallèle, rangé à l'heure close ; la nuit consolide, purge et sauvegarde. Dix fois moins d'octets écrits (mesuré).</p></div>
+</div>
+<p><strong>Critères de choix</strong> : octets par relevé, écritures par seconde, latence d'une courbe et du démarrage, aucune perte d'information utile, une seule autorité par donnée. Les budgets de <a href="../PERFORMANCE.md">PERFORMANCE.md</a> restent tenus : 32 Mio anonymes, image ≤&nbsp;40&nbsp;Mo, p95 API ≤&nbsp;25&nbsp;ms, démarrage ≤&nbsp;2&nbsp;s.</p>
+</section>
+
+<section id="existant">
+<h2>Ce qui existe déjà</h2>
+<p>Réanalyse du code du 21 octobre. La proposition s'appuie d'abord sur ce qui marche.</p>
+<div class="tw"><table>
+<thead><tr><th>Sujet</th><th>Aujourd'hui</th><th>Écart</th></tr></thead>
+<tbody>
+<tr><td>Instants</td><td><code>Sample{value, ts}</code> : <code>ts</code> est l'heure de réception, renouvelée à chaque rapport, même identique. L'événement n'est émis que sur changement.</td><td>Un seul <code>ts</code> pour deux sens : l'instantané donne le dernier rapport, le flux le dernier changement. Pas d'horodatage source pour un pilote.</td></tr>
+<tr><td>Énumérations</td><td>Un texte pris dans une liste.</td><td>Stockée en texte, affichée brute.</td></tr>
+<tr><td>Sens d'un contact</td><td>Zigbee : <code>contact</code> vrai = fermé. Tuya : <code>doorcontact_state</code> vrai = ouvert.</td><td>Corrigé à plusieurs endroits de l'interface.</td></tr>
+<tr><td>Filtres</td><td>Dédoublonnage par égalité seulement.</td><td>Ni bande morte, ni anti-rebond, ni intervalle minimal.</td></tr>
+<tr><td>Lissage</td><td><code>moli-rollup</code> : moyenne pondérée par le temps, somme, nombre, durées par état, couverture. Il n'est utilisé que par l'archive.</td><td>Courbes du cœur et statistiques MCP en moyenne simple, donc biaisées sur des relevés irréguliers. Aucun agrégat local.</td></tr>
+<tr><td>Index cumulés</td><td><code>moli-energy</code> le fait bien : delta réparti, relevé suspect, remise à zéro, totaux additifs.</td><td>Réservé à l'électricité. Une valeur calculée accepte un compteur pour en faire une moyenne.</td></tr>
+<tr><td>Fraîcheur</td><td>Disponibilité par appareil, statut par pilote, détection du silence propre à quelques pilotes.</td><td>Pas d'intervalle attendu générique, pas de qualité de valeur, disponibilité non persistée.</td></tr>
+<tr><td>Composites</td><td>Le luminaire D12 : ampoules et relais, état dérivé, ordres redistribués.</td><td>Rien de générique : un portail Overkiz RTS n'expose qu'une commande, sans position.</td></tr>
+<tr><td>Durées</td><td><code>when_threshold{below, for_s}</code> couvre « &lt; 200 pendant 10&nbsp;min ».</td><td>Perdu au redémarrage. Pas de contrôle de fraîcheur pendant le décompte. Pas d'hystérésis.</td></tr>
+<tr><td>Textes</td><td>4&nbsp;000 caractères au plus, pour les ordres seulement.</td><td>Un texte trop long fait échouer tout un lot d'historique et suspend les purges.</td></tr>
+<tr><td>État métier</td><td>Une vingtaine de fichiers JSON ou TOML, réécrits en entier à chaque changement.</td><td>Sauvegarde par liste, qui oublie <code>people.json</code>, <code>settings.json</code> et <code>assistant.json</code>.</td></tr>
+<tr><td>Turso (D13)</td><td>Un fichier <code>moli.db</code> pour historique et énergie. Un rédacteur, des lecteurs sur leurs connexions sans blocage. <code>BEGIN CONCURRENT</code> fonctionne mais reste expérimental, donc inutilisé. Vecteurs compilés par défaut.</td><td>L'état métier reste en fichiers. Le parallélisme entre une rafale de relevés et une décision humaine n'est pas exploité.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="valeur">
+<h2>Une valeur, quatre états</h2>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 300" role="img" aria-labelledby="d1t d1d">
+<title id="d1t">Chemin d'une valeur</title><desc id="d1d">Une valeur passe par quatre états : reçue de l'appareil, traduite en valeur canonique par le profil, stockée sous forme compacte avec ses horodatages, puis affichée avec un libellé traduit.</desc>
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="h" x="15" y="22">1 · REÇU</text><text class="h" x="205" y="22">2 · CANONIQUE</text><text class="h" x="395" y="22">3 · STOCKÉ</text><text class="h" x="585" y="22">4 · AFFICHÉ</text>
+<text class="muted" x="15" y="40">ce que dit l'appareil</text><text class="muted" x="205" y="40">ce que Moli comprend</text><text class="muted" x="395" y="40">ce qu'on garde, une fois</text><text class="muted" x="585" y="40">ce que voit l'humain</text>
+<rect class="box" x="10" y="56" width="165" height="92" rx="6"/><text class="mono" x="22" y="88">contact: false</text><text class="muted" x="22" y="112">Zigbee2MQTT</text><text class="muted" x="22" y="130">vrai = fermé chez lui</text>
+<rect class="box-a" x="200" y="56" width="165" height="92" rx="6"/><text class="mono" x="212" y="88">ouvert = vrai</text><text class="muted" x="212" y="112">profil : inversion</text><text class="muted" x="212" y="130">un seul sens partout</text>
+<rect class="box" x="390" y="56" width="165" height="92" rx="6"/><text class="mono" x="402" y="88">b = 1</text><text class="muted" x="402" y="112">+ observé · reçu</text><text class="muted" x="402" y="130">+ changé</text>
+<rect class="box" x="580" y="56" width="165" height="92" rx="6"/><text class="big" x="592" y="92">« Ouvert »</text><text class="muted" x="592" y="116">libellé traduit</text><text class="muted" x="592" y="132">en : “Open”</text>
+<path class="arrow" d="M176,102 L198,102" marker-end="url(#a1)"/><path class="arrow" d="M366,102 L388,102" marker-end="url(#a1)"/><path class="arrow" d="M556,102 L578,102" marker-end="url(#a1)"/>
+<rect class="box" x="10" y="166" width="165" height="92" rx="6"/><text class="mono" x="22" y="198">preset: "eco"</text><text class="muted" x="22" y="222">API du chauffage</text><text class="muted" x="22" y="240">texte libre de l'API</text>
+<rect class="box-a" x="200" y="166" width="165" height="92" rx="6"/><text class="mono" x="212" y="198">mode = eco</text><text class="muted" x="212" y="222">énumération connue</text><text class="muted" x="212" y="240">clé stable</text>
+<rect class="box" x="390" y="166" width="165" height="92" rx="6"/><text class="mono" x="402" y="198">e = 2</text><text class="muted" x="402" y="222">code du dictionnaire</text><text class="muted" x="402" y="240">1 octet au lieu d'un mot</text>
+<rect class="box" x="580" y="166" width="165" height="92" rx="6"/><text class="big" x="592" y="202">« Éco »</text><text class="muted" x="592" y="226">libellé traduit</text><text class="muted" x="592" y="242">en : “Eco”</text>
+<path class="arrow" d="M176,212 L198,212" marker-end="url(#a1)"/><path class="arrow" d="M366,212 L388,212" marker-end="url(#a1)"/><path class="arrow" d="M556,212 L578,212" marker-end="url(#a1)"/>
+<text class="muted" x="10" y="288">Le libellé n'est jamais stocké : changer de langue ou de libellé ne réécrit pas l'historique.</text>
+</svg></div><figcaption>Le sens d'un contact, l'échelle, l'unité et le code d'énumération sont fixés une fois, au bord. L'historique ne voit que la valeur canonique.</figcaption></figure>
+
+<div class="tw"><table>
+<thead><tr><th>Type</th><th>Stocké</th><th>Affiché</th></tr></thead>
+<tbody>
+<tr><td>Booléen (contact, présence)</td><td><code>0</code> ou <code>1</code> : aucun octet de valeur en SQLite</td><td>libellé de la sémantique : Ouvert/Fermé, Allumé/Éteint</td></tr>
+<tr><td>Énumération (mode, programme)</td><td>code du dictionnaire du point, 1 octet</td><td>libellé traduit de la clé</td></tr>
+<tr><td>Décimal (température, puissance)</td><td>entier à l'échelle de la source : 21,57&nbsp;°C → <code>2157</code>, échelle 0,01 ; réel de 8&nbsp;octets si rien ne convient</td><td>précision d'affichage du point</td></tr>
+<tr><td>Index cumulé (kWh, m³)</td><td>comme un décimal, avec sa nature déclarée</td><td>consommation sur la période</td></tr>
+<tr><td>Texte</td><td>borné à 4&nbsp;000 caractères ; dictionnaire s'il se répète</td><td>tel quel</td></tr>
+<tr><td>Inconnu</td><td><code>Null</code>, jamais <code>0</code> ni texte vide</td><td>« — »</td></tr>
+</tbody></table></div>
+<div class="rule"><strong>Échelle ≠ arrondi.</strong> L'échelle d'un point est la résolution réelle de sa source, jamais plus grossière. La règle du projet « ne pas arrondir arbitrairement une mesure pour réduire les écritures » reste respectée. Changer l'échelle ou l'unité ouvre une nouvelle version du point.</div>
+<p><strong>Dictionnaires</strong> : chaque énumération a des codes en ajout seul, jamais réutilisés. Une valeur inconnue reçoit un nouveau code au lieu d'être perdue. Les textes répétitifs (applications, sources, chaînes) en profitent aussi, pas les textes libres ou privés. Le nombre d'états est connu d'avance, ce qui supprime le risque des « plus de 64 états » qui bloque aujourd'hui une publication d'archive.</p>
+</section>
+
+<section id="instants">
+<h2>Trois instants par valeur</h2>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 270" role="img" aria-labelledby="d2t d2d">
+<title id="d2t">Mise à jour et changement</title><desc id="d2d">Un capteur de température rapporte toutes les trois minutes. La valeur change deux fois ; chaque rapport met à jour l'instant de réception ; après le dernier rapport, la valeur passe de fraîche à en retard, puis perdue.</desc>
+<text class="title" x="20" y="24">Température salon · rapport attendu toutes les 3 min</text>
+<line class="grid" x1="60" y1="80" x2="720" y2="80"/><line class="grid" x1="60" y1="130" x2="720" y2="130"/>
+<text class="muted" x="20" y="84">21,0</text><text class="muted" x="20" y="134">20,5</text>
+<path class="line" d="M60,130 L192,130 L192,80 L500,80 L500,130 L555,130"/>
+<circle class="rep" cx="60" cy="160" r="4.5"/><circle class="rep" cx="93" cy="160" r="4.5"/><circle class="rep" cx="126" cy="160" r="4.5"/><circle class="rep" cx="159" cy="160" r="4.5"/><circle class="repc" cx="192" cy="160" r="5"/><circle class="rep" cx="225" cy="160" r="4.5"/><circle class="rep" cx="258" cy="160" r="4.5"/><circle class="rep" cx="291" cy="160" r="4.5"/><circle class="rep" cx="324" cy="160" r="4.5"/><circle class="rep" cx="357" cy="160" r="4.5"/><circle class="rep" cx="390" cy="160" r="4.5"/><circle class="rep" cx="423" cy="160" r="4.5"/><circle class="rep" cx="456" cy="160" r="4.5"/><circle class="repc" cx="500" cy="160" r="5"/><circle class="rep" cx="522" cy="160" r="4.5"/><circle class="rep" cx="555" cy="160" r="4.5"/>
+<text class="muted" x="565" y="164">rapports (● = changement)</text>
+<line class="mark" x1="500" y1="46" x2="500" y2="150"/><text class="markt" x="398" y="42">changé le · 40 min</text>
+<line class="mark" x1="555" y1="58" x2="555" y2="150"/><text class="markt" x="560" y="62">reçu le · 45 min</text>
+<text class="muted" x="300" y="200">silence après le dernier rapport :</text>
+<rect class="zok" x="555" y="186" width="33" height="20"/><rect class="zwarn" x="588" y="186" width="66" height="20"/><rect class="zbad" x="654" y="186" width="66" height="20"/>
+<text class="tok" x="555" y="224">frais</text><text class="twarn" x="592" y="224">en retard</text><text class="tbad" x="658" y="224">perdu</text>
+<line class="axis" x1="60" y1="244" x2="720" y2="244"/>
+<text class="muted" x="56" y="262">0</text><text class="muted" x="216" y="262">15</text><text class="muted" x="381" y="262">30</text><text class="muted" x="546" y="262">45</text><text class="muted" x="692" y="262">60 min</text>
+</svg></div><figcaption>Douze rapports sans changement ne créent aucune ligne d'historique, mais chacun prouve que le capteur vit.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Instant</th><th>Sens</th><th>Où il vit</th><th>Coût</th></tr></thead>
+<tbody>
+<tr><td>Observé le</td><td>instant de la mesure selon la source (cloud, compteur, import)</td><td>clé du relevé : la chronologie</td><td>aucun</td></tr>
+<tr><td>Reçu le</td><td>dernier rapport, même identique</td><td>mémoire, persisté par lots avec l'écriture existante toutes les 60&nbsp;s</td><td>une écriture groupée par minute au plus</td></tr>
+<tr><td>Changé le</td><td>dernier changement de valeur</td><td>dernier relevé du point</td><td>aucun</td></tr>
+</tbody></table></div>
+<p>Chaque appareil a aussi un <strong>dernier contact</strong> : tout message, même sans valeur. C'est lui qui mesure la vie de l'appareil. L'historique n'écrit jamais une valeur égale au dernier relevé du point. Après un redémarrage, une valeur relue reste incertaine jusqu'au premier rapport frais.</p>
+</section>
+
+<section id="filtres">
+<h2>Filtrer sans perdre de vrai</h2>
+<div class="tw"><table>
+<thead><tr><th>Filtre</th><th>Pour</th><th>Où</th><th>Effet</th></tr></thead>
+<tbody>
+<tr><td>Anti-rebond</td><td>contact qui rebondit, détecteur qui se réarme</td><td>au bord, avant le hub</td><td>tout le monde voit la valeur stabilisée. Seulement là où le rebond est prouvé : une porte ouverte puis fermée en une seconde est un vrai événement.</td></tr>
+<tr><td>Bande morte</td><td>bruit d'un capteur (±1 W, ±0,05&nbsp;°C)</td><td>au stockage seulement</td><td>hub et automatismes voient la valeur exacte ; l'historique n'écrit que les écarts significatifs</td></tr>
+<tr><td>Intervalle minimal</td><td>capteurs bavards (puissance chaque seconde)</td><td>au stockage seulement</td><td>au plus un relevé par intervalle ; min et max survivent dans l'agrégat</td></tr>
+</tbody></table></div>
+<div class="rule"><strong>Un filtre ne cache jamais un seuil.</strong> Bande morte et intervalle s'appliquent au stockage, jamais à l'entrée : un automatisme sur « luminosité &lt; 200 » voit toujours la vraie valeur.</div>
+<p>La position de lecture d'un média ne s'historise pas : elle se déduit de l'état de lecture et de son début. Selon la fréquence de publication du pilote, c'est peut-être aujourd'hui le point le plus bavard de la maison.</p>
+</section>
+
+<section id="conserver">
+<h2>Garder longtemps sans grossir</h2>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 230" role="img" aria-labelledby="d5t d5d">
+<title id="d5t">Horizons de conservation</title><desc id="d5d">De maintenant vers le passé : la dernière valeur est toujours gardée, puis chaque changement pendant quelques jours, puis des agrégats horaires et journaliers pendant des mois ou des années, puis l'archive.</desc>
+<text class="h" x="20" y="22">DU PLUS RÉCENT AU PLUS ANCIEN, PAR VALEUR</text>
+<rect class="box-a" x="560" y="40" width="185" height="96" rx="6"/><text class="title" x="574" y="66">État courant</text><text class="muted" x="574" y="88">dernière valeur</text><text class="muted" x="574" y="106">+ 3 instants, qualité</text><text class="muted" x="574" y="124">toujours gardée</text>
+<rect class="box" x="370" y="40" width="185" height="96" rx="6"/><text class="title" x="384" y="66">Détail récent</text><text class="muted" x="384" y="88">chaque changement</text><text class="muted" x="384" y="106">après bande morte</text><text class="muted" x="384" y="124">7 à 31 j (cible D13)</text>
+<rect class="box" x="180" y="40" width="185" height="96" rx="6"/><text class="title" x="194" y="66">Agrégats</text><text class="muted" x="194" y="88">heure, jour, mois</text><text class="muted" x="194" y="106">fonction selon la nature</text><text class="muted" x="194" y="124">des mois aux années</text>
+<rect class="box" x="20" y="40" width="155" height="96" rx="6"/><text class="title" x="34" y="66">Archive</text><text class="muted" x="34" y="88">Parquet (D13)</text><text class="muted" x="34" y="106">détail ou résumés</text><text class="muted" x="34" y="124">selon la famille</text>
+<line class="axis" x1="20" y1="160" x2="745" y2="160"/><text class="muted" x="20" y="180">années</text><text class="muted" x="745" y="180" text-anchor="end">maintenant</text>
+<text class="txt" x="20" y="212">Plus on recule, moins on garde de points, mais on garde toujours min, max et couverture.</text>
+</svg></div><figcaption>Quatre horizons, réglés par famille puis par valeur.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Nature</th><th>Agrégat d'une heure, d'un jour, d'un mois</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td>Mesure continue (température, luminosité, puissance)</td><td>moyenne pondérée par le temps, min, max</td><td>les relevés sont irréguliers : une moyenne simple est fausse</td></tr>
+<tr><td>Index cumulé (kWh, m³, impulsions)</td><td>delta réparti, total additif</td><td>on ne moyenne jamais un index (section suivante)</td></tr>
+<tr><td>Binaire, énumération</td><td>durée par état, nombre de transitions</td><td>« porte ouverte 2&nbsp;h 10 hier, 14 ouvertures »</td></tr>
+<tr><td>Événement (bouton, sonnette)</td><td>nombre</td><td>—</td></tr>
+<tr><td>Texte</td><td>aucun : événements gardés selon leur rétention</td><td>—</td></tr>
+</tbody></table></div>
+<p><strong>Éclaircir ou moyenner ?</strong> Garder un point sur N perd les extrêmes et biaise les moyennes : c'est déconseillé. Moyenner par période garde min, max et couverture : c'est recommandé. Pour une longue courbe, on réduit à la lecture, un point par pixel, pas sur le disque.</p>
+<p><strong>Au fil de l'eau</strong> : l'agrégat de l'heure en cours vit en mémoire et s'écrit une fois, à la fin de l'heure, comme <code>energy_total</code> dans D13. Après un arrêt brutal, on le recalcule depuis le détail récent. Une courbe de 30&nbsp;jours lit alors 720&nbsp;lignes au lieu de dizaines de milliers. Les fonctions existent déjà dans <code>moli-rollup</code>.</p>
+</section>
+
+<section id="cumuls">
+<h2>Valeurs cumulées : l'agrégat est une différence</h2>
+<p>Un index (Linky, eau, gaz, production, impulsions, octets) ne se moyenne pas, et son maximum n'est que son dernier relevé. Ce qui compte, c'est la quantité entre deux relevés. <code>moli-energy</code> le fait déjà bien pour l'électricité ; on l'étend à tous les index.</p>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 300" role="img" aria-labelledby="d8t d8d">
+<title id="d8t">Compteur du jour et consommation par heure</title><desc id="d8d">Un compteur journalier monte jusqu'à 11,6 kWh à 23 h 55, revient à zéro à minuit, puis aucun relevé n'arrive avant 2 h 30. Le relevé de 2 h 30 est retenu comme suspect ; celui de 3 h le confirme : 1,8 kWh sont comptés depuis 23 h 55 et répartis sur les heures couvertes. Les barres horaires ne sont jamais négatives et le jour est la somme des heures.</desc>
+<text class="title" x="20" y="24">Compteur du jour (kWh) → consommation par heure</text>
+<text class="muted" x="16" y="48">12 kWh</text><text class="muted" x="40" y="154">0</text>
+<line class="axis" x1="60" y1="150" x2="720" y2="150"/>
+<path class="line" d="M60,67.5 L170,56.5 L280,49.2 L380.8,43.7"/>
+<path class="mark" d="M380.8,43.7 L390,150"/>
+<path class="gap" d="M390,150 L665,136.3"/>
+<path class="line" d="M665,136.3 L720,133.5"/>
+<circle class="repc" cx="60" cy="67.5" r="4"/><circle class="repc" cx="170" cy="56.5" r="4"/><circle class="repc" cx="280" cy="49.2" r="4"/><circle class="repc" cx="380.8" cy="43.7" r="4"/><circle class="rep" cx="665" cy="136.3" r="4.5"/><circle class="repc" cx="720" cy="133.5" r="4"/>
+<text class="markt" x="398" y="80">remise à zéro à minuit</text>
+<text class="muted" x="398" y="96">2 h 30 : 1,5 kWh, retenu comme suspect</text>
+<text class="muted" x="398" y="112">3 h : confirmé, 1,8 kWh comptés depuis 23 h 55</text>
+<text class="muted" x="470" y="130">aucun relevé (trou)</text>
+<text class="muted" x="20" y="186">consommation par heure (kWh)</text>
+<line class="axis" x1="60" y1="262" x2="720" y2="262"/>
+<rect class="bar" x="80" y="210.6" width="70" height="51.4"/><rect class="bar" x="190" y="227.7" width="70" height="34.3"/><rect class="bar" x="300" y="234.1" width="70" height="27.9"/>
+<rect class="spread" x="410" y="237.1" width="70" height="24.9"/><rect class="spread" x="520" y="237.1" width="70" height="24.9"/><rect class="spread" x="630" y="237.1" width="70" height="24.9"/>
+<text class="st" x="105" y="205">1,2</text><text class="st" x="215" y="222">0,8</text><text class="st" x="321" y="229">0,65</text><text class="st" x="431" y="232">0,58</text><text class="st" x="541" y="232">0,58</text><text class="st" x="651" y="232">0,58</text>
+<text class="muted" x="101" y="280">21 h</text><text class="muted" x="211" y="280">22 h</text><text class="muted" x="321" y="280">23 h</text><text class="muted" x="434" y="280">0 h</text><text class="muted" x="544" y="280">1 h</text><text class="muted" x="654" y="280">2 h</text>
+<text class="muted" x="20" y="297">Pointillés : quantité répartie sur le trou · jour = somme des heures · jamais de delta négatif</text>
+</svg></div><figcaption>C'est exactement ce que fait <code>meter.rs</code> aujourd'hui pour l'électricité. La proposition l'applique à tout index déclaré.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Nature déclarée</th><th>Exemple</th><th>Agrégat</th></tr></thead>
+<tbody>
+<tr><td>Mesure</td><td>puissance, température</td><td>moyenne pondérée, min, max</td></tr>
+<tr><td>Index monotone</td><td>Linky, compteur d'eau</td><td>delta réparti</td></tr>
+<tr><td>Index à remise à zéro</td><td>consommation du jour, compteur qui redémarre</td><td>delta avec remise détectée</td></tr>
+<tr><td>Résumé de période</td><td><code>energie:maison/today_kwh</code></td><td>aucun : déjà agrégé par sa source</td></tr>
+<tr><td>Occurrences</td><td>appuis, ouvertures</td><td>nombre</td></tr>
+</tbody></table></div>
+<ul>
+<li><strong>Nature déclarée, jamais devinée par l'unité.</strong> Aujourd'hui, un résumé en kWh est classé <code>energy</code> par son unité, alors que son pilote précise qu'il ne faut pas l'additionner.</li>
+<li><strong>Périodes additives</strong> : jour = somme des heures, mois = somme des jours. Jamais « index de fin − index de début » : c'est faux dès qu'il y a une remise, un changement de compteur ou un trou.</li>
+<li><strong>Plusieurs compteurs</strong> : on somme des deltas, jamais des index. Un sous-compteur (prise mesurée sur le chauffe-eau) est déjà dans le compteur principal. Une relation « inclus dans » évite de le compter deux fois. « Autres usages » = principal − somme des sous-compteurs, borné à zéro et signalé s'il devient négatif.</li>
+<li><strong>Filtrage</strong> : sauter des relevés intermédiaires d'un index monotone ne perd aucune quantité. Mais sur un index à remise, le dernier relevé avant la remise doit toujours être gardé. Pas de bande morte sur un index.</li>
+<li><strong>Calculs</strong> : un index n'alimente qu'un calcul de deltas, jamais une moyenne. Quand un index existe, il l'emporte sur la puissance intégrée ; on n'additionne jamais les deux.</li>
+</ul>
+</section>
+
+<section id="fraicheur">
+<h2>Fraîcheur, qualité et pannes</h2>
+<div class="tw"><table>
+<thead><tr><th>Appareil</th><th>Rapport attendu (exemple)</th><th>Perdu après (proposition)</th></tr></thead>
+<tbody>
+<tr><td>Linky (téléinformation)</td><td>≈&nbsp;3&nbsp;min</td><td>3 rapports manqués</td></tr>
+<tr><td>Zigbee sur secteur</td><td>10&nbsp;min, défaut de Zigbee2MQTT</td><td>3 rapports manqués</td></tr>
+<tr><td>Zigbee sur pile (contact de porte)</td><td>24&nbsp;h ; Zigbee2MQTT prend 25&nbsp;h</td><td>dépassement de l'intervalle</td></tr>
+<tr><td>Intégration cloud interrogée</td><td>l'intervalle d'interrogation</td><td>3 interrogations sans réponse</td></tr>
+<tr><td>Valeur calculée</td><td>fraîcheur de ses entrées</td><td>entrées toutes périmées</td></tr>
+</tbody></table></div>
+<p>Une échéance par appareil dans l'échéancier, repoussée à chaque rapport. Les états se déduisent à la lecture, sans balayage : <span class="tag t-ok">frais</span> <span class="tag t-warn">en retard</span> <span class="tag t-bad">perdu</span>.</p>
+<div class="tw"><table>
+<thead><tr><th>Qualité</th><th>Quand</th><th>Usage par défaut</th></tr></thead>
+<tbody>
+<tr><td><span class="tag t-ok">bonne</span></td><td>source fraîche et disponible</td><td>tout usage</td></tr>
+<tr><td><span class="tag t-warn">incertaine</span></td><td>en retard, ou relue après redémarrage sans confirmation</td><td>affichée avec un badge ; l'automatisme décide selon sa règle</td></tr>
+<tr><td><span class="tag t-bad">mauvaise</span></td><td>perdue, indisponible, intégration en panne</td><td>jamais utilisée pour déclencher</td></tr>
+</tbody></table></div>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 210" role="img" aria-labelledby="d4t d4d">
+<title id="d4t">Santé en cascade</title><desc id="d4d">Quand l'intégration TaHoma tombe, ses appareils deviennent indisponibles avec une seule cause racine, et l'équipement Portail passe en lecture seule car son état vient du contact Zigbee resté sain.</desc>
+<defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="h" x="20" y="22">INTÉGRATION</text><text class="h" x="275" y="22">APPAREILS</text><text class="h" x="530" y="22">ÉQUIPEMENTS</text>
+<rect class="zbad" x="20" y="36" width="215" height="92" rx="6"/><text class="title" x="34" y="62">Somfy TaHoma</text><text class="tbad" x="34" y="86">en panne</text><text class="muted" x="34" y="108">cause : jeton refusé</text>
+<rect class="zbad" x="275" y="36" width="215" height="92" rx="6"/><text class="title" x="289" y="62">portail et volets</text><text class="tbad" x="289" y="86">indisponibles</text><text class="muted" x="289" y="108">cause héritée : l'intégration</text>
+<rect class="zwarn" x="530" y="36" width="215" height="92" rx="6"/><text class="title" x="544" y="62">Portail</text><text class="twarn" x="544" y="86">dégradé : lecture seule</text><text class="muted" x="544" y="108">l'état vient du Zigbee, sain</text>
+<path class="arrow" d="M236,82 L272,82" marker-end="url(#a4)"/><path class="arrow" d="M491,82 L527,82" marker-end="url(#a4)"/>
+<rect class="box" x="20" y="148" width="725" height="44" rx="6"/>
+<text class="txt" x="34" y="175">Une alerte, pas une par appareil : chaque niveau cite la cause racine au lieu de la répéter.</text>
+</svg></div><figcaption>Le superviseur met déjà hors ligne tous les appareils d'un pilote en panne. Il manque la cause affichée, la persistance de la disponibilité et le mode des équipements.</figcaption></figure>
+<p>Les automatismes ne déclenchent jamais sur une valeur de mauvaise qualité, et revérifient la qualité à l'échéance d'un <code>for_s</code>. Le hub l'exige déjà dans un commentaire, mais le moteur ne le fait pas encore.</p>
+</section>
+
+<section id="equipements">
+<h2>Appareils physiques, équipements logiques</h2>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 290" role="img" aria-labelledby="d3t d3d">
+<title id="d3t">Appareils physiques et équipement logique</title><desc id="d3d">La motorisation TaHoma fournit la commande du portail et le contact Zigbee fournit son état. L'équipement Portail relie ces deux sources par des rôles, sans recopier de valeur.</desc>
+<defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="h" x="20" y="22">APPAREILS PHYSIQUES</text><text class="h" x="470" y="22">ÉQUIPEMENT LOGIQUE</text>
+<rect class="box" x="20" y="36" width="270" height="104" rx="6"/>
+<text class="title" x="34" y="62">TaHoma · motorisation portail</text><text class="muted" x="34" y="82">intégration Somfy (local ou cloud)</text><text class="mono" x="34" y="106">ouvrir · stop · fermer</text><text class="muted" x="34" y="126">ne sait pas si le portail est ouvert</text>
+<rect class="box" x="20" y="162" width="270" height="104" rx="6"/>
+<text class="title" x="34" y="188">Contact Zigbee · portail</text><text class="muted" x="34" y="208">intégration Zigbee2MQTT</text><text class="mono" x="34" y="232">contact</text><text class="muted" x="34" y="252">sait si le portail est ouvert</text>
+<rect class="box-a" x="470" y="56" width="270" height="190" rx="8"/>
+<text class="title" x="486" y="84">Portail</text>
+<text class="txt" x="486" y="116">commande → TaHoma</text>
+<text class="txt" x="486" y="146">état → contact (inversé)</text>
+<text class="txt" x="486" y="176">santé → les deux sources</text>
+<text class="muted" x="486" y="214">aucune valeur recopiée :</text><text class="muted" x="486" y="232">des liaisons, lues à la demande</text>
+<path class="arrow" d="M291,88 C380,88 390,112 466,112" marker-end="url(#a3)"/>
+<path class="arrow" d="M291,214 C380,214 390,142 466,142" marker-end="url(#a3)"/>
+<text class="muted" x="352" y="80">liaison</text><text class="muted" x="352" y="228">liaison</text>
+</svg></div><figcaption>Un portail, deux appareils, zéro copie. L'historique de l'équipement est celui de ses sources, transformé à la lecture.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Commande (TaHoma)</th><th>État (contact Zigbee)</th><th>Portail</th></tr></thead>
+<tbody>
+<tr><td>saine</td><td>saine</td><td><span class="tag t-ok">normal</span></td></tr>
+<tr><td>saine</td><td>perdue</td><td><span class="tag t-warn">dégradé</span> commande sans retour d'état</td></tr>
+<tr><td>perdue</td><td>saine</td><td><span class="tag t-warn">dégradé</span> lecture seule</td></tr>
+<tr><td>perdue</td><td>perdue</td><td><span class="tag t-bad">indisponible</span></td></tr>
+</tbody></table></div>
+<ul>
+<li>Une commande d'équipement suit le chemin de toute commande : hub, garde, journal.</li>
+<li>Une <strong>valeur calculée</strong> (moyenne de plusieurs capteurs) apporte une information nouvelle : elle se stocke une fois, avec sa définition versionnée. Une simple liaison ne se stocke jamais.</li>
+<li>Point de départ : le luminaire D12, qui le fait déjà pour les lumières. On le généralise par <code>[[equipment]]</code>, à l'image de <code>[[fixture]]</code>. Plus tard viendra l'édition par brouillon et version validée par PIN, comme les dépendances.</li>
+<li>Avec <a href="modes.md">modes.md</a> : un profil d'équipements y est une scène, pas une composition. Une scène peut viser le rôle « commande » d'un équipement.</li>
+</ul>
+</section>
+
+<section id="usages">
+<h2>Conditions avec durée</h2>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 260" role="img" aria-labelledby="d6t d6d">
+<title id="d6t">Condition avec durée</title><desc id="d6d">La luminosité passe sous 200 lux à 18 h 02 : Moli note l'instant et programme un seul réveil à 18 h 12. Si la luminosité reste sous le seuil, l'action part à 18 h 12 ; si elle remonte avant, le réveil est annulé.</desc>
+<text class="title" x="20" y="24">Luminosité &lt; 200 lx pendant 10 min → allumer</text>
+<rect class="below" x="126" y="110" width="594" height="80"/>
+<line class="thr" x1="60" y1="110" x2="720" y2="110"/><text class="tbad" x="640" y="104">seuil 200 lx</text>
+<path class="line" d="M60,58 C90,70 110,96 126,110 C150,128 190,140 240,146 C320,154 420,150 480,156 C560,162 640,160 720,166"/>
+<line class="mark" x1="126" y1="40" x2="126" y2="200"/><text class="markt" x="132" y="52">vraie depuis 18:02</text>
+<line class="mark" x1="456" y1="40" x2="456" y2="200"/><text class="markt" x="462" y="52">réveil unique 18:12 → action</text>
+<path class="axis" d="M126,212 L126,220 L456,220 L456,212"/><text class="muted" x="270" y="236">10 min</text>
+<line class="axis" x1="60" y1="200" x2="720" y2="200"/>
+<text class="muted" x="56" y="254">18:00</text><text class="muted" x="414" y="254">18:10</text><text class="muted" x="680" y="254">18:20</text>
+</svg></div><figcaption>Un instant mémorisé, un réveil programmé, aucune relecture d'historique. Si la valeur remonte au-dessus du seuil ou devient mauvaise, le réveil est annulé.</figcaption></figure>
+<p><code>when_threshold{below: 200, for_s: 600}</code> fait déjà exactement cela, à coût constant. Il lui manque quatre choses :</p>
+<ol>
+<li><strong>Survivre au redémarrage.</strong> « Vraie depuis » se reconstruit depuis le détail récent, sinon il est persisté. Aujourd'hui, une valeur déjà sous le seuil au redémarrage ne relance aucun décompte.</li>
+<li><strong>Qualité.</strong> Annuler si la valeur devient mauvaise, et revérifier à l'échéance.</li>
+<li><strong>Hystérésis.</strong> Un seuil de sortie distinct (&lt; 200 pour allumer, &gt; 250 pour revenir) évite le battement.</li>
+<li><strong>Échéancier unique</strong> pour les minuteurs, plannings, fraîcheurs, durées et expirations. Les minuteurs persistent déjà une échéance absolue reconstruite au démarrage : on réutilise ce modèle.</li>
+</ol>
+</section>
+
+<section id="familles">
+<h2>Familles à part</h2>
+<div class="cards">
+  <div class="card"><h3>Énergie (Linky)</h3><p>Arrive par Zigbee2MQTT. L'index et les heures sont tenus par <code>moli-energy</code> ; la puissance apparente (VA) est une mesure. Avec un rapport attendu ≈&nbsp;3&nbsp;min, une coupure se voit vite. Le Linky doit déclarer sa nature au lieu de la laisser déduire de l'unité.</p></div>
+  <div class="card"><h3>Notes scolaires</h3><p>Des enregistrements, pas des mesures : élève, matière, période scolaire, évaluation (note, barème, coefficient). Les moyennes se calculent à la demande sur les périodes scolaires. La moyenne officielle est gardée à part, car elle peut différer d'un recalcul. Données d'enfants : accès par personne, rétention à l'année. Le plan Pronote actuel les exclut.</p></div>
+  <div class="card"><h3>Médias</h3><p>L'état courant reste en points texte. L'historique devient un journal <code>lecture(appareil, contenu, début, fin)</code>, avec les contenus dans un dictionnaire : un titre revu dix fois n'est stocké qu'une fois. Ni position ni durée de lecture. Rétention courte et effaçable.</p></div>
+  <div class="card"><h3>Textes libres</h3><p>Bornés à 4&nbsp;000 caractères au bord, avec un indicateur de troncature. Un texte trop long ne doit plus faire échouer un lot d'historique ni suspendre les purges.</p></div>
+</div>
+</section>
+
+<section id="algorithmes">
+<h2>Les algorithmes : aujourd'hui, limites, améliorations</h2>
+<p>Chaque algorithme qui touche une valeur, du pilote au disque. Le détail et les références au code sont dans le <a href="valeurs-appareils-stockage.md#12-les-algorithmes--aujourdhui-limites-améliorations">§ 12 du Markdown</a>.</p>
+<div class="tw"><table>
+<thead><tr><th>Algorithme</th><th>Aujourd'hui</th><th>Limite</th><th>Amélioration</th></tr></thead>
+<tbody>
+<tr><td>Réception d'une valeur</td><td>O(1) : comparaison à la valeur précédente, événement si changement, <code>ts</code> renouvelé à chaque rapport</td><td><code>ts</code> à double sens, <code>Kind</code> non contrôlé, texte non borné</td><td>valeur canonique au bord, deux instants, qualité</td></tr>
+<tr><td>Rédacteur de l'historique</td><td>lots de 2&nbsp;s ou 1&nbsp;000&nbsp;lignes ; en saturation, garde le dernier changement par point, puis jette les plus anciens</td><td>ré-énoncés au démarrage ; extrêmes perdus en saturation ; une page par point et par lot</td><td>filtres de politique ; jamais une valeur égale au dernier relevé ; l'agrégat reçoit tout ; journal en ajout, rangé par point à l'heure close</td></tr>
+<tr><td>Purge ancrée</td><td>toutes les 6&nbsp;h, lots de 5&nbsp;000, ancre gardée, garde B1 à chaque suppression</td><td>solide</td><td>ne purger que ce qui est consolidé et publié ; plages de rowid ; la nuit</td></tr>
+<tr><td>Courbes du cœur</td><td>brut, ou seaux de largeur fixe en moyenne simple ; non numérique : N derniers</td><td>moyenne biaisée, états tronqués</td><td>moyenne pondérée par le temps, agrégats au-delà de 2&nbsp;j, états en segments</td></tr>
+<tr><td>Statistiques MCP</td><td>pondérées par nombre de relevés</td><td>biais vers les périodes bavardes</td><td>pondération par le temps</td></tr>
+<tr><td>Consolidation</td><td><code>moli-rollup</code>, pour l'archive seulement</td><td>absente du cœur</td><td>agrégats horaires incrémentaux dans le cœur</td></tr>
+<tr><td>Index (<code>meter.rs</code>)</td><td>delta réparti, suspect, remise, recalage</td><td>électricité seulement</td><td>toute nature cumulée, « inclus dans »</td></tr>
+<tr><td>Valeurs calculées</td><td>Min/Max/Mean de sources fraîches, publiée dès une source valide</td><td>pas de quorum, accepte un index</td><td>quorum minimal, qualité exposée, somme explicite</td></tr>
+<tr><td>Durées d'automatisme</td><td>une tâche <code>sleep(for_s)</code> par décompte, en mémoire</td><td>perdue au redémarrage, sans qualité ni hystérésis</td><td>échéancier unique, reprise, qualité, hystérésis</td></tr>
+<tr><td>Disponibilité</td><td>pilote en panne → appareils hors ligne ; backoff de 1 à 60&nbsp;s</td><td>pas d'échéance générique ni de cause ; non persistée</td><td>échéance par appareil, cause racine, persistance</td></tr>
+<tr><td>État courant (<code>state.json</code>)</td><td>tout le fichier réécrit toutes les 60&nbsp;s dès qu'un rapport est arrivé ; relu et réémis au démarrage</td><td>≈&nbsp;81&nbsp;Ko par minute ; un relevé en double par point à chaque redémarrage ; ni incertitude ni réconciliation</td><td><code>point_state</code> par lots de 60&nbsp;s, réconciliation silencieuse</td></tr>
+<tr><td>État métier (<code>StateFile</code>)</td><td>tout l'état réécrit, fsync, renommage, fsync du dossier</td><td>coût proportionnel à la taille totale, jusqu'à 4 Mio, à chaque changement</td><td>une ligne par changement dans <code>maison.db</code></td></tr>
+<tr><td>Journal des actions</td><td>ajout ; réécrit les 2&nbsp;000 dernières lignes au-delà de 8 Mio</td><td>réécriture complète, aucune requête</td><td>table en ajout seul, purge par plage</td></tr>
+<tr><td>Export (D13)</td><td>NDJSON immuable par opération, lots gzip ; lots d'écriture ≤&nbsp;100&nbsp;ms</td><td>≈&nbsp;128&nbsp;octets par opération ; presque une validation et un fsync par relevé</td><td>opération compacte figée, qui sert aussi de journal du jour ; lot rendu une fois et figé ; lots de 2&nbsp;s</td></tr>
+<tr><td>Sauvegarde</td><td>liste <code>FILES</code>, <code>VACUUM INTO</code>, tailles ; à la main</td><td>oublis, pas d'empreintes, aucune planification</td><td>deux instantanés, SHA-256, plus de liste ; <code>moli.db</code> la nuit</td></tr>
+</tbody></table></div>
+<h3>Réception d'une valeur</h3>
+<pre><code>au bord (pilote ou profil), une fois :
+    v     ← canonique(brut)            -- Kind contrôlé, sens, échelle, unité, code, texte ≤ 4 000
+    t_obs ← horodatage source s'il existe, sinon maintenant
+dans le hub, en O(1) :
+    p.reçu_le ← maintenant ; appareil.dernier_contact ← maintenant
+    échéancier.repousser(appareil, maintenant + attendu(appareil))
+    si v ≠ p.valeur : p.valeur ← v ; p.changé_le ← t_obs ; p.qualité ← bonne ; émettre État
+    sinon si p.qualité ≠ bonne : p.qualité ← bonne ; émettre Qualité</code></pre>
+<p>Un rapport identique coûte deux affectations et une opération sur le tas des échéances : aucune écriture disque immédiate, aucun événement.</p>
+<h3>Rédacteur de l'historique</h3>
+<pre><code>pour chaque État(p, v, t) :
+    agrégat[p].ajouter(v, t)                      -- toujours : l'agrégat voit tout
+    si v = dernier_écrit[p] : ignorer             -- plus aucun ré-énoncé
+    si mesure et |v − dernier_écrit[p]| &lt; bande_morte(p) : ignorer
+    si t − dernier_t[p] &lt; intervalle_min(p) : en_attente[p] ← (v, t) ; continuer
+    si index à remise et v &lt; dernier_écrit[p] : écrire d'abord en_attente[p]
+    lot.ajouter(p, v, t)
+toutes les 2 s ou 1 000 lignes : une transaction, une opération compacte en ajout par relevé
+à l'heure close : ranger l'heure par point dans samples et écrire son agrégat, une transaction</code></pre>
+<p>La bande morte compare au dernier relevé <em>écrit</em> : une dérive lente finit toujours par s'écrire. L'agrégat reçoit aussi les valeurs filtrées : moyenne, min et max de l'heure restent exacts.</p>
+<h3>Échéancier unique</h3>
+<pre><code>un tas binaire d'échéances (instant, type, référence, génération), une seule tâche réveillée
+types : fraîcheur d'appareil, durée de condition, minuteur, planning, expiration
+repousser : O(log n) ; annuler : incrémenter la génération
+au démarrage : recharger les échéances durables ; recalculer les dérivées
+    condition déjà vraie : vraie_depuis ← dernier franchissement (relevés récents)
+    reste ← for_s − (maintenant − vraie_depuis) ; si reste &gt; 0 : programmer ; sinon ne pas rattraper</code></pre>
+<p>Les autres algorithmes sont détaillés dans le Markdown :</p>
+<ul>
+<li>purge après consolidation et publication ;</li>
+<li>consolidation au fil de l'eau avec choix de la source d'une courbe (≤&nbsp;2&nbsp;j relevés, ≤&nbsp;90&nbsp;j heures, au-delà jours) ;</li>
+<li>quorum des valeurs calculées ;</li>
+<li>export compact avec lot figé à sa formation.</li>
+</ul>
+<p>La réconciliation du démarrage et les travaux de nuit sont dans la section <a href="#double-ecriture">Double écriture et nuit</a>.</p>
+</section>
+
+<section id="deux-bases">
+<h2>Deux bases : l'historique à part, le fonctionnement direct à part</h2>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 380" role="img" aria-labelledby="d9t d9d">
+<title id="d9t">Deux bases, deux rédacteurs</title><desc id="d9d">Les appareils envoient leurs valeurs au bord, qui les rend canoniques, puis au hub en mémoire. Le hub écrit les décisions et l'état courant complet de chaque point dans maison.db, la base de fonctionnement direct, et les changements filtrés dans moli.db, la base d'historique. Chaque base a son propre rédacteur, qui tourne en parallèle de l'autre.</desc>
+<defs><marker id="a9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="20" y="160" width="120" height="64" rx="6"/><text class="title" x="32" y="186">Appareils</text><text class="muted" x="32" y="206">Zigbee, API, cloud</text>
+<rect class="box" x="165" y="160" width="130" height="64" rx="6"/><text class="title" x="177" y="186">Bord</text><text class="muted" x="177" y="206">valeur canonique</text>
+<rect class="box-a" x="320" y="145" width="170" height="94" rx="8"/><text class="title" x="334" y="172">Hub, en mémoire</text><text class="muted" x="334" y="194">état courant, qualité</text><text class="muted" x="334" y="212">échéancier unique</text>
+<path class="arrow" d="M141,192 L163,192" marker-end="url(#a9)"/><path class="arrow" d="M296,192 L318,192" marker-end="url(#a9)"/>
+<rect class="box" x="530" y="24" width="210" height="150" rx="8"/><text class="h" x="544" y="46">FONCTIONNEMENT DIRECT</text><text class="title" x="544" y="68">maison.db</text><text class="muted" x="544" y="90">état courant, équipements</text><text class="muted" x="544" y="108">état métier, échéances durables</text><text class="muted" x="544" y="126">rédacteur 1 : petites transactions</text><text class="muted" x="544" y="144">sauvegarde fréquente</text><text class="muted" x="544" y="162">vecteurs de l'assistant (BLOB)</text>
+<rect class="box" x="530" y="206" width="210" height="150" rx="8"/><text class="h" x="544" y="228">HISTORIQUE</text><text class="title" x="544" y="250">moli.db (D13)</text><text class="muted" x="544" y="272">relevés, agrégats, énergie</text><text class="muted" x="544" y="290">garde B1, export → archive</text><text class="muted" x="544" y="308">rédacteur 2 : ajout, heure, nuit</text><text class="muted" x="544" y="326">lecteurs : une connexion chacun</text><text class="muted" x="544" y="344">sauvegarde quotidienne</text>
+<path class="arrow" d="M480,145 C500,110 505,100 528,98" marker-end="url(#a9)"/>
+<path class="arrow" d="M480,239 C500,270 505,280 528,282" marker-end="url(#a9)"/>
+<text class="muted" x="320" y="110">décisions : tout de suite</text><text class="muted" x="320" y="126">état courant : lots de 60 s</text>
+<text class="muted" x="320" y="268">changements filtrés : lots de 2 s</text><text class="muted" x="320" y="284">rangement + agrégat chaque heure</text>
+<text class="txt" x="20" y="300">Deux fichiers, deux rédacteurs</text><text class="txt" x="20" y="318">en parallèle, sans MVCC expérimental :</text><text class="txt" x="20" y="336">une rafale de relevés ne retarde</text><text class="txt" x="20" y="354">jamais un clic.</text>
+</svg></div><figcaption>Entre les deux bases, on se réfère par des noms stables (<code>PointId</code>, <code>DeviceId</code>), jamais par des entiers internes : chaque base se restaure seule.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th></th><th>Fonctionnement direct (<code>maison.db</code>, nom proposé)</th><th>Historique (<code>moli.db</code>, nom de D13)</th></tr></thead>
+<tbody>
+<tr><td>Contenu</td><td>état courant complet de chaque point (valeur, observé, reçu, changé), appareils, équipements et rôles, état métier, échéances durables, journal des actions</td><td>vocabulaire (points, dictionnaires), journal du jour, relevés rangés, agrégats, énergie, garde B1, export</td></tr>
+<tr><td>Taille</td><td>quelques Mo</td><td>des centaines de Mo</td></tr>
+<tr><td>Écritures</td><td>petites, décidées par un humain ou un automatisme ; état courant par lots de 60&nbsp;s</td><td>journal en ajout par lots de 2&nbsp;s ; rangement et agrégat à l'heure close ; travaux de nuit</td></tr>
+<tr><td>Valeur</td><td>précieuse : c'est la maison</td><td>en partie remplaçable : l'archive garde le long terme</td></tr>
+<tr><td>Panne</td><td>n'attend jamais l'historique</td><td>réparable sans bloquer la maison</td></tr>
+</tbody></table></div>
+<div class="rule"><strong>Double écriture voulue, recouvrement borné.</strong> L'état courant (une ligne par point, dans <code>maison.db</code>) et l'historique (une ligne par changement retenu, dans <code>moli.db</code>) ne sont pas la même donnée : ce qui est vrai maintenant, et ce qu'on a gardé du passé. La dernière ligne de l'historique est souvent égale à l'état courant, mais pas toujours : bande morte, intervalle minimal, point non historisé, lot pas encore validé. Le recouvrement tient en une ligne par point. « Reçu le » vit seulement dans <code>maison.db</code>. Une valeur physique n'est jamais recopiée dans un équipement logique.</div>
+<div class="cards">
+  <div class="card"><h3>Embarqué</h3><p>Les deux bases tournent dans le processus, sans serveur, dans un seul binaire. Le surcoût de Turso (+11,4&nbsp;Mo) tient dans le budget d'image de 40&nbsp;Mo.</p></div>
+  <div class="card"><h3>Multithread</h3><p>Chaque lecteur a sa connexion, sans blocage, sur son instantané. Deux bases, ce sont deux rédacteurs réellement parallèles. <code>BEGIN CONCURRENT</code> (MVCC) sera réévalué quand il sera stable, sans fragiliser la garde B1.</p></div>
+  <div class="card"><h3>Vecteurs</h3><p><code>vector32</code> et les distances sont compilés par défaut. Turso ne calcule pas les vecteurs et n'a qu'un index expérimental : on filtre d'abord, puis on compare. Les vecteurs, rangés en BLOB, vont dans <code>maison.db</code> ou une base de l'assistant, jamais dans l'historique.</p></div>
+</div>
+<ol>
+<li><strong>Bord</strong> : valeur canonique.</li>
+<li><strong>Hub</strong> : reçu, changé, qualité, échéancier, en mémoire.</li>
+<li><strong>Rédacteur direct</strong> : décisions tout de suite ; état courant complet, dernier contact et disponibilité par lots de 60&nbsp;s, et à l'arrêt.</li>
+<li><strong>Rédacteur de l'historique</strong> : relevés filtrés en ajout par lots de 2&nbsp;s ; à l'heure close, rangement par point et agrégat ; la nuit, jour, purge et sauvegarde.</li>
+<li><strong>Export</strong> vers l'archive Parquet.</li>
+<li><strong>Lectures</strong> : état courant en mémoire ; courbes sur les connexions de lecture de <code>moli.db</code>, terminées par la valeur en mémoire.</li>
+<li><strong>Démarrage</strong> : <code>maison.db</code> seule rend tout l'état, incertain et sans événement ; la réconciliation avec <code>moli.db</code> suit en arrière-plan.</li>
+<li><strong>Sauvegarde</strong> : <code>VACUUM INTO</code> des deux bases, avec empreintes ; les fichiers JSON migrés restent 30&nbsp;jours à côté.</li>
+</ol>
+</section>
+
+<section id="double-ecriture">
+<h2>Double écriture et travaux de nuit</h2>
+<p class="lead">La question : la base de production garde la dernière valeur de chaque point avec tous ses instants, l'historique s'écrit en parallèle, et la nuit consolide et purge. <strong>Réponse : oui, à trois conditions.</strong> Moli le fait déjà, mais en réécrivant <code>state.json</code> en entier chaque minute, sans marquer les valeurs relues ni les réconcilier avec l'historique. Le détail et les références au code sont aux <a href="valeurs-appareils-stockage.md#137-double-écriture--létat-courant-complet-dans-maisondb">§ 13.7 à 13.9 du Markdown</a>.</p>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 410" role="img" aria-labelledby="d10t d10d">
+<title id="d10t">Un rapport, deux destinations</title><desc id="d10d">Un rapport d'appareil met à jour le hub en mémoire, seule vérité vive, où lisent les automatismes. Le hub écrit l'état courant complet de chaque point dans maison.db par lots de 60 secondes, et les relevés retenus dans le journal du jour de moli.db par lots de 2 secondes. À chaque heure close, le journal est rangé par point et l'agrégat de l'heure écrit ; la nuit consolide, purge et sauvegarde. Au démarrage, maison.db suffit ; la réconciliation avec moli.db suit, en silence. Aucune transaction commune : chaque base a sa fenêtre de perte, l'autre la couvre.</desc>
+<defs><marker id="a10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="box" x="20" y="178" width="110" height="60" rx="6"/><text class="title" x="32" y="203">Rapport</text><text class="muted" x="32" y="222">d'un appareil</text>
+<rect class="box-a" x="160" y="160" width="180" height="96" rx="8"/><text class="title" x="174" y="186">Hub, en mémoire</text><text class="muted" x="174" y="207">la seule vérité vive</text><text class="muted" x="174" y="225">les automatismes lisent ici</text><text class="muted" x="174" y="243">aucun disque sur ce chemin</text>
+<path class="arrow" d="M131,208 L158,208" marker-end="url(#a10)"/>
+<rect class="box" x="400" y="20" width="340" height="132" rx="8"/><text class="h" x="414" y="42">FONCTIONNEMENT DIRECT</text><text class="title" x="414" y="64">maison.db · point_state</text><text class="muted" x="414" y="86">une ligne par point : valeur et trois instants</text><text class="muted" x="414" y="104">lots de 60 s ; décisions tout de suite</text><text class="muted" x="414" y="122">au démarrage, suffit seule</text><text class="muted" x="414" y="140">≈ 65 Mo écrits par jour (mesuré)</text>
+<rect class="box" x="400" y="268" width="340" height="132" rx="8"/><text class="h" x="414" y="290">HISTORIQUE</text><text class="title" x="414" y="312">moli.db</text><text class="muted" x="414" y="334">journal du jour en ajout : lots de 2 s</text><text class="muted" x="414" y="352">heure close : rangé par point + agrégat</text><text class="muted" x="414" y="370">la nuit : jour, purge, sauvegarde</text><text class="muted" x="414" y="388">≈ 258 Mo écrits par jour (mesuré)</text>
+<path class="arrow" d="M340,184 C370,160 372,96 398,86" marker-end="url(#a10)"/>
+<path class="arrow" d="M340,232 C370,256 372,322 398,334" marker-end="url(#a10)"/>
+<path class="mark" d="M460,156 L460,264"/>
+<text class="markt" x="474" y="196">réconciliation au démarrage :</text><text class="markt" x="474" y="212">la plus récente gagne,</text><text class="markt" x="474" y="228">en silence, sans événement</text>
+<text class="txt" x="20" y="300">Aucune transaction commune :</text><text class="txt" x="20" y="318">chaque base a sa fenêtre de perte</text><text class="txt" x="20" y="336">(60 s, 2 s) ; l'autre la couvre.</text>
+</svg></div><figcaption>La mémoire reste la seule vérité vive ; les deux bases en sont des copies datées, relues seulement au démarrage. Le recouvrement se limite à une ligne par point.</figcaption></figure>
+
+<h3>Le fonctionnement, situation par situation</h3>
+<div class="tw"><table>
+<thead><tr><th>Situation</th><th>Ce qui se passe</th><th>Effet</th></tr></thead>
+<tbody>
+<tr><td>Rapport identique (un contact se réannonce)</td><td>mémoire : « reçu le » avance, la ligne est marquée à écrire ; <code>moli.db</code> : rien</td><td>aucune écriture immédiate</td></tr>
+<tr><td>Changement (porte ouverte)</td><td>mémoire et événement tout de suite ; les automatismes lisent la mémoire ; relevé dans le lot de 2&nbsp;s ; ligne d'état dans le lot de 60&nbsp;s</td><td>aucun disque sur le chemin d'une décision</td></tr>
+<tr><td>Petite variation (21,03 → 21,05&nbsp;°C)</td><td>l'état courant prend la valeur exacte ; l'historique l'ignore (bande morte) ; l'agrégat la compte</td><td>l'historique maigrit sans fausser l'état courant</td></tr>
+<tr><td>Rafale (jusqu'à 241 valeurs en une seconde chez Home Assistant)</td><td>la mémoire absorbe ; un lot d'historique ; dix rapports d'un point = une ligne d'état</td><td>aucune base n'en ralentit une autre</td></tr>
+<tr><td>Coupure entre deux écritures</td><td>une base a au plus un lot de retard sur l'autre</td><td>la réconciliation du démarrage prend la plus récente</td></tr>
+<tr><td>Redémarrage</td><td><code>maison.db</code> rend tout l'état, incertain ; la maison repart sans attendre l'historique</td><td>démarrage indépendant de la taille de l'historique (budget ≤&nbsp;2&nbsp;s)</td></tr>
+<tr><td>Nuit</td><td>consolidation, purge et sauvegarde dans <code>moli.db</code>, par tranches</td><td>une nuit lente ne retarde aucun clic</td></tr>
+<tr><td>Restauration</td><td><code>maison.db</code> seule : la maison et ses dernières valeurs ; <code>moli.db</code> seule : les courbes</td><td>chaque base se suffit</td></tr>
+<tr><td>Historique corrompu ou plein</td><td>le rédacteur d'historique s'arrête et le signale ; la maison continue</td><td>panne isolée</td></tr>
+</tbody></table></div>
+
+<h3>Fenêtres de perte et réconciliation</h3>
+<div class="tw"><table>
+<thead><tr><th>Donnée</th><th>Base</th><th>Écrite</th><th>Perte au plus</th><th>Rattrapage</th></tr></thead>
+<tbody>
+<tr><td>Décision (humain, automatisme), échéance durable</td><td><code>maison.db</code></td><td>tout de suite</td><td>rien</td><td>—</td></tr>
+<tr><td>Relevé retenu</td><td><code>moli.db</code></td><td>lot de 2&nbsp;s</td><td>2&nbsp;s</td><td>—</td></tr>
+<tr><td>État courant : valeur, instants, disponibilité</td><td><code>maison.db</code></td><td>lot de 60&nbsp;s, et à l'arrêt</td><td>60&nbsp;s</td><td>réconciliation avec <code>moli.db</code>, puis rapports suivants</td></tr>
+<tr><td>Agrégat de l'heure en cours</td><td>mémoire</td><td>à l'heure close</td><td>l'heure en cours</td><td>recalcul la nuit depuis les relevés</td></tr>
+</tbody></table></div>
+<pre><code>état ← point_state (maison.db) ; qualité ← incertaine ; aucun événement
+la maison démarre sans attendre moli.db
+en arrière-plan, quand moli.db est ouverte, pour chaque point historisé :
+    d ← dernier relevé du point                        -- une descente de b-arbre
+    si d.instant &gt; p.changé_le : p.valeur ← d.valeur ; p.changé_le ← d.instant
+    sinon si d.valeur ≠ p.valeur : proposer p au rédacteur d'historique (il repasse par les filtres)
+en silence : aucun événement ; qualité incertaine jusqu'au premier rapport frais</code></pre>
+<p>Le silence compte : une porte ouverte juste avant la coupure ne doit pas redéclencher « porte ouverte » au redémarrage. Aujourd'hui, chaque valeur relue est réémise comme un changement, avec son ancien <code>ts</code> : environ un relevé en double par point à chaque redémarrage.</p>
+<div class="rule"><strong>Trois conditions.</strong>
+<ol>
+<li><strong>La mémoire reste la seule vérité vive.</strong> Les deux bases sont relues au démarrage, jamais pour décider.</li>
+<li><strong>L'état courant s'écrit par lots, jamais à chaque rapport.</strong> Par lots de 60&nbsp;s : ≈&nbsp;65&nbsp;Mo écrits par jour ; toutes les 2&nbsp;s : ≈&nbsp;495&nbsp;Mo (mesuré).</li>
+<li><strong>Aucune transaction commune aux deux fichiers.</strong> En WAL, SQLite garantit l'atomicité dans chaque fichier, pas entre fichiers attachés (<a href="https://www.sqlite.org/lang_attach.html">documentation d'<code>ATTACH</code></a>). Les fenêtres bornées et la réconciliation la remplacent.</li>
+</ol></div>
+
+<h3>Ce que coûte vraiment une écriture : des pages, pas des octets</h3>
+<p>SQLite et Turso écrivent le WAL par pages de 4&nbsp;Kio : une validation réécrit chaque page touchée, même pour 20&nbsp;octets. Or <code>samples</code> est rangé par point, et les relevés arrivent dans l'ordre du temps : chaque point d'un lot salit sa propre page. La mesure rejoue une vraie journée (164&nbsp;126&nbsp;relevés, comptes horaires réels anonymisés de 1&nbsp;512&nbsp;séries, la charge « ×1 » du banc D13) sur SQLite, dont Turso reprend le format de pages.</p>
+<p class="note">Tous les chiffres de cette section viennent de la série <code>2026-10-21T114647Z</code>, produite par l'outil <a href="../../tools/storage-writes/README.md"><code>tools/storage-writes</code></a>. Son <a href="../reports/mesure-ecritures-2026-10-21T114647Z.md">rapport daté</a> donne l'environnement, les empreintes de l'outil et de l'entrée, tous les scénarios et les données brutes. Relancer l'outil écrit une nouvelle série.</p>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 304" role="img" aria-labelledby="d11t d11d">
+<title id="d11t">Octets écrits par jour</title><desc id="d11d">Pour une vraie journée de 164 126 relevés : le chemin d'écriture de D13 tel que décidé écrit environ 3,1 Go en 150 311 validations ; avec des lots de 2 secondes, environ 1,75 Go. La proposition, journal en ajout rangé à l'heure close avec des lots de 2 secondes, écrit environ 258 Mo, plus 65 Mo pour l'état courant de maison.db, soit 0,32 Go. Avec des lots de 10 secondes et un rangement de nuit, 79 Mo plus 65 Mo. Série 2026-10-21T114647Z.</desc>
+<text class="title" x="20" y="24">Octets écrits sur disque par jour, pour une vraie journée de 164 126 relevés</text>
+<text class="txt" x="20" y="56">D13 tel que décidé, lots ≤ 100 ms</text><text class="muted" x="20" y="73">150 311 validations</text>
+<rect class="red" x="290" y="40" width="380" height="24"/><text class="tot" x="678" y="57">≈ 3,1 Go</text>
+<text class="txt" x="20" y="108">D13, lots de 2 s</text><text class="muted" x="20" y="125">42 638 validations</text>
+<rect class="red" x="290" y="92" width="214.8" height="24"/><text class="tot" x="513" y="109">≈ 1,75 Go</text>
+<text class="txt" x="20" y="160">Proposé : journal, heure close, 2 s</text><text class="muted" x="20" y="177">44 103 validations, état compris</text>
+<rect class="bar" x="290" y="144" width="31.6" height="24"/><rect class="bar2" x="321.6" y="144" width="8" height="24"/><text class="tot" x="338" y="161">≈ 0,32 Go</text>
+<text class="txt" x="20" y="212">Proposé : lots de 10 s, rangé la nuit</text><text class="muted" x="20" y="229">10 163 validations, état compris</text>
+<rect class="bar" x="290" y="196" width="9.6" height="24"/><rect class="bar2" x="299.6" y="196" width="8" height="24"/><text class="tot" x="316" y="213">≈ 0,14 Go</text>
+<rect class="red" x="20" y="250" width="14" height="14"/><text class="muted" x="40" y="262">D13 : relevé + outbox + NDJSON</text>
+<rect class="bar" x="250" y="250" width="14" height="14"/><text class="muted" x="270" y="262">historique proposé</text>
+<rect class="bar2" x="410" y="250" width="14" height="14"/><text class="muted" x="430" y="262">état courant, maison.db, lots de 60 s</text>
+<text class="muted" x="20" y="292">Proxy SQLite 3.53, pages de 4 Kio, WAL et points de contrôle comptés ; pour ≈ 3,4 Mo de données utiles.</text>
+</svg></div><figcaption>Dix fois moins d'octets et 3,4&nbsp;fois moins de validations, double écriture comprise (série <code>2026-10-21T114647Z</code>). À confirmer sur Turso, puis sur le Pi Zero 2 W visé par D10, dont la carte microSD s'use vite sous de petites écritures synchrones.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Chemin d'écriture</th><th>Validations par jour</th><th>Écrit par jour</th></tr></thead>
+<tbody>
+<tr><td>Historique, D13 tel que décidé : relevé + outbox + journal NDJSON + <code>meta</code>, lots ≤&nbsp;100&nbsp;ms</td><td>150&nbsp;311</td><td>≈&nbsp;3,1&nbsp;Go</td></tr>
+<tr><td>Historique, D13 avec des lots de 2&nbsp;s</td><td>42&nbsp;638</td><td>≈&nbsp;1,75&nbsp;Go</td></tr>
+<tr><td>Historique proposé : opération compacte en ajout, lots de 2&nbsp;s, rangée à l'heure close</td><td>42&nbsp;663</td><td>≈&nbsp;258&nbsp;Mo</td></tr>
+<tr><td>Historique proposé, rangé la nuit</td><td>42&nbsp;640</td><td>≈&nbsp;218&nbsp;Mo</td></tr>
+<tr><td>Historique proposé, lots de 10&nbsp;s, rangé la nuit</td><td>8&nbsp;723</td><td>≈&nbsp;79&nbsp;Mo</td></tr>
+<tr><td>État courant aujourd'hui : <code>state.json</code> entier chaque minute</td><td>1&nbsp;440 (2 fsync chacune)</td><td>≈&nbsp;117&nbsp;Mo (estimation)</td></tr>
+<tr><td>État courant : <code>point_state</code>, lots de 2&nbsp;s</td><td>42&nbsp;557</td><td>≈&nbsp;495&nbsp;Mo</td></tr>
+<tr><td>État courant : <code>point_state</code>, lots de 60&nbsp;s (proposé)</td><td>1&nbsp;440</td><td>≈&nbsp;65&nbsp;Mo</td></tr>
+<tr><td>État courant : <code>point_state</code>, lots de 15&nbsp;min</td><td>96</td><td>≈&nbsp;5,9&nbsp;Mo</td></tr>
+</tbody></table></div>
+<ul>
+<li><strong>Deux leviers</strong> : écrire la journée en ajout puis la ranger par point d'un coup (l'opération compacte de l'export sert de journal : une ligne d'environ 20&nbsp;octets remplace relevé, outbox et NDJSON) ; et valider moins souvent, car une validation écrit au moins une page. Avec ≈&nbsp;2&nbsp;relevés par seconde, des lots ≤&nbsp;100&nbsp;ms valident presque chaque relevé seul.</li>
+<li><strong>À l'heure close plutôt que la nuit</strong> : la nuit écrit un peu moins (218 contre 258&nbsp;Mo), mais une courbe du jour devrait balayer tout le journal du jour. Pour le point le plus bavard, une plage de <code>samples</code> se lit en 9,8&nbsp;ms, le journal du jour entier en 19,5&nbsp;ms pour n'importe quel point, et le journal d'une heure en 0,46&nbsp;ms. Le rangement de l'heure partage la transaction de son agrégat.</li>
+<li><strong>Lots de 2&nbsp;s plutôt que ≤&nbsp;100&nbsp;ms</strong> : rien sur le chemin vif n'attend l'historique. <code>FULL</code> reste, et une séquence n'est envoyée à l'archive qu'après sa validation : l'export prend 2&nbsp;s de retard au plus, sans affaiblir la garantie de D13. C'est déjà le rythme du recorder actuel.</li>
+<li><strong>Ordre de grandeur</strong> : une maison entièrement passée de Home Assistant à Moli. L'installation Moli actuelle est bien plus petite (≈&nbsp;2,5&nbsp;Mo d'historique pour 70&nbsp;appareils sur 30&nbsp;jours).</li>
+</ul>
+
+<h3>La nuit : consolider, purger, sauvegarder</h3>
+<p><strong>Ce qui a besoin de toutes les valeurs reste au fil de l'eau ; ce qui peut attendre passe la nuit.</strong> L'agrégat de l'heure voit toutes les valeurs, même celles que la bande morte n'écrit pas : la nuit ne verrait que les relevés écrits. Il reste donc à l'heure close.</p>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 252" role="img" aria-labelledby="d12t d12d">
+<title id="d12t">Une journée : ce qui tourne quand</title><desc id="d12d">En continu, l'état courant s'écrit par lots de 60 secondes et les relevés par lots de 2 secondes, en ajout. À chaque heure close, une transaction écrit l'agrégat et range l'heure par point. La nuit, de 3 h 30 à 6 h, après l'heure du changement d'heure, on vérifie les heures, on calcule les agrégats du jour, on purge, on sauvegarde et on fait un point de contrôle ; ce qui n'est pas fini reprend la nuit suivante.</desc>
+<text class="title" x="20" y="24">Une journée : ce qui tourne quand</text>
+<text class="txt" x="20" y="62">En continu</text>
+<rect class="seg" x="150" y="46" width="590" height="22"/><text class="muted" x="160" y="61">état courant : lots de 60 s · relevés : lots de 2 s, en ajout</text>
+<text class="txt" x="20" y="108">Chaque heure</text>
+<rect class="bar" x="173.1" y="92" width="3" height="22"/><rect class="bar" x="197.7" y="92" width="3" height="22"/><rect class="bar" x="222.3" y="92" width="3" height="22"/><rect class="bar" x="246.8" y="92" width="3" height="22"/><rect class="bar" x="271.4" y="92" width="3" height="22"/><rect class="bar" x="296" y="92" width="3" height="22"/><rect class="bar" x="320.6" y="92" width="3" height="22"/><rect class="bar" x="345.2" y="92" width="3" height="22"/><rect class="bar" x="369.8" y="92" width="3" height="22"/><rect class="bar" x="394.3" y="92" width="3" height="22"/><rect class="bar" x="418.9" y="92" width="3" height="22"/><rect class="bar" x="443.5" y="92" width="3" height="22"/><rect class="bar" x="468.1" y="92" width="3" height="22"/><rect class="bar" x="492.7" y="92" width="3" height="22"/><rect class="bar" x="517.3" y="92" width="3" height="22"/><rect class="bar" x="541.8" y="92" width="3" height="22"/><rect class="bar" x="566.4" y="92" width="3" height="22"/><rect class="bar" x="591" y="92" width="3" height="22"/><rect class="bar" x="615.6" y="92" width="3" height="22"/><rect class="bar" x="640.2" y="92" width="3" height="22"/><rect class="bar" x="664.8" y="92" width="3" height="22"/><rect class="bar" x="689.3" y="92" width="3" height="22"/><rect class="bar" x="713.9" y="92" width="3" height="22"/><rect class="bar" x="737" y="92" width="3" height="22"/>
+<text class="muted" x="160" y="134">à chaque heure close : agrégat et rangement de l'heure, en une transaction</text>
+<text class="txt" x="20" y="172">La nuit</text>
+<rect class="zwarn" x="199.2" y="154" width="24.6" height="26"/>
+<rect class="box-a" x="236" y="154" width="61.5" height="26"/><text class="st" x="236" y="149">03 h 30 – 06 h</text>
+<text class="txt" x="310" y="166">heures à vérifier, agrégats du jour, purge B1,</text><text class="txt" x="310" y="182">sauvegarde, point de contrôle ; reprise la nuit suivante</text>
+<text class="twarn" x="310" y="202">02 h – 03 h évitée : l'heure qui saute ou se répète</text>
+<path class="axis" d="M150,222 L740,222"/>
+<path class="axis" d="M150,218 L150,226 M223.8,218 L223.8,226 M297.5,218 L297.5,226 M371.3,218 L371.3,226 M445,218 L445,226 M518.8,218 L518.8,226 M592.5,218 L592.5,226 M666.3,218 L666.3,226 M740,218 L740,226"/>
+<text class="muted" x="150" y="242" text-anchor="middle">0 h</text><text class="muted" x="223.8" y="242" text-anchor="middle">3 h</text><text class="muted" x="297.5" y="242" text-anchor="middle">6 h</text><text class="muted" x="371.3" y="242" text-anchor="middle">9 h</text><text class="muted" x="445" y="242" text-anchor="middle">12 h</text><text class="muted" x="518.8" y="242" text-anchor="middle">15 h</text><text class="muted" x="592.5" y="242" text-anchor="middle">18 h</text><text class="muted" x="666.3" y="242" text-anchor="middle">21 h</text><text class="muted" x="740" y="242" text-anchor="end">24 h</text>
+</svg></div><figcaption>La nuit est une échéance de plus dans l'échéancier unique : aujourd'hui, Moli n'a que des intervalles, sans heure fixe.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Tâche</th><th>Quand</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td>Agrégat et rangement de l'heure</td><td>à l'heure close, en une transaction</td><td>l'agrégat voit toutes les valeurs, filtrées comprises</td></tr>
+<tr><td>Énergie (<code>meter.rs</code>), export</td><td>au fil de l'eau</td><td>consommation du jour en direct ; export inchangé</td></tr>
+<tr><td>Vérifier les heures du jour clos, recalculer celles qu'un arrêt a laissées partielles</td><td>la nuit</td><td>les relevés sont encore là</td></tr>
+<tr><td>Agrégats du jour (<code>agg_day</code>, <code>state_day</code>)</td><td>la nuit</td><td>24&nbsp;lignes par point à lire</td></tr>
+<tr><td>Purge B1</td><td>la nuit, au lieu de toutes les 6&nbsp;h et au démarrage</td><td>une coupe au jour près suffit ; garde B1 inchangée</td></tr>
+<tr><td>Sauvegarde <code>VACUUM INTO</code> de <code>moli.db</code></td><td>la nuit</td><td>aujourd'hui, elle ne se lance qu'à la main</td></tr>
+<tr><td>Point de contrôle <code>TRUNCATE</code></td><td>la nuit</td><td>WAL vide pour la journée</td></tr>
+</tbody></table></div>
+<pre><code>chaque nuit à 03 h 30, heure locale :
+    pour chaque tâche, dans l'ordre : heures du jour clos, agrégats du jour, purge, sauvegarde, point de contrôle
+        reprendre à progrès[tâche]                     -- une ligne par tâche dans moli.db
+        par tranches courtes (≤ 50 ms), écrites par le rédacteur de l'historique entre deux lots
+        progrès[tâche] ← où on en est                  -- dans la transaction de la tranche
+    à 06 h 00 : s'arrêter ; la tâche reprendra la nuit suivante
+nuit manquée : rattrapage au démarrage suivant, après 10 min, jour le plus ancien d'abord</code></pre>
+<ul>
+<li><strong>Reprenable et idempotente</strong> : recalculer un jour remplace les mêmes lignes, dont l'identifiant est calculé.</li>
+<li><strong>Un seul rédacteur</strong> : la garde B1 ne change pas, et MVCC reste inutile.</li>
+<li><strong>Après un arrêt non propre</strong>, B1 suspend les purges jusqu'à une validation par PIN : la nuit saute la purge et l'interface le dit ; les autres tâches continuent.</li>
+<li><strong>Place</strong> : la place libérée par la purge est réutilisée, et le banc D13 constate que le fichier garde sa taille. Aucun <code>VACUUM</code> du fichier vivant n'est nécessaire en régime établi.</li>
+</ul>
+<p class="note">Analogie : Home Assistant garde son état en mémoire, réécrit <code>core.restore_state</code> toutes les 15&nbsp;min et à l'arrêt, valide l'historique toutes les 5&nbsp;s dans son propre fil et purge chaque nuit à 04&nbsp;h 12. Ses statistiques horaires ne sont jamais purgées automatiquement. La proposition reprend ce découpage, avec une table au lieu d'un fichier réécrit.</p>
+</section>
+
+<section id="base">
+<h2>Changements de base proposés</h2>
+<p>Ils visent la cible D13 (<code>moli.db</code> sur Turso) et la nouvelle base <code>maison.db</code>. Les décider <strong>avant l'intégration de C2</strong> évite une migration de données réelles.</p>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 272" role="img" aria-labelledby="d7t d7d">
+<title id="d7t">Octets par relevé</title><desc id="d7d">Estimation du format d'enregistrement SQLite : environ 26 octets pour le relevé actuel, 39 pour la cible D13 qui recopie point_id, ts et kind déjà présents dans la clé calculée ou le catalogue, environ 22 pour un décimal mis à l'échelle dans la proposition et 20 à 21 pour un binaire ou une énumération.</desc>
+<text class="title" x="20" y="24">Octets par relevé (estimation du format SQLite, à mesurer au banc)</text>
+<text class="txt" x="20" y="60">history.db actuel</text>
+<g transform="translate(200,44)"><rect class="seg" x="0" width="25" height="26"/><rect class="seg" x="25" width="12.5" height="26"/><rect class="seg" x="37.5" width="75" height="26"/><rect class="seg" x="112.5" width="100" height="26"/><rect class="seg" x="212.5" width="12.5" height="26"/><rect class="seg" x="225" width="100" height="26"/><text class="st" x="52" y="17">en-tête</text><text class="st" x="122" y="17">clé point + ts</text><text class="st" x="257" y="17">num 8</text><text class="tot" x="335" y="18">≈ 26 o</text></g>
+<text class="txt" x="20" y="108">Cible D13 · décimal</text>
+<g transform="translate(200,92)"><rect class="seg" x="0" width="25" height="26"/><rect class="seg" x="25" width="112.5" height="26"/><rect class="seg" x="137.5" width="100" height="26"/><rect class="red" x="237.5" width="25" height="26"/><rect class="red" x="262.5" width="75" height="26"/><rect class="seg" x="337.5" width="37.5" height="26"/><rect class="red" x="375" width="12.5" height="26"/><rect class="seg" x="387.5" width="100" height="26"/><text class="st" x="45" y="17">clé + taille</text><text class="st" x="165" y="17">en-tête</text><text class="st" x="293" y="17">ts</text><text class="st" x="344" y="17">seq</text><text class="st" x="418" y="17">num 8</text><text class="tot" x="497" y="18">≈ 39 o</text></g>
+<text class="txt" x="20" y="156">Proposé · décimal ×100</text>
+<g transform="translate(200,140)"><rect class="seg" x="0" width="25" height="26"/><rect class="seg" x="25" width="112.5" height="26"/><rect class="seg" x="137.5" width="75" height="26"/><rect class="seg" x="212.5" width="37.5" height="26"/><rect class="seg" x="250" width="25" height="26"/><text class="st" x="45" y="17">clé + taille</text><text class="st" x="152" y="17">en-tête</text><text class="st" x="219" y="17">seq</text><text class="tot" x="285" y="18">≈ 22 o</text></g>
+<text class="txt" x="20" y="204">Proposé · binaire, énum.</text>
+<g transform="translate(200,188)"><rect class="seg" x="0" width="25" height="26"/><rect class="seg" x="25" width="112.5" height="26"/><rect class="seg" x="137.5" width="75" height="26"/><rect class="seg" x="212.5" width="37.5" height="26"/><rect class="seg" x="250" width="6" height="26"/><text class="st" x="45" y="17">clé + taille</text><text class="st" x="152" y="17">en-tête</text><text class="st" x="219" y="17">seq</text><text class="tot" x="266" y="18">≈ 20–21 o</text></g>
+<rect class="red" x="20" y="232" width="14" height="14"/><text class="muted" x="40" y="244">redondant : point_id, ts et kind sont déjà dans la clé calculée ou le catalogue</text>
+<text class="muted" x="20" y="266">SQLite écrit 0 et 1 sans octet de valeur ; un réel coûte toujours 8 octets ; le pointeur de cellule (2 o) est compté.</text>
+</svg></div><figcaption>La cible D13 recopie le point et l'instant, déjà dans sa clé calculée. Les retirer et garder les entiers entiers (<code>num ANY</code>) divise le relevé par près de deux.</figcaption></figure>
+
+<div class="tw"><table>
+<thead><tr><th>Changement</th><th>Vitesse</th><th>Place</th><th>Coût, risque</th><th>Mesure à faire</th></tr></thead>
+<tbody>
+<tr><td>Deux bases</td><td>un clic n'attend jamais une rafale de relevés</td><td>—</td><td>deux rédacteurs, règle des noms stables</td><td>p95 d'un clic pendant une rafale, avec et sans séparation</td></tr>
+<tr><td>Relevé amaigri</td><td>moins de pages par courbe</td><td>≈ −45&nbsp;% par relevé (estimation)</td><td>faible avant l'intégration de C2</td><td>banc ×2 : taille, p95 d'une courbe de 7&nbsp;j</td></tr>
+<tr><td>Bande morte et intervalle au stockage</td><td>moins d'écritures</td><td>fort sur les capteurs bavards</td><td>réglage par famille</td><td>part des points qui changent plus d'une fois par minute</td></tr>
+<tr><td>Agrégats au fil de l'eau</td><td>courbe longue en quelques centaines de lignes</td><td>détail plus court possible</td><td>écriture horaire</td><td>p95 d'une courbe de 30&nbsp;j</td></tr>
+<tr><td>Moyennes pondérées par le temps</td><td>—</td><td>—</td><td>corrige un biais actuel</td><td>comparer sur une journée réelle</td></tr>
+<tr><td>Index généralisés</td><td>totaux sans relecture</td><td>—</td><td>réutilise <code>meter.rs</code></td><td>remise, trou, changement de compteur</td></tr>
+<tr><td>Dictionnaires</td><td>comparaisons entières</td><td>1 octet par état</td><td>ajout seul</td><td>—</td></tr>
+<tr><td>État courant en table, double écriture</td><td>démarrage sans attendre l'historique</td><td>+1 ligne par point ; ≈&nbsp;65&nbsp;Mo écrits par jour, contre ≈&nbsp;117 pour <code>state.json</code></td><td>réconciliation silencieuse au démarrage</td><td>coupure entre deux lots de chaque base</td></tr>
+<tr><td>Journal du jour, rangé à l'heure close</td><td>courbe = une plage + une heure de journal</td><td>≈&nbsp;3,1&nbsp;Go → ≈&nbsp;0,26&nbsp;Go écrits par jour (mesuré, proxy SQLite)</td><td>revue D13 ; déduplication au rangement</td><td>octets écrits sur Turso, puis sur Pi Zero 2 W</td></tr>
+<tr><td>Lots de 2&nbsp;s au lieu de ≤&nbsp;100&nbsp;ms</td><td>—</td><td>3,5&nbsp;fois moins de validations et de fsync</td><td>export retardé de 2&nbsp;s au plus</td><td>idem</td></tr>
+<tr><td>Travaux de nuit</td><td>journée plus calme</td><td>—</td><td>reprise, rattrapage, purge suspendue après un arrêt non propre</td><td>durée d'une nuit à charge ×2</td></tr>
+<tr><td>Échéancier unique</td><td>aucun balayage</td><td>—</td><td>regroupe l'existant</td><td>reprise après redémarrage</td></tr>
+<tr><td>Équipements par liaisons</td><td>lecture en mémoire</td><td>zéro copie</td><td>généralise D12</td><td>trois équipements sur papier</td></tr>
+<tr><td>Journal d'export compact</td><td>—</td><td>−80 à −90&nbsp;% du poste (estimation)</td><td>revue D13 : l'identité d'un réessai repose sur un rendu versionné</td><td>banc ×2</td></tr>
+<tr><td>État métier en tables</td><td>une ligne au lieu d'un fichier</td><td>—</td><td>migration par domaine</td><td>—</td></tr>
+</tbody></table></div>
+
+<details><summary>Esquisse de <code>moli.db</code> (historique)</summary>
+<pre><code>-- Relevé amaigri : point et instant sont dans la clé, le type dans le vocabulaire ;
+-- rempli à l'heure close, trié par point, depuis le journal du jour (ops)
+CREATE TABLE samples (
+    id  INTEGER PRIMARY KEY,  -- (point &lt;&lt; 44) + ts en ms, comme D13
+    seq INTEGER NOT NULL,     -- à garder seulement si l'export l'exige
+    num ANY,                  -- 0/1, code, entier mis à l'échelle ou réel
+    txt TEXT,                 -- texte seulement
+    q   INTEGER               -- NULL normalement ; marqueur rare : texte tronqué
+) STRICT;
+
+-- Vocabulaire de l'historique (étend le catalog de D13)
+CREATE TABLE catalog (
+    id INTEGER PRIMARY KEY, point TEXT NOT NULL UNIQUE,   -- PointId : nom stable partagé
+    type INTEGER NOT NULL, nature INTEGER NOT NULL, scale INTEGER, dict_id INTEGER,
+    family TEXT NOT NULL, unit TEXT, version INTEGER NOT NULL DEFAULT 1
+) STRICT;
+CREATE TABLE dict_entry (
+    id INTEGER PRIMARY KEY,   -- (dict &lt;&lt; 16) + code
+    dict INTEGER NOT NULL, key TEXT NOT NULL, seen INTEGER NOT NULL,
+    UNIQUE (dict, key)
+) STRICT;
+
+-- Agrégats horaires (même modèle au jour local)
+CREATE TABLE agg_hour (
+    id INTEGER PRIMARY KEY,   -- (point &lt;&lt; 24) + heures depuis 1970
+    mean ANY, min ANY, max ANY, delta ANY, covered INTEGER NOT NULL
+) STRICT;
+CREATE TABLE state_hour (
+    id INTEGER PRIMARY KEY,   -- (point &lt;&lt; 32) + (heure &lt;&lt; 8) + code
+    ms INTEGER NOT NULL, entries INTEGER NOT NULL
+) STRICT;
+-- Opération compacte figée : export, journal du jour, source du rangement
+CREATE TABLE ops (
+    seq INTEGER PRIMARY KEY,  -- séquence d'export contiguë ; ajout en fin de b-arbre
+    kind INTEGER NOT NULL, point INTEGER NOT NULL, ts INTEGER NOT NULL,
+    num ANY, txt TEXT, cost ANY   -- cost : heure d'énergie seulement
+) STRICT;
+CREATE TABLE progress (task INTEGER PRIMARY KEY, upto INTEGER NOT NULL) STRICT;  -- nuit, rangement
+
+-- meta.next_seq : écrit seulement avant une purge qui viderait ops (la suite se lit à sa fin)
+-- inchangés de D13 : meta, meter_state, energy_hour, energy_total, archive_ack ;
+-- remplacés par ops : outbox, export_journal ;
+-- garde B1 : retention, retention_log, retention_guard, retention_consent</code></pre>
+</details>
+<details><summary>Esquisse de <code>maison.db</code> (fonctionnement direct)</summary>
+<pre><code>CREATE TABLE point_state (                                -- état courant complet, historisé ou non
+    id INTEGER PRIMARY KEY, point TEXT NOT NULL UNIQUE,   -- PointId
+    num ANY, txt TEXT,                                    -- valeur canonique, sans code
+    observed_at INTEGER,                                  -- instant de la mesure selon la source
+    received_at INTEGER NOT NULL,                         -- dernier rapport
+    changed_at INTEGER                                    -- dernier changement
+) STRICT;
+CREATE TABLE device (
+    id INTEGER PRIMARY KEY, device TEXT NOT NULL UNIQUE, integration TEXT NOT NULL,
+    expected_ms INTEGER, last_contact INTEGER, online INTEGER
+) STRICT;
+CREATE TABLE equipment (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL, room_id INTEGER) STRICT;
+CREATE TABLE equipment_role (
+    id INTEGER PRIMARY KEY,   -- (equipment &lt;&lt; 8) + rôle
+    point TEXT NOT NULL,      -- PointId de la source, jamais une copie
+    transform TEXT
+) STRICT;
+CREATE TABLE deadline (
+    id INTEGER PRIMARY KEY, kind INTEGER NOT NULL, ref TEXT NOT NULL,
+    at INTEGER NOT NULL, generation INTEGER NOT NULL
+) STRICT;
+-- état métier : personnes, zones, invitations, téléphones, étiquettes, pièces, tableau de bord,
+-- plan, automatismes, dépendances, aides, réglages, journal des actions</code></pre>
+</details>
+<p><strong>Politiques</strong> : on étend <code>[storage]</code> de <code>moli.toml</code>, déjà validé par B1, pour garder une seule autorité. Une table ne se justifie que si l'interface doit les éditer.</p>
+<p><strong>État métier, dans <code>maison.db</code></strong> : les fichiers JSON se regroupent en six formes. Ce sont les registres, les documents validés en bloc, les définitions versionnées, les états d'exécution, les journaux et les réglages. Pièce et personne deviennent des tables pivots, alors qu'elles sont aujourd'hui recopiées dans plusieurs fichiers. On gagne une ligne écrite au lieu d'un fichier entier, et une sauvegarde complète en un instantané. Le coffre reste chiffré et séparé.</p>
+</section>
+
+<section id="suite">
+<h2>Garde-fous, décisions, expériences</h2>
+<div class="warnbox"><strong>Comment rater à coup sûr</strong> (et donc ce qu'on ne fait pas) :
+<ul>
+<li>stocker un libellé ou une traduction ;</li>
+<li>recopier une valeur physique dans un équipement ;</li>
+<li>moyenner un index, ou calculer un mois par « index de fin − index de début » ;</li>
+<li>éclaircir l'historique au hasard ;</li>
+<li>filtrer à l'entrée et cacher un seuil à un automatisme ;</li>
+<li>traiter une erreur de lecture comme une absence ;</li>
+<li>relier les deux bases par des entiers internes ;</li>
+<li>activer MVCC avant qu'il soit stable, au détriment de la garde B1 ;</li>
+<li>chercher une transaction commune aux deux bases : en WAL, elle n'est pas atomique ;</li>
+<li>écrire l'état courant à chaque rapport, ou le relire pour décider ;</li>
+<li>réémettre une valeur relue au démarrage comme un changement ;</li>
+<li>écrire chaque relevé directement à sa place par point, lot après lot ;</li>
+<li>faire la nuit en une seule grosse transaction, qui bloquerait le rédacteur ;</li>
+<li>créer une table clé/valeur universelle ;</li>
+<li>mettre un secret en clair dans une table.</li>
+</ul></div>
+<h3>Décisions à prendre</h3>
+<ol>
+<li>Anti-rebond seulement là où un rebond est prouvé (proposé), ou par défaut sur tous les contacts ?</li>
+<li><code>seq</code> dans <code>samples</code> : nécessaire à l'export et à l'expurgation, ou supprimable ?</li>
+<li>Journal d'export compact : le présenter à la revue D13 ?</li>
+<li>Politiques dans <code>[storage]</code> (proposé) ou dans la base ?</li>
+<li>Deux bases : noms définitifs (<code>maison.db</code> proposé), frontière exacte, place des vecteurs (<code>maison.db</code> ou base de l'assistant) ?</li>
+<li>Condition avec durée après redémarrage : reprendre le temps restant sans jamais rattraper (proposé), ou rattraper ?</li>
+<li>Équipements par <code>[[equipment]]</code> à l'image de D12 d'abord (proposé) ?</li>
+<li>Notes scolaires dans le périmètre Pronote ? Garder aussi les moyennes officielles ?</li>
+<li>Sous-compteurs : qui déclare la relation « inclus dans », et où ?</li>
+<li>MVCC (<code>BEGIN CONCURRENT</code>) : quels critères pour l'adopter un jour ?</li>
+<li>Double écriture de l'état courant dans <code>maison.db</code> : l'adopter (proposé) ? Lots de 60&nbsp;s (proposé, comme aujourd'hui) ou de 15&nbsp;min comme Home Assistant ?</li>
+<li>Lots de l'historique : 2&nbsp;s comme le recorder actuel (proposé), ou ≤&nbsp;100&nbsp;ms comme écrit dans D13 ?</li>
+<li>Journal du jour rangé à l'heure close (proposé) ou la nuit ? À présenter à la revue D13 avec l'export compact.</li>
+<li>Nuit : fenêtre 03&nbsp;h 30 – 06&nbsp;h 00 (proposé) ? Purge B1 déplacée de « toutes les 6&nbsp;h » à la nuit ?</li>
+</ol>
+<h3>Expériences, sans toucher au code de production</h3>
+<ul>
+<li><strong>Banc <code>tools/storage-bench</code></strong> : variante « relevé amaigri » à charge ×2 (taille, débit, p95 d'une courbe de 7&nbsp;j). Vérifier aussi que Turso écrit 0 et 1 sans octet de valeur. Variante « deux bases » : p95 d'une écriture métier pendant une rafale de relevés, avec et sans séparation. <strong>Octets écrits par jour</strong> : porter les scénarios de <code>tools/storage-writes</code> dans ce banc, sur Turso, en comptant les octets écrits et non la taille du WAL.</li>
+<li><strong><code>tools/storage-writes</code> sur le matériel cible</strong> : l'outil n'a besoin que de Python ; relancé sur un Pi Zero 2 W avec sa carte microSD, il donne une nouvelle série datée, à comparer à <code>2026-10-21T114647Z</code>.</li>
+<li><strong>Coupure</strong> : <code>kill -9</code> entre deux lots de chaque base ; la réconciliation doit garder la valeur la plus récente, sans événement ni relevé en double.</li>
+<li><strong>Nuit</strong> : durée de chaque tâche à charge ×2, rattrapage de trois nuits manquées.</li>
+<li><strong>Export réel anonymisé</strong> : part des points qui changent plus d'une fois par minute, et volume de la position de lecture des médias.</li>
+<li><strong>Exercices papier</strong> :
+  <ul>
+  <li>dix points réels dans les quatre états ;</li>
+  <li>trois équipements en rôles, avec leurs modes dégradés ;</li>
+  <li>une journée de compteur avec remise à minuit et trou de deux heures.</li>
+  </ul></li>
+</ul>
+<p class="note">Méthode : premiers principes, analyse morphologique des options, analogies (OPC UA et historiens industriels, Zigbee2MQTT, Prometheus <code>for:</code>, RRDtool, Home Assistant, arbres LSM), parcours de scénarios, mesure sur une journée réelle (outil versionné, série datée, <a href="../reports/mesure-ecritures-2026-10-21T114647Z.md">rapport généré</a>), inversion, puis convergence par vitesse, place, risque et mesure à faire.</p>
+</section>
+
+</main>
+</div>
+<footer>Moli OS · proposition du 21 octobre 2026, non livrée · détail et références au code : <a href="valeurs-appareils-stockage.md">valeurs-appareils-stockage.md</a> · inventaire : <a href="../reports/inventaire-persistance-2026-10-20T060728Z.md">inventaire de la persistance</a></footer>
+</body>
+</html>

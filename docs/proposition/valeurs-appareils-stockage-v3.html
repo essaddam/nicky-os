@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="V3 de la proposition de stockage de Moli OS : quatre étages, le format de l'archive comme premier levier (mesuré), le type de chaque valeur décide de son vieillissement, segments, paliers, codes au lieu de textes.">
+<title>Valeurs et stockage V3</title>
+<style>
+:root{--paper:#f7f3eb;--ink:#202b28;--muted:#56625c;--line:#d3d9cf;--accent:#216c55;--soft:#e6eee5;--warm:#a64f2a;--card:#fffdf8;--ok:#2f7d4f;--warn:#8f600e;--bad:#b0413e;--okbg:#e2f0e6;--warnbg:#f7ecd6;--badbg:#f6e0de;--mast:#202b28;--mastfg:#f7f3eb;--mastmuted:#c9d6cb;--code:#e9eee6;--sans:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif;--serif:"Iowan Old Style",Palatino,"Book Antiqua",Georgia,serif;--mono:"SFMono-Regular",Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#121715;--ink:#e6ebe5;--muted:#a3afa8;--line:#323e39;--accent:#6cc19f;--soft:#1c2622;--warm:#e39466;--card:#18201c;--ok:#67c48d;--warn:#e2b24f;--bad:#e5807a;--okbg:#1d3326;--warnbg:#3a2f17;--badbg:#3d2120;--mast:#0b0f0d;--mastfg:#e6ebe5;--mastmuted:#a9b8ae;--code:#1f2a25}}
+:root[data-theme="dark"]{--paper:#121715;--ink:#e6ebe5;--muted:#a3afa8;--line:#323e39;--accent:#6cc19f;--soft:#1c2622;--warm:#e39466;--card:#18201c;--ok:#67c48d;--warn:#e2b24f;--bad:#e5807a;--okbg:#1d3326;--warnbg:#3a2f17;--badbg:#3d2120;--mast:#0b0f0d;--mastfg:#e6ebe5;--mastmuted:#a9b8ae;--code:#1f2a25}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.62}
+a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+a:focus-visible,summary:focus-visible{outline:3px solid var(--warm);outline-offset:3px}
+.skip{position:absolute;left:1rem;top:-4rem;background:var(--card);color:var(--ink);padding:.6rem .9rem;z-index:10}
+.skip:focus{top:1rem}
+.mast{background:var(--mast);color:var(--mastfg);padding:44px clamp(16px,5vw,88px) 36px}
+.eyebrow{letter-spacing:.14em;text-transform:uppercase;font-size:.75rem;color:var(--mastmuted)}
+.mast h1{font-family:var(--serif);font-size:clamp(2.1rem,5vw,4.2rem);line-height:1.05;letter-spacing:-.03em;margin:16px 0 14px;max-width:1000px}
+.mast p{max-width:820px;color:var(--mastmuted);margin:0 0 10px}
+.mast a{color:var(--mastfg)}
+.facts{display:flex;flex-wrap:wrap;gap:28px;margin-top:26px}
+.fact{border-top:1px solid var(--mastmuted);padding-top:8px;min-width:150px;max-width:230px}
+.fact strong{display:block;font-family:var(--serif);font-size:1.9rem;line-height:1.15;color:var(--mastfg)}
+.fact span{font-size:.8rem;color:var(--mastmuted)}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1500px;margin:0 auto}
+.toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:30px 18px}
+.toc p{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.toc a{display:block;padding:7px 0;border-bottom:1px solid var(--line);color:var(--muted);text-decoration:none;font-size:.86rem}
+.toc a:hover{color:var(--accent)}
+main{min-width:0;background:var(--card);border-left:1px solid var(--line);padding:30px clamp(16px,4vw,60px) 70px}
+section{max-width:980px}
+h2{font-family:var(--serif);font-size:1.85rem;line-height:1.2;margin:56px 0 12px;padding-top:16px;border-top:2px solid var(--ink)}
+section:first-child h2{margin-top:6px}
+h3{font-size:1.1rem;margin:30px 0 8px}
+p,li{max-width:92ch}
+li{margin-bottom:.45rem}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);border-radius:3px;padding:.1em .3em;overflow-wrap:anywhere}
+pre{background:var(--code);border:1px solid var(--line);padding:16px;overflow:auto;line-height:1.45;font-size:.85rem}
+pre code{background:none;padding:0}
+th code,.mast code{background:rgba(255,255,255,.16);color:inherit}
+.lead{font-size:1.08rem}
+.note{color:var(--muted);font-size:.9rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{border:1px solid var(--line);background:var(--paper);padding:14px 16px;border-radius:6px}
+.card h3{margin:0 0 6px;font-size:1rem}
+.card p{margin:0;font-size:.92rem}
+.num{display:inline-block;min-width:1.6em;height:1.6em;line-height:1.6em;text-align:center;border-radius:50%;background:var(--accent);color:var(--card);font-size:.8rem;font-weight:700;margin-right:6px}
+.tw{max-width:100%;overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;line-height:1.5}
+th{background:var(--ink);color:var(--card);text-align:left;vertical-align:top;padding:10px 12px;font-size:.8rem;letter-spacing:.02em}
+td{padding:10px 12px;vertical-align:top;border-top:1px solid var(--line);min-width:120px}
+tr:nth-child(even) td{background:var(--paper)}
+figure{margin:20px 0 26px;border:1px solid var(--line);background:var(--card);padding:14px}
+.fig{overflow-x:auto}
+figcaption{color:var(--muted);font-size:.86rem;margin-top:8px}
+details{border:1px solid var(--line);padding:10px 14px;margin:12px 0;background:var(--paper)}
+summary{cursor:pointer;font-weight:700}
+.rule{border-left:4px solid var(--accent);background:var(--soft);padding:12px 16px;margin:16px 0}
+.warnbox{border-left:4px solid var(--warn);background:var(--warnbg);padding:12px 16px;margin:16px 0}
+footer{max-width:1500px;margin:0 auto;padding:20px clamp(16px,4vw,40px);color:var(--muted);font-size:.82rem}
+svg.dia{display:block;width:100%;height:auto;min-width:640px}
+.dia text{font-family:var(--sans)}
+.dia .box{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.dia .box-a{fill:var(--soft);stroke:var(--accent);stroke-width:1.5}
+.dia .h{fill:var(--accent);font-size:13px;font-weight:700;letter-spacing:.04em}
+.dia .title{fill:var(--ink);font-size:14px;font-weight:700}
+.dia .txt{fill:var(--ink);font-size:13px}
+.dia .muted{fill:var(--muted);font-size:12px}
+.dia .arrow{stroke:var(--accent);stroke-width:2;fill:none}
+.dia .head{fill:var(--accent)}
+.dia .axis{stroke:var(--muted);stroke-width:1;fill:none}
+.dia .mark{stroke:var(--warm);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.dia .markt{fill:var(--warm);font-size:12px;font-weight:700}
+.dia .repc{fill:var(--accent)}
+.dia .seg{fill:var(--soft);stroke:var(--accent);stroke-width:1}
+.dia .red{fill:var(--badbg);stroke:var(--bad);stroke-width:1}
+.dia .zwarn{fill:var(--warnbg);stroke:var(--warn)}
+.dia .bar{fill:var(--accent)}
+.dia .st{fill:var(--ink);font-size:11.5px}
+.dia .tot{fill:var(--ink);font-size:14px;font-weight:700}
+.dia .bandfill{fill:var(--soft);stroke:var(--accent);stroke-width:.5;stroke-dasharray:2 2}
+.dia .raw{stroke:var(--muted);stroke-width:1;fill:none;opacity:.8}
+.dia .held{stroke:var(--accent);stroke-width:2.5;fill:none}
+.dia .pruned{fill:var(--muted)}
+.dia .p1{fill:var(--soft);stroke:var(--accent);stroke-width:1}
+.dia .p2{fill:var(--okbg);stroke:var(--ok);stroke-width:1}
+.dia .p3{fill:var(--warnbg);stroke:var(--warn);stroke-width:1}
+.dia .px{fill:var(--card);stroke:var(--line);stroke-width:1}
+.dia .pl{fill:var(--card);stroke:var(--accent);stroke-width:2}
+.dia .opt{fill:none;stroke:var(--warn);stroke-width:1.5;stroke-dasharray:4 3}
+@media (max-width:900px){.layout{display:block}.toc{position:static;max-height:none;display:flex;gap:14px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid var(--line)}.toc p{display:none}.toc a{border:0;white-space:nowrap}main{border-left:0;padding:22px 16px 60px}h2{font-size:1.55rem;margin-top:40px}.facts{gap:18px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{.toc,.skip{display:none}.layout{display:block}main{border:0;padding:0}.mast{background:none;color:#000;padding:0 0 12px;border-bottom:2px solid #000}.mast p,.eyebrow,.fact span,.fact strong{color:#333}figure,table,pre{break-inside:avoid}.fig,.tw{overflow:visible}svg.dia{min-width:0}}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="mast">
+  <div class="eyebrow">Moli OS · proposition V3, non livrée · 21 octobre 2026 · code vérifié sur <code>bd1714d</code></div>
+  <h1>Valeurs et stockage, V3 : la proposition consolidée</h1>
+  <p>Quatre étages, chacun sa technique. Le format de l'archive comme premier levier, mesuré. Chaque valeur vieillit selon sa nature : une mesure se résume en segments, une porte se garde telle quelle, un compteur s'élague, une énumération devient un code.</p>
+  <p>Remplace la <a href="valeurs-appareils-stockage.html">V1</a> et la <a href="valeurs-appareils-stockage-v2.html">V2</a>, gardées comme historique. Version détaillée, avec les références au code : <a href="valeurs-appareils-stockage-v3.md">valeurs-appareils-stockage-v3.md</a>.</p>
+  <div class="facts">
+    <div class="fact"><strong>÷&nbsp;38</strong><span>octets d'une heure résumée : 59,3 en format actuel, 1,3 en colonnes typées (mesuré)</span></div>
+    <div class="fact"><strong>17&nbsp;Mo</strong><span>par an d'heures typées pour la charge ×1 ; 650&nbsp;Mo en format actuel</span></div>
+    <div class="fact"><strong>17 ≈&nbsp;12</strong><span>Mo par an : heures denses contre creuses ; la forme creuse de la V2 est écartée</span></div>
+    <div class="fact"><strong>÷&nbsp;4,6</strong><span>lignes de mesure avec le relevé à bande (valeurs synthétiques, à confirmer)</span></div>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Sommaire">
+  <p>Sommaire</p>
+  <a href="#reanalyse">Ce que la réanalyse a changé</a>
+  <a href="#constats">Ce qui existe</a>
+  <a href="#etages">Quatre étages</a>
+  <a href="#type">Le type décide</a>
+  <a href="#segments">Tout est segment</a>
+  <a href="#paliers">Vieillir par paliers</a>
+  <a href="#archive">Le format de l'archive</a>
+  <a href="#codes">Des codes, pas du texte</a>
+  <a href="#recent">Le récent dans moli.db</a>
+  <a href="#double">Double écriture, nuit, lectures</a>
+  <a href="#suite">Décisions et mesures</a>
+</nav>
+
+<main id="contenu">
+<section id="reanalyse">
+<h2>Ce que la réanalyse a changé</h2>
+<p class="lead">J'ai relu la V2 en cherchant ce qu'elle affirmait sans preuve, ce qu'elle compliquait sans besoin, et ce qui contredisait une décision prise. Trois mesures datées tranchent : <a href="../reports/mesure-ecritures-2026-10-21T114647Z.md">écritures</a>, <a href="../reports/profil-historique-2026-10-21T151507Z.md">profil</a> et, nouvelle, <a href="../reports/formes-parquet-2026-10-21T200551Z.md">formes en Parquet</a>.</p>
+<div class="tw"><table>
+<thead><tr><th>Sujet</th><th>V2</th><th>V3</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td>Le premier levier</td><td>les paliers</td><td><strong>le format de l'archive</strong> : colonnes typées, codes, dictionnaire, zstd</td><td>mesuré : le format actuel coûte 6,7&nbsp;fois plus pour le brut et 38&nbsp;fois plus pour les heures. Aucun palier ne rattrape ça</td></tr>
+<tr><td>Heures « creuses »</td><td>n'écrire une heure que si la valeur a changé</td><td><strong>les heures denses que <code>moli-rollup</code> calcule déjà</strong></td><td>5,5&nbsp;fois moins de lignes, mais 17 contre 12&nbsp;Mo par an : Parquet compresse presque gratuitement une heure sans changement. La forme creuse aurait exigé l'historique de disponibilité pour lire un trou</td></tr>
+<tr><td>Coupure de la bande à chaque heure</td><td>une ligne par point bavard et par heure</td><td><strong>supprimée</strong> : l'archive calcule les heures depuis les lignes à bande, au prorata, avec une erreur bornée par la bande</td><td>la bande est la précision déclarée du point</td></tr>
+<tr><td>Agrégats locaux dans <code>moli.db</code></td><td>gardés pour les courbes de 7 à 31&nbsp;jours</td><td><strong>supprimés</strong></td><td>31&nbsp;jours de lignes à bande se lisent en quelques millisecondes ; les heures viennent de l'archive, ou se calculent à la volée en secours</td></tr>
+<tr><td>Transitions de sûreté « pour toujours »</td><td>toujours</td><td><strong>365&nbsp;jours (D13), puis durées par jour</strong> ; « toujours » sur choix explicite</td><td>vie privée : dix ans d'ouvertures de porte sont un journal de présence</td></tr>
+<tr><td>Codes dans le protocole</td><td>une opération « dictionnaire »</td><td><strong>le dictionnaire voyage dans le catalogue</strong>, déjà révisionné ; variante minimale : clé texte et dictionnaire Parquet</td><td>les octets ne sont pas la raison des codes ; la limite des 64 états et l'identité stable le sont</td></tr>
+<tr><td>Lectures longues</td><td>« D1 »</td><td><strong>un algorithme</strong> : heures et jours par l'archive, brut local, secours local</td><td>une courbe de 90&nbsp;jours doit avoir une seule réponse</td></tr>
+<tr><td>Bande</td><td>gain affirmé</td><td><strong>gain mesuré</strong> : 4,6&nbsp;fois moins de lignes, sur des valeurs synthétiques</td><td>une affirmation devient une mesure, avec sa limite</td></tr>
+</tbody></table></div>
+<div class="cards">
+  <div class="card"><h3><span class="num">1</span>Quatre étages</h3><p>Mémoire, <code>maison.db</code>, <code>moli.db</code> (récent, Turso), archive (long terme, Parquet). Un étage ne garde jamais ce qui revient au suivant.</p></div>
+  <div class="card"><h3><span class="num">2</span>Le format d'abord</h3><p>Le format actuel répète le nom du point et l'opération en JSON. Typé et compressé, le long terme pèse 6,7 à 38&nbsp;fois moins.</p></div>
+  <div class="card"><h3><span class="num">3</span>Le type décide</h3><p>La nature déclarée fixe l'encodage, le filtre, les paliers et ce qu'on ne fait jamais.</p></div>
+  <div class="card"><h3><span class="num">4</span>Tout est segment</h3><p>Un intervalle début–fin et une charge utile. Vieillir, c'est fusionner des voisins selon la nature.</p></div>
+  <div class="card"><h3><span class="num">5</span>Mesures en bande</h3><p>Le relevé écrit résume ce qu'il a absorbé ; puis les heures de <code>moli-rollup</code>, puis les jours.</p></div>
+  <div class="card"><h3><span class="num">6</span>États sans perte</h3><p>Transitions gardées telles quelles, durées par jour en plus. 365&nbsp;jours de détail, puis les jours.</p></div>
+  <div class="card"><h3><span class="num">7</span>Cumuls élagués</h3><p>Deltas par heure, jour, mois, index de fin gardé. Jamais de moyenne.</p></div>
+  <div class="card"><h3><span class="num">8</span>Des codes</h3><p>Une énumération coûte un octet partout ; un titre n'est stocké qu'une fois et s'efface en un point.</p></div>
+</div>
+</section>
+
+<section id="constats">
+<h2>Ce qui existe déjà</h2>
+<p>Constats sur le code (<code>bd1714d</code>) ; références au <a href="valeurs-appareils-stockage-v3.md#2-ce-qui-existe-code-à-bd1714d">§ 2 du Markdown</a>.</p>
+<div class="tw"><table>
+<thead><tr><th>Sujet</th><th>Aujourd'hui</th><th>Conséquence</th></tr></thead>
+<tbody>
+<tr><td>Archive</td><td><code>moli-archive</code> fusionné, en option, sur la même machine ; aucun crate du cœur ne l'appelle</td><td>le long terme existe, mais rien ne l'alimente ; sans archive, pas de long terme</td></tr>
+<tr><td>Format <code>archive_v1</code></td><td>une seule forme de ligne : nom du point en texte, type en texte, JSON complet de l'opération ou du résumé ; Snappy, dictionnaire coupé, groupes de 256&nbsp;lignes</td><td><strong>mesuré</strong> : 40,7&nbsp;octets par relevé brut et 59,3 par heure résumée, contre 6,1 et 1,3 en colonnes typées</td></tr>
+<tr><td>Résumés</td><td>heures, jours et mois calculés par l'archive avec <code>moli-rollup</code> : moyenne pondérée, min, max, durées par état, couverture, qualité, origine</td><td>le bon calcul existe ; il est rangé dans le mauvais format</td></tr>
+<tr><td>Vieillissement</td><td>aucun : rien n'est retiré ; « la purge du détail relève d'E1 »</td><td>l'archive grossit au rythme du brut</td></tr>
+<tr><td>Horizons par famille</td><td>écrits dans D13, codés nulle part</td><td>à coder dans B1 et E1</td></tr>
+<tr><td>États</td><td>valeur en texte ; plus de 64 états distincts font échouer la publication et mettent l'archive en panne</td><td>une énumération bavarde peut bloquer l'archive</td></tr>
+<tr><td>Tickets</td><td>D13 nomme C1 la bascule du cœur ; le plan et le code nomment C1 l'archive</td><td>ce document suit le plan : C1 archive, C2 récent, D1 lectures, E1 vieillissement</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="etages">
+<h2>Quatre étages, chacun sa technique</h2>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 300" role="img" aria-labelledby="e1t e1d">
+<title id="e1t">Quatre étages</title><desc id="e1d">La mémoire du hub reçoit les rapports et décide sans disque. Elle écrit l'état courant dans maison.db par lots de 60 secondes, et les relevés retenus dans moli.db, le récent sur Turso, par lots de 2 secondes. moli.db exporte vers l'archive Parquet, qui garde le long terme et le fait vieillir par paliers. Un étage ne garde jamais ce qui revient au suivant.</desc>
+<defs><marker id="ae1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<text class="muted" x="192" y="52" text-anchor="middle">lots de 60 s</text>
+<text class="muted" x="573" y="52" text-anchor="middle">export</text>
+<rect class="box-a" x="20" y="60" width="160" height="150" rx="8"/><text class="h" x="34" y="84">VIF</text><text class="title" x="34" y="106">Mémoire du hub</text><text class="muted" x="34" y="128">maintenant</text><text class="muted" x="34" y="146">valeur, instants, bandes</text><text class="muted" x="34" y="164">aucun disque</text>
+<rect class="box" x="205" y="60" width="165" height="150" rx="8"/><text class="h" x="219" y="84">ÉTAT COURANT</text><text class="title" x="219" y="106">maison.db</text><text class="muted" x="219" y="128">une ligne par point</text><text class="muted" x="219" y="146">Turso, lots de 60 s</text><text class="muted" x="219" y="164">suffit au démarrage</text>
+<rect class="box" x="395" y="60" width="165" height="150" rx="8"/><text class="h" x="409" y="84">RÉCENT</text><text class="title" x="409" y="106">moli.db</text><text class="muted" x="409" y="128">Turso, 7 à 31 jours</text><text class="muted" x="409" y="146">journal, lignes à bande</text><text class="muted" x="409" y="164">aucun agrégat</text>
+<rect class="box" x="585" y="60" width="155" height="150" rx="8"/><text class="h" x="599" y="84">LONG TERME</text><text class="title" x="599" y="106">Archive</text><text class="muted" x="599" y="128">Parquet typé, zstd</text><text class="muted" x="599" y="146">heures, jours, paliers</text><text class="muted" x="599" y="164">mois → toujours</text>
+<path class="arrow" d="M181,110 L203,110" marker-end="url(#ae1)"/>
+<path class="arrow" d="M100,211 C100,262 477,262 477,213" marker-end="url(#ae1)"/>
+<text class="muted" x="288" y="270" text-anchor="middle">relevés retenus : lots de 2 s</text>
+<path class="arrow" d="M561,135 L583,135" marker-end="url(#ae1)"/>
+<path class="arrow" d="M705,211 C705,250 630,250 630,213" marker-end="url(#ae1)"/>
+<text class="muted" x="668" y="266" text-anchor="middle">paliers (E1)</text>
+<text class="txt" x="20" y="292">Un étage ne garde jamais ce qui revient au suivant : le long terme ne vit que dans l'archive.</text>
+</svg></div><figcaption>Turso pour le récent et l'état courant, Parquet pour le long terme : la décision du propriétaire, appliquée jusqu'au bout. L'archive, aujourd'hui en option, devient nécessaire dès qu'on veut garder plus que les fenêtres de D13.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Étage</th><th>Contient</th><th>Horizon</th><th>Technique</th></tr></thead>
+<tbody>
+<tr><td>Vif</td><td>valeur, trois instants, qualité, bandes ouvertes</td><td>maintenant</td><td>mémoire du hub</td></tr>
+<tr><td>État courant</td><td>une ligne complète par point ; appareils, équipements, état métier, échéances</td><td>la dernière valeur</td><td><code>maison.db</code>, Turso, lots de 60&nbsp;s</td></tr>
+<tr><td>Récent</td><td>journal du jour, relevés à bande rangés par point, énergie de D13, catalogue, dictionnaires, garde B1</td><td>7 à 31&nbsp;jours ; heures d'énergie 2&nbsp;mois</td><td><code>moli.db</code>, Turso, rowid calculé</td></tr>
+<tr><td>Long terme</td><td>paliers par nature</td><td>des mois à toujours</td><td>archive Parquet typée, fichiers immuables</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="type">
+<h2>Le type décide</h2>
+<p>Chaque point déclare sa nature, jamais déduite de l'unité. Elle fixe tout le reste. La valeur reste canonique au bord, datée de trois instants et qualifiée, comme dans la V1.</p>
+<div class="tw"><table>
+<thead><tr><th>Nature</th><th>Exemples</th><th>Encodage</th><th>Récent</th><th>Long terme</th><th>Jamais</th></tr></thead>
+<tbody>
+<tr><td>Mesure</td><td>température, luminosité, puissance</td><td>entier mis à l'échelle</td><td>relevés à bande</td><td>bande, puis heures, puis jours (<code>moli-rollup</code>)</td><td>éclaircir au hasard, moyenne simple</td></tr>
+<tr><td>État</td><td>porte, fenêtre, serrure, alarme, mode</td><td>code (1 octet)</td><td>transitions</td><td>transitions telles quelles, puis durées par jour</td><td>lisser, moyenner, échantillonner</td></tr>
+<tr><td>Index cumulé</td><td>Linky, eau, gaz</td><td>entier mis à l'échelle</td><td>relevés, heures d'énergie</td><td>deltas par heure → jour → mois, index de fin</td><td>moyenne, « fin − début »</td></tr>
+<tr><td>Occurrence</td><td>bouton, sonnette, passage</td><td>code du geste</td><td>événements</td><td>événements, puis nombre par jour</td><td>—</td></tr>
+<tr><td>Texte, média</td><td>titre en cours, application</td><td>code de contenu</td><td>sessions</td><td>sessions courtes et effaçables, puis durées par contenu</td><td>écrire le texte à chaque changement</td></tr>
+<tr><td>Diagnostic</td><td>qualité de lien, batterie</td><td>entier</td><td>relevés, 7&nbsp;jours</td><td>rien (D13)</td><td>archiver le détail</td></tr>
+<tr><td>Résumé de période</td><td>énergie du jour</td><td>—</td><td>non historisé</td><td>—</td><td>stocker un total tenu ailleurs</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="segments">
+<h2>Tout est segment</h2>
+<p class="lead">Un segment, c'est un intervalle <strong>[début, fin)</strong> et une charge utile qui dépend de la nature. C'est l'idée « valeur moyenne, date de début et de fin », généralisée : chaque nature dit ce que porte un segment et comment deux voisins se fusionnent.</p>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 430" role="img" aria-labelledby="e2t e2d">
+<title id="e2t">Trois natures, trois formes de segment</title><desc id="e2d">En haut, une puissance bruitée : seuls quelques relevés sont écrits, chacun portant le minimum, le maximum et la moyenne de ce qu'il a absorbé depuis le précédent ; une heure à cheval sur un intervalle en prend sa part au prorata. Au milieu, une porte : chaque transition est gardée telle quelle, ouverte de 08 h 03 à 08 h 05, puis de 12 h 40 à 12 h 52. En bas, un compteur d'énergie : on garde l'index de fin de chaque heure et le delta de l'heure ; les relevés intermédiaires sont élagués, jamais moyennés.</desc>
+<text class="title" x="20" y="28">Mesure : puissance</text>
+<rect class="bandfill" x="150" y="112" width="112" height="12"/><rect class="bandfill" x="262" y="60" width="56" height="14"/><rect class="bandfill" x="318" y="48" width="202" height="24"/><rect class="bandfill" x="520" y="86" width="80" height="12"/><rect class="bandfill" x="600" y="114" width="140" height="12"/>
+<polyline class="raw" points="150,118 158,114 166,121 174,116 182,122 190,113 198,119 206,123 214,115 222,120 230,114 238,122 246,117 254,121 262,118 262,66 270,62 278,71 286,64 294,73 302,61 310,69 318,58 326,50 334,70 342,55 350,66 358,49 366,71 374,57 382,64 390,52 398,68 406,59 414,70 422,50 430,63 440,60 448,54 456,66 464,57 472,67 480,53 488,64 496,58 504,67 512,55 520,92 528,88 536,96 544,90 552,97 560,87 568,94 576,89 584,96 592,90 600,120 608,116 616,124 624,118 632,125 640,115 648,121 656,117 664,124 672,116 680,122 688,118 696,125 704,115 712,121 720,117 728,123 740,119"/>
+<path class="held" d="M150,118 H262 V66 H318 V58 H520 V92 H600 V120 H740"/>
+<circle class="repc" cx="150" cy="118" r="4"/><circle class="repc" cx="262" cy="66" r="4"/><circle class="repc" cx="318" cy="58" r="4"/><circle class="repc" cx="520" cy="92" r="4"/><circle class="repc" cx="600" cy="120" r="4"/>
+<path class="mark" d="M440,38 L440,140"/><text class="markt" x="446" y="44">heure : au prorata</text>
+<text class="muted" x="20" y="60">5 relevés écrits</text><text class="muted" x="20" y="76">sur plus de 70 rapports</text>
+<text class="muted" x="20" y="156">point = relevé écrit ; zone = min et max absorbés depuis le relevé précédent ; trait = valeur tenue ; plus de coupure à l'heure</text>
+<text class="title" x="20" y="200">État : porte</text>
+<rect class="seg" x="150" y="215" width="180" height="22"/><rect class="zwarn" x="330" y="215" width="20" height="22"/><rect class="seg" x="350" y="215" width="210" height="22"/><rect class="zwarn" x="560" y="215" width="40" height="22"/><rect class="seg" x="600" y="215" width="140" height="22"/>
+<text class="st" x="160" y="230">fermée</text><text class="st" x="360" y="230">fermée</text><text class="st" x="610" y="230">fermée</text>
+<text class="st" x="300" y="210">ouverte 08:03–08:05</text><text class="st" x="532" y="210">ouverte 12:40–12:52</text>
+<text class="muted" x="150" y="256">chaque transition est gardée telle quelle : (instant, code) ; jamais lissée, jamais moyennée</text>
+<text class="title" x="20" y="290">Index cumulé : énergie</text>
+<path class="mark" d="M250,298 L250,402"/><path class="mark" d="M450,298 L450,402"/><path class="mark" d="M650,298 L650,402"/>
+<text class="markt" x="254" y="306">heure</text><text class="markt" x="454" y="306">heure</text><text class="markt" x="654" y="306">heure</text>
+<polyline class="held" points="150,395 170,393 190,391 210,389 230,387 250,385 270,382 290,379 310,376 330,373 350,370 370,367 390,364 410,361 430,358 450,355 470,351 490,347 510,343 530,339 550,335 570,331 590,327 610,323 630,319 650,315 670,314 690,313 710,312 740,310"/>
+<g class="pruned"><circle cx="170" cy="393" r="2"/><circle cx="190" cy="391" r="2"/><circle cx="210" cy="389" r="2"/><circle cx="230" cy="387" r="2"/><circle cx="270" cy="382" r="2"/><circle cx="290" cy="379" r="2"/><circle cx="310" cy="376" r="2"/><circle cx="330" cy="373" r="2"/><circle cx="350" cy="370" r="2"/><circle cx="370" cy="367" r="2"/><circle cx="390" cy="364" r="2"/><circle cx="410" cy="361" r="2"/><circle cx="430" cy="358" r="2"/><circle cx="470" cy="351" r="2"/><circle cx="490" cy="347" r="2"/><circle cx="510" cy="343" r="2"/><circle cx="530" cy="339" r="2"/><circle cx="550" cy="335" r="2"/><circle cx="570" cy="331" r="2"/><circle cx="590" cy="327" r="2"/><circle cx="610" cy="323" r="2"/><circle cx="630" cy="319" r="2"/><circle cx="670" cy="314" r="2"/><circle cx="690" cy="313" r="2"/><circle cx="710" cy="312" r="2"/></g>
+<circle class="repc" cx="250" cy="385" r="5"/><circle class="repc" cx="450" cy="355" r="5"/><circle class="repc" cx="650" cy="315" r="5"/>
+<text class="tot" x="318" y="396">+0,30 kWh</text><text class="tot" x="518" y="368">+0,40 kWh</text>
+<text class="muted" x="20" y="320">index de fin</text><text class="muted" x="20" y="336">gardé à l'heure</text>
+<text class="muted" x="20" y="422">gros points : index de fin de chaque heure, gardés ; petits points : relevés intermédiaires, élagués</text>
+</svg></div><figcaption>La mesure se résume, l'état ne se résume jamais, le cumul s'élague. Les heures, jours et mois ne sont que des fusions de segments alignées sur le calendrier local, comme <code>moli-rollup</code> le fait déjà.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Nature</th><th>Charge utile</th><th>Fusion de deux voisins</th><th>Ce qu'on perd</th></tr></thead>
+<tbody>
+<tr><td>Mesure</td><td>valeur tenue ; avec bande : moyenne pondérée, min, max, nombre</td><td>moyenne pondérée par les durées, min des min, max des max</td><td>la forme de la courbe dans le segment, jamais ses extrêmes ni sa moyenne</td></tr>
+<tr><td>État</td><td>code</td><td>seulement si le code est le même</td><td>rien</td></tr>
+<tr><td>Index</td><td>delta, index de fin, remise à zéro</td><td>deltas additionnés, index de fin du second</td><td>l'instant d'un relevé intermédiaire, jamais une quantité</td></tr>
+<tr><td>Occurrence</td><td>nombre par code</td><td>nombres additionnés</td><td>l'instant de chaque appui, au-delà du détail</td></tr>
+<tr><td>Texte, média</td><td>code de contenu</td><td>seulement si c'est le même contenu</td><td>rien</td></tr>
+</tbody></table></div>
+<h3>Le relevé à bande, au cœur</h3>
+<pre><code>pour chaque rapport (t, v) d'une mesure p :
+    b ← bande[p]
+    b.aire += b.tenue × (t − b.dernier_t) ; b.dernier_t ← t     -- la valeur précédente a tenu jusqu'à t
+    si |v − b.écrite| ≥ bande(p) et t − b.début ≥ intervalle_min(p) :
+        résumé ← b.n &gt; 1 ? (b.aire / (t − b.début), b.min, b.max, b.n) : rien
+        écrire (p, t, v, résumé)                                 -- la ligne ferme [b.début, t)
+        b ← (début = t, écrite = v, tenue = v, min = v, max = v, aire = 0, n = 1)
+    sinon :                                                      -- absorbé : rien n'est écrit
+        b.tenue ← v ; b.min ← min(b.min, v) ; b.max ← max(b.max, v) ; b.n += 1
+à l'arrêt propre : écrire chaque bande ouverte avec n &gt; 1, puis la rouvrir au démarrage</code></pre>
+<p>Une ligne dit : « à partir de t, la valeur est v ; depuis la ligne précédente, elle a varié entre min et max, avec cette moyenne, en n rapports ». Ce seul mécanisme remplace la bande morte, l'intervalle minimal « le dernier gagne » et l'accumulateur horaire de la V1. Mesuré sur des valeurs synthétiques (bande de 5&nbsp;W ou 0,05&nbsp;°C) : 4,6&nbsp;fois moins de lignes de mesure. Le gain réel se mesure sur un export avec valeurs.</p>
+<h3>Les heures et les jours : <code>moli-rollup</code>, nourri par les segments</h3>
+<p><code>moli-rollup</code> calcule déjà la moyenne pondérée par le temps, le min, le max, la couverture, les changements, l'ancre et l'origine, par heure, puis les jours et mois locaux. Il lui manque une seule chose : lire une ligne à bande comme un intervalle fermé. Une heure à cheval sur un intervalle en prend sa part au prorata, avec le même min et le même max ; l'erreur est bornée par <code>max − min</code>, lui-même borné par la bande du point. Les heures restent denses : une heure sans changement existe, avec sa couverture, et Parquet la compresse presque gratuitement.</p>
+</section>
+
+<section id="paliers">
+<h2>Vieillir petit à petit : les paliers</h2>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 340" role="img" aria-labelledby="e3t e3d">
+<title id="e3t">Ce que garde l'archive selon l'âge</title><desc id="e3d">Puissance : relevés à bande jusqu'à 30 jours, heures jusqu'à 10 ans, jours ensuite. Climat : bande jusqu'à 90 jours, heures jusqu'à 5 ans, puis jours. États de sûreté : transitions un an, puis durées par jour ; toujours seulement sur choix explicite. Autres états : transitions un an, puis durées par jour. Index d'énergie : deltas horaires 10 ans, puis jours et mois. Diagnostic : local seulement, 7 jours. Textes et médias : sessions, puis durées par contenu.</desc>
+<text class="title" x="20" y="24">Ce que garde le long terme selon l'âge de la donnée</text>
+<text class="txt" x="20" y="65">Puissance</text>
+<rect class="p1" x="200" y="50" width="120" height="22"/><rect class="p2" x="320" y="50" width="320" height="22"/><rect class="p3" x="640" y="50" width="100" height="22"/>
+<text class="st" x="208" y="65">bande</text><text class="st" x="328" y="65">heures (moli-rollup)</text><text class="st" x="648" y="65">jours</text>
+<text class="txt" x="20" y="100">Climat</text>
+<rect class="p1" x="200" y="85" width="185" height="22"/><rect class="p2" x="385" y="85" width="175" height="22"/><rect class="p3" x="560" y="85" width="180" height="22"/>
+<text class="st" x="208" y="100">bande</text><text class="st" x="393" y="100">heures</text><text class="st" x="568" y="100">jours</text>
+<text class="txt" x="20" y="135">États de sûreté</text>
+<rect class="pl" x="200" y="120" width="270" height="22"/><rect class="p3" x="470" y="120" width="270" height="22"/><rect class="opt" x="470" y="118" width="270" height="26"/>
+<text class="st" x="208" y="135">transitions, sans perte (D13 : 365 j)</text><text class="st" x="478" y="135">durées par jour · transitions « toujours » : sur choix</text>
+<text class="txt" x="20" y="170">Autres états</text>
+<rect class="pl" x="200" y="155" width="270" height="22"/><rect class="p3" x="470" y="155" width="270" height="22"/>
+<text class="st" x="208" y="170">transitions</text><text class="st" x="478" y="170">durées et transitions par jour</text>
+<text class="txt" x="20" y="205">Index (énergie)</text>
+<rect class="p2" x="200" y="190" width="440" height="22"/><rect class="p3" x="640" y="190" width="100" height="22"/>
+<text class="st" x="208" y="205">deltas horaires et index de fin</text><text class="st" x="648" y="205">jours, mois</text>
+<text class="txt" x="20" y="240">Diagnostic</text>
+<rect class="px" x="200" y="225" width="55" height="22"/><text class="st" x="208" y="240">local</text>
+<text class="txt" x="20" y="275">Textes, médias</text>
+<rect class="p1" x="200" y="260" width="185" height="22"/><rect class="p3" x="385" y="260" width="355" height="22"/>
+<text class="st" x="208" y="275">sessions</text><text class="st" x="393" y="275">durées par contenu</text>
+<path class="axis" d="M200,296 L740,296 M200,292 L200,300 M255,292 L255,300 M320,292 L320,300 M385,292 L385,300 M470,292 L470,300 M560,292 L560,300 M640,292 L640,300 M740,292 L740,300"/>
+<text class="muted" x="200" y="314" text-anchor="middle">0</text><text class="muted" x="255" y="314" text-anchor="middle">7 j</text><text class="muted" x="320" y="314" text-anchor="middle">30 j</text><text class="muted" x="385" y="314" text-anchor="middle">90 j</text><text class="muted" x="470" y="314" text-anchor="middle">1 an</text><text class="muted" x="560" y="314" text-anchor="middle">5 ans</text><text class="muted" x="640" y="314" text-anchor="middle">10 ans</text><text class="muted" x="740" y="314" text-anchor="end">toujours</text>
+<rect class="p1" x="20" y="322" width="12" height="12"/><text class="muted" x="38" y="332">détail</text>
+<rect class="p2" x="110" y="322" width="12" height="12"/><text class="muted" x="128" y="332">heures</text>
+<rect class="p3" x="200" y="322" width="12" height="12"/><text class="muted" x="218" y="332">jours et plus</text>
+<rect class="pl" x="320" y="322" width="12" height="12"/><text class="muted" x="338" y="332">sans perte</text>
+<rect class="opt" x="440" y="322" width="12" height="12"/><text class="muted" x="458" y="332">sur choix explicite</text>
+<text class="muted" x="600" y="332">échelle non linéaire</text>
+</svg></div><figcaption>Les horizons de puissance, climat, états et énergie sont ceux de D13 ; le reste est proposé. « Toujours » est un choix explicite du propriétaire, pour la vie privée autant que pour la place. <code>moli.db</code> garde en plus les 7 à 31 premiers jours en local.</figcaption></figure>
+<figure><div class="fig">
+<svg class="dia" viewBox="0 0 760 330" role="img" aria-labelledby="e4t e4d">
+<title id="e4t">Mo par an selon la forme, mesuré en Parquet</title><desc id="e4d">Charge ×1, valeurs synthétiques, série formes-parquet-2026-10-21T200551Z. Format actuel de l'archive : 2 459 Mo par an de brut, 650 Mo par an d'heures résumées. Format typé : 368 Mo de brut, 175 Mo de détail à bande, 17 Mo d'heures denses, 12 Mo d'heures creuses, 4 Mo de jours.</desc>
+<text class="title" x="20" y="24">Mo par an selon la forme, mesuré en Parquet (charge ×1, valeurs synthétiques)</text>
+<text class="txt" x="20" y="62">archive_v1 brut, aujourd'hui</text><rect class="red" x="250" y="47" width="400" height="22"/><text class="tot" x="658" y="64">2 459</text>
+<text class="txt" x="20" y="97">archive_v1 heures résumées</text><rect class="red" x="250" y="82" width="105.7" height="22"/><text class="tot" x="364" y="99">650</text>
+<text class="txt" x="20" y="132">typé brut</text><rect class="bar" x="250" y="117" width="59.9" height="22"/><text class="tot" x="318" y="134">368</text>
+<text class="txt" x="20" y="167">typé détail à bande</text><rect class="bar" x="250" y="152" width="28.5" height="22"/><text class="tot" x="287" y="169">175</text>
+<text class="txt" x="20" y="202">typé heures denses</text><rect class="bar" x="250" y="187" width="2.8" height="22"/><text class="tot" x="261" y="204">17</text><text class="muted" x="290" y="204">(creuses : 12, écartées)</text>
+<text class="txt" x="20" y="237">typé jours denses</text><rect class="bar" x="250" y="222" width="1" height="22"/><text class="tot" x="259" y="239">4</text>
+<rect class="red" x="20" y="262" width="12" height="12"/><text class="muted" x="38" y="272">format actuel : nom du point et JSON sur chaque ligne, Snappy, sans dictionnaire</text>
+<rect class="bar" x="20" y="284" width="12" height="12"/><text class="muted" x="38" y="294">format typé : colonnes par nature, codes, dictionnaire, zstd, grands groupes</text>
+<text class="muted" x="20" y="320">Heure résumée : 59,3 octets en format actuel, 1,3 typée. Les réglages seuls divisent par 2,4 ; la forme fait le reste.</text>
+</svg></div><figcaption>Le format est le premier levier : 6,7&nbsp;fois moins pour le brut, 38&nbsp;fois moins pour les heures. Dix ans d'heures typées tiennent dans ≈&nbsp;170&nbsp;Mo. Les octets des formes à bande dépendent du bruit réel des capteurs, à mesurer sur des valeurs réelles.</figcaption></figure>
+<div class="tw"><table>
+<thead><tr><th>Nature (famille D13)</th><th>Récent, <code>moli.db</code></th><th>Archive, palier 1</th><th>Palier 2</th><th>Palier 3</th></tr></thead>
+<tbody>
+<tr><td>Puissance (<code>power</code>)</td><td>bande, 7&nbsp;j (D13)</td><td>bande, 30&nbsp;j (D13)</td><td>heures, 10&nbsp;ans (D13)</td><td>jours, proposé</td></tr>
+<tr><td>Climat (<code>climate</code>)</td><td>bande, 14&nbsp;j (D13)</td><td>bande, 90&nbsp;j (D13)</td><td>heures, 5&nbsp;ans (D13)</td><td>jours, proposé</td></tr>
+<tr><td>États de sûreté (<code>states</code>)</td><td>transitions, 31&nbsp;j (D13)</td><td>transitions, 365&nbsp;j (D13)</td><td>durées et nombres par jour, proposé</td><td>« toujours » sur choix explicite</td></tr>
+<tr><td>Autres états, occurrences</td><td>31&nbsp;j (D13)</td><td>transitions et événements, 365&nbsp;j (D13)</td><td>durées, transitions et nombres par jour, proposé</td><td>—</td></tr>
+<tr><td>Index cumulé (<code>energy</code>)</td><td>heures 2&nbsp;mois, totaux 62&nbsp;j et 13&nbsp;mois (D13)</td><td>deltas par heure, index de fin, 10&nbsp;ans (D13)</td><td>jours, proposé</td><td>mois, proposé</td></tr>
+<tr><td>Diagnostic</td><td>7&nbsp;j (D13)</td><td>rien (D13)</td><td>—</td><td>—</td></tr>
+<tr><td>Autres mesures (<code>other</code>)</td><td>7&nbsp;j (D13)</td><td>bande, 30&nbsp;j (D13)</td><td>heures, 5&nbsp;ans, proposé</td><td>jours, proposé</td></tr>
+<tr><td>Texte, média</td><td>sessions de la fenêtre</td><td>sessions courtes et effaçables</td><td>durées par contenu</td><td>—</td></tr>
+</tbody></table></div>
+<p><strong>Qui fait vieillir : l'archive (E1)</strong>, par sa compaction. Les fichiers Parquet sont immuables : vieillir un mois revient à écrire ses paliers suivants puis à basculer le manifeste. Rien n'est retiré avant que le palier suivant soit écrit, vérifié (mêmes totaux, mêmes min et max, même couverture) et publié.</p>
+</section>
+
+<section id="archive">
+<h2>Le format de l'archive : <code>archive_v2</code>, typé</h2>
+<div class="tw"><table>
+<thead><tr><th>Forme</th><th>Octets par ligne</th><th>Mo par an</th></tr></thead>
+<tbody>
+<tr><td><code>archive_v1</code> brut, réglages actuels</td><td>40,7</td><td>2&nbsp;459</td></tr>
+<tr><td><code>archive_v1</code> brut, mêmes colonnes, zstd + dictionnaire + grands groupes</td><td>17,0</td><td>1&nbsp;029</td></tr>
+<tr><td>typé brut</td><td>6,1</td><td>368</td></tr>
+<tr><td><code>archive_v1</code> heures résumées, réglages actuels</td><td>59,3</td><td>650</td></tr>
+<tr><td>typé heures</td><td>1,3</td><td>17</td></tr>
+</tbody></table></div>
+<p>Un fichier par nature et par mois, trié par (point, début). Les groupes actuels de l'archive restent les dossiers ; seules les colonnes changent.</p>
+<div class="tw"><table>
+<thead><tr><th>Fichier (groupe)</th><th>Colonnes</th><th>Palier</th></tr></thead>
+<tbody>
+<tr><td><code>mesures</code> (<code>numeric</code>)</td><td>point, début, valeur mise à l'échelle, moyenne, min, max, n</td><td>1 : relevés à bande</td></tr>
+<tr><td><code>mesures_heures</code>, <code>mesures_jours</code> (<code>stats</code>)</td><td>point, début, moyenne, min, max, couvert, changements, qualité, origine</td><td>2 et 3 : <code>moli-rollup</code></td></tr>
+<tr><td><code>etats</code>, <code>etats_jours</code></td><td>point, début, code ; point, jour, code, durée, transitions</td><td>transitions ; durées</td></tr>
+<tr><td><code>index_heures</code>, <code>index_jours</code>, <code>index_mois</code> (<code>energy</code>)</td><td>compteur, période, delta, index de fin, coût, origine</td><td>1 à 3</td></tr>
+<tr><td><code>occurrences</code>, <code>sessions</code></td><td>point, instant, code ; point, début, fin, contenu</td><td>—</td></tr>
+<tr><td><code>catalogue</code>, <code>dictionnaires</code></td><td>points, natures, unités, échelles ; codes → clés</td><td>—</td></tr>
+</tbody></table></div>
+<h3>Le protocole d'export, delta minimal</h3>
+<ul>
+<li><code>sample</code> gagne quatre champs facultatifs, <code>lo</code>, <code>hi</code>, <code>mean</code>, <code>n</code> : le résumé de l'intervalle que la ligne ferme.</li>
+<li><code>kind</code> <code>e</code> : énumération, <code>num</code> porte le code.</li>
+<li>Le catalogue, déjà révisionné par <code>PUT /catalog</code>, porte par point la nature, l'échelle et la liste des clés d'une énumération, dont l'indice est le code. Un code inconnu reste un entier stockable, décodé à la révision suivante.</li>
+<li>Le protocole refuse les champs inconnus : l'archive est mise à jour avant le cœur. <code>archive_v1</code> se convertit une fois, par la compaction.</li>
+<li>Variante minimale, sans toucher au protocole : clé texte et dictionnaire Parquet activé. Les octets sont les mêmes ; la limite des 64 états reste en texte.</li>
+</ul>
+</section>
+
+<section id="codes">
+<h2>Des codes, pas du texte</h2>
+<ul>
+<li><strong>Dictionnaire en ajout seul</strong> par énumération : clé stable → code, jamais réutilisé ni renuméroté. Le code circule partout : <code>moli.db</code>, export, archive, durées par état.</li>
+<li><strong>Pourquoi des codes, et pas seulement un dictionnaire Parquet</strong> : la limite des 64 états devient une alerte sur le dictionnaire ; un libellé qui change ne casse pas l'historique ; une comparaison est entière ; une entrée s'efface en un point.</li>
+<li><strong>Titres et applications</strong> : un dictionnaire de contenus et des sessions (appareil, début, fin, contenu). Un titre revu dix fois n'est stocké qu'une fois ; l'effacer l'efface de toutes les sessions, sans réécrire un fichier de l'archive.</li>
+<li>9,1&nbsp;% des changements sont des textes courts, presque tous des énumérations (série profil).</li>
+</ul>
+</section>
+
+<section id="recent">
+<h2>Le récent dans <code>moli.db</code></h2>
+<ul>
+<li><strong>Contenu</strong> : opérations compactes (journal du jour et export), relevés à bande rangés par point à l'heure close, énergie de D13, catalogue, dictionnaires, garde B1.</li>
+<li><strong>Retiré</strong> : tout agrégat. Une courbe locale à la résolution heure se calcule à la volée depuis les lignes à bande, seulement en secours.</li>
+<li><strong>Purge</strong> chaque nuit, aux horizons de D13, jamais au-delà de <code>published_upto</code> pour une famille archivée.</li>
+<li><strong>Taille</strong> en régime établi : ≈&nbsp;50 à 80&nbsp;Mo pour la charge ×1 (estimation).</li>
+</ul>
+<details><summary>Esquisse de <code>moli.db</code> en V3</summary>
+<pre><code>CREATE TABLE samples (            -- relevés à bande, rangés par point à l'heure close
+    id  INTEGER PRIMARY KEY,      -- (point &lt;&lt; 44) + ts en ms
+    seq INTEGER NOT NULL,
+    num ANY, txt TEXT, q INTEGER,
+    moy ANY, lo ANY, hi ANY,      -- résumé de l'intervalle que ce relevé ferme ; NULL sans bande
+    n   INTEGER                   -- rapports absorbés
+) STRICT;
+-- ops : opérations compactes, avec les mêmes colonnes de bande
+-- inchangés de D13 : catalog, meter_state, energy_hour, energy_total, archive_ack, meta, garde B1
+-- ajoutés : dict_entry, progress ; retirés : tout agrégat</code></pre>
+</details>
+</section>
+
+<section id="double">
+<h2>Double écriture, nuit, lectures</h2>
+<p>Inchangées depuis la V1 (<a href="valeurs-appareils-stockage.html#double-ecriture">section de la V1</a>) et mesurées : <code>maison.db</code> garde l'état courant complet et suffit au démarrage ; <code>moli.db</code> reçoit l'historique en parallèle ; une réconciliation silencieuse au démarrage garde la valeur la plus récente. Environ 0,32&nbsp;Go écrits par jour, double écriture comprise, contre environ 3,1&nbsp;Go pour le chemin de D13.</p>
+<div class="tw"><table>
+<thead><tr><th>Où</th><th>Quand</th><th>Quoi</th></tr></thead>
+<tbody>
+<tr><td>Cœur, au fil de l'eau</td><td>lots de 60&nbsp;s et de 2&nbsp;s</td><td>état courant ; relevés à bande et opérations compactes</td></tr>
+<tr><td>Cœur, à l'heure close</td><td>une transaction</td><td>rangement de l'heure par point</td></tr>
+<tr><td>Cœur, la nuit</td><td>03&nbsp;h 30 – 06&nbsp;h 00, tranches reprenables</td><td>purge des fenêtres, sauvegarde, point de contrôle ; plus aucun agrégat</td></tr>
+<tr><td>Archive, à la réception</td><td>lot par lot</td><td>palier 1 de chaque nature ; heures par <code>moli-rollup</code></td></tr>
+<tr><td>Archive, la nuit (E1)</td><td>après la nuit du cœur</td><td>paliers suivants, vérification, manifeste, ramasse-miettes</td></tr>
+</tbody></table></div>
+<h3>Lire une courbe (D1)</h3>
+<pre><code>courbe(p, [de, à], résolution) :
+    heure, jour ou mois : archive jusqu'à published_upto, puis lignes à bande locales résumées à la volée,
+                          puis la valeur vive en mémoire comme dernier point
+    brut : moli.db pour la fenêtre locale ; archive au-delà (détail s'il est encore là, sinon le palier suivant)
+    archive injoignable : la partie locale seule, marquée "archive": "unavailable" (D13)
+état : segments début–fin, jamais des points ; index : deltas, jamais une courbe d'index moyennée</code></pre>
+</section>
+
+<section id="suite">
+<h2>Décisions et mesures</h2>
+<div class="warnbox"><strong>Ce qu'on ne fait pas</strong> :
+<ul>
+<li>garder le long terme dans <code>moli.db</code>, ou un agrégat dans le cœur ;</li>
+<li>écrire le nom du point ou l'opération en JSON sur chaque ligne du long terme ;</li>
+<li>lisser, moyenner ou ré-échantillonner un état ;</li>
+<li>moyenner un index, ou calculer une période par « fin − début » ;</li>
+<li>inventer une forme creuse que Parquet rend inutile ;</li>
+<li>couper une bande à l'heure pour une exactitude que la bande ne promet pas ;</li>
+<li>garder dix ans de transitions de porte sans décision explicite ;</li>
+<li>retirer un palier avant que le suivant soit écrit, vérifié et publié ;</li>
+<li>stocker le texte d'une énumération ou un titre répété ;</li>
+<li>laisser un 65ᵉ état mettre l'archive en panne.</li>
+</ul></div>
+<h3>Décisions à prendre</h3>
+<ol>
+<li>Quatre étages : long terme dans l'archive seulement, <code>moli.db</code> limitée au récent, archive lancée par défaut dès qu'on veut un long terme ?</li>
+<li><code>archive_v2</code> typé, avec le delta de protocole : à présenter à la revue de D13 et de l'archive ? C'est le premier levier.</li>
+<li>Heures denses de <code>moli-rollup</code> comme palier, sans forme creuse ?</li>
+<li>Relevé à bande au cœur, à la place de la bande morte et de l'intervalle minimal ; colonnes dans <code>samples</code> ou table à part ?</li>
+<li>Paliers et horizons proposés ; « toujours », pour quelles natures, sur décision explicite ?</li>
+<li>Codes de bout en bout, ou variante minimale (clé texte + dictionnaire Parquet) ?</li>
+<li>Vieillissement par l'archive (E1) ?</li>
+<li>Lectures D1 : heure et jour par l'archive, brut en local, secours local ?</li>
+<li>Segments à tolérance : un palier de plus, après mesure sur valeurs réelles ?</li>
+<li>Tickets : aligner D13 sur le plan (C1 archive, C2 récent) ?</li>
+<li>Les décisions encore ouvertes de la V1 (anti-rebond, <code>seq</code>, politiques, noms des bases, reprise des durées, équipements, notes scolaires, sous-compteurs, MVCC, lots, fenêtre de nuit).</li>
+</ol>
+<h3>Mesures</h3>
+<ul>
+<li><strong>Faites</strong> : <a href="../reports/mesure-ecritures-2026-10-21T114647Z.md">écritures</a>, <a href="../reports/profil-historique-2026-10-21T151507Z.md">profil</a>, <a href="../reports/formes-parquet-2026-10-21T200551Z.md">formes en Parquet</a> (valeurs synthétiques), par l'outil <a href="../../tools/storage-writes/README.md"><code>tools/storage-writes</code></a>.</li>
+<li><strong>À faire</strong> : bande et segments à tolérance sur un export anonymisé avec valeurs ; octets écrits sur Turso puis sur Pi Zero 2&nbsp;W ; durée d'un mois de paliers sur Pi ; une énumération à plus de 64 valeurs qui ne bloque plus l'archive ; coût des colonnes de bande vides.</li>
+</ul>
+<p class="note">Méthode : réanalyse de chaque affirmation de la V2 contre une mesure ou le code ; premiers principes ; analyse morphologique par nature ; analogies (RRDtool, historiens industriels, TimescaleDB et InfluxDB, Parquet, arbres LSM) ; trois outils versionnés et trois séries datées ; inversion.</p>
+</section>
+
+</main>
+</div>
+<footer>Moli OS · proposition V3 du 21 octobre 2026, non livrée · détail : <a href="valeurs-appareils-stockage-v3.md">valeurs-appareils-stockage-v3.md</a> · versions précédentes : <a href="valeurs-appareils-stockage.html">V1</a>, <a href="valeurs-appareils-stockage-v2.html">V2</a> · mesures : <a href="../reports/mesure-ecritures-2026-10-21T114647Z.md">écritures</a>, <a href="../reports/profil-historique-2026-10-21T151507Z.md">profil</a>, <a href="../reports/formes-parquet-2026-10-21T200551Z.md">formes</a></footer>
+</body>
+</html>
