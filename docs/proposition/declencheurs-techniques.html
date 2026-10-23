@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="fr" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Proposition technique Moli OS : déclencheurs, événements, GPS iPhone, Bluetooth par pièce, mail, agenda, Teams, WhatsApp et anticipation des réunions.">
+  <meta name="source-markdown" content="declencheurs-techniques.md">
+  <meta name="source-sha256" content="eca585c43383dcfbf95902ee83a83088734fec19522963a4b226d4e83080902c">
+  <title>Déclencheurs techniques · Moli OS</title>
+  <style>
+    :root {
+      --paper: #fffdf8; --page: #f0f1ec; --ink: #1d302a; --muted: #52615a;
+      --line: #d4ddd4; --soft: #f4f6f1; --green: #195744; --green-soft: #e6eee5;
+      --warm: #8b3b22; --warm-soft: #fae9df;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 90px; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 var(--sans); }
+    a { color: var(--green); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--warm); outline-offset: 4px; }
+    .skip { position: fixed; top: 8px; left: 8px; z-index: 20; padding: 10px 16px;
+      background: var(--paper); transform: translateY(-160%); }
+    .skip:focus { transform: none; }
+    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: var(--paper); }
+    .topbar-inner { max-width: 1440px; min-height: 68px; padding: 12px 36px; margin: auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 750; }
+    .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; background: var(--green);
+      color: white; border-radius: 7px; font: 23px/1 var(--serif); }
+    .brand-sub { border-left: 1px solid var(--line); padding-left: 15px; margin-left: 4px;
+      font-size: 12px; font-weight: 500; color: var(--muted); }
+    .actions { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+    .print { border: 1px solid var(--line); padding: 8px 13px; border-radius: 5px;
+      color: var(--ink); background: var(--soft); min-height: 42px; }
+    .print:hover, .demo button:hover { background: var(--green-soft); border-color: var(--green); }
+    .frame { max-width: 1440px; margin: auto; padding: 34px 36px 60px; display: grid;
+      grid-template-columns: 238px minmax(0, 1fr); align-items: start; gap: 38px; }
+    aside { position: sticky; top: 95px; max-height: calc(100dvh - 115px); overflow-y: auto; padding-right: 12px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 750; }
+    aside .eyebrow { color: var(--muted); margin: 8px 0 17px 9px; }
+    aside ul, .mobile-toc ul { list-style: none; padding: 0; margin: 0; }
+    aside li { margin: 0 0 3px; }
+    aside a { display: block; padding: 8px 9px; color: var(--muted); font-size: 12px;
+      line-height: 1.5; text-decoration: none; border-left: 2px solid transparent; }
+    aside a:hover, aside a[aria-current="location"] { background: var(--green-soft); color: var(--green); border-left-color: var(--green); }
+    .sidebar-note { margin: 23px 9px 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 12px; color: var(--muted); }
+    main { min-width: 0; }
+    .cover { padding: 8px 0 30px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 24px; color: var(--muted); font-size: 12px; }
+    .status { padding: 3px 9px; border: 1px solid #e0bdaa; color: var(--warm); border-radius: 3px; background: var(--warm-soft); font-weight: 650; }
+    h1 { font: 500 clamp(40px, 4.9vw, 72px)/1.06 var(--serif); letter-spacing: -.035em; margin: 0 0 23px; }
+    h1 span { display: block; color: var(--green); }
+    .lead { max-width: 730px; font-size: 18px; line-height: 1.65; margin: 0; color: var(--muted); }
+    .mechanisms { border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .mechanisms-head { padding: 15px 21px; display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+    .mechanisms-head span { font-size: 12px; color: var(--muted); }
+    .mechanism-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .mechanism { padding: 21px 18px 23px; border-right: 1px solid var(--line); }
+    .mechanism:last-child { border-right: 0; }
+    .mechanism .number { font: 11px var(--mono); color: var(--green); margin-bottom: 12px; display: block; }
+    .mechanism h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .mechanism p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .invocation { margin: 0; padding: 13px 21px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .invocation strong { color: var(--ink); }
+    .routing { padding: 17px 20px; background: var(--green-soft); border-left: 3px solid var(--green); margin-bottom: 23px; }
+    .routing p { margin: 0; font-size: 13px; line-height: 1.65; }
+    .routing strong { color: var(--green); }
+    .demo { border: 1px solid var(--line); background: var(--paper); margin-bottom: 22px; }
+    .demo > summary { min-height: 55px; cursor: pointer; padding: 15px 20px; font-weight: 650; font-size: 14px; }
+    .demo[open] > summary { border-bottom: 1px solid var(--line); }
+    .demo-body { padding: 22px; }
+    .demo-note { margin: 0 0 21px; font-size: 13px; color: var(--muted); }
+    .demo-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .demo h3 { margin: 0 0 10px; font-size: 17px; line-height: 1.4; }
+    .demo p { font-size: 13px; }
+    .demo-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+    .demo button { min-height: 42px; border: 1px solid var(--line); padding: 8px 11px; background: var(--soft); color: var(--ink); border-radius: 4px; font-size: 12px; }
+    .counts { display: flex; flex-wrap: wrap; gap: 9px 18px; padding: 14px 0; border-block: 1px solid var(--line); }
+    .counts span { font-size: 11px; color: var(--muted); }
+    .counts strong { color: var(--green); display: block; font: 25px/1.4 var(--mono); }
+    .demo-status { min-height: 3.4em; margin: 10px 0 0; }
+    .demo label { font-size: 12px; display: block; font-weight: 650; margin-bottom: 12px; }
+    .demo input[type="time"], .demo input[type="number"] { display: block; width: 100%; max-width: 210px; min-height: 42px;
+      padding: 7px 9px; border: 1px solid #a5b5a8; border-radius: 4px; background: white; color: var(--ink); margin-top: 5px; }
+    .meeting-fields { display: flex; gap: 15px; }
+    .meeting-fields label { flex: 1; min-width: 0; }
+    .demo .checkbox { display: flex; align-items: center; gap: 9px; font-weight: 500; }
+    .checkbox input { width: 18px; height: 18px; accent-color: var(--green); }
+    .meeting-result { padding: 13px 15px; background: var(--green-soft); margin-top: 15px; }
+    .meeting-result span { font-size: 11px; display: block; color: var(--muted); }
+    .meeting-result strong { display: block; font: 28px/1.4 var(--mono); color: var(--green); }
+    .meeting-result p { margin: 6px 0 0; }
+    .mobile-toc { display: none; }
+    article { padding: 32px 38px 36px; background: var(--paper); border: 1px solid var(--line); overflow-wrap: break-word; }
+    article > p:first-child { color: var(--muted); font-size: 13px; }
+    article p { margin: 0 0 1.15em; }
+    article h2 { font-size: clamp(23px, 2.2vw, 29px); font-weight: 650; line-height: 1.3; letter-spacing: -.025em;
+      margin: 40px 0 21px; padding-top: 30px; border-top: 1px solid var(--line); text-wrap: balance; }
+    article > section:first-of-type > h2 { margin-top: 25px; }
+    article h3 { margin: 28px 0 15px; font-size: 19px; font-weight: 650; line-height: 1.4; }
+    article ul, article ol { padding-left: 24px; margin: 0 0 22px; }
+    article li { padding-left: 3px; margin-bottom: 9px; }
+    article li p { margin-bottom: 8px; }
+    code { background: var(--soft); padding: 2px 5px; font: .86em var(--mono); overflow-wrap: anywhere; }
+    pre { background: var(--soft); padding: 18px; white-space: pre-wrap; line-height: 1.7; overflow-wrap: anywhere; }
+    pre code { padding: 0; background: transparent; font-size: 12px; }
+    .table-wrap { max-width: 100%; overflow-x: auto; margin: 24px 0; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 12.5px; line-height: 1.6; }
+    th, td { padding: 12px 13px; vertical-align: top; text-align: left; border-bottom: 1px solid var(--line); }
+    th { background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 750; }
+    td:first-child { font-weight: 600; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr > * + * { border-left: 1px solid #e5eae1; }
+    footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 21px; color: var(--muted); font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1100px) {
+      .frame { grid-template-columns: 205px minmax(0, 1fr); gap: 24px; padding-inline: 24px; }
+      .topbar-inner { padding-inline: 24px; }
+      article { padding: 25px; }
+      .mechanism-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .mechanism:nth-child(2) { border-right: 0; }
+      .mechanism:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .demo-columns { grid-template-columns: 1fr; }
+      .demo-columns > section + section { border-top: 1px solid var(--line); padding-top: 23px; }
+    }
+    @media (max-width: 780px) {
+      .frame { display: block; padding: 24px 18px 40px; }
+      .topbar-inner { padding-inline: 18px; }
+      aside, .brand-sub { display: none; }
+      .actions { gap: 12px; font-size: 12px; }
+      .cover { padding-top: 0; }
+      h1 { font-size: clamp(39px, 8vw, 60px); }
+      .lead { font-size: 16px; }
+      article { padding: 20px; }
+      .mobile-toc { display: block; padding: 0 17px; margin: 0 0 22px; background: var(--paper); border: 1px solid var(--line); }
+      .mobile-toc summary { padding: 13px 0; min-height: 50px; cursor: pointer; font-size: 14px; font-weight: 650; }
+      .mobile-toc a { display: block; padding: 8px 0; font-size: 13px; }
+      .mobile-toc ul { padding-bottom: 13px; }
+      .mechanisms-head { flex-wrap: wrap; }
+      .mechanism { padding: 18px 14px; }
+      .mechanism h2 { font-size: 15px; }
+      .demo-body { padding: 18px; }
+      .meeting-fields { flex-wrap: wrap; }
+      .meeting-fields label { flex-basis: 140px; }
+    }
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      body { background: white; font-size: 10pt; color: black; }
+      .topbar, aside, .mobile-toc, .demo, .skip, .to-top { display: none; }
+      .frame { display: block; max-width: none; padding: 0; }
+      .cover { padding: 0 0 18px; }
+      h1 { font-size: 35pt; }
+      .lead { font-size: 12pt; }
+      article { border: 0; padding: 0; }
+      article h2 { break-after: avoid; font-size: 16pt; }
+      article h3 { break-after: avoid; font-size: 12pt; }
+      .mechanism-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .mechanism:nth-child(2) { border-right: 1px solid var(--line); }
+      .mechanism:nth-child(-n+2) { border-bottom: 0; }
+      .mechanisms, .routing, pre { break-inside: avoid; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; font-size: 9pt; }
+      tr { break-inside: avoid; }
+      th, td { padding: 7px 8px; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#document">Aller au document</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">m</span>Moli OS<span class="brand-sub">Propositions techniques</span></a>
+      <div class="actions"><a href="declencheurs-techniques.md">Source Markdown</a><button class="print" id="print-document" type="button" hidden>Imprimer / PDF</button></div>
+    </div>
+  </header>
+  <div class="frame">
+    <aside>
+      <p class="eyebrow">Dans ce document</p>
+      <nav aria-label="Sommaire du document"><ul>
+<li><a href="#objet-et-vocabulaire">1. Objet et vocabulaire</a></li>
+<li><a href="#quatre-mécanismes-et-une-invocation-explicite">2. Quatre mécanismes et une invocation explicite</a></li>
+<li><a href="#adaptateurs-dentrée-à-considérer">3. Adaptateurs d’entrée à considérer</a></li>
+<li><a href="#trois-signaux-à-distinguer-absolument">4. Trois signaux à distinguer absolument</a></li>
+<li><a href="#mail-teams-et-whatsapp">5. Mail, Teams et WhatsApp</a></li>
+<li><a href="#agenda-et-réunion-dix-minutes-avant">6. Agenda et réunion : dix minutes avant</a></li>
+<li><a href="#localisation-des-personnes-gps-et-bluetooth-par-pièce">7. Localisation des personnes : GPS et Bluetooth par pièce</a></li>
+<li><a href="#règles-composées-à-construire-au-dessus">8. Règles composées à construire au-dessus</a></li>
+<li><a href="#informations-minimales-et-livraison">9. Informations minimales et livraison</a></li>
+<li><a href="#contraintes-de-fonctionnement">10. Contraintes de fonctionnement</a></li>
+<li><a href="#correspondance-avec-le-dépôt-actuel">11. Correspondance avec le dépôt actuel</a></li>
+<li><a href="#cas-dacceptation-pour-une-future-implémentation">12. Cas d’acceptation pour une future implémentation</a></li>
+<li><a href="#ordre-proposé-et-références">13. Ordre proposé et références</a></li>
+</ul></nav>
+      <p class="sidebar-note">Quatre mécanismes communs.<br>Des connecteurs spécialisés.<br>Une exécution déterministe.</p>
+    </aside>
+    <main>
+      <div class="cover">
+        <div class="meta"><span class="status">Proposition à relire</span><span>21 octobre 2026</span><span>Architecture des automatismes</span></div>
+        <h1>Les déclencheurs,<span>côté moteur.</span></h1>
+        <p class="lead">Planifier un instant, attendre une durée, suivre un état ou recevoir une occurrence. Capteurs, GPS iPhone, Bluetooth par pièce, mails, agendas et messageries alimentent ces mêmes mécanismes.</p>
+      </div>
+      <section class="mechanisms" aria-label="Vue d’ensemble des mécanismes">
+        <div class="mechanisms-head"><strong class="eyebrow">Le contrat du moteur</strong><span>La source change, les mécanismes restent.</span></div>
+        <div class="mechanism-grid">
+          <div class="mechanism"><span class="number">01 / HORLOGE</span><h2>Planification</h2><p>Date, cron, soleil, agenda ou réunion à −10 minutes.</p></div>
+          <div class="mechanism"><span class="number">02 / DURÉE</span><h2>Minuterie</h2><p>Délai, maintien d’un état, silence ou réponse attendue.</p></div>
+          <div class="mechanism"><span class="number">03 / TRANSITION</span><h2>Mutation d’état</h2><p>Ancienne valeur → nouvelle valeur, zone GPS ou pièce Bluetooth.</p></div>
+          <div class="mechanism"><span class="number">04 / OCCURRENCE</span><h2>Événement reçu</h2><p>Appui, NFC, webhook, mail ou message Teams / WhatsApp.</p></div>
+        </div>
+        <p class="invocation"><strong>+ Invocation explicite :</strong> lancer directement un scénario depuis une interface, un raccourci ou une API, avec les droits de l’appelant.</p>
+      </section>
+      <div class="routing"><p><strong>Sources → Adaptateurs → Signaux normalisés → Moteur.</strong><br>Un agenda fournit des rendez-vous et leurs changements. Le moteur calcule les échéances, puis évalue les règles validées.</p></div>
+      <details class="demo" id="demonstrations" hidden>
+        <summary>Explorer deux exemples : valeur répétée et réunion à −10 minutes</summary>
+        <div class="demo-body">
+          <p class="demo-note">Simulation locale et manuelle, sans connexion à un service ni à un appareil. Le document complet reste lisible sans JavaScript.</p>
+          <div class="demo-columns">
+            <section aria-labelledby="sample-demo-title">
+              <h3 id="sample-demo-title">Même contenu, signaux différents</h3>
+              <p>État initial du capteur : 21 °C. Chaque scan représente une nouvelle occurrence du même tag.</p>
+              <div class="demo-actions"><button type="button" id="sample-21">Recevoir 21 °C</button><button type="button" id="sample-22">Recevoir 22 °C</button><button type="button" id="scan-tag">Scanner le même tag</button><button type="button" id="reset-signals">Réinitialiser</button></div>
+              <div class="counts" aria-label="Compteurs de signaux"><span>Mesures reçues<strong id="sample-count">0</strong></span><span>Changements d’état<strong id="change-count">0</strong></span><span>Occurrences<strong id="event-count">0</strong></span></div>
+              <p class="demo-status" id="signal-status" role="status">Aucun signal reçu. Valeur courante : 21 °C.</p>
+            </section>
+            <section aria-labelledby="calendar-demo-title">
+              <h3 id="calendar-demo-title">Une réunion peut être déplacée</h3>
+              <p>Modifiez le début : l’échéance remplace la précédente. Une annulation la supprime.</p>
+              <div class="meeting-fields"><label for="meeting-start">Début de réunion<input type="time" id="meeting-start" value="10:00" required></label><label for="meeting-offset">Anticipation en minutes<input type="number" id="meeting-offset" value="10" min="0" max="1440" step="1" required></label></div>
+              <label class="checkbox" for="meeting-cancelled"><input type="checkbox" id="meeting-cancelled">Réunion annulée</label>
+              <div class="meeting-result" role="status"><span>Échéance calculée</span><strong id="meeting-due">09:50</strong><p id="meeting-explanation">Début à 10:00, anticipation de 10 minutes.</p></div>
+              <p>Illustration sur une journée fictive ; les fuseaux et changements d’heure sont traités dans le contrat du document.</p>
+            </section>
+          </div>
+        </div>
+      </details>
+      <details class="mobile-toc"><summary>Sommaire du document</summary><nav aria-label="Sommaire mobile"><ul>
+<li><a href="#objet-et-vocabulaire">1. Objet et vocabulaire</a></li>
+<li><a href="#quatre-mécanismes-et-une-invocation-explicite">2. Quatre mécanismes et une invocation explicite</a></li>
+<li><a href="#adaptateurs-dentrée-à-considérer">3. Adaptateurs d’entrée à considérer</a></li>
+<li><a href="#trois-signaux-à-distinguer-absolument">4. Trois signaux à distinguer absolument</a></li>
+<li><a href="#mail-teams-et-whatsapp">5. Mail, Teams et WhatsApp</a></li>
+<li><a href="#agenda-et-réunion-dix-minutes-avant">6. Agenda et réunion : dix minutes avant</a></li>
+<li><a href="#localisation-des-personnes-gps-et-bluetooth-par-pièce">7. Localisation des personnes : GPS et Bluetooth par pièce</a></li>
+<li><a href="#règles-composées-à-construire-au-dessus">8. Règles composées à construire au-dessus</a></li>
+<li><a href="#informations-minimales-et-livraison">9. Informations minimales et livraison</a></li>
+<li><a href="#contraintes-de-fonctionnement">10. Contraintes de fonctionnement</a></li>
+<li><a href="#correspondance-avec-le-dépôt-actuel">11. Correspondance avec le dépôt actuel</a></li>
+<li><a href="#cas-dacceptation-pour-une-future-implémentation">12. Cas d’acceptation pour une future implémentation</a></li>
+<li><a href="#ordre-proposé-et-références">13. Ordre proposé et références</a></li>
+</ul></nav></details>
+      <article id="document" aria-label="Proposition détaillée">
+<p>Date : 21 octobre 2026. Statut : proposition de modèle technique à relire. Cette proposition décrit une cible et des connecteurs possibles ; elle ne déclare pas tous ces mécanismes livrés. Elle respecte les décisions de <a href="../ARCHITECTURE.md">l’architecture</a>. Les exemples sont fictifs.</p>
+<section id="objet-et-vocabulaire" class="level2">
+<h2>1. Objet et vocabulaire</h2>
+<p>Recenser les entrées techniques nécessaires à un moteur d’automatismes sans créer un type de déclencheur pour chaque appareil ou chaque usage.</p>
+<p>La proposition sépare quatre notions :</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Notion</th>
+<th>Rôle</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Source</td>
+<td>Produit l’information</td>
+<td>Capteur, iPhone, récepteur Bluetooth, boîte mail, agenda, Teams, WhatsApp</td>
+</tr>
+<tr class="even">
+<td>Adaptateur</td>
+<td>Acquiert et normalise l’information</td>
+<td>Pilote matériel, polling HTTP, abonnement, webhook</td>
+</tr>
+<tr class="odd">
+<td>Déclencheur</td>
+<td>Décide à quel instant lancer</td>
+<td>Changement d’état, occurrence reçue, échéance atteinte</td>
+</tr>
+<tr class="even">
+<td>Condition</td>
+<td>Autorise ou écarte le lancement</td>
+<td>Maison occupée, message issu d’un canal autorisé</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le chemin proposé est :</p>
+<pre class="text"><code>Sources → Adaptateurs → États / mesures / occurrences / échéances
+                                  ↓
+                       Déclencheur et conditions
+                                  ↓
+                 Scénario validé → hub → garde → pilote</code></pre>
+<p>Un lecteur NFC et un webhook nécessitent des adaptateurs différents, mais peuvent alimenter le même mécanisme « occurrence reçue ». Un polling d’API est un mode d’acquisition : il peut produire un état, une mesure inchangée ou plusieurs nouvelles occurrences.</p>
+</section>
+<section id="quatre-mécanismes-et-une-invocation-explicite" class="level2">
+<h2>2. Quatre mécanismes et une invocation explicite</h2>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Mécanisme</th>
+<th>Signal technique</th>
+<th>Configuration minimale</th>
+<th>Sémantique</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Planification</td>
+<td>Une échéance calculée est atteinte</td>
+<td>Date, heure ou règle, fuseau, politique de reprise</td>
+<td>Heure civile ou instant absolu</td>
+</tr>
+<tr class="even">
+<td>Minuterie</td>
+<td>Une durée s’écoule après un départ</td>
+<td>Durée, démarrage, remise à zéro, annulation</td>
+<td>Temps écoulé</td>
+</tr>
+<tr class="odd">
+<td>Mutation d’état</td>
+<td>Une donnée passe de A à B</td>
+<td>Référence stable, filtre sur ancienne/nouvelle valeur</td>
+<td>Transition, pas simple réception</td>
+</tr>
+<tr class="even">
+<td>Réception d’événement</td>
+<td>Une occurrence est publiée</td>
+<td>Source, type, filtre, identité de l’occurrence</td>
+<td>Deux occurrences identiques peuvent compter deux fois</td>
+</tr>
+<tr class="odd">
+<td>Invocation explicite</td>
+<td>Un appel demande un lancement</td>
+<td>Scénario, arguments, identité et droits de l’appelant</td>
+<td>Commande directe du moteur</td>
+</tr>
+</tbody>
+</table></div>
+<p>L’invocation explicite est une entrée d’exécution, pas nécessairement un abonnement. Elle peut être représentée comme un événement interne si cela simplifie le contrat, sans changer ses contrôles d’autorisation.</p>
+<section id="planification" class="level3">
+<h3>2.1 Planification</h3>
+<p>La famille comprend : date ponctuelle, horaire quotidien, expression cron, récurrence de calendrier, intervalle aligné sur l’horloge, lever/coucher du soleil, début/fin d’un rendez-vous et décalage par rapport à ce rendez-vous.</p>
+<p>Chaque fournisseur calcule la prochaine échéance. L’ordonnanceur peut donc traiter « à 08:00 » et « dix minutes avant le prochain rendez-vous » avec le même mécanisme, même si les fournisseurs de dates sont différents.</p>
+<p>Une récurrence cron et un intervalle écoulé ne sont pas interchangeables : « toutes les heures à la minute 30 » et « toutes les 90 minutes depuis l’activation » n’ont pas le même point de départ. Le modèle doit préciser l’ancrage.</p>
+</section>
+<section id="minuterie" class="level3">
+<h3>2.2 Minuterie</h3>
+<p>Une minuterie peut être démarrée, réinitialisée, suspendue si le contrat le prévoit, annulée ou remplacée. Une nouvelle génération invalide l’expiration de l’ancienne. Cela sert au délai simple, au maintien d’un état et à l’absence de réponse.</p>
+<p>Le temps écoulé est mesuré avec une horloge monotone pendant le fonctionnement. Cette horloge ne traverse pas un redémarrage : toute persistance nécessite une échéance durable et une politique explicite de restauration ou d’abandon.</p>
+</section>
+<section id="mutation-détat" class="level3">
+<h3>2.3 Mutation d’état</h3>
+<p>Le moteur compare une valeur précédente et une nouvelle valeur typées. Les variantes comprennent le passage vers une valeur, le franchissement d’un seuil, l’entrée dans une plage ou la transition d’un résultat calculé de faux à vrai.</p>
+<p>L’initialisation d’un état et sa restauration depuis un cache ne sont pas automatiquement des transitions observées. Le contrat précise si une règle doit évaluer la situation présente au démarrage. Une donnée inconnue ou périmée n’est pas assimilée à une valeur métier, telle que « absent » ou « fermé ».</p>
+</section>
+<section id="réception-dévénement" class="level3">
+<h3>2.4 Réception d’événement</h3>
+<p>Un événement représente une occurrence : appui, scan, message reçu, fichier créé, action terminée, décision humaine, démarrage ou déconnexion d’un composant.</p>
+<p>Deux scans du même tag donnent deux identités d’occurrence. En revanche, la retransmission réseau du même scan conserve son identité logique et doit pouvoir être dédupliquée. Le contenu seul ne permet pas de distinguer ces situations.</p>
+</section>
+</section>
+<section id="adaptateurs-dentrée-à-considérer" class="level2">
+<h2>3. Adaptateurs d’entrée à considérer</h2>
+<p>Ce catalogue décrit des possibilités techniques, pas une liste de connecteurs actuellement disponibles ou qualifiés.</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Entrée</th>
+<th>Acquisition possible</th>
+<th>Sortie normalisée</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Webhook HTTP</td>
+<td>Requête entrante vérifiée et décodée</td>
+<td>Occurrence ou invocation autorisée</td>
+</tr>
+<tr class="even">
+<td>API interrogée</td>
+<td>Polling périodique, curseur ou lecture incrémentale</td>
+<td>État, mesure et/ou occurrences</td>
+</tr>
+<tr class="odd">
+<td>MQTT ou bus de messages</td>
+<td>Abonnement à des topics ou files</td>
+<td>État ou occurrence selon le contrat du message</td>
+</tr>
+<tr class="even">
+<td>WebSocket ou SSE</td>
+<td>Connexion persistante, reprise avec curseur si disponible</td>
+<td>État et/ou occurrence</td>
+</tr>
+<tr class="odd">
+<td>TCP, UDP ou protocole propriétaire</td>
+<td>Écoute réseau et décodeur</td>
+<td>État et/ou occurrence</td>
+</tr>
+<tr class="even">
+<td>Zigbee, BLE, USB, série, GPIO</td>
+<td>Pilote du bus ou passerelle</td>
+<td>État, mesure ou occurrence</td>
+</tr>
+<tr class="odd">
+<td>NFC, RFID, QR code, code-barres</td>
+<td>Lecteur ou application mobile</td>
+<td>Occurrence de lecture</td>
+</tr>
+<tr class="even">
+<td>GPS / localisation de l’iPhone</td>
+<td>Application autorisée, mises à jour de position ou surveillance de zones</td>
+<td>Mesure de position, état de zone, entrée/sortie de zone</td>
+</tr>
+<tr class="odd">
+<td>Localisation Bluetooth par pièce</td>
+<td>Récepteurs BLE fixes ou téléphone détectant des balises de pièce</td>
+<td>Mesure de proximité, pièce estimée, entrée/sortie de pièce</td>
+</tr>
+<tr class="even">
+<td>Interface, raccourci, montre, CLI, API</td>
+<td>Appel explicite</td>
+<td>Invocation ou occurrence</td>
+</tr>
+<tr class="odd">
+<td>Commande vocale reconnue</td>
+<td>Intentions structurées d’un composant autorisé</td>
+<td>Invocation ou occurrence</td>
+</tr>
+<tr class="even">
+<td>Fichier ou répertoire</td>
+<td>Surveillance du système de fichiers</td>
+<td>Création, modification, suppression</td>
+</tr>
+<tr class="odd">
+<td>Base de données</td>
+<td>Notifications, journal de changements ou polling</td>
+<td>Mutation et/ou occurrence</td>
+</tr>
+<tr class="even">
+<td>Processus ou système d’exploitation</td>
+<td>Supervision et notifications système</td>
+<td>Démarrage, arrêt, erreur, changement réseau</td>
+</tr>
+<tr class="odd">
+<td>Bus interne</td>
+<td>Publication par un composant du moteur</td>
+<td>Cycle de vie, approbation, résultat d’action ou de scénario</td>
+</tr>
+<tr class="even">
+<td>Mail</td>
+<td>API du fournisseur, abonnement ou suivi de boîte compatible</td>
+<td>Message reçu/modifié/supprimé, état calculé</td>
+</tr>
+<tr class="odd">
+<td>Agenda</td>
+<td>API, synchronisation incrémentale, export ICS ou protocole compatible</td>
+<td>Rendez-vous normalisé et échéances dérivées</td>
+</tr>
+<tr class="even">
+<td>Teams</td>
+<td>Connecteur autorisé à des ressources de messagerie et/ou de présence</td>
+<td>Message, modification, mention structurée, état de présence</td>
+</tr>
+<tr class="odd">
+<td>WhatsApp</td>
+<td>Connecteur autorisé pour le compte et l’API retenus</td>
+<td>Message entrant, réponse structurée, statut si exposé</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le transport ne décide pas de la nature du signal. Un message MQTT peut être une température à conserver ou un appui à compter. Le début d’un abonnement ou une reconnexion ne prouve pas que chaque donnée reçue représente une nouvelle occurrence.</p>
+</section>
+<section id="trois-signaux-à-distinguer-absolument" class="level2">
+<h2>4. Trois signaux à distinguer absolument</h2>
+<p>Les noms suivants décrivent le contrat proposé ; ils ne sont pas tous des noms d’API existants.</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Signal</th>
+<th>Signification</th>
+<th>Même valeur reçue deux fois</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sample_received</code></td>
+<td>Une nouvelle mesure a été acquise</td>
+<td>Deux réceptions ; la fraîcheur peut être actualisée</td>
+</tr>
+<tr class="even">
+<td><code>state_changed</code></td>
+<td>La valeur courante a réellement changé</td>
+<td>Aucun deuxième changement si la valeur reste identique</td>
+</tr>
+<tr class="odd">
+<td><code>event_received</code></td>
+<td>Une nouvelle occurrence s’est produite</td>
+<td>Deux événements si les identités d’occurrence diffèrent</td>
+</tr>
+</tbody>
+</table></div>
+<p>Exemple : le capteur transmet 21 °C, puis encore 21 °C. Deux mesures sont reçues, mais la température n’a pas changé. Le capteur reste vivant. À l’inverse, deux appuis « simple » restent deux occurrences, même avec le même contenu.</p>
+<p>La fraîcheur doit distinguer instant de mesure à la source et instant de réception. Recevoir de nouveau une ancienne mesure depuis un cache ne prouve pas une nouvelle observation. Une règle de silence précise donc si elle suit le transport, les mesures nouvelles ou la disponibilité métier de la source.</p>
+</section>
+<section id="mail-teams-et-whatsapp" class="level2">
+<h2>5. Mail, Teams et WhatsApp</h2>
+<p>Les messageries sont des sources d’événements. Elles ne nécessitent pas un moteur distinct par fournisseur.</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Cas</th>
+<th>Signal à normaliser</th>
+<th>Filtre déterministe possible</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Nouveau mail</td>
+<td><code>message.received</code></td>
+<td>Compte, dossier, expéditeur autorisé, étiquette</td>
+</tr>
+<tr class="even">
+<td>Mail déplacé ou marqué</td>
+<td><code>message.updated</code></td>
+<td>Ancienne/nouvelle propriété, révision</td>
+</tr>
+<tr class="odd">
+<td>Nouveau message Teams</td>
+<td><code>message.received</code></td>
+<td>Conversation ou canal sélectionné</td>
+</tr>
+<tr class="even">
+<td>Mention Teams</td>
+<td>Événement ou propriété structurée de message</td>
+<td>Mention du compte suivi, si exposée</td>
+</tr>
+<tr class="odd">
+<td>Message WhatsApp entrant</td>
+<td><code>message.received</code></td>
+<td>Compte et conversation autorisés</td>
+</tr>
+<tr class="even">
+<td>Réponse à un bouton de message</td>
+<td><code>interaction.received</code></td>
+<td>Référence de demande, choix et identité vérifiée</td>
+</tr>
+<tr class="odd">
+<td>Absence de réponse</td>
+<td>Expiration d’une minuterie</td>
+<td>Demande toujours ouverte et non annulée</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les noms ci-dessus sont indicatifs. Le connecteur conserve le type de changement : recevoir une modification ou un accusé ne doit pas être confondu avec un nouveau message. Il maintient son curseur et une identité de message pour éviter de relancer sur tout l’historique lors d’une reconnexion.</p>
+<p>Microsoft Graph fournit des notifications de changement pour les messages Outlook, les événements Outlook, les messages Teams et certaines informations de présence. Le choix exact des ressources, permissions et abonnements dépend du compte et de l’organisation : voir la <a href="https://learn.microsoft.com/en-us/graph/change-notifications-overview">documentation Microsoft</a>.</p>
+<p>WhatsApp doit faire l’objet d’un choix explicite de connecteur. L’offre officielle documentée par Meta est la WhatsApp Business Platform, avec des API de messagerie ; cela ne suffit pas à promettre l’accès à tous les échanges d’un compte personnel. La compatibilité du compte et les événements disponibles restent à qualifier : voir les <a href="https://www.postman.com/meta/whatsapp-business-platform/overview">collections officielles Meta</a>.</p>
+<p>Le texte libre d’un message est une donnée, pas une autorisation d’exécuter des commandes. Les règles utilisent des champs structurés ou des filtres explicites. Aucune décision de commande physique ne dépend d’un LLM à l’exécution. La réception d’un message n’autorise pas automatiquement l’envoi d’une réponse à un tiers.</p>
+</section>
+<section id="agenda-et-réunion-dix-minutes-avant" class="level2">
+<h2>6. Agenda et réunion : dix minutes avant</h2>
+<p>Un agenda expose deux choses différentes : les changements du rendez-vous et les dates auxquelles des actions doivent être envisagées.</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Traitement technique</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rendez-vous créé</td>
+<td>Normaliser l’objet et calculer ses échéances</td>
+</tr>
+<tr class="even">
+<td>Horaire ou durée modifiés</td>
+<td>Invalider les anciennes échéances et recalculer</td>
+</tr>
+<tr class="odd">
+<td>Rendez-vous annulé ou supprimé</td>
+<td>Annuler ses échéances encore en attente</td>
+</tr>
+<tr class="even">
+<td>Début moins dix minutes atteint</td>
+<td>Publier une occurrence à l’échéance calculée</td>
+</tr>
+<tr class="odd">
+<td>Début ou fin atteints</td>
+<td>Publier la frontière de calendrier correspondante</td>
+</tr>
+<tr class="even">
+<td>Participation effective à un appel</td>
+<td>Consommer un signal distinct du client de réunion, s’il existe</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le calendrier prévoit une réunion. Il ne prouve pas que la personne est en appel. Un statut de présence Teams ou une télémétrie de session est une autre source, dont la signification doit être définie par le connecteur.</p>
+<section id="calcul-et-replanification" class="level3">
+<h3>6.1 Calcul et replanification</h3>
+<p>Exemple fictif, dans un fuseau explicite :</p>
+<pre class="text"><code>Réunion prévue à 10:00 → anticipation -10 min → échéance à 09:50
+Réunion déplacée à 10:30 → ancienne échéance annulée → nouvelle échéance à 10:20
+Réunion annulée → échéance à 10:20 annulée</code></pre>
+<p>La règle est <code>échéance = début de l’occurrence + décalage</code>. Le décalage peut être négatif, nul ou positif ; il peut aussi s’appliquer à la fin du rendez-vous. La minuterie n’est pas armée « dix minutes après réception de l’invitation ».</p>
+<p>Chaque échéance référence une source, une occurrence de rendez-vous, sa révision et une règle. Une révision remplacée ne doit plus produire d’effet. La vérification de génération et l’admission du lancement doivent être coordonnées afin de traiter une modification qui arrive au même instant que l’échéance.</p>
+</section>
+<section id="situations-à-définir-dans-le-contrat" class="level3">
+<h3>6.2 Situations à définir dans le contrat</h3>
+<ul>
+<li><strong>Récurrence</strong> : distinguer série, occurrence, exception déplacée et occurrence annulée. Développer les récurrences dans un horizon et un nombre d’occurrences bornés.</li>
+<li><strong>Fuseau</strong> : conserver la zone de la source et les instants normalisés ; définir les heures ambiguës ou inexistantes lors d’un changement d’heure.</li>
+<li><strong>Journée entière</strong> : ne pas inventer un horaire de réunion ; appliquer une règle distincte ou ignorer cette catégorie si elle n’a pas de sens pour l’automatisme.</li>
+<li><strong>Rendez-vous découvert tardivement</strong> : choisir ignorer, prévenir maintenant dans une tolérance bornée, ou attendre la prochaine frontière. Ne pas rattraper implicitement.</li>
+<li><strong>Déplacement après un premier rappel</strong> : préciser si le nouveau créneau autorise un nouveau rappel ; dédupliquer les transports sans effacer cette décision métier.</li>
+<li><strong>Événements simultanés</strong> : définir une politique de regroupement ou de concurrence.</li>
+<li><strong>Panne de synchronisation</strong> : conserver la dernière information en la marquant périmée ; n’agir que selon la politique de fraîcheur validée. Une annulation distante non encore synchronisée reste inconnue du moteur.</li>
+<li><strong>Redémarrage</strong> : reconstruire les échéances futures et appliquer une politique explicite aux échéances dépassées ; une commande physique manquée n’est pas rejouée par défaut.</li>
+</ul>
+<p>Les notifications push de Google Calendar signalent les modifications des ressources ; elles ne remplacent pas l’ordonnanceur local chargé de l’anticipation de dix minutes. Voir <a href="https://developers.google.com/workspace/calendar/api/guides/push">Google Calendar : notifications push</a>.</p>
+</section>
+</section>
+<section id="localisation-des-personnes-gps-et-bluetooth-par-pièce" class="level2">
+<h2>7. Localisation des personnes : GPS et Bluetooth par pièce</h2>
+<p>Deux échelles sont à distinguer : la zone géographique autour de la maison et la pièce à l’intérieur. Le GPS et le Bluetooth sont des sources et des méthodes de mesure ; les déclencheurs du moteur restent des mutations et des occurrences.</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Information normalisée</th>
+<th>Mécanisme du moteur</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Nouvelle position de l’iPhone</td>
+<td>Position, précision et date de mesure</td>
+<td><code>sample_received</code></td>
+</tr>
+<tr class="even">
+<td>Position qui change</td>
+<td>Ancienne/nouvelle position, si son exposition est autorisée</td>
+<td><code>state_changed</code></td>
+</tr>
+<tr class="odd">
+<td>Personne entrant ou sortant d’une zone</td>
+<td>Transition d’appartenance à une zone identifiée</td>
+<td>Mutation puis occurrence d’entrée/sortie</td>
+</tr>
+<tr class="even">
+<td>Franchissement d’une distance définie</td>
+<td>Distance calculée vers une zone ou un point de référence</td>
+<td>Mutation et seuil</td>
+</tr>
+<tr class="odd">
+<td>Personne localisée dans une autre pièce par Bluetooth</td>
+<td>Ancienne/nouvelle pièce estimée, qualité</td>
+<td>Mutation puis occurrence de passage</td>
+</tr>
+<tr class="even">
+<td>Maintien de présence dans une pièce</td>
+<td>État de pièce stable pendant la durée définie</td>
+<td>Mutation et minuterie</td>
+</tr>
+<tr class="odd">
+<td>Signal GPS ou BLE devenu trop ancien</td>
+<td>Qualité périmée ou localisation inconnue</td>
+<td>Minuterie de fraîcheur et changement de qualité</td>
+</tr>
+</tbody>
+</table></div>
+<section id="gps-de-liphone-et-zones-géographiques" class="level3">
+<h3>7.1 GPS de l’iPhone et zones géographiques</h3>
+<p>L’application acquiert une position ou un signal d’entrée/sortie de zone selon ses capacités et autorisations. Le connecteur associe l’appareil à une personne par une liaison explicite, puis normalise les données. La zone peut être calculée sur le téléphone ou côté moteur ; il faut désigner la source faisant autorité pour éviter de publier deux entrées pour la même transition.</p>
+<p>Une zone a une identité stable, une géométrie privée et une politique de stabilité. La précision de mesure, l’hystérésis aux frontières et une éventuelle durée de confirmation évitent les allers-retours artificiels. Une donnée trop ancienne ou imprécise ne permet pas de conclure à une nouvelle entrée ou sortie.</p>
+<p>Sur iOS, les mises à jour en arrière-plan dépendent des autorisations et du cycle de vie de l’application ; leur disponibilité ne doit pas être traitée comme un flux continu garanti. Le connecteur expose les interruptions et la fraîcheur : voir <a href="https://developer.apple.com/documentation/corelocation/handling-location-updates-in-the-background">Apple : localisation en arrière-plan</a>.</p>
+<p>Les coordonnées brutes ne sont pas nécessaires dans chaque événement de scénario. Une référence opaque de personne, une référence de zone, la transition et sa qualité suffisent souvent. L’exposition et la conservation des positions précises restent explicitement configurées et privées.</p>
+</section>
+<section id="bluetooth-et-estimation-de-la-pièce" class="level3">
+<h3>7.2 Bluetooth et estimation de la pièce</h3>
+<p>Deux architectures possibles : des récepteurs fixes dans les pièces observent un appareil ou une balise portée ; ou le téléphone détecte des balises fixes associées aux pièces et transmet son estimation. Ce choix appartient au connecteur, pas au type de déclencheur du moteur.</p>
+<p>La force du signal reçue (RSSI) est une observation, pas une preuve de présence dans une pièce. L’estimation combine mesures récentes, écart entre récepteurs, durée de stabilité et règles de départage. Elle doit pouvoir rendre « pièce inconnue » ou « estimation incertaine ». Apple précise également que la proximité d’une balise n’est pas une position précise et que les mesures fluctuent avec les interférences : voir <a href="https://developer.apple.com/documentation/corelocation/clbeacon/accuracy">Apple : précision d’une balise</a>.</p>
+<p>Un téléphone n’est pas supposé émettre en permanence une identité Bluetooth stable et exploitable. Il faut qualifier le matériel et le mode d’émission, gérer les identifiants changeants et définir une association autorisée à la personne. Une balise BLE dédiée peut constituer une autre source. Le mode iBeacon annoncé par une application iOS a notamment ses propres contraintes de premier plan : voir <a href="https://developer.apple.com/documentation/corelocation/turning-an-ios-device-into-an-ibeacon-device">Apple : transformer un appareil iOS en iBeacon</a>.</p>
+</section>
+<section id="présence-identité-et-arbitrage" class="level3">
+<h3>7.3 Présence, identité et arbitrage</h3>
+<p>Une personne peut avoir plusieurs appareils ; un appareil peut rester dans une pièce sans elle. Le modèle distingue observations des appareils et présence estimée de la personne. Il conserve provenance, date et qualité de l’estimation.</p>
+<p>Si les sources GPS, Bluetooth et Wi-Fi se contredisent, une politique déterministe explicite décide : priorité, fraîcheur, corroboration ou résultat inconnu. Perdre le Bluetooth dans une pièce ne prouve pas une sortie de la maison. Un retour d’observation après panne ne constitue pas automatiquement une nouvelle arrivée. Une estimation de localisation ne donne pas, à elle seule, le droit d’ouvrir une porte ou de contourner la garde.</p>
+</section>
+</section>
+<section id="règles-composées-à-construire-au-dessus" class="level2">
+<h2>8. Règles composées à construire au-dessus</h2>
+<p>Ces règles réutilisent les mécanismes de base. Elles ajoutent de la mémoire et des opérateurs ; elles ne créent pas un nouveau protocole d’entrée.</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Besoin</th>
+<th>Composition technique</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Seuil ou plage</td>
+<td>Mutation d’état et comparaison ; hystérésis si nécessaire</td>
+</tr>
+<tr class="even">
+<td>Expression qui devient vraie</td>
+<td>Suivi des dépendances et mémorisation du résultat précédent</td>
+</tr>
+<tr class="odd">
+<td>État vrai pendant une durée</td>
+<td>Mutation et minuterie annulable</td>
+</tr>
+<tr class="even">
+<td>Aucune nouvelle mesure</td>
+<td>Minuterie réinitialisée sur la mesure pertinente</td>
+</tr>
+<tr class="odd">
+<td>Aucune réponse à une demande</td>
+<td>Occurrence initiale, corrélation, minuterie et annulation sur réponse</td>
+</tr>
+<tr class="even">
+<td>A puis B dans une durée</td>
+<td>Automate de séquence et fenêtre temporelle</td>
+</tr>
+<tr class="odd">
+<td>N événements dans une fenêtre</td>
+<td>Compteur ou historique glissant borné</td>
+</tr>
+<tr class="even">
+<td>Hausse rapide ou moyenne dépassée</td>
+<td>Valeur dérivée déterministe, puis mutation ou seuil</td>
+</tr>
+<tr class="odd">
+<td>Première arrivée ou dernier départ</td>
+<td>Agrégation des états de présence et transition du résultat</td>
+</tr>
+<tr class="even">
+<td>Entrée stable dans une zone GPS ou une pièce BLE</td>
+<td>Estimation de localisation, hystérésis et confirmation temporelle</td>
+</tr>
+</tbody>
+</table></div>
+<p>Une expression surveille toutes ses dépendances : si <code>A ET B</code> devient vraie parce que B change en dernier, elle doit aussi pouvoir déclencher. Des déclencheurs indépendants reliés par OU et des conditions évaluées après lancement ne constituent pas automatiquement ce mécanisme.</p>
+<p>« À 22:00, si quelqu’un est présent » lance seulement à l’échéance. « Dès qu’il est après 22:00 et que quelqu’un est présent » doit aussi réagir à une arrivée à 22:15. Le temps est alors une dépendance de l’expression.</p>
+</section>
+<section id="informations-minimales-et-livraison" class="level2">
+<h2>9. Informations minimales et livraison</h2>
+<p>Un contrat normalisé doit pouvoir exprimer les informations suivantes, avec un schéma versionné et des champs adaptés au signal.</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Information</th>
+<th>Raison</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Identité stable de source et de donnée</td>
+<td>Éviter les références fondées sur un nom modifiable</td>
+</tr>
+<tr class="even">
+<td>Nature du signal et valeur typée</td>
+<td>Distinguer mesure, mutation, occurrence et échéance</td>
+</tr>
+<tr class="odd">
+<td>Identité d’occurrence ou de ressource/révision</td>
+<td>Séparer répétition légitime et retransmission</td>
+</tr>
+<tr class="even">
+<td>Instant à la source et instant de réception</td>
+<td>Fraîcheur, retard et ordre des observations</td>
+</tr>
+<tr class="odd">
+<td>Provenance, cause et corrélation</td>
+<td>Relier message, rendez-vous, déclenchement et exécution</td>
+</tr>
+<tr class="even">
+<td>Qualité et état de disponibilité</td>
+<td>Signaler donnée inconnue, restaurée, périmée ou source hors ligne</td>
+</tr>
+<tr class="odd">
+<td>Référence de règle et révision</td>
+<td>Annuler les lancements d’une configuration remplacée</td>
+</tr>
+<tr class="even">
+<td>Échéance, génération et politique de reprise</td>
+<td>Invalider une minuterie ou un rendez-vous remplacé</td>
+</tr>
+</tbody>
+</table></div>
+<p>L’ordre d’arrivée réseau n’est pas une garantie d’ordre métier. Les connecteurs doivent traiter les révisions et curseurs disponibles. Sans version ordonnable, ils peuvent devoir relire l’état courant du fournisseur.</p>
+<p>La déduplication est bornée en mémoire et/ou persistée selon la politique de livraison. Il faut distinguer déduplication du transport, admission d’un lancement et effet physique : un identifiant d’événement ne garantit pas à lui seul un effet « exactement une fois » après panne. Les commandes restent soumises à leurs échéances et au suivi de résultat du hub.</p>
+</section>
+<section id="contraintes-de-fonctionnement" class="level2">
+<h2>10. Contraintes de fonctionnement</h2>
+<ul>
+<li><strong>Déterminisme</strong> : filtres et opérateurs explicites ; aucun LLM dans les décisions de commande.</li>
+<li><strong>Validation humaine</strong> : un nouvel automatisme ou une nouvelle logique reste soumis au mécanisme de validation existant ; une source réseau n’accorde aucun droit implicite.</li>
+<li><strong>Autorité</strong> : l’origine et l’acteur sont établis côté serveur. Un champ reçu dans un mail, un webhook ou un message ne prouve pas l’identité d’une personne.</li>
+<li><strong>Confidentialité</strong> : ne publier sur le bus commun que les références opaques et champs nécessaires. Les corps de mail, titres privés, participants, liens de réunion et coordonnées précises ne deviennent pas des points publics de la maison. Les secrets restent au coffre.</li>
+<li><strong>Bornes</strong> : limiter payloads, abonnements, récurrences développées, fenêtres, minuteries, déduplication et files. Traiter explicitement pertes et retard.</li>
+<li><strong>Reprise</strong> : séparer la reconstruction des états du rejeu d’occurrences ; ne pas transformer une synchronisation initiale, un message conservé ou une restauration de cache en nouvelle action physique sans politique validée.</li>
+<li><strong>Boucles</strong> : conserver la cause et limiter les chaînes, la concurrence et le débit afin qu’un scénario ne se relance pas indéfiniment sur ses propres effets.</li>
+<li><strong>Performance</strong> : router par source, point ou type vers les abonnés concernés ; ne pas scanner tous les scénarios à chaque événement. Mutualiser les lectures d’un même connecteur et libérer abonnements/minuteries devenus inutiles.</li>
+</ul>
+</section>
+<section id="correspondance-avec-le-dépôt-actuel" class="level2">
+<h2>11. Correspondance avec le dépôt actuel</h2>
+<p>Repérage au 21 octobre 2026 ; les fichiers de code font foi si la documentation du composant présente un état plus ancien.</p>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Élément constaté</th>
+<th>Référence</th>
+<th>Conséquence pour la proposition</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Horaires, soleil, intervalle, démarrage, manuel</td>
+<td><a href="../../crates/moli-automation/src/model.rs">Modèle des automatismes</a></td>
+<td>Des mécanismes de base sont déjà représentés ; cela ne prouve pas un support cron général</td>
+</tr>
+<tr class="even">
+<td>Changements d’état, seuils et maintien <code>for_s</code></td>
+<td><a href="../components/automatismes.md">Documentation des automatismes</a></td>
+<td>Réutiliser ces sémantiques et préciser leur reprise</td>
+</tr>
+<tr class="odd">
+<td>Déclencheur <code>when_occurrence</code> et événement <code>Occurrence</code></td>
+<td><a href="../../crates/moli-automation/src/model.rs">Modèle</a>, <a href="../../crates/moli-core/src/event.rs">bus</a></td>
+<td>La séparation état/occurrence existe déjà dans le code actuel</td>
+</tr>
+<tr class="even">
+<td>Traitement des occurrences et expirations de minuteries</td>
+<td><a href="../../crates/moli-automation/src/engine.rs">Moteur</a></td>
+<td>Vérifier les contrats existants avant toute extension</td>
+</tr>
+<tr class="odd">
+<td>Calendrier ICS de réservations</td>
+<td><a href="../components/reservations.md">Réservations</a></td>
+<td>Source spécialisée déjà documentée, sans décalage d’arrivée/départ et sans calendrier de réunions général</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les connecteurs mail, Teams, WhatsApp, l’anticipation générique de réunions et les règles de localisation GPS/BLE décrites ici sont des pistes de cette proposition ; ce document n’en affirme ni l’implémentation complète ni la qualification. Il ne modifie aucun contrat existant de réservation ou d’accès.</p>
+</section>
+<section id="cas-dacceptation-pour-une-future-implémentation" class="level2">
+<h2>12. Cas d’acceptation pour une future implémentation</h2>
+<div class="table-wrap" role="region" aria-label="Tableau technique, défilement horizontal possible" tabindex="0"><table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Vérification</th>
+<th>Résultat attendu</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Deux mesures nouvelles à 21 °C</td>
+<td>Deux réceptions, aucun deuxième changement d’état</td>
+</tr>
+<tr class="even">
+<td>Deux scans distincts du même tag</td>
+<td>Deux occurrences et deux lancements autorisés</td>
+</tr>
+<tr class="odd">
+<td>Même occurrence retransmise</td>
+<td>Pas de deuxième admission dans la fenêtre de déduplication définie</td>
+</tr>
+<tr class="even">
+<td>Mail ancien relu après reconnexion</td>
+<td>Aucun lancement comme « nouveau mail » sans politique de rejeu explicite</td>
+</tr>
+<tr class="odd">
+<td>Message modifié ou accusé reçu</td>
+<td>Pas de confusion avec un nouveau message entrant</td>
+</tr>
+<tr class="even">
+<td>Réunion à 10:00, décalage -10 min</td>
+<td>Échéance à 09:50</td>
+</tr>
+<tr class="odd">
+<td>Réunion déplacée à 10:30 avant le rappel</td>
+<td>Ancienne échéance invalidée, nouvelle à 10:20</td>
+</tr>
+<tr class="even">
+<td>Réunion annulée avant le rappel</td>
+<td>Aucun lancement de cette échéance</td>
+</tr>
+<tr class="odd">
+<td>Une occurrence d’une série est déplacée</td>
+<td>Seule cette occurrence est replanifiée</td>
+</tr>
+<tr class="even">
+<td>Modification reçue au moment de l’échéance</td>
+<td>Admission cohérente avec la révision retenue, trace explicable</td>
+</tr>
+<tr class="odd">
+<td>Capteur transmettant une valeur stable</td>
+<td>Pas d’alerte de silence tant que de nouvelles mesures fraîches arrivent</td>
+</tr>
+<tr class="even">
+<td>Réponse reçue avant expiration</td>
+<td>Minuterie de non-réponse annulée</td>
+</tr>
+<tr class="odd">
+<td>Redémarrage après l’échéance d’une commande physique</td>
+<td>Pas de rattrapage implicite</td>
+</tr>
+<tr class="even">
+<td>Scénario modifié pendant une attente</td>
+<td>Ancienne exécution annulée selon le contrat de validation</td>
+</tr>
+<tr class="odd">
+<td>Expression <code>A ET B</code>, B change en dernier</td>
+<td>Une transition vers vrai peut déclencher</td>
+</tr>
+<tr class="even">
+<td>Positions GPS oscillant à la frontière d’une zone</td>
+<td>Pas d’alternance entrée/sortie tant que les règles de stabilité ne sont pas satisfaites</td>
+</tr>
+<tr class="odd">
+<td>Position GPS reçue avec un ancien instant de mesure</td>
+<td>Pas de présence déclarée fraîche sur la seule réception</td>
+</tr>
+<tr class="even">
+<td>Deux récepteurs BLE voient le même appareil</td>
+<td>Une seule estimation de pièce, ou résultat incertain explicite</td>
+</tr>
+<tr class="odd">
+<td>Bluetooth perdu alors que la présence maison reste établie</td>
+<td>Pièce inconnue possible, pas de départ de la maison déduit automatiquement</td>
+</tr>
+<tr class="even">
+<td>Localisation restaurée après panne</td>
+<td>Pas de nouvelle arrivée physique inventée par la restauration</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ces cas décrivent des preuves à obtenir, pas des tests déclarés réussis.</p>
+</section>
+<section id="ordre-proposé-et-références" class="level2">
+<h2>13. Ordre proposé et références</h2>
+<p>Convergence selon deux critères : couverture de besoins distincts et réutilisation des mécanismes existants. L’ordre ci-dessous n’est pas une estimation de charge.</p>
+<ol type="1">
+<li><strong>Stabiliser les contrats de signal et de livraison.</strong> Vérifier mesures, états, occurrences et minuteries déjà présents ; éprouver répétition et retransmission.</li>
+<li><strong>Généraliser les échéances dérivées.</strong> Éprouver une réunion à -10 minutes, son déplacement et son annulation, sans effet physique.</li>
+<li><strong>Ajouter les connecteurs prioritaires.</strong> Choisir un fournisseur de mail/agenda, une messagerie et les sources de localisation utiles ; qualifier permissions, synchronisation, qualité et reprise avec des fixtures anonymisées ; ne pas promettre une compatibilité universelle.</li>
+<li><strong>Étendre les opérateurs composés.</strong> Ajouter les besoins réellement rencontrés, en bornant mémoire, fenêtres et coût de réévaluation.</li>
+</ol>
+<p>Références de cadrage :</p>
+<ul>
+<li><a href="../ARCHITECTURE.md">Architecture du projet</a>, <a href="../components/automatismes.md">automatismes</a>, <a href="../components/coeur.md">cœur</a>, <a href="../components/reservations.md">réservations</a>.</li>
+<li><a href="https://www.home-assistant.io/integrations/event/">Home Assistant : événements</a>, pour la distinction entre état et signal ponctuel.</li>
+<li><a href="https://learn.microsoft.com/en-us/graph/change-notifications-overview">Microsoft Graph : notifications de changement</a>, pour les ressources mail, agenda et Teams (référence consultée le 21 octobre 2026).</li>
+<li><a href="https://developers.google.com/workspace/calendar/api/guides/push">Google Calendar : notifications push</a>, pour la synchronisation des modifications d’agenda.</li>
+<li><a href="https://www.postman.com/meta/whatsapp-business-platform/overview">Meta : collections officielles WhatsApp Business Platform</a>, pour le périmètre de messagerie officielle.</li>
+<li><a href="https://developer.apple.com/documentation/corelocation/handling-location-updates-in-the-background">Apple : localisation en arrière-plan</a>, <a href="https://developer.apple.com/documentation/corelocation/clbeacon/accuracy">précision d’une balise</a> et <a href="https://developer.apple.com/documentation/corelocation/turning-an-ios-device-into-an-ibeacon-device">appareil iOS en iBeacon</a>, pour les limites des sources GPS et Bluetooth.</li>
+</ul>
+<p>Les vidéos évoquées dans la discussion n’ont pas été consultées : aucun lien ou transcrit n’était disponible dans ce dépôt. Leurs scénarios pourront compléter ce catalogue sans changer la séparation entre source, adaptateur et mécanisme.</p>
+</section>
+      </article>
+      <footer><span>Document autonome · Aucun service externe chargé · Proposition, pas inventaire de fonctions livrées</span><a class="to-top" href="#top">Revenir en haut ↑</a></footer>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const printButton = document.getElementById('print-document');
+      printButton.hidden = false;
+      printButton.addEventListener('click', () => window.print());
+
+      const demo = document.getElementById('demonstrations');
+      demo.hidden = false;
+      let currentValue = 21;
+      let samples = 0;
+      let changes = 0;
+      let events = 0;
+      const status = document.getElementById('signal-status');
+      function renderCounts() {
+        document.getElementById('sample-count').textContent = String(samples);
+        document.getElementById('change-count').textContent = String(changes);
+        document.getElementById('event-count').textContent = String(events);
+      }
+      function receiveSample(value) {
+        samples += 1;
+        const changed = value !== currentValue;
+        if (changed) changes += 1;
+        currentValue = value;
+        renderCounts();
+        status.textContent = 'Mesure reçue : ' + value + ' °C. ' + (changed ? 'La valeur a changé.' : 'La valeur reste identique.') + ' Total : ' + samples + ' mesure(s), ' + changes + ' changement(s), ' + events + ' occurrence(s).';
+      }
+      document.getElementById('sample-21').addEventListener('click', () => receiveSample(21));
+      document.getElementById('sample-22').addEventListener('click', () => receiveSample(22));
+      document.getElementById('scan-tag').addEventListener('click', () => {
+        events += 1;
+        renderCounts();
+        status.textContent = 'Scan n° ' + events + ' : même tag, nouvelle identité d’occurrence. Aucune mesure de température reçue.';
+      });
+      document.getElementById('reset-signals').addEventListener('click', () => {
+        currentValue = 21; samples = 0; changes = 0; events = 0;
+        renderCounts();
+        status.textContent = 'Compteurs remis à zéro. Valeur courante : 21 °C.';
+      });
+
+      const start = document.getElementById('meeting-start');
+      const offset = document.getElementById('meeting-offset');
+      const cancelled = document.getElementById('meeting-cancelled');
+      const due = document.getElementById('meeting-due');
+      const explanation = document.getElementById('meeting-explanation');
+      function updateMeeting() {
+        if (cancelled.checked) {
+          due.textContent = 'Annulée';
+          explanation.textContent = 'Aucune échéance en attente pour cette réunion.';
+          return;
+        }
+        if (!start.value || !start.validity.valid || !offset.value || !offset.validity.valid) {
+          due.textContent = 'À compléter';
+          explanation.textContent = 'Saisissez un horaire et une anticipation entière entre 0 et 1440 minutes.';
+          return;
+        }
+        const [hours, minutes] = start.value.split(':').map(Number);
+        const anticipation = Number(offset.value);
+        const target = hours * 60 + minutes - anticipation;
+        const normalized = ((target % 1440) + 1440) % 1440;
+        const formatted = String(Math.floor(normalized / 60)).padStart(2, '0') + ':' + String(normalized % 60).padStart(2, '0');
+        due.textContent = formatted + (target < 0 ? ' (veille)' : '');
+        explanation.textContent = 'Début à ' + start.value + ', anticipation de ' + anticipation + ' minute(s). Cette échéance remplace la précédente.';
+      }
+      start.addEventListener('input', updateMeeting);
+      offset.addEventListener('input', updateMeeting);
+      cancelled.addEventListener('change', updateMeeting);
+      updateMeeting();
+
+      const sections = Array.from(document.querySelectorAll('article > section[id]'));
+      const links = Array.from(document.querySelectorAll('aside nav a'));
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting);
+          if (!visible.length) return;
+          const section = visible[0].target;
+          for (const link of links) {
+            if (decodeURIComponent(link.hash.slice(1)) === section.id) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          }
+        }, { rootMargin: '-10% 0px -75% 0px' });
+        sections.forEach(section => observer.observe(section));
+      }
+    })();
+  </script>
+</body>
+</html>
