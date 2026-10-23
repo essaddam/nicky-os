@@ -1,0 +1,33 @@
+test calendrier::tests::deux_evenements_a_la_meme_heure_font_deux_rappels ... ok
+test calendrier::tests::dix_minutes_avant_chaque_evenement ... ok
+test calendrier::tests::la_seconde_et_la_milliseconde_sont_tenues ... ok
+test calendrier::tests::le_coucher_du_soleil_suit_les_jours_et_le_decalage ... ok
+test calendrier::tests::passage_a_l_heure_d_ete_au_saut ... ok
+test calendrier::tests::rattrapee_si_moins_de_2_min_de_retard_sinon_manquee ... ok
+test calendrier::tests::retour_a_l_heure_d_hiver_une_seule_fois_a_la_premiere ... ok
+test calendrier::tests::rien_de_calendaire_tant_que_l_horloge_n_est_pas_sure ... ok
+test calendrier::tests::un_evenement_deplace_ou_annule_rearme_le_rappel ... ok
+test calendrier::tests::un_rappel_tardif_part_tant_que_l_evenement_n_a_pas_commence ... ok
+test calendrier::tests::un_niveau_en_rendez_vous ... ok
+test calendrier::tests::un_saut_d_horloge_en_arriere_ne_fait_pas_partir_deux_fois ... ok
+test calendrier::tests::un_saut_d_horloge_en_avant_rattrape_ou_manque ... ok
+test calendrier::tests::une_heure_portee_par_une_valeur_se_rearme_quand_elle_change ... ok
+test calendrier::tests::une_longue_panne_ne_fait_qu_une_alerte ... ok
+test calendrier::tests::une_periode_compte_le_temps_reel ... ok
+test calendrier::tests::une_plage_dans_le_saut_ne_s_ouvre_jamais_celle_qui_l_enjambe_s_ouvre_au_saut ... ok
+test calendrier::tests::une_plage_de_nuit_appartient_au_jour_ou_elle_commence ... ok
+test calendrier::tests::une_plage_vaut_pour_les_deux_copies_de_l_heure_repetee ... ok
+test minuteries::tests::elle_reprend_apres_un_redemarrage_avec_ce_qui_reste ... ok
+test minuteries::tests::l_echeance_suit_l_horloge_monotone ... ok
+test minuteries::tests::une_heure_murale_qui_a_recule_rend_la_reprise_impossible ... ok
+test minuteries::tests::une_minuterie_annulee_ne_finit_pas ... ok
+test scenario::tests::le_journal_dit_pourquoi ... ok
+test scenario::tests::le_chemin_de_a_avance_seulement ... ok
+test scenario::tests::les_avis_et_les_causes ... ok
+test scenario::tests::les_etats_releves ... ok
+test scenario::tests::les_ordres_de_la_soiree ... ok
+test scenario::tests::cent_maisons_identiques ... ok
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+    Finished `release` profile [optimized] target(s) in 17.14s
+    Finished `vitesse` profile [optimized] target(s) in 18.59s
+rustc 1.99.1 (58cf8f9c3 2026-10-13)

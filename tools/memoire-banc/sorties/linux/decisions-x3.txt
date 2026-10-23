@@ -1,0 +1,13 @@
+RESULTAT|decisions|3|taille_execution64|64.000|o
+RESULTAT|decisions|3|memoire_executions64|131072.000|o
+RESULTAT|decisions|3|finir_et_relancer64|4.271|ns
+RESULTAT|decisions|3|reseau_memoire_totale|135148.000|o
+RESULTAT|decisions|3|reseau_structure_figee|115308.000|o
+RESULTAT|decisions|3|reseau_etat_de_verite|19840.000|o
+RESULTAT|decisions|3|reseau_feuilles|3600.000|
+RESULTAT|decisions|3|reseau_conditions|1200.000|
+RESULTAT|decisions|3|reseau_reconstruire|11.875|us
+RESULTAT|decisions|3|rss_fin|1552.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

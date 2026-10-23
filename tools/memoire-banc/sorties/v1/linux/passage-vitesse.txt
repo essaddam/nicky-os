@@ -1,0 +1,10 @@
+RESULTAT|passage|2264|passage_blocs|0.166|us
+RESULTAT|passage|2264|passage_colonne|0.916|us
+RESULTAT|passage|22640|passage_blocs|1.291|us
+RESULTAT|passage|22640|passage_colonne|9.084|us
+RESULTAT|passage|226400|passage_blocs|13.083|us
+RESULTAT|passage|226400|passage_colonne|91.166|us
+RESULTAT|passage|2264000|passage_blocs|130.333|us
+RESULTAT|passage|2264000|passage_colonne|890.162|us
+RESULTAT|passage|1|rss_fin|768.000|Kio
+CONTENEUR|false|0

@@ -1,0 +1,9 @@
+test scenario::tests::le_chemin_de_a_avance_seulement ... ok
+test scenario::tests::le_journal_dit_pourquoi ... ok
+test scenario::tests::les_avis_et_les_causes ... ok
+test scenario::tests::les_etats_releves ... ok
+test scenario::tests::les_ordres_de_la_soiree ... ok
+test scenario::tests::cent_maisons_identiques ... ok
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+    Finished `release` profile [optimized] target(s) in 12.36s
+rustc 1.99.1 (58cf8f9c3 2026-10-13)

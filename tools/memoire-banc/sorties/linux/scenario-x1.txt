@@ -1,0 +1,154 @@
+RESULTAT|scenario|1|automatismes|8.000|
+RESULTAT|scenario|1|noeuds|49.000|
+RESULTAT|scenario|1|points|18.000|
+RESULTAT|scenario|1|messages|672.000|
+RESULTAT|scenario|1|passages|20.000|
+RESULTAT|scenario|1|ordres|14.000|
+RESULTAT|scenario|1|ordres_par_copie|14.000|
+RESULTAT|scenario|1|copies_identiques|1.000|
+RESULTAT|scenario|1|cpu_moteur_toute_la_soiree|0.233|ms
+RESULTAT|scenario|1|cpu_par_message|346.960|ns
+RESULTAT|scenario|1|preparer|0.635|ms
+RESULTAT|scenario|1|jouer_avec_le_banc|0.907|ms
+RESULTAT|scenario|1|memoire_programme|6268.000|o
+RESULTAT|scenario|1|memoire_programme_textes|2440.000|o
+RESULTAT|scenario|1|memoire_definitions_aujourdhui|15868.000|o
+RESULTAT|scenario|1|memoire_executions|256.000|o
+RESULTAT|scenario|1|executions_max|3.000|
+RESULTAT|scenario|1|memoire_attentes|96.000|o
+RESULTAT|scenario|1|memoire_horaires|196.000|o
+RESULTAT|scenario|1|horaires|4.000|
+RESULTAT|scenario|1|memoire_verite|17.000|o
+
+== Ordres ==
+19:10:00  lum_salon    ← 0
+19:55:00  lum_salon    ← 0
+21:00:00  lum_couloir  ← 1
+21:01:30  lum_couloir  ← 1
+21:03:31  lum_couloir  ← 0
+22:01:00  lum_salon    ← 0
+22:06:01  volet        ← 0
+22:06:45  alarme       ← 2
+22:06:47  mode         ← 1
+22:19:00  veilleuse    ← 1
+22:30:00  veilleuse    ← 1
+22:36:48  consigne     ← 1700
+23:08:00  veilleuse    ← 1
+23:10:01  veilleuse    ← 0
+
+== Avis ==
+20:30:00  Coucher : conditions non réunies (z2m:bouton_chambre_0/action = 1 (avant : 0) à 20:30:00).
+21:20:00  Rendez-vous dans 10 min (agenda 1, événement 1, rappel de 21:20:00).
+22:25:00  Porte d'entrée ouverte depuis 5 min, la nuit ! (z2m:porte_entree_0/contact = 0 (avant : 1) à 22:17:00)
+22:25:00  Tâche de nuit (l'horloge, 22:24:00, 60 s de retard).
+22:25:00  Rendez-vous dans 10 min (agenda 1, événement 2, rappel de 22:21:00).
+22:30:00  Ronde de 22 h 30 : la porte d'entrée est ouverte.
+22:37:49  Chauffage : consigne non confirmée (température au départ : 2130).
+22:37:49  Maison couchée ; dernière fenêtre fermée : z2m:fenetre_bureau_0/contact = 1 (avant : 0) à 21:51:00 ; température au départ : 2130.
+22:56:00  Rendez-vous dans 10 min (agenda 1, événement 3, rappel de 22:50:00).
+23:04:00  Rendez-vous dans 10 min (agenda 1, événement 4, rappel de 23:04:00).
+23:04:00  Rendez-vous dans 10 min (agenda 1, événement 5, rappel de 23:04:00).
+23:05:00  Coucher : conditions non réunies (z2m:fenetre_cuisine_0/contact = 1 (avant : 1) à 18:00:00).
+23:10:02  Couloir éteint.
+23:12:00  Alarme en alerte depuis 1 min (alarme:maison_0/mode = 3 (avant : 2) à 23:11:00).
+
+== Relevés d'état ==
+22:03:30  après le mouvement au salon, pendant l'attente de 5 min
+      A : attend une durée au nœud attendre_5, registre 2130, cause z2m:fenetre_bureau_0/contact, génération 7
+      B : aucune exécution
+      condition d'entrée de A vraie : true ; A commence au nœud global 8
+22:19:30  juste avant la panne
+      A : attend une durée au nœud attendre_30, registre 2130, cause z2m:fenetre_bureau_0/contact, génération 7
+      B : attend une durée au nœud attendre_veilleuse, registre 0, cause z2m:mouvement_couloir_0/occupancy, génération 1
+      condition d'entrée de A vraie : false ; A commence au nœud global 8
+22:25:00  juste après le redémarrage
+      A : attend une durée au nœud attendre_30, registre 2130, cause z2m:fenetre_bureau_0/contact, génération 7
+      B : aucune exécution
+      condition d'entrée de A vraie : false ; A commence au nœud global 8
+22:31:00  juste après la modification de B
+      A : attend une durée au nœud attendre_30, registre 2130, cause z2m:fenetre_bureau_0/contact, génération 7
+      B : aucune exécution
+      condition d'entrée de A vraie : false ; A commence au nœud global 9
+23:00:00  le thermomètre se tait depuis 20 min
+      A : aucune exécution
+      B : aucune exécution
+      condition d'entrée de A vraie : false ; A commence au nœud global 9
+
+== Chemin de A, de 22:01 ==
+tout_ferme → verifier → lire_temperature → eteindre_salon → attendre_5 → encore_personne → fermer_volet → verifier_volet → armer → verifier_alarme → mode_nuit → attendre_30 → chauffage → verifier_chauffage → chauffage_ko → selon_cause → fin_fenetre
+
+== Journal ==
+19:00:00  Extinction 0 : attente armée jusqu'à 19:10:00
+19:10:00  Extinction 0 : départ (case 0, génération 1) ; cause : hue:lumiere_salon_0/on = 1 (avant : 0) à 19:00:00
+19:10:01  Extinction 0 : terminée (case 0, génération 1)
+19:30:00  Extinction 0 : attente armée jusqu'à 19:40:00
+19:40:00  Extinction 0 : attente abandonnée, la valeur a bougé ou n'est plus sûre
+19:45:00  Extinction 0 : attente armée jusqu'à 19:55:00
+19:55:00  Extinction 0 : départ (case 0, génération 2) ; cause : hue:lumiere_salon_0/on = 1 (avant : 0) à 19:45:00
+19:55:01  Extinction 0 : terminée (case 0, génération 2)
+20:30:00  Coucher 0 : départ (case 0, génération 3) ; cause : z2m:bouton_chambre_0/action = 1 (avant : 0) à 20:30:00
+20:30:00  Coucher 0 : terminée (case 0, génération 3)
+21:00:00  Couloir 0 : départ (case 0, génération 4) ; cause : z2m:mouvement_couloir_0/occupancy = 1 (avant : 0) à 21:00:00
+21:00:05  Couloir 0 : issue absente à l'échéance de l'ordre, on continue
+21:01:30  Couloir 0 : relancée par un nouveau déclenchement (case 0, génération 4)
+21:01:30  Couloir 0 : départ (case 0, génération 5) ; cause : z2m:mouvement_couloir_0/occupancy = 1 (avant : 0) à 21:01:30
+21:01:40  issue tardive écartée (demande 3, case 0, génération 4)
+21:03:32  Couloir 0 : terminée (case 0, génération 5)
+21:20:00  Rendez-vous 0 : départ (case 0, génération 6) ; cause : agenda 1, événement 1, rappel de 21:20:00
+21:20:00  Rendez-vous 0 : terminée (case 0, génération 6)
+21:45:00  Coucher 0 : condition composée vraie depuis 21:45:00
+21:45:00  Coucher 0 : attente armée jusqu'à 21:55:00
+21:50:00  Coucher 0 : condition composée fausse
+21:51:00  Coucher 0 : condition composée vraie depuis 21:51:00
+21:51:00  Coucher 0 : attente armée jusqu'à 22:01:00
+22:01:00  Coucher 0 : départ (case 0, génération 7) ; cause : z2m:fenetre_bureau_0/contact = 1 (avant : 0) à 21:51:00
+22:10:00  Coucher 0 : déclenchement ignoré, déjà en cours
+22:17:00  Coucher 0 : condition composée fausse
+22:17:00  Porte 0 : attente armée jusqu'à 22:22:00
+22:19:00  Couloir 0 : départ (case 1, génération 1) ; cause : z2m:mouvement_couloir_0/occupancy = 1 (avant : 0) à 22:19:00
+22:20:00  panne : le hub s'arrête (instantané rangé)
+22:25:00  redémarrage : programme recompilé, vérité des conditions reconstruite
+22:25:00  Coucher 0 : reprise, réveil à 22:36:48
+22:25:00  Couloir 0 : interrompue : échéance dépassée de 239 s au redémarrage (case 1, génération 1)
+22:25:00  Porte 0 : départ (case 1, génération 2) ; cause : z2m:porte_entree_0/contact = 0 (avant : 1) à 22:17:00
+22:25:00  Porte 0 : terminée (case 1, génération 2)
+22:25:00  Tâches 0 : occurrence de 22:21:30 manquée (1), retard au-delà de 2 min
+22:25:00  Tâches 0 : départ (case 1, génération 3) ; cause : l'horloge, 22:24:00, 60 s de retard
+22:25:00  Tâches 0 : terminée (case 1, génération 3)
+22:25:00  Rendez-vous 0 : départ (case 1, génération 4) ; cause : agenda 1, événement 2, rappel de 22:21:00
+22:25:00  Rendez-vous 0 : terminée (case 1, génération 4)
+22:30:00  Couloir 0 : départ (case 1, génération 5) ; cause : z2m:mouvement_couloir_0/occupancy = 1 (avant : 0) à 22:30:00
+22:30:00  Ronde 0 : départ (case 2, génération 1) ; cause : l'horloge, 22:30:00
+22:30:00  Ronde 0 : terminée (case 2, génération 1)
+22:31:00  Couloir 0 : arrêtée : logique modifiée (case 1, génération 5)
+22:31:00  programme recompilé (49 nœuds) ; 1 automatisme(s) modifié(s)
+22:37:49  Coucher 0 : terminée (case 0, génération 7)
+22:44:00  Alerte 0 : attente armée jusqu'à 22:45:00
+22:45:00  Alerte 0 : attente abandonnée, la valeur a bougé ou n'est plus sûre
+22:50:00  Coucher 0 : condition composée vraie depuis 22:50:00
+22:50:00  Coucher 0 : attente armée jusqu'à 23:00:00
+22:52:31  valeur trop vieille : z2m:thermometre_salon_0/temperature
+22:55:01  appareil muet : z2m:fenetre_cuisine_0/contact
+22:55:01  Coucher 0 : condition composée fausse (valeur plus sûre)
+22:56:00  Rendez-vous 0 : départ (case 0, génération 8) ; cause : agenda 1, événement 3, rappel de 22:50:00
+22:56:00  Rendez-vous 0 : terminée (case 0, génération 8)
+23:00:00  Coucher 0 : attente abandonnée, la valeur a bougé ou n'est plus sûre
+23:04:00  Rendez-vous 0 : départ (case 0, génération 9) ; cause : agenda 1, événement 4, rappel de 23:04:00
+23:04:00  Rendez-vous 0 : terminée (case 0, génération 9)
+23:04:00  Rendez-vous 0 : départ (case 0, génération 10) ; cause : agenda 1, événement 5, rappel de 23:04:00
+23:04:00  Rendez-vous 0 : terminée (case 0, génération 10)
+23:05:00  appareil revenu : z2m:fenetre_cuisine_0/contact
+23:05:00  Coucher 0 : condition composée vraie depuis 22:50:00
+23:05:00  Coucher 0 : attente armée jusqu'à 23:05:00
+23:05:00  Coucher 0 : départ (case 0, génération 11) ; cause : z2m:fenetre_cuisine_0/contact = 1 (avant : 1) à 18:00:00
+23:05:00  Coucher 0 : terminée (case 0, génération 11)
+23:07:31  appareil muet : z2m:thermometre_salon_0/temperature
+23:08:00  Couloir 0 : départ (case 0, génération 12) ; cause : z2m:mouvement_couloir_0/occupancy = 1 (avant : 0) à 23:08:00
+23:10:02  Couloir 0 : terminée (case 0, génération 12)
+23:11:00  Alerte 0 : attente armée jusqu'à 23:12:00
+23:12:00  Alerte 0 : départ (case 0, génération 13) ; cause : alarme:maison_0/mode = 3 (avant : 2) à 23:11:00
+23:12:00  Alerte 0 : terminée (case 0, génération 13)
+RESULTAT|scenario|1|rss_fin|1396.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

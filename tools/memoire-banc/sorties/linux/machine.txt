@@ -1,0 +1,6 @@
+Apple M4, macOS (Darwin 27.2, arm64)
+Docker 29.2.1 (Colima), VM Ubuntu 24.04.4 LTS, noyau 6.8.0-100-generic, 4 CPU, 7,7 Gio
+Conteneurs de mesure : alpine:3, --cpuset-cpus=0,1, --memory=128m, --memory-swap=128m
+Compilation : rust:1-alpine, rustc 1.99.1, musl, opt-level "s", LTO complet
+Trois essais par mesure, chacun dans un conteneur neuf : la médiane (le pire des trois pour un pire cas, `_max`)
+Charge moyenne de la machine pendant la série : environ 6 (le portable servait à autre chose)

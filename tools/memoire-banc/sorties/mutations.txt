@@ -1,0 +1,38 @@
+code d'origine : tous les tests passent
+
+détectée        une attente de déclencheur ne revérifie plus l'instant « changé »
+                → 2 test(s) en échec : le_journal_dit_pourquoi, les_avis_et_les_causes
+détectée        le redémarrage reprend toutes les exécutions, même très en retard
+                → 4 test(s) en échec : les_etats_releves, les_ordres_de_la_soiree, le_journal_dit_pourquoi, cent_maisons_identiques
+détectée        les bascules sont lues à chaque valeur, pas à la fin du message
+                → 1 test(s) en échec : le_journal_dit_pourquoi
+détectée        le registre ne garde plus la valeur lue : le message relit la température en direct
+                → 2 test(s) en échec : les_etats_releves, les_avis_et_les_causes
+détectée        une recompilation arrête toutes les exécutions, même inchangées
+                → 5 test(s) en échec : les_etats_releves, les_avis_et_les_causes, le_chemin_de_a_avance_seulement, les_ordres_de_la_soiree, cent_maisons_identiques
+détectée        la cause n'est plus gardée par l'exécution
+                → 2 test(s) en échec : le_chemin_de_a_avance_seulement, les_avis_et_les_causes
+détectée        une issue est acceptée sans vérifier sa génération ni sa demande
+                → 2 test(s) en échec : le_journal_dit_pourquoi, les_ordres_de_la_soiree
+détectée        une attente compte en heure murale au lieu de l'horloge monotone
+                → 4 test(s) en échec : les_ordres_de_la_soiree, les_avis_et_les_causes, le_journal_dit_pourquoi, cent_maisons_identiques
+détectée        une valeur trop vieille reste bonne
+                → 1 test(s) en échec : les_etats_releves
+détectée        une heure répétée (retour à l'heure d'hiver) part à la seconde copie
+                → 1 test(s) en échec : retour_a_l_heure_d_hiver_une_seule_fois_a_la_premiere
+détectée        une heure qui n'existe pas (passage à l'heure d'été) est sautée
+                → 1 test(s) en échec : passage_a_l_heure_d_ete_au_saut
+détectée        tout se rattrape, quel que soit le retard
+                → 4 test(s) en échec : rattrapee_si_moins_de_2_min_de_retard_sinon_manquee, un_saut_d_horloge_en_avant_rattrape_ou_manque, le_journal_dit_pourquoi, les_avis_et_les_causes
+détectée        une occurrence repart après un recul de l'horloge
+                → 1 test(s) en échec : un_saut_d_horloge_en_arriere_ne_fait_pas_partir_deux_fois
+détectée        le calendrier s'arme sur une horloge pas encore sûre
+                → 1 test(s) en échec : rien_de_calendaire_tant_que_l_horloge_n_est_pas_sure
+détectée        un rappel d'agenda en retard ne part plus, même avant l'événement
+                → 2 test(s) en échec : un_rappel_tardif_part_tant_que_l_evenement_n_a_pas_commence, les_avis_et_les_causes
+détectée        la partie après minuit d'une plage appartient au jour même, pas à la veille
+                → 1 test(s) en échec : une_plage_de_nuit_appartient_au_jour_ou_elle_commence
+détectée        deux rendez-vous à la même heure ne font qu'un rappel
+                → 2 test(s) en échec : deux_evenements_a_la_meme_heure_font_deux_rappels, les_avis_et_les_causes
+
+17 mutations détectées sur 17 ; code restauré

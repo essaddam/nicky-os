@@ -1,0 +1,31 @@
+[package]
+name = "banc-memoire"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Crate jetable, hors dépôt : le banc de l'étude mémoire (docs/proposition/memoire.md).
+# Aucune dépendance aux crates de Sarah Home : les types d'aujourd'hui sont recopiés à l'identique
+# (moli-core Value/Sample, moli-runtime States, moli-automation model), pour compiler en quelques
+# secondes et mesurer exactement ces formes.
+[workspace]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Déjà dans le Cargo.lock du dépôt (0.17, par indexmap) : la table de l'annuaire interné.
+hashbrown = "0.17"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "time", "sync", "macros"] }
+# Comme le dépôt (Cargo.toml racine) : les fuseaux embarqués, sans base système (image scratch).
+jiff = { version = "0.2", default-features = false, features = ["std", "tzdb-bundle-always"] }
+
+[profile.release]
+# Comme la production (Cargo.toml du dépôt).
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+
+# Le même code réglé pour la vitesse, pour mesurer ce que le réglage « taille » coûte au passage.
+[profile.vitesse]
+inherits = "release"
+opt-level = 3

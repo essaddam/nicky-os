@@ -1,0 +1,15 @@
+RESULTAT|conditions|3|conditions_si|1200.000|
+RESULTAT|conditions|3|regle_etat_aujourdhui|90.555|ns
+RESULTAT|conditions|3|si_trois_regles_a_la_demande|5.833|ns
+RESULTAT|conditions|3|memoire_reseau|125548.000|o
+RESULTAT|conditions|3|reseau_changement_quelconque|1.770|ns
+RESULTAT|conditions|3|reseau_changement_lu_par_une_regle|4.130|ns
+RESULTAT|conditions|3|reseau_bascule_nuit|1958.500|ns
+RESULTAT|conditions|3|cycle_automate_un_tour|6.959|us
+RESULTAT|conditions|3|duree_tache_tokio_par_attente|594.438|o
+RESULTAT|conditions|3|duree_case_proposee_par_attente|16.000|o
+RESULTAT|conditions|3|attendre_que_aujourdhui_10_attentes_par_evenement|0.700|us
+RESULTAT|conditions|3|attendre_que_aujourdhui_100_attentes_par_evenement|6.710|us
+RESULTAT|conditions|3|attendre_que_aujourdhui_400_attentes_par_evenement|26.787|us
+RESULTAT|conditions|3|rss_fin|1180.000|Kio
+CONTENEUR|false|0
