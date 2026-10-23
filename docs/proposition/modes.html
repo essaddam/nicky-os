@@ -1,0 +1,1234 @@
+<!doctype html>
+<html lang="fr" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Proposition Moli OS : modes indépendants, transitions conditionnelles et profils d’équipements avec mémorisation et restauration.">
+  <meta name="source-markdown" content="modes.md">
+  <meta name="source-sha256" content="67598e21005033f7a61692155a66f25add22088acf364ec5e65cb14d1abf1469">
+  <title>Modes, transitions et profils · Moli OS</title>
+  <style>
+  :root {
+    --page: #f3f5f7; --paper: #fff; --ink: #171c28; --muted: #535e70;
+    --line: #dce2ea; --soft: #f5f7fa; --accent: #176759; --accent-soft: #e1f3ef;
+    --warm: #8a4b06; --warm-soft: #fff2dc;
+    --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --mono: "SFMono-Regular", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 104px; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 var(--sans); }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+  .skip { position: fixed; top: 8px; left: 8px; z-index: 20; padding: 10px 16px;
+    background: var(--paper); transform: translateY(-160%); }
+  .skip:focus { transform: none; }
+  .topbar { position: sticky; top: 0; z-index: 10; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .topbar-inner { max-width: 1440px; margin: auto; min-height: 72px; padding: 12px 40px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--ink);
+    font-weight: 750; text-decoration: none; }
+  .brand-mark { width: 34px; height: 34px; display: grid; place-items: center;
+    border-radius: 9px; background: var(--ink); color: #fff; font: 23px/1 var(--serif); }
+  .brand-sub { font-weight: 450; color: var(--muted); margin-left: 8px; padding-left: 17px;
+    border-left: 1px solid var(--line); font-size: 13px; }
+  .top-actions { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+  .print { min-height: 42px; padding: 8px 15px; color: var(--ink); background: var(--soft);
+    border: 1px solid var(--line); border-radius: 8px; }
+  .print:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .frame { max-width: 1440px; margin: auto; display: grid;
+    grid-template-columns: 255px minmax(0, 1fr); gap: 42px; padding: 36px 40px 72px; align-items: start; }
+  .sidebar { position: sticky; top: 100px; max-height: calc(100dvh - 124px); overflow-y: auto;
+    scrollbar-width: thin; padding-right: 9px; }
+  .sidebar-label { margin: 0 0 12px 12px; color: var(--muted); font-size: 12px; font-weight: 650; }
+  .contents { list-style: none; padding: 0; margin: 0; }
+  .contents .nav-group { font-weight: 700; margin: 23px 0 5px 12px; color: var(--ink); font-size: 12px; }
+  .contents .nav-group:first-child { margin-top: 0; }
+  .contents a { display: flex; align-items: baseline; gap: 10px; padding: 7px 11px;
+    font-size: 12.5px; line-height: 1.5; text-decoration: none; color: var(--muted); border-radius: 7px; }
+  .contents a:hover { background: #e8edf0; color: var(--ink); }
+  .contents a[aria-current="location"] { color: var(--accent); background: var(--accent-soft); font-weight: 650; }
+  .nav-number { flex: 0 0 16px; font-family: var(--mono); font-size: 10px; opacity: .85; }
+  .sidebar-foot { border-top: 1px solid var(--line); padding: 18px 12px 0; margin-top: 24px;
+    color: var(--muted); font-size: 12px; }
+  main { min-width: 0; }
+  .cover { padding: 18px 3px 30px; }
+  .document-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 13px;
+    font-size: 12px; color: var(--muted); margin-bottom: 22px; }
+  .status { padding: 4px 11px; background: var(--warm-soft); color: var(--warm); border-radius: 6px; font-weight: 650; }
+  h1 { font: 500 clamp(39px, 4.3vw, 66px)/1.08 var(--serif); letter-spacing: -.028em;
+    max-width: 850px; margin: 0 0 22px; text-wrap: balance; }
+  .lead { font-size: 18px; line-height: 1.65; max-width: 730px; color: var(--muted); margin: 0; }
+  .concept-line { display: flex; flex-wrap: wrap; gap: 9px 13px; align-items: center;
+    margin: 25px 0 0; font-size: 12px; color: var(--muted); }
+  .concept-line strong { color: var(--ink); font-weight: 650; }
+  .example { padding: 24px 28px; background: #e7efed; border-radius: 12px; margin-bottom: 28px; }
+  .example-head { display: flex; gap: 15px; align-items: baseline; justify-content: space-between; margin-bottom: 19px; }
+  .example-head h2 { margin: 0; font-size: 15px; line-height: 1.4; }
+  .example-head a { font-size: 12px; flex-shrink: 0; }
+  .capture-route { display: grid; grid-template-columns: 1fr 24px 1fr 24px 1fr; align-items: center; gap: 12px; }
+  .capture-state { min-width: 0; }
+  .capture-state span { display: block; font-size: 11px; color: #435d56; margin-bottom: 5px; }
+  .capture-state strong { display: block; font-size: 17px; line-height: 1.3; font-weight: 650; }
+  .capture-state small { display: block; margin-top: 5px; font-size: 12px; line-height: 1.5; color: #435d56; }
+  .route-arrow { text-align: center; color: var(--accent); font-size: 22px; }
+  .mobile-contents { display: none; }
+  .article { background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    padding: 34px 42px 46px; overflow-wrap: break-word; }
+  .article p { margin: 0 0 1.2em; }
+  .article .document-notice { font-size: 13px; color: var(--muted); line-height: 1.65; }
+  .article > h2 { border-top: 1px solid var(--line); padding-top: 34px; margin: 42px 0 20px;
+    font-size: clamp(23px, 2.3vw, 29px); font-weight: 650; line-height: 1.3; letter-spacing: -.025em; text-wrap: balance; }
+  .article > h2:first-of-type { margin-top: 28px; }
+  .article h3 { font-size: 18px; font-weight: 650; line-height: 1.4; margin: 30px 0 14px; }
+  .article ul, .article ol { padding-left: 24px; margin: 0 0 23px; }
+  .article li { padding-left: 3px; margin-bottom: 9px; }
+  .article li > p { margin-bottom: 8px; }
+  .article strong { font-weight: 700; }
+  code { background: var(--soft); padding: 2px 5px; border-radius: 4px; font: .86em var(--mono); overflow-wrap: anywhere; }
+  pre { white-space: pre-wrap; background: var(--soft); padding: 18px; border-radius: 8px; }
+  pre code { padding: 0; background: transparent; }
+  .table-scroll { overflow-x: auto; overscroll-behavior-inline: contain; margin: 24px 0 27px;
+    border: 1px solid var(--line); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.6; }
+  th, td { text-align: left; vertical-align: top; padding: 13px 15px; border-bottom: 1px solid var(--line); }
+  th { background: var(--soft); font-size: 12px; font-weight: 700; color: #394254; }
+  td:first-child { font-weight: 600; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tr > * + * { border-left: 1px solid #edf0f3; }
+  .transition-flow { background: var(--soft); padding: 23px 24px 16px; margin: 24px 0; border-radius: 10px; }
+  .transition-flow figcaption { font-weight: 700; font-size: 14px; margin-bottom: 19px; }
+  .transition-flow ol { margin: 0; padding-left: 24px; }
+  .transition-flow li { padding: 0 0 12px 8px; margin: 0; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+  .transition-flow li::marker { color: var(--accent); font-family: var(--mono); font-size: 12px; }
+  .transition-flow li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .transition-flow strong { font-size: 14px; display: block; }
+  .transition-flow span { display: block; color: var(--muted); font-size: 13px; }
+  footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between;
+    gap: 12px; padding: 22px 3px 0; }
+  .to-top { white-space: nowrap; }
+  @media (min-width: 1450px) { .frame { gap: 58px; } }
+  @media (max-width: 1100px) {
+    .frame { grid-template-columns: 215px minmax(0, 1fr); gap: 25px; padding: 25px 24px 48px; }
+    .article { padding: 28px; }
+    .topbar-inner { padding-inline: 24px; }
+    .contents a { font-size: 12px; }
+  }
+  @media (max-width: 800px) {
+    html { scroll-padding-top: 90px; }
+    .topbar-inner { min-height: 66px; padding: 10px 20px; }
+    .brand-sub, .sidebar { display: none; }
+    .frame { display: block; padding: 22px 20px 38px; }
+    .cover { padding-top: 8px; }
+    h1 { font-size: clamp(37px, 7vw, 54px); }
+    .lead { font-size: 16px; }
+    .mobile-contents { display: block; margin: 0 0 24px; background: var(--paper);
+      border: 1px solid var(--line); border-radius: 9px; padding: 0 18px; }
+    .mobile-contents summary { min-height: 48px; padding: 12px 0; cursor: pointer; font-size: 14px; font-weight: 650; }
+    .mobile-contents .contents { padding-bottom: 17px; }
+    .mobile-contents .contents a { padding-block: 9px; font-size: 13px; }
+    .article { padding: 24px; }
+    .example { padding: 23px; }
+  }
+  @media (max-width: 480px) {
+    body { font-size: 15px; }
+    .topbar-inner { padding-inline: 16px; gap: 10px; }
+    .top-actions { gap: 12px; font-size: 12px; }
+    .print { min-height: 40px; padding: 7px 11px; }
+    .brand { font-size: 14px; }
+    .brand-mark { width: 30px; height: 30px; }
+    .frame { padding: 19px 14px 32px; }
+    .article { padding: 20px 18px 30px; }
+    .article > h2 { font-size: 22px; padding-top: 27px; margin-top: 33px; }
+    .article h3 { font-size: 17px; }
+    .document-meta { gap: 10px; margin-bottom: 18px; }
+    .concept-line { gap: 6px 9px; }
+    .example { padding: 21px; }
+    .example-head { display: block; }
+    .example-head a { display: inline-block; margin-top: 6px; }
+    .capture-route { grid-template-columns: 1fr; gap: 10px; }
+    .capture-state { display: grid; grid-template-columns: 85px 1fr; align-items: baseline; column-gap: 14px; }
+    .capture-state span { grid-row: span 2; margin-bottom: 0; font-size: 12px; }
+    .capture-state small { grid-column: 2; margin-top: 3px; }
+    .route-arrow { display: none; }
+    .capture-state strong { font-size: 16px; }
+    table { min-width: 460px; font-size: 12px; }
+    th, td { padding: 11px 12px; }
+    .transition-flow { padding: 20px 17px 14px; }
+  }
+  @media print {
+    @page { size: A4; margin: 17mm 16mm; }
+    body { background: #fff; font: 10.5pt/1.5 var(--sans); }
+    .topbar, .sidebar, .mobile-contents, .skip, .to-top { display: none !important; }
+    .frame { display: block; padding: 0; max-width: none; }
+    .cover { padding: 0 0 18px; }
+    h1 { font-size: 34pt; max-width: none; }
+    .lead { font-size: 12pt; }
+    .example { border: 1px solid #aaa; padding: 15px; }
+    .article { padding: 0; border: 0; }
+    .article > h2 { font-size: 17pt; break-after: avoid; margin-top: 24px; padding-top: 18px; }
+    .article h3 { break-after: avoid; font-size: 12pt; }
+    .table-scroll { overflow: visible; border-radius: 0; }
+    table { font-size: 8.5pt; min-width: 0; }
+    tr { break-inside: avoid; }
+    thead { display: table-header-group; }
+    a { color: inherit; text-decoration: underline; }
+    p, li { orphans: 3; widows: 3; }
+    .transition-flow { break-inside: avoid; border: 1px solid #aaa; }
+    footer { margin-top: 20px; border-top: 1px solid #aaa; }
+  }
+</style>
+</head>
+<body>
+  <a class="skip" href="#document">Aller au document</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">M</span>Moli OS<span class="brand-sub">Notes de conception</span></a>
+      <div class="top-actions"><a href="modes.md">Markdown</a><button class="print" type="button" data-print>Imprimer</button></div>
+    </div>
+  </header>
+  <div class="frame">
+    <aside class="sidebar" aria-label="Sommaire du document">
+      <p class="sidebar-label">Dans cette proposition</p>
+      <nav aria-label="Sections"><ul class="contents"><li class="nav-group">Comprendre</li>
+<li><a href="#section-1" data-section-link="section-1"><span class="nav-number" aria-hidden="true">1</span><span>Intention</span></a></li>
+<li><a href="#section-2" data-section-link="section-2"><span class="nav-number" aria-hidden="true">2</span><span>Principes retenus pour la proposition</span></a></li>
+<li><a href="#section-3" data-section-link="section-3"><span class="nav-number" aria-hidden="true">3</span><span>Vocabulaire et organisation des modes</span></a></li>
+<li><a href="#section-4" data-section-link="section-4"><span class="nav-number" aria-hidden="true">4</span><span>Sources des changements et arbitrage</span></a></li>
+<li class="nav-group">Comportements</li>
+<li><a href="#section-5" data-section-link="section-5"><span class="nav-number" aria-hidden="true">5</span><span>Transitions : état précédent, état suivant et cause</span></a></li>
+<li><a href="#section-6" data-section-link="section-6"><span class="nav-number" aria-hidden="true">6</span><span>Profils d’équipements réutilisables</span></a></li>
+<li><a href="#section-7" data-section-link="section-7"><span class="nav-number" aria-hidden="true">7</span><span>Sortir d’un mode : profil suivant, conservation ou restauration</span></a></li>
+<li><a href="#section-8" data-section-link="section-8"><span class="nav-number" aria-hidden="true">8</span><span>Vigilance et réactions graduées</span></a></li>
+<li><a href="#section-9" data-section-link="section-9"><span class="nav-number" aria-hidden="true">9</span><span>Plannings, agendas et rôle de l’assistant</span></a></li>
+<li class="nav-group">Concevoir</li>
+<li><a href="#section-10" data-section-link="section-10"><span class="nav-number" aria-hidden="true">10</span><span>Expérience dans le dashboard</span></a></li>
+<li><a href="#section-11" data-section-link="section-11"><span class="nav-number" aria-hidden="true">11</span><span>Combinaisons et conflits entre usages</span></a></li>
+<li><a href="#section-12" data-section-link="section-12"><span class="nav-number" aria-hidden="true">12</span><span>Autorisations et versions exécutables</span></a></li>
+<li><a href="#section-13" data-section-link="section-13"><span class="nav-number" aria-hidden="true">13</span><span>État du dépôt et architecture d’intégration proposée</span></a></li>
+<li><a href="#section-14" data-section-link="section-14"><span class="nav-number" aria-hidden="true">14</span><span>Persistance, reprise et limites</span></a></li>
+<li><a href="#section-15" data-section-link="section-15"><span class="nav-number" aria-hidden="true">15</span><span>Surfaces proposées et compatibilité</span></a></li>
+<li class="nav-group">Préparer la suite</li>
+<li><a href="#section-16" data-section-link="section-16"><span class="nav-number" aria-hidden="true">16</span><span>Choix d’approche et périmètre progressif</span></a></li>
+<li><a href="#section-17" data-section-link="section-17"><span class="nav-number" aria-hidden="true">17</span><span>Cas d’acceptation pour la future implémentation</span></a></li>
+<li><a href="#section-18" data-section-link="section-18"><span class="nav-number" aria-hidden="true">18</span><span>Références du dépôt</span></a></li></ul></nav>
+      <div class="sidebar-foot">18 sections<br>Document de proposition<br>21 octobre 2026</div>
+    </aside>
+    <main>
+      <div class="cover">
+        <div class="document-meta"><span class="status">Proposition à relire</span><time datetime="2026-10-21">21 octobre 2026</time></div>
+        <h1>Modes, transitions<br>et profils d’équipements.</h1>
+        <p class="lead">Décrire les contextes de la maison, comprendre chaque changement et retrouver les bons réglages au bon moment.</p>
+        <div class="concept-line"><strong>Plusieurs contextes</strong><span aria-hidden="true">·</span><strong>Des transitions explicites</strong><span aria-hidden="true">·</span><strong>Des profils réutilisables</strong></div>
+      </div>
+      <section class="example" aria-labelledby="example-title">
+        <div class="example-head"><h2 id="example-title">Un exemple : une séance de cinéma</h2><a href="#section-7-1">Voir le parcours complet →</a></div>
+        <div class="capture-route">
+          <div class="capture-state"><span>Avant</span><strong>Mémoriser l’existant</strong><small>Conserver les réglages de départ.</small></div>
+          <span class="route-arrow" aria-hidden="true">→</span>
+          <div class="capture-state"><span>Pendant</span><strong>Appliquer Cinéma</strong><small>Lumières, volets et autres réglages.</small></div>
+          <span class="route-arrow" aria-hidden="true">→</span>
+          <div class="capture-state"><span>À la fin</span><strong>Restaurer l’état initial</strong><small>Préserver les modifications plus récentes.</small></div>
+        </div>
+      </section>
+      <details class="mobile-contents"><summary>Sommaire des 18 sections</summary><nav aria-label="Sections sur mobile"><ul class="contents"><li class="nav-group">Comprendre</li>
+<li><a href="#section-1" data-section-link="section-1"><span class="nav-number" aria-hidden="true">1</span><span>Intention</span></a></li>
+<li><a href="#section-2" data-section-link="section-2"><span class="nav-number" aria-hidden="true">2</span><span>Principes retenus pour la proposition</span></a></li>
+<li><a href="#section-3" data-section-link="section-3"><span class="nav-number" aria-hidden="true">3</span><span>Vocabulaire et organisation des modes</span></a></li>
+<li><a href="#section-4" data-section-link="section-4"><span class="nav-number" aria-hidden="true">4</span><span>Sources des changements et arbitrage</span></a></li>
+<li class="nav-group">Comportements</li>
+<li><a href="#section-5" data-section-link="section-5"><span class="nav-number" aria-hidden="true">5</span><span>Transitions : état précédent, état suivant et cause</span></a></li>
+<li><a href="#section-6" data-section-link="section-6"><span class="nav-number" aria-hidden="true">6</span><span>Profils d’équipements réutilisables</span></a></li>
+<li><a href="#section-7" data-section-link="section-7"><span class="nav-number" aria-hidden="true">7</span><span>Sortir d’un mode : profil suivant, conservation ou restauration</span></a></li>
+<li><a href="#section-8" data-section-link="section-8"><span class="nav-number" aria-hidden="true">8</span><span>Vigilance et réactions graduées</span></a></li>
+<li><a href="#section-9" data-section-link="section-9"><span class="nav-number" aria-hidden="true">9</span><span>Plannings, agendas et rôle de l’assistant</span></a></li>
+<li class="nav-group">Concevoir</li>
+<li><a href="#section-10" data-section-link="section-10"><span class="nav-number" aria-hidden="true">10</span><span>Expérience dans le dashboard</span></a></li>
+<li><a href="#section-11" data-section-link="section-11"><span class="nav-number" aria-hidden="true">11</span><span>Combinaisons et conflits entre usages</span></a></li>
+<li><a href="#section-12" data-section-link="section-12"><span class="nav-number" aria-hidden="true">12</span><span>Autorisations et versions exécutables</span></a></li>
+<li><a href="#section-13" data-section-link="section-13"><span class="nav-number" aria-hidden="true">13</span><span>État du dépôt et architecture d’intégration proposée</span></a></li>
+<li><a href="#section-14" data-section-link="section-14"><span class="nav-number" aria-hidden="true">14</span><span>Persistance, reprise et limites</span></a></li>
+<li><a href="#section-15" data-section-link="section-15"><span class="nav-number" aria-hidden="true">15</span><span>Surfaces proposées et compatibilité</span></a></li>
+<li class="nav-group">Préparer la suite</li>
+<li><a href="#section-16" data-section-link="section-16"><span class="nav-number" aria-hidden="true">16</span><span>Choix d’approche et périmètre progressif</span></a></li>
+<li><a href="#section-17" data-section-link="section-17"><span class="nav-number" aria-hidden="true">17</span><span>Cas d’acceptation pour la future implémentation</span></a></li>
+<li><a href="#section-18" data-section-link="section-18"><span class="nav-number" aria-hidden="true">18</span><span>Références du dépôt</span></a></li></ul></nav></details>
+      <article class="article" id="document" aria-label="Proposition complète">
+<p class="document-notice">Date : 21 octobre 2026. Statut : proposition fonctionnelle et technique à relire.
+Ce document décrit une évolution ; il ne déclare pas ces fonctions livrées et ne
+modifie pas les décisions de <a href="../ARCHITECTURE.md">l’architecture</a>.
+Les exemples sont génériques et ne décrivent aucune installation réelle.</p>
+<h2 id="section-1">1. Intention</h2>
+<p>Permettre à la maison de connaître plusieurs contextes durables et d’adapter ses
+automatismes à leur combinaison : fonctionnement général, séjour des enfants,
+occupation d’une chambre, activité d’une pièce, vigilance ou télétravail.</p>
+<p>Le mode principal reste directement accessible sur l’accueil. Une page « Modes »
+affiche automatiquement tous les groupes configurés. Chaque changement indique
+l’état quitté, l’état rejoint, sa source, sa cause et les réactions exécutées.</p>
+<p>La fonction comprend trois objets liés :</p>
+<div aria-label="Tableau : 1. Intention" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Objet</th>
+<th scope="col">Question à laquelle il répond</th>
+<th scope="col">Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mode</td>
+<td>Dans quel contexte sommes-nous ?</td>
+<td>L’activité de la pièce est « Cinéma »</td>
+</tr>
+<tr>
+<td>Transition</td>
+<td>D’où vient-on, où va-t-on et pourquoi ?</td>
+<td>« Cinéma → Nuit », à la demande d’une personne</td>
+</tr>
+<tr>
+<td>Profil d’équipements</td>
+<td>Quels réglages faut-il appliquer ?</td>
+<td>Éclairage à 15 %, volets à une position donnée</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le besoin central dépasse « faire quelque chose quand un état change » : une sortie
+de Cinéma vers Nuit doit pouvoir différer d’une sortie de Cinéma vers Normal ; une
+entrée en Nuit depuis Cinéma peut aussi différer d’une entrée depuis Lecture.</p>
+<h2 id="section-2">2. Principes retenus pour la proposition</h2>
+<ol>
+<li>Un seul mode principal est présenté sur l’accueil ; les autres restent disponibles
+dans une page dédiée, sans multiplier les boutons sur la page principale.</li>
+<li>Plusieurs groupes sont actifs simultanément, avec un seul état courant par groupe.</li>
+<li>Les identités des groupes, états et profils sont stables ; leurs libellés peuvent
+changer et être traduits sans casser les références.</li>
+<li>Un mode décrit un contexte. Ses effets sont des réactions explicites, configurées
+et validées, pas des comportements cachés dans son nom.</li>
+<li>Une transition conserve un contexte immuable, notamment <code>from</code> et <code>to</code>, disponible
+pour les règles de sortie, de passage et d’entrée.</li>
+<li>Un profil décrit des valeurs cibles réutilisables. Il peut être appliqué depuis
+plusieurs transitions ou directement, sans imposer un changement de mode.</li>
+<li>La famille conserve les commandes ordinaires selon les droits actuels. Les règles
+automatiques, leurs dépendances et leurs remplacements suivent la validation humaine.</li>
+<li>L’IA prépare, configure et explique. L’exécution autonome des transitions et des
+commandes reste déterministe, conformément à l’architecture actuelle.</li>
+<li>Mode demandé, mode courant et réussite des effets sont distingués. Une transition
+logique réussie ne prouve pas que tous les appareils ont atteint leur consigne.</li>
+</ol>
+<h2 id="section-3">3. Vocabulaire et organisation des modes</h2>
+<p>Un <strong>groupe de modes</strong> est un ensemble nommé d’états exclusifs : « Maison », « Séjour
+des enfants », « Activité de la pièce ». Dans l’interface, on peut naturellement
+parler de « mode Cinéma » ; dans le modèle, Cinéma est un état d’un groupe identifié.</p>
+<div aria-label="Tableau : 3. Vocabulaire et organisation des modes" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Groupe possible</th>
+<th scope="col">États possibles</th>
+<th scope="col">Portée et intérêt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maison, principal</td>
+<td>Normal, Absent, Nuit, Vacances</td>
+<td>Fonctionnement général</td>
+</tr>
+<tr>
+<td>Séjour des enfants</td>
+<td>Chez nous, Hors séjour</td>
+<td>Horaires et confort pendant une période de séjour</td>
+</tr>
+<tr>
+<td>Chambre d’amis</td>
+<td>Libre, Occupée</td>
+<td>Volets et confort de cette pièce</td>
+</tr>
+<tr>
+<td>Activité d’une pièce</td>
+<td>Normal, Lecture, Cinéma, Nuit</td>
+<td>Réglages locaux adaptés à l’activité</td>
+</tr>
+<tr>
+<td>Vigilance</td>
+<td>Vert, Orange, Rouge</td>
+<td>Réactions graduées aux incidents</td>
+</tr>
+<tr>
+<td>Armement de l’alarme</td>
+<td>Désarmée, Partielle, Totale</td>
+<td>Surveillance effectivement armée</td>
+</tr>
+<tr>
+<td>Travail</td>
+<td>Habituel, Télétravail</td>
+<td>Bureau et interruptions</td>
+</tr>
+<tr>
+<td>Repos</td>
+<td>Habituel, Sieste</td>
+<td>Annonces et actions gênantes</td>
+</tr>
+<tr>
+<td>Entretien</td>
+<td>Habituel, Ménage, Travaux</td>
+<td>Suspensions temporaires de règles concernées</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ces groupes constituent un catalogue d’idées, pas une configuration obligatoire.
+Une maison peut se limiter aux groupes qui lui servent. La portée peut être la
+maison, une pièce ou un ensemble explicite de pièces ; elle est montrée à la validation.</p>
+<p>La combinaison « Maison = Nuit », « Séjour des enfants = Chez nous » et « Chambre
+d’amis = Occupée » n’exige pas de créer un état distinct pour chaque combinaison.
+Une règle peut utiliser plusieurs groupes comme conditions.</p>
+<p>Le séjour planifié et la présence physique restent deux informations différentes :
+une absence pendant la journée ne termine pas automatiquement un séjour. De même,
+une réservation ne prouve pas une arrivée réelle. Armement et vigilance sont séparés :
+être en Rouge ne signifie pas qu’un ordre d’armement vient d’être exécuté.</p>
+<p>Une indisponibilité est une qualité de l’information, distincte d’un état métier.
+« Inconnu » ne signifie ni Libre, ni Absent, ni Vert. Un nouvel état métier de ce nom
+n’est créé que si sa signification et ses réactions sont explicitement définies.</p>
+<h2 id="section-4">4. Sources des changements et arbitrage</h2>
+<p>« D’où vient le changement » recouvre deux dimensions : l’état précédent et la source
+de la demande. Elles doivent être conservées séparément.</p>
+<div aria-label="Tableau : 4. Sources des changements et arbitrage" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Source</th>
+<th scope="col">Exemple</th>
+<th scope="col">Contrat proposé</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Personne</td>
+<td>Choisir Cinéma dans la page Modes</td>
+<td>Droits du foyer et garde habituelle</td>
+</tr>
+<tr>
+<td>Consigne à l’assistant</td>
+<td>« Prépare une période invités pour ce week-end »</td>
+<td>Interprétation et aperçu ; commande ou règle selon les droits existants</td>
+</tr>
+<tr>
+<td>Planning</td>
+<td>Semaine de séjour récurrente</td>
+<td>Définition validée, fuseau et prochaine échéance visibles</td>
+</tr>
+<tr>
+<td>Agenda</td>
+<td>Fenêtre de réservation active</td>
+<td>Source choisie par un humain et correspondance déterministe validée</td>
+</tr>
+<tr>
+<td>Équipement ou capteur</td>
+<td>État d’une centrale d’alarme</td>
+<td>Source et fraîcheur vérifiées, transitions autorisées explicites</td>
+</tr>
+<tr>
+<td>Automatisme</td>
+<td>Passage en Nuit à une heure choisie</td>
+<td>Graphe validé et corrélation du lancement conservée</td>
+</tr>
+<tr>
+<td>Système externe</td>
+<td>Événement d’un connecteur autorisé</td>
+<td>Adaptateur identifié, entrées bornées, aucune autorité implicite</td>
+</tr>
+</tbody>
+</table></div>
+<p>Un libellé fourni par un client, un texte d’agenda ou un champ <code>source</code> ne prouve pas
+une autorisation. L’origine et les droits sont établis côté serveur ; les métadonnées
+de provenance expliquent la demande sans lui accorder de pouvoir supplémentaire.</p>
+<h3 id="section-4-1">4.1 Correction manuelle et retour au planning</h3>
+<p>Pour les modes ordinaires, proposer un fonctionnement automatique avec dérogation
+manuelle : jusqu’à une échéance choisie, jusqu’à la prochaine frontière du planning,
+ou jusqu’à « Reprendre le planning ». Montrer la durée et l’état qui prendrait le relais.
+Une dérogation expirée fait recalculer la situation présente ; elle ne rejoue pas les
+transitions horaires manquées. Le traitement des effets suit la politique de reprise.</p>
+<p>La définition du groupe choisit ses sources et leur ordre de priorité. À priorité
+égale, un ordre stable par identité départage les sources ; une configuration
+contradictoire doit être signalée dans l’aperçu. Le dernier message réseau reçu ne
+constitue pas une règle de priorité. Toutes les décisions restent explicables.</p>
+<h3 id="section-4-2">4.2 Sources périmées</h3>
+<p>Chaque liaison automatique définit sa fraîcheur et le comportement en cas de panne :
+conserver une valeur en la marquant périmée, déclarer l’état indisponible, ou employer
+un repli explicitement validé. Aucune panne d’agenda ne devient silencieusement
+« chambre libre ». Aucun équipement d’alarme injoignable ne prouve le retour au Vert.</p>
+<h2 id="section-5">5. Transitions : état précédent, état suivant et cause</h2>
+<p>Une transition est un passage accepté <code>A → B</code> dans un groupe. Elle porte :</p>
+<div aria-label="Tableau : 5. Transitions : état précédent, état suivant et cause" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Donnée</th>
+<th scope="col">Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identité de transition et révision du groupe</td>
+<td>Déduplication, concurrence, corrélation</td>
+</tr>
+<tr>
+<td>Groupe et version de définition utilisée</td>
+<td>Expliquer et reproduire la décision logique</td>
+</tr>
+<tr>
+<td><code>from</code> et <code>to</code></td>
+<td>Filtrer le passage et les réactions de sortie/entrée</td>
+</tr>
+<tr>
+<td>Source, origine, acteur et cause</td>
+<td>Comprendre pourquoi le changement a été demandé</td>
+</tr>
+<tr>
+<td>Instant de demande et instant d’engagement</td>
+<td>Distinguer réception et changement effectif</td>
+</tr>
+<tr>
+<td>Chaîne causale</td>
+<td>Relier agenda, automatisme, transition, profil et commandes</td>
+</tr>
+<tr>
+<td>Dérogation et échéance éventuelles</td>
+<td>Expliquer la durée et le retour au fonctionnement automatique</td>
+</tr>
+<tr>
+<td>Résultat des réactions</td>
+<td>Montrer succès, attente, échec partiel ou interruption</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les références de cause sont minimales et opaques lorsque nécessaire. Ne pas copier
+de titre privé, de participant, d’URL secrète ou de contenu d’agenda dans un événement
+générique, une projection de point ou un message public.</p>
+<h3 id="section-5-1">5.1 Trois points d’accroche</h3>
+<div aria-label="Tableau : 5.1 Trois points d’accroche" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Réaction</th>
+<th scope="col">Déclenchement</th>
+<th scope="col">Filtres utiles</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sortie de A</td>
+<td>On quitte A</td>
+<td>Destination B, source, autres contextes</td>
+</tr>
+<tr>
+<td>Passage A → B</td>
+<td>Cette paire exacte est parcourue</td>
+<td>Cause, source, autres contextes</td>
+</tr>
+<tr>
+<td>Entrée dans B</td>
+<td>On rejoint B</td>
+<td>Provenance A, source, autres contextes</td>
+</tr>
+</tbody>
+</table></div>
+<p>Exemples de règles exprimables :</p>
+<ul>
+<li>Sortir de Cinéma <strong>vers Normal</strong> : restaurer certains réglages antérieurs.</li>
+<li>Sortir de Cinéma <strong>vers Nuit</strong> : abandonner la restauration et appliquer le profil Nuit.</li>
+<li>Entrer dans Cinéma <strong>depuis Lecture</strong> : appliquer le même profil Cinéma, avec une
+étape de préparation propre à cette provenance si elle a été configurée.</li>
+<li>Entrer dans Nuit <strong>depuis Absent</strong> : appliquer un parcours différent de Normal → Nuit.</li>
+<li>Passer de Vigilance Orange à Rouge : exécuter l’escalade prévue, sans répéter toutes
+les réactions déjà faites en Orange.</li>
+<li>Quitter Rouge vers Orange : conserver les mesures prévues pour un incident encore actif.</li>
+</ul>
+<p>Un filtre absent signifie « toute provenance » ou « toute destination ». Les conditions
+peuvent combiner la paire, la source et d’autres groupes, sans formule libre exécutée
+par un LLM. <code>from</code> et <code>to</code> restent ceux de la transition, même après une attente.
+Une condition sur l’état courant est une autre lecture, explicitement identifiable.</p>
+<h3 id="section-5-2">5.2 Ordre proposé</h3>
+<figure class="transition-flow"><figcaption>Une transition, du déclenchement au bilan</figcaption><ol><li><strong>Demande</strong><span>Identifier la provenance et la cause.</span></li><li><strong>Contrôles</strong><span>Vérifier les droits, la révision et les règles.</span></li><li><strong>Préparation</strong><span>Construire le plan et résoudre ses versions.</span></li><li><strong>Engagement</strong><span>Enregistrer durablement le passage de A vers B.</span></li><li><strong>Sortie de A</strong><span>Choisir les réactions selon la destination B.</span></li><li><strong>Passage A → B</strong><span>Exécuter les réactions propres à cette paire.</span></li><li><strong>Entrée dans B</strong><span>Choisir les réactions selon la provenance A.</span></li><li><strong>Bilan</strong><span>Suivre les profils et le résultat des commandes.</span></li></ol></figure>
+<p>Les trois phases s’exécutent dans cet ordre ; dans une phase, l’ordre explicite des
+étapes fait foi. Les règles génériques et spécifiques qui correspondent s’ajoutent :
+une règle spécifique ne remplace pas silencieusement une règle générale. L’aperçu
+montre l’ensemble et signale les effets contradictoires ou répétés.</p>
+<p>La sortie est ici une <strong>phase de réaction</strong> : l’état courant B a déjà été engagé.
+Les actions de sortie utilisent le contexte <code>from = A</code>, <code>to = B</code> ; elles ne relisent
+pas le point courant en espérant y retrouver A. Les préconditions capables de refuser
+le changement sont évaluées avant engagement, pas dans une action de sortie.</p>
+<p>Une même valeur demandée de nouveau produit un reçu « déjà dans cet état » sans
+rejouer les sorties et entrées. « Réappliquer le profil » est une opération distincte.
+Un changement de source à état identique actualise sa provenance sans simuler A → A.</p>
+<h3 id="section-5-3">5.3 Concurrence, attentes et annulation</h3>
+<p>Les changements d’un groupe sont sérialisés et contrôlés par révision attendue.
+Deux clients ne peuvent pas engager une transition depuis la même ancienne révision.
+Un conflit exige de relire l’état, sans remplacer aveuglément la demande par une autre.</p>
+<p>Une nouvelle transition acceptée invalide les effets encore en attente de l’ancienne.
+Les étapes différées revérifient la génération, les conditions courantes nécessaires,
+les droits et le permis vivant avant émission. Une commande déjà envoyée n’est pas
+défaite ; son résultat reste suivi et journalisé. Une escalade urgente ne reste pas
+bloquée derrière une attente de confort.</p>
+<p>Chaque chaîne de transitions conserve sa cause initiale. Les dépendances de réactions
+qui se déclencheraient en boucle, dans un groupe ou entre groupes, sont refusées ;
+les allers-retours entre états sur des demandes distinctes restent normaux. Les chaînes
+provoquées par des événements externes sont bornées et protégées contre les oscillations.
+Une mise à jour d’un autre groupe reste une transition distincte : pas de transaction atomique entre tous les
+contextes ni entre leurs appareils.</p>
+<h3 id="section-5-4">5.4 Changement logique et échec d’un effet</h3>
+<p>Une définition invalide, une source non autorisée ou une précondition non satisfaite
+refuse la transition avant engagement. Un appareil hors ligne pendant une réaction
+laisse la transition engagée, avec un résultat partiel. L’interface peut donc afficher
+« Cinéma — éclairage appliqué, volet indisponible ».</p>
+<p>Le plan définit les étapes indispensables et facultatives : l’échec d’une étape
+indispensable arrête la suite dépendante ; les branches indépendantes autorisées
+peuvent continuer. Il n’y a pas de retour automatique au mode précédent pour masquer
+un échec physique, ni de promesse de transaction entre appareils.</p>
+<h2 id="section-6">6. Profils d’équipements réutilisables</h2>
+<p>Un profil d’équipements est un ensemble nommé de <strong>valeurs cibles typées</strong> : lumière
+allumée ou éteinte, luminosité, couleur, température de blanc, position de volet,
+consigne de chauffage ou volume lorsque les appareils exposent ces capacités.
+Il peut concerner plusieurs appareils et plusieurs familles d’équipements.</p>
+<p>Ces profils sont la présentation fonctionnelle des <strong>scènes</strong> proposées par
+<a href="../components/automatismes-primitives.md#auto-s1--sc%C3%A8ne">AUTO-S1</a>. Il faut un seul
+moteur de scènes, pas deux implémentations concurrentes. Ils sont distincts des
+<a href="../components/profils.md">profils déclaratifs d’intégration</a>, qui décrivent comment
+communiquer avec un appareil. Une ambiance lumineuse existante peut être réutilisée
+comme étape explicite, mais ne couvre pas à elle seule les volets et le reste.</p>
+<h3 id="section-6-1">6.1 Exemple : profil Cinéma</h3>
+<div aria-label="Tableau : 6.1 Exemple : profil Cinéma" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Équipement fictif</th>
+<th scope="col">Valeurs cibles</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lampe principale de la pièce</td>
+<td>Éteinte</td>
+</tr>
+<tr>
+<td>Éclairage indirect</td>
+<td>Allumé, luminosité 15 %, blanc chaud si disponible</td>
+</tr>
+<tr>
+<td>Volet de la pièce</td>
+<td>Position fermée selon la sémantique réelle du point</td>
+</tr>
+<tr>
+<td>Téléviseur</td>
+<td>Allumé si le point sait représenter et appliquer cet état</td>
+</tr>
+<tr>
+<td>Enceinte</td>
+<td>Volume à une valeur choisie, si ce point est exposé</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ne pas supposer qu’un pourcentage de volet a le même sens pour tous les pilotes.
+L’éditeur utilise le sens, l’unité et les bornes du point réellement choisi.
+Une action événementielle comme « lancer un film », « annoncer un message » ou
+« ouvrir une gâche » reste une étape de réaction distincte d’un profil d’état voulu.</p>
+<p>Le même profil peut être associé à l’entrée dans Cinéma depuis plusieurs états.
+Un bouton « Appliquer » permet aussi de l’utiliser sans modifier le groupe de modes.
+Appliquer un profil n’active aucun contexte implicitement ; entrer dans un contexte
+n’applique que les profils explicitement liés à ses réactions.</p>
+<h3 id="section-6-2">6.2 Création et édition</h3>
+<p>Deux chemins sont proposés : sélectionner les appareils et leurs valeurs, ou capturer
+un sous-ensemble choisi de réglages actuels. La capture montre les points retenus et
+exclut les valeurs inconnues, les secrets et les commandes événementielles.
+Elle ne fait pas de copie intégrale opaque de la maison.</p>
+<p>Avant publication : valider les types, unités, plages et références ; refuser les
+valeurs contradictoires pour un même point ; montrer les pièces, groupes et membres
+réellement touchés, avec les protections existantes.</p>
+<p>Les profils ont un brouillon et une version courante validée. Modifier un profil
+réutilisé montre tous ses consommateurs, y compris les réactions de modes et leurs
+graphes. Une édition d’agent ne remplace jamais un profil déjà approuvé.</p>
+<h3 id="section-6-3">6.3 Application et résultat</h3>
+<p>L’application produit un plan prévalidé et un bilan par cible : déjà conforme,
+retenue pour autorisation, envoyée, confirmée, échouée, remplacée ou résultat inconnu.
+La confirmation doit venir d’une observation appropriée ; l’acceptation par un pilote
+ne prouve pas toujours que la consigne physique a été atteinte.</p>
+<p>Le moteur conserve les dépendances d’ordre sur un appareil et limite la concurrence
+entre appareils. Il peut éviter une écriture déjà conforme. Une répétition de demande
+avec la même identité retrouve son reçu ; elle ne crée pas une seconde application.
+Un résultat ambigu ne provoque pas un réessai physique automatique.</p>
+<p>Deux usages sont proposés : appliquer simplement les réglages, ou démarrer un
+<strong>profil temporaire avec mémorisation de l’existant</strong>. Dans le second cas, une session
+relie la capture avant application, les réglages appliqués et leur restauration à la
+fin de cette utilisation. La confirmation des réglages ne termine pas cette session.</p>
+<p>Un profil ponctuel ne réserve pas les équipements et ne maintient pas continuellement
+leurs consignes. Si une personne règle une lampe ensuite, le profil ne lutte pas contre
+elle. Un éventuel profil maintenu serait une extension distincte, avec ses règles de
+dérogation et son coût d’exécution.</p>
+<h2 id="section-7">7. Sortir d’un mode : profil suivant, conservation ou restauration</h2>
+<p>La politique de sortie est explicite et peut dépendre de la destination.</p>
+<div aria-label="Tableau : 7. Sortir d’un mode : profil suivant, conservation ou restauration" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Politique</th>
+<th scope="col">Exemple</th>
+<th scope="col">Effet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Appliquer un profil de destination</td>
+<td>Cinéma → Nuit</td>
+<td>Appliquer Nuit, sans retour intermédiaire à l’éclairage précédent</td>
+</tr>
+<tr>
+<td>Restaurer certains réglages antérieurs</td>
+<td>Cinéma → Normal</td>
+<td>Restaurer seulement les points admissibles et encore attribuables à cette application</td>
+</tr>
+<tr>
+<td>Conserver les réglages</td>
+<td>Cinéma → Lecture</td>
+<td>Garder les points non repris par un profil Lecture</td>
+</tr>
+<tr>
+<td>Réaction spécifique</td>
+<td>Orange → Rouge</td>
+<td>Exécuter une séquence dédiée au passage</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="section-7-1">7.1 Exemple complet : mémoriser, appliquer, puis revenir à l’existant</h3>
+<p>Le parcours attendu pour un profil temporaire est :</p>
+<ol>
+<li>Une transition vers Cinéma demande l’application du profil correspondant.</li>
+<li><strong>Avant la première commande du profil</strong>, lire et enregistrer les valeurs existantes
+des points qui devront être restaurés : éclairages, positions des volets et autres
+réglages sélectionnés. La capture est rendue durable avant ces commandes.</li>
+<li>Appliquer les valeurs prédéfinies du profil Cinéma et conserver la capture initiale
+pendant toute cette utilisation, même lorsque l’application est terminée.</li>
+<li>À la fin de cette utilisation, restaurer les valeurs capturées selon la politique
+de sortie et les contrôles de provenance décrits ci-dessous.</li>
+</ol>
+<div aria-label="Tableau : 7.1 Exemple complet : mémoriser, appliquer, puis revenir à l’existant" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Réglage fictif</th>
+<th scope="col">Juste avant Cinéma, mémorisé</th>
+<th scope="col">Pendant le profil</th>
+<th scope="col">Après « Terminer et restaurer »</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lampe principale</td>
+<td>Allumée</td>
+<td>Éteinte</td>
+<td>Allumée</td>
+</tr>
+<tr>
+<td>Luminosité indirecte</td>
+<td>65 %</td>
+<td>15 %</td>
+<td>65 %</td>
+</tr>
+<tr>
+<td>Volet</td>
+<td>À mi-course</td>
+<td>Fermé</td>
+<td>À mi-course</td>
+</tr>
+</tbody>
+</table></div>
+<p>La restauration revient à <strong>ce qui existait réellement au début de cette utilisation</strong>.
+Elle n’applique pas un profil Normal fixe et ne dépend pas des valeurs présentes lors
+de la création du profil. Une séance suivante mémorise son propre état de départ.</p>
+<p>Lorsque la session est liée à un mode, sa fin est déclenchée par la sortie de ce mode,
+avec la destination connue. Pour un profil appliqué seul, une action explicite
+« Terminer et restaurer » termine la session sans changer implicitement un mode.
+Un délai de fin éventuel doit être configuré explicitement. Cinéma → Nuit peut choisir
+le profil Nuit au lieu de revenir à l’existant, conformément à la table précédente.</p>
+<h3 id="section-7-2">7.2 Captures par utilisation et limites</h3>
+<p>La restauration est une option de la liaison ou de l’application ; lorsqu’elle est
+choisie, la capture avant application est obligatoire. Elle est bornée aux points
+sélectionnés et porte l’identité de session, l’identité d’application et la version du
+profil. Elle reste disponible jusqu’au bilan de fin, puis suit une rétention bornée.</p>
+<p>Un réessai de la même demande ou une réapplication dans la même session ne remplace
+jamais la capture initiale par les réglages Cinéma déjà appliqués. Une nouvelle session
+capture un nouvel existant ; la première version ne crée pas de sessions temporaires
+imbriquées sur les mêmes points.</p>
+<p>Les valeurs inconnues ne sont pas inventées. Si une capture requise ne peut pas être
+lue ou enregistrée, l’application est arrêtée avant toute commande du profil, avec
+une explication. Retirer des points à restaurer demande un choix explicite ; ce n’est
+pas un succès silencieux de la capture incomplète.</p>
+<h3 id="section-7-3">7.3 Préserver les changements effectués depuis la capture</h3>
+<p>Avant toute restauration, vérifier que le point est toujours contrôlé par cette
+application : aucune commande manuelle, autre règle ou profil plus récent ne l’a repris.
+Une simple égalité de valeur est insuffisante : une personne peut avoir choisi la même
+valeur. Cela nécessite un suivi de révision et de provenance des écritures, à ajouter
+explicitement ; le cache d’état actuel ne fournit pas seul cette garantie.</p>
+<p>Le contrôle doit tenir jusqu’à l’admission et l’émission de la commande de restauration,
+pas seulement lors de l’aperçu. Un point repris par quelqu’un d’autre est ignoré avec
+une explication. Les points repris par le profil de destination sont aussi exclus de
+la restauration : éviter « rallumer tout, puis tout éteindre » lors de Cinéma → Nuit.</p>
+<p>Pas de restauration automatique globale, de pile illimitée de profils ni de rollback
+physique sur échec. Après redémarrage, une ancienne capture ne déclenche aucune
+restauration spontanée ; elle peut être présentée pour une nouvelle action explicite.</p>
+<h2 id="section-8">8. Vigilance et réactions graduées</h2>
+<p>La vigilance est un usage particulier des modes, avec une politique d’escalade adaptée.</p>
+<div aria-label="Tableau : 8. Vigilance et réactions graduées" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Niveau</th>
+<th scope="col">Sens possible</th>
+<th scope="col">Réactions configurables</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vert</td>
+<td>Aucun incident actif connu selon les sources utilisables</td>
+<td>Fonctionnement ordinaire</td>
+</tr>
+<tr>
+<td>Orange</td>
+<td>Incident mineur, doute ou signal nécessitant vérification</td>
+<td>Information du foyer et vérifications définies</td>
+</tr>
+<tr>
+<td>Rouge</td>
+<td>Intrusion confirmée selon une règle ou une source de référence</td>
+<td>Réactions d’alarme explicitement validées</td>
+</tr>
+</tbody>
+</table></div>
+<p>La confirmation est définie par le propriétaire : état d’une centrale, combinaison
+déterministe de signaux ou décision humaine. Un LLM ne transforme pas librement un
+texte suspect en preuve d’intrusion.</p>
+<p>Si plusieurs incidents sont actifs, le niveau retenu est le plus élevé encore requis.
+Un événement Vert d’une source ne supprime pas un incident Rouge d’une autre.
+Un acquittement indique qu’une personne a vu l’alerte ; il ne résout pas l’incident.</p>
+<p>Les transitions descendantes, notamment Rouge → Orange et Rouge → Vert, ont leurs
+conditions propres : résolution des incidents concernés et remise à zéro autorisée
+si elle a été prévue. L’absence de nouveau signal ou la panne d’une source ne vaut
+pas une résolution. Une indisponibilité est signalée séparément du dernier niveau.</p>
+<p>Les temporisations d’anti-rebond et de retour au calme sont explicites et bornées.
+La page montre les incidents qui expliquent le niveau et les réactions déjà effectuées,
+afin d’éviter les notifications et actions répétées à chaque observation identique.
+Les protections des chambres restent indépendantes du niveau de vigilance.</p>
+<h2 id="section-9">9. Plannings, agendas et rôle de l’assistant</h2>
+<h3 id="section-9-1">9.1 Séjours et récurrences</h3>
+<p>Pour une alternance sur deux semaines : date d’ancrage, fuseau, récurrence, début et
+fin de période, puis exceptions explicites. Une simple bascule hebdomadaire ne suffit
+pas : une coupure du service pourrait inverser le calendrier réel.</p>
+<p>Le dépôt comporte maintenant des <a href="../components/plannings.md">plannings hebdomadaires</a>
+et un <a href="../components/reservations.md">lecteur de réservations ICS</a>. Le premier fournit
+un booléen hebdomadaire ; il ne représente pas seul une alternance sur deux semaines.
+Le second prend déjà en charge un sous-ensemble de récurrences hebdomadaires avec
+intervalle et exceptions, mais garde un contrat de réservation spécifique et une
+qualification de fournisseur distincte. Ne pas l’annoncer comme agenda universel.</p>
+<p>Réutiliser leurs mécanismes temporels et de fraîcheur ; ajouter une liaison explicite
+vers les modes. Le lecteur ICS ne change aujourd’hui ni présence ni mode à lui seul.
+Un état de séjour prévu peut alimenter « Occupation planifiée » ; le choix de le relier
+à « Chambre occupée » reste une règle visible, avec correction manuelle possible.</p>
+<h3 id="section-9-2">9.2 Assistant et agents externes</h3>
+<p>L’assistant peut aider à nommer les groupes, préparer leurs états, construire un profil,
+traduire une consigne en période ou en règle, proposer des transitions, expliquer les
+effets et repérer les incohérences. Les créations et modifications exécutables restent
+des brouillons jusqu’à leur publication humaine selon les mécanismes existants.</p>
+<p>Une consigne directe de la famille peut employer les outils de commande disponibles,
+avec les droits réels de l’assistant et la garde. Elle ne devient pas automatiquement
+un automatisme de confiance. Changer un mode doit tenir compte de ses effets indirects.</p>
+<p>L’exécution autonome lit les événements et définitions validés sans dépendre d’un
+appel LLM. Une interprétation libre et continue d’agendas par LLM pour décider des
+actions serait une autre décision d’architecture ; elle n’est pas introduite par
+cette proposition. Les textes externes restent des données, jamais des instructions
+capables de modifier les droits, les profils ou les transitions.</p>
+<h2 id="section-10">10. Expérience dans le dashboard</h2>
+<h3 id="section-10-1">10.1 Accueil</h3>
+<p>Conserver le sélecteur du mode principal et ajouter un accès à la page Modes.
+Le rôle principal est une métadonnée explicite, avec une seule référence principale
+configurée ; il ne dépend pas du nom d’un groupe ou d’une recherche par suffixe.
+La migration conserve la référence du mode principal existant.</p>
+<p>Une alerte importante peut apparaître parmi les alertes de l’accueil sans remplacer
+le sélecteur principal. L’accueil peut ainsi présenter « Nuit » et une alerte Rouge.</p>
+<h3 id="section-10-2">10.2 Page Modes</h3>
+<p>La page se construit depuis les définitions visibles pour l’appelant : aucune liste
+de groupes codée en dur dans l’interface. Une carte par groupe montre :</p>
+<ul>
+<li>nom, portée, états disponibles et état courant ;</li>
+<li>provenance du dernier changement, paire précédente → suivante et cause ;</li>
+<li>mode automatique ou dérogation, échéance et prochaine transition prévue ;</li>
+<li>qualité de l’information et sources indisponibles ;</li>
+<li>profils liés et bilan des dernières réactions ;</li>
+<li>actions autorisées : changer d’état, reprendre le planning, voir les règles et le journal.</li>
+</ul>
+<p>Un groupe en brouillon est distinct d’un groupe publié utilisable. L’ajout d’un groupe
+publié le rend visible sans modification du code de la page. Son retrait conserve les
+preuves et les dépendances ; une référence utilisée n’est pas supprimée silencieusement.</p>
+<h3 id="section-10-3">10.3 Éditeur de transitions et de profils</h3>
+<p>L’éditeur propose des formulations lisibles : « En quittant Cinéma vers Nuit »,
+« En entrant dans Cinéma depuis Lecture » et « Pendant que Chambre d’amis est Occupée ».
+Il montre les réactions générales et spécifiques ensemble, dans leur ordre réel.</p>
+<p>Pour un profil temporaire, afficher « Mémoriser l’état avant application », les points
+capturés et la politique de fin. La session active propose « Terminer et restaurer »
+avec l’aperçu des valeurs qui seraient rétablies et des points qui seraient ignorés.</p>
+<p>Avant validation ou commande sensible, l’aperçu décrit les équipements touchés,
+les réglages prévus, les restaurations ignorées et les conflits connus. Un essai à
+blanc détaille le parcours sans changer un mode, attendre réellement, envoyer une
+commande, contacter un tiers ou appeler un LLM.</p>
+<p>Tous les libellés d’interface et messages exécutables seront traduits en français
+et en anglais dès leur écriture. Les noms personnalisés restent des données de la maison.</p>
+<h2 id="section-11">11. Combinaisons et conflits entre usages</h2>
+<p>Chaque groupe reste indépendant ; une priorité des sources <strong>dans un groupe</strong> ne
+résout pas à elle seule les commandes de deux profils sur une même lampe.</p>
+<p>Pour la première version, les usages combinés sont exprimés par des conditions et
+des réactions explicites : par exemple, le passage général en Nuit peut demander
+une transition locale Cinéma → Nuit si cette liaison a été configurée et validée.
+Tous les automatismes d’ouverture concernés doivent consulter l’occupation d’une
+chambre ; ajouter une règle d’exception à côté d’une ouverture générale qui l’ignore
+ne suffit pas.</p>
+<p>Prévalider les conflits au sein d’une application et montrer les recouvrements connus
+entre profils et règles. Une commande concurrente peut remplacer une consigne ; le
+bilan l’indique au lieu de prétendre que le profil est entièrement atteint.
+Les conditions et permis sont revérifiés avant les effets différés.</p>
+<p>Un moteur général de profils superposés avec arbitrage permanent par point reste une
+extension ambitieuse. Il ne doit pas être introduit implicitement en prétendant que
+tous les profils ponctuels possèdent les appareils jusqu’à la sortie d’un mode.</p>
+<h2 id="section-12">12. Autorisations et versions exécutables</h2>
+<p>Un changement de mode peut lancer des actions dans des pièces protégées. Une projection
+virtuelle située hors de ces pièces ne doit pas devenir un détour autour de la garde.</p>
+<p>Toutes les entrées — page Modes, REST, MCP, CLI, assistant et écriture compatible d’un
+point — passent par la même admission métier. Pour une commande directe, considérer
+le périmètre des effets dérivés et conserver l’origine, l’acteur et la corrélation.
+L’autorisation doit rester valable jusqu’à l’émission, notamment pour une commande
+retenue ou une session invitée expirée.</p>
+<p>Une réaction automatique agit sous l’autorité de sa définition humaine validée et de
+ses sources autorisées. Le fait qu’elle existe ne rend pas tout appelant autorisé à
+la déclencher : un agent ne peut pas contourner ses droits en changeant une aide, puis
+faire exécuter indirectement le même ordre avec une origine plus forte. Un champ JSON
+ne permet jamais de choisir <code>automation</code> ou <code>system</code>.</p>
+<p>Réutiliser le contrat <a href="../components/plannings.md">des dépendances exécutables</a> pour
+les définitions de modes, réactions et scènes : brouillon, courant validé, aperçu des
+consommateurs, confirmation PIN et contrôle de versions. L’aperçu inclut les dépendances
+transitives et les effets des profils. Les graphes existants n’exécutent jamais un
+brouillon modifié par un agent.</p>
+<p>L’empreinte couvre les comportements, les liaisons et les identités référencées.
+La publication d’une nouvelle version montre les consommateurs affectés. Une transition
+admise conserve les versions exécutables résolues dans son plan ; une publication
+ultérieure ne réécrit pas ce plan déjà admis. Les transitions suivantes emploient le
+nouveau courant. Ce gel concerne le plan de transition ; il ne change pas les lectures
+ordinaires des graphes existants, qui suivent leur propre contrat de dépendances.
+Coupure, retrait d’autorisation et transition plus récente restent capables d’annuler
+des effets non envoyés. Ne pas confondre version de définition,
+révision d’état et identité de transition.</p>
+<p>Les invités ne reçoivent aucun accès global aux modes, agendas, profils ou incidents.
+Une éventuelle commande locale autorisée respecte leurs pièces et fenêtres existantes.
+Une permission d’occupation ne crée aucun compte, droit d’accès ou autorisation de serrure.
+Aucun canal d’envoi à un tiers n’est activé implicitement par un niveau d’alerte.</p>
+<h2 id="section-13">13. État du dépôt et architecture d’intégration proposée</h2>
+<p>État examiné le 21 octobre 2026, référence <code>7cee583</code>.</p>
+<div aria-label="Tableau : 13. État du dépôt et architecture d’intégration proposée" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Brique</th>
+<th scope="col">Présent</th>
+<th scope="col">Évolution proposée</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aides <code>select</code> et <code>switch</code></td>
+<td>Valeurs virtuelles utilisables dans les graphes</td>
+<td>Définition métier des groupes, sources et transitions</td>
+</tr>
+<tr>
+<td>Mode principal de l’accueil</td>
+<td>Recherche explicite de <code>:mode_maison</code></td>
+<td>Référence principale configurée et page Modes générique</td>
+</tr>
+<tr>
+<td>Automatismes</td>
+<td>Filtres d’état <code>from</code> / <code>to</code>, conditions, commandes et occurrences</td>
+<td>Contexte complet de transition, phases et actions de mode/profil</td>
+</tr>
+<tr>
+<td>Dépendances exécutables</td>
+<td>Types planning et calcul, versions et publication validée</td>
+<td>Étendre avec des types modes/scènes, pas du JSON exécutable libre</td>
+</tr>
+<tr>
+<td>Plannings et ICS</td>
+<td>Évaluations déterministes et contrats de reprise</td>
+<td>Liaisons explicites vers les groupes et leurs dérogations</td>
+</tr>
+<tr>
+<td>Scènes d’équipements</td>
+<td>Contrat AUTO-S1 proposé</td>
+<td>Moteur partagé des profils d’équipements</td>
+</tr>
+<tr>
+<td>Ambiances</td>
+<td>Actions lumineuses existantes</td>
+<td>Réutilisation choisie dans une réaction, sans confusion avec un profil complet</td>
+</tr>
+<tr>
+<td>Hub, garde, permis et journal</td>
+<td>Chemin commun des commandes</td>
+<td>Admission des effets indirects et corrélation des transitions</td>
+</tr>
+</tbody>
+</table></div>
+<p>Répartition proposée, à préciser à l’étape d’implémentation :</p>
+<ul>
+<li>Domaine pur : groupes, états, transitions, filtres, définitions typées de scènes
+et validation de leurs références.</li>
+<li>Propriétaire métier : état courant, provenance, dérogations, admission sérialisée,
+révisions et reçus durables. Les projections du hub restent des vues de cet état.</li>
+<li>Moteur d’automatismes : réactions validées, ordre des étapes, attentes, annulations,
+consommation des événements et suivi des lancements.</li>
+<li>Exécuteur de scènes : prévalidation des points, application bornée, confirmations
+et éventuelle capture/restauration contrôlée.</li>
+<li>Connecteurs : publication de données et événements identifiés ; aucune logique
+de commande cachée dans le lecteur d’agenda ou dans un pilote de capteur.</li>
+<li>REST, MCP, CLI et dashboard : mêmes services métier, mêmes droits et mêmes résultats.</li>
+</ul>
+<p>Les points des modes peuvent rester lisibles dans les outils et graphes génériques.
+Toute écriture d’une ancienne aide adoptée comme mode doit être routée vers le service
+de transition ; garder une deuxième voie qui modifie directement son cache créerait
+des changements sans contexte ni autorisation cohérente.</p>
+<h2 id="section-14">14. Persistance, reprise et limites</h2>
+<h3 id="section-14-1">14.1 État durable</h3>
+<p>Les nouvelles définitions suivent le propriétaire de dépendances existant, étendu
+avec des types explicites. L’état d’exécution des modes utilise un propriétaire métier
+unique et un fichier versionné, par exemple <code>modes.json</code>, selon les conventions des
+primitives : écriture temporaire, fsync, renommage et synchronisation du dossier avant
+acquittement. Le cache périodique <code>state.json</code> ne constitue pas cette durabilité.
+Cette proposition ne choisit pas une nouvelle base et ne redéfinit pas D13.</p>
+<p>Persister ensemble état, révision, provenance, dérogation et reçu de transition, ainsi
+que les références nécessaires à son suivi. Les fichiers métier sont inclus dans les
+sauvegardes. Une erreur ou une version inconnue bloque le chemin concerné avec un
+diagnostic ; aucune réinitialisation silencieuse.</p>
+<p>Les captures des sessions de profils temporaires sont des données d’exécution de la
+maison, distinctes de la définition du profil. Leur stockage est borné, inclus dans les
+sauvegardes et confirmé avant les premières commandes correspondantes.</p>
+<p>Les effets physiques commencent seulement après l’engagement durable de leur intention.
+Une identité de requête permet de retrouver le résultat d’une réponse perdue sans
+recommencer le passage. Les reçus sont bornés ; une identité trop ancienne pour être
+prouvée est refusée plutôt qu’interprétée comme une nouvelle intention.</p>
+<h3 id="section-14-2">14.2 Redémarrage et perte d’événements</h3>
+<p>Au démarrage, restaurer les états durables, réévaluer les sources encore valides et
+réconcilier les contextes présents. Ne pas rejouer les sorties/entrées manquées, les
+notifications, les ouvertures ou les applications physiques d’un ancien plan.
+Une interruption entre émission et confirmation reste « résultat inconnu ».</p>
+<p>Une réconciliation est identifiée comme telle, distincte d’une transition observée
+en direct. En première version, elle actualise le contexte sans ses réactions normales ;
+un éventuel comportement de reprise nécessite une règle séparée, explicite et validée.
+La reprise d’un état n’est jamais interprétée comme une arrivée physique.</p>
+<p>Une perte du bus permet de relire l’état courant, pas de recréer toutes les transitions
+qui ont eu lieu. Les consommations d’événements portent une identité et une politique
+documentées, en cohérence avec les <a href="../components/automatismes.md">occurrences</a>.</p>
+<h3 id="section-14-3">14.3 Bornes et performance</h3>
+<p>Le contrat final fixe et teste les plafonds de groupes, états par groupe, réactions,
+cibles par profil, captures, reçus, événements, chaînes causales et délais. Une borne
+atteinte produit un refus visible ; aucune file, pile de profils ou rétention illimitée.
+Les définitions partagées restent dans les plafonds existants tant qu’aucune hausse
+n’a été justifiée et mesurée ; les profils ne créent pas un registre parallèle illimité.</p>
+<p>Indexer les transitions par groupe et filtres. Réagir aux changements et échéances,
+réutiliser les ordonnanceurs, ne pas parcourir tous les profils à chaque seconde.
+Sans groupes configurés, aucune tâche périodique dédiée. Les mesures doivent tenir
+le <a href="../PERFORMANCE.md">budget de performance</a>, y compris avec le dashboard et les
+sources déconnectées. Aucun gain ni coût chiffré n’est revendiqué avant mesure.</p>
+<h2 id="section-15">15. Surfaces proposées et compatibilité</h2>
+<p>Les noms ci-dessous expriment des capacités à concevoir ; ils ne décrivent pas des
+routes ou outils déjà disponibles.</p>
+<div aria-label="Tableau : 15. Surfaces proposées et compatibilité" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Capacité</th>
+<th scope="col">Contenu attendu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lister les modes</td>
+<td>Définitions visibles, courant, provenance, qualité et prochaine échéance</td>
+</tr>
+<tr>
+<td>Préparer un brouillon</td>
+<td>États, sources autorisées, réactions et profils référencés</td>
+</tr>
+<tr>
+<td>Prévisualiser et publier</td>
+<td>Différence de version, effets et consommateurs, confirmation humaine</td>
+</tr>
+<tr>
+<td>Demander une transition</td>
+<td>Groupe, destination, révision attendue et identité de requête</td>
+</tr>
+<tr>
+<td>Simuler une transition</td>
+<td>Paire précédente → suivante, règles retenues et commandes prévues</td>
+</tr>
+<tr>
+<td>Gérer une dérogation</td>
+<td>Échéance, retour au planning et nouvelle révision</td>
+</tr>
+<tr>
+<td>Lister/appliquer les profils</td>
+<td>Définition validée et résultat par cible</td>
+</tr>
+<tr>
+<td>Lire le journal</td>
+<td>Corrélation source → transition → réactions → commandes</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le client ne choisit ni l’état précédent, ni une origine de confiance, ni la version
+exécutable réellement autorisée. Un événement interne contient ces informations
+établies côté serveur. Les erreurs distinguent conflit, refus, attente humaine,
+indisponibilité et application partielle ; une simulation ne crée pas de transition.</p>
+<p>Conserver l’identité du mode principal existant et ses références dans les graphes.
+L’adoption comme groupe de modes demande un aperçu et une validation explicites :
+aucune aide ni automatisation existante n’est réinterprétée au seul motif de son nom.
+Les modes d’exécution <code>restart</code>, <code>single</code> et <code>queued</code> des automatismes restent une
+notion distincte des modes de la maison.</p>
+<h2 id="section-16">16. Choix d’approche et périmètre progressif</h2>
+<p>Le regroupement des idées fait apparaître trois ensembles : les <strong>contextes</strong> (modes
+et sources), les <strong>passages</strong> (transitions et réactions) et les <strong>réglages</strong> (profils).
+Le tri ci-dessous utilise trois critères : couverture du besoin, simplicité pour
+la famille et effort d’intégration.</p>
+<div aria-label="Tableau : 16. Choix d’approche et périmètre progressif" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Approche</th>
+<th scope="col">Couverture et intérêt</th>
+<th scope="col">Limite</th>
+<th scope="col">Avis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aides seules et graphes écrits à la main</td>
+<td>Vérifier rapidement quelques usages</td>
+<td>Provenance, révisions et sorties restent dispersées</td>
+<td>Utile pour une exploration limitée</td>
+</tr>
+<tr>
+<td>Modes métier + réactions dans le moteur + scènes partagées</td>
+<td>Couvre les transitions conditionnelles et profils réutilisables avec une page commune</td>
+<td>Ajoute admission métier et contexte de transition</td>
+<td>Approche recommandée</td>
+</tr>
+<tr>
+<td>Profils maintenus et superposés avec arbitrage permanent</td>
+<td>Pour des configurations très nombreuses et fortement combinées</td>
+<td>Priorités, propriété des points et dérogations nettement plus complexes</td>
+<td>Extension ultérieure</td>
+</tr>
+</tbody>
+</table></div>
+<p>Découpage proposé, sans estimation ni engagement d’implémentation :</p>
+<ol>
+<li><strong>Modes et visibilité</strong> : groupes, principal conservé, page générique, provenance,
+révisions, validation et admission commune. Vérifier deux groupes simultanés.</li>
+<li><strong>Transitions complètes</strong> : <code>from</code> / <code>to</code>, phases ordonnées, filtres, journal, essais
+à blanc, concurrence et reprise. Vérifier deux sorties d’un même état.</li>
+<li><strong>Profils via AUTO-S1</strong> : définitions réutilisables, publication des dépendances,
+application et confirmations, sessions temporaires avec capture préalable et
+restauration contrôlée ; priorité au profil de destination lorsqu’il est choisi.</li>
+<li><strong>Liaisons automatiques</strong> : planning, ICS, exceptions et dérogations ; garder les
+distinctions entre prévision, présence et événement observé.</li>
+<li><strong>Vigilance</strong> : incidents multiples, escalade, acquittement distinct de résolution,
+retours autorisés et réactions graduées.</li>
+<li><strong>Extensions facultatives</strong> : modèles prêts à configurer, éditeur enrichi et étude
+des profils maintenus.</li>
+</ol>
+<p>Les droits indirects, la durabilité, les états inconnus et les résultats partiels sont
+des propriétés de chaque lot concerné ; ils ne sont pas reportés à un lot final.</p>
+<h2 id="section-17">17. Cas d’acceptation pour la future implémentation</h2>
+<ol>
+<li>Ajouter un groupe publié le fait apparaître dans Modes sans changement du frontend ;
+le mode principal reste disponible sur l’accueil.</li>
+<li>Changer le séjour des enfants ne remplace ni le mode Maison ni l’occupation de la
+chambre d’amis. Une observation d’absence ne termine pas le séjour sans règle prévue.</li>
+<li>Normal → Cinéma avec restauration mémorise durablement l’existant avant la première
+commande du profil, l’applique une seule fois et conserve sa provenance. Une capture
+obligatoire impossible empêche cette application ; un réessai ne remplace pas la capture.</li>
+<li>Cinéma → Normal et Cinéma → Nuit sélectionnent des réactions de sortie différentes.
+Une entrée dans Nuit peut aussi filtrer son état précédent.</li>
+<li>Sortie générale, paire spécifique et entrée générale sont toutes visibles et suivent
+l’ordre annoncé. Les doublons contradictoires sont signalés avant publication.</li>
+<li>Demander à nouveau Cinéma, ou réessayer la même requête, ne rejoue pas ses réactions.
+Une réapplication explicite de profil reste possible selon les droits.</li>
+<li>Une attente suivie d’un changement de mode ne laisse partir aucun effet devenu caduc
+encore annulable. Les commandes déjà émises gardent une trace de résultat.</li>
+<li>Un volet hors ligne produit une application partielle ; la transition logique et la
+réussite de chaque cible restent distinctes. Une reconnexion ne rejoue rien seule.</li>
+<li>Terminer un profil temporaire restaure l’état de départ propre à cette session,
+y compris hors d’un mode. Modifier manuellement une lampe, même vers la même valeur,
+empêche la restauration de reprendre ce point. Le profil de destination exclut une
+restauration intermédiaire ; une nouvelle session capture un nouvel état de départ.</li>
+<li>Une publication de profil montre tous ses consommateurs transitifs ; un brouillon
+d’agent n’a aucun effet sur les modes et graphes validés.</li>
+<li>REST, MCP, CLI, assistant et ancienne écriture de point traversent la même admission.
+Un agent ou invité ne gagne aucun droit en passant par un mode ou un profil.</li>
+<li>Deux demandes concurrentes depuis une même révision ne peuvent pas toutes deux
+réussir. Une réponse perdue se résout sans double transition.</li>
+<li>Planning, exceptions, alternance sur deux semaines, fuseau, heures sautées/répétées,
+dérogation et retour au planning produisent des états cohérents après interruption.</li>
+<li>Une source périmée n’est pas traitée comme Libre ou Vert ; la cause est visible sans
+exposer le contenu privé d’un agenda.</li>
+<li>Plusieurs incidents actifs maintiennent le niveau maximal requis. Acquitter ne
+résout pas ; l’escalade et les retours ont des règles distinctes.</li>
+<li>Les coupures avant/après engagement durable et l’incertitude de confirmation ne
+provoquent ni faux succès ni réinitialisation ni rejeu physique aveugle.</li>
+<li>Un essai à blanc explique le parcours sans effet réel, notification externe, attente
+effective ou appel LLM. Les tests utilisent des appareils simulés et des données fictives.</li>
+<li>Les plafonds, l’absence de cycles, la sauvegarde/restauration, les traductions fr/en
+et les budgets de performance sont vérifiés sur les chemins réellement livrés.</li>
+</ol>
+<h2 id="section-18">18. Références du dépôt</h2>
+<ul>
+<li><a href="../ARCHITECTURE.md">Architecture et règles de commande</a>.</li>
+<li><a href="../components/coeur.md">Cœur, garde, origines et journal</a>.</li>
+<li><a href="../components/pilotes.md">Aides et pilotes</a>.</li>
+<li><a href="../components/automatismes.md">Automatismes et occurrences</a>.</li>
+<li><a href="../components/automatismes-primitives.md">Primitives proposées, dont les scènes AUTO-S1</a>.</li>
+<li><a href="../components/plannings.md">Plannings et versions des dépendances exécutables</a>.</li>
+<li><a href="../components/reservations.md">Réservations ICS et accès invités</a>.</li>
+<li><a href="../../integrations/reservations/README.md">Contrat et limites du lecteur ICS</a>.</li>
+<li><a href="../components/moli.md">Assistant</a>, <a href="../components/dashboard.md">dashboard</a>
+et <a href="../components/api.md">surfaces d’API</a>.</li>
+<li><a href="../components/profils.md">Profils déclaratifs d’intégration, notion distincte</a>.</li>
+<li><a href="../PERFORMANCE.md">Budget de performance</a>.</li>
+</ul>
+</article>
+      <footer><span>Version de lecture issue de <a href="modes.md">modes.md</a>, qui reste le document de référence.</span><a class="to-top" href="#top">Retour en haut ↑</a></footer>
+    </main>
+  </div>
+  <script>
+  const printButton = document.querySelector('[data-print]');
+  printButton.addEventListener('click', () => window.print());
+  const headings = [...document.querySelectorAll('.article > h2[id]')];
+  const links = [...document.querySelectorAll('[data-section-link]')];
+  let scheduled = false;
+  function updateLocation() {
+    scheduled = false;
+    let current = headings[0]?.id;
+    for (const heading of headings) {
+      if (heading.getBoundingClientRect().top <= 132) current = heading.id;
+      else break;
+    }
+    for (const link of links) {
+      if (link.dataset.sectionLink === current) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    }
+  }
+  window.addEventListener('scroll', () => {
+    if (!scheduled) { scheduled = true; requestAnimationFrame(updateLocation); }
+  }, { passive: true });
+  for (const link of document.querySelectorAll('.mobile-contents a')) {
+    link.addEventListener('click', () => { document.querySelector('.mobile-contents').open = false; });
+  }
+  updateLocation();
+</script>
+</body>
+</html>
