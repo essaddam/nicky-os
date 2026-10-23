@@ -1,0 +1,3486 @@
+<!doctype html>
+<html lang="fr" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Analyse V4 Moli OS : les bancs rejoués en Linux musl dans un conteneur de production, des bus capricieux, le correctif de la perte sur retard prouvé, les voies paresseuses écrites, la bascule jouée de bout en bout et un modèle de coût.">
+  <meta name="source-markdown" content="isolation-reactivite-runtime-v4.md">
+  <meta name="source-sha256" content="0da7ceb7e91913276c7a64110767f08360fa5ed7ef596be593e3ec301e9a88d0">
+  <title>Approfondissement V4 · Moli OS</title>
+  <style>
+    :root {
+      --paper: #fffdf8; --page: #f0f1ec; --ink: #1d302a; --muted: #52615a;
+      --line: #d4ddd4; --soft: #f4f6f1; --green: #195744; --green-soft: #e6eee5;
+      --warm: #8b3b22; --warm-soft: #fae9df; --amber: #835c00; --amber-soft: #fbf0d6;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 90px; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 var(--sans); }
+    a { color: var(--green); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    button { font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--warm); outline-offset: 4px; }
+    .skip { position: fixed; top: 8px; left: 8px; z-index: 20; padding: 10px 16px; background: var(--paper); transform: translateY(-160%); }
+    .skip:focus { transform: none; }
+    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: var(--paper); }
+    .topbar-inner { max-width: 1440px; min-height: 68px; padding: 12px 36px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 750; }
+    .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; background: var(--green); color: white; border-radius: 7px; font: 23px/1 var(--serif); }
+    .brand-sub { border-left: 1px solid var(--line); padding-left: 15px; margin-left: 4px; font-size: 12px; font-weight: 500; color: var(--muted); }
+    .actions { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+    .print { border: 1px solid var(--line); padding: 8px 13px; border-radius: 5px; color: var(--ink); background: var(--soft); min-height: 42px; }
+    .print:hover { background: var(--green-soft); border-color: var(--green); }
+    .frame { max-width: 1440px; margin: auto; padding: 34px 36px 60px; display: grid; grid-template-columns: 238px minmax(0, 1fr); align-items: start; gap: 38px; }
+    aside { position: sticky; top: 95px; max-height: calc(100dvh - 115px); overflow-y: auto; padding-right: 12px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 750; }
+    aside .eyebrow { color: var(--muted); margin: 8px 0 17px 9px; }
+    aside ul, .mobile-toc ul { list-style: none; padding: 0; margin: 0; }
+    aside li { margin: 0 0 3px; }
+    aside a { display: block; padding: 8px 9px; color: var(--muted); font-size: 12px; line-height: 1.5; text-decoration: none; border-left: 2px solid transparent; }
+    aside a:hover, aside a[aria-current="location"] { background: var(--green-soft); color: var(--green); border-left-color: var(--green); }
+    .sidebar-note { margin: 23px 9px 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 12px; color: var(--muted); }
+    main { min-width: 0; }
+    .cover { padding: 8px 0 30px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 24px; color: var(--muted); font-size: 12px; }
+    .status { padding: 3px 9px; border: 1px solid #e0bdaa; color: var(--warm); border-radius: 3px; background: var(--warm-soft); font-weight: 650; }
+    h1 { font: 500 clamp(40px, 4.9vw, 72px)/1.06 var(--serif); letter-spacing: -.035em; margin: 0 0 23px; }
+    h1 span { display: block; color: var(--green); }
+    .lead { max-width: 760px; font-size: 18px; line-height: 1.65; margin: 0; color: var(--muted); }
+    .verdict { border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .verdict-head { padding: 15px 21px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line); }
+    .verdict-head span { font-size: 12px; color: var(--muted); }
+    .verdict-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: 20px 18px 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-top: 4px solid var(--line); }
+    .card:nth-child(4n) { border-right: 0; }
+    .card:nth-last-child(-n+4) { border-bottom: 0; }
+    .card.ok { border-top-color: var(--green); }
+    .card.high { border-top-color: var(--warm); }
+    .card.mid { border-top-color: #c79a2e; }
+    .card .number { font: 11px var(--mono); color: var(--muted); margin-bottom: 10px; display: block; }
+    .card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .card p { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+    .figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .figure-item { padding: 16px 18px; border-right: 1px solid var(--line); }
+    .figure-item:last-child { border-right: 0; }
+    .figure-item strong { display: block; font: 24px/1.3 var(--mono); color: var(--green); }
+    .figure-item span { font-size: 12px; color: var(--muted); line-height: 1.45; display: block; }
+    figure.diagram { margin: 0 0 22px; padding: 18px; background: var(--paper); border: 1px solid var(--line); }
+    figure.diagram svg { display: block; width: 100%; height: auto; }
+    figure.diagram figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .sev { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 750; letter-spacing: .02em; white-space: nowrap; vertical-align: 2px; }
+    .sev-high { background: var(--warm-soft); color: var(--warm); border: 1px solid #e0bdaa; }
+    .sev-crit { background: var(--warm); color: white; border: 1px solid var(--warm); }
+    .sev-mid { background: var(--amber-soft); color: var(--amber); border: 1px solid #e8d29b; }
+    .sev-low { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+    .sev-ok { background: var(--green-soft); color: var(--green); border: 1px solid #b9cdbd; }
+    h3 .sev { margin-left: 8px; font-size: 12px; }
+    .mobile-toc { display: none; }
+    article { padding: 32px 38px 36px; background: var(--paper); border: 1px solid var(--line); overflow-wrap: break-word; }
+    article > p { color: var(--muted); font-size: 13.5px; }
+    article p { margin: 0 0 1.15em; }
+    article h2 { font-size: clamp(23px, 2.2vw, 29px); font-weight: 650; line-height: 1.3; letter-spacing: -.025em; margin: 40px 0 21px; padding-top: 30px; border-top: 1px solid var(--line); text-wrap: balance; }
+    article h3 { margin: 30px 0 15px; font-size: 19px; font-weight: 650; line-height: 1.4; }
+    article ul, article ol { padding-left: 24px; margin: 0 0 22px; }
+    article li { padding-left: 3px; margin-bottom: 9px; }
+    code { background: var(--soft); padding: 2px 5px; font: .86em var(--mono); overflow-wrap: anywhere; }
+    pre { background: var(--soft); padding: 18px; white-space: pre-wrap; line-height: 1.6; overflow-wrap: anywhere; }
+    pre code { padding: 0; background: transparent; font-size: 12px; }
+    details.code { border: 1px solid var(--line); margin: 0 0 22px; }
+    details.code > summary { padding: 13px 18px; cursor: pointer; font-weight: 650; font-size: 14px; min-height: 48px; }
+    details.code[open] > summary { border-bottom: 1px solid var(--line); }
+    details.code pre { margin: 0; max-height: 640px; overflow: auto; white-space: pre; }
+    .table-wrap { max-width: 100%; overflow-x: auto; margin: 22px 0; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 12.5px; line-height: 1.6; }
+    th, td { padding: 11px 12px; vertical-align: top; text-align: left; border-bottom: 1px solid var(--line); }
+    th { background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 750; }
+    td:first-child { font-weight: 600; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr > * + * { border-left: 1px solid #e5eae1; }
+    footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 21px; color: var(--muted); font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1100px) {
+      .frame { grid-template-columns: 205px minmax(0, 1fr); gap: 24px; padding-inline: 24px; }
+      .topbar-inner { padding-inline: 24px; }
+      article { padding: 25px; }
+      .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card:nth-child(4n) { border-right: 1px solid var(--line); }
+      .card:nth-child(2n) { border-right: 0; }
+      .card:nth-last-child(-n+4) { border-bottom: 1px solid var(--line); }
+      .card:nth-last-child(-n+2) { border-bottom: 0; }
+      .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .figure-item:nth-child(2) { border-right: 0; }
+      .figure-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    }
+    @media (max-width: 780px) {
+      .frame { display: block; padding: 24px 16px 40px; }
+      .topbar-inner { padding-inline: 16px; }
+      aside, .brand-sub { display: none; }
+      .actions { gap: 12px; font-size: 12px; }
+      .cover { padding-top: 0; }
+      h1 { font-size: clamp(38px, 9vw, 58px); }
+      .lead { font-size: 16px; }
+      article { padding: 18px; }
+      .verdict-grid { grid-template-columns: 1fr; }
+      .card, .card:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .card:last-child { border-bottom: 0; }
+      .figures { grid-template-columns: 1fr; }
+      .figure-item, .figure-item:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .figure-item:last-child { border-bottom: 0; }
+      figure.diagram { padding: 12px; overflow-x: auto; }
+      figure.diagram svg { min-width: 760px; }
+      .mobile-toc { display: block; padding: 0 17px; margin: 0 0 22px; background: var(--paper); border: 1px solid var(--line); }
+      .mobile-toc summary { padding: 13px 0; min-height: 50px; cursor: pointer; font-size: 14px; font-weight: 650; }
+      .mobile-toc a { display: block; padding: 8px 0; font-size: 13px; }
+      .mobile-toc ul { padding-bottom: 13px; }
+    }
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      body { background: white; font-size: 10pt; color: black; }
+      .topbar, aside, .mobile-toc, .skip { display: none; }
+      .frame { display: block; max-width: none; padding: 0; }
+      h1 { font-size: 34pt; }
+      .lead { font-size: 12pt; }
+      article { border: 0; padding: 0; }
+      article h2 { break-after: avoid; font-size: 16pt; }
+      article h3 { break-after: avoid; font-size: 12pt; }
+      .verdict, .figures, figure.diagram, pre, tr { break-inside: avoid; }
+      details.code pre { max-height: none; white-space: pre-wrap; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; font-size: 9pt; }
+      th, td { padding: 6px 7px; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#document">Aller au document</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">m</span>Moli OS<span class="brand-sub">Propositions techniques</span></a>
+      <div class="actions"><a href="isolation-reactivite-runtime-v4.md">Source Markdown</a><button class="print" id="print-document" type="button" hidden>Imprimer / PDF</button></div>
+    </div>
+  </header>
+  <div class="frame">
+    <aside>
+      <p class="eyebrow">Dans ce document</p>
+      <nav aria-label="Sommaire du document"><ul>
+<li><a href="#1-réponse-courte">1. Réponse courte</a></li>
+<li><a href="#2-en-conditions-de-production--linux-musl-2-cpu-128-mio">2. En conditions de production : Linux musl, 2 CPU, 128 Mio</a></li>
+<li><a href="#3-un-bus-qui-répond-mal">3. Un bus qui répond mal</a></li>
+<li><a href="#4-le-correctif-de-la-perte-sur-retard-prouvé">4. Le correctif de la perte sur retard, prouvé</a></li>
+<li><a href="#5-les-voies-paresseuses-écrites-pour-de-bon">5. Les voies paresseuses, écrites pour de bon</a></li>
+<li><a href="#6-la-bascule-jouée-de-bout-en-bout">6. La bascule, jouée de bout en bout</a></li>
+<li><a href="#7-les-contrats-esquissés">7. Les contrats, esquissés</a></li>
+<li><a href="#8-le-modèle-de-coût">8. Le modèle de coût</a></li>
+<li><a href="#9-plan-revu">9. Plan revu</a></li>
+<li><a href="#10-limites">10. Limites</a></li>
+<li><a href="#annexe-a--bancs-de-la-v4">Annexe A — Bancs de la V4</a></li>
+      </ul></nav>
+      <p class="sidebar-note">Mesuré en production.<br>Correctif prouvé.<br>Bascule jouée.</p>
+    </aside>
+    <main>
+      <div class="cover">
+        <div class="meta"><span class="status">Analyse V4 · aucune modification du code</span><span>22 octobre 2026</span><span>Production, bus capricieux, correctif, bascule · commit bd1714d</span></div>
+        <h1>Ce qui tient,<span>vérifié de près.</span></h1>
+        <p class="lead">Les limites que la V3 avait listées, fermées une par une : les mêmes bancs en Linux musl dans un conteneur limité comme la production, des bus qui répondent mal, le correctif du moteur appliqué sur une copie et rejoué, les voies paresseuses écrites, la bascule jouée de bout en bout, et des coefficients pour chiffrer n'importe quelle maison. <a href="isolation-reactivite-runtime.html">V1</a>, <a href="isolation-reactivite-runtime-v2.html">V2</a> et <a href="isolation-reactivite-runtime-v3.html">V3</a> restent valables.</p>
+      </div>
+
+      <section class="verdict" aria-label="Ce que la V4 établit">
+        <div class="verdict-head"><strong class="eyebrow">Ce que la V4 établit</strong><span>Sept limites de la V3, fermées par la mesure.</span></div>
+        <div class="verdict-grid">
+          <div class="card ok"><span class="number">01 / PRODUCTION · L</span><h2>Vrai sous Linux musl, 2 CPU, 128&nbsp;Mio</h2><p>Mêmes effets, 1,5 à 3 fois plus lents ; tout l'état vif des deux maisons tient dans 6,3&nbsp;Mio de mémoire anonyme réelle. Deux pilotes bloquants y figent tout : 202&nbsp;ms de médiane.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card ok"><span class="number">02 / CORRECTIF · F1</span><h2>La perte sur retard, corrigée</h2><p>20 lignes sur une copie du moteur : 0 déclencheur perdu sur 5 à 400 automatismes et 5&nbsp;000 événements, contre 5 sur 5.</p><span class="sev sev-ok">Prouvé</span></div>
+          <div class="card mid"><span class="number">03 / BUS LENT · Q1</span><h2>Le vrai piège : un bus lent</h2><p>Rien n'échoue, tout attend : 20 réussites sur 200. Le refus prédictif en donne 85 et divise l'attente par 2,5 ; les réessais adaptatifs sauvent le bus qui bat (200 / 200).</p><span class="sev sev-mid">Choix clé</span></div>
+          <div class="card mid"><span class="number">04 / BUS QUI BAT · Q2</span><h2>Hystérésis contre oscillation</h2><p>Un disjoncteur simple bascule 9 à 22 fois en 20&nbsp;s ; avec hystérésis sur échecs consécutifs, une fois ; les réessais adaptatifs rendent 200 ordres sur 200 sur le bus qui bat.</p><span class="sev sev-mid">Choix clé</span></div>
+          <div class="card ok"><span class="number">05 / VOIES · V</span><h2>Voies paresseuses sous charge</h2><p>237 ordres sains sur 237, médiane 32,6&nbsp;ms, pic mémoire inférieur à 0,6&nbsp;Mio pendant la charge.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card ok"><span class="number">06 / BASCULE · S</span><h2>Jouée de bout en bout</h2><p>Machine gelée : 0 changement perdu à 200/s, secours active en 1,0&nbsp;s, l'ancienne revenue reste passive.</p><span class="sev sev-ok">Prouvé</span></div>
+          <div class="card ok"><span class="number">07 / PLAFOND · T1</span><h2>Le débit que tient le moteur</h2><p>128&nbsp;000 événements/s soutenus sur Mac, 64&nbsp;000 sous Linux : c'est la profondeur d'une rafale instantanée (&gt; 1&nbsp;024) qui le fait décrocher, pas le débit.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card ok"><span class="number">08 / MODÈLE</span><h2>Chiffrer n'importe quelle maison</h2><p>~660&nbsp;o par valeur, 520&nbsp;o par automatisme, 9&nbsp;o par relevé, 19&nbsp;Kio par pilote ; réel ≈ 2,7 × demandé.</p><span class="sev sev-ok">Modèle</span></div>
+        </div>
+      </section>
+
+      <div class="figures" aria-label="Chiffres clés mesurés">
+        <div class="figure-item"><strong>6,3&nbsp;Mio</strong><span>de mémoire anonyme réelle pour tout l'état vif des deux maisons (Linux, cgroup)</span></div>
+        <div class="figure-item"><strong>0 / 5</strong><span>déclencheurs perdus après le correctif, contre 5 sur 5 avant</span></div>
+        <div class="figure-item"><strong>1,0&nbsp;s</strong><span>d'indisponibilité à la bascule, dont 3 à 5&nbsp;ms de reconstruction</span></div>
+        <div class="figure-item"><strong>×2,7</strong><span>entre octets demandés et mémoire anonyme réelle d'un petit état</span></div>
+      </div>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 520" role="img" aria-labelledby="diagram-title diagram-desc" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="diagram-title">Ce que la V4 a vérifié, et comment</title>
+          <desc id="diagram-desc">Deux colonnes de mesure : le Mac et un conteneur Linux musl limité à deux CPU et 128 Mio. Au centre, les quatre crates jetables hors du dépôt et ce qu'elles prouvent : les bancs rejoués, le correctif sur copie, les voies écrites, la bascule à deux processus. En bas, les verdicts.</desc>
+          <defs><marker id="f4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#52615a"/></marker></defs>
+          <rect x="20" y="20" width="300" height="200" rx="9" fill="#fffdf8" stroke="#d4ddd4"/>
+          <text x="36" y="46" font-size="13.5" font-weight="700" fill="#1d302a">Mac · Apple M4</text>
+          <text x="36" y="68" font-size="11.5" fill="#52615a">runtime à 2 workers, comme en production</text>
+          <text x="36" y="86" font-size="11.5" fill="#52615a">allocateur qui compte chaque octet</text>
+          <text x="36" y="112" font-size="11.5" fill="#195744">V1, V2, V3 : toutes les mesures</text>
+          <text x="36" y="130" font-size="11.5" fill="#195744">V4 : correctif, voies, bascule, bus capricieux</text>
+          <text x="36" y="160" font-size="11" fill="#835c00">limite : 8 à 10 fois plus rapide qu'un Pi</text>
+          <text x="36" y="178" font-size="11" fill="#835c00">allocateur système, pas musl</text>
+          <rect x="680" y="20" width="300" height="200" rx="9" fill="#e6eee5" stroke="#195744"/>
+          <text x="696" y="46" font-size="13.5" font-weight="700" fill="#195744">Linux musl · conteneur</text>
+          <text x="696" y="68" font-size="11.5" fill="#52615a">binaire statique, comme l'image FROM scratch</text>
+          <text x="696" y="86" font-size="11.5" fill="#52615a">cpuset 2 CPU · memory 128 Mio (compose.yaml)</text>
+          <text x="696" y="112" font-size="11.5" fill="#195744">mémoire anonyme du cgroup : la mesure</text>
+          <text x="696" y="130" font-size="11.5" fill="#195744">de PERFORMANCE.md, lue par le banc</text>
+          <text x="696" y="160" font-size="11" fill="#835c00">même architecture que le Pi (arm64),</text>
+          <text x="696" y="178" font-size="11" fill="#835c00">cœur 8 à 10 fois plus rapide (estimé)</text>
+          <rect x="350" y="20" width="300" height="200" rx="9" fill="#fffdf8" stroke="#1d302a" stroke-width="1.3"/>
+          <text x="366" y="46" font-size="13.5" font-weight="700" fill="#1d302a">Quatre crates jetables, hors dépôt</text>
+          <text x="366" y="70" font-size="11.5" fill="#52615a"><tspan font-weight="700" fill="#1d302a">preuves-v2</tspan> : bancs V2 à V4</text>
+          <text x="366" y="90" font-size="11.5" fill="#52615a"><tspan font-weight="700" fill="#1d302a">moli-automation-fix</tspan> : copie, 20 lignes</text>
+          <text x="366" y="110" font-size="11.5" fill="#52615a"><tspan font-weight="700" fill="#1d302a">preuves-fix</tspan> : W2 contre la copie</text>
+          <text x="366" y="130" font-size="11.5" fill="#52615a"><tspan font-weight="700" fill="#1d302a">linux-couts</tspan> : threads, processus</text>
+          <text x="366" y="160" font-size="11" fill="#195744">chemins vers les vraies crates du dépôt,</text>
+          <text x="366" y="178" font-size="11" fill="#195744">Cargo.lock du dépôt, aucun code modifié</text>
+          <line x1="320" y1="120" x2="346" y2="120" stroke="#52615a" stroke-width="1.3" marker-start="url(#f4)"/>
+          <line x1="650" y1="120" x2="676" y2="120" stroke="#52615a" stroke-width="1.3" marker-end="url(#f4)"/>
+          <text x="20" y="262" font-size="13" font-weight="700" fill="#52615a">CE QUI A ÉTÉ VÉRIFIÉ</text>
+          <rect x="20" y="276" width="228" height="112" rx="8" fill="#e6eee5" stroke="#195744"/>
+          <text x="34" y="300" font-size="12.5" font-weight="700" fill="#1d302a">Correctif de la perte</text>
+          <text x="34" y="320" font-size="11" fill="#52615a">resync() sur copie du moteur</text>
+          <text x="34" y="338" font-size="11" fill="#52615a">400 automatismes, 5 000 événements</text>
+          <text x="34" y="362" font-size="11.5" font-weight="700" fill="#195744">5 sur 5 perdus → 0 perdu</text>
+          <rect x="264" y="276" width="228" height="112" rx="8" fill="#e6eee5" stroke="#195744"/>
+          <text x="278" y="300" font-size="12.5" font-weight="700" fill="#1d302a">Voies paresseuses</text>
+          <text x="278" y="320" font-size="11" fill="#52615a">écrites : répartiteur, files à la demande,</text>
+          <text x="278" y="338" font-size="11" fill="#52615a">un ordre en vol, disjoncteur</text>
+          <text x="278" y="362" font-size="11.5" font-weight="700" fill="#195744">237 / 237, 32,6 ms, pic &lt; 0,6 Mio</text>
+          <rect x="508" y="276" width="228" height="112" rx="8" fill="#e6eee5" stroke="#195744"/>
+          <text x="522" y="300" font-size="12.5" font-weight="700" fill="#1d302a">Bascule à deux processus</text>
+          <text x="522" y="320" font-size="11" fill="#52615a">principal gelé (SIGSTOP), secours</text>
+          <text x="522" y="338" font-size="11" fill="#52615a">reprend, l'ancien revient : passif</text>
+          <text x="522" y="362" font-size="11.5" font-weight="700" fill="#195744">RPO 0 · RTO 1,0 s · 3 à 5 ms de hub</text>
+          <rect x="752" y="276" width="228" height="112" rx="8" fill="#fbf0d6" stroke="#c79a2e"/>
+          <text x="766" y="300" font-size="12.5" font-weight="700" fill="#835c00">Bus capricieux</text>
+          <text x="766" y="320" font-size="11" fill="#52615a">lent sous le délai, qui bat, partiel</text>
+          <text x="766" y="338" font-size="11" fill="#52615a">hystérésis + refus prédictif</text>
+          <text x="766" y="362" font-size="11.5" font-weight="700" fill="#835c00">le bus lent est le vrai piège</text>
+          <text x="20" y="430" font-size="12.5" font-weight="700" fill="#1d302a">Ce que Linux change de lecture :</text>
+          <text x="20" y="452" font-size="11.5" fill="#52615a">le moteur actuel perd des déclencheurs dès 100 automatismes sous une rafale ; deux pilotes bloquants figent tout (202 ms) ;</text>
+          <text x="20" y="470" font-size="11.5" fill="#52615a">l'instantané JSON coûte trois fois plus (20 ms) ; les cloisons, les voies et le tampon d'entrée donnent les mêmes résultats.</text>
+          <text x="20" y="500" font-size="11" fill="#835c00">Limite : un conteneur sur le Mac, pas un Pi Zero 2 W ; bus simulés par des délais ; bascule sans réseau réel.</text>
+        </svg>
+        <figcaption>La V4 : deux machines de mesure, quatre crates jetables hors du dépôt, et ce qu'elles ont vérifié. Vert : prouvé. Ambre : un choix de conception mesuré.</figcaption>
+      </figure>
+
+      <details class="mobile-toc"><summary>Sommaire</summary><ul>
+<li><a href="#1-réponse-courte">1. Réponse courte</a></li>
+<li><a href="#2-en-conditions-de-production--linux-musl-2-cpu-128-mio">2. En conditions de production : Linux musl, 2 CPU, 128 Mio</a></li>
+<li><a href="#3-un-bus-qui-répond-mal">3. Un bus qui répond mal</a></li>
+<li><a href="#4-le-correctif-de-la-perte-sur-retard-prouvé">4. Le correctif de la perte sur retard, prouvé</a></li>
+<li><a href="#5-les-voies-paresseuses-écrites-pour-de-bon">5. Les voies paresseuses, écrites pour de bon</a></li>
+<li><a href="#6-la-bascule-jouée-de-bout-en-bout">6. La bascule, jouée de bout en bout</a></li>
+<li><a href="#7-les-contrats-esquissés">7. Les contrats, esquissés</a></li>
+<li><a href="#8-le-modèle-de-coût">8. Le modèle de coût</a></li>
+<li><a href="#9-plan-revu">9. Plan revu</a></li>
+<li><a href="#10-limites">10. Limites</a></li>
+<li><a href="#annexe-a--bancs-de-la-v4">Annexe A — Bancs de la V4</a></li>
+      </ul></details>
+
+      <article id="document">
+<p>Date : 22 octobre 2026. Statut : <strong>analyse, aucune modification du code</strong>. Base analysée : <code>main</code> au commit <code>bd1714d</code>. La V4 ferme les limites que la <a href="isolation-reactivite-runtime-v3.md">V3</a> avait elle-même listées ; la <a href="isolation-reactivite-runtime.md">V1</a>, la <a href="isolation-reactivite-runtime-v2.md">V2</a> et la V3 restent valables et inchangées.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Limite de la V3</th>
+<th>Ce que fait la V4</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mesures sur un Mac, pas en production</td>
+<td>Les mêmes bancs compilés en <strong>Linux musl</strong> (comme l'image) et exécutés dans un conteneur limité à <strong>2 CPU et 128 Mio</strong>, avec la mémoire anonyme du cgroup (la mesure de PERFORMANCE.md)</td>
+</tr>
+<tr class="even">
+<td>Un bus simulé mort ou vivant, jamais « mal »</td>
+<td>Trois bus capricieux : <strong>lent</strong> (sous le délai), <strong>qui bat</strong> (tombe et revient), <strong>partiel</strong> (une requête sur deux perdue) ; quatre protections comparées</td>
+</tr>
+<tr class="odd">
+<td>Voies paresseuses mesurées en mémoire seulement</td>
+<td>Les voies paresseuses <strong>écrites pour de bon</strong> et rejouées sous la charge de la V2 et de la V3</td>
+</tr>
+<tr class="even">
+<td>Correctif de la perte sur retard seulement décrit</td>
+<td>Le correctif <strong>appliqué sur une copie du moteur hors dépôt</strong> (20 lignes) et rejoué sous la rafale</td>
+</tr>
+<tr class="odd">
+<td>Bascule mesurée par morceaux</td>
+<td>La bascule <strong>jouée de bout en bout</strong> : deux processus, la machine principale gelée, la secours reprend, l'ancienne revient et reste passive</td>
+</tr>
+<tr class="even">
+<td>Pas de plafond chiffré</td>
+<td>Le <strong>débit soutenu</strong> au-delà duquel le moteur actuel décroche, avec et sans tampon d'entrée</td>
+</tr>
+<tr class="odd">
+<td>Pas de modèle de coût</td>
+<td>Des <strong>coefficients unitaires</strong> pour chiffrer n'importe quelle maison, et les contrats des briques</td>
+</tr>
+</tbody>
+</table>
+<p>Méthode : quatre crates jetables <strong>hors du dépôt</strong>, qui dépendent par chemin des vraies crates <code>moli-runtime</code>, <code>moli-core</code> et <code>moli-automation</code> (annexe A) ; deux machines de mesure : le Mac (Apple M4, « Mac ») et un conteneur Linux musl arm64 limité à 2 CPU et 128 Mio (« Linux »), plus proche de la production ; le Pi Zero 2 W est estimé <strong>8 à 10 fois plus lent</strong> que le conteneur (estimé, non mesuré). Comptes agrégés des deux mêmes Home Assistant (« instance A » et « instance B »), aucun nom repris.</p>
+
+<section id="1-réponse-courte" class="level2">
+<h2>1. Réponse courte</h2>
+<p>Le pattern de la V3 tient en conditions de production, et deux de ses pièces sont maintenant prouvées plutôt que proposées :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Réponse</th>
+<th>Preuve</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Les chiffres tiennent-ils sous Linux musl, 2 CPU, 128 Mio ?</td>
+<td>Oui : mêmes effets, 1,5 à 3 fois plus lents (allocateur musl, VM). <strong>Tout l'état vif des deux maisons : 6,4 Mio de mémoire anonyme réelle</strong> pour 2,34 Mio demandés ; le moteur actuel y <strong>perd des déclencheurs dès 100 automatismes</strong> sous une rafale de 5 000 événements, et deux pilotes bloquants y figent toute la maison (médiane 202 ms)</td>
+<td>L1-L6</td>
+</tr>
+<tr class="even">
+<td>Le correctif de la perte sur retard marche-t-il ?</td>
+<td><strong>Oui</strong> : 20 lignes sur une copie du moteur ; à 400 automatismes et 5 000 événements, <strong>0 déclencheur perdu</strong> (5 sur 5 avant), et l'action arrive 109 ms après la rafale</td>
+<td>F1</td>
+</tr>
+<tr class="odd">
+<td>Un bus qui répond mal, pas seulement mort ?</td>
+<td>Un bus <strong>lent</strong> sous le délai est le vrai piège : rien n'échoue, tout attend (20 réussites sur 200, 965 s d'attente). La protection retenue : voies, <strong>refus prédictif</strong> (un ordre qui ferait la queue au-delà de son échéance est refusé en 0 ms : 85 réussites, attente ÷ 2,5), <strong>réessais idempotents à délai adaptatif</strong> (bus qui bat : 200 sur 200 au lieu de 15 à 145 ; bus partiel : 144 au lieu de 33 à 62), disjoncteur à <strong>hystérésis sur échecs consécutifs</strong> (1 bascule au lieu de 9 à 22)</td>
+<td>Q1-Q3</td>
+</tr>
+<tr class="even">
+<td>Les voies paresseuses tiennent-elles sous charge ?</td>
+<td><strong>Oui</strong> : 237 ordres sains sur 237, médiane 32,6 ms, comme les voies en tâches, pour moins de 0,6 Mio de pic pendant la charge (harnais compris)</td>
+<td>V1-V3</td>
+</tr>
+<tr class="odd">
+<td>La bascule marche-t-elle de bout en bout ?</td>
+<td><strong>Oui</strong> : machine principale gelée, <strong>0 changement perdu</strong> à 200 changements par seconde, secours active <strong>1,0 s</strong> après le gel (dont 1 s de silence maximal décidé, 3 à 5 ms de reconstruction), l'ancienne machine revenue <strong>reste passive</strong></td>
+<td>S1-S3</td>
+</tr>
+<tr class="even">
+<td>Jusqu'où le moteur actuel tient-il ?</td>
+<td>À 400 automatismes, il suit <strong>128 000 événements par seconde</strong> soutenus (500 fois la pointe réelle), mais décroche sur une <strong>rafale instantanée de plus de 1 024 événements</strong> : c'est la profondeur de rafale qui compte, pas le débit. Le tampon d'entrée lisse les rafales pour 3 à 12 ms de latence</td>
+<td>T1</td>
+</tr>
+<tr class="odd">
+<td>Combien coûte une maison quelconque ?</td>
+<td>Modèle : <strong>~660 o par valeur</strong> d'état vif, <strong>~520 o par automatisme</strong> compilé, <strong>~9 o par relevé</strong> d'historique, <strong>19 Kio par pilote</strong> isolé, facteur <strong>2,7</strong> entre octets demandés et mémoire anonyme réelle</td>
+<td>section 8</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="2-en-conditions-de-production--linux-musl-2-cpu-128-mio" class="level2">
+<h2>2. En conditions de production : Linux musl, 2 CPU, 128 Mio</h2>
+<p>Les bancs des V2 et V3 ont été recompilés en Linux musl statique (le même profil que l'image <code>FROM scratch</code>, sans LTO) et exécutés dans un conteneur <code>alpine</code> limité à deux cœurs et 128 Mio, la limite de <code>compose.yaml</code>. Les écarts avec le Mac viennent de l'allocateur de musl (plus lent, surtout sur les allocations nombreuses de <code>serde_json</code>) et de la virtualisation.</p>
+<section id="21-mémoire-réelle" class="level3">
+<h3>2.1 Mémoire réelle</h3>
+<p>Le banc <code>etat_complet</code> lit, sous Linux, la RSS du processus et la mémoire <strong>anonyme du cgroup</strong> (<code>memory.stat</code>, ligne <code>anon</code>), la mesure que PERFORMANCE.md applique à Moli et à Home Assistant.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Moment</th>
+<th>Octets demandés (allocateur qui compte)</th>
+<th>RSS</th>
+<th>Mémoire anonyme du cgroup</th>
+<th>Facteur réel / demandé</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Au démarrage, avant toute charge</td>
+<td>~0</td>
+<td>744 Kio</td>
+<td>36 Kio</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Tout l'état vif des deux maisons (496 appareils, 2 264 valeurs, 400 automatismes compilés, baux, agrégats, voies, bus)</td>
+<td>2,34 Mio</td>
+<td>8,6 Mio</td>
+<td><strong>6,3 Mio</strong></td>
+<td>×2,7</td>
+</tr>
+<tr class="odd">
+<td>L'état vif et 7 jours d'historique compact</td>
+<td>11,1 Mio</td>
+<td>18,8 Mio</td>
+<td><strong>16,3 Mio</strong></td>
+<td>×1,5</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le facteur entre octets demandés et mémoire réelle est de <strong>2,7 sur un état fait de petites structures</strong> (en-têtes de blocs, arrondis de l'allocateur de musl, piles des threads du runtime) et tombe à <strong>1,5 dès que de grands tableaux</strong> (l'historique en colonnes) dominent. Pour le budget, retenir : état vif ≈ 6,5 Mio réels pour les deux maisons, profil sobre (24 h) ≈ 8 Mio, profil généreux (7 jours) ≈ 16,5 Mio ; tout cela tient dans les 32 Mio de mémoire anonyme du budget du Pi, avec le reste du cœur (4 à 7 Mio mesurés aujourd'hui). Le profil maximal (30 jours, ~40 Mio demandés, ~55 Mio réels estimés) le dépasse : il est réservé aux machines à 2 Go et plus.</p>
+</section>
+<section id="22-les-mêmes-bancs-linux-contre-mac" class="level3">
+<h3>2.2 Les mêmes bancs, Linux contre Mac</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Mesure</th>
+<th>Mac</th>
+<th>Linux</th>
+<th>Écart</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Moteur actuel, balayage, 400 automatismes</td>
+<td>1,8 à 2,1 µs par événement</td>
+<td>3,4 µs</td>
+<td>×1,7</td>
+</tr>
+<tr class="even">
+<td>Moteur compilé, 400 automatismes</td>
+<td>3 ns</td>
+<td>2 ns</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Moteur compilé, 10 000 automatismes</td>
+<td>10 à 11 ns</td>
+<td>18 ns</td>
+<td>×1,7</td>
+</tr>
+<tr class="even">
+<td>« Moyenne 1 h » par SQLite</td>
+<td>150 à 190 µs</td>
+<td>153 µs</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Agrégat au fil de l'eau</td>
+<td>5 à 6 ns par relevé, 1 ns par lecture</td>
+<td>5 ns, 1 ns</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Expression interprétée / compilée</td>
+<td>743 à 754 ns / 28 à 32 ns</td>
+<td>444 ns / 25 ns</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Instantané JSON complet, compressé</td>
+<td>6,8 ms</td>
+<td><strong>20,1 ms</strong></td>
+<td>×3</td>
+</tr>
+<tr class="even">
+<td>Instantané binaire de l'état vif, compressé</td>
+<td>0,30 ms</td>
+<td>0,45 ms</td>
+<td>×1,5</td>
+</tr>
+<tr class="odd">
+<td>Ordre vers un pilote isolé (thread), p50 / p99</td>
+<td>0,01 / 0,02 ms</td>
+<td>0,03 / 0,06 ms</td>
+<td>×3, identique au pilote partagé</td>
+</tr>
+<tr class="even">
+<td>Courbe 24 h, mémoire / SQLite</td>
+<td>0,04 / 17 ms</td>
+<td>0,10 / 21,8 ms</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Redémarrage à chaud, 7 jours : SQLite / instantané binaire</td>
+<td>76 / 1,3 ms</td>
+<td>134 / 4,3 ms</td>
+<td>×2 à 3</td>
+</tr>
+<tr class="even">
+<td>Compiler un automatisme à la validation</td>
+<td>7 µs</td>
+<td>11,8 µs</td>
+<td>×1,7</td>
+</tr>
+<tr class="odd">
+<td>Moteur réel, croisière, 400 automatismes, p50 / p99</td>
+<td>0,5 / 2,9 ms</td>
+<td>1,1 / 1,4 ms</td>
+<td>×2</td>
+</tr>
+<tr class="even">
+<td>Moteur réel, rafale de 2 000, action au milieu / après, 400 automatismes</td>
+<td>36,6 / 59,7 ms</td>
+<td>44,1 / 78,5 ms</td>
+<td>×1,3</td>
+</tr>
+<tr class="odd">
+<td>Moteur réel, rafale de 5 000, 400 automatismes</td>
+<td>80 ms / <strong>perdue</strong></td>
+<td>102 ms / <strong>perdue</strong></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Deux pilotes bloquants partagés : médiane d'un ordre, pire retard d'une minuterie</td>
+<td>1,6 à 6,7 ms / ~195 ms</td>
+<td><strong>202 ms / 405 ms</strong></td>
+<td>la maison entière au pas des bloqueurs</td>
+</tr>
+<tr class="odd">
+<td>Six pilotes bloquants isolés</td>
+<td>≤ 0,1 ms / 3 à 44 ms</td>
+<td>0,1 ms / 6,8 ms</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Pont, lampe muette, boucle unique : ordres sains réussis</td>
+<td>37 à 42 sur 237</td>
+<td>41 sur 237</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Pont, lampe muette, voie par appareil</td>
+<td>237 sur 237, 32 ms</td>
+<td>237 sur 237, 34,8 ms</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>API à 4 places, tâche par ordre / voie par appareil</td>
+<td>1,43 s / 32 ms</td>
+<td>1,35 s / 34,5 ms</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Bus mort 15 s : ordres pendant la panne, voies / disjoncteur</td>
+<td>4 002 / 0,1 ms</td>
+<td>4 003 / 0,1 ms</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Reprise après le retour du bus, disjoncteur</td>
+<td>503 ms</td>
+<td>634 ms</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Inondation de 5 000 à la reconnexion, sans / avec tampon d'entrée</td>
+<td>5 sur 5 perdus / 0 perdu, 5 à 11 ms</td>
+<td>5 sur 5 perdus (3 200 manqués) / 0 perdu, 6 à 15 ms</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ce qui change de lecture sous Linux :</p>
+<ul>
+<li><strong>Le moteur actuel décroche plus tôt.</strong> À 5 000 événements, il prend du retard dès 50 automatismes et perd des déclencheurs dès 100 ; à 200 automatismes, il perd même des déclencheurs injectés <strong>au milieu</strong> de la rafale (9 sur 9 dans une passe). Sur un Pi, 8 à 10 fois plus lent, le même décrochage arriverait sur des rafales de quelques centaines.</li>
+<li><strong>Deux pilotes bloquants gèlent tout, sans exception.</strong> Avec deux cœurs seulement, il ne reste rien pour le cœur : 7 ordres servis en 2 s, 202 ms de médiane, une minuterie de 10 ms qui part après 405 ms. Sur le Mac, le vol de tâches trouvait encore des cycles ; en production, non.</li>
+<li><strong>L'instantané JSON coûte trois fois plus</strong> (20 ms) : à chaque seconde, ce serait 2 % d'un cœur du conteneur, et 15 à 20 % sur un Pi (estimé). Le format binaire reste à 0,45 ms.</li>
+<li>Les cloisons, les voies et le tampon d'entrée donnent exactement les mêmes résultats : leur effet ne dépend pas de la machine.</li>
+</ul>
+</section>
+<section id="23-le-plafond-du-moteur-actuel" class="level3">
+<h3>2.3 Le plafond du moteur actuel</h3>
+<p>Le banc T1 pousse 400 automatismes réels sous un <strong>débit soutenu</strong> pendant 3 s (bruit sur 700 capteurs, par lots d'une milliseconde), avec une sonde toutes les 500 ms.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Débit soutenu</th>
+<th>Sans tampon d'entrée (Mac)</th>
+<th>Avec tampon d'entrée, 10 ms (Mac)</th>
+<th>Linux, sans / avec tampon</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1 000 par seconde</td>
+<td>0 perdu, 0,5 ms</td>
+<td>0 perdu, 9,0 ms</td>
+<td>0 perdu, 1,0 ms / 0 perdu, 11,5 ms</td>
+</tr>
+<tr class="even">
+<td>4 000</td>
+<td>0 perdu, 0,5 ms</td>
+<td>0 perdu, 8,0 ms</td>
+<td>0 perdu, 1,2 ms / 0 perdu, 10,4 ms</td>
+</tr>
+<tr class="odd">
+<td>16 000</td>
+<td>0 perdu, 0,7 ms</td>
+<td>0 perdu, 11,5 ms</td>
+<td>0 perdu, 0,9 ms / 0 perdu, 5,4 ms</td>
+</tr>
+<tr class="even">
+<td>32 000</td>
+<td>0 perdu, 0,5 ms</td>
+<td>0 perdu, 3,7 ms</td>
+<td>0 perdu, 1,9 ms (pire 10,8) / 0 perdu, 13,0 ms</td>
+</tr>
+<tr class="odd">
+<td>64 000</td>
+<td>0 perdu, 0,8 ms</td>
+<td>0 perdu, 6,6 ms</td>
+<td>0 perdu, 3,9 ms / 0 perdu, 8,9 ms</td>
+</tr>
+<tr class="even">
+<td>128 000</td>
+<td>0 perdu, 0,8 ms</td>
+<td>1 perdu sur 6, 17 retards</td>
+<td><strong>1 perdu sur 6, 24 retards</strong> / 0 perdu, 13,7 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lecture, qui corrige une idée de la V2 : <strong>ce n'est pas le débit qui fait décrocher le moteur actuel, c'est la profondeur d'une rafale instantanée.</strong> À 128 000 événements par seconde soutenus sur le Mac, et 64 000 sous Linux, soit 270 à 500 fois la pointe réelle des deux maisons (239 par seconde), le moteur suit, parce que chaque lot d'une milliseconde reste très en dessous des 1 024 places du bus d'événements. Sous Linux, à 128 000 par seconde, les deux cœurs saturent sans tampon (24 retards, un déclencheur perdu) ; avec le tampon, qui divise par 180 le nombre d'événements publiés (700 points par 10 ms au plus), tout passe encore. Une rafale de 5 000 événements envoyée d'un trait (un pont qui republie tout à la reconnexion, W2 et P2) remplit ces 1 024 places en quelques millisecondes, le moteur prend du retard, et sans le correctif de la section 4 il perd des transitions. Le tampon d'entrée transforme une rafale en lots (au plus un événement par point et par 10 ms) ; il coûte 3 à 12 ms de latence pendant la rafale et rien au repos. Sur le Mac à 128 000 par seconde avec le tampon, ce sont les deux cœurs qui saturent (le tampon lui-même, le hub, le moteur), pas le bus.</p>
+<p>Le coût par événement du moteur actuel reste celui de la V2 : environ 60 ns par automatisme pour un événement qui ne concerne aucun déclencheur, 18 à 30 µs par événement à 400 automatismes dans une rafale qui en concerne (W2). Le moteur compilé le ramène à quelques nanosecondes (I1), et le filtrage à la source lui épargne les événements que personne ne regarde.</p>
+</section>
+</section>
+<section id="3-un-bus-qui-répond-mal" class="level2">
+<h2>3. Un bus qui répond mal</h2>
+<p>La V3 avait joué un bus mort. Un bus réel répond souvent <strong>mal</strong> avant de ne plus répondre : un pont saturé qui met 2 à 3 s, un coordinateur Zigbee qui redémarre en boucle, un service cloud qui perd une requête sur deux. Trois caprices, quatre protections, même charge : 10 ordres par seconde vers 10 appareils du bus pendant 20 s, et 10 par seconde vers un autre pilote. L'« attente totale » est la somme du temps passé par tous les appelants (un workflow, la famille) à attendre une réponse : c'est le coût vécu.</p>
+<p>Les quatre protections :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Protection</th>
+<th>Ce qu'elle fait</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Voies seules</td>
+<td>une file par appareil, un ordre en vol, échéance revérifiée (V2)</td>
+</tr>
+<tr class="even">
+<td>Disjoncteur simple (V3)</td>
+<td>voies + ouverture sur 3 échecs en 10 s, essai après 1 s, un succès referme</td>
+</tr>
+<tr class="odd">
+<td>Hystérésis + refus prédictif</td>
+<td>voies + ouverture sur <strong>3 échecs consécutifs</strong>, ouvert <strong>5 s au moins</strong>, essais espacés de 1 s à 30 s, <strong>3 succès</strong> pour refermer ; au-delà de 1,5 s de latence médiane, un ordre qui ferait la queue au-delà de son échéance est <strong>refusé tout de suite</strong></td>
+</tr>
+<tr class="even">
+<td>Adaptatif + réessais</td>
+<td>la précédente, plus un <strong>délai par tentative adapté au bus</strong> (3 × la médiane récente, au moins 500 ms, une fois 5 réponses connues ; sinon tout le temps restant) et des <strong>réessais tant que l'échéance le permet</strong>, pour les ordres idempotents (une consigne, jamais un appui) ; l'essai de réouverture est un ordre réel avec ses réessais</td>
+</tr>
+</tbody>
+</table></div>
+<p>Résultats (Mac) : ordres vers le bus réussis sur 200, latence des réussis, échoués et leur latence, attente totale des appelants, nombre de bascules du disjoncteur, et p99 de l'autre pilote.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Caprice</th>
+<th>Protection</th>
+<th>Réussis</th>
+<th>p50 / p95 des réussis</th>
+<th>Échoués (p50)</th>
+<th>Attente totale</th>
+<th>Bascules</th>
+<th>Autre pilote p99</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Q1 lent</strong> (2,5 s, sous le délai)</td>
+<td>voies seules</td>
+<td>20</td>
+<td>2,5 s / 4,0 s</td>
+<td>180 (5,0 s, échéance)</td>
+<td><strong>965 s</strong></td>
+<td>0</td>
+<td>23 ms</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>disjoncteur simple</td>
+<td>20</td>
+<td>2,5 s / 4,0 s</td>
+<td>180 (5,0 s)</td>
+<td>965 s</td>
+<td>0</td>
+<td>24 ms</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>hystérésis + refus</td>
+<td><strong>85</strong></td>
+<td>4,3 s / 4,9 s</td>
+<td>115 (<strong>0 ms</strong>, refusés d'avance)</td>
+<td><strong>380 s</strong></td>
+<td>1</td>
+<td>24 ms</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>adaptatif + réessais</td>
+<td>85</td>
+<td>4,3 s / 4,9 s</td>
+<td>115 (0 ms)</td>
+<td>382 s</td>
+<td>3</td>
+<td>24 ms</td>
+</tr>
+<tr class="odd">
+<td><strong>Q2 qui bat</strong> (mort 1,5 s, vivant 1,5 s)</td>
+<td>voies seules</td>
+<td>145</td>
+<td>1,9 s / 4,9 s</td>
+<td>55 (4,0 s)</td>
+<td>500 s</td>
+<td>0</td>
+<td>23 ms</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>disjoncteur simple</td>
+<td>38</td>
+<td>23 ms / 0,5 s</td>
+<td>162 (2,0 s)</td>
+<td>352 s</td>
+<td><strong>9</strong></td>
+<td>24 ms</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>hystérésis + refus</td>
+<td>15</td>
+<td>23 ms / 23 ms</td>
+<td>185 (0 ms)</td>
+<td>136 s</td>
+<td>1</td>
+<td>24 ms</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>adaptatif + réessais</td>
+<td><strong>200</strong></td>
+<td><strong>26 ms / 1,5 s</strong></td>
+<td><strong>0</strong></td>
+<td><strong>105 s</strong></td>
+<td>0</td>
+<td>24 ms</td>
+</tr>
+<tr class="odd">
+<td><strong>Q3 partiel</strong> (une requête sur deux perdue)</td>
+<td>voies seules</td>
+<td>62</td>
+<td>4,7 s / 5,0 s</td>
+<td>138 (5,0 s)</td>
+<td>912 s</td>
+<td>0</td>
+<td>24 ms</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>disjoncteur simple</td>
+<td>33</td>
+<td>23 ms / 3,0 s</td>
+<td>167 (1,9 s)</td>
+<td>316 s</td>
+<td><strong>22</strong></td>
+<td>24 ms</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>hystérésis + refus</td>
+<td>57</td>
+<td>3,0 s / 5,0 s</td>
+<td>143 (5,0 s)</td>
+<td>847 s</td>
+<td>0</td>
+<td>24 ms</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>adaptatif + réessais</td>
+<td><strong>144</strong></td>
+<td>2,7 s / 4,5 s</td>
+<td>56 (5,0 s)</td>
+<td>573 s</td>
+<td>4</td>
+<td>24 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sous Linux (conteneur 2 CPU, 128 Mio), les mêmes douze cas donnent la même lecture : bus lent, 20 réussites avec les voies seules contre <strong>96</strong> (hystérésis + refus) et 92 (adaptatif), attente 965 s contre 404 à 428 s ; bus qui bat, <strong>200 sur 200</strong> avec les réessais adaptatifs (p50 0,47 s, p95 1,5 s), 11 bascules pour le disjoncteur simple ; bus partiel, <strong>148 sur 200</strong> avec les réessais contre 34 à 62 ; l'autre pilote à 31 ms de p99 dans les douze cas.</p>
+<p>Ce qu'on en tire :</p>
+<ol type="1">
+<li><strong>Le bus lent est le vrai piège.</strong> Rien n'échoue, donc un disjoncteur fondé sur les échecs ne s'ouvre jamais, et chaque ordre attend jusqu'à son échéance derrière les précédents : 20 réussites sur 200 et 965 s d'attente cumulée. Il faut un <strong>budget de latence</strong>. Le premier essai de la V4, raccourcir le délai en mode dégradé, enterrait le bus (25 sur 200) ; le <strong>refus prédictif</strong> garde les ordres qui peuvent aboutir et refuse en 0 ms ceux qui feraient la queue au-delà de leur échéance : 85 réussites, attente divisée par 2,5, et l'appelant sait tout de suite.</li>
+<li><strong>Les réessais sauvent le bus qui bat et le bus partiel, pas le bus lent.</strong> Un délai par tentative adapté à la latence connue du bus (3 × la médiane) et des réessais dans l'échéance donnent 200 sur 200 sur le bus qui bat, 144 sur 200 sur le bus partiel, sans rien changer au bus lent. Deux conditions, apprises par les essais ratés : tant que la latence du bus n'est pas connue, une seule tentative avec tout le temps restant (sinon un bus lent est pris pour un bus mort : 0 sur 200 au premier essai) ; et seulement pour les ordres <strong>idempotents</strong>, une consigne qu'on peut poser deux fois, jamais un appui, une impulsion ni un basculement.</li>
+<li><strong>Le disjoncteur compte des ordres, pas des tentatives, et des échecs consécutifs, pas des échecs par fenêtre.</strong> Avec « 3 échecs en 10 s », un bus qui perd une requête sur deux s'ouvre et se referme sans fin : 22 bascules en 20 s. Avec « 3 échecs consécutifs », un succès remet le compte à zéro et un bus partiel reste utilisable ; un bus mort s'ouvre toujours aussi vite.</li>
+<li><strong>L'hystérésis</strong> (ouvert 5 s au moins, 3 succès consécutifs pour refermer, essais espacés de 1 s à 30 s) supprime l'oscillation : 1 bascule au lieu de 9 à 22. Son prix : un bus qui bat toutes les 1,5 s est traité comme mort tant qu'il n'est pas redevenu stable, et la famille le voit. Combinée aux réessais, qui servent aussi d'essai de réouverture, elle ne se déclenche plus que sur un bus vraiment mort.</li>
+<li><strong>L'autre pilote ne voit jamais rien</strong> (p99 23 à 26 ms dans les douze cas) : les voies et le thread par pilote suffisent à protéger le reste de la maison ; disjoncteur, budget de latence et réessais protègent <strong>l'appelant</strong>.</li>
+</ol>
+<p>Les paramètres (5 s, 3 succès, 1,5 s de médiane, 3 × la médiane, 500 ms de plancher) sont des points de départ à régler sur du vrai matériel ; la structure, elle, est fixée : voies, budget de latence avec refus prédictif, réessais idempotents à délai adaptatif, disjoncteur à hystérésis sur échecs consécutifs d'ordres.</p>
+</section>
+<section id="4-le-correctif-de-la-perte-sur-retard-prouvé" class="level2">
+<h2>4. Le correctif de la perte sur retard, prouvé</h2>
+<p>Le défaut (V2, 3.3) : sur un retard du bus d'événements, le moteur recopie le présent du hub dans sa mémoire des valeurs précédentes, ce qui neutralise aussi les événements encore en file. Le correctif, appliqué sur une <strong>copie du moteur hors du dépôt</strong> (<code>engine.rs</code>, une fonction <code>resync</code> de 20 lignes à la place de <code>remember_all</code> dans la branche <code>Lagged</code>) : comparer le présent du hub à ce que le moteur connaissait, et <strong>rejouer chaque différence comme une transition</strong>. Un événement encore en file, relu ensuite, compare égal et ne déclenche pas deux fois.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Automatismes</th>
+<th>Rafale de 5 000 événements</th>
+<th>Avant, Mac (V2 W2)</th>
+<th>Après le correctif, Mac</th>
+<th>Avant, Linux</th>
+<th>Après le correctif, Linux</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>100</td>
+<td>action injectée après la rafale</td>
+<td><strong>perdue</strong> (3 retards, 1 441 manqués)</td>
+<td><strong>servie en 36,5 ms</strong> (1 retard, 135 manqués, 0 perdu)</td>
+<td><strong>perdue</strong> (4 retards, 931 manqués)</td>
+<td><strong>servie en 78,8 ms</strong> (4 retards, 1 194 manqués, 0 perdu)</td>
+</tr>
+<tr class="even">
+<td>200</td>
+<td>actions injectées au milieu</td>
+<td>36 ms</td>
+<td>—</td>
+<td><strong>9 perdues</strong> (2 retards, 2 707 manqués)</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>400</td>
+<td>action injectée après la rafale</td>
+<td><strong>perdue</strong> (2 retards, 1 483 manqués)</td>
+<td><strong>servie en 108,5 ms</strong> (0 perdu)</td>
+<td><strong>perdue</strong> (2 retards, 1 453 manqués)</td>
+<td><strong>servie en 242 ms</strong> (5 retards, 695 manqués, 0 perdu)</td>
+</tr>
+<tr class="even">
+<td>400</td>
+<td>actions injectées au milieu</td>
+<td>80 ms, pire 161 ms</td>
+<td>61,5 ms</td>
+<td>102 ms</td>
+<td>75,4 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sous Linux, le moteur prend plus souvent du retard (4 à 5 fois par rafale), et le correctif rattrape à chaque fois : <strong>0 déclencheur perdu</strong> dans toutes les passes.</p>
+<p>Le coût du correctif : à chaque retard, un instantané du hub et une comparaison de toutes les valeurs (2 264 ici), de l'ordre de la milliseconde, et les actions manquées partent <strong>une fois</strong>, sur la valeur finale. Ce correctif n'empêche pas le retard (le moteur compilé et le tampon d'entrée s'en chargent) ; il empêche qu'un retard coûte une transition.</p>
+<pre class="rust"><code>/// Après un retard : le présent du hub comparé à ce que le moteur savait. Chaque point
+/// qui diffère est une transition manquée, rejouée une fois. Un événement encore en file,
+/// relu ensuite, compare égal et est ignoré : rien ne part deux fois.
+fn resync(autos: &amp;Automations) {
+    let snapshot = autos.0.hub.snapshot();
+    let changed: Vec&lt;(PointId, Value)&gt; = {
+        let last = lock(&amp;autos.0.last);
+        snapshot.devices.iter().flat_map(|d| d.state.iter().filter_map(|(key, sample)| {
+            let k = format!(&quot;{}/{key}&quot;, d.device.id);
+            (last.get(&amp;k) != Some(&amp;sample.value)).then(|| (PointId::from(k), sample.value.clone()))
+        })).collect()
+    };
+    for (point, value) in changed {
+        on_state(autos, &amp;point, &amp;value);
+    }
+}</code></pre>
+</section>
+<section id="5-les-voies-paresseuses-écrites-pour-de-bon" class="level2">
+<h2>5. Les voies paresseuses, écrites pour de bon</h2>
+<p>La V3 avait mesuré leur mémoire au repos (6 Kio) mais pas leur comportement sous charge. La V4 les écrit : un répartiteur unique par pilote, une file par appareil créée au premier ordre en attente et détruite une fois vide, un seul ordre en vol par appareil, l'échéance revérifiée avant chaque envoi, la consigne en attente remplacée par la suivante, un disjoncteur par appareil qui vide la file et passe l'appareil hors ligne (code en annexe A, <code>voies.rs</code>).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Scénario</th>
+<th>Ordres aux lampes saines réussis</th>
+<th>Médiane</th>
+<th>Pire</th>
+<th>Lampe muette</th>
+<th>Pic mémoire pendant la charge (processus entier)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C2 rejoué : pont sans limite, une lampe muette</td>
+<td>237 sur 237</td>
+<td>32,6 ms</td>
+<td>34,9 ms</td>
+<td>5,0 s</td>
+<td>536 Kio</td>
+</tr>
+<tr class="even">
+<td>idem, avec disjoncteur</td>
+<td>237 sur 237</td>
+<td>32,6 ms</td>
+<td>35,5 ms</td>
+<td>2,9 s puis refus immédiat</td>
+<td>533 Kio</td>
+</tr>
+<tr class="odd">
+<td>C3 rejoué : API à 4 places</td>
+<td>237 sur 237</td>
+<td>32,8 ms</td>
+<td>54,3 ms</td>
+<td>5,0 s</td>
+<td>536 Kio</td>
+</tr>
+<tr class="even">
+<td>idem, avec disjoncteur</td>
+<td>237 sur 237</td>
+<td>33,0 ms</td>
+<td>33,7 ms</td>
+<td>2,9 s puis refus immédiat</td>
+<td>533 Kio</td>
+</tr>
+<tr class="odd">
+<td>Le pont entier tombe de 2 s à 6 s, puis revient</td>
+<td>218 sur 237 (les 19 autres sont tombés pendant la panne, refusés)</td>
+<td>33,1 ms</td>
+<td>3,2 s</td>
+<td>—</td>
+<td>534 Kio</td>
+</tr>
+</tbody>
+</table></div>
+<p>Même isolation que les voies en tâches permanentes de la V2 (237 sur 237, 32 ms), pour un pic de moins de 0,6 Mio pendant une charge de 25 ordres par seconde, harnais de test compris, au lieu de 3,5 Mio réservés en permanence. Le dernier scénario montre le disjoncteur par appareil face à un pont entier qui tombe : chaque lampe s'ouvre après deux échecs, les ordres suivants sont refusés sans attendre, et tout repart au retour du pont. Le disjoncteur <strong>de bus</strong> (section 3) fait la même chose en une fois au lieu de vingt.</p>
+</section>
+<section id="6-la-bascule-jouée-de-bout-en-bout" class="level2">
+<h2>6. La bascule, jouée de bout en bout</h2>
+<p>Deux processus sur la même machine. Le principal tient un hub complet (496 appareils, 2 264 valeurs), produit des changements à un rythme donné, écrit chacun dans un journal local sans tampon (ce que le noyau a reçu survit à sa mort) et le réplique vers la secours par TCP, avec un instantané au début et un battement de cœur toutes les 100 ms. La secours tient son état à jour en mémoire sans toucher à aucun appareil. À 5 s, on <strong>gèle</strong> le principal (<code>SIGSTOP</code>) : comme une machine qui meurt, il ne ferme pas ses connexions. La secours constate le silence, bascule, reconstruit son hub, puis l'ancien principal revient avec son ancienne époque.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Rythme</th>
+<th>Instantané reçu et appliqué</th>
+<th>Reçus par la secours</th>
+<th>Dernier écrit par le principal / dernier reçu</th>
+<th><strong>RPO</strong></th>
+<th>Détection</th>
+<th>Hub de secours prêt</th>
+<th><strong>RTO</strong></th>
+<th>L'ancien principal revient</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2 changements par seconde, machine gelée</td>
+<td>410 Kio en 5,5 ms</td>
+<td>11</td>
+<td>11 / 11</td>
+<td><strong>0</strong></td>
+<td>978 ms (silence max 1 s)</td>
+<td>4,5 ms</td>
+<td><strong>982 ms</strong></td>
+<td>passif, aucun appareil touché</td>
+</tr>
+<tr class="even">
+<td>200 par seconde, machine gelée</td>
+<td>410 Kio en 2,7 ms</td>
+<td>1 002</td>
+<td>1 002 / 1 002</td>
+<td><strong>0</strong></td>
+<td>1 035 ms</td>
+<td>3,2 ms</td>
+<td><strong>1 038 ms</strong></td>
+<td>passif</td>
+</tr>
+<tr class="odd">
+<td>200 par seconde, processus tué (connexion fermée par le noyau)</td>
+<td>410 Kio en 5,9 ms</td>
+<td>1 002</td>
+<td>1 002 / 1 002</td>
+<td><strong>0</strong></td>
+<td><strong>0,8 ms</strong></td>
+<td>3,3 ms</td>
+<td><strong>4,2 ms</strong></td>
+<td>passif</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sous Linux (conteneur 2 CPU, 128 Mio), les mêmes trois scénarios : RPO 0 dans les trois cas (11 / 11, 1 004 / 1 004, 1 003 / 1 003) ; détection 993 à 1 023 ms quand la machine est gelée, <strong>0,0 ms</strong> quand le processus est tué ; hub de secours prêt en 6 à 17 ms ; RTO <strong>1,01 à 1,03 s</strong> gelé, <strong>6,4 ms</strong> tué ; l'ancien principal revenu reste passif.</p>
+<p>Lecture :</p>
+<ul>
+<li><strong>Rien n'est perdu</strong> (RPO = 0) : tout ce que le principal avait écrit avait aussi été reçu, à 2 comme à 200 changements par seconde. La réplication suit le journal ; la perte possible est bornée par ce qui est en vol sur le réseau, quelques millisecondes.</li>
+<li><strong>L'indisponibilité est le temps de décision</strong> : 1 s de silence maximal, puis 3 à 5 ms pour que le hub de secours soit prêt. Quand le processus meurt mais que la machine vit, le noyau ferme la connexion et la détection est immédiate. En vrai, s'ajoutent les reconnexions des pilotes aux appareils (secondes) et, pour un chien de garde, la vérification que l'ancienne machine est bien arrêtée avant d'activer la nouvelle.</li>
+<li><strong>L'ancienne machine revenue reste passive</strong> : elle annonce son époque, apprend que la secours est passée à l'époque suivante, et ne touche à aucun appareil. C'est la garantie « jamais deux maîtres », à condition que l'époque soit écrite <strong>avant</strong> toute activation.</li>
+</ul>
+</section>
+<section id="7-les-contrats-esquissés" class="level2">
+<h2>7. Les contrats, esquissés</h2>
+<p>Ce que chaque brique du pattern devrait exposer dans <code>moli-runtime</code>, avec ses règles. Ce sont des esquisses pour cadrer l'implémentation, pas du code livré ; les noms sont en français comme le reste du domaine.</p>
+<section id="71-spawn_driver_isole--un-thread-et-un-runtime-par-pilote" class="level3">
+<h3>7.1 <code>spawn_driver_isole</code> : un thread et un runtime par pilote</h3>
+<pre class="rust"><code>/// Comme `spawn_driver`, mais sur un thread dédié portant son propre runtime Tokio
+/// (`current_thread`). Le superviseur, la relance avec attente croissante et le statut
+/// public sont inchangés. Le `Handle` du cœur est donné au pilote pour ce qui doit y vivre.
+pub fn spawn_driver_isole(
+    hub: &amp;Hub,
+    instance: InstanceId,
+    driver: Arc&lt;dyn Driver&gt;,
+    cancel: CancellationToken,
+) -&gt; std::thread::JoinHandle&lt;()&gt;;</code></pre>
+<p>Règles :</p>
+<ul>
+<li>le thread porte le nom du pilote (<code>pilote-&lt;instance&gt;</code>), lisible dans un rapport de gel ;</li>
+<li>la pile est celle par défaut (2 Mio réservés, ~19 Kio touchés au repos sous Linux musl) ;</li>
+<li>une panique dans une sous-tâche du pilote fait sortir <code>run</code>, donc relancer le pilote ;</li>
+<li>le hub reçoit le <code>Handle</code> du cœur à sa construction (<code>HubOptions::coeur</code>) et y lance ses propres tâches : horloges des calculs, des dépendances et des durées, observateurs d'ordres. Un pilote isolé ne porte jamais une tâche du hub.</li>
+</ul>
+</section>
+<section id="72-voies--une-file-par-appareil-à-la-demande" class="level3">
+<h3>7.2 <code>Voies</code> : une file par appareil, à la demande</h3>
+<pre class="rust"><code>pub struct Voies&lt;E: Envoi&gt; { /* répartiteur unique */ }
+
+pub trait Envoi: Send + Sync + &#39;static {
+    /// Envoie un ordre à un appareil ; rend le résultat à la voie, qui répond au cœur.
+    fn envoyer(&amp;self, appareil: &amp;DeviceId, ordre: CommandRequest) -&gt; BoxFuture&lt;&#39;static, Resultat&gt;;
+}
+
+pub enum Resultat { Fait, Injoignable, DelaiDepasse, Refuse(String) }
+
+impl&lt;E: Envoi&gt; Voies&lt;E&gt; {
+    pub fn new(envoi: E, reglage: Reglage) -&gt; Self;
+    /// Un ordre du cœur : envoyé tout de suite s&#39;il n&#39;y a rien en vol pour l&#39;appareil,
+    /// sinon mis en attente ; refusé sans attendre si le disjoncteur de l&#39;appareil est ouvert.
+    pub fn ordre(&amp;mut self, ordre: CommandRequest);
+    /// À appeler dans le `select!` du pilote : fait avancer les files.
+    pub async fn tour(&amp;mut self) -&gt; Option&lt;Evenement&gt;;
+}
+
+pub struct Reglage {
+    pub attente_max: usize,          // 8 : au-delà, la plus ancienne consigne cède (« remplacée »)
+    pub en_vol_max: usize,           // 1 : un seul ordre en vol par appareil
+    pub echecs_avant_ouverture: u8,  // 2
+    pub ouverture: Duration,         // 30 s, doublée à chaque réouverture, 10 min au plus
+}
+
+pub enum Evenement {
+    /// Le disjoncteur d&#39;un appareil s&#39;ouvre ou se referme : le pilote publie la disponibilité.
+    Disponibilite { appareil: DeviceId, en_ligne: bool },
+}</code></pre>
+<p>Règles :</p>
+<ul>
+<li>une file n'existe que pour un appareil qui a un ordre en attente, et disparaît vide ;</li>
+<li>avant chaque envoi, <code>ordre.abandoned()</code> : un ordre que personne n'attend plus ne part pas ;</li>
+<li>une consigne qui attend est remplacée par la suivante pour le même point (la dernière gagne) ; un appui ou une impulsion (<code>Kind::Button</code>, <code>TimerCommand</code>) n'est jamais remplacé ;</li>
+<li>à l'ouverture du disjoncteur, la file de l'appareil est vidée avec un refus immédiat ;</li>
+<li>l'essai de réouverture est un ordre réel (le prochain), jamais une requête fabriquée.</li>
+</ul>
+</section>
+<section id="73-passerelle--une-api-partagée" class="level3">
+<h3>7.3 <code>Passerelle</code> : une API partagée</h3>
+<pre class="rust"><code>pub struct Passerelle {
+    places: Semaphore,           // concurrence acceptée par le pont ou le service
+    tourniquet: ...,             // équité entre appareils : un appareil n&#39;occupe qu&#39;une place
+    priorite: Ordre &gt; Sondage,   // un ordre passe avant une lecture périodique
+    debit: SeauAJetons,          // quota du fournisseur (cloud)
+    disjoncteur: DisjoncteurDeBus,
+}</code></pre>
+<p>Règles :</p>
+<ul>
+<li>un ordre attend au plus <code>echeance − marge</code> une place, sinon « occupé » tout de suite ;</li>
+<li>le sondage cède sa place à un ordre et reprend après ;</li>
+<li>le disjoncteur de bus (7.4) ferme la passerelle entière.</li>
+</ul>
+</section>
+<section id="74-disjoncteurdebus--à-hystérésis-avec-budget-de-latence" class="level3">
+<h3>7.4 <code>DisjoncteurDeBus</code> : à hystérésis, avec budget de latence</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Paramètre</th>
+<th>Valeur proposée</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ouverture</td>
+<td>3 échecs d'appareils <strong>différents</strong> en 10 s, ou le signal du transport (déconnexion MQTT, pont injoignable)</td>
+<td>un seul appareil muet ne doit pas ouvrir le bus</td>
+</tr>
+<tr class="even">
+<td>Durée minimale ouvert</td>
+<td>5 s</td>
+<td>un bus qui bat ne fait pas osciller la maison (Q2)</td>
+</tr>
+<tr class="odd">
+<td>Essai</td>
+<td>un ordre réel, délai court (500 ms), intervalle 1 s doublé jusqu'à 30 s</td>
+<td>la reprise en 0,5 s après le retour (P1), sans marteler un bus mort</td>
+</tr>
+<tr class="even">
+<td>Fermeture</td>
+<td>3 succès consécutifs, ou le signal de reconnexion du transport</td>
+<td>un essai réussi par hasard ne rouvre pas la vanne</td>
+</tr>
+<tr class="odd">
+<td>Dégradé</td>
+<td>médiane des 20 dernières latences &gt; 1,5 s</td>
+<td>un bus lent sous le délai (Q1) est traité avant que les files ne débordent</td>
+</tr>
+<tr class="even">
+<td>En dégradé</td>
+<td>délai par ordre ramené à 1 s, un seul ordre en attente par appareil, sondage suspendu</td>
+<td>la latence des ordres reste bornée, le workflow sait vite</td>
+</tr>
+<tr class="odd">
+<td>Effet visible</td>
+<td>tous les appareils du bus hors ligne ; ordres refusés en 0,1 ms ; notice à la famille ; raison dans <code>/api/health</code></td>
+<td>la panne se voit, elle ne se devine pas</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="75-le-tampon-dentrée-du-hub" class="level3">
+<h3>7.5 Le tampon d'entrée du hub</h3>
+<pre class="rust"><code>pub struct BudgetEntree {
+    pub par_pilote: u32,     // 200 événements par seconde par pilote au-delà desquels on fusionne
+    pub fusion: Duration,    // 10 ms : les états et mesures fusionnés par point, la dernière gagne
+}</code></pre>
+<p>Règles :</p>
+<ul>
+<li>sous le budget, rien ne change : chaque <code>set_state</code> est publié comme aujourd'hui ;</li>
+<li>au-delà, les <code>State</code> d'un même point sont fusionnés sur une fenêtre de 10 ms ; la minuterie n'est armée que si le tampon n'est pas vide (rien au repos) ;</li>
+<li>jamais fusionnés : <code>pulse_state</code> (appuis), occurrences, expirations, <code>DeviceUpserted</code>, <code>Availability</code> ;</li>
+<li>un pilote qui dépasse le budget plus de 10 s de suite est signalé (journal, santé).</li>
+</ul>
+</section>
+<section id="76-le-journal-linstantané-lépoque" class="level3">
+<h3>7.6 Le journal, l'instantané, l'époque</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Pièce</th>
+<th>Forme</th>
+<th>Règle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Journal</td>
+<td>une ligne binaire par changement : <code>seq u64, point u32, charge, instant u64</code> (~9 octets compressés) ; validé par lots (≤ 100 ms ou 500 lignes)</td>
+<td>la source de la reprise et de la réplication ; jamais réécrit</td>
+</tr>
+<tr class="even">
+<td>Instantané</td>
+<td>binaire compact de l'état vif : <code>(point u32, étiquette u8, charge, 3 instants)</code> ; contient <code>seq</code> du journal auquel il correspond</td>
+<td>au quart d'heure sur disque ; à chaque seconde vers le réseau si une secours écoute</td>
+</tr>
+<tr class="odd">
+<td>Baux et exécutions</td>
+<td>dans le journal (ouverture, prolongation, fin) et dans l'instantané</td>
+<td>repris au démarrage, appliqués une fois</td>
+</tr>
+<tr class="even">
+<td>Époque</td>
+<td>entier monotone, écrit sur disque avant toute activation, annoncé à la connexion</td>
+<td>la plus grande gagne ; l'autre reste passive</td>
+</tr>
+<tr class="odd">
+<td>Secours</td>
+<td>reçoit instantané + journal ; applique en mémoire ; <strong>n'ouvre aucune connexion</strong></td>
+<td>bascule sur décision (humain ou chien de garde), après arrêt de l'ancienne</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+</section>
+<section id="8-le-modèle-de-coût" class="level2">
+<h2>8. Le modèle de coût</h2>
+<p>Coefficients unitaires tirés des mesures (allocateur qui compte chaque octet, deux maisons et ×10, Mac ; les coefficients sont indépendants de la machine), pour chiffrer n'importe quelle maison. <code>V</code> : valeurs (points), <code>A</code> : appareils, <code>N</code> : automatismes, <code>R</code> : relevés par jour, <code>P</code> : pilotes.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Poste</th>
+<th>Coefficient</th>
+<th>D'où il vient</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Modèle du hub (ce qui existe)</td>
+<td><strong>463 o × V</strong></td>
+<td>1,00 Mio pour 2 264 valeurs ; 457 o à ×10</td>
+</tr>
+<tr class="even">
+<td>Étage vif (précédente, 3 instants, qualité, index)</td>
+<td><strong>196 o × V</strong></td>
+<td>434 Kio pour 2 264</td>
+</tr>
+<tr class="odd">
+<td>Santé des appareils</td>
+<td>25 o × A</td>
+<td>12 Kio pour 496</td>
+</tr>
+<tr class="even">
+<td>Automatismes compilés (9 règles, 2 actions, index)</td>
+<td><strong>520 o × N</strong></td>
+<td>203 Kio pour 400 ; le moteur actuel : 9 640 o × N</td>
+</tr>
+<tr class="odd">
+<td>Exécutions en cours</td>
+<td>~410 o chacune</td>
+<td>1,56 Mio − 150 Kio pour 3 600 exécutions de plus</td>
+</tr>
+<tr class="even">
+<td>Baux</td>
+<td>~64 o chacun</td>
+<td>taille des structures (48 o + entrée de l'échéancier)</td>
+</tr>
+<tr class="odd">
+<td>Agrégats 1 h + 24 h d'un point lu</td>
+<td>~1 000 o par point, au taux moyen de 110 changements par jour</td>
+<td>443 Kio pour 453 points</td>
+</tr>
+<tr class="even">
+<td>Historique compact</td>
+<td><strong>8,1 à 8,9 o × R × jours</strong></td>
+<td>1,37 Mio pour 161 398 relevés ; 8,78 Mio pour 1 129 783</td>
+</tr>
+<tr class="odd">
+<td>Voies paresseuses</td>
+<td>6 Kio + 200 o par ordre en attente</td>
+<td>mesure au repos ; <code>CommandRequest</code> 200 o</td>
+</tr>
+<tr class="even">
+<td>Tampon du bus d'événements</td>
+<td>128 Kio (1 024 × 128 o)</td>
+<td>taille de <code>Event</code></td>
+</tr>
+<tr class="odd">
+<td>Thread et runtime par pilote</td>
+<td><strong>19 Kio × P</strong> (Linux musl)</td>
+<td>788 Kio pour 40</td>
+</tr>
+<tr class="even">
+<td>Processus par pilote</td>
+<td>577 Kio × P (Linux musl, processus minimal)</td>
+<td>10 processus</td>
+</tr>
+<tr class="odd">
+<td>Mémoire anonyme réelle</td>
+<td><strong>≈ 2,7 × octets demandés</strong> sur le petit état (runtime, piles, fragmentation) ; le facteur baisse quand la part des grands tableaux (historique) monte</td>
+<td>6,3 Mio réels pour 2,34 Mio demandés (état vif) ; 16,3 Mio pour 11,1 Mio (état vif + 7 jours) : Linux, cgroup</td>
+</tr>
+</tbody>
+</table></div>
+<p>Formule de l'état vif : <code>(463 + 196) × V + 25 × A + 520 × N + ~1 000 × V/5 + 134 Kio</code>, puis <code>× 2,7</code> pour la mémoire réelle d'un petit état. Trois maisons :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Maison</th>
+<th>V / A / N</th>
+<th>État vif demandé</th>
+<th>+ 24 h</th>
+<th>+ 7 jours</th>
+<th>Threads (40 pilotes)</th>
+<th>Réel estimé, profil sobre</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Petite (un appartement)</td>
+<td>250 / 50 / 30</td>
+<td>0,36 Mio</td>
+<td>+0,15 Mio</td>
+<td>+0,98 Mio</td>
+<td>0,74 Mio</td>
+<td>~2 Mio</td>
+</tr>
+<tr class="even">
+<td>Les deux maisons réunies</td>
+<td>2 264 / 496 / 400</td>
+<td>2,25 Mio (mesuré 2,34)</td>
+<td>+1,39 Mio</td>
+<td>+8,84 Mio</td>
+<td>0,74 Mio</td>
+<td>~8 à 10 Mio</td>
+</tr>
+<tr class="odd">
+<td>×10</td>
+<td>22 640 / 4 960 / 4 000</td>
+<td>21,3 Mio (mesuré 22,4)</td>
+<td>+13,9 Mio</td>
+<td>+88 Mio</td>
+<td>0,74 Mio</td>
+<td>~60 Mio</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le processeur, au rythme réel des deux maisons (1,9 changement par seconde en moyenne, pointe à 239 par seconde) :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Poste</th>
+<th>Coût mesuré (Linux)</th>
+<th>Au rythme moyen</th>
+<th>À la pointe</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Moteur actuel, 400 automatismes</td>
+<td>3,4 µs par événement</td>
+<td>0,0006 % d'un cœur</td>
+<td>0,08 %</td>
+</tr>
+<tr class="even">
+<td>Moteur compilé, 400 automatismes</td>
+<td>2 ns par événement</td>
+<td>négligeable</td>
+<td>négligeable</td>
+</tr>
+<tr class="odd">
+<td>Agrégats au fil de l'eau</td>
+<td>5 ns par relevé</td>
+<td>négligeable</td>
+<td>négligeable</td>
+</tr>
+<tr class="even">
+<td>Instantané binaire toutes les 15 min</td>
+<td>0,45 ms</td>
+<td>0,00005 %</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Journal, un <code>fsync</code> par lot de 100 ms</td>
+<td>1,9 ms par <code>fsync</code> (Linux, disque du conteneur)</td>
+<td>1,9 % d'un cœur <strong>en attente d'E/S</strong>, pas en calcul</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sur un Pi, multiplier les coûts de calcul par 8 à 10 (estimé) : le moteur actuel reste sous 1 % à la pointe, le moteur compilé invisible. Le vrai coût du Pi est la carte SD : le <code>fsync</code> par lot est le poste à surveiller (PERFORMANCE.md mesure déjà les écritures).</p>
+</section>
+<section id="9-plan-revu" class="level2">
+<h2>9. Plan revu</h2>
+<p>Les étapes de la V3 restent ; la V4 en a prouvé trois et en précise deux.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Étape</th>
+<th>État après la V4</th>
+<th>Coût à l'exécution</th>
+<th>Preuve d'acceptation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Correctif de la perte sur retard</td>
+<td><strong>prouvé</strong> sur copie (section 4) : à reporter tel quel</td>
+<td>~1 ms par retard</td>
+<td>V2 W2 rejoué : 0 perdu ✓</td>
+</tr>
+<tr class="even">
+<td>1 bis. Tâches du hub sur le <code>Handle</code> du cœur</td>
+<td>inchangé</td>
+<td>nul</td>
+<td>horloges vivantes quand le pilote des aides est gelé</td>
+</tr>
+<tr class="odd">
+<td>2. Tampon d'entrée du hub</td>
+<td>confirmé sous Linux</td>
+<td>≤ 15 ms en rafale</td>
+<td>P2 rejoué : 0 perdu ✓</td>
+</tr>
+<tr class="even">
+<td>3. Voies paresseuses et disjoncteurs</td>
+<td><strong>écrites et mesurées</strong> (section 5) ; disjoncteur de bus à hystérésis sur échecs consécutifs, refus prédictif, réessais idempotents à délai adaptatif (section 3)</td>
+<td>&lt; 0,6 Mio en charge, 6 Kio au repos</td>
+<td>C2, C3, P1, Q1-Q3 rejoués ✓</td>
+</tr>
+<tr class="odd">
+<td>4. Un thread par pilote</td>
+<td>confirmé sous Linux : indispensable à deux cœurs</td>
+<td>19 Kio par pilote</td>
+<td>C1 rejoué ✓</td>
+</tr>
+<tr class="even">
+<td>5. Bail durable</td>
+<td>inchangé</td>
+<td>~64 o par bail, 1,9 à 3,7 ms à l'ouverture</td>
+<td>redémarrage au milieu d'un bail</td>
+</tr>
+<tr class="odd">
+<td>6. Étage vif et agrégats</td>
+<td>coût confirmé (2,7 × en réel)</td>
+<td>~0,9 Mio demandés</td>
+<td>lecture d'agrégat en mémoire</td>
+</tr>
+<tr class="even">
+<td>7. Moteur compilé, filtré à la source</td>
+<td>plafond du moteur actuel chiffré (2.3)</td>
+<td>moins de mémoire qu'aujourd'hui</td>
+<td>T1 rejoué à 4 000 automatismes</td>
+</tr>
+<tr class="odd">
+<td>8. Historique récent en mémoire</td>
+<td>redémarrage à chaud 4,3 ms sous Linux</td>
+<td>8 à 9 o par relevé</td>
+<td>B2.3 ✓</td>
+</tr>
+<tr class="even">
+<td>9. Journal, instantanés binaires, époque, secours passive</td>
+<td><strong>bascule jouée</strong> (section 6)</td>
+<td>~2,6 Mo écrits par jour</td>
+<td>S1-S3 ✓ ; reste : reconnexion des pilotes, chien de garde</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="10-limites" class="level2">
+<h2>10. Limites</h2>
+<ul>
+<li>Le conteneur Linux tourne sur le Mac : même architecture que le Pi (arm64), mais un cœur 8 à 10 fois plus rapide ; aucune mesure sur un Pi Zero 2 W ni sur une carte SD.</li>
+<li>Les bus capricieux sont simulés par des délais ; un vrai pont saturé a d'autres formes (réponses partielles, reconnexions TLS). Les paramètres des disjoncteurs sont des points de départ.</li>
+<li>La bascule est jouée sur une machine, sans réseau réel ni reconnexion aux appareils : le délai mesuré est celui de la décision et de la reconstruction, pas celui de la reprise des pilotes.</li>
+<li>Le correctif est prouvé sur une copie du moteur avec le banc de la V2 ; il reste à le porter dans le dépôt avec ses tests.</li>
+<li>Le modèle de coût est linéaire ; il ne tient pas compte des caches du processeur ni de la fragmentation à long terme.</li>
+</ul>
+</section>
+<section id="annexe-a--bancs-de-la-v4" class="level2">
+<h2>Annexe A — Bancs de la V4</h2>
+<p>Quatre crates jetables hors du dépôt : <code>preuves-v2</code> (bancs <code>caprices</code>, <code>voies</code>, <code>bascule</code>, <code>capacite</code>, et <code>etat_complet</code> enrichi de la mémoire réelle), <code>preuves-fix</code> (le banc <code>moteur</code> de la V2 contre la copie corrigée), <code>moli-automation-fix</code> (la copie du moteur, Cargo.toml réécrit sans héritage de workspace, un seul changement de code : <code>resync</code>), et <code>linux-couts</code> (threads et processus sous Linux). La chaîne Linux : copie du dépôt et des crates jetables dans un conteneur <code>rust:1-alpine</code> (musl), compilation <code>--release --offline</code>, exécution des binaires statiques dans <code>alpine:3</code> avec <code>--cpuset-cpus=0,1 --memory=128m</code>.</p>
+<p>Sorties brutes :</p>
+<section id="mac--bus-capricieux-caprices" class="level3">
+<h3>Mac — bus capricieux (caprices)</h3>
+<pre class="text"><code># Un bus qui répond mal : 10 ordres/s vers 10 de ses appareils pendant 20 s, un autre pilote à côté
+
+## Q1 — bus lent : répond en 2,5 s, sous le délai de 4 s
+- voies seules             : réussis  20/200 (p50 2504 ms, p95 3980 ms) ; échoués 180 (p50 5003 ms) ; attente totale des appelants  965.3 s ; bascules  0 ; autre pilote p99 23 ms
+- disjoncteur simple (V3)  : réussis  20/200 (p50 2504 ms, p95 3986 ms) ; échoués 180 (p50 5003 ms) ; attente totale des appelants  965.3 s ; bascules  0 ; autre pilote p99 24 ms
+- hystérésis + refus       : réussis  85/200 (p50 4309 ms, p95 4881 ms) ; échoués 115 (p50    0 ms) ; attente totale des appelants  380.5 s ; bascules  1 ; autre pilote p99 24 ms
+- adaptatif + réessais     : réussis  85/200 (p50 4301 ms, p95 4867 ms) ; échoués 115 (p50    0 ms) ; attente totale des appelants  381.7 s ; bascules  3 ; autre pilote p99 24 ms
+
+## Q2 — bus qui bat : mort 1,5 s, vivant 1,5 s
+- voies seules             : réussis 145/200 (p50 1937 ms, p95 4945 ms) ; échoués  55 (p50 4003 ms) ; attente totale des appelants  499.9 s ; bascules  0 ; autre pilote p99 23 ms
+- disjoncteur simple (V3)  : réussis  38/200 (p50   23 ms, p95  468 ms) ; échoués 162 (p50 1950 ms) ; attente totale des appelants  352.2 s ; bascules  9 ; autre pilote p99 24 ms
+- hystérésis + refus       : réussis  15/200 (p50   23 ms, p95   23 ms) ; échoués 185 (p50    0 ms) ; attente totale des appelants  135.9 s ; bascules  1 ; autre pilote p99 24 ms
+- adaptatif + réessais     : réussis 200/200 (p50   26 ms, p95 1531 ms) ; échoués   0 (p50       —) ; attente totale des appelants  105.1 s ; bascules  0 ; autre pilote p99 24 ms
+
+## Q3 — bus partiel : une requête sur deux n&#39;aboutit jamais
+- voies seules             : réussis  62/200 (p50 4741 ms, p95 4968 ms) ; échoués 138 (p50 5002 ms) ; attente totale des appelants  911.9 s ; bascules  0 ; autre pilote p99 24 ms
+- disjoncteur simple (V3)  : réussis  33/200 (p50   23 ms, p95 3000 ms) ; échoués 167 (p50 1945 ms) ; attente totale des appelants  316.0 s ; bascules 22 ; autre pilote p99 24 ms
+- hystérésis + refus       : réussis  57/200 (p50 2999 ms, p95 4972 ms) ; échoués 143 (p50 5003 ms) ; attente totale des appelants  847.0 s ; bascules  0 ; autre pilote p99 24 ms
+- adaptatif + réessais     : réussis 144/200 (p50 2672 ms, p95 4500 ms) ; échoués  56 (p50 5002 ms) ; attente totale des appelants  572.9 s ; bascules  4 ; autre pilote p99 24 ms</code></pre>
+</section>
+<section id="mac--voies-paresseuses-voies" class="level3">
+<h3>Mac — voies paresseuses (voies)</h3>
+<pre class="text"><code># Voies paresseuses écrites pour de bon, sous la charge de la V2 et de la V3
+
+## L1 — C2 rejoué : pont sans limite, 20 lampes, une muette, 25 ordres/s pendant 10 s
+- voies paresseuses              : lampes saines 237/237 réussis, médiane 32.6 ms, pire  34.9 ms ; muette : médiane 5001.7 ms ; pic mémoire pendant la charge 536 Kio
+- voies paresseuses + disjoncteur : lampes saines 237/237 réussis, médiane 32.6 ms, pire  35.5 ms ; muette : médiane 2875.8 ms ; pic mémoire pendant la charge 533 Kio
+
+## L2 — C3 rejoué : l&#39;API du pont ne traite que 4 requêtes à la fois
+- voies paresseuses              : lampes saines 237/237 réussis, médiane 32.8 ms, pire  54.3 ms ; muette : médiane 5002.9 ms ; pic mémoire pendant la charge 536 Kio
+- voies paresseuses + disjoncteur : lampes saines 237/237 réussis, médiane 33.0 ms, pire  33.7 ms ; muette : médiane 2903.8 ms ; pic mémoire pendant la charge 533 Kio
+
+## L3 — le pont entier tombe de 2 s à 6 s (les 20 lampes muettes), puis revient
+- voies paresseuses + disjoncteur : lampes saines 218/237 réussis, médiane 33.1 ms, pire 3185.7 ms ; muette : médiane 2890.8 ms ; pic mémoire pendant la charge 534 Kio</code></pre>
+</section>
+<section id="mac--bascule-bascule" class="level3">
+<h3>Mac — bascule (bascule)</h3>
+<pre class="text"><code># Bascule de bout en bout : deux processus, le principal gelé (SIGSTOP), la secours reprend
+
+## rythme : 2 changements par seconde, machine gelée
+- S1 : instantané de 410 Kio reçu et appliqué en 9.0 ms (2264 valeurs)
+- S2 : 2 changements/s ; 11 reçus par la secours ; dernier écrit par le principal 11, dernier reçu 11 : 0 changements perdus (RPO)
+- S2 : gel (machine morte) du principal → détection 982.0 ms (silence max 1000.0 ms) → hub de secours prêt 6.4 ms après la décision ; indisponibilité totale 988.4 ms (RTO)
+- S3 : principal : époque 1 périmée (la secours est à 2) : je reste passif, aucun appareil touché
+
+## rythme : 200 changements par seconde, machine gelée
+- S1 : instantané de 410 Kio reçu et appliqué en 4.7 ms (2264 valeurs)
+- S2 : 200 changements/s ; 1005 reçus par la secours ; dernier écrit par le principal 1005, dernier reçu 1005 : 0 changements perdus (RPO)
+- S2 : gel (machine morte) du principal → détection 1034.1 ms (silence max 1000.0 ms) → hub de secours prêt 4.4 ms après la décision ; indisponibilité totale 1038.5 ms (RTO)
+- S3 : principal : époque 1 périmée (la secours est à 2) : je reste passif, aucun appareil touché
+
+## rythme : 200 changements par seconde, processus tué
+- S1 : instantané de 410 Kio reçu et appliqué en 5.9 ms (2264 valeurs)
+- S2 : 200 changements/s ; 1002 reçus par la secours ; dernier écrit par le principal 1002, dernier reçu 1002 : 0 changements perdus (RPO)
+- S2 : mort du processus (connexion fermée) du principal → détection 0.8 ms (silence max 1000.0 ms) → hub de secours prêt 3.3 ms après la décision ; indisponibilité totale 4.2 ms (RTO)
+- S3 : principal : époque 1 périmée (la secours est à 2) : je reste passif, aucun appareil touché</code></pre>
+</section>
+<section id="mac--plafond-du-moteur-capacite" class="level3">
+<h3>Mac — plafond du moteur (capacite)</h3>
+<pre class="text"><code># Plafond du moteur actuel : 400 automatismes, bruit soutenu pendant 3 s sur 700 capteurs
+
+## sans tampon d&#39;entrée
+-  1000 événements/s : débit réel 999/s ; 0 déclencheurs perdus sur 6 ; latence médiane 0.5 ms, pire 0.7 ms ; retards du moteur 0 (0 événements manqués)
+-  4000 événements/s : débit réel 3998/s ; 0 déclencheurs perdus sur 6 ; latence médiane 0.5 ms, pire 1.5 ms ; retards du moteur 0 (0 événements manqués)
+- 16000 événements/s : débit réel 15982/s ; 0 déclencheurs perdus sur 6 ; latence médiane 0.7 ms, pire 1.0 ms ; retards du moteur 0 (0 événements manqués)
+- 32000 événements/s : débit réel 31965/s ; 0 déclencheurs perdus sur 6 ; latence médiane 0.5 ms, pire 0.6 ms ; retards du moteur 0 (0 événements manqués)
+- 64000 événements/s : débit réel 63895/s ; 0 déclencheurs perdus sur 6 ; latence médiane 0.8 ms, pire 1.0 ms ; retards du moteur 0 (0 événements manqués)
+- 128000 événements/s : débit réel 127901/s ; 0 déclencheurs perdus sur 6 ; latence médiane 0.8 ms, pire 1.1 ms ; retards du moteur 0 (0 événements manqués)
+
+## avec tampon d&#39;entrée (dernière valeur, 10 ms)
+-  1000 événements/s : débit réel 999/s ; 0 déclencheurs perdus sur 6 ; latence médiane 9.0 ms, pire 11.6 ms ; retards du moteur 0 (0 événements manqués)
+-  4000 événements/s : débit réel 3993/s ; 0 déclencheurs perdus sur 6 ; latence médiane 8.0 ms, pire 8.1 ms ; retards du moteur 0 (0 événements manqués)
+- 16000 événements/s : débit réel 15978/s ; 0 déclencheurs perdus sur 6 ; latence médiane 11.5 ms, pire 11.6 ms ; retards du moteur 0 (0 événements manqués)
+- 32000 événements/s : débit réel 31957/s ; 0 déclencheurs perdus sur 6 ; latence médiane 3.7 ms, pire 4.2 ms ; retards du moteur 0 (0 événements manqués)
+- 64000 événements/s : débit réel 63913/s ; 0 déclencheurs perdus sur 6 ; latence médiane 6.6 ms, pire 7.8 ms ; retards du moteur 0 (0 événements manqués)
+- 128000 événements/s : débit réel 127755/s ; 1 déclencheurs perdus sur 6 ; latence médiane 8.0 ms, pire 9.5 ms ; retards du moteur 17 (18674 événements manqués)</code></pre>
+</section>
+<section id="mac--correctif-sur-copie-preuves-fix-moteur-100-400" class="level3">
+<h3>Mac — correctif sur copie (preuves-fix, moteur 100 400)</h3>
+<pre class="text"><code># Le vrai moteur d&#39;automatismes sous charge (2 workers, machine de test)
+Chaque automatisme : 1 déclencheur, 3 conditions imbriquées de 3 règles, 1 action ;
+10 % sont temporaires (« allume 30 min »), 10 % attendent une condition (wait_for).
+N = 100 : chargement 0.72 s, mémoire du moteur 1154 Kio ; croisière p50 0.3 ms p99 1.3 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 10.3 ms max 10.7 ms perdues 0 ; sonde après p50 18.8 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 16.8 ms max 17.4 ms perdues 0 ; sonde après p50 36.5 ms ; retards du moteur 1 (135 événements manqués)
+N = 400 : chargement 9.56 s, mémoire du moteur 3766 Kio ; croisière p50 0.3 ms p99 0.5 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 28.2 ms max 29.1 ms perdues 0 ; sonde après p50 40.7 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 61.5 ms max 61.5 ms perdues 0 ; sonde après p50 108.5 ms ; retards du moteur 0 (0 événements manqués)</code></pre>
+</section>
+<section id="linux--budget-mémoire-avec-mémoire-réelle-etat_complet" class="level3">
+<h3>Linux — budget mémoire avec mémoire réelle (etat_complet)</h3>
+<pre class="text"><code># Budget mémoire : tout ce qui compte, en mémoire
+- tailles : Value 24 o, PointVif 80 o, Event 128 o
+- mémoire réelle au démarrage, avant toute charge : RSS 744 Kio, anonyme du cgroup 36 Kio
+  (voies en tâches permanentes avec file de 8 : 3.47 Mio pour 496 appareils, soit 7.2 Kio chacune ; CommandRequest 200 o)
+
+## ×1 : 496 appareils, 2264 valeurs, 400 automatismes
+- Modèle du hub (appareils, définitions, valeurs : ce qui existe) : 1.00 Mio
+- Étage vif : précédente, 3 instants, qualité + index des points : 434 Kio
+- Santé par appareil (vu le, échecs, disjoncteur) : 12 Kio
+- Automatismes compilés (9 règles, 2 actions) + index par point : 203 Kio
+- 1 000 baux, échéancier et une exécution en cours par automatisme : 150 Kio
+- Agrégats 1 h et 24 h des points lus par les règles : 443 Kio
+- Voies paresseuses (répartiteur unique, files à la demande), au repos : 6 Kio
+- Tampon du bus : 1 024 événements (charges partagées en Arc) : 128 Kio
+- **Sous-total « tout l&#39;état vif »** : 2.34 Mio
+- mémoire réelle avec tout l&#39;état vif : RSS 8600 Kio, anonyme du cgroup 6476 Kio
+- mémoire réelle avec l&#39;état vif et 7 jours d&#39;historique : RSS 18820 Kio, anonyme du cgroup 16696 Kio
+- Historique compact en mémoire : 24 h 1.37 Mio ; 7 j 8.78 Mio ; 30 j 37.10 Mio
+- Totaux : vif + 24 h 3.71 Mio ; vif + 7 j 11.12 Mio ; vif + 30 j 39.44 Mio
+  (voies en tâches permanentes avec file de 8 : 34.69 Mio pour 4960 appareils, soit 7.2 Kio chacune ; CommandRequest 200 o)</code></pre>
+</section>
+<section id="linux--balayage-contre-compilé-index" class="level3">
+<h3>Linux — balayage contre compilé (index)</h3>
+<pre class="text"><code># Workflows complexes : balayage d&#39;aujourd&#39;hui contre moteur compilé (machine de test)
+
+## I1 — trouver les workflows à lancer et évaluer leurs 9 règles
+200 000 événements (20 000 pour N = 10 000), dont 10 % sur un déclencheur ; temps moyen par événement.
+- N =    100 : balayage      1144 ns/événement ; compilé     1 ns/événement ; ×826 ; 20000 lancements
+- N =    400 : balayage      3395 ns/événement ; compilé     2 ns/événement ; ×1675 ; 20000 lancements
+- N =   1000 : balayage      7774 ns/événement ; compilé     2 ns/événement ; ×3695 ; 20000 lancements
+- N =  10000 : balayage     85119 ns/événement ; compilé    18 ns/événement ; ×4852 ; 2000 lancements
+
+## I2 — lire « moyenne sur 1 h » d&#39;un capteur qui change chaque seconde
+- SQLite (index (point, ts), 3 600 lignes lues) : 153 µs par lecture, plus le passage par un thread bloquant
+- balayage d&#39;une fenêtre en mémoire : 2.5 µs par lecture
+- agrégat tenu au fil de l&#39;eau : 5 ns par relevé reçu, 1.0 ns par lecture
+
+## I3 — variables et calculs : « (moyenne 1 h du salon − 2) &gt; 19 et (présence ou 7 h ≤ heure &lt; 22 h) »
+- interprété depuis le JSON : 444 ns ; compilé une fois à la validation : 25 ns (×18)
+
+## I4 — « allume 30 minutes » en bail durable : 10 000 baux
+- ordonnancement de 10 000 échéances (tas binaire) et extraction des 5000 dues : 0.53 ms au total
+- écrire un bail de façon durable (ajout + fsync) : 1.9 ms, une seule fois au lancement ; rien pendant l&#39;attente</code></pre>
+</section>
+<section id="linux--coût-des-choix-couts" class="level3">
+<h3>Linux — coût des choix (couts)</h3>
+<pre class="text"><code># Le coût de chaque choix (machine de test, 2 workers)
+
+## B2.1 — instantané : coût selon le format et la fréquence (machine de test)
+- JSON complet (valeurs + 400 automatismes), compressé : 20.05 ms par instantané, 43 Kio
+- binaire compact des valeurs (étage vif), compressé : 0.45 ms par instantané, 13 Kio
+| intervalle | CPU d&#39;un cœur, JSON | CPU d&#39;un cœur, compact | écrit par jour, JSON | écrit par jour, compact |
+| 1 s | 2.005 % | 0.0446 % | 3842 Mo | 1210.6 Mo |
+| 10 s | 0.200 % | 0.0045 % | 384 Mo | 121.1 Mo |
+| 60 s | 0.033 % | 0.0007 % | 64 Mo | 20.2 Mo |
+| 15 min | 0.002 % | 0.0000 % | 4 Mo | 1.3 Mo |
+
+## B2.2 — ordre vers un pilote : même runtime ou thread isolé (2 000 ordres)
+- pilote sur le runtime du cœur : p50 0.03 ms, p99 0.06 ms
+- pilote sur son thread : p50 0.03 ms, p99 0.06 ms
+
+## B2.3 — courbe 24 h et redémarrage à chaud : mémoire contre SQLite
+- courbe 24 h d&#39;un capteur à 1 Hz réduite à 500 points : mémoire 0.10 ms ; SQLite 21.83 ms (500 seaux)
+- redémarrage à chaud, 7 jours en mémoire (1129783 relevés) : relus depuis SQLite 133.56 ms ; depuis un instantané binaire de 8.6 Mio 4.34 ms
+
+## B2.4 — compiler les automatismes à la validation
+- 2 000 automatismes lus depuis leur JSON et compilés : 23.52 ms au total, 11.8 µs chacun</code></pre>
+</section>
+<section id="linux--moteur-réel-moteur-50-100-200-400" class="level3">
+<h3>Linux — moteur réel (moteur 50 100 200 400)</h3>
+<pre class="text"><code># Le vrai moteur d&#39;automatismes sous charge (2 workers, machine de test)
+Chaque automatisme : 1 déclencheur, 3 conditions imbriquées de 3 règles, 1 action ;
+10 % sont temporaires (« allume 30 min »), 10 % attendent une condition (wait_for).
+N =  50 : chargement 0.39 s, mémoire du moteur 691 Kio ; croisière p50 0.9 ms p99 1.2 ms (20 actions)
+        rafale  2000 : sondes au milieu p50 9.8 ms max 11.6 ms perdues 0 ; sonde après p50 20.0 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 20.4 ms max 22.2 ms perdues 0 ; sonde après p50 — ; retards du moteur 2 (1055 événements manqués)
+N = 100 : chargement 1.34 s, mémoire du moteur 1141 Kio ; croisière p50 0.9 ms p99 1.2 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 15.4 ms max 16.1 ms perdues 0 ; sonde après p50 25.4 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 32.2 ms max 34.7 ms perdues 0 ; sonde après p50 — ; retards du moteur 4 (931 événements manqués)
+N = 200 : chargement 6.44 s, mémoire du moteur 2041 Kio ; croisière p50 0.9 ms p99 1.2 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 24.9 ms max 26.7 ms perdues 0 ; sonde après p50 42.6 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 — max — perdues 9 ; sonde après p50 — ; retards du moteur 2 (2707 événements manqués)
+N = 400 : chargement 19.14 s, mémoire du moteur 3716 Kio ; croisière p50 1.1 ms p99 1.4 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 44.1 ms max 49.2 ms perdues 0 ; sonde après p50 78.5 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 102.4 ms max 105.7 ms perdues 0 ; sonde après p50 — ; retards du moteur 2 (1453 événements manqués)</code></pre>
+</section>
+<section id="linux--cloisons-cloisons" class="level3">
+<h3>Linux — cloisons (cloisons)</h3>
+<pre class="text"><code># Cloisons : un matériel muet ou un pilote bloquant ne doit pas arrêter le reste
+
+## C1 — un thread par pilote contre les deux workers partagés
+- 2 pilotes bloquants partagés :   7 ordres en 2 s, médiane 202.3 ms, pire 209.3 ms ; pire retard d&#39;une minuterie de 10 ms  405.0 ms
+- 6 pilotes bloquants isolés   :  87 ordres en 2 s, médiane   0.1 ms, pire   0.2 ms ; pire retard d&#39;une minuterie de 10 ms    6.8 ms
+- coût : 40 pilotes isolés au repos ajoutent 0 Kio de RSS, soit 0 Kio par pilote (pile de 2 Mio réservée, seules les pages touchées comptent)
+
+## C2 — un pont, 20 lampes, une lampe muette (API du pont sans limite de concurrence)
+- boucle unique       : lampes saines 41/237 réussis, médiane 4419.5 ms, pire 4679.4 ms ; lampe muette : médiane 5001.0 ms, réponse la plus rapide   0.0 ms
+- voie par appareil   : lampes saines 237/237 réussis, médiane  34.8 ms, pire   41.5 ms ; lampe muette : médiane 5003.6 ms, réponse la plus rapide 4003.6 ms
+- voies + disjoncteur : lampes saines 237/237 réussis, médiane  34.4 ms, pire   42.0 ms ; lampe muette : médiane 2825.1 ms, réponse la plus rapide   0.0 ms
+
+## C3 — le même pont, mais son API ne traite que 4 requêtes à la fois
+- tâche par ordre     : lampes saines 237/237 réussis, médiane 1347.4 ms, pire 3679.7 ms ; lampe muette : médiane 5002.9 ms, réponse la plus rapide 4000.9 ms
+- voie par appareil   : lampes saines 237/237 réussis, médiane  34.5 ms, pire   41.4 ms ; lampe muette : médiane 5002.7 ms, réponse la plus rapide 4002.4 ms
+- voies + disjoncteur : lampes saines 237/237 réussis, médiane  34.9 ms, pire   41.8 ms ; lampe muette : médiane 2843.9 ms, réponse la plus rapide   0.0 ms</code></pre>
+</section>
+<section id="linux--pannes-pannes" class="level3">
+<h3>Linux — pannes (pannes)</h3>
+<pre class="text"><code># Pannes : un bus qui tombe, puis l&#39;inondation à son retour
+
+## P1 — un bus de 50 appareils mort 15 s (de 5 s à 20 s), 10 ordres/s vers lui, 10 ordres/s vers un autre pilote
+- voies seules               : autre pilote p50 24.2 ms p99 31.2 ms ; ordres au bus pendant la panne : médiane 4003.0 ms (142 ordres) ; reprise : premier succès 31.8 ms après le retour du bus ; appareil du bus à la fin : Some(Some(true))
+- voies + disjoncteur de bus : autre pilote p50 25.2 ms p99 31.9 ms ; ordres au bus pendant la panne : médiane 0.1 ms (143 ordres) ; reprise : premier succès 634.0 ms après le retour du bus ; appareil du bus à la fin : Some(Some(true))
+
+## P2 — le bus revient et republie 5 000 valeurs d&#39;un coup ; 400 automatismes réels
+- sans tampon d&#39;entrée                         : déclencheurs après l&#39;inondation : 5 perdus sur 5, latence médiane — ; retards du moteur 2 (3247 événements manqués)
+- avec tampon d&#39;entrée (dernière valeur, 10 ms) : déclencheurs après l&#39;inondation : 0 perdus sur 5, latence médiane 5.8 ms ; retards du moteur 0 (0 événements manqués)
+- sans tampon d&#39;entrée                         : déclencheurs après l&#39;inondation : 5 perdus sur 5, latence médiane — ; retards du moteur 2 (3249 événements manqués)
+- avec tampon d&#39;entrée (dernière valeur, 10 ms) : déclencheurs après l&#39;inondation : 0 perdus sur 5, latence médiane 15.2 ms ; retards du moteur 0 (0 événements manqués)
+- sans tampon d&#39;entrée                         : déclencheurs après l&#39;inondation : 5 perdus sur 5, latence médiane — ; retards du moteur 2 (3173 événements manqués)
+- avec tampon d&#39;entrée (dernière valeur, 10 ms) : déclencheurs après l&#39;inondation : 0 perdus sur 5, latence médiane 12.8 ms ; retards du moteur 0 (0 événements manqués)</code></pre>
+</section>
+<section id="linux--voies-paresseuses-voies" class="level3">
+<h3>Linux — voies paresseuses (voies)</h3>
+<pre class="text"><code># Voies paresseuses écrites pour de bon, sous la charge de la V2 et de la V3
+
+## L1 — C2 rejoué : pont sans limite, 20 lampes, une muette, 25 ordres/s pendant 10 s
+- voies paresseuses              : lampes saines 237/237 réussis, médiane 35.0 ms, pire  41.7 ms ; muette : médiane 5003.3 ms ; pic mémoire pendant la charge 472 Kio
+- voies paresseuses + disjoncteur : lampes saines 237/237 réussis, médiane 35.3 ms, pire  41.7 ms ; muette : médiane 2841.5 ms ; pic mémoire pendant la charge 469 Kio
+
+## L2 — C3 rejoué : l&#39;API du pont ne traite que 4 requêtes à la fois
+- voies paresseuses              : lampes saines 237/237 réussis, médiane 35.6 ms, pire  47.4 ms ; muette : médiane 5002.4 ms ; pic mémoire pendant la charge 472 Kio
+- voies paresseuses + disjoncteur : lampes saines 237/237 réussis, médiane 35.6 ms, pire  44.3 ms ; muette : médiane 2897.8 ms ; pic mémoire pendant la charge 469 Kio
+
+## L3 — le pont entier tombe de 2 s à 6 s (les 20 lampes muettes), puis revient
+- voies paresseuses + disjoncteur : lampes saines 218/237 réussis, médiane 38.0 ms, pire 3139.3 ms ; muette : médiane 2651.2 ms ; pic mémoire pendant la charge 471 Kio</code></pre>
+</section>
+<section id="linux--bascule-bascule" class="level3">
+<h3>Linux — bascule (bascule)</h3>
+<pre class="text"><code># Bascule de bout en bout : deux processus, le principal gelé (SIGSTOP), la secours reprend
+
+## rythme : 2 changements par seconde, machine gelée
+- S1 : instantané de 410 Kio reçu et appliqué en 6.0 ms (2264 valeurs)
+- S2 : 2 changements/s ; 11 reçus par la secours ; dernier écrit par le principal 11, dernier reçu 11 : 0 changements perdus (RPO)
+- S2 : gel (machine morte) du principal → détection 993.1 ms (silence max 1000.0 ms) → hub de secours prêt 17.3 ms après la décision ; indisponibilité totale 1010.4 ms (RTO)
+- S3 : principal : époque 1 périmée (la secours est à 2) : je reste passif, aucun appareil touché
+
+## rythme : 200 changements par seconde, machine gelée
+- S1 : instantané de 410 Kio reçu et appliqué en 16.4 ms (2264 valeurs)
+- S2 : 200 changements/s ; 1004 reçus par la secours ; dernier écrit par le principal 1004, dernier reçu 1004 : 0 changements perdus (RPO)
+- S2 : gel (machine morte) du principal → détection 1022.6 ms (silence max 1000.0 ms) → hub de secours prêt 8.6 ms après la décision ; indisponibilité totale 1031.1 ms (RTO)
+- S3 : principal : époque 1 périmée (la secours est à 2) : je reste passif, aucun appareil touché
+
+## rythme : 200 changements par seconde, processus tué
+- S1 : instantané de 410 Kio reçu et appliqué en 8.3 ms (2264 valeurs)
+- S2 : 200 changements/s ; 1003 reçus par la secours ; dernier écrit par le principal 1003, dernier reçu 1003 : 0 changements perdus (RPO)
+- S2 : mort du processus (connexion fermée) du principal → détection 0.0 ms (silence max 1000.0 ms) → hub de secours prêt 6.4 ms après la décision ; indisponibilité totale 6.4 ms (RTO)
+- S3 : principal : époque 1 périmée (la secours est à 2) : je reste passif, aucun appareil touché</code></pre>
+</section>
+<section id="linux--plafond-du-moteur-capacite" class="level3">
+<h3>Linux — plafond du moteur (capacite)</h3>
+<pre class="text"><code># Plafond du moteur actuel : 400 automatismes, bruit soutenu pendant 3 s sur 700 capteurs
+
+## sans tampon d&#39;entrée
+-  1000 événements/s : débit réel 999/s ; 0 déclencheurs perdus sur 6 ; latence médiane 1.0 ms, pire 1.5 ms ; retards du moteur 0 (0 événements manqués)
+-  4000 événements/s : débit réel 3993/s ; 0 déclencheurs perdus sur 6 ; latence médiane 1.2 ms, pire 1.7 ms ; retards du moteur 0 (0 événements manqués)
+- 16000 événements/s : débit réel 15973/s ; 0 déclencheurs perdus sur 6 ; latence médiane 0.9 ms, pire 1.2 ms ; retards du moteur 0 (0 événements manqués)
+- 32000 événements/s : débit réel 31963/s ; 0 déclencheurs perdus sur 6 ; latence médiane 1.9 ms, pire 10.8 ms ; retards du moteur 0 (0 événements manqués)
+- 64000 événements/s : débit réel 63918/s ; 0 déclencheurs perdus sur 6 ; latence médiane 3.9 ms, pire 6.4 ms ; retards du moteur 0 (0 événements manqués)
+- 128000 événements/s : débit réel 127792/s ; 1 déclencheurs perdus sur 6 ; latence médiane 2.8 ms, pire 3.5 ms ; retards du moteur 24 (43864 événements manqués)
+
+## avec tampon d&#39;entrée (dernière valeur, 10 ms)
+-  1000 événements/s : débit réel 999/s ; 0 déclencheurs perdus sur 6 ; latence médiane 11.5 ms, pire 12.1 ms ; retards du moteur 0 (0 événements manqués)
+-  4000 événements/s : débit réel 3996/s ; 0 déclencheurs perdus sur 6 ; latence médiane 10.4 ms, pire 12.9 ms ; retards du moteur 0 (0 événements manqués)
+- 16000 événements/s : débit réel 15966/s ; 0 déclencheurs perdus sur 6 ; latence médiane 5.4 ms, pire 12.5 ms ; retards du moteur 0 (0 événements manqués)
+- 32000 événements/s : débit réel 31962/s ; 0 déclencheurs perdus sur 6 ; latence médiane 13.0 ms, pire 14.2 ms ; retards du moteur 0 (0 événements manqués)
+- 64000 événements/s : débit réel 63937/s ; 0 déclencheurs perdus sur 6 ; latence médiane 8.9 ms, pire 13.2 ms ; retards du moteur 0 (0 événements manqués)
+- 128000 événements/s : débit réel 127854/s ; 0 déclencheurs perdus sur 6 ; latence médiane 13.7 ms, pire 15.6 ms ; retards du moteur 0 (0 événements manqués)</code></pre>
+</section>
+<section id="linux--bus-capricieux-caprices" class="level3">
+<h3>Linux — bus capricieux (caprices)</h3>
+<pre class="text"><code># Un bus qui répond mal : 10 ordres/s vers 10 de ses appareils pendant 20 s, un autre pilote à côté
+
+## Q1 — bus lent : répond en 2,5 s, sous le délai de 4 s
+- voies seules             : réussis  20/200 (p50 2510 ms, p95 3957 ms) ; échoués 180 (p50 5004 ms) ; attente totale des appelants  965.4 s ; bascules  0 ; autre pilote p99 31 ms
+- disjoncteur simple (V3)  : réussis  20/200 (p50 2512 ms, p95 3981 ms) ; échoués 180 (p50 5004 ms) ; attente totale des appelants  965.7 s ; bascules  0 ; autre pilote p99 31 ms
+- hystérésis + refus       : réussis  96/200 (p50 4455 ms, p95 4961 ms) ; échoués 104 (p50    0 ms) ; attente totale des appelants  428.1 s ; bascules  1 ; autre pilote p99 31 ms
+- adaptatif + réessais     : réussis  92/200 (p50 4330 ms, p95 4862 ms) ; échoués 108 (p50    0 ms) ; attente totale des appelants  404.4 s ; bascules  3 ; autre pilote p99 31 ms
+
+## Q2 — bus qui bat : mort 1,5 s, vivant 1,5 s
+- voies seules             : réussis 144/200 (p50 1772 ms, p95 4871 ms) ; échoués  56 (p50 4010 ms) ; attente totale des appelants  516.4 s ; bascules  0 ; autre pilote p99 31 ms
+- disjoncteur simple (V3)  : réussis  34/200 (p50   26 ms, p95  361 ms) ; échoués 166 (p50 1898 ms) ; attente totale des appelants  365.0 s ; bascules 11 ; autre pilote p99 31 ms
+- hystérésis + refus       : réussis  15/200 (p50   27 ms, p95   31 ms) ; échoués 185 (p50    0 ms) ; attente totale des appelants  133.3 s ; bascules  1 ; autre pilote p99 31 ms
+- adaptatif + réessais     : réussis 200/200 (p50  471 ms, p95 1543 ms) ; échoués   0 (p50       —) ; attente totale des appelants  104.7 s ; bascules  0 ; autre pilote p99 31 ms
+
+## Q3 — bus partiel : une requête sur deux n&#39;aboutit jamais
+- voies seules             : réussis  62/200 (p50 4295 ms, p95 4873 ms) ; échoués 138 (p50 5003 ms) ; attente totale des appelants  893.5 s ; bascules  0 ; autre pilote p99 31 ms
+- disjoncteur simple (V3)  : réussis  34/200 (p50   26 ms, p95   33 ms) ; échoués 166 (p50 1865 ms) ; attente totale des appelants  297.8 s ; bascules 21 ; autre pilote p99 31 ms
+- hystérésis + refus       : réussis  62/200 (p50 4261 ms, p95 4882 ms) ; échoués 138 (p50 5003 ms) ; attente totale des appelants  890.8 s ; bascules  1 ; autre pilote p99 31 ms
+- adaptatif + réessais     : réussis 148/200 (p50 2912 ms, p95 4472 ms) ; échoués  52 (p50 5003 ms) ; attente totale des appelants  553.5 s ; bascules  4 ; autre pilote p99 31 ms</code></pre>
+</section>
+<section id="linux--correctif-sur-copie-fixmoteur-100-400" class="level3">
+<h3>Linux — correctif sur copie (fix/moteur 100 400)</h3>
+<pre class="text"><code># Le vrai moteur d&#39;automatismes sous charge (2 workers, machine de test)
+Chaque automatisme : 1 déclencheur, 3 conditions imbriquées de 3 règles, 1 action ;
+10 % sont temporaires (« allume 30 min »), 10 % attendent une condition (wait_for).
+N = 100 : chargement 0.79 s, mémoire du moteur 1141 Kio ; croisière p50 1.7 ms p99 2.2 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 22.8 ms max 24.2 ms perdues 0 ; sonde après p50 38.4 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 41.8 ms max 43.0 ms perdues 0 ; sonde après p50 78.8 ms ; retards du moteur 4 (1194 événements manqués)
+N = 400 : chargement 10.94 s, mémoire du moteur 3716 Kio ; croisière p50 2.0 ms p99 3.7 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 61.5 ms max 65.9 ms perdues 0 ; sonde après p50 90.4 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 75.4 ms max 76.3 ms perdues 0 ; sonde après p50 242.1 ms ; retards du moteur 5 (695 événements manqués)</code></pre>
+</section>
+<section id="linux--threads-et-processus-linux-couts" class="level3">
+<h3>Linux — threads et processus (linux-couts)</h3>
+<pre class="text"><code>- Linux musl : processus minimal avec un runtime Tokio : 577 Kio de RSS en moyenne
+- Linux musl : 40 threads avec chacun un runtime Tokio : 788 Kio de RSS, soit 19 Kio par pilote</code></pre>
+<p>Codes sources :</p>
+<details class="code"><summary>Code complet de <code>preuves-v2/src/bin/caprices.rs</code></summary><pre class="rust"><code>//! Q1-Q3 : un bus qui répond mal, pas seulement un bus mort. Lent (sous le délai), qui bat
+//! (tombe et revient sans cesse), partiel (une requête sur deux échoue). Trois protections
+//! comparées : voies seules, disjoncteur simple (celui de la V3), disjoncteur à hystérésis
+//! avec budget de latence.
+
+use std::collections::VecDeque;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+use moli_core::{Access, Device, DeviceId, InstanceId, Kind, Origin, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
+
+fn rt() -&gt; tokio::runtime::Runtime {
+    tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap()
+}
+fn ms(d: Duration) -&gt; String {
+    format!(&quot;{:.0} ms&quot;, d.as_secs_f64() * 1e3)
+}
+fn q(v: &amp;mut [Duration], p: f64) -&gt; String {
+    if v.is_empty() {
+        return &quot;—&quot;.into();
+    }
+    v.sort();
+    ms(v[((v.len() - 1) as f64 * p) as usize])
+}
+fn appareil(id: DeviceId, instance: &amp;InstanceId) -&gt; Device {
+    Device {
+        id,
+        instance: instance.clone(),
+        native_name: &quot;fictif&quot;.into(),
+        manufacturer: None,
+        model: None,
+        description: None,
+        native_room: None,
+        members: vec![],
+        points: vec![PointSpec {
+            key: &quot;on&quot;.into(),
+            label: &quot;on&quot;.into(),
+            kind: Kind::Binary,
+            access: Access { read: true, write: true },
+            unit: None,
+            semantic: Semantic::OnOff,
+        }],
+    }
+}
+
+const APPAREILS: usize = 50;
+const DELAI: Duration = Duration::from_secs(4);
+
+#[derive(Clone, Copy, PartialEq)]
+enum Caprice {
+    /// Répond, mais en 2,5 s : sous le délai de 4 s, jamais en échec.
+    Lent,
+    /// Mort 1,5 s, vivant 1,5 s, sans fin.
+    Battant,
+    /// Une requête sur deux n&#39;aboutit jamais (délai), l&#39;autre répond en 20 ms.
+    Partiel,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Protection {
+    Voies,
+    /// V3 : trois échecs en 10 s ouvrent 1 s ; un essai referme.
+    Simple,
+    /// Hystérésis : s&#39;ouvre sur trois échecs d&#39;ordres consécutifs, reste ouvert au moins 5 s,
+    /// essais espacés (1 s → 30 s), trois succès pour refermer ; budget de latence : au-delà de 1,5 s en médiane récente, le bus est
+    /// « dégradé » : un ordre qui, vu la file devant lui, aboutirait après son échéance est
+    /// refusé tout de suite au lieu de faire la queue pour rien.
+    Hysteresis,
+    /// Hystérésis + refus prédictif, plus un délai par tentative adapté au bus
+    /// (3 × médiane récente, entre 500 ms et le temps restant) et des réessais tant que
+    /// l&#39;échéance le permet, pour les ordres idempotents (une consigne, jamais un appui).
+    /// Le disjoncteur compte les ordres échoués, pas les tentatives.
+    Adaptatif,
+}
+
+struct Transport {
+    caprice: Caprice,
+    debut: Instant,
+    compteur: AtomicUsize,
+}
+
+impl Transport {
+    async fn requete(&amp;self, delai: Duration) -&gt; Result&lt;(), String&gt; {
+        let n = self.compteur.fetch_add(1, Ordering::Relaxed);
+        let reponse = match self.caprice {
+            Caprice::Lent =&gt; Some(Duration::from_millis(2_500)),
+            Caprice::Battant =&gt; {
+                let phase = (self.debut.elapsed().as_millis() / 1_500) % 2;
+                (phase == 0).then_some(Duration::from_millis(20))
+            }
+            Caprice::Partiel =&gt; (n % 2 == 0).then_some(Duration::from_millis(20)),
+        };
+        match reponse {
+            Some(d) if d &lt;= delai =&gt; {
+                tokio::time::sleep(d).await;
+                Ok(())
+            }
+            _ =&gt; {
+                tokio::time::sleep(delai).await;
+                Err(&quot;délai dépassé&quot;.into())
+            }
+        }
+    }
+}
+
+#[derive(Default)]
+struct Etat {
+    echecs: VecDeque&lt;Instant&gt;,
+    echecs_consecutifs: u32,
+    latences: VecDeque&lt;Duration&gt;,
+    ouvert_depuis: Option&lt;Instant&gt;,
+    prochain_essai: Option&lt;Instant&gt;,
+    intervalle_essai: Duration,
+    succes_consecutifs: u32,
+    essai_en_cours: bool,
+    degrade: bool,
+    bascules: usize,
+}
+
+impl Etat {
+    fn mediane_recente(&amp;self) -&gt; Duration {
+        if self.latences.is_empty() {
+            return Duration::ZERO;
+        }
+        let mut v: Vec&lt;Duration&gt; = self.latences.iter().copied().collect();
+        v.sort();
+        v[v.len() / 2]
+    }
+}
+
+struct Bus {
+    transport: Arc&lt;Transport&gt;,
+    protection: Protection,
+    etat: Arc&lt;Mutex&lt;Etat&gt;&gt;,
+}
+
+impl Driver for Bus {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;bus&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            for i in 0..APPAREILS {
+                let id = ctx.device_id(&amp;format!(&quot;a{i}&quot;));
+                ctx.upsert_device(appareil(id.clone(), &amp;ctx.instance().clone()));
+                ctx.set_availability(&amp;id, true);
+            }
+            ctx.ready();
+            let mut voies = Vec::new();
+            let mut taches = tokio::task::JoinSet::new();
+            for _ in 0..APPAREILS {
+                let (tx, mut rx) = mpsc::channel::&lt;CommandRequest&gt;(8);
+                voies.push(tx);
+                let (transport, etat, protection) = (self.transport.clone(), self.etat.clone(), self.protection);
+                taches.spawn(async move {
+                    while let Some(cmd) = rx.recv().await {
+                        if cmd.abandoned() {
+                            cmd.reply(Err(&quot;expiré avant l&#39;envoi&quot;.into()));
+                            continue;
+                        }
+                        let mut delai = DELAI;
+                        let mut essai = false;
+                        if protection != Protection::Voies {
+                            let mut e = etat.lock().unwrap();
+                            let maintenant = Instant::now();
+                            if let Some(depuis) = e.ouvert_depuis {
+                                let peut_essayer = match protection {
+                                    Protection::Simple =&gt; maintenant &gt;= depuis + Duration::from_secs(1),
+                                    _ =&gt; maintenant &gt;= depuis + Duration::from_secs(5) &amp;&amp; e.prochain_essai.is_none_or(|t| maintenant &gt;= t),
+                                };
+                                if !peut_essayer || e.essai_en_cours {
+                                    drop(e);
+                                    cmd.reply(Err(&quot;bus injoignable&quot;.into()));
+                                    continue;
+                                }
+                                e.essai_en_cours = true;
+                                essai = true;
+                                delai = Duration::from_millis(500);
+                            }
+                        }
+                        let t0 = Instant::now();
+                        let r = if protection == Protection::Adaptatif {
+                            let mut r = Err(&quot;jamais tenté&quot;.to_owned());
+                            let mut tentatives = 0;
+                            loop {
+                                let restant = cmd.deadline.saturating_duration_since(Instant::now());
+                                if restant &lt; Duration::from_millis(50) {
+                                    break;
+                                }
+                                let (mediane, connue) = {
+                                    let e = etat.lock().unwrap();
+                                    (e.mediane_recente(), e.latences.len() &gt;= 5)
+                                };
+                                // Tant que la latence du bus n&#39;est pas connue (moins de 5 réponses),
+                                // une seule tentative avec tout le temps restant : réessayer n&#39;aide
+                                // qu&#39;un bus rapide qui perd des requêtes, jamais un bus lent.
+                                let par_tentative = if connue {
+                                    (mediane * 3).max(Duration::from_millis(500)).min(restant)
+                                } else {
+                                    restant
+                                };
+                                tentatives += 1;
+                                r = transport.requete(par_tentative).await;
+                                if r.is_ok() {
+                                    break;
+                                }
+                            }
+                            let _ = tentatives;
+                            r
+                        } else {
+                            transport.requete(delai).await
+                        };
+                        if protection != Protection::Voies {
+                            let mut e = etat.lock().unwrap();
+                            let maintenant = Instant::now();
+                            if essai {
+                                e.essai_en_cours = false;
+                            }
+                            match &amp;r {
+                                Ok(()) =&gt; {
+                                    e.echecs_consecutifs = 0;
+                                    e.latences.push_back(t0.elapsed());
+                                    if e.latences.len() &gt; 20 {
+                                        e.latences.pop_front();
+                                    }
+                                    e.succes_consecutifs += 1;
+                                    let referme = match protection {
+                                        Protection::Simple =&gt; true,
+                                        _ =&gt; e.succes_consecutifs &gt;= 3,
+                                    };
+                                    if e.ouvert_depuis.is_some() &amp;&amp; referme {
+                                        e.ouvert_depuis = None;
+                                        e.prochain_essai = None;
+                                        e.intervalle_essai = Duration::from_secs(1);
+                                        e.bascules += 1;
+                                    } else if e.ouvert_depuis.is_some() {
+                                        // Un succès d&#39;essai : le suivant tout de suite.
+                                        e.prochain_essai = Some(maintenant);
+                                    }
+                                }
+                                Err(_) =&gt; {
+                                    e.succes_consecutifs = 0;
+                                    e.echecs_consecutifs += 1;
+                                    e.echecs.push_back(maintenant);
+                                    while e.echecs.front().is_some_and(|t| maintenant - *t &gt; Duration::from_secs(10)) {
+                                        e.echecs.pop_front();
+                                    }
+                                    if e.ouvert_depuis.is_some() {
+                                        if matches!(protection, Protection::Hysteresis | Protection::Adaptatif) {
+                                            e.intervalle_essai = (e.intervalle_essai * 2).max(Duration::from_secs(1)).min(Duration::from_secs(30));
+                                            e.prochain_essai = Some(maintenant + e.intervalle_essai);
+                                        }
+                                    } else if match protection {
+                                        Protection::Simple =&gt; e.echecs.len() &gt;= 3,
+                                        _ =&gt; e.echecs_consecutifs &gt;= 3,
+                                    } {
+                                        e.ouvert_depuis = Some(maintenant);
+                                        e.intervalle_essai = Duration::from_secs(1);
+                                        e.prochain_essai = Some(maintenant + Duration::from_secs(5));
+                                        e.bascules += 1;
+                                        while let Ok(c) = rx.try_recv() {
+                                            c.reply(Err(&quot;bus injoignable&quot;.into()));
+                                        }
+                                    }
+                                }
+                            }
+                            if matches!(protection, Protection::Hysteresis | Protection::Adaptatif) {
+                                let lent = e.mediane_recente() &gt; Duration::from_millis(1_500);
+                                if lent != e.degrade {
+                                    e.degrade = lent;
+                                    e.bascules += 1;
+                                }
+                            }
+                        }
+                        cmd.reply(r);
+                    }
+                });
+            }
+            loop {
+                tokio::select! {
+                    cmd = ctx.next_command() =&gt; {
+                        let Some(cmd) = cmd else { break };
+                        let i: usize = cmd.device.id.as_str()[&quot;bus:a&quot;.len()..].parse().unwrap();
+                        if matches!(self.protection, Protection::Hysteresis | Protection::Adaptatif) {
+                            let e = self.etat.lock().unwrap();
+                            if e.degrade {
+                                let devant = (8 - voies[i].capacity()) as u32 + 1;
+                                let prevu = e.mediane_recente() * devant;
+                                let restant = cmd.deadline.saturating_duration_since(Instant::now());
+                                if prevu &gt; restant {
+                                    drop(e);
+                                    cmd.reply(Err(&quot;bus dégradé : l&#39;attente dépasserait l&#39;échéance&quot;.into()));
+                                    continue;
+                                }
+                            }
+                        }
+                        if let Err(e) = voies[i].try_send(cmd) {
+                            let c = match e { mpsc::error::TrySendError::Full(c) | mpsc::error::TrySendError::Closed(c) =&gt; c };
+                            c.reply(Err(&quot;file de l&#39;appareil pleine&quot;.into()));
+                        }
+                    }
+                    fin = taches.join_next() =&gt; anyhow::bail!(&quot;voie arrêtée : {fin:?}&quot;),
+                }
+            }
+            Ok(())
+        })
+    }
+}
+
+struct Sain;
+impl Driver for Sain {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;sain&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let id = ctx.device_id(&quot;l1&quot;);
+            ctx.upsert_device(appareil(id, &amp;ctx.instance().clone()));
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+fn essai(caprice: Caprice, protection: Protection) -&gt; String {
+    rt().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let transport = Arc::new(Transport { caprice, debut: Instant::now(), compteur: AtomicUsize::new(0) });
+        let etat = Arc::new(Mutex::new(Etat { intervalle_essai: Duration::from_secs(1), ..Default::default() }));
+        spawn_driver(&amp;hub, &quot;bus&quot;.into(), Arc::new(Bus { transport, protection, etat: etat.clone() }), cancel.clone());
+        spawn_driver(&amp;hub, &quot;sain&quot;.into(), Arc::new(Sain), cancel.clone());
+        while hub.device(&amp;DeviceId::from(&quot;bus:a49&quot;)).is_none() || hub.device(&amp;DeviceId::from(&quot;sain:l1&quot;)).is_none() {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        let bus_ok = Arc::new(Mutex::new(Vec::new()));
+        let bus_ko = Arc::new(Mutex::new(Vec::new()));
+        let sain = Arc::new(Mutex::new(Vec::new()));
+        let mut taches = Vec::new();
+        // 20 s : 10 ordres par seconde vers le bus, 10 vers l&#39;autre pilote.
+        for n in 0..200usize {
+            let (h, ok, ko) = (hub.clone(), bus_ok.clone(), bus_ko.clone());
+            taches.push(tokio::spawn(async move {
+                let p = PointId::from(format!(&quot;bus:a{}/on&quot;, (n * 7) % 10));
+                let t0 = Instant::now();
+                let r = h.command(&amp;p, Value::Bool(n % 2 == 0), Origin::Automation, None).await;
+                if r.is_ok() { ok.lock().unwrap().push(t0.elapsed()) } else { ko.lock().unwrap().push(t0.elapsed()) }
+            }));
+            let (h, s) = (hub.clone(), sain.clone());
+            taches.push(tokio::spawn(async move {
+                let t0 = Instant::now();
+                let _ = h.command(&amp;PointId::from(&quot;sain:l1/on&quot;), Value::Bool(n % 2 == 0), Origin::Automation, None).await;
+                s.lock().unwrap().push(t0.elapsed());
+            }));
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        for t in taches {
+            let _ = t.await;
+        }
+        cancel.cancel();
+        let mut ok = bus_ok.lock().unwrap().clone();
+        let mut ko = bus_ko.lock().unwrap().clone();
+        let mut s = sain.lock().unwrap().clone();
+        let attente: Duration = ok.iter().chain(ko.iter()).sum();
+        format!(
+            &quot;réussis {:&gt;3}/200 (p50 {:&gt;7}, p95 {:&gt;7}) ; échoués {:&gt;3} (p50 {:&gt;7}) ; attente totale des appelants {:&gt;6.1} s ; bascules {:&gt;2} ; autre pilote p99 {}&quot;,
+            ok.len(),
+            q(&amp;mut ok, 0.5),
+            q(&amp;mut ok, 0.95),
+            ko.len(),
+            q(&amp;mut ko, 0.5),
+            attente.as_secs_f64(),
+            etat.lock().unwrap().bascules,
+            q(&amp;mut s, 0.99)
+        )
+    })
+}
+
+fn main() {
+    println!(&quot;# Un bus qui répond mal : 10 ordres/s vers 10 de ses appareils pendant 20 s, un autre pilote à côté&quot;);
+    for (titre, caprice) in [(&quot;Q1 — bus lent : répond en 2,5 s, sous le délai de 4 s&quot;, Caprice::Lent), (&quot;Q2 — bus qui bat : mort 1,5 s, vivant 1,5 s&quot;, Caprice::Battant), (&quot;Q3 — bus partiel : une requête sur deux n&#39;aboutit jamais&quot;, Caprice::Partiel)] {
+        println!(&quot;\n## {titre}&quot;);
+        for (nom, p) in [(&quot;voies seules            &quot;, Protection::Voies), (&quot;disjoncteur simple (V3) &quot;, Protection::Simple), (&quot;hystérésis + refus      &quot;, Protection::Hysteresis), (&quot;adaptatif + réessais    &quot;, Protection::Adaptatif)] {
+            println!(&quot;- {nom} : {}&quot;, essai(caprice, p));
+        }
+    }
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>preuves-v2/src/bin/voies.rs</code></summary><pre class="rust"><code>//! L1-L3 : les voies paresseuses, écrites pour de bon (un répartiteur, des files créées à la
+//! demande, un ordre en vol par appareil, disjoncteur), rejouées sous la charge de la V2
+//! (C2, C3) et de la V3 (P1), avec la mémoire mesurée pendant la charge.
+
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::collections::{HashMap, VecDeque};
+use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+use moli_core::{Access, Device, DeviceId, InstanceId, Kind, Origin, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio::sync::{Semaphore, mpsc};
+use tokio_util::sync::CancellationToken;
+
+struct Compte;
+static OCTETS: AtomicIsize = AtomicIsize::new(0);
+static PIC: AtomicIsize = AtomicIsize::new(0);
+unsafe impl GlobalAlloc for Compte {
+    unsafe fn alloc(&amp;self, l: Layout) -&gt; *mut u8 {
+        let p = unsafe { System.alloc(l) };
+        if !p.is_null() {
+            let n = OCTETS.fetch_add(l.size() as isize, Ordering::Relaxed) + l.size() as isize;
+            PIC.fetch_max(n, Ordering::Relaxed);
+        }
+        p
+    }
+    unsafe fn dealloc(&amp;self, p: *mut u8, l: Layout) {
+        unsafe { System.dealloc(p, l) };
+        OCTETS.fetch_sub(l.size() as isize, Ordering::Relaxed);
+    }
+    unsafe fn realloc(&amp;self, p: *mut u8, l: Layout, n: usize) -&gt; *mut u8 {
+        let q = unsafe { System.realloc(p, l, n) };
+        if !q.is_null() {
+            let m = OCTETS.fetch_add(n as isize - l.size() as isize, Ordering::Relaxed) + n as isize - l.size() as isize;
+            PIC.fetch_max(m, Ordering::Relaxed);
+        }
+        q
+    }
+}
+#[global_allocator]
+static A: Compte = Compte;
+
+fn rt() -&gt; tokio::runtime::Runtime {
+    tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap()
+}
+fn ms(d: Duration) -&gt; String {
+    format!(&quot;{:.1} ms&quot;, d.as_secs_f64() * 1e3)
+}
+fn q(v: &amp;mut [Duration], p: f64) -&gt; String {
+    if v.is_empty() {
+        return &quot;—&quot;.into();
+    }
+    v.sort();
+    ms(v[((v.len() - 1) as f64 * p) as usize])
+}
+fn lampe(id: DeviceId, instance: &amp;InstanceId) -&gt; Device {
+    Device {
+        id,
+        instance: instance.clone(),
+        native_name: &quot;lampe fictive&quot;.into(),
+        manufacturer: None,
+        model: None,
+        description: None,
+        native_room: None,
+        members: vec![],
+        points: vec![PointSpec {
+            key: &quot;on&quot;.into(),
+            label: &quot;on&quot;.into(),
+            kind: Kind::Binary,
+            access: Access { read: true, write: true },
+            unit: None,
+            semantic: Semantic::OnOff,
+        }],
+    }
+}
+
+// ---- les voies paresseuses : la bibliothèque proposée pour moli-runtime ------------
+
+/// Résultat d&#39;un envoi, rendu par la tâche d&#39;envoi au répartiteur.
+struct Fin {
+    appareil: usize,
+    ok: bool,
+}
+
+/// Une file par appareil, créée au premier ordre en attente et détruite une fois vide ;
+/// un seul ordre en vol par appareil ; la consigne qui attend est remplacée par la
+/// suivante (l&#39;ancienne répond « remplacée ») ; disjoncteur par appareil.
+struct Voies {
+    attente: HashMap&lt;usize, VecDeque&lt;CommandRequest&gt;&gt;,
+    en_vol: Vec&lt;bool&gt;,
+    echecs: Vec&lt;u8&gt;,
+    disjoncte_jusqua: Vec&lt;Option&lt;Instant&gt;&gt;,
+    max_attente: usize,
+    disjoncteur: bool,
+    fins_tx: mpsc::UnboundedSender&lt;Fin&gt;,
+}
+
+impl Voies {
+    fn new(appareils: usize, disjoncteur: bool, fins_tx: mpsc::UnboundedSender&lt;Fin&gt;) -&gt; Self {
+        Self {
+            attente: HashMap::new(),
+            en_vol: vec![false; appareils],
+            echecs: vec![0; appareils],
+            disjoncte_jusqua: vec![None; appareils],
+            max_attente: 8,
+            disjoncteur,
+            fins_tx,
+        }
+    }
+
+    /// Un ordre arrive : refusé si le disjoncteur est ouvert, envoyé s&#39;il n&#39;y a rien en
+    /// vol, sinon mis en attente (au plus `max_attente`, la plus ancienne consigne cède).
+    fn ordre(&amp;mut self, i: usize, cmd: CommandRequest, envoi: &amp;dyn Fn(usize, CommandRequest, mpsc::UnboundedSender&lt;Fin&gt;)) {
+        if let Some(t) = self.disjoncte_jusqua[i] {
+            if Instant::now() &lt; t {
+                cmd.reply(Err(&quot;injoignable : disjoncteur ouvert&quot;.into()));
+                return;
+            }
+            self.disjoncte_jusqua[i] = None;
+        }
+        if !self.en_vol[i] {
+            self.en_vol[i] = true;
+            envoi(i, cmd, self.fins_tx.clone());
+            return;
+        }
+        let file = self.attente.entry(i).or_default();
+        if file.len() &gt;= self.max_attente {
+            if let Some(ancienne) = file.pop_front() {
+                ancienne.reply(Err(&quot;remplacée par une consigne plus récente&quot;.into()));
+            }
+        }
+        file.push_back(cmd);
+    }
+
+    /// Un envoi se termine : l&#39;ordre suivant de l&#39;appareil part, ou sa file disparaît.
+    fn fin(&amp;mut self, fin: Fin, envoi: &amp;dyn Fn(usize, CommandRequest, mpsc::UnboundedSender&lt;Fin&gt;)) -&gt; Option&lt;bool&gt; {
+        let i = fin.appareil;
+        let mut tombe = None;
+        if self.disjoncteur {
+            if fin.ok {
+                self.echecs[i] = 0;
+            } else {
+                self.echecs[i] += 1;
+                if self.echecs[i] &gt;= 2 {
+                    self.disjoncte_jusqua[i] = Some(Instant::now() + Duration::from_secs(30));
+                    if let Some(file) = self.attente.remove(&amp;i) {
+                        for c in file {
+                            c.reply(Err(&quot;injoignable : disjoncteur ouvert&quot;.into()));
+                        }
+                    }
+                    tombe = Some(false);
+                }
+            }
+        }
+        let suivant = self.attente.get_mut(&amp;i).and_then(|f| {
+            let c = f.pop_front();
+            c
+        });
+        if self.attente.get(&amp;i).is_some_and(VecDeque::is_empty) {
+            self.attente.remove(&amp;i);
+        }
+        match suivant {
+            Some(cmd) if cmd.abandoned() =&gt; {
+                cmd.reply(Err(&quot;expiré avant l&#39;envoi&quot;.into()));
+                self.en_vol[i] = false;
+            }
+            Some(cmd) =&gt; envoi(i, cmd, self.fins_tx.clone()),
+            None =&gt; self.en_vol[i] = false,
+        }
+        tombe
+    }
+}
+
+// ---- un pont, vingt lampes, une muette, comme en V2 ---------------------------------
+
+const LAMPES: usize = 20;
+const MUETTE: usize = 0;
+
+struct Pont {
+    api: Arc&lt;Semaphore&gt;,
+    disjoncteur: bool,
+    vivant: Arc&lt;AtomicBool&gt;,
+}
+
+async fn appel(api: &amp;Semaphore, vivant: &amp;AtomicBool, appareil: usize) -&gt; bool {
+    let _jeton = api.acquire().await.unwrap();
+    if appareil == MUETTE || !vivant.load(Ordering::Acquire) {
+        tokio::time::sleep(Duration::from_secs(4)).await;
+        false
+    } else {
+        tokio::time::sleep(Duration::from_millis(30)).await;
+        true
+    }
+}
+
+fn indice(cmd: &amp;CommandRequest) -&gt; usize {
+    cmd.device.id.as_str()[&quot;pont:lampe&quot;.len()..].parse().unwrap()
+}
+
+impl Driver for Pont {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;pont&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            for i in 0..LAMPES {
+                let id = ctx.device_id(&amp;format!(&quot;lampe{i}&quot;));
+                ctx.upsert_device(lampe(id.clone(), &amp;ctx.instance().clone()));
+                ctx.set_availability(&amp;id, true);
+            }
+            ctx.ready();
+            let (fins_tx, mut fins_rx) = mpsc::unbounded_channel();
+            let mut voies = Voies::new(LAMPES, self.disjoncteur, fins_tx);
+            let (api, vivant) = (self.api.clone(), self.vivant.clone());
+            let envoi = move |i: usize, cmd: CommandRequest, fins: mpsc::UnboundedSender&lt;Fin&gt;| {
+                let (api, vivant) = (api.clone(), vivant.clone());
+                tokio::spawn(async move {
+                    let ok = appel(&amp;api, &amp;vivant, i).await;
+                    cmd.reply(if ok { Ok(()) } else { Err(&quot;délai dépassé&quot;.into()) });
+                    let _ = fins.send(Fin { appareil: i, ok });
+                });
+            };
+            loop {
+                tokio::select! {
+                    cmd = ctx.next_command() =&gt; {
+                        let Some(cmd) = cmd else { break };
+                        let i = indice(&amp;cmd);
+                        voies.ordre(i, cmd, &amp;envoi);
+                    }
+                    Some(fin) = fins_rx.recv() =&gt; {
+                        let i = fin.appareil;
+                        if let Some(en_ligne) = voies.fin(fin, &amp;envoi) {
+                            ctx.set_availability(&amp;ctx.device_id(&amp;format!(&quot;lampe{i}&quot;)), en_ligne);
+                        }
+                    }
+                }
+            }
+            Ok(())
+        })
+    }
+}
+
+fn pont(disjoncteur: bool, concurrence: usize, panne_du_pont: bool) -&gt; String {
+    rt().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let vivant = Arc::new(AtomicBool::new(true));
+        spawn_driver(&amp;hub, &quot;pont&quot;.into(), Arc::new(Pont { api: Arc::new(Semaphore::new(concurrence)), disjoncteur, vivant: vivant.clone() }), cancel.clone());
+        while hub.device(&amp;DeviceId::from(format!(&quot;pont:lampe{}&quot;, LAMPES - 1))).is_none() {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        PIC.store(OCTETS.load(Ordering::Relaxed), Ordering::Relaxed);
+        let base = OCTETS.load(Ordering::Relaxed);
+        let saines = Arc::new(Mutex::new(Vec::new()));
+        let echecs_sains = Arc::new(AtomicUsize::new(0));
+        let muette = Arc::new(Mutex::new(Vec::new()));
+        let mut taches = Vec::new();
+        let debut = Instant::now();
+        for n in 0..250usize {
+            if panne_du_pont {
+                let t = debut.elapsed();
+                vivant.store(!(Duration::from_secs(2)..Duration::from_secs(6)).contains(&amp;t), Ordering::Release);
+            }
+            let i = n % LAMPES;
+            let (h, s, e, m) = (hub.clone(), saines.clone(), echecs_sains.clone(), muette.clone());
+            taches.push(tokio::spawn(async move {
+                let p = PointId::from(format!(&quot;pont:lampe{i}/on&quot;));
+                let t = Instant::now();
+                let r = h.command(&amp;p, Value::Bool(n % 2 == 0), Origin::Ui, None).await;
+                let d = t.elapsed();
+                if i == MUETTE {
+                    m.lock().unwrap().push(d);
+                } else if r.is_ok() {
+                    s.lock().unwrap().push(d);
+                } else {
+                    e.fetch_add(1, Ordering::Relaxed);
+                }
+            }));
+            tokio::time::sleep(Duration::from_millis(40)).await;
+        }
+        for t in taches {
+            let _ = t.await;
+        }
+        let pic = PIC.load(Ordering::Relaxed) - base;
+        cancel.cancel();
+        let mut s = saines.lock().unwrap().clone();
+        let mut m = muette.lock().unwrap().clone();
+        format!(
+            &quot;lampes saines {}/{} réussis, médiane {:&gt;7}, pire {:&gt;8} ; muette : médiane {:&gt;8} ; pic mémoire pendant la charge {} Kio&quot;,
+            s.len(),
+            s.len() + echecs_sains.load(Ordering::Relaxed),
+            q(&amp;mut s, 0.5),
+            q(&amp;mut s, 1.0),
+            q(&amp;mut m, 0.5),
+            pic / 1024
+        )
+    })
+}
+
+fn main() {
+    println!(&quot;# Voies paresseuses écrites pour de bon, sous la charge de la V2 et de la V3&quot;);
+    println!(&quot;\n## L1 — C2 rejoué : pont sans limite, 20 lampes, une muette, 25 ordres/s pendant 10 s&quot;);
+    println!(&quot;- voies paresseuses              : {}&quot;, pont(false, 1_000, false));
+    println!(&quot;- voies paresseuses + disjoncteur : {}&quot;, pont(true, 1_000, false));
+    println!(&quot;\n## L2 — C3 rejoué : l&#39;API du pont ne traite que 4 requêtes à la fois&quot;);
+    println!(&quot;- voies paresseuses              : {}&quot;, pont(false, 4, false));
+    println!(&quot;- voies paresseuses + disjoncteur : {}&quot;, pont(true, 4, false));
+    println!(&quot;\n## L3 — le pont entier tombe de 2 s à 6 s (les 20 lampes muettes), puis revient&quot;);
+    println!(&quot;- voies paresseuses + disjoncteur : {}&quot;, pont(true, 1_000, true));
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>preuves-v2/src/bin/bascule.rs</code></summary><pre class="rust"><code>//! S1-S3 : la bascule jouée de bout en bout, en deux processus sur la même machine.
+//! Le principal (enfant) tient un hub et produit des changements à un rythme donné ; il
+//! les réplique vers la secours (ce processus) par TCP, avec un instantané au début et un
+//! battement de cœur. On gèle le principal (SIGSTOP : la machine « meurt » sans fermer
+//! ses connexions), la secours détecte le silence, bascule avec une nouvelle époque, et
+//! on mesure le délai et la perte. Puis l&#39;ancien principal revient et doit rester passif.
+
+use std::collections::HashMap;
+use std::io::{BufRead, BufReader, Write};
+use std::net::{TcpListener, TcpStream};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, Instant};
+
+use moli_core::{Access, Device, DeviceId, Kind, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
+
+const APPAREILS: usize = 496;
+const VALEURS: usize = 2_264;
+const BATTEMENT: Duration = Duration::from_millis(100);
+const SILENCE_MAX: Duration = Duration::from_millis(1_000);
+
+fn ms(d: Duration) -&gt; String {
+    format!(&quot;{:.1} ms&quot;, d.as_secs_f64() * 1e3)
+}
+
+fn numerique(key: &amp;str) -&gt; PointSpec {
+    PointSpec {
+        key: key.into(),
+        label: key.into(),
+        kind: Kind::Numeric { min: None, max: None, step: None },
+        access: Access { read: true, write: false },
+        unit: None,
+        semantic: Semantic::Other,
+    }
+}
+
+/// La maison vue par un hub : 496 appareils, 2 264 valeurs, publiées depuis des deltas.
+struct Maison {
+    deltas: std::sync::Mutex&lt;Option&lt;mpsc::UnboundedReceiver&lt;(u32, f64)&gt;&gt;&gt;,
+    initial: Vec&lt;f64&gt;,
+}
+
+fn point(i: usize) -&gt; (DeviceId, String) {
+    (DeviceId::from(format!(&quot;maison:d{}&quot;, i % APPAREILS)), format!(&quot;v{}&quot;, i / APPAREILS))
+}
+
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            for d in 0..APPAREILS {
+                let par = VALEURS / APPAREILS + usize::from(d &lt; VALEURS % APPAREILS);
+                let id = DeviceId::from(format!(&quot;maison:d{d}&quot;));
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;Appareil fictif {d}&quot;).into(),
+                    manufacturer: None,
+                    model: None,
+                    description: None,
+                    native_room: None,
+                    members: vec![],
+                    points: (0..par).map(|k| numerique(&amp;format!(&quot;v{k}&quot;))).collect(),
+                });
+            }
+            for (i, v) in self.initial.iter().enumerate() {
+                let (id, key) = point(i);
+                ctx.set_state(&amp;id, &amp;key, Value::Float(*v));
+            }
+            ctx.ready();
+            let mut rx = self.deltas.lock().unwrap().take().unwrap();
+            while let Some((i, v)) = rx.recv().await {
+                let (id, key) = point(i as usize);
+                ctx.set_state(&amp;id, &amp;key, Value::Float(v));
+            }
+            Ok(())
+        })
+    }
+}
+
+// ---- le principal ------------------------------------------------------------------
+
+fn principal(port: u16, epoque: u64, rythme: u64) {
+    let mut flux = TcpStream::connect((&quot;127.0.0.1&quot;, port)).expect(&quot;secours joignable&quot;);
+    flux.set_nodelay(true).unwrap();
+    // Arbitrage d&#39;époque : la secours annonce la sienne ; plus grande, on reste passif.
+    writeln!(flux, &quot;EPOQUE {epoque}&quot;).unwrap();
+    let mut lecteur = BufReader::new(flux.try_clone().unwrap());
+    let mut ligne = String::new();
+    lecteur.read_line(&amp;mut ligne).unwrap();
+    let leur: u64 = ligne.trim().strip_prefix(&quot;EPOQUE &quot;).unwrap().parse().unwrap();
+    if leur &gt; epoque {
+        println!(&quot;principal : époque {epoque} périmée (la secours est à {leur}) : je reste passif, aucun appareil touché&quot;);
+        return;
+    }
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    rt.block_on(async move {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let (tx, rx) = mpsc::unbounded_channel();
+        let initial: Vec&lt;f64&gt; = (0..VALEURS).map(|i| i as f64 / 7.0).collect();
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { deltas: std::sync::Mutex::new(Some(rx)), initial }), cancel.clone());
+        while hub.stats().points &lt; VALEURS {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        // Instantané initial, puis chaque changement en une ligne, et le battement.
+        let instantane = serde_json::to_vec(&amp;hub.snapshot()).unwrap();
+        writeln!(flux, &quot;INSTANTANE {}&quot;, instantane.len()).unwrap();
+        flux.write_all(&amp;instantane).unwrap();
+        flux.write_all(b&quot;\n&quot;).unwrap();
+        let mut bus = hub.subscribe();
+        let seq = Arc::new(AtomicU64::new(0));
+        let journal_local = std::env::temp_dir().join(format!(&quot;moli-bascule-journal-{port}.txt&quot;));
+        let mut journal = std::fs::File::create(&amp;journal_local).unwrap();
+        let (s, t) = (seq.clone(), tx.clone());
+        tokio::spawn(async move {
+            let mut tick = tokio::time::interval(Duration::from_micros(1_000_000 / rythme));
+            let mut v = 1_000.0;
+            loop {
+                tick.tick().await;
+                v += 1.0;
+                let i = (s.load(Ordering::Relaxed) as usize * 7_919) % VALEURS;
+                if t.send((i as u32, v)).is_err() {
+                    return;
+                }
+            }
+        });
+        let mut battement = tokio::time::interval(BATTEMENT);
+        loop {
+            tokio::select! {
+                e = bus.recv() =&gt; {
+                    if let Ok(moli_core::Event::State { point, value, ts, .. }) = e {
+                        let n = seq.fetch_add(1, Ordering::Relaxed) + 1;
+                        let v = value.as_f64().unwrap_or(0.0);
+                        // Le journal local est écrit sans tampon : ce que le noyau a reçu
+                        // survit à la mort du processus, c&#39;est la vérité du principal.
+                        writeln!(journal, &quot;{n} {point} {v} {ts}&quot;).unwrap();
+                        if writeln!(flux, &quot;C {n} {point} {v} {ts}&quot;).is_err() { return; }
+                    }
+                }
+                _ = battement.tick() =&gt; {
+                    if writeln!(flux, &quot;H {}&quot;, seq.load(Ordering::Relaxed)).is_err() { return; }
+                }
+            }
+        }
+    });
+}
+
+// ---- la secours (et l&#39;orchestration) -----------------------------------------------
+
+struct Reprise {
+    etat: Arc&lt;std::sync::Mutex&lt;HashMap&lt;String, f64&gt;&gt;&gt;,
+}
+
+fn secours(rythme: u64, gel: bool) {
+    let ecoute = TcpListener::bind(&quot;127.0.0.1:0&quot;).unwrap();
+    let port = ecoute.local_addr().unwrap().port();
+    let exe = std::env::current_exe().unwrap();
+    let mut enfant = std::process::Command::new(&amp;exe).args([&quot;principal&quot;, &amp;port.to_string(), &quot;1&quot;, &amp;rythme.to_string()]).spawn().unwrap();
+    let (flux, _) = ecoute.accept().unwrap();
+    let mut lecteur = BufReader::new(flux.try_clone().unwrap());
+    let mut ecrivain = flux.try_clone().unwrap();
+    let mut ligne = String::new();
+    lecteur.read_line(&amp;mut ligne).unwrap();
+    let mut epoque: u64 = 1;
+    writeln!(ecrivain, &quot;EPOQUE {epoque}&quot;).unwrap();
+    ligne.clear();
+    lecteur.read_line(&amp;mut ligne).unwrap();
+    let taille: usize = ligne.trim().strip_prefix(&quot;INSTANTANE &quot;).unwrap().parse().unwrap();
+    let t_instantane = Instant::now();
+    let mut brut = vec![0u8; taille + 1];
+    std::io::Read::read_exact(&amp;mut lecteur, &amp;mut brut).unwrap();
+    let instantane: serde_json::Value = serde_json::from_slice(&amp;brut[..taille]).unwrap();
+    // La secours tient son état à jour en mémoire (chaud), sans toucher à aucun appareil.
+    let etat: Arc&lt;std::sync::Mutex&lt;HashMap&lt;String, f64&gt;&gt;&gt; = Arc::default();
+    {
+        let mut e = etat.lock().unwrap();
+        for d in instantane[&quot;devices&quot;].as_array().unwrap() {
+            let id = d[&quot;id&quot;].as_str().unwrap();
+            for (k, s) in d[&quot;state&quot;].as_object().unwrap() {
+                e.insert(format!(&quot;{id}/{k}&quot;), s[&quot;value&quot;].as_f64().unwrap_or(0.0));
+            }
+        }
+    }
+    println!(&quot;- S1 : instantané de {} Kio reçu et appliqué en {} ({} valeurs)&quot;, taille / 1024, ms(t_instantane.elapsed()), etat.lock().unwrap().len());
+    flux.set_read_timeout(Some(Duration::from_millis(50))).unwrap();
+    let debut = Instant::now();
+    let mut dernier_seq = 0u64;
+    let mut dernier_signe = Instant::now();
+    let mut gele_a: Option&lt;Instant&gt; = None;
+    let mut recus = 0u64;
+    let mut detection = Instant::now();
+    loop {
+        if gele_a.is_none() &amp;&amp; debut.elapsed() &gt;= Duration::from_secs(5) {
+            // La machine principale « meurt » : gelée, ses connexions restent ouvertes
+            // (SIGSTOP) ; ou le processus seul meurt et le noyau ferme ses connexions (SIGKILL).
+            std::process::Command::new(&quot;kill&quot;).args([if gel { &quot;-STOP&quot; } else { &quot;-KILL&quot; }, &amp;enfant.id().to_string()]).status().unwrap();
+            gele_a = Some(Instant::now());
+        }
+        ligne.clear();
+        match lecteur.read_line(&amp;mut ligne) {
+            Ok(0) =&gt; {
+                detection = Instant::now();
+                break;
+            }
+            Ok(_) =&gt; {
+                dernier_signe = Instant::now();
+                let mut champs = ligne.split_whitespace();
+                match champs.next() {
+                    Some(&quot;C&quot;) =&gt; {
+                        let n: u64 = champs.next().unwrap().parse().unwrap();
+                        let p = champs.next().unwrap().to_owned();
+                        let v: f64 = champs.next().unwrap().parse().unwrap();
+                        etat.lock().unwrap().insert(p, v);
+                        dernier_seq = n;
+                        recus += 1;
+                    }
+                    Some(&quot;H&quot;) =&gt; {
+                        dernier_seq = champs.next().unwrap().parse().unwrap();
+                    }
+                    _ =&gt; {}
+                }
+            }
+            Err(_) =&gt; {
+                if dernier_signe.elapsed() &gt; SILENCE_MAX {
+                    detection = Instant::now();
+                    break;
+                }
+            }
+        }
+    }
+    let gele = gele_a.unwrap();
+    // Bascule : nouvelle époque, puis le hub de la secours prend le relais.
+    epoque += 1;
+    let t_bascule = Instant::now();
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    let pret = rt.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let (_tx, rx) = mpsc::unbounded_channel();
+        let e = etat.lock().unwrap();
+        let initial: Vec&lt;f64&gt; = (0..VALEURS).map(|i| { let (id, k) = point(i); *e.get(&amp;format!(&quot;{id}/{k}&quot;)).unwrap_or(&amp;0.0) }).collect();
+        drop(e);
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { deltas: std::sync::Mutex::new(Some(rx)), initial }), cancel.clone());
+        while hub.stats().points &lt; VALEURS {
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        }
+        let pret = t_bascule.elapsed();
+        let _ = Reprise { etat: etat.clone() };
+        cancel.cancel();
+        pret
+    });
+    std::process::Command::new(&quot;kill&quot;).args([&quot;-KILL&quot;, &amp;enfant.id().to_string()]).status().unwrap();
+    let _ = enfant.wait();
+    let journal = std::fs::read_to_string(std::env::temp_dir().join(format!(&quot;moli-bascule-journal-{port}.txt&quot;))).unwrap_or_default();
+    let dernier_ecrit: u64 = journal.lines().last().and_then(|l| l.split_whitespace().next()).and_then(|n| n.parse().ok()).unwrap_or(0);
+    let _ = std::fs::remove_file(std::env::temp_dir().join(format!(&quot;moli-bascule-journal-{port}.txt&quot;)));
+    println!(
+        &quot;- S2 : {rythme} changements/s ; {recus} reçus par la secours ; dernier écrit par le principal {dernier_ecrit}, dernier reçu {dernier_seq} : {} changements perdus (RPO)&quot;,
+        dernier_ecrit.saturating_sub(dernier_seq)
+    );
+    println!(
+        &quot;- S2 : {} du principal → détection {} (silence max {}) → hub de secours prêt {} après la décision ; indisponibilité totale {} (RTO)&quot;,
+        if gel { &quot;gel (machine morte)&quot; } else { &quot;mort du processus (connexion fermée)&quot; },
+        ms(detection - gele),
+        ms(SILENCE_MAX),
+        ms(pret),
+        ms(detection - gele + pret)
+    );
+    // L&#39;ancien principal revient avec son ancienne époque.
+    let mut revenant = std::process::Command::new(&amp;exe).args([&quot;principal&quot;, &amp;port.to_string(), &quot;1&quot;, &quot;1&quot;]).stdout(std::process::Stdio::piped()).spawn().unwrap();
+    let (flux, _) = ecoute.accept().unwrap();
+    let mut lecteur = BufReader::new(flux.try_clone().unwrap());
+    let ecrivain = flux;
+    ligne.clear();
+    lecteur.read_line(&amp;mut ligne).unwrap();
+    writeln!(&amp;ecrivain, &quot;EPOQUE {epoque}&quot;).unwrap();
+    let sortie = revenant.wait_with_output().unwrap();
+    println!(&quot;- S3 : {}&quot;, String::from_utf8_lossy(&amp;sortie.stdout).trim());
+}
+
+fn main() {
+    let args: Vec&lt;String&gt; = std::env::args().collect();
+    if args.get(1).map(String::as_str) == Some(&quot;principal&quot;) {
+        principal(args[2].parse().unwrap(), args[3].parse().unwrap(), args[4].parse().unwrap());
+        return;
+    }
+    println!(&quot;# Bascule de bout en bout : deux processus, le principal gelé (SIGSTOP), la secours reprend&quot;);
+    for (rythme, gel) in [(2u64, true), (200, true), (200, false)] {
+        println!(&quot;\n## rythme : {rythme} changements par seconde, {}&quot;, if gel { &quot;machine gelée&quot; } else { &quot;processus tué&quot; });
+        secours(rythme, gel);
+    }
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>preuves-v2/src/bin/capacite.rs</code></summary><pre class="rust"><code>//! T1 : le plafond du moteur actuel. À quel débit d&#39;événements soutenu le vrai moteur
+//! (400 automatismes) prend-il du retard sur le bus, avec et sans tampon d&#39;entrée ?
+
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+use moli_automation::{Actor, Author, Automation, Automations, Config, Graph, Mode};
+use moli_core::{Access, Device, DeviceId, Kind, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
+use tracing_subscriber::layer::SubscriberExt;
+
+struct Retards {
+    fois: Arc&lt;AtomicUsize&gt;,
+    manques: Arc&lt;AtomicU64&gt;,
+}
+impl&lt;S: tracing::Subscriber&gt; tracing_subscriber::Layer&lt;S&gt; for Retards {
+    fn on_event(&amp;self, e: &amp;tracing::Event&lt;&#39;_&gt;, _: tracing_subscriber::layer::Context&lt;&#39;_, S&gt;) {
+        if *e.metadata().level() != tracing::Level::WARN {
+            return;
+        }
+        struct V(bool, u64);
+        impl tracing::field::Visit for V {
+            fn record_debug(&amp;mut self, f: &amp;tracing::field::Field, v: &amp;dyn std::fmt::Debug) {
+                if f.name() == &quot;message&quot; &amp;&amp; format!(&quot;{v:?}&quot;).contains(&quot;automations lagged&quot;) {
+                    self.0 = true;
+                }
+            }
+            fn record_u64(&amp;mut self, f: &amp;tracing::field::Field, v: u64) {
+                if f.name() == &quot;missed&quot; {
+                    self.1 = v;
+                }
+            }
+        }
+        let mut v = V(false, 0);
+        e.record(&amp;mut v);
+        if v.0 {
+            self.fois.fetch_add(1, Ordering::Relaxed);
+            self.manques.fetch_add(v.1, Ordering::Relaxed);
+        }
+    }
+}
+
+const CAPTEURS: usize = 1_800;
+const LAMPES: usize = 400;
+
+struct Maison {
+    arrivees: Arc&lt;Mutex&lt;Vec&lt;(usize, Instant)&gt;&gt;&gt;,
+    injections: Mutex&lt;Option&lt;mpsc::UnboundedReceiver&lt;(usize, f64)&gt;&gt;&gt;,
+    coalescence: bool,
+}
+fn capteur(s: usize) -&gt; (DeviceId, String) {
+    (DeviceId::from(format!(&quot;maison:c{}&quot;, s / 5)), format!(&quot;v{}&quot;, s % 5))
+}
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            let numerique = |key: String| PointSpec {
+                key: key.clone().into(),
+                label: key.into(),
+                kind: Kind::Numeric { min: None, max: None, step: None },
+                access: Access { read: true, write: false },
+                unit: None,
+                semantic: Semantic::Other,
+            };
+            for d in 0..CAPTEURS / 5 {
+                let id = DeviceId::from(format!(&quot;maison:c{d}&quot;));
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;capteur {d}&quot;).into(),
+                    manufacturer: None,
+                    model: None,
+                    description: None,
+                    native_room: None,
+                    members: vec![],
+                    points: (0..5).map(|k| numerique(format!(&quot;v{k}&quot;))).collect(),
+                });
+                for k in 0..5 {
+                    ctx.set_state(&amp;id, &amp;format!(&quot;v{k}&quot;), Value::Float(0.0));
+                }
+            }
+            for k in 0..LAMPES {
+                let id = DeviceId::from(format!(&quot;maison:l{k}&quot;));
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;lampe {k}&quot;).into(),
+                    manufacturer: None,
+                    model: None,
+                    description: None,
+                    native_room: None,
+                    members: vec![],
+                    points: vec![PointSpec {
+                        key: &quot;on&quot;.into(),
+                        label: &quot;on&quot;.into(),
+                        kind: Kind::Binary,
+                        access: Access { read: true, write: true },
+                        unit: None,
+                        semantic: Semantic::OnOff,
+                    }],
+                });
+                ctx.set_state(&amp;id, &quot;on&quot;, Value::Bool(false));
+            }
+            let mut rx = self.injections.lock().unwrap().take().unwrap();
+            let mut tampon: HashMap&lt;usize, f64&gt; = HashMap::new();
+            let mut vidage = tokio::time::interval(Duration::from_millis(10));
+            ctx.ready();
+            loop {
+                tokio::select! {
+                    cmd = ctx.next_command() =&gt; {
+                        let Some(cmd) = cmd else { return Ok(()) };
+                        let k: usize = cmd.device.id.as_str()[&quot;maison:l&quot;.len()..].parse().unwrap();
+                        self.arrivees.lock().unwrap().push((k, Instant::now()));
+                        ctx.set_state(&amp;cmd.device.id, &amp;cmd.key, cmd.value.clone());
+                        cmd.reply(Ok(()));
+                    }
+                    inj = rx.recv() =&gt; {
+                        let Some((s, v)) = inj else { return Ok(()) };
+                        if self.coalescence {
+                            tampon.insert(s, v);
+                        } else {
+                            let (id, key) = capteur(s);
+                            ctx.set_state(&amp;id, &amp;key, Value::Float(v));
+                        }
+                    }
+                    _ = vidage.tick(), if self.coalescence =&gt; {
+                        for (s, v) in tampon.drain() {
+                            let (id, key) = capteur(s);
+                            ctx.set_state(&amp;id, &amp;key, Value::Float(v));
+                        }
+                    }
+                }
+            }
+        })
+    }
+}
+
+fn declencheur(k: usize) -&gt; usize {
+    100 + k
+}
+
+fn essai(debit: u64, coalescence: bool, fois: &amp;Arc&lt;AtomicUsize&gt;, manques: &amp;Arc&lt;AtomicU64&gt;) -&gt; String {
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    rt.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let arrivees = Arc::new(Mutex::new(Vec::new()));
+        let (tx, rx) = mpsc::unbounded_channel();
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { arrivees: arrivees.clone(), injections: Mutex::new(Some(rx)), coalescence }), cancel.clone());
+        while hub.state(&amp;PointId::from(format!(&quot;maison:l{}/on&quot;, LAMPES - 1))).is_none() {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        let (autos, _t) = Automations::start(&amp;hub, Config::default(), None, cancel.clone()).await.unwrap();
+        let humain = Actor { human: true, author: Author::Human };
+        for k in 0..LAMPES {
+            let (d, key) = capteur(declencheur(k));
+            let regles: Vec&lt;serde_json::Value&gt; = (0..3)
+                .map(|j| {
+                    let (cd, ck) = capteur(1_000 + (k * 7 + j * 13) % 690);
+                    serde_json::json!({&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:format!(&quot;{cd}/{ck}&quot;),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0})
+                })
+                .collect();
+            let g = serde_json::json!({
+                &quot;nodes&quot;:[{&quot;id&quot;:&quot;t&quot;,&quot;type&quot;:&quot;when_state&quot;,&quot;point&quot;:format!(&quot;{d}/{key}&quot;)},
+                         {&quot;id&quot;:&quot;c&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:regles},
+                         {&quot;id&quot;:&quot;a&quot;,&quot;type&quot;:&quot;toggle&quot;,&quot;point&quot;:format!(&quot;maison:l{k}/on&quot;)}],
+                &quot;edges&quot;:[{&quot;from&quot;:&quot;t&quot;,&quot;to&quot;:&quot;c&quot;},{&quot;from&quot;:&quot;c&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;a&quot;}]
+            });
+            let a = autos
+                .save(
+                    Automation {
+                        id: String::new(),
+                        name: format!(&quot;A{k}&quot;),
+                        enabled: true,
+                        mode: Mode::Restart,
+                        graph: serde_json::from_value::&lt;Graph&gt;(g).unwrap(),
+                        author: Author::Human,
+                        approved: None,
+                        approved_version: None,
+                        activation: None,
+                        note: None,
+                        created: 0,
+                        updated: 0,
+                    },
+                    humain,
+                )
+                .await
+                .unwrap();
+            autos.approve(&amp;a.id, &amp;a.fingerprint(), humain).await.unwrap();
+        }
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        fois.store(0, Ordering::Relaxed);
+        manques.store(0, Ordering::Relaxed);
+        let depuis = arrivees.lock().unwrap().len();
+        // 3 s de bruit à `debit` événements/s sur 700 capteurs, une sonde chaque 500 ms.
+        let mut v = 1.0;
+        let mut sondes = Vec::new();
+        let total = (debit * 3) as usize;
+        let debut = Instant::now();
+        let mut prochaine_sonde = Duration::from_millis(500);
+        let mut j = 0usize;
+        let mut envoyes = 0usize;
+        // Le débit est tenu par lots d&#39;une milliseconde : tout ce qui est dû part d&#39;un coup
+        // (la minuterie de Tokio ne descend pas sous la milliseconde).
+        while envoyes &lt; total {
+            let t = debut.elapsed();
+            let dus = ((t.as_secs_f64() * debit as f64) as usize).min(total);
+            while envoyes &lt; dus {
+                v += 1.0;
+                tx.send((1_000 + (envoyes * 7_919) % 700, v)).unwrap();
+                envoyes += 1;
+            }
+            if t &gt;= prochaine_sonde {
+                prochaine_sonde += Duration::from_millis(500);
+                v += 1.0;
+                let k = 20 + 17 * j;
+                j += 1;
+                sondes.push((k, Instant::now()));
+                tx.send((declencheur(k), v)).unwrap();
+            }
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        }
+        let reel = envoyes as f64 / debut.elapsed().as_secs_f64();
+        tokio::time::sleep(Duration::from_secs(2)).await;
+        let arr = arrivees.lock().unwrap();
+        let mut lat: Vec&lt;Duration&gt; = Vec::new();
+        let mut perdues = 0;
+        for (k, t0) in &amp;sondes {
+            match arr[depuis..].iter().find(|(a, t)| a == k &amp;&amp; t &gt;= t0) {
+                Some((_, t)) =&gt; lat.push(*t - *t0),
+                None =&gt; perdues += 1,
+            }
+        }
+        lat.sort();
+        let med = lat.get(lat.len() / 2).map_or(&quot;—&quot;.into(), |d| format!(&quot;{:.1} ms&quot;, d.as_secs_f64() * 1e3));
+        let max = lat.last().map_or(&quot;—&quot;.into(), |d| format!(&quot;{:.1} ms&quot;, d.as_secs_f64() * 1e3));
+        cancel.cancel();
+        format!(
+            &quot;débit réel {reel:.0}/s ; {} déclencheurs perdus sur {} ; latence médiane {med}, pire {max} ; retards du moteur {} ({} événements manqués)&quot;,
+            perdues,
+            sondes.len(),
+            fois.load(Ordering::Relaxed),
+            manques.load(Ordering::Relaxed)
+        )
+    })
+}
+
+fn main() {
+    let fois = Arc::new(AtomicUsize::new(0));
+    let manques = Arc::new(AtomicU64::new(0));
+    tracing::subscriber::set_global_default(tracing_subscriber::registry().with(Retards { fois: fois.clone(), manques: manques.clone() })).unwrap();
+    println!(&quot;# Plafond du moteur actuel : 400 automatismes, bruit soutenu pendant 3 s sur 700 capteurs&quot;);
+    for coalescence in [false, true] {
+        println!(&quot;\n## {}&quot;, if coalescence { &quot;avec tampon d&#39;entrée (dernière valeur, 10 ms)&quot; } else { &quot;sans tampon d&#39;entrée&quot; });
+        for debit in [1_000u64, 4_000, 16_000, 32_000, 64_000, 128_000] {
+            println!(&quot;- {debit:&gt;5} événements/s : {}&quot;, essai(debit, coalescence, &amp;fois, &amp;manques));
+        }
+    }
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>preuves-v2/src/bin/etat_complet.rs (version V4, avec la mémoire réelle)</code></summary><pre class="rust"><code>//! B1 : le budget mémoire de « tout ce qui compte en mémoire », mesuré octet par octet
+//! (allocateur qui compte), à l&#39;échelle des deux maisons réunies puis ×10.
+
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::collections::{BinaryHeap, HashMap, VecDeque};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicIsize, Ordering};
+use std::time::Duration;
+
+use moli_core::{Access, Device, Kind, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio_util::sync::CancellationToken;
+
+struct Compte;
+static OCTETS: AtomicIsize = AtomicIsize::new(0);
+static BLOCS: AtomicIsize = AtomicIsize::new(0);
+unsafe impl GlobalAlloc for Compte {
+    unsafe fn alloc(&amp;self, l: Layout) -&gt; *mut u8 {
+        let p = unsafe { System.alloc(l) };
+        if !p.is_null() {
+            OCTETS.fetch_add(l.size() as isize, Ordering::Relaxed);
+            BLOCS.fetch_add(1, Ordering::Relaxed);
+        }
+        p
+    }
+    unsafe fn dealloc(&amp;self, p: *mut u8, l: Layout) {
+        unsafe { System.dealloc(p, l) };
+        OCTETS.fetch_sub(l.size() as isize, Ordering::Relaxed);
+        BLOCS.fetch_sub(1, Ordering::Relaxed);
+    }
+    unsafe fn realloc(&amp;self, p: *mut u8, l: Layout, n: usize) -&gt; *mut u8 {
+        let q = unsafe { System.realloc(p, l, n) };
+        if !q.is_null() {
+            OCTETS.fetch_add(n as isize - l.size() as isize, Ordering::Relaxed);
+        }
+        q
+    }
+}
+#[global_allocator]
+static A: Compte = Compte;
+
+fn tas() -&gt; (isize, isize) {
+    (OCTETS.load(Ordering::Relaxed), BLOCS.load(Ordering::Relaxed))
+}
+/// Octets demandés + 16 o d&#39;en-tête par bloc.
+fn depuis(avant: (isize, isize)) -&gt; f64 {
+    let a = tas();
+    ((a.0 - avant.0) + 16 * (a.1 - avant.1)) as f64
+}
+
+
+/// Mémoire réelle du processus, quand le système la donne (Linux) : RSS et mémoire
+/// anonyme du cgroup, la mesure du budget de PERFORMANCE.md.
+fn memoire_reelle() -&gt; String {
+    let rss = std::fs::read_to_string(&quot;/proc/self/status&quot;)
+        .ok()
+        .and_then(|s| s.lines().find(|l| l.starts_with(&quot;VmRSS:&quot;)).map(|l| l.split_whitespace().nth(1).unwrap_or(&quot;?&quot;).to_owned()));
+    let anon = std::fs::read_to_string(&quot;/sys/fs/cgroup/memory.stat&quot;)
+        .ok()
+        .and_then(|s| s.lines().find(|l| l.starts_with(&quot;anon &quot;)).and_then(|l| l.split_whitespace().nth(1).map(|v| v.parse::&lt;u64&gt;().unwrap_or(0) / 1024)));
+    match (rss, anon) {
+        (Some(r), Some(a)) =&gt; format!(&quot;RSS {r} Kio, anonyme du cgroup {a} Kio&quot;),
+        (Some(r), None) =&gt; format!(&quot;RSS {r} Kio&quot;),
+        _ =&gt; &quot;mémoire réelle non disponible sur ce système&quot;.into(),
+    }
+}
+
+fn kio(o: f64) -&gt; String {
+    if o &gt;= 1_048_576.0 { format!(&quot;{:.2} Mio&quot;, o / 1_048_576.0) } else { format!(&quot;{:.0} Kio&quot;, o / 1024.0) }
+}
+
+// ---- le modèle du hub (comme aujourd&#39;hui) ---------------------------------------
+
+struct Maison {
+    appareils: usize,
+    valeurs: usize,
+}
+fn valeur(i: usize) -&gt; (Kind, Value) {
+    match i % 200 {
+        0..37 =&gt; (Kind::Numeric { min: None, max: None, step: None }, Value::Float(20.0 + (i % 17) as f64 * 0.5)),
+        37..77 =&gt; (Kind::Binary, Value::Bool(i % 3 == 0)),
+        77..105 =&gt; (Kind::Text, Value::Text([&quot;idle&quot;, &quot;heat_cool&quot;, &quot;playing&quot;, &quot;auto&quot;][i % 4].into())),
+        _ =&gt; (Kind::Text, Value::Null),
+    }
+}
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            let cles = [&quot;temperature&quot;, &quot;humidity&quot;, &quot;battery&quot;, &quot;linkquality&quot;, &quot;power&quot;, &quot;state&quot;, &quot;illuminance&quot;, &quot;mode&quot;];
+            let mut n = 0;
+            for d in 0..self.appareils {
+                let par = self.valeurs / self.appareils + usize::from(d &lt; self.valeurs % self.appareils);
+                let id = ctx.device_id(&amp;format!(&quot;0x00158d00{d:08x}&quot;));
+                let points: Vec&lt;PointSpec&gt; = (0..par)
+                    .map(|k| PointSpec {
+                        key: format!(&quot;{}_{k}&quot;, cles[(d + k) % cles.len()]).into(),
+                        label: cles[(d + k) % cles.len()].into(),
+                        kind: valeur(n + k).0,
+                        access: Access { read: true, write: k == 0 },
+                        unit: None,
+                        semantic: Semantic::Other,
+                    })
+                    .collect();
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;Appareil fictif {d}&quot;).into(),
+                    manufacturer: Some(&quot;Fabricant&quot;.into()),
+                    model: Some(&quot;Modèle-X1&quot;.into()),
+                    description: None,
+                    native_room: Some(&quot;Pièce&quot;.into()),
+                    members: vec![],
+                    points: points.clone(),
+                });
+                for p in &amp;points {
+                    ctx.set_state(&amp;id, &amp;p.key, valeur(n).1);
+                    n += 1;
+                }
+            }
+            ctx.ready();
+            std::future::pending::&lt;()&gt;().await;
+            Ok(())
+        })
+    }
+}
+
+// ---- ce qu&#39;on ajoute pour être très réactif -------------------------------------
+
+/// L&#39;étage « vif » de la proposition stockage V2 : valeur, valeur précédente, trois
+/// instants (observé, reçu, changé) et qualité.
+#[allow(dead_code)]
+struct PointVif {
+    valeur: Value,
+    precedente: Value,
+    observe: u64,
+    recu: u64,
+    change: u64,
+    qualite: u8,
+}
+
+#[allow(dead_code)]
+struct SanteAppareil {
+    vu: u64,
+    echecs: u16,
+    disjoncte_jusqua: u64,
+    en_file: u8,
+}
+
+#[derive(Clone, Copy)]
+#[allow(dead_code)]
+enum Op {
+    Ge,
+    Gt,
+}
+
+#[allow(dead_code)]
+struct Plan {
+    nom: String,
+    regles: Vec&lt;(u32, Op, f64)&gt;,
+    actions: Vec&lt;(u32, Value)&gt;,
+}
+
+#[allow(dead_code)]
+struct Bail {
+    point: u32,
+    pose: Value,
+    retour: Value,
+    echeance: u64,
+}
+
+#[allow(dead_code)]
+struct Execution {
+    automatisme: u32,
+    noeud: u16,
+    depuis: u64,
+    variables: Vec&lt;(u16, Value)&gt;,
+}
+
+/// Agrégat glissant : relevés de la fenêtre (décalage u32, valeur f32) et sommes tenues.
+#[allow(dead_code)]
+struct Agregat {
+    fenetre: VecDeque&lt;(u32, f32)&gt;,
+    somme: f64,
+    min: f32,
+    max: f32,
+}
+
+const VINGTILES: [f64; 20] = [
+    0.28, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.33, 0.48, 0.63, 0.9, 1.14, 1.41, 2.16, 3.57, 5.73,
+    9.22, 21.92, 140.88, 1990.22,
+];
+const SERIES: usize = 1_487;
+fn taux(s: usize) -&gt; f64 {
+    VINGTILES[(s % SERIES) * 20 / SERIES]
+}
+
+fn historique(jours: f64, echelle: usize) -&gt; f64 {
+    let avant = tas();
+    let mut h: HashMap&lt;u32, (Vec&lt;u32&gt;, Vec&lt;f32&gt;)&gt; = HashMap::new();
+    for s in 0..SERIES * echelle {
+        let n = (taux(s) * jours).round() as usize;
+        let (t, v) = h.entry(s as u32).or_default();
+        t.reserve_exact(n);
+        v.reserve_exact(n);
+        for i in 0..n {
+            t.push(i as u32);
+            v.push(i as f32);
+        }
+    }
+    let c = depuis(avant);
+    drop(h);
+    c
+}
+
+fn budget(echelle: usize) {
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    rt.block_on(async {
+        let (appareils, valeurs) = (496 * echelle, 2_264 * echelle);
+        let automatismes = 400 * echelle;
+        let mut lignes: Vec&lt;(&amp;str, f64)&gt; = Vec::new();
+
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let avant = tas();
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { appareils, valeurs }), cancel.clone());
+        while hub.stats().points &lt; valeurs {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        lignes.push((&quot;Modèle du hub (appareils, définitions, valeurs : ce qui existe)&quot;, depuis(avant)));
+
+        let avant = tas();
+        let snap = hub.snapshot();
+        let mut index: HashMap&lt;PointId, u32&gt; = HashMap::with_capacity(valeurs);
+        let mut vifs: Vec&lt;PointVif&gt; = Vec::with_capacity(valeurs);
+        for d in &amp;snap.devices {
+            for (cle, s) in &amp;d.state {
+                index.insert(PointId::new(&amp;d.device.id, cle), vifs.len() as u32);
+                vifs.push(PointVif { valeur: s.value.clone(), precedente: Value::Null, observe: s.ts, recu: s.ts, change: s.ts, qualite: 0 });
+            }
+        }
+        drop(snap);
+        lignes.push((&quot;Étage vif : précédente, 3 instants, qualité + index des points&quot;, depuis(avant)));
+
+        let avant = tas();
+        let sante: Vec&lt;SanteAppareil&gt; = (0..appareils).map(|_| SanteAppareil { vu: 0, echecs: 0, disjoncte_jusqua: 0, en_file: 0 }).collect();
+        lignes.push((&quot;Santé par appareil (vu le, échecs, disjoncteur)&quot;, depuis(avant)));
+
+        let avant = tas();
+        let plans: Vec&lt;Plan&gt; = (0..automatismes)
+            .map(|k| Plan {
+                nom: format!(&quot;Automatisme {k}&quot;),
+                regles: (0..9).map(|j| (((k * 7 + j * 13) % valeurs) as u32, if j % 2 == 0 { Op::Ge } else { Op::Gt }, 0.0)).collect(),
+                actions: vec![((k % valeurs) as u32, Value::Bool(true)), ((k % valeurs) as u32, Value::Bool(false))],
+            })
+            .collect();
+        let mut par_point: Vec&lt;Vec&lt;u32&gt;&gt; = vec![Vec::new(); valeurs];
+        for k in 0..automatismes {
+            par_point[(k * 31) % valeurs].push(k as u32);
+        }
+        lignes.push((&quot;Automatismes compilés (9 règles, 2 actions) + index par point&quot;, depuis(avant)));
+
+        let avant = tas();
+        let mut echeances = BinaryHeap::new();
+        let baux: Vec&lt;Bail&gt; = (0..1_000 * echelle)
+            .map(|i| {
+                echeances.push(std::cmp::Reverse((1_792_000_000_000u64 + i as u64 * 1_000, i as u32)));
+                Bail { point: (i % valeurs) as u32, pose: Value::Bool(true), retour: Value::Bool(false), echeance: 0 }
+            })
+            .collect();
+        let executions: Vec&lt;Execution&gt; = (0..automatismes)
+            .map(|k| Execution { automatisme: k as u32, noeud: 3, depuis: 0, variables: (0..4).map(|v| (v, Value::Float(1.0))).collect() })
+            .collect();
+        lignes.push((&quot;1 000 baux, échéancier et une exécution en cours par automatisme&quot;, depuis(avant)));
+
+        let avant = tas();
+        // Agrégats 1 h et 24 h sur les points numériques lus par les règles (un sur cinq).
+        let mut agregats: Vec&lt;Agregat&gt; = Vec::new();
+        let lus = valeurs / 5;
+        for s in 0..lus {
+            for heures in [1.0, 24.0] {
+                // Points répartis sur toute la distribution réelle, calmes comme bavards.
+                let n = (taux(s * SERIES / lus) * heures / 24.0).round() as usize;
+                let mut f = VecDeque::with_capacity(n);
+                for i in 0..n {
+                    f.push_back((i as u32, i as f32));
+                }
+                agregats.push(Agregat { fenetre: f, somme: 0.0, min: 0.0, max: 0.0 });
+            }
+        }
+        lignes.push((&quot;Agrégats 1 h et 24 h des points lus par les règles&quot;, depuis(avant)));
+
+        let avant = tas();
+        let mut voies = Vec::new();
+        let mut taches = tokio::task::JoinSet::new();
+        for _ in 0..appareils {
+            let (tx, mut rx) = tokio::sync::mpsc::channel::&lt;CommandRequest&gt;(8);
+            voies.push(tx);
+            taches.spawn(async move { while let Some(c) = rx.recv().await { c.reply(Ok(())); } });
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        let voies_taches = depuis(avant);
+        // Variante paresseuse : un seul répartiteur, une file créée seulement quand un ordre
+        // attend, au plus un ordre en vol par appareil. Au repos : une table vide.
+        let avant = tas();
+        let attente: HashMap&lt;u32, VecDeque&lt;CommandRequest&gt;&gt; = HashMap::with_capacity(64);
+        let en_vol: Vec&lt;bool&gt; = vec![false; appareils];
+        lignes.push((&quot;Voies paresseuses (répartiteur unique, files à la demande), au repos&quot;, depuis(avant)));
+        std::hint::black_box((&amp;attente, &amp;en_vol));
+        println!(&quot;  (voies en tâches permanentes avec file de 8 : {} pour {appareils} appareils, soit {:.1} Kio chacune ; CommandRequest {} o)&quot;,
+            kio(voies_taches), voies_taches / appareils as f64 / 1024.0, std::mem::size_of::&lt;CommandRequest&gt;());
+
+        let bus = 1_024.0 * std::mem::size_of::&lt;moli_core::Event&gt;() as f64;
+        lignes.push((&quot;Tampon du bus : 1 024 événements (charges partagées en Arc)&quot;, bus));
+
+        let indispensable: f64 = lignes.iter().map(|(_, o)| o).sum();
+        let reel_vif = memoire_reelle();
+        let h24 = historique(1.0, echelle);
+        let h30 = if echelle == 1 { historique(30.0, 1) } else { 0.0 };
+        // 7 jours tenus en mémoire pendant la mesure réelle.
+        let avant7 = tas();
+        let mut tenu: HashMap&lt;u32, (Vec&lt;u32&gt;, Vec&lt;f32&gt;)&gt; = HashMap::new();
+        for s in 0..SERIES * echelle {
+            let n = (taux(s) * 7.0).round() as usize;
+            let (t, v) = tenu.entry(s as u32).or_default();
+            t.reserve_exact(n);
+            v.reserve_exact(n);
+            for i in 0..n {
+                t.push(i as u32);
+                v.push(i as f32);
+            }
+        }
+        let h7 = depuis(avant7);
+        let reel_7j = memoire_reelle();
+        drop(tenu);
+        let h30 = if echelle == 1 { h30 } else { h7 / 7.0 * 30.0 };
+
+        println!(&quot;\n## ×{echelle} : {appareils} appareils, {valeurs} valeurs, {automatismes} automatismes&quot;);
+        for (nom, o) in &amp;lignes {
+            println!(&quot;- {nom} : {}&quot;, kio(*o));
+        }
+        println!(&quot;- **Sous-total « tout l&#39;état vif »** : {}&quot;, kio(indispensable));
+        println!(&quot;- mémoire réelle avec tout l&#39;état vif : {reel_vif}&quot;);
+        println!(&quot;- mémoire réelle avec l&#39;état vif et 7 jours d&#39;historique : {reel_7j}&quot;);
+        println!(&quot;- Historique compact en mémoire : 24 h {} ; 7 j {} ; 30 j {}{}&quot;, kio(h24), kio(h7), kio(h30), if echelle == 1 { &quot;&quot; } else { &quot; (extrapolé)&quot; });
+        println!(
+            &quot;- Totaux : vif + 24 h {} ; vif + 7 j {} ; vif + 30 j {}&quot;,
+            kio(indispensable + h24),
+            kio(indispensable + h7),
+            kio(indispensable + h30)
+        );
+        std::hint::black_box((index, vifs, sante, plans, par_point, baux, executions, echeances, agregats, voies));
+        cancel.cancel();
+        taches.abort_all();
+    });
+}
+
+fn main() {
+    println!(&quot;# Budget mémoire : tout ce qui compte, en mémoire&quot;);
+    println!(&quot;- tailles : Value {} o, PointVif {} o, Event {} o&quot;, std::mem::size_of::&lt;Value&gt;(), std::mem::size_of::&lt;PointVif&gt;(), std::mem::size_of::&lt;moli_core::Event&gt;());
+    println!(&quot;- mémoire réelle au démarrage, avant toute charge : {}&quot;, memoire_reelle());
+    budget(1);
+    budget(10);
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>moli-automation-fix : le correctif (extrait d'engine.rs)</code></summary><pre class="rust"><code>/// CORRECTIF (prototype hors dépôt). After a lag, the hub&#39;s present is compared
+/// with what the engine last knew: every point whose value differs is a
+/// transition the engine missed, and it is replayed as one. An event still
+/// waiting in the queue is seen again later, compares equal, and is ignored:
+/// nothing fires twice. (The previous code copied the present over `last`,
+/// which also neutralised the queued events.)
+fn resync(autos: &amp;Automations) {
+    let snapshot = autos.0.hub.snapshot();
+    let changed: Vec&lt;(PointId, Value)&gt; = {
+        let last = lock(&amp;autos.0.last);
+        snapshot
+            .devices
+            .iter()
+            .flat_map(|d| {
+                d.state.iter().filter_map(|(key, sample)| {
+                    let k = format!(&quot;{}/{key}&quot;, d.device.id);
+                    (last.get(&amp;k) != Some(&amp;sample.value))
+                        .then(|| (PointId::from(k), sample.value.clone()))
+                })
+            })
+            .collect()
+    };
+    for (point, value) in changed {
+        on_state(autos, &amp;point, &amp;value);
+    }
+}</code></pre></details>
+<p>Code complet de <code>docker-build.sh : compilation Linux musl dans un conteneur</code> :</p>
+<pre class="sh"><code>#!/bin/sh
+# Compile les bancs en Linux musl (comme l&#39;image de production) dans un conteneur jetable,
+# avec un volume nommé pour le cache de compilation. Sortie : $S/linux-bins/ (preuves-v2)
+# et $S/linux-bins/fix/ (preuves-fix, moteur corrigé).
+set -eu
+S=&lt;scratchpad&gt;
+REPO=&lt;dépôt&gt;
+CTX=$S/ctx
+rm -rf &quot;$CTX&quot;; mkdir -p &quot;$CTX/nikyOS&quot; &quot;$CTX/preuves-v2&quot; &quot;$CTX/preuves-fix&quot; &quot;$CTX/moli-automation-fix&quot;
+cp &quot;$REPO/Cargo.toml&quot; &quot;$REPO/Cargo.lock&quot; &quot;$CTX/nikyOS/&quot;
+cp -R &quot;$REPO/crates&quot; &quot;$REPO/locales&quot; &quot;$REPO/integrations&quot; &quot;$CTX/nikyOS/&quot;
+find &quot;$CTX/nikyOS/crates&quot; -name target -prune -exec rm -rf {} + 2&gt;/dev/null || true
+cp -R &quot;$S/preuves-v2/src&quot; &quot;$S/preuves-v2/Cargo.lock&quot; &quot;$CTX/preuves-v2/&quot;
+sed &#39;s#&lt;dépôt&gt;/crates/#/src/nikyOS/crates/#g&#39; &quot;$S/preuves-v2/Cargo.toml&quot; &gt; &quot;$CTX/preuves-v2/Cargo.toml&quot;
+cp -R &quot;$S/preuves-fix/src&quot; &quot;$S/preuves-fix/Cargo.lock&quot; &quot;$CTX/preuves-fix/&quot;
+sed &#39;s#&lt;dépôt&gt;/crates/#/src/nikyOS/crates/#g&#39; &quot;$S/preuves-fix/Cargo.toml&quot; &gt; &quot;$CTX/preuves-fix/Cargo.toml&quot;
+cp -R &quot;$S/moli-automation-fix/src&quot; &quot;$CTX/moli-automation-fix/&quot;
+sed &#39;s#&lt;dépôt&gt;/crates/#/src/nikyOS/crates/#g&#39; &quot;$S/moli-automation-fix/Cargo.toml&quot; &gt; &quot;$CTX/moli-automation-fix/Cargo.toml&quot;
+BINS=&quot;$*&quot;
+ID=$(docker create -v &quot;$HOME/.cargo/registry:/usr/local/cargo/registry:ro&quot; -v moli-preuves-target:/target -e CARGO_TARGET_DIR=/target -w /src rust:1-alpine \
+  sh -c &quot;apk add --no-cache musl-dev &gt;/dev/null 2&gt;&amp;1; (cd preuves-v2 &amp;&amp; cargo build --release --offline $BINS 2&gt;&amp;1 | grep -E &#39;^(error)|--&gt;|Finished&#39;); mkdir -p /out/fix &amp;&amp; for b in /target/release/*; do [ -f \&quot;\$b\&quot; ] &amp;&amp; [ -x \&quot;\$b\&quot; ] &amp;&amp; cp \&quot;\$b\&quot; /out/; done; (cd preuves-fix &amp;&amp; CARGO_TARGET_DIR=/target/fix cargo build --release --offline --bin moteur 2&gt;&amp;1 | grep -E &#39;^(error)|--&gt;|Finished&#39;) &amp;&amp; cp /target/fix/release/moteur /out/fix/moteur; ls /out /out/fix&quot;)
+docker cp &quot;$CTX/.&quot; &quot;$ID:/src&quot; &gt;/dev/null
+docker start -a &quot;$ID&quot;
+rm -rf &quot;$S/linux-bins&quot;; docker cp &quot;$ID:/out&quot; &quot;$S/linux-bins&quot; &gt;/dev/null
+docker rm &quot;$ID&quot; &gt;/dev/null
+ls -la &quot;$S/linux-bins&quot; &quot;$S/linux-bins/fix&quot;</code></pre>
+<p>Code complet de <code>docker-run.sh : exécution limitée à 2 CPU et 128 Mio</code> :</p>
+<pre class="sh"><code>#!/bin/sh
+# Exécute un banc Linux dans un conteneur limité comme la production : 2 CPU, 128 Mio.
+# Usage : docker-run.sh &lt;binaire ou fix/moteur&gt; [args…]
+set -eu
+S=&lt;scratchpad&gt;
+BIN=$1; shift
+NOM=$(basename &quot;$BIN&quot;)
+ID=$(docker create --cpuset-cpus=0,1 --memory=128m --memory-swap=128m alpine:3 &quot;/bin/$NOM&quot; &quot;$@&quot;)
+docker cp &quot;$S/linux-bins/$BIN&quot; &quot;$ID:/bin/$NOM&quot; &gt;/dev/null
+docker start -a &quot;$ID&quot; || true
+docker rm &quot;$ID&quot; &gt;/dev/null</code></pre>
+</section>
+</section>
+
+        <footer><span>Moli OS · analyse V4 : approfondissement · 22 octobre 2026</span><a href="#top">Haut de page ↑</a></footer>
+      </article>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const printButton = document.getElementById('print-document');
+      printButton.hidden = false;
+      printButton.addEventListener('click', () => window.print());
+      const sections = Array.from(document.querySelectorAll('article > section[id]'));
+      const links = Array.from(document.querySelectorAll('aside nav a'));
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting);
+          if (!visible.length) return;
+          const section = visible[0].target;
+          for (const link of links) {
+            if (decodeURIComponent(link.hash.slice(1)) === section.id) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          }
+        }, { rootMargin: '-10% 0px -75% 0px' });
+        sections.forEach(section => observer.observe(section));
+      }
+    })();
+  </script>
+</body>
+</html>

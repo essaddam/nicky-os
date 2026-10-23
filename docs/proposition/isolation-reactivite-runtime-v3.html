@@ -1,0 +1,2471 @@
+<!doctype html>
+<html lang="fr" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Analyse V3 Moli OS : le pattern recommandé (noyau vif en mémoire, cloisons à chaque frontière, durabilité par journal), le budget mémoire de tout l'état utile et le coût mesuré de chaque choix.">
+  <meta name="source-markdown" content="isolation-reactivite-runtime-v3.md">
+  <meta name="source-sha256" content="fae5160e5af61cb7f55d7229294fd240b8955f59cf8386d16c62386769a574ef">
+  <title>Le pattern et ses coûts · Moli OS</title>
+  <style>
+    :root {
+      --paper: #fffdf8; --page: #f0f1ec; --ink: #1d302a; --muted: #52615a;
+      --line: #d4ddd4; --soft: #f4f6f1; --green: #195744; --green-soft: #e6eee5;
+      --warm: #8b3b22; --warm-soft: #fae9df; --amber: #835c00; --amber-soft: #fbf0d6;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 90px; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 var(--sans); }
+    a { color: var(--green); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    button { font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--warm); outline-offset: 4px; }
+    .skip { position: fixed; top: 8px; left: 8px; z-index: 20; padding: 10px 16px; background: var(--paper); transform: translateY(-160%); }
+    .skip:focus { transform: none; }
+    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: var(--paper); }
+    .topbar-inner { max-width: 1440px; min-height: 68px; padding: 12px 36px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 750; }
+    .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; background: var(--green); color: white; border-radius: 7px; font: 23px/1 var(--serif); }
+    .brand-sub { border-left: 1px solid var(--line); padding-left: 15px; margin-left: 4px; font-size: 12px; font-weight: 500; color: var(--muted); }
+    .actions { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+    .print { border: 1px solid var(--line); padding: 8px 13px; border-radius: 5px; color: var(--ink); background: var(--soft); min-height: 42px; }
+    .print:hover { background: var(--green-soft); border-color: var(--green); }
+    .frame { max-width: 1440px; margin: auto; padding: 34px 36px 60px; display: grid; grid-template-columns: 238px minmax(0, 1fr); align-items: start; gap: 38px; }
+    aside { position: sticky; top: 95px; max-height: calc(100dvh - 115px); overflow-y: auto; padding-right: 12px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 750; }
+    aside .eyebrow { color: var(--muted); margin: 8px 0 17px 9px; }
+    aside ul, .mobile-toc ul { list-style: none; padding: 0; margin: 0; }
+    aside li { margin: 0 0 3px; }
+    aside a { display: block; padding: 8px 9px; color: var(--muted); font-size: 12px; line-height: 1.5; text-decoration: none; border-left: 2px solid transparent; }
+    aside a:hover, aside a[aria-current="location"] { background: var(--green-soft); color: var(--green); border-left-color: var(--green); }
+    .sidebar-note { margin: 23px 9px 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 12px; color: var(--muted); }
+    main { min-width: 0; }
+    .cover { padding: 8px 0 30px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 24px; color: var(--muted); font-size: 12px; }
+    .status { padding: 3px 9px; border: 1px solid #e0bdaa; color: var(--warm); border-radius: 3px; background: var(--warm-soft); font-weight: 650; }
+    h1 { font: 500 clamp(40px, 4.9vw, 72px)/1.06 var(--serif); letter-spacing: -.035em; margin: 0 0 23px; }
+    h1 span { display: block; color: var(--green); }
+    .lead { max-width: 760px; font-size: 18px; line-height: 1.65; margin: 0; color: var(--muted); }
+    .verdict { border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .verdict-head { padding: 15px 21px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line); }
+    .verdict-head span { font-size: 12px; color: var(--muted); }
+    .verdict-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: 20px 18px 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-top: 4px solid var(--line); }
+    .card:nth-child(4n) { border-right: 0; }
+    .card:nth-last-child(-n+4) { border-bottom: 0; }
+    .card.ok { border-top-color: var(--green); }
+    .card.high { border-top-color: var(--warm); }
+    .card.mid { border-top-color: #c79a2e; }
+    .card .number { font: 11px var(--mono); color: var(--muted); margin-bottom: 10px; display: block; }
+    .card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .card p { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+    .figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .figure-item { padding: 16px 18px; border-right: 1px solid var(--line); }
+    .figure-item:last-child { border-right: 0; }
+    .figure-item strong { display: block; font: 24px/1.3 var(--mono); color: var(--green); }
+    .figure-item span { font-size: 12px; color: var(--muted); line-height: 1.45; display: block; }
+    figure.diagram { margin: 0 0 22px; padding: 18px; background: var(--paper); border: 1px solid var(--line); }
+    figure.diagram svg { display: block; width: 100%; height: auto; }
+    figure.diagram figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .sev { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 750; letter-spacing: .02em; white-space: nowrap; vertical-align: 2px; }
+    .sev-high { background: var(--warm-soft); color: var(--warm); border: 1px solid #e0bdaa; }
+    .sev-crit { background: var(--warm); color: white; border: 1px solid var(--warm); }
+    .sev-mid { background: var(--amber-soft); color: var(--amber); border: 1px solid #e8d29b; }
+    .sev-low { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+    .sev-ok { background: var(--green-soft); color: var(--green); border: 1px solid #b9cdbd; }
+    h3 .sev { margin-left: 8px; font-size: 12px; }
+    .mobile-toc { display: none; }
+    article { padding: 32px 38px 36px; background: var(--paper); border: 1px solid var(--line); overflow-wrap: break-word; }
+    article > p { color: var(--muted); font-size: 13.5px; }
+    article p { margin: 0 0 1.15em; }
+    article h2 { font-size: clamp(23px, 2.2vw, 29px); font-weight: 650; line-height: 1.3; letter-spacing: -.025em; margin: 40px 0 21px; padding-top: 30px; border-top: 1px solid var(--line); text-wrap: balance; }
+    article h3 { margin: 30px 0 15px; font-size: 19px; font-weight: 650; line-height: 1.4; }
+    article ul, article ol { padding-left: 24px; margin: 0 0 22px; }
+    article li { padding-left: 3px; margin-bottom: 9px; }
+    code { background: var(--soft); padding: 2px 5px; font: .86em var(--mono); overflow-wrap: anywhere; }
+    pre { background: var(--soft); padding: 18px; white-space: pre-wrap; line-height: 1.6; overflow-wrap: anywhere; }
+    pre code { padding: 0; background: transparent; font-size: 12px; }
+    details.code { border: 1px solid var(--line); margin: 0 0 22px; }
+    details.code > summary { padding: 13px 18px; cursor: pointer; font-weight: 650; font-size: 14px; min-height: 48px; }
+    details.code[open] > summary { border-bottom: 1px solid var(--line); }
+    details.code pre { margin: 0; max-height: 640px; overflow: auto; white-space: pre; }
+    .table-wrap { max-width: 100%; overflow-x: auto; margin: 22px 0; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 12.5px; line-height: 1.6; }
+    th, td { padding: 11px 12px; vertical-align: top; text-align: left; border-bottom: 1px solid var(--line); }
+    th { background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 750; }
+    td:first-child { font-weight: 600; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr > * + * { border-left: 1px solid #e5eae1; }
+    footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 21px; color: var(--muted); font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1100px) {
+      .frame { grid-template-columns: 205px minmax(0, 1fr); gap: 24px; padding-inline: 24px; }
+      .topbar-inner { padding-inline: 24px; }
+      article { padding: 25px; }
+      .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card:nth-child(4n) { border-right: 1px solid var(--line); }
+      .card:nth-child(2n) { border-right: 0; }
+      .card:nth-last-child(-n+4) { border-bottom: 1px solid var(--line); }
+      .card:nth-last-child(-n+2) { border-bottom: 0; }
+      .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .figure-item:nth-child(2) { border-right: 0; }
+      .figure-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    }
+    @media (max-width: 780px) {
+      .frame { display: block; padding: 24px 16px 40px; }
+      .topbar-inner { padding-inline: 16px; }
+      aside, .brand-sub { display: none; }
+      .actions { gap: 12px; font-size: 12px; }
+      .cover { padding-top: 0; }
+      h1 { font-size: clamp(38px, 9vw, 58px); }
+      .lead { font-size: 16px; }
+      article { padding: 18px; }
+      .verdict-grid { grid-template-columns: 1fr; }
+      .card, .card:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .card:last-child { border-bottom: 0; }
+      .figures { grid-template-columns: 1fr; }
+      .figure-item, .figure-item:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .figure-item:last-child { border-bottom: 0; }
+      figure.diagram { padding: 12px; overflow-x: auto; }
+      figure.diagram svg { min-width: 760px; }
+      .mobile-toc { display: block; padding: 0 17px; margin: 0 0 22px; background: var(--paper); border: 1px solid var(--line); }
+      .mobile-toc summary { padding: 13px 0; min-height: 50px; cursor: pointer; font-size: 14px; font-weight: 650; }
+      .mobile-toc a { display: block; padding: 8px 0; font-size: 13px; }
+      .mobile-toc ul { padding-bottom: 13px; }
+    }
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      body { background: white; font-size: 10pt; color: black; }
+      .topbar, aside, .mobile-toc, .skip { display: none; }
+      .frame { display: block; max-width: none; padding: 0; }
+      h1 { font-size: 34pt; }
+      .lead { font-size: 12pt; }
+      article { border: 0; padding: 0; }
+      article h2 { break-after: avoid; font-size: 16pt; }
+      article h3 { break-after: avoid; font-size: 12pt; }
+      .verdict, .figures, figure.diagram, pre, tr { break-inside: avoid; }
+      details.code pre { max-height: none; white-space: pre-wrap; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; font-size: 9pt; }
+      th, td { padding: 6px 7px; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#document">Aller au document</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">m</span>Moli OS<span class="brand-sub">Propositions techniques</span></a>
+      <div class="actions"><a href="isolation-reactivite-runtime-v3.md">Source Markdown</a><button class="print" id="print-document" type="button" hidden>Imprimer / PDF</button></div>
+    </div>
+  </header>
+  <div class="frame">
+    <aside>
+      <p class="eyebrow">Dans ce document</p>
+      <nav aria-label="Sommaire du document"><ul>
+<li><a href="#1-réponse-courte">1. Réponse courte</a></li>
+<li><a href="#2-le-pattern-recommandé">2. Le pattern recommandé</a></li>
+<li><a href="#3-tout-en-mémoire--le-noyau-vif">3. Tout en mémoire : le noyau vif</a></li>
+<li><a href="#4-le-coût-de-chaque-choix">4. Le coût de chaque choix</a></li>
+<li><a href="#5-pannes--ce-qui-se-passe-avec-et-sans-le-pattern">5. Pannes : ce qui se passe, avec et sans le pattern</a></li>
+<li><a href="#6-les-workflows-quand-quelque-chose-ne-va-pas">6. Les workflows quand quelque chose ne va pas</a></li>
+<li><a href="#7-plan-par-étapes-avec-ce-que-chaque-étape-coûte">7. Plan par étapes, avec ce que chaque étape coûte</a></li>
+<li><a href="#8-limites">8. Limites</a></li>
+<li><a href="#annexe-a--bancs-de-la-v3">Annexe A — Bancs de la V3</a></li>
+      </ul></nav>
+      <p class="sidebar-note">Tout en mémoire.<br>Des cloisons partout.<br>Un journal pour ne rien perdre.</p>
+    </aside>
+    <main>
+      <div class="cover">
+        <div class="meta"><span class="status">Analyse V3 · aucune modification du code</span><span>21 octobre 2026</span><span>Pattern, mémoire, coûts · commit bd1714d</span></div>
+        <h1>Tout en mémoire,<span>des cloisons partout.</span></h1>
+        <p class="lead">Le pattern qui garde la maison réactive quand des bus ou des appareils tombent, ce que coûte de garder en mémoire tout ce qui compte, et le prix mesuré de chaque choix. Sur la forme réelle de deux Home Assistant chargés. <a href="isolation-reactivite-runtime.html">V1</a> et <a href="isolation-reactivite-runtime-v2.html">V2</a> restent valables.</p>
+      </div>
+
+      <section class="verdict" aria-label="Ce que la V3 établit">
+        <div class="verdict-head"><strong class="eyebrow">Ce que la V3 établit</strong><span>Un pattern, un budget, et le coût de chaque choix.</span></div>
+        <div class="verdict-grid">
+          <div class="card ok"><span class="number">01 / LE PATTERN</span><h2>Noyau vif, cloisons, journal</h2><p>Toute décision en mémoire ; chaque frontière a sa cloison ; le disque sert à ne rien perdre.</p><span class="sev sev-ok">Recommandé</span></div>
+          <div class="card ok"><span class="number">02 / MÉMOIRE · B1</span><h2>Tout l'état vif : 2,35&nbsp;Mio</h2><p>Les deux maisons réunies ; 3,7&nbsp;Mio avec 24&nbsp;h d'historique, 11&nbsp;Mio avec 7 jours.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card ok"><span class="number">03 / THREADS · LINUX</span><h2>19&nbsp;Kio par pilote</h2><p>Un thread et un runtime par pilote sous Linux musl ; un processus en coûte 577&nbsp;Kio.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card ok"><span class="number">04 / VOIES · B1</span><h2>Voies paresseuses : 6&nbsp;Kio</h2><p>La même isolation qu'une tâche par appareil, qui coûte 7,3&nbsp;Kio chacune.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card ok"><span class="number">05 / BUS · P1</span><h2>Un bus mort répond en 0,1&nbsp;ms</h2><p>Au lieu de 4&nbsp;s par ordre ; les autres pilotes ne voient rien ; reprise en 0,5&nbsp;s.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card ok"><span class="number">06 / INONDATION · P2</span><h2>Plus aucun déclencheur perdu</h2><p>Au retour d'un bus : 5 sur 5 perdus sans tampon d'entrée, aucun avec, en 5 à 11&nbsp;ms.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card mid"><span class="number">07 / ÉCRITURES · B2</span><h2>La mémoire est bon marché</h2><p>Un instantané par seconde écrirait 1,2 à 3,8&nbsp;Go par jour ; journal et instantané au quart d'heure : 2,6&nbsp;Mo.</p><span class="sev sev-mid">Choix clé</span></div>
+          <div class="card ok"><span class="number">08 / WORKFLOWS</span><h2>Ce qui casse ne bloque pas</h2><p>Résultats typés, échec en 0,1&nbsp;ms, baux repris, rafales fusionnées, occurrences jamais.</p><span class="sev sev-ok">Règle</span></div>
+        </div>
+      </section>
+
+      <div class="figures" aria-label="Chiffres clés mesurés">
+        <div class="figure-item"><strong>2,35&nbsp;Mio</strong><span>pour tout l'état vif des deux maisons réunies</span></div>
+        <div class="figure-item"><strong>19&nbsp;Kio</strong><span>par pilote cloisonné sur son thread (Linux musl)</span></div>
+        <div class="figure-item"><strong>0 / 5</strong><span>déclencheurs perdus au retour d'un bus, contre 5 sur 5 sans tampon</span></div>
+        <div class="figure-item"><strong>2,6&nbsp;Mo</strong><span>écrits par jour pour ne rien perdre (journal et instantanés)</span></div>
+      </div>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 600" role="img" aria-labelledby="diagram-title diagram-desc" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="diagram-title">Le pattern recommandé</title>
+          <desc id="diagram-desc">À gauche, les bus et appareils. Au milieu, une colonne de cloisons : un thread par pilote, un disjoncteur de bus, des voies paresseuses par appareil, une passerelle pour les API partagées, et le tampon d'entrée du hub. À droite, le noyau vif en mémoire : état vif, moteur compilé, agrégats, historique récent, garde, journal et API. En bas, la durabilité : journal en ajout, instantanés, bases et archive, et la machine de secours.</desc>
+          <defs><marker id="f3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#52615a"/></marker></defs>
+          <text x="20" y="26" font-size="13" font-weight="700" fill="#52615a">BUS ET APPAREILS</text>
+          <rect x="20" y="40" width="190" height="62" rx="7" fill="#fffdf8" stroke="#d4ddd4"/>
+          <text x="34" y="66" font-size="13" font-weight="700" fill="#1d302a">Zigbee (MQTT)</text>
+          <text x="34" y="86" font-size="11" fill="#52615a">broker, coordinateur</text>
+          <rect x="20" y="114" width="190" height="62" rx="7" fill="#fffdf8" stroke="#d4ddd4"/>
+          <text x="34" y="140" font-size="13" font-weight="700" fill="#1d302a">Ponts partagés</text>
+          <text x="34" y="160" font-size="11" fill="#52615a">Hue, TaHoma</text>
+          <rect x="20" y="188" width="190" height="62" rx="7" fill="#fae9df" stroke="#8b3b22"/>
+          <text x="34" y="214" font-size="13" font-weight="700" fill="#8b3b22">Appareil muet</text>
+          <text x="34" y="234" font-size="11" fill="#8b3b22">Wi-Fi, endormi, débranché</text>
+          <rect x="20" y="262" width="190" height="62" rx="7" fill="#fffdf8" stroke="#d4ddd4"/>
+          <text x="34" y="288" font-size="13" font-weight="700" fill="#1d302a">Services cloud</text>
+          <text x="34" y="308" font-size="11" fill="#52615a">quotas, jetons, pannes</text>
+          <text x="250" y="26" font-size="13" font-weight="700" fill="#195744">CLOISONS À CHAQUE FRONTIÈRE</text>
+          <rect x="250" y="40" width="330" height="284" rx="9" fill="#e6eee5" stroke="#195744"/>
+          <rect x="264" y="54" width="302" height="50" rx="6" fill="#fffdf8" stroke="#195744"/>
+          <text x="278" y="76" font-size="12.5" font-weight="700" fill="#1d302a">Un thread et un runtime par pilote</text>
+          <text x="278" y="94" font-size="11" fill="#195744">19 Kio par pilote (Linux musl) · 0,01 ms par ordre</text>
+          <rect x="264" y="112" width="302" height="50" rx="6" fill="#fffdf8" stroke="#195744"/>
+          <text x="278" y="134" font-size="12.5" font-weight="700" fill="#1d302a">Disjoncteur de bus</text>
+          <text x="278" y="152" font-size="11" fill="#195744">refus en 0,1 ms · essai court · reprise 0,5 s</text>
+          <rect x="264" y="170" width="302" height="50" rx="6" fill="#fffdf8" stroke="#195744"/>
+          <text x="278" y="192" font-size="12.5" font-weight="700" fill="#1d302a">Voies paresseuses par appareil</text>
+          <text x="278" y="210" font-size="11" fill="#195744">6 Kio au repos · un ordre en vol · dernière consigne</text>
+          <rect x="264" y="228" width="302" height="50" rx="6" fill="#fffdf8" stroke="#195744"/>
+          <text x="278" y="250" font-size="12.5" font-weight="700" fill="#1d302a">Passerelle des API partagées et cloud</text>
+          <text x="278" y="268" font-size="11" fill="#195744">concurrence plafonnée · équité · recul · cache</text>
+          <text x="278" y="304" font-size="11" fill="#52615a">ordres → descendent ; états ↑ remontent</text>
+          <line x1="210" y1="71" x2="246" y2="79" stroke="#52615a" stroke-width="1.2" marker-end="url(#f3)"/>
+          <line x1="210" y1="145" x2="246" y2="137" stroke="#52615a" stroke-width="1.2" marker-end="url(#f3)"/>
+          <line x1="210" y1="219" x2="246" y2="195" stroke="#52615a" stroke-width="1.2" marker-end="url(#f3)"/>
+          <line x1="210" y1="293" x2="246" y2="253" stroke="#52615a" stroke-width="1.2" marker-end="url(#f3)"/>
+          <rect x="606" y="124" width="62" height="116" rx="7" fill="#fbf0d6" stroke="#c79a2e"/>
+          <text x="637" y="150" font-size="11" font-weight="700" text-anchor="middle" fill="#835c00">tampon</text>
+          <text x="637" y="166" font-size="11" font-weight="700" text-anchor="middle" fill="#835c00">d'entrée</text>
+          <text x="637" y="190" font-size="10" text-anchor="middle" fill="#835c00">dernière</text>
+          <text x="637" y="204" font-size="10" text-anchor="middle" fill="#835c00">valeur</text>
+          <text x="637" y="218" font-size="10" text-anchor="middle" fill="#835c00">≤ 10 ms</text>
+          <line x1="580" y1="182" x2="602" y2="182" stroke="#52615a" stroke-width="1.3" marker-end="url(#f3)"/>
+          <line x1="668" y1="182" x2="690" y2="182" stroke="#52615a" stroke-width="1.3" marker-end="url(#f3)"/>
+          <text x="694" y="26" font-size="13" font-weight="700" fill="#1d302a">NOYAU VIF EN MÉMOIRE</text>
+          <rect x="694" y="40" width="290" height="284" rx="9" fill="#fffdf8" stroke="#1d302a" stroke-width="1.4"/>
+          <text x="710" y="66" font-size="12.5" font-weight="700" fill="#1d302a">État vif · 2,35 Mio (deux maisons)</text>
+          <text x="710" y="86" font-size="11" fill="#52615a">valeur, précédente, 3 instants, qualité</text>
+          <text x="710" y="102" font-size="11" fill="#52615a">santé des appareils et des bus</text>
+          <text x="710" y="130" font-size="12.5" font-weight="700" fill="#1d302a">Moteur compilé et durable</text>
+          <text x="710" y="150" font-size="11" fill="#52615a">3 à 11 ns par événement, index, échéances</text>
+          <text x="710" y="166" font-size="11" fill="#52615a">baux et exécutions repris au redémarrage</text>
+          <text x="710" y="194" font-size="12.5" font-weight="700" fill="#1d302a">Agrégats et historique récent</text>
+          <text x="710" y="214" font-size="11" fill="#52615a">moyenne 1 h en 1 ns ; 24 h : +1,4 Mio</text>
+          <text x="710" y="230" font-size="11" fill="#52615a">7 jours : +8,8 Mio ; 30 jours : +37 Mio</text>
+          <text x="710" y="258" font-size="12.5" font-weight="700" fill="#1d302a">Garde, journal, API, SSE</text>
+          <text x="710" y="278" font-size="11" fill="#52615a">aucune décision n'attend le disque</text>
+          <text x="710" y="294" font-size="11" fill="#52615a">ni un appareil</text>
+          <text x="20" y="352" font-size="13" font-weight="700" fill="#52615a">DURABILITÉ DÉCOUPLÉE : ON ÉCRIT PEU, EN AJOUT, PAR LOTS</text>
+          <rect x="20" y="386" width="230" height="96" rx="8" fill="#fffdf8" stroke="#195744"/>
+          <text x="34" y="412" font-size="12.5" font-weight="700" fill="#1d302a">Journal en ajout</text>
+          <text x="34" y="432" font-size="11" fill="#52615a">~1,3 Mo par jour compressé</text>
+          <text x="34" y="448" font-size="11" fill="#52615a">validé par petits lots</text>
+          <text x="34" y="464" font-size="11" fill="#195744">source de la reprise</text>
+          <rect x="264" y="386" width="230" height="96" rx="8" fill="#fffdf8" stroke="#195744"/>
+          <text x="278" y="412" font-size="12.5" font-weight="700" fill="#1d302a">Instantané binaire</text>
+          <text x="278" y="432" font-size="11" fill="#52615a">0,3 ms · 13 Kio compressé</text>
+          <text x="278" y="448" font-size="11" fill="#52615a">au quart d'heure : ~1,3 Mo par jour</text>
+          <text x="278" y="464" font-size="11" fill="#195744">reprise à chaud en ms</text>
+          <rect x="508" y="386" width="230" height="96" rx="8" fill="#fffdf8" stroke="#195744"/>
+          <text x="522" y="412" font-size="12.5" font-weight="700" fill="#1d302a">maison.db · moli.db · archive</text>
+          <text x="522" y="432" font-size="11" fill="#52615a">état courant par lots de 60 s</text>
+          <text x="522" y="448" font-size="11" fill="#52615a">récent (D13), long terme (Parquet)</text>
+          <text x="522" y="464" font-size="11" fill="#195744">proposition stockage V2</text>
+          <rect x="752" y="386" width="232" height="96" rx="8" fill="#fbf0d6" stroke="#c79a2e"/>
+          <text x="766" y="412" font-size="12.5" font-weight="700" fill="#835c00">Machine de secours</text>
+          <text x="766" y="432" font-size="11" fill="#52615a">reçoit journal et instantanés</text>
+          <text x="766" y="448" font-size="11" fill="#52615a">passive jusqu'à la bascule</text>
+          <text x="766" y="464" font-size="11" fill="#52615a">hub reconstruit en 11 à 14 ms</text>
+          <line x1="839" y1="324" x2="839" y2="368" stroke="#52615a" stroke-width="1.3" marker-end="url(#f3)"/>
+          <path d="M839 368 H135 V382" stroke="#52615a" stroke-width="1.3" fill="none" marker-end="url(#f3)"/>
+          <line x1="379" y1="368" x2="379" y2="382" stroke="#52615a" stroke-width="1.3" marker-end="url(#f3)"/>
+          <line x1="623" y1="368" x2="623" y2="382" stroke="#52615a" stroke-width="1.3" marker-end="url(#f3)"/>
+          <path d="M135 482 V498 H868 V486" stroke="#835c00" stroke-width="1.4" stroke-dasharray="5 4" fill="none" marker-end="url(#f3)"/><line x1="379" y1="482" x2="379" y2="498" stroke="#835c00" stroke-width="1.4" stroke-dasharray="5 4"/><text x="600" y="512" font-size="10.5" fill="#835c00">journal et instantanés vers la secours</text>
+          <text x="20" y="534" font-size="12.5" font-weight="700" fill="#1d302a">Une panne reste là où elle naît :</text>
+          <text x="20" y="555" font-size="11.5" fill="#52615a">un pilote qui bloque ne bloque que son thread ; un appareil muet que sa voie ; un bus mort que ses appareils, refusés en 0,1 ms ;</text>
+          <text x="20" y="573" font-size="11.5" fill="#52615a">une inondation est fusionnée avant le hub ; le moteur ne perd plus de déclencheur ; un redémarrage reprend les baux.</text>
+        </svg>
+        <figcaption>Le pattern recommandé, avec le coût mesuré de chaque couche. Vert : cloisons et noyau. Ambre : tampon d'entrée et secours. Rouge : un appareil en défaut, contenu par sa voie.</figcaption>
+      </figure>
+
+      <details class="mobile-toc"><summary>Sommaire</summary><ul>
+<li><a href="#1-réponse-courte">1. Réponse courte</a></li>
+<li><a href="#2-le-pattern-recommandé">2. Le pattern recommandé</a></li>
+<li><a href="#3-tout-en-mémoire--le-noyau-vif">3. Tout en mémoire : le noyau vif</a></li>
+<li><a href="#4-le-coût-de-chaque-choix">4. Le coût de chaque choix</a></li>
+<li><a href="#5-pannes--ce-qui-se-passe-avec-et-sans-le-pattern">5. Pannes : ce qui se passe, avec et sans le pattern</a></li>
+<li><a href="#6-les-workflows-quand-quelque-chose-ne-va-pas">6. Les workflows quand quelque chose ne va pas</a></li>
+<li><a href="#7-plan-par-étapes-avec-ce-que-chaque-étape-coûte">7. Plan par étapes, avec ce que chaque étape coûte</a></li>
+<li><a href="#8-limites">8. Limites</a></li>
+<li><a href="#annexe-a--bancs-de-la-v3">Annexe A — Bancs de la V3</a></li>
+      </ul></details>
+
+      <article id="document">
+<p>Date : 21 octobre 2026. Statut : <strong>analyse, aucune modification du code</strong>. Base analysée : <code>main</code> au commit <code>bd1714d</code>. Cette V3 répond à trois questions : quel pattern rend la maison réactive même quand des bus ou des appareils tombent, combien coûte de tout garder en mémoire, et ce que coûte chaque choix. La <a href="isolation-reactivite-runtime.md">V1</a> et la <a href="isolation-reactivite-runtime-v2.md">V2</a> restent valables et inchangées ; la V3 s'appuie sur leurs mesures et sur la proposition <a href="valeurs-appareils-stockage-v2.md">Valeurs, appareils et stockage V2</a>, avec laquelle elle reste cohérente (même étage « vif » en mémoire, mêmes mesures d'écritures).</p>
+<p>Méthode : quatre nouveaux bancs, exécutés hors du dépôt contre les vraies crates <code>moli-runtime</code> et <code>moli-automation</code> (<a href="#annexe-a--bancs-de-la-v3">annexe A</a>) ; mesure des coûts de thread et de processus sous Linux musl, la cible de production ; comptes agrégés des deux mêmes Home Assistant (« instance A » et « instance B » : 496 appareils, 2 264 valeurs, ~163 000 relevés par jour à elles deux). Machine de test : Apple M4, runtime à 2 workers comme en production ; les durées absolues ne se transposent pas au Pi Zero 2 W, les rapports si.</p>
+<p>Un mot de vocabulaire : un <strong>bus</strong> désigne ici un transport partagé par plusieurs appareils (broker MQTT, coordinateur Zigbee, pont Hue ou TaHoma, service cloud) ; le <strong>bus d'événements</strong> est le canal interne du hub.</p>
+
+<section id="1-réponse-courte" class="level2">
+<h2>1. Réponse courte</h2>
+<p><strong>Le pattern : un noyau vif en mémoire, des cloisons à chaque frontière, la durabilité par un journal.</strong> Toute décision se prend sur l'état en mémoire, sans attendre ni un disque ni un appareil. Chaque frontière (le thread d'un pilote, l'appareil, le bus, l'entrée du hub) a sa cloison et sa règle quand ça déborde. Le disque ne sert qu'à ne rien perdre, par un journal en ajout et des instantanés.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Couche</th>
+<th>Ce qu'elle garantit</th>
+<th>Coût mesuré</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Un thread et un runtime par pilote</td>
+<td>un pilote qui bloque ne bloque que lui</td>
+<td><strong>19 Kio par pilote sous Linux musl</strong> ; aucun surcoût de latence (0,01 ms)</td>
+</tr>
+<tr class="even">
+<td>2. Voies paresseuses par appareil</td>
+<td>un appareil muet ne retient que ses propres ordres</td>
+<td><strong>6 Kio au repos pour toute la maison</strong> (3,5 Mio en tâches permanentes)</td>
+</tr>
+<tr class="odd">
+<td>3. Disjoncteur par appareil et par bus</td>
+<td>un bus mort fait échouer ses ordres en 0,1 ms au lieu de 4 s</td>
+<td>quelques octets ; reprise 0,5 s après le retour du bus</td>
+</tr>
+<tr class="even">
+<td>4. Tampon d'entrée du hub (dernière valeur gagne)</td>
+<td>une inondation à la reconnexion ne fait plus perdre de déclencheurs</td>
+<td>quelques Kio ; ≤ 10 ms de délai, pendant les rafales seulement</td>
+</tr>
+<tr class="odd">
+<td>5. Noyau vif en mémoire</td>
+<td>aucune décision n'attend le disque</td>
+<td><strong>2,35 Mio pour les deux maisons</strong> ; avec 24 h d'historique 3,7 Mio, avec 7 jours 11 Mio</td>
+</tr>
+<tr class="even">
+<td>6. Moteur compilé et durable</td>
+<td>3 à 11 ns par événement ; workflows temporaires repris après un redémarrage</td>
+<td>~0,5 Kio par automatisme, au lieu de 9,4 Kio aujourd'hui</td>
+</tr>
+<tr class="odd">
+<td>7. Durabilité par journal et instantanés</td>
+<td>une reprise sans perte, ici ou sur la machine de secours</td>
+<td>~1,3 Mo par jour de journal compressé ; un instantané binaire en 0,3 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>Avec ce pattern, une panne reste à l'endroit où elle se produit :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Panne</th>
+<th>Aujourd'hui</th>
+<th>Avec le pattern</th>
+<th>Preuve</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Un bus entier tombe 15 s</td>
+<td>chaque ordre vers lui attend 4 s avant d'échouer</td>
+<td>refus en 0,1 ms, appareils hors ligne, reprise 0,5 s après le retour ; les autres pilotes ne voient rien</td>
+<td>P1</td>
+</tr>
+<tr class="even">
+<td>Le bus revient et republie 5 000 valeurs</td>
+<td>5 déclencheurs sur 5 perdus, ~2 600 événements manqués par le moteur</td>
+<td>aucun déclencheur perdu, latence 5 à 11 ms</td>
+<td>P2</td>
+</tr>
+<tr class="odd">
+<td>Une lampe muette derrière un pont</td>
+<td>16 à 18 % des ordres aux lampes <strong>saines</strong> réussissent</td>
+<td>100 %, en 32 ms</td>
+<td>V2 C2</td>
+</tr>
+<tr class="even">
+<td>Deux pilotes qui bloquent leur thread</td>
+<td>toute la maison à ~200 ms par pas</td>
+<td>cœur à ≤ 0,1 ms</td>
+<td>V2 C1</td>
+</tr>
+<tr class="odd">
+<td>La machine principale tombe</td>
+<td>« allume 30 minutes » perdu, valeurs à refaire</td>
+<td>reprise ailleurs, hub reconstruit en 11 à 14 ms, baux repris</td>
+<td>V2 R1</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="2-le-pattern-recommandé" class="level2">
+<h2>2. Le pattern recommandé</h2>
+<section id="21-vue-densemble" class="level3">
+<h3>2.1 Vue d'ensemble</h3>
+<pre class="text"><code>   appareils et services            frontières cloisonnées                   noyau vif (cœur)
+ ┌──────────────────────┐   ┌──────────────────────────────────┐   ┌──────────────────────────────────┐
+ │ bus Zigbee (MQTT)    │──►│ thread du pilote Zigbee2MQTT      │   │  état vif : valeurs, 3 instants, │
+ │ pont Hue, TaHoma     │──►│   disjoncteur de bus              │   │  qualité, santé des appareils    │
+ │ appareils Wi-Fi      │──►│   voies paresseuses par appareil  │══►│  moteur compilé : index, baux,   │
+ │ services cloud       │──►│   budget, recul, cache            │   │  agrégats, historique récent     │
+ └──────────────────────┘   └──────────────────────────────────┘   │  garde, journal, API, SSE        │
+                                       ▲                ║           └───────────────┬──────────────────┘
+                                       │  ordres        ║ états : tampon d&#39;entrée    │ journal en ajout,
+                                       └────────────────╫── (dernière valeur gagne)  │ instantanés
+                                                        ▼                            ▼
+                                                 entrée du hub              disque, puis secours</code></pre>
+</section>
+<section id="22-les-sept-couches" class="level3">
+<h3>2.2 Les sept couches</h3>
+<ol type="1">
+<li><p><strong>Un thread et un runtime par pilote.</strong> Le superviseur actuel tourne sur un thread dédié au pilote. Un appel bloquant, un décodage coûteux (le XML de la V1, E8) ou une boucle sans attente ne retiennent plus que ce thread. Le hub reçoit à sa construction le <code>Handle</code> du runtime du cœur, et y lance ses propres tâches (V2, 4.2).</p></li>
+<li><p><strong>Voies paresseuses par appareil.</strong> Un seul répartiteur par pilote ; une file n'existe que pour un appareil qui a un ordre en attente ; un seul ordre en vol par appareil ; l'échéance est revérifiée juste avant l'envoi ; une nouvelle consigne remplace celle qui attend encore.</p></li>
+<li><p><strong>Disjoncteurs.</strong></p>
+<ul>
+<li>Par appareil : après deux échecs, refus immédiat et appareil hors ligne.</li>
+<li>Par bus : trois échecs d'appareils différents en 10 s, c'est le bus. Tous ses appareils passent hors ligne et leurs ordres échouent tout de suite.</li>
+<li>Un essai à délai court (500 ms) chaque seconde, ou mieux, le signal de reconnexion du transport (ConnAck MQTT, état du pont), referme le disjoncteur.</li>
+<li>Derrière une API partagée (pont, cloud) : une passerelle plafonne la concurrence et répartit équitablement les places entre appareils (V2, C3).</li>
+</ul></li>
+<li><p><strong>Tampon d'entrée du hub.</strong> Quand un pilote publie plus vite que son budget, les états et les mesures sont fusionnés par point : la dernière valeur gagne, vidée en un lot. Les <strong>occurrences</strong> (appuis, sonnette, expiration de minuteur) ne sont jamais fusionnées. La minuterie de vidage n'est armée que si le tampon n'est pas vide : rien au repos.</p></li>
+<li><p><strong>Noyau vif en mémoire.</strong> Toute l'information utile à une décision vit en mémoire :</p>
+<ul>
+<li>les valeurs, la précédente, trois instants (observé, reçu, changé) et la qualité ;</li>
+<li>la santé de chaque appareil et de chaque bus ;</li>
+<li>les automatismes compilés, leurs index, les baux, les exécutions en cours ;</li>
+<li>les agrégats tenus au fil de l'eau, et l'historique récent selon le profil.</li>
+</ul>
+<p>Le détail chiffré est à la section 3.</p></li>
+<li><p><strong>Moteur compilé et durable.</strong> Plans compilés à la validation, déclencheurs indexés, horloge par échéance, agrégats incrémentaux, exécutions et baux persistés aux points d'attente (V2, 3.6). Il ne reçoit que les événements des points qu'il regarde. Sur un retard du bus d'événements, il recalcule les transitions au lieu d'écraser ce qu'il savait (V2, 3.3).</p></li>
+<li><p><strong>Durabilité découplée.</strong></p>
+<ul>
+<li>Un journal compact en ajout, validé par petits lots.</li>
+<li>Un instantané binaire périodique de l'état vif.</li>
+<li>L'état courant et l'historique dans les étages de la proposition stockage V2 : <code>maison.db</code> par lots de 60 s, <code>moli.db</code> pour le récent, l'archive pour le long terme.</li>
+<li>Le journal et les instantanés partent aussi vers la machine de secours (V2, 6).</li>
+</ul></li>
+</ol>
+<p>S'ajoute une <strong>surveillance</strong> transversale : détecteur de gel du runtime, vivacité des pilotes, sentinelle des briques (V1), et santé par bus affichée à la famille.</p>
+</section>
+<section id="23-pourquoi-ce-pattern-plutôt-quun-autre" class="level3">
+<h3>2.3 Pourquoi ce pattern plutôt qu'un autre</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Pattern</th>
+<th>Ce qu'il protège</th>
+<th>Coût mesuré ou estimé</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Tout sur un runtime partagé (aujourd'hui)</td>
+<td>les paniques des pilotes seulement</td>
+<td>rien</td>
+<td>insuffisant : deux blocages gèlent tout (V2 C1)</td>
+</tr>
+<tr class="even">
+<td><strong>Un thread par pilote</strong> (recommandé)</td>
+<td>les blocages et les calculs longs</td>
+<td><strong>19 Kio par pilote</strong> sous Linux musl, 52 Kio sous macOS</td>
+<td>protège l'essentiel pour presque rien</td>
+</tr>
+<tr class="odd">
+<td>Un processus par pilote</td>
+<td>aussi le débordement de pile, la mémoire, <code>abort</code></td>
+<td><strong>577 Kio par processus minimal</strong> sous Linux musl, 30 fois un thread, plus la sérialisation de chaque état et de chaque ordre entre processus (estimé)</td>
+<td>à réserver à un ou deux pilotes à risque, jamais à tous sur un Pi</td>
+</tr>
+<tr class="even">
+<td>Bac à sable WASM par extension</td>
+<td>aussi le code non relu</td>
+<td>plusieurs Mio par instance et un calcul plus lent (estimé) ; écarté par D2</td>
+<td>seulement si des extensions non relues doivent tourner</td>
+</tr>
+<tr class="odd">
+<td>Cadriciel d'acteurs (actix, ractor…)</td>
+<td>comme les voies</td>
+<td>une dépendance de plus, pas d'avantage mesurable sur des tâches Tokio et des files</td>
+<td>inutile</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+</section>
+<section id="3-tout-en-mémoire--le-noyau-vif" class="level2">
+<h2>3. Tout en mémoire : le noyau vif</h2>
+<section id="31-ce-que--toutes-les-données-importantes--recouvre" class="level3">
+<h3>3.1 Ce que « toutes les données importantes » recouvre</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Famille</th>
+<th>Contenu</th>
+<th>Pourquoi en mémoire</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Valeurs</td>
+<td>valeur courante, précédente, observé / reçu / changé, qualité</td>
+<td>une condition se lit en nanosecondes ; « depuis 10 min » se calcule sans disque</td>
+</tr>
+<tr class="even">
+<td>Appareils et bus</td>
+<td>définitions, santé, disjoncteurs, files d'attente</td>
+<td>un ordre vers un appareil mort échoue tout de suite</td>
+</tr>
+<tr class="odd">
+<td>Workflows</td>
+<td>plans compilés, index par point, échéancier, baux, exécutions en cours</td>
+<td>un événement ne réveille que ce qui le concerne ; un bail ne s'oublie pas</td>
+</tr>
+<tr class="even">
+<td>Agrégats</td>
+<td>moyennes, extrêmes, durées sur 1 h et 24 h des points lus par les règles</td>
+<td>« moyenne sur 1 h » en 1 ns au lieu de 150 µs</td>
+</tr>
+<tr class="odd">
+<td>Historique récent</td>
+<td>24 h, 7 jours ou 30 jours selon le profil, en colonnes compactes</td>
+<td>courbes du tableau de bord instantanées, redémarrage à chaud</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="32-le-budget-mesuré" class="level3">
+<h3>3.2 Le budget mesuré</h3>
+<p>Allocateur qui compte chaque octet, forme réelle des deux maisons (B1).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Élément</th>
+<th>Les deux maisons (496 appareils, 2 264 valeurs, 400 automatismes)</th>
+<th>×10 (4 960 appareils, 22 640 valeurs, 4 000 automatismes)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Modèle du hub (ce qui existe aujourd'hui)</td>
+<td>1,00 Mio</td>
+<td>9,86 Mio</td>
+</tr>
+<tr class="even">
+<td>Étage vif : valeur précédente, trois instants, qualité, index des points</td>
+<td>434 Kio</td>
+<td>4,04 Mio</td>
+</tr>
+<tr class="odd">
+<td>Santé par appareil</td>
+<td>12 Kio</td>
+<td>116 Kio</td>
+</tr>
+<tr class="even">
+<td>Automatismes compilés et index par point</td>
+<td>203 Kio</td>
+<td>1,98 Mio</td>
+</tr>
+<tr class="odd">
+<td>Baux (1 000) et une exécution en cours par automatisme</td>
+<td>150 Kio</td>
+<td>1,56 Mio</td>
+</tr>
+<tr class="even">
+<td>Agrégats 1 h et 24 h des points lus par les règles</td>
+<td>443 Kio</td>
+<td>4,69 Mio</td>
+</tr>
+<tr class="odd">
+<td>Voies paresseuses, au repos</td>
+<td>6 Kio</td>
+<td>10 Kio</td>
+</tr>
+<tr class="even">
+<td>Tampon du bus d'événements (1 024 événements)</td>
+<td>128 Kio</td>
+<td>128 Kio</td>
+</tr>
+<tr class="odd">
+<td><strong>Sous-total : tout l'état vif</strong></td>
+<td><strong>2,35 Mio</strong></td>
+<td><strong>22,4 Mio</strong></td>
+</tr>
+<tr class="even">
+<td>Historique compact 24 h</td>
+<td>1,37 Mio</td>
+<td>14,3 Mio</td>
+</tr>
+<tr class="odd">
+<td>Historique compact 7 jours</td>
+<td>8,78 Mio</td>
+<td>88,4 Mio</td>
+</tr>
+<tr class="even">
+<td>Historique compact 30 jours</td>
+<td>37,1 Mio</td>
+<td>379 Mio (extrapolé)</td>
+</tr>
+<tr class="odd">
+<td>Threads des pilotes (40 pilotes, Linux musl)</td>
+<td>0,76 Mio</td>
+<td>0,76 Mio</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="33-trois-profils" class="level3">
+<h3>3.3 Trois profils</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Profil</th>
+<th>Contenu</th>
+<th>Total mesuré, deux maisons</th>
+<th>Total ×10</th>
+<th>Matériel</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Sobre</strong></td>
+<td>état vif + 24 h d'historique + threads</td>
+<td><strong>~4,5 Mio</strong></td>
+<td>~38 Mio</td>
+<td>Pi Zero 2 W (512 Mo) : tient dans le budget de 32 Mio de mémoire anonyme (PERFORMANCE.md) avec le reste du cœur</td>
+</tr>
+<tr class="even">
+<td><strong>Généreux</strong></td>
+<td>état vif + 7 jours + threads</td>
+<td><strong>~12 Mio</strong></td>
+<td>~112 Mio</td>
+<td>Pi 4 ou 5, mini-PC ; pour ×10, au-delà du plafond actuel du conteneur (128 Mio)</td>
+</tr>
+<tr class="odd">
+<td><strong>Maximal</strong></td>
+<td>état vif + 30 jours + threads</td>
+<td><strong>~40 Mio</strong></td>
+<td>~402 Mio</td>
+<td>≥ 2 Go ; dépasse le budget de 32 Mio du Pi</td>
+</tr>
+</tbody>
+</table></div>
+<p>Aujourd'hui, Moli occupe 4 à 7 Mio de mémoire anonyme (PERFORMANCE.md) et Home Assistant de l'ordre de 2 Gio. Même le profil maximal reste 50 fois sous Home Assistant.</p>
+</section>
+<section id="34-ce-que-la-mémoire-rapporte" class="level3">
+<h3>3.4 Ce que la mémoire rapporte</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Opération</th>
+<th>Depuis le disque</th>
+<th>Depuis la mémoire</th>
+<th>Preuve</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lire « moyenne sur 1 h »</td>
+<td>150 à 190 µs (SQLite), plus un passage de thread</td>
+<td>1 ns (agrégat tenu au fil de l'eau)</td>
+<td>V2 I2</td>
+</tr>
+<tr class="even">
+<td>Courbe 24 h d'un capteur à 1 Hz, réduite à 500 points</td>
+<td>17 ms (SQLite)</td>
+<td>0,04 ms</td>
+<td>B2.3</td>
+</tr>
+<tr class="odd">
+<td>Redémarrage à chaud avec 7 jours en mémoire</td>
+<td>76 ms pour relire 1,13 million de relevés depuis SQLite</td>
+<td>1,3 ms depuis un instantané binaire de 8,6 Mio</td>
+<td>B2.3</td>
+</tr>
+<tr class="even">
+<td>Trouver et évaluer les workflows d'un événement</td>
+<td>0,9 à 54 µs (balayage actuel)</td>
+<td>3 à 11 ns (compilé, indexé)</td>
+<td>V2 I1</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="35-ce-qui-reste-sur-disque" class="level3">
+<h3>3.5 Ce qui reste sur disque</h3>
+<p>La mémoire sert la réactivité ; elle ne remplace pas la durabilité. Un étage ne garde jamais ce qui revient au suivant, comme le pose la proposition stockage V2 :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Étage</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mémoire (noyau vif)</td>
+<td>la vérité vive ; toutes les décisions</td>
+</tr>
+<tr class="even">
+<td>Journal en ajout</td>
+<td>ne rien perdre entre deux instantanés ; la source de la reprise et de la réplication</td>
+</tr>
+<tr class="odd">
+<td><code>maison.db</code></td>
+<td>l'état courant complet, par lots de 60 s, suffit au démarrage</td>
+</tr>
+<tr class="even">
+<td><code>moli.db</code></td>
+<td>le récent (fenêtres de D13)</td>
+</tr>
+<tr class="odd">
+<td>Archive</td>
+<td>le long terme, hors de la machine</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="36-le-coût-caché--les-voies-en-tâches-permanentes" class="level3">
+<h3>3.6 Le coût caché : les voies en tâches permanentes</h3>
+<p>Une voie par appareil en tâche permanente, avec sa file de 8, coûte <strong>7,3 Kio par appareil</strong> : une file Tokio réserve d'avance un bloc de 32 places de 200 octets (<code>CommandRequest</code>), plus la tâche. C'est 3,5 Mio pour les deux maisons et 35 Mio à ×10, le plus gros poste du budget. Les voies paresseuses (un répartiteur, une file créée seulement quand un ordre attend) rendent la même isolation pour 6 Kio au repos. C2 et C3 de la V2 ont mesuré cette isolation avec des tâches ; avec des voies paresseuses, le comportement attendu est le même, à confirmer une fois écrites dans <code>moli-runtime</code> (section 8).</p>
+</section>
+</section>
+<section id="4-le-coût-de-chaque-choix" class="level2">
+<h2>4. Le coût de chaque choix</h2>
+<p>Mesuré sur la machine de test, sauf mention « estimé ». « Pi » : ordre de grandeur pour un Pi Zero 2 W, 10 à 20 fois plus lent par cœur (estimé).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Choix</th>
+<th>Mémoire</th>
+<th>CPU au repos</th>
+<th>Coût par opération</th>
+<th>Écritures par jour</th>
+<th>Ce qu'on y gagne</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Thread et runtime par pilote</td>
+<td>19 Kio par pilote (Linux musl)</td>
+<td>nul (thread parqué)</td>
+<td>aller-retour d'un ordre inchangé : 0,01 ms</td>
+<td>—</td>
+<td>le cœur ne gèle plus (V2 C1)</td>
+</tr>
+<tr class="even">
+<td>Processus par pilote</td>
+<td>577 Kio par processus minimal (Linux musl)</td>
+<td>nul</td>
+<td>sérialisation de chaque état et de chaque ordre (estimé)</td>
+<td>—</td>
+<td>aussi la pile et la mémoire ; trop cher pour tous les pilotes</td>
+</tr>
+<tr class="odd">
+<td>Voies en tâches permanentes</td>
+<td>7,3 Kio par appareil</td>
+<td>nul</td>
+<td>~0</td>
+<td>—</td>
+<td>isolation par appareil</td>
+</tr>
+<tr class="even">
+<td>Voies paresseuses</td>
+<td>6 Kio pour toute la maison, +200 o par ordre en attente</td>
+<td>nul</td>
+<td>~0</td>
+<td>—</td>
+<td>la même isolation, sans le coût</td>
+</tr>
+<tr class="odd">
+<td>Disjoncteur par appareil et par bus</td>
+<td>quelques octets</td>
+<td>un essai par seconde pendant une panne</td>
+<td>refus en 0,1 ms au lieu de 4 s ; reprise 0,5 s après le retour (P1)</td>
+<td>—</td>
+<td>un bus mort ne fait plus attendre</td>
+</tr>
+<tr class="even">
+<td>Tampon d'entrée (dernière valeur gagne)</td>
+<td>quelques Kio pendant une rafale</td>
+<td>nul si la minuterie n'est armée qu'en rafale</td>
+<td>≤ 10 ms de délai pendant une rafale (P2)</td>
+<td>—</td>
+<td>plus aucun déclencheur perdu à la reconnexion</td>
+</tr>
+<tr class="odd">
+<td>Étage vif étendu (précédente, trois instants, qualité)</td>
+<td>434 Kio</td>
+<td>nul</td>
+<td>quelques ns par mise à jour (estimé)</td>
+<td>par <code>maison.db</code> : ~65 Mo par jour (stockage V2)</td>
+<td>« depuis », « avant », fraîcheur en mémoire</td>
+</tr>
+<tr class="even">
+<td>Moteur compilé</td>
+<td>~0,5 Kio par automatisme (9,4 Kio aujourd'hui)</td>
+<td>nul (horloge par échéance)</td>
+<td>3 à 11 ns par événement ; compilation 7 µs par automatisme</td>
+<td>—</td>
+<td>280 à 5 000 fois moins de CPU par événement</td>
+</tr>
+<tr class="odd">
+<td>Agrégats au fil de l'eau</td>
+<td>443 Kio</td>
+<td>nul</td>
+<td>5 à 6 ns par relevé, 1 ns par lecture</td>
+<td>—</td>
+<td>des règles « moyenne, durée » sans disque</td>
+</tr>
+<tr class="even">
+<td>Historique 24 h en mémoire</td>
+<td>1,37 Mio</td>
+<td>nul</td>
+<td>quelques ns par relevé</td>
+<td>—</td>
+<td>courbes 24 h en 0,04 ms</td>
+</tr>
+<tr class="odd">
+<td>Historique 7 jours en mémoire</td>
+<td>8,78 Mio</td>
+<td>nul</td>
+<td>idem</td>
+<td>—</td>
+<td>redémarrage à chaud en 1,3 ms</td>
+</tr>
+<tr class="even">
+<td>Historique 30 jours en mémoire</td>
+<td>37,1 Mio</td>
+<td>nul</td>
+<td>idem</td>
+<td>—</td>
+<td>courbes du mois sans disque</td>
+</tr>
+<tr class="odd">
+<td>Instantané JSON complet chaque seconde</td>
+<td>~1 Mio transitoire</td>
+<td><strong>0,68 % d'un cœur</strong> ; Pi : 7 à 14 % (estimé)</td>
+<td>6,8 ms</td>
+<td><strong>3,8 Go</strong> s'il est écrit</td>
+<td>à éviter</td>
+</tr>
+<tr class="even">
+<td>Instantané binaire de l'état vif chaque seconde</td>
+<td>~0,1 Mio transitoire</td>
+<td>0,03 % d'un cœur ; Pi : 0,3 à 0,6 % (estimé)</td>
+<td>0,30 ms</td>
+<td>1,2 Go s'il est écrit</td>
+<td>acceptable vers le réseau, pas sur une carte SD</td>
+</tr>
+<tr class="odd">
+<td>Instantané binaire toutes les 15 min + journal compact</td>
+<td>négligeable</td>
+<td>négligeable</td>
+<td>0,30 ms par instantané</td>
+<td><strong>~1,3 Mo d'instantanés + ~1,3 Mo de journal</strong></td>
+<td>la reprise sans perte, sans user la carte SD</td>
+</tr>
+<tr class="even">
+<td>Historique écrit selon D13 tel que décidé</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>~3,1 Go (stockage V2, série <code>2026-10-21T114647Z</code>)</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Historique en opérations compactes, lots de 2 s</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>~0,22 à 0,26 Go (même série)</td>
+<td>12 fois moins d'écritures</td>
+</tr>
+</tbody>
+</table></div>
+<p>Trois règles en sortent :</p>
+<ol type="1">
+<li><strong>La mémoire est bon marché, les écritures ne le sont pas.</strong> Garder 7 jours en mémoire coûte 9 Mio ; écrire un instantané par seconde userait la carte SD de plusieurs Go par jour. On garde beaucoup en mémoire, on écrit peu, en ajout et par lots.</li>
+<li><strong>Une cloison coûte quelques Kio ; une tâche permanente par appareil coûte des Mio.</strong> On cloisonne par thread pour les pilotes, et de façon paresseuse pour les appareils.</li>
+<li><strong>Le moteur compilé fait gagner sur les deux tableaux</strong> : moins de mémoire par automatisme et beaucoup moins de CPU par événement.</li>
+</ol>
+</section>
+<section id="5-pannes--ce-qui-se-passe-avec-et-sans-le-pattern" class="level2">
+<h2>5. Pannes : ce qui se passe, avec et sans le pattern</h2>
+<section id="51-un-bus-entier-tombe-p1" class="level3">
+<h3>5.1 Un bus entier tombe (P1)</h3>
+<p>Un bus de 50 appareils meurt pendant 15 s. On envoie 10 ordres par seconde vers ses appareils et 10 par seconde vers un autre pilote.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th></th>
+<th>Autre pilote, p50 / p99</th>
+<th>Ordres au bus pendant la panne</th>
+<th>Reprise après le retour du bus</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Voies seules</td>
+<td>22,1 / 25,3 ms</td>
+<td>médiane <strong>4 002 ms</strong> (147 ordres, tous en délai dépassé)</td>
+<td>premier succès 108 ms après</td>
+</tr>
+<tr class="even">
+<td>Voies + disjoncteur de bus, essai à 500 ms</td>
+<td>22,1 / 23,0 ms</td>
+<td>médiane <strong>0,1 ms</strong> (refus immédiat, appareils hors ligne)</td>
+<td>premier succès 503 ms après</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les voies suffisent déjà à protéger les <strong>autres</strong> pilotes : leur latence ne bouge pas (la simulation de l'appareil sain coûte 20 ms). Le disjoncteur de bus protège les <strong>workflows</strong>. Un ordre vers un bus mort échoue tout de suite, ce qui permet de prendre une autre branche au lieu d'attendre 4 s par étape. Un premier essai attendait le délai complet de 4 s pour sonder, et la reprise traînait à 4,6 s ; avec un essai à 500 ms, elle tombe à 0,5 s. Le signal de reconnexion du transport la ramènerait à presque rien.</p>
+</section>
+<section id="52-le-bus-revient-et-inonde-le-hub-p2" class="level3">
+<h3>5.2 Le bus revient et inonde le hub (P2)</h3>
+<p>Le bus revient et republie 5 000 valeurs d'un coup sur 700 capteurs, puis 5 vrais déclencheurs arrivent ; 400 automatismes réels tournent. Trois essais de chaque :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th></th>
+<th>Déclencheurs perdus</th>
+<th>Latence des déclencheurs</th>
+<th>Retards du moteur</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sans tampon d'entrée</td>
+<td><strong>5 sur 5, aux trois essais</strong></td>
+<td>—</td>
+<td>2 retards, ~2 600 événements manqués</td>
+</tr>
+<tr class="even">
+<td>Avec tampon d'entrée (dernière valeur gagne, vidé toutes les 10 ms)</td>
+<td><strong>0</strong></td>
+<td>4,9 à 10,8 ms</td>
+<td>aucun</td>
+</tr>
+</tbody>
+</table></div>
+<p>C'est la combinaison du défaut de la V2 (3.3 : sur un retard, le moteur perd aussi ce qui reste en file) et d'une inondation ordinaire, celle d'un pont qui se reconnecte. Le tampon d'entrée la désamorce en amont : 5 000 valeurs sur 700 points deviennent ~700 événements. La correction du moteur reste nécessaire, pour les rafales que rien ne fusionne.</p>
+</section>
+<section id="53-rappel-des-autres-pannes-mesurées" class="level3">
+<h3>5.3 Rappel des autres pannes mesurées</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Panne</th>
+<th>Sans le pattern</th>
+<th>Avec le pattern</th>
+<th>Preuve</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Une lampe muette derrière un pont</td>
+<td>16 à 18 % d'ordres sains réussis, médiane ~4 s</td>
+<td>100 %, médiane 32 ms</td>
+<td>V2 C2</td>
+</tr>
+<tr class="even">
+<td>API partagée limitée à 4 requêtes, une lampe muette</td>
+<td>lampes saines à 1,4 s de médiane</td>
+<td>32 ms</td>
+<td>V2 C3</td>
+</tr>
+<tr class="odd">
+<td>Deux pilotes bloquent leur thread</td>
+<td>~200 ms par pas pour toute la maison</td>
+<td>≤ 0,1 ms de médiane pour le cœur</td>
+<td>V2 C1</td>
+</tr>
+<tr class="even">
+<td>Un décodeur XML reçoit une réponse hostile</td>
+<td>96,6 s de CPU sur un worker</td>
+<td>le même coût, sur le seul thread du pilote, et refusé par le pré-contrôle</td>
+<td>V1 E8</td>
+</tr>
+<tr class="odd">
+<td>La machine principale tombe</td>
+<td>état vif et baux perdus</td>
+<td>hub reconstruit en 11 à 14 ms ailleurs</td>
+<td>V2 R1</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+</section>
+<section id="6-les-workflows-quand-quelque-chose-ne-va-pas" class="level2">
+<h2>6. Les workflows quand quelque chose ne va pas</h2>
+<p>Le principe : <strong>ce qui ne marche plus ne bloque jamais ce qui marche.</strong></p>
+<ol type="1">
+<li><strong>Chaque action rend un résultat typé</strong> : faite, retenue par la garde, refusée, appareil injoignable (disjoncteur), délai dépassé. Un graphe peut brancher sur l'échec, comme <code>wait_for</code> branche déjà sur le délai. Par défaut, l'échec est journalisé et l'exécution continue ses autres branches.</li>
+<li><strong>Un appareil injoignable répond en 0,1 ms</strong>, pas en 4 s. Un workflow qui allume dix lampes dont trois sont sur un bus mort allume les sept autres tout de suite.</li>
+<li><strong>Une condition sur un appareil hors ligne</strong> lit une valeur de qualité « inconnue ». Elle est fausse par défaut, comme aujourd'hui (<code>holds</code> refuse une valeur nulle) ; un nœud peut aussi tester « inconnu » explicitement.</li>
+<li><strong>Un ordre non exécuté à temps ne part jamais plus tard</strong> : c'est une règle de l'architecture. Un workflow qui veut insister le dit (« réessayer 3 fois en 2 minutes »), avec une échéance.</li>
+<li><strong>Les déclencheurs horaires, les baux et les minuteurs continuent</strong> quand un bus tombe ; un bail échu pendant la panne s'applique au retour de l'appareil, s'il en est encore temps.</li>
+<li><strong>Au retour d'un bus</strong>, le tampon d'entrée fusionne la rafale : un « quand la température change » part une fois, sur la valeur finale, pas sept fois. Une occurrence (appui, sonnette) n'est jamais fusionnée : chacune part une fois.</li>
+<li><strong>La famille voit la panne</strong> : bus et appareils hors ligne sur le tableau de bord, étape « non faite : bus injoignable » dans l'exécution du workflow, notification si le workflow le demande.</li>
+<li><strong>Le garde-fou d'emballement</strong> ralentit (anti-rebond, fusion) au lieu d'éteindre l'automatisme au-delà de 20 lancements par minute (V2, 3.1).</li>
+</ol>
+</section>
+<section id="7-plan-par-étapes-avec-ce-que-chaque-étape-coûte" class="level2">
+<h2>7. Plan par étapes, avec ce que chaque étape coûte</h2>
+<p>Chaque étape apporte un gain seule ; l'ordre suit le rapport gain sur coût.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Étape</th>
+<th>Gain</th>
+<th>Coût à l'exécution (mesuré)</th>
+<th>Effort</th>
+<th>Preuve d'acceptation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Corriger la perte sur retard du moteur ; tâches du hub sur le <code>Handle</code> du cœur</td>
+<td>plus de déclencheurs perdus ; horloges du hub hors des pilotes</td>
+<td>nul</td>
+<td>faible</td>
+<td>V2 W2 rejoué : 0 perdu</td>
+</tr>
+<tr class="even">
+<td>2. Tampon d'entrée du hub</td>
+<td>inondations désamorcées</td>
+<td>quelques Kio, ≤ 10 ms en rafale</td>
+<td>faible</td>
+<td>P2 rejoué : 0 perdu</td>
+</tr>
+<tr class="odd">
+<td>3. Voies paresseuses et disjoncteurs dans <code>moli-runtime</code></td>
+<td>appareils et bus cloisonnés</td>
+<td>6 Kio au repos</td>
+<td>moyen</td>
+<td>P1, V2 C2 et C3 rejoués</td>
+</tr>
+<tr class="even">
+<td>4. Un thread par pilote</td>
+<td>blocages et calculs isolés</td>
+<td>19 Kio par pilote</td>
+<td>moyen</td>
+<td>V2 C1 rejoué dans <code>moli-os</code></td>
+</tr>
+<tr class="odd">
+<td>5. Bail durable pour « pendant N minutes »</td>
+<td>workflows temporaires fiables</td>
+<td>~80 o par bail en mémoire ; 3,4 à 3,7 ms d'écriture au lancement</td>
+<td>faible</td>
+<td>redémarrage au milieu d'un bail</td>
+</tr>
+<tr class="even">
+<td>6. Étage vif étendu et agrégats</td>
+<td>conditions « depuis », moyennes sans disque</td>
+<td>~0,9 Mio</td>
+<td>moyen</td>
+<td>lecture d'agrégat en mémoire</td>
+</tr>
+<tr class="odd">
+<td>7. Moteur compilé, filtré à la source</td>
+<td>280 à 5 000 fois moins de CPU par événement</td>
+<td>moins de mémoire qu'aujourd'hui</td>
+<td>élevé</td>
+<td>V2 W2 rejoué à 4 000 automatismes</td>
+</tr>
+<tr class="even">
+<td>8. Historique récent en mémoire selon le profil</td>
+<td>courbes et reprise instantanées</td>
+<td>1,4 Mio (24 h) à 37 Mio (30 j)</td>
+<td>moyen</td>
+<td>B2.3 rejoué</td>
+</tr>
+<tr class="odd">
+<td>9. Journal, instantanés binaires, secours passif</td>
+<td>reprise sans perte, ici ou ailleurs</td>
+<td>~2,6 Mo écrits par jour</td>
+<td>élevé</td>
+<td>arrêt brutal, reprise sur la secours</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="8-limites" class="level2">
+<h2>8. Limites</h2>
+<ul>
+<li>Machine de test Apple M4 : les rapports entre options sont fiables, les durées absolues ne le sont pas pour le Pi. Les coûts de thread et de processus ont été mesurés sous Linux musl dans un conteneur arm64, pas sur un Pi.</li>
+<li>Les transports de P1 et P2 sont simulés : un bus qui ne répond plus du tout. Un bus qui répond mal (lenteur intermittente, réponses partielles) reste à jouer.</li>
+<li>Les voies paresseuses sont mesurées en mémoire ; leur comportement sous charge est celui des voies en tâches de la V2, à confirmer une fois écrites dans <code>moli-runtime</code>.</li>
+<li>Le coût d'un processus par pilote ne compte que le processus minimal ; un vrai pilote avec TLS et sa sérialisation coûte davantage.</li>
+</ul>
+</section>
+<section id="annexe-a--bancs-de-la-v3" class="level2">
+<h2>Annexe A — Bancs de la V3</h2>
+<p>Même crate jetable que la V2, <strong>hors du dépôt</strong>, avec quatre binaires de plus : <code>etat_complet</code> (B1), <code>couts</code> (B2), <code>pannes</code> (P1, P2) et <code>veille</code> (processus minimal sous macOS). La mesure Linux musl est un petit programme compilé et lancé dans un conteneur <code>rust:1-alpine</code> jetable. Reproduire : <code>cargo run --release --bin &lt;nom&gt;</code> (<code>pannes p1</code> ne joue que P1).</p>
+<p>Sorties brutes :</p>
+<pre class="text"><code># Budget mémoire : tout ce qui compte, en mémoire
+- tailles : Value 24 o, PointVif 80 o, Event 128 o
+  (voies en tâches permanentes avec file de 8 : 3.53 Mio pour 496 appareils, soit 7.3 Kio chacune ; CommandRequest 200 o)
+
+## ×1 : 496 appareils, 2264 valeurs, 400 automatismes
+- Modèle du hub (appareils, définitions, valeurs : ce qui existe) : 1.00 Mio
+- Étage vif : précédente, 3 instants, qualité + index des points : 434 Kio
+- Santé par appareil (vu le, échecs, disjoncteur) : 12 Kio
+- Automatismes compilés (9 règles, 2 actions) + index par point : 203 Kio
+- 1 000 baux, échéancier et une exécution en cours par automatisme : 150 Kio
+- Agrégats 1 h et 24 h des points lus par les règles : 443 Kio
+- Voies paresseuses (répartiteur unique, files à la demande), au repos : 6 Kio
+- Tampon du bus : 1 024 événements (charges partagées en Arc) : 128 Kio
+- **Sous-total « tout l&#39;état vif »** : 2.35 Mio
+- Historique compact en mémoire : 24 h 1.37 Mio ; 7 j 8.78 Mio ; 30 j 37.10 Mio
+- Totaux : vif + 24 h 3.71 Mio ; vif + 7 j 11.12 Mio ; vif + 30 j 39.44 Mio
+  (voies en tâches permanentes avec file de 8 : 35.29 Mio pour 4960 appareils, soit 7.3 Kio chacune ; CommandRequest 200 o)
+
+## ×10 : 4960 appareils, 22640 valeurs, 4000 automatismes
+- Modèle du hub (appareils, définitions, valeurs : ce qui existe) : 9.86 Mio
+- Étage vif : précédente, 3 instants, qualité + index des points : 4.04 Mio
+- Santé par appareil (vu le, échecs, disjoncteur) : 116 Kio
+- Automatismes compilés (9 règles, 2 actions) + index par point : 1.98 Mio
+- 1 000 baux, échéancier et une exécution en cours par automatisme : 1.56 Mio
+- Agrégats 1 h et 24 h des points lus par les règles : 4.69 Mio
+- Voies paresseuses (répartiteur unique, files à la demande), au repos : 10 Kio
+- Tampon du bus : 1 024 événements (charges partagées en Arc) : 128 Kio
+- **Sous-total « tout l&#39;état vif »** : 22.39 Mio
+- Historique compact en mémoire : 24 h 14.33 Mio ; 7 j 88.42 Mio ; 30 j 378.95 Mio (extrapolé)
+- Totaux : vif + 24 h 36.72 Mio ; vif + 7 j 110.81 Mio ; vif + 30 j 401.34 Mio
+
+# Le coût de chaque choix (machine de test, 2 workers)
+
+## B2.1 — instantané : coût selon le format et la fréquence (machine de test)
+- JSON complet (valeurs + 400 automatismes), compressé : 6.80 ms par instantané, 43 Kio
+- binaire compact des valeurs (étage vif), compressé : 0.30 ms par instantané, 13 Kio
+| intervalle | CPU d&#39;un cœur, JSON | CPU d&#39;un cœur, compact | écrit par jour, JSON | écrit par jour, compact |
+| 1 s | 0.680 % | 0.0299 % | 3837 Mo | 1207.1 Mo |
+| 10 s | 0.068 % | 0.0030 % | 384 Mo | 120.7 Mo |
+| 60 s | 0.011 % | 0.0005 % | 64 Mo | 20.1 Mo |
+| 15 min | 0.001 % | 0.0000 % | 4 Mo | 1.3 Mo |
+
+## B2.2 — ordre vers un pilote : même runtime ou thread isolé (2 000 ordres)
+- pilote sur le runtime du cœur : p50 0.01 ms, p99 0.02 ms
+- pilote sur son thread : p50 0.01 ms, p99 0.02 ms
+
+## B2.3 — courbe 24 h et redémarrage à chaud : mémoire contre SQLite
+- courbe 24 h d&#39;un capteur à 1 Hz réduite à 500 points : mémoire 0.04 ms ; SQLite 17.07 ms (500 seaux)
+- redémarrage à chaud, 7 jours en mémoire (1129783 relevés) : relus depuis SQLite 76.30 ms ; depuis un instantané binaire de 8.6 Mio 1.28 ms
+
+## B2.4 — compiler les automatismes à la validation
+- 2 000 automatismes lus depuis leur JSON et compilés : 14.04 ms au total, 7.0 µs chacun
+
+# Pannes : un bus qui tombe, puis l&#39;inondation à son retour
+
+## P1 — un bus de 50 appareils mort 15 s (de 5 s à 20 s), 10 ordres/s vers lui, 10 ordres/s vers un autre pilote
+- voies seules               : autre pilote p50 22.1 ms p99 25.3 ms ; ordres au bus pendant la panne : médiane 4001.7 ms (147 ordres) ; reprise : premier succès 107.9 ms après le retour du bus ; appareil du bus à la fin : Some(Some(true))
+- voies + disjoncteur de bus : autre pilote p50 22.1 ms p99 23.0 ms ; ordres au bus pendant la panne : médiane 0.1 ms (147 ordres) ; reprise : premier succès 502.6 ms après le retour du bus ; appareil du bus à la fin : Some(Some(true))
+
+## P2 — le bus revient et republie 5 000 valeurs d&#39;un coup ; 400 automatismes réels
+- sans tampon d&#39;entrée                         : déclencheurs après l&#39;inondation : 5 perdus sur 5, latence médiane — ; retards du moteur 2 (2626 événements manqués)
+- avec tampon d&#39;entrée (dernière valeur, 10 ms) : déclencheurs après l&#39;inondation : 0 perdus sur 5, latence médiane 4.9 ms ; retards du moteur 0 (0 événements manqués)
+- sans tampon d&#39;entrée                         : déclencheurs après l&#39;inondation : 5 perdus sur 5, latence médiane — ; retards du moteur 2 (2638 événements manqués)
+- avec tampon d&#39;entrée (dernière valeur, 10 ms) : déclencheurs après l&#39;inondation : 0 perdus sur 5, latence médiane 10.1 ms ; retards du moteur 0 (0 événements manqués)
+- sans tampon d&#39;entrée                         : déclencheurs après l&#39;inondation : 5 perdus sur 5, latence médiane — ; retards du moteur 2 (2614 événements manqués)
+- avec tampon d&#39;entrée (dernière valeur, 10 ms) : déclencheurs après l&#39;inondation : 0 perdus sur 5, latence médiane 10.8 ms ; retards du moteur 0 (0 événements manqués)
+
+- processus Rust minimal avec un runtime Tokio : 2102 Kio de RSS en moyenne (10 processus, machine de test)
+
+- Linux musl : processus minimal avec un runtime Tokio : 577 Kio de RSS en moyenne
+- Linux musl : 40 threads avec chacun un runtime Tokio : 788 Kio de RSS, soit 19 Kio par pilote</code></pre>
+<p>Codes sources :</p>
+<details class="code"><summary>Code complet de <code>src/bin/etat_complet.rs</code></summary><pre class="rust"><code>//! B1 : le budget mémoire de « tout ce qui compte en mémoire », mesuré octet par octet
+//! (allocateur qui compte), à l&#39;échelle des deux maisons réunies puis ×10.
+
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::collections::{BinaryHeap, HashMap, VecDeque};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicIsize, Ordering};
+use std::time::Duration;
+
+use moli_core::{Access, Device, Kind, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio_util::sync::CancellationToken;
+
+struct Compte;
+static OCTETS: AtomicIsize = AtomicIsize::new(0);
+static BLOCS: AtomicIsize = AtomicIsize::new(0);
+unsafe impl GlobalAlloc for Compte {
+    unsafe fn alloc(&amp;self, l: Layout) -&gt; *mut u8 {
+        let p = unsafe { System.alloc(l) };
+        if !p.is_null() {
+            OCTETS.fetch_add(l.size() as isize, Ordering::Relaxed);
+            BLOCS.fetch_add(1, Ordering::Relaxed);
+        }
+        p
+    }
+    unsafe fn dealloc(&amp;self, p: *mut u8, l: Layout) {
+        unsafe { System.dealloc(p, l) };
+        OCTETS.fetch_sub(l.size() as isize, Ordering::Relaxed);
+        BLOCS.fetch_sub(1, Ordering::Relaxed);
+    }
+    unsafe fn realloc(&amp;self, p: *mut u8, l: Layout, n: usize) -&gt; *mut u8 {
+        let q = unsafe { System.realloc(p, l, n) };
+        if !q.is_null() {
+            OCTETS.fetch_add(n as isize - l.size() as isize, Ordering::Relaxed);
+        }
+        q
+    }
+}
+#[global_allocator]
+static A: Compte = Compte;
+
+fn tas() -&gt; (isize, isize) {
+    (OCTETS.load(Ordering::Relaxed), BLOCS.load(Ordering::Relaxed))
+}
+/// Octets demandés + 16 o d&#39;en-tête par bloc.
+fn depuis(avant: (isize, isize)) -&gt; f64 {
+    let a = tas();
+    ((a.0 - avant.0) + 16 * (a.1 - avant.1)) as f64
+}
+
+fn kio(o: f64) -&gt; String {
+    if o &gt;= 1_048_576.0 { format!(&quot;{:.2} Mio&quot;, o / 1_048_576.0) } else { format!(&quot;{:.0} Kio&quot;, o / 1024.0) }
+}
+
+// ---- le modèle du hub (comme aujourd&#39;hui) ---------------------------------------
+
+struct Maison {
+    appareils: usize,
+    valeurs: usize,
+}
+fn valeur(i: usize) -&gt; (Kind, Value) {
+    match i % 200 {
+        0..37 =&gt; (Kind::Numeric { min: None, max: None, step: None }, Value::Float(20.0 + (i % 17) as f64 * 0.5)),
+        37..77 =&gt; (Kind::Binary, Value::Bool(i % 3 == 0)),
+        77..105 =&gt; (Kind::Text, Value::Text([&quot;idle&quot;, &quot;heat_cool&quot;, &quot;playing&quot;, &quot;auto&quot;][i % 4].into())),
+        _ =&gt; (Kind::Text, Value::Null),
+    }
+}
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            let cles = [&quot;temperature&quot;, &quot;humidity&quot;, &quot;battery&quot;, &quot;linkquality&quot;, &quot;power&quot;, &quot;state&quot;, &quot;illuminance&quot;, &quot;mode&quot;];
+            let mut n = 0;
+            for d in 0..self.appareils {
+                let par = self.valeurs / self.appareils + usize::from(d &lt; self.valeurs % self.appareils);
+                let id = ctx.device_id(&amp;format!(&quot;0x00158d00{d:08x}&quot;));
+                let points: Vec&lt;PointSpec&gt; = (0..par)
+                    .map(|k| PointSpec {
+                        key: format!(&quot;{}_{k}&quot;, cles[(d + k) % cles.len()]).into(),
+                        label: cles[(d + k) % cles.len()].into(),
+                        kind: valeur(n + k).0,
+                        access: Access { read: true, write: k == 0 },
+                        unit: None,
+                        semantic: Semantic::Other,
+                    })
+                    .collect();
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;Appareil fictif {d}&quot;).into(),
+                    manufacturer: Some(&quot;Fabricant&quot;.into()),
+                    model: Some(&quot;Modèle-X1&quot;.into()),
+                    description: None,
+                    native_room: Some(&quot;Pièce&quot;.into()),
+                    members: vec![],
+                    points: points.clone(),
+                });
+                for p in &amp;points {
+                    ctx.set_state(&amp;id, &amp;p.key, valeur(n).1);
+                    n += 1;
+                }
+            }
+            ctx.ready();
+            std::future::pending::&lt;()&gt;().await;
+            Ok(())
+        })
+    }
+}
+
+// ---- ce qu&#39;on ajoute pour être très réactif -------------------------------------
+
+/// L&#39;étage « vif » de la proposition stockage V2 : valeur, valeur précédente, trois
+/// instants (observé, reçu, changé) et qualité.
+#[allow(dead_code)]
+struct PointVif {
+    valeur: Value,
+    precedente: Value,
+    observe: u64,
+    recu: u64,
+    change: u64,
+    qualite: u8,
+}
+
+#[allow(dead_code)]
+struct SanteAppareil {
+    vu: u64,
+    echecs: u16,
+    disjoncte_jusqua: u64,
+    en_file: u8,
+}
+
+#[derive(Clone, Copy)]
+#[allow(dead_code)]
+enum Op {
+    Ge,
+    Gt,
+}
+
+#[allow(dead_code)]
+struct Plan {
+    nom: String,
+    regles: Vec&lt;(u32, Op, f64)&gt;,
+    actions: Vec&lt;(u32, Value)&gt;,
+}
+
+#[allow(dead_code)]
+struct Bail {
+    point: u32,
+    pose: Value,
+    retour: Value,
+    echeance: u64,
+}
+
+#[allow(dead_code)]
+struct Execution {
+    automatisme: u32,
+    noeud: u16,
+    depuis: u64,
+    variables: Vec&lt;(u16, Value)&gt;,
+}
+
+/// Agrégat glissant : relevés de la fenêtre (décalage u32, valeur f32) et sommes tenues.
+#[allow(dead_code)]
+struct Agregat {
+    fenetre: VecDeque&lt;(u32, f32)&gt;,
+    somme: f64,
+    min: f32,
+    max: f32,
+}
+
+const VINGTILES: [f64; 20] = [
+    0.28, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.33, 0.48, 0.63, 0.9, 1.14, 1.41, 2.16, 3.57, 5.73,
+    9.22, 21.92, 140.88, 1990.22,
+];
+const SERIES: usize = 1_487;
+fn taux(s: usize) -&gt; f64 {
+    VINGTILES[(s % SERIES) * 20 / SERIES]
+}
+
+fn historique(jours: f64, echelle: usize) -&gt; f64 {
+    let avant = tas();
+    let mut h: HashMap&lt;u32, (Vec&lt;u32&gt;, Vec&lt;f32&gt;)&gt; = HashMap::new();
+    for s in 0..SERIES * echelle {
+        let n = (taux(s) * jours).round() as usize;
+        let (t, v) = h.entry(s as u32).or_default();
+        t.reserve_exact(n);
+        v.reserve_exact(n);
+        for i in 0..n {
+            t.push(i as u32);
+            v.push(i as f32);
+        }
+    }
+    let c = depuis(avant);
+    drop(h);
+    c
+}
+
+fn budget(echelle: usize) {
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    rt.block_on(async {
+        let (appareils, valeurs) = (496 * echelle, 2_264 * echelle);
+        let automatismes = 400 * echelle;
+        let mut lignes: Vec&lt;(&amp;str, f64)&gt; = Vec::new();
+
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let avant = tas();
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { appareils, valeurs }), cancel.clone());
+        while hub.stats().points &lt; valeurs {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        lignes.push((&quot;Modèle du hub (appareils, définitions, valeurs : ce qui existe)&quot;, depuis(avant)));
+
+        let avant = tas();
+        let snap = hub.snapshot();
+        let mut index: HashMap&lt;PointId, u32&gt; = HashMap::with_capacity(valeurs);
+        let mut vifs: Vec&lt;PointVif&gt; = Vec::with_capacity(valeurs);
+        for d in &amp;snap.devices {
+            for (cle, s) in &amp;d.state {
+                index.insert(PointId::new(&amp;d.device.id, cle), vifs.len() as u32);
+                vifs.push(PointVif { valeur: s.value.clone(), precedente: Value::Null, observe: s.ts, recu: s.ts, change: s.ts, qualite: 0 });
+            }
+        }
+        drop(snap);
+        lignes.push((&quot;Étage vif : précédente, 3 instants, qualité + index des points&quot;, depuis(avant)));
+
+        let avant = tas();
+        let sante: Vec&lt;SanteAppareil&gt; = (0..appareils).map(|_| SanteAppareil { vu: 0, echecs: 0, disjoncte_jusqua: 0, en_file: 0 }).collect();
+        lignes.push((&quot;Santé par appareil (vu le, échecs, disjoncteur)&quot;, depuis(avant)));
+
+        let avant = tas();
+        let plans: Vec&lt;Plan&gt; = (0..automatismes)
+            .map(|k| Plan {
+                nom: format!(&quot;Automatisme {k}&quot;),
+                regles: (0..9).map(|j| (((k * 7 + j * 13) % valeurs) as u32, if j % 2 == 0 { Op::Ge } else { Op::Gt }, 0.0)).collect(),
+                actions: vec![((k % valeurs) as u32, Value::Bool(true)), ((k % valeurs) as u32, Value::Bool(false))],
+            })
+            .collect();
+        let mut par_point: Vec&lt;Vec&lt;u32&gt;&gt; = vec![Vec::new(); valeurs];
+        for k in 0..automatismes {
+            par_point[(k * 31) % valeurs].push(k as u32);
+        }
+        lignes.push((&quot;Automatismes compilés (9 règles, 2 actions) + index par point&quot;, depuis(avant)));
+
+        let avant = tas();
+        let mut echeances = BinaryHeap::new();
+        let baux: Vec&lt;Bail&gt; = (0..1_000 * echelle)
+            .map(|i| {
+                echeances.push(std::cmp::Reverse((1_792_000_000_000u64 + i as u64 * 1_000, i as u32)));
+                Bail { point: (i % valeurs) as u32, pose: Value::Bool(true), retour: Value::Bool(false), echeance: 0 }
+            })
+            .collect();
+        let executions: Vec&lt;Execution&gt; = (0..automatismes)
+            .map(|k| Execution { automatisme: k as u32, noeud: 3, depuis: 0, variables: (0..4).map(|v| (v, Value::Float(1.0))).collect() })
+            .collect();
+        lignes.push((&quot;1 000 baux, échéancier et une exécution en cours par automatisme&quot;, depuis(avant)));
+
+        let avant = tas();
+        // Agrégats 1 h et 24 h sur les points numériques lus par les règles (un sur cinq).
+        let mut agregats: Vec&lt;Agregat&gt; = Vec::new();
+        let lus = valeurs / 5;
+        for s in 0..lus {
+            for heures in [1.0, 24.0] {
+                // Points répartis sur toute la distribution réelle, calmes comme bavards.
+                let n = (taux(s * SERIES / lus) * heures / 24.0).round() as usize;
+                let mut f = VecDeque::with_capacity(n);
+                for i in 0..n {
+                    f.push_back((i as u32, i as f32));
+                }
+                agregats.push(Agregat { fenetre: f, somme: 0.0, min: 0.0, max: 0.0 });
+            }
+        }
+        lignes.push((&quot;Agrégats 1 h et 24 h des points lus par les règles&quot;, depuis(avant)));
+
+        let avant = tas();
+        let mut voies = Vec::new();
+        let mut taches = tokio::task::JoinSet::new();
+        for _ in 0..appareils {
+            let (tx, mut rx) = tokio::sync::mpsc::channel::&lt;CommandRequest&gt;(8);
+            voies.push(tx);
+            taches.spawn(async move { while let Some(c) = rx.recv().await { c.reply(Ok(())); } });
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        let voies_taches = depuis(avant);
+        // Variante paresseuse : un seul répartiteur, une file créée seulement quand un ordre
+        // attend, au plus un ordre en vol par appareil. Au repos : une table vide.
+        let avant = tas();
+        let attente: HashMap&lt;u32, VecDeque&lt;CommandRequest&gt;&gt; = HashMap::with_capacity(64);
+        let en_vol: Vec&lt;bool&gt; = vec![false; appareils];
+        lignes.push((&quot;Voies paresseuses (répartiteur unique, files à la demande), au repos&quot;, depuis(avant)));
+        std::hint::black_box((&amp;attente, &amp;en_vol));
+        println!(&quot;  (voies en tâches permanentes avec file de 8 : {} pour {appareils} appareils, soit {:.1} Kio chacune ; CommandRequest {} o)&quot;,
+            kio(voies_taches), voies_taches / appareils as f64 / 1024.0, std::mem::size_of::&lt;CommandRequest&gt;());
+
+        let bus = 1_024.0 * std::mem::size_of::&lt;moli_core::Event&gt;() as f64;
+        lignes.push((&quot;Tampon du bus : 1 024 événements (charges partagées en Arc)&quot;, bus));
+
+        let indispensable: f64 = lignes.iter().map(|(_, o)| o).sum();
+        let h24 = historique(1.0, echelle);
+        let h7 = historique(7.0, echelle);
+        let h30 = if echelle == 1 { historique(30.0, 1) } else { h7 / 7.0 * 30.0 };
+
+        println!(&quot;\n## ×{echelle} : {appareils} appareils, {valeurs} valeurs, {automatismes} automatismes&quot;);
+        for (nom, o) in &amp;lignes {
+            println!(&quot;- {nom} : {}&quot;, kio(*o));
+        }
+        println!(&quot;- **Sous-total « tout l&#39;état vif »** : {}&quot;, kio(indispensable));
+        println!(&quot;- Historique compact en mémoire : 24 h {} ; 7 j {} ; 30 j {}{}&quot;, kio(h24), kio(h7), kio(h30), if echelle == 1 { &quot;&quot; } else { &quot; (extrapolé)&quot; });
+        println!(
+            &quot;- Totaux : vif + 24 h {} ; vif + 7 j {} ; vif + 30 j {}&quot;,
+            kio(indispensable + h24),
+            kio(indispensable + h7),
+            kio(indispensable + h30)
+        );
+        std::hint::black_box((index, vifs, sante, plans, par_point, baux, executions, echeances, agregats, voies));
+        cancel.cancel();
+        taches.abort_all();
+    });
+}
+
+fn main() {
+    println!(&quot;# Budget mémoire : tout ce qui compte, en mémoire&quot;);
+    println!(&quot;- tailles : Value {} o, PointVif {} o, Event {} o&quot;, std::mem::size_of::&lt;Value&gt;(), std::mem::size_of::&lt;PointVif&gt;(), std::mem::size_of::&lt;moli_core::Event&gt;());
+    budget(1);
+    budget(10);
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>src/bin/couts.rs</code></summary><pre class="rust"><code>//! B2 : le coût de chaque choix, mesuré : instantané selon sa fréquence et son format,
+//! saut de thread d&#39;un pilote isolé, courbe 24 h en mémoire ou par SQLite, redémarrage
+//! à chaud, compilation des automatismes.
+
+use std::collections::HashMap;
+use std::io::Write;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+
+use moli_core::{Access, Device, InstanceId, Kind, Origin, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio_util::sync::CancellationToken;
+
+fn ms(d: Duration) -&gt; String {
+    format!(&quot;{:.2} ms&quot;, d.as_secs_f64() * 1e3)
+}
+
+struct Maison;
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            let mut n = 0usize;
+            for d in 0..496usize {
+                let par = 2_264 / 496 + usize::from(d &lt; 2_264 % 496);
+                let id = ctx.device_id(&amp;format!(&quot;0x00158d00{d:08x}&quot;));
+                let points: Vec&lt;PointSpec&gt; = (0..par)
+                    .map(|k| PointSpec {
+                        key: format!(&quot;valeur_{k}&quot;).into(),
+                        label: &quot;valeur&quot;.into(),
+                        kind: Kind::Numeric { min: None, max: None, step: None },
+                        access: Access { read: true, write: k == 0 },
+                        unit: None,
+                        semantic: Semantic::Other,
+                    })
+                    .collect();
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;Appareil fictif {d}&quot;).into(),
+                    manufacturer: None,
+                    model: None,
+                    description: None,
+                    native_room: None,
+                    members: vec![],
+                    points: points.clone(),
+                });
+                for p in &amp;points {
+                    n += 1;
+                    ctx.set_state(&amp;id, &amp;p.key, if n % 5 == 0 { Value::Text(&quot;idle&quot;.into()) } else { Value::Float(n as f64 / 7.0) });
+                }
+            }
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+fn graphe(k: usize) -&gt; serde_json::Value {
+    let p = |i: usize| format!(&quot;maison:0x00158d00{:08x}/valeur_0&quot;, i % 496);
+    serde_json::json!({
+        &quot;name&quot;: format!(&quot;Automatisme {k}&quot;), &quot;mode&quot;: &quot;restart&quot;,
+        &quot;nodes&quot;: [
+            {&quot;id&quot;:&quot;t&quot;,&quot;type&quot;:&quot;when_state&quot;,&quot;point&quot;:p(k)},
+            {&quot;id&quot;:&quot;c1&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+1),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0},{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+2),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0},{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+3),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0}]},
+            {&quot;id&quot;:&quot;c2&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+4),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0},{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+5),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0},{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+6),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0}]},
+            {&quot;id&quot;:&quot;c3&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+7),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0},{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+8),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0},{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:p(k+9),&quot;op&quot;:&quot;gt&quot;,&quot;value&quot;:1e9}]},
+            {&quot;id&quot;:&quot;a&quot;,&quot;type&quot;:&quot;toggle&quot;,&quot;point&quot;:p(k+10)}
+        ],
+        &quot;edges&quot;: [{&quot;from&quot;:&quot;t&quot;,&quot;to&quot;:&quot;c1&quot;},{&quot;from&quot;:&quot;c1&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;c2&quot;},{&quot;from&quot;:&quot;c2&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;c3&quot;},{&quot;from&quot;:&quot;c3&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;a&quot;}]
+    })
+}
+
+/// Encodage compact de l&#39;étage vif : identifiant, étiquette, charge, trois instants.
+fn compact(hub: &amp;Hub) -&gt; Vec&lt;u8&gt; {
+    let mut o = Vec::with_capacity(2_264 * 40);
+    let mut id = 0u32;
+    for d in hub.snapshot().devices {
+        for s in d.state.values() {
+            o.extend_from_slice(&amp;id.to_le_bytes());
+            match &amp;s.value {
+                Value::Float(f) =&gt; {
+                    o.push(1);
+                    o.extend_from_slice(&amp;f.to_le_bytes());
+                }
+                Value::Text(t) =&gt; {
+                    o.push(2);
+                    o.extend_from_slice(&amp;(t.len() as u16).to_le_bytes());
+                    o.extend_from_slice(t.as_bytes());
+                }
+                _ =&gt; o.push(0),
+            }
+            for _ in 0..3 {
+                o.extend_from_slice(&amp;s.ts.to_le_bytes());
+            }
+            id += 1;
+        }
+    }
+    o
+}
+
+fn gz(b: &amp;[u8]) -&gt; usize {
+    let mut e = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+    e.write_all(b).unwrap();
+    e.finish().unwrap().len()
+}
+
+fn b1_instantanes(hub: &amp;Hub) {
+    println!(&quot;\n## B2.1 — instantané : coût selon le format et la fréquence (machine de test)&quot;);
+    let automatismes: Vec&lt;serde_json::Value&gt; = (0..400).map(graphe).collect();
+    let t = Instant::now();
+    let mut taille_json = 0;
+    for _ in 0..20 {
+        let v = serde_json::to_vec(&amp;serde_json::json!({&quot;maison&quot;: hub.snapshot(), &quot;automatismes&quot;: automatismes})).unwrap();
+        taille_json = gz(&amp;v);
+    }
+    let json = t.elapsed() / 20;
+    let t = Instant::now();
+    let mut taille_bin = 0;
+    for _ in 0..200 {
+        taille_bin = gz(&amp;compact(hub));
+    }
+    let bin = t.elapsed() / 200;
+    println!(&quot;- JSON complet (valeurs + 400 automatismes), compressé : {} par instantané, {} Kio&quot;, ms(json), taille_json / 1024);
+    println!(&quot;- binaire compact des valeurs (étage vif), compressé : {} par instantané, {} Kio&quot;, ms(bin), taille_bin / 1024);
+    println!(&quot;| intervalle | CPU d&#39;un cœur, JSON | CPU d&#39;un cœur, compact | écrit par jour, JSON | écrit par jour, compact |&quot;);
+    for (nom, s) in [(&quot;1 s&quot;, 1.0f64), (&quot;10 s&quot;, 10.0), (&quot;60 s&quot;, 60.0), (&quot;15 min&quot;, 900.0)] {
+        let par_jour = 86_400.0 / s;
+        println!(
+            &quot;| {nom} | {:.3} % | {:.4} % | {:.0} Mo | {:.1} Mo |&quot;,
+            json.as_secs_f64() / s * 100.0,
+            bin.as_secs_f64() / s * 100.0,
+            taille_json as f64 * par_jour / 1e6,
+            taille_bin as f64 * par_jour / 1e6
+        );
+    }
+}
+
+fn isole(hub: &amp;Hub, nom: &amp;str, pilote: Arc&lt;dyn Driver&gt;, cancel: CancellationToken) {
+    let (hub, nom) = (hub.clone(), InstanceId::from(nom));
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        rt.block_on(async move {
+            let _ = spawn_driver(&amp;hub, nom, pilote, cancel).await;
+        });
+    });
+}
+
+struct Sain;
+impl Driver for Sain {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;sain&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let id = ctx.device_id(&quot;l1&quot;);
+            ctx.upsert_device(Device {
+                id: id.clone(),
+                instance: ctx.instance().clone(),
+                native_name: &quot;lampe&quot;.into(),
+                manufacturer: None,
+                model: None,
+                description: None,
+                native_room: None,
+                members: vec![],
+                points: vec![PointSpec {
+                    key: &quot;on&quot;.into(),
+                    label: &quot;on&quot;.into(),
+                    kind: Kind::Binary,
+                    access: Access { read: true, write: true },
+                    unit: None,
+                    semantic: Semantic::OnOff,
+                }],
+            });
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                ctx.set_state(&amp;cmd.device.id, &amp;cmd.key, cmd.value.clone());
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+async fn aller_retour(hub: &amp;Hub, instance: &amp;str) -&gt; (Duration, Duration) {
+    let p = PointId::from(format!(&quot;{instance}:l1/on&quot;));
+    while hub.state(&amp;p).is_none() &amp;&amp; hub.device(&amp;p.split().unwrap().0).is_none() {
+        tokio::time::sleep(Duration::from_millis(2)).await;
+    }
+    let mut v = Vec::with_capacity(2_000);
+    for i in 0..2_000 {
+        let t = Instant::now();
+        hub.command(&amp;p, Value::Bool(i % 2 == 0), Origin::Ui, None).await.unwrap();
+        v.push(t.elapsed());
+    }
+    v.sort();
+    (v[1_000], v[1_979])
+}
+
+fn b2_saut_de_thread() {
+    println!(&quot;\n## B2.2 — ordre vers un pilote : même runtime ou thread isolé (2 000 ordres)&quot;);
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    rt.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;hub, &quot;partage&quot;.into(), Arc::new(Sain), cancel.clone());
+        isole(&amp;hub, &quot;isole&quot;, Arc::new(Sain), cancel.clone());
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        let (p50, p99) = aller_retour(&amp;hub, &quot;partage&quot;).await;
+        println!(&quot;- pilote sur le runtime du cœur : p50 {}, p99 {}&quot;, ms(p50), ms(p99));
+        let (p50, p99) = aller_retour(&amp;hub, &quot;isole&quot;).await;
+        println!(&quot;- pilote sur son thread : p50 {}, p99 {}&quot;, ms(p50), ms(p99));
+        cancel.cancel();
+    });
+}
+
+fn b3_courbe_et_reprise() {
+    println!(&quot;\n## B2.3 — courbe 24 h et redémarrage à chaud : mémoire contre SQLite&quot;);
+    // Un capteur qui change chaque seconde : 86 400 relevés en 24 h.
+    let ts: Vec&lt;u32&gt; = (0..86_400).collect();
+    let val: Vec&lt;f32&gt; = (0..86_400).map(|i| (i % 300) as f32 / 10.0).collect();
+    let t = Instant::now();
+    let mut sortie = Vec::new();
+    for _ in 0..100 {
+        sortie.clear();
+        for seau in ts.chunks(173).zip(val.chunks(173)) {
+            let (min, max, somme) = seau.1.iter().fold((f32::MAX, f32::MIN, 0.0f64), |(a, b, s), v| (a.min(*v), b.max(*v), s + f64::from(*v)));
+            sortie.push((seau.0[0], min, max, somme / seau.1.len() as f64));
+        }
+    }
+    let memoire = t.elapsed() / 100;
+    let conn = rusqlite::Connection::open_in_memory().unwrap();
+    conn.execute_batch(&quot;CREATE TABLE samples (point INTEGER, ts INTEGER, num REAL, PRIMARY KEY (point, ts)) WITHOUT ROWID;&quot;).unwrap();
+    {
+        let tx = conn.unchecked_transaction().unwrap();
+        let mut ins = tx.prepare(&quot;INSERT INTO samples VALUES (?1, ?2, ?3)&quot;).unwrap();
+        for p in 0..14i64 {
+            for s in 0..86_400i64 {
+                ins.execute((p, s * 1000, (s % 300) as f64 / 10.0)).unwrap();
+            }
+        }
+        drop(ins);
+        tx.commit().unwrap();
+    }
+    let mut req = conn
+        .prepare(&quot;SELECT ts / 173000, min(num), max(num), avg(num) FROM samples WHERE point = ?1 AND ts &gt;= 0 AND ts &lt; 86400000 GROUP BY ts / 173000&quot;)
+        .unwrap();
+    let t = Instant::now();
+    let mut lignes = 0;
+    for i in 0..20i64 {
+        lignes = req.query_map([i % 14], |r| r.get::&lt;_, i64&gt;(0)).unwrap().count();
+    }
+    let sql = t.elapsed() / 20;
+    println!(
+        &quot;- courbe 24 h d&#39;un capteur à 1 Hz réduite à {} points : mémoire {} ; SQLite {} ({} seaux)&quot;,
+        sortie.len(),
+        ms(memoire),
+        ms(sql),
+        lignes
+    );
+    // Redémarrage à chaud : recharger 7 jours de toute la maison (1,13 million de relevés).
+    let total: usize = 1_129_783;
+    let par_point = total / 1_487 + 1;
+    {
+        let tx = conn.unchecked_transaction().unwrap();
+        tx.execute_batch(&quot;DELETE FROM samples&quot;).unwrap();
+        let mut ins = tx.prepare(&quot;INSERT INTO samples VALUES (?1, ?2, ?3)&quot;).unwrap();
+        let mut n = 0;
+        &#39;fin: for p in 0..1_487i64 {
+            for s in 0..par_point as i64 {
+                ins.execute((p, s * 1000, s as f64)).unwrap();
+                n += 1;
+                if n == total {
+                    break &#39;fin;
+                }
+            }
+        }
+        drop(ins);
+        tx.commit().unwrap();
+    }
+    let t = Instant::now();
+    let mut colonnes: HashMap&lt;i64, (Vec&lt;u32&gt;, Vec&lt;f32&gt;)&gt; = HashMap::new();
+    let mut tout = conn.prepare(&quot;SELECT point, ts, num FROM samples&quot;).unwrap();
+    let mut lignes = tout.query([]).unwrap();
+    while let Some(r) = lignes.next().unwrap() {
+        let (p, ts, v): (i64, i64, f64) = (r.get(0).unwrap(), r.get(1).unwrap(), r.get(2).unwrap());
+        let c = colonnes.entry(p).or_default();
+        c.0.push((ts / 1000) as u32);
+        c.1.push(v as f32);
+    }
+    let depuis_sql = t.elapsed();
+    // Le même contenu écrit en binaire compact, puis relu.
+    let mut binaire = Vec::with_capacity(total * 8 + 1_487 * 12);
+    for (p, (t, v)) in &amp;colonnes {
+        binaire.extend_from_slice(&amp;(*p as u32).to_le_bytes());
+        binaire.extend_from_slice(&amp;(t.len() as u32).to_le_bytes());
+        for x in t {
+            binaire.extend_from_slice(&amp;x.to_le_bytes());
+        }
+        for x in v {
+            binaire.extend_from_slice(&amp;x.to_le_bytes());
+        }
+    }
+    let t = Instant::now();
+    let mut relu: HashMap&lt;u32, (Vec&lt;u32&gt;, Vec&lt;f32&gt;)&gt; = HashMap::new();
+    let mut i = 0;
+    while i &lt; binaire.len() {
+        let p = u32::from_le_bytes(binaire[i..i + 4].try_into().unwrap());
+        let n = u32::from_le_bytes(binaire[i + 4..i + 8].try_into().unwrap()) as usize;
+        i += 8;
+        let t: Vec&lt;u32&gt; = binaire[i..i + 4 * n].chunks_exact(4).map(|b| u32::from_le_bytes(b.try_into().unwrap())).collect();
+        i += 4 * n;
+        let v: Vec&lt;f32&gt; = binaire[i..i + 4 * n].chunks_exact(4).map(|b| f32::from_le_bytes(b.try_into().unwrap())).collect();
+        i += 4 * n;
+        relu.insert(p, (t, v));
+    }
+    let depuis_bin = t.elapsed();
+    println!(
+        &quot;- redémarrage à chaud, 7 jours en mémoire ({} relevés) : relus depuis SQLite {} ; depuis un instantané binaire de {:.1} Mio {}&quot;,
+        total,
+        ms(depuis_sql),
+        binaire.len() as f64 / 1_048_576.0,
+        ms(depuis_bin)
+    );
+    std::hint::black_box(relu);
+}
+
+fn b4_compilation() {
+    println!(&quot;\n## B2.4 — compiler les automatismes à la validation&quot;);
+    let graphes: Vec&lt;String&gt; = (0..2_000).map(|k| graphe(k).to_string()).collect();
+    let t = Instant::now();
+    let mut points: HashMap&lt;String, u32&gt; = HashMap::new();
+    let mut plans: Vec&lt;Vec&lt;(u32, f64)&gt;&gt; = Vec::with_capacity(graphes.len());
+    for g in &amp;graphes {
+        let v: serde_json::Value = serde_json::from_str(g).unwrap();
+        let mut regles = Vec::new();
+        for n in v[&quot;nodes&quot;].as_array().unwrap() {
+            if let Some(rs) = n[&quot;rules&quot;].as_array() {
+                for r in rs {
+                    let nom = r[&quot;point&quot;].as_str().unwrap().to_owned();
+                    let suivant = points.len() as u32;
+                    let id = *points.entry(nom).or_insert(suivant);
+                    regles.push((id, r[&quot;value&quot;].as_f64().unwrap()));
+                }
+            }
+        }
+        plans.push(regles);
+    }
+    let duree = t.elapsed();
+    println!(
+        &quot;- 2 000 automatismes lus depuis leur JSON et compilés : {} au total, {:.1} µs chacun&quot;,
+        ms(duree),
+        duree.as_secs_f64() * 1e6 / 2_000.0
+    );
+    std::hint::black_box(plans);
+}
+
+fn main() {
+    println!(&quot;# Le coût de chaque choix (machine de test, 2 workers)&quot;);
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    rt.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison), cancel.clone());
+        while hub.stats().points &lt; 2_264 {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        b1_instantanes(&amp;hub);
+        cancel.cancel();
+    });
+    b2_saut_de_thread();
+    b3_courbe_et_reprise();
+    b4_compilation();
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>src/bin/pannes.rs</code></summary><pre class="rust"><code>//! P1-P2 : un bus entier qui tombe (broker, coordinateur, pont), puis l&#39;inondation quand il
+//! revient. Mesuré contre le vrai `moli-runtime` et le vrai moteur `moli-automation`.
+
+use std::collections::{HashMap, VecDeque};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+use moli_automation::{Actor, Author, Automation, Automations, Config, Graph, Mode};
+use moli_core::{Access, Device, DeviceId, InstanceId, Kind, Origin, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
+use tracing_subscriber::layer::SubscriberExt;
+
+fn rt() -&gt; tokio::runtime::Runtime {
+    tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap()
+}
+fn ms(d: Duration) -&gt; String {
+    format!(&quot;{:.1} ms&quot;, d.as_secs_f64() * 1e3)
+}
+fn q(v: &amp;mut [Duration], p: f64) -&gt; String {
+    if v.is_empty() {
+        return &quot;—&quot;.into();
+    }
+    v.sort();
+    ms(v[((v.len() - 1) as f64 * p) as usize])
+}
+fn lampe(id: DeviceId, instance: &amp;InstanceId, cle: &amp;str, kind: Kind, ecriture: bool) -&gt; Device {
+    Device {
+        id,
+        instance: instance.clone(),
+        native_name: &quot;fictif&quot;.into(),
+        manufacturer: None,
+        model: None,
+        description: None,
+        native_room: None,
+        members: vec![],
+        points: vec![PointSpec {
+            key: cle.into(),
+            label: cle.into(),
+            kind,
+            access: Access { read: true, write: ecriture },
+            unit: None,
+            semantic: Semantic::Other,
+        }],
+    }
+}
+
+// ---- P1 : un bus entier tombe ----------------------------------------------------
+
+const APPAREILS: usize = 50;
+
+/// État partagé du transport (le broker, le coordinateur Zigbee, le pont).
+struct Transport {
+    vivant: AtomicBool,
+}
+
+#[derive(Default)]
+struct Disjoncteur {
+    echecs: VecDeque&lt;Instant&gt;,
+    ouvert_jusqua: Option&lt;Instant&gt;,
+    sonde: bool,
+}
+
+struct Bus {
+    transport: Arc&lt;Transport&gt;,
+    disjoncteur_de_bus: bool,
+}
+
+async fn requete(t: &amp;Transport) -&gt; Result&lt;(), String&gt; {
+    // Une requête envoyée sur un transport mort n&#39;aboutit jamais : elle tombe au délai de
+    // 4 s de moli-net, même si le transport revient entre-temps (la connexion est perdue).
+    if t.vivant.load(Ordering::Acquire) {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        Ok(())
+    } else {
+        tokio::time::sleep(Duration::from_secs(4)).await;
+        Err(&quot;délai dépassé&quot;.into())
+    }
+}
+
+impl Driver for Bus {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;bus&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            for i in 0..APPAREILS {
+                let id = ctx.device_id(&amp;format!(&quot;a{i}&quot;));
+                ctx.upsert_device(lampe(id.clone(), &amp;ctx.instance().clone(), &quot;on&quot;, Kind::Binary, true));
+                ctx.set_availability(&amp;id, true);
+            }
+            ctx.ready();
+            let etat = Arc::new(Mutex::new(Disjoncteur::default()));
+            let (dispo_tx, mut dispo_rx) = mpsc::unbounded_channel::&lt;bool&gt;();
+            let mut voies = Vec::new();
+            let mut taches = tokio::task::JoinSet::new();
+            for _ in 0..APPAREILS {
+                let (tx, mut rx) = mpsc::channel::&lt;CommandRequest&gt;(8);
+                voies.push(tx);
+                let (transport, etat, dispo_tx, actif) = (self.transport.clone(), etat.clone(), dispo_tx.clone(), self.disjoncteur_de_bus);
+                taches.spawn(async move {
+                    while let Some(cmd) = rx.recv().await {
+                        if cmd.abandoned() {
+                            cmd.reply(Err(&quot;expiré avant l&#39;envoi&quot;.into()));
+                            continue;
+                        }
+                        let mut sonde = false;
+                        if actif {
+                            let mut e = etat.lock().unwrap();
+                            if let Some(t) = e.ouvert_jusqua {
+                                if Instant::now() &lt; t || e.sonde {
+                                    drop(e);
+                                    cmd.reply(Err(&quot;bus injoignable&quot;.into()));
+                                    continue;
+                                }
+                                e.sonde = true; // une seule requête d&#39;essai
+                                sonde = true;
+                            }
+                        }
+                        // L&#39;essai du disjoncteur a un délai court : la reprise ne doit pas
+                        // attendre le délai complet d&#39;une requête.
+                        let r = if sonde {
+                            tokio::time::timeout(Duration::from_millis(500), requete(&amp;transport))
+                                .await
+                                .unwrap_or_else(|_| Err(&quot;essai sans réponse&quot;.into()))
+                        } else {
+                            requete(&amp;transport).await
+                        };
+                        if actif {
+                            let mut e = etat.lock().unwrap();
+                            let maintenant = Instant::now();
+                            if r.is_ok() {
+                                if e.ouvert_jusqua.take().is_some() {
+                                    let _ = dispo_tx.send(true);
+                                }
+                                e.echecs.clear();
+                            } else {
+                                e.echecs.push_back(maintenant);
+                                while e.echecs.front().is_some_and(|t| maintenant - *t &gt; Duration::from_secs(10)) {
+                                    e.echecs.pop_front();
+                                }
+                                // Trois échecs sur des appareils du bus en 10 s : c&#39;est le bus.
+                                if e.echecs.len() &gt;= 3 || sonde {
+                                    if e.ouvert_jusqua.is_none() {
+                                        let _ = dispo_tx.send(false);
+                                    }
+                                    e.ouvert_jusqua = Some(maintenant + Duration::from_secs(1));
+                                }
+                            }
+                            if sonde {
+                                e.sonde = false;
+                            }
+                        }
+                        cmd.reply(r);
+                    }
+                });
+            }
+            loop {
+                tokio::select! {
+                    cmd = ctx.next_command() =&gt; {
+                        let Some(cmd) = cmd else { break };
+                        let i: usize = cmd.device.id.as_str()[&quot;bus:a&quot;.len()..].parse().unwrap();
+                        if let Err(e) = voies[i].try_send(cmd) {
+                            let c = match e { mpsc::error::TrySendError::Full(c) | mpsc::error::TrySendError::Closed(c) =&gt; c };
+                            c.reply(Err(&quot;file de l&#39;appareil pleine&quot;.into()));
+                        }
+                    }
+                    Some(en_ligne) = dispo_rx.recv() =&gt; {
+                        for i in 0..APPAREILS {
+                            ctx.set_availability(&amp;ctx.device_id(&amp;format!(&quot;a{i}&quot;)), en_ligne);
+                        }
+                    }
+                    fin = taches.join_next() =&gt; anyhow::bail!(&quot;voie arrêtée : {fin:?}&quot;),
+                }
+            }
+            Ok(())
+        })
+    }
+}
+
+struct Sain;
+impl Driver for Sain {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;sain&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let id = ctx.device_id(&quot;l1&quot;);
+            ctx.upsert_device(lampe(id, &amp;ctx.instance().clone(), &quot;on&quot;, Kind::Binary, true));
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+fn p1(disjoncteur: bool) {
+    rt().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let transport = Arc::new(Transport { vivant: AtomicBool::new(true) });
+        spawn_driver(&amp;hub, &quot;bus&quot;.into(), Arc::new(Bus { transport: transport.clone(), disjoncteur_de_bus: disjoncteur }), cancel.clone());
+        spawn_driver(&amp;hub, &quot;sain&quot;.into(), Arc::new(Sain), cancel.clone());
+        while hub.device(&amp;DeviceId::from(&quot;bus:a49&quot;)).is_none() || hub.device(&amp;DeviceId::from(&quot;sain:l1&quot;)).is_none() {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        let debut = Instant::now();
+        let sain = Arc::new(Mutex::new(Vec::new()));
+        let panne = Arc::new(Mutex::new(Vec::new()));
+        let premier_succes = Arc::new(Mutex::new(None::&lt;Duration&gt;));
+        let mut taches = Vec::new();
+        // 30 s : bus vivant 5 s, mort 15 s, vivant 10 s ; 10 ordres/s vers le bus, 10/s ailleurs.
+        for n in 0..300usize {
+            let t = debut.elapsed();
+            transport.vivant.store(!(Duration::from_secs(5)..Duration::from_secs(20)).contains(&amp;t), Ordering::Release);
+            let (h, panne, premier) = (hub.clone(), panne.clone(), premier_succes.clone());
+            taches.push(tokio::spawn(async move {
+                let p = PointId::from(format!(&quot;bus:a{}/on&quot;, (n * 7) % APPAREILS));
+                let t0 = Instant::now();
+                let r = h.command(&amp;p, Value::Bool(n % 2 == 0), Origin::Automation, None).await;
+                let d = t0.elapsed();
+                if (Duration::from_secs(5)..Duration::from_secs(20)).contains(&amp;t) {
+                    panne.lock().unwrap().push(d);
+                } else if t &gt;= Duration::from_secs(20) &amp;&amp; r.is_ok() {
+                    let mut f = premier.lock().unwrap();
+                    if f.is_none() {
+                        *f = Some(t + d - Duration::from_secs(20));
+                    }
+                }
+            }));
+            let (h, sain) = (hub.clone(), sain.clone());
+            taches.push(tokio::spawn(async move {
+                let t0 = Instant::now();
+                let _ = h.command(&amp;PointId::from(&quot;sain:l1/on&quot;), Value::Bool(n % 2 == 0), Origin::Automation, None).await;
+                sain.lock().unwrap().push(t0.elapsed());
+            }));
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        for t in taches {
+            let _ = t.await;
+        }
+        let hors_ligne = hub.device(&amp;DeviceId::from(&quot;bus:a3&quot;)).map(|d| d.online);
+        let mut s = sain.lock().unwrap().clone();
+        let mut p = panne.lock().unwrap().clone();
+        println!(
+            &quot;- {} : autre pilote p50 {} p99 {} ; ordres au bus pendant la panne : médiane {} ({} ordres) ; reprise : premier succès {} après le retour du bus ; appareil du bus à la fin : {:?}&quot;,
+            if disjoncteur { &quot;voies + disjoncteur de bus&quot; } else { &quot;voies seules              &quot; },
+            q(&amp;mut s, 0.5),
+            q(&amp;mut s, 0.99),
+            q(&amp;mut p, 0.5),
+            p.len(),
+            premier_succes.lock().unwrap().map_or(&quot;—&quot;.into(), ms),
+            hors_ligne
+        );
+        cancel.cancel();
+    });
+}
+
+// ---- P2 : l&#39;inondation au retour du bus, contre le vrai moteur -------------------
+
+struct Retards {
+    fois: Arc&lt;AtomicUsize&gt;,
+    manques: Arc&lt;AtomicU64&gt;,
+}
+impl&lt;S: tracing::Subscriber&gt; tracing_subscriber::Layer&lt;S&gt; for Retards {
+    fn on_event(&amp;self, e: &amp;tracing::Event&lt;&#39;_&gt;, _: tracing_subscriber::layer::Context&lt;&#39;_, S&gt;) {
+        if *e.metadata().level() != tracing::Level::WARN {
+            return;
+        }
+        struct V(bool, u64);
+        impl tracing::field::Visit for V {
+            fn record_debug(&amp;mut self, f: &amp;tracing::field::Field, v: &amp;dyn std::fmt::Debug) {
+                if f.name() == &quot;message&quot; &amp;&amp; format!(&quot;{v:?}&quot;).contains(&quot;automations lagged&quot;) {
+                    self.0 = true;
+                }
+            }
+            fn record_u64(&amp;mut self, f: &amp;tracing::field::Field, v: u64) {
+                if f.name() == &quot;missed&quot; {
+                    self.1 = v;
+                }
+            }
+        }
+        let mut v = V(false, 0);
+        e.record(&amp;mut v);
+        if v.0 {
+            self.fois.fetch_add(1, Ordering::Relaxed);
+            self.manques.fetch_add(v.1, Ordering::Relaxed);
+        }
+    }
+}
+
+const CAPTEURS: usize = 1_800;
+const LAMPES: usize = 400;
+
+struct Maison {
+    arrivees: Arc&lt;Mutex&lt;Vec&lt;(usize, Instant)&gt;&gt;&gt;,
+    injections: Mutex&lt;Option&lt;mpsc::UnboundedReceiver&lt;(usize, f64)&gt;&gt;&gt;,
+    /// Tampon d&#39;entrée : la dernière valeur de chaque point gagne, vidé toutes les 10 ms.
+    coalescence: bool,
+}
+fn capteur(s: usize) -&gt; (DeviceId, String) {
+    (DeviceId::from(format!(&quot;maison:c{}&quot;, s / 5)), format!(&quot;v{}&quot;, s % 5))
+}
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            for d in 0..CAPTEURS / 5 {
+                let id = DeviceId::from(format!(&quot;maison:c{d}&quot;));
+                let mut dev = lampe(id.clone(), &amp;instance, &quot;v0&quot;, Kind::Numeric { min: None, max: None, step: None }, false);
+                dev.points = (0..5)
+                    .map(|k| PointSpec {
+                        key: format!(&quot;v{k}&quot;).into(),
+                        label: &quot;v&quot;.into(),
+                        kind: Kind::Numeric { min: None, max: None, step: None },
+                        access: Access { read: true, write: false },
+                        unit: None,
+                        semantic: Semantic::Other,
+                    })
+                    .collect();
+                ctx.upsert_device(dev);
+                for k in 0..5 {
+                    ctx.set_state(&amp;id, &amp;format!(&quot;v{k}&quot;), Value::Float(0.0));
+                }
+            }
+            for k in 0..LAMPES {
+                let id = DeviceId::from(format!(&quot;maison:l{k}&quot;));
+                ctx.upsert_device(lampe(id.clone(), &amp;instance, &quot;on&quot;, Kind::Binary, true));
+                ctx.set_state(&amp;id, &quot;on&quot;, Value::Bool(false));
+            }
+            let mut rx = self.injections.lock().unwrap().take().unwrap();
+            let mut tampon: HashMap&lt;usize, f64&gt; = HashMap::new();
+            let mut vidage = tokio::time::interval(Duration::from_millis(10));
+            ctx.ready();
+            loop {
+                tokio::select! {
+                    cmd = ctx.next_command() =&gt; {
+                        let Some(cmd) = cmd else { return Ok(()) };
+                        let k: usize = cmd.device.id.as_str()[&quot;maison:l&quot;.len()..].parse().unwrap();
+                        self.arrivees.lock().unwrap().push((k, Instant::now()));
+                        ctx.set_state(&amp;cmd.device.id, &amp;cmd.key, cmd.value.clone());
+                        cmd.reply(Ok(()));
+                    }
+                    inj = rx.recv() =&gt; {
+                        let Some((s, v)) = inj else { return Ok(()) };
+                        if self.coalescence {
+                            tampon.insert(s, v);
+                        } else {
+                            let (id, key) = capteur(s);
+                            ctx.set_state(&amp;id, &amp;key, Value::Float(v));
+                        }
+                    }
+                    _ = vidage.tick(), if self.coalescence =&gt; {
+                        for (s, v) in tampon.drain() {
+                            let (id, key) = capteur(s);
+                            ctx.set_state(&amp;id, &amp;key, Value::Float(v));
+                        }
+                    }
+                }
+            }
+        })
+    }
+}
+
+fn declencheur(k: usize) -&gt; usize {
+    100 + k
+}
+
+fn p2(coalescence: bool, fois: &amp;Arc&lt;AtomicUsize&gt;, manques: &amp;Arc&lt;AtomicU64&gt;) {
+    rt().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let arrivees = Arc::new(Mutex::new(Vec::new()));
+        let (tx, rx) = mpsc::unbounded_channel();
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { arrivees: arrivees.clone(), injections: Mutex::new(Some(rx)), coalescence }), cancel.clone());
+        while hub.state(&amp;PointId::from(format!(&quot;maison:l{}/on&quot;, LAMPES - 1))).is_none() {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        let (autos, _t) = Automations::start(&amp;hub, Config::default(), None, cancel.clone()).await.unwrap();
+        let humain = Actor { human: true, author: Author::Human };
+        for k in 0..LAMPES {
+            let (d, key) = capteur(declencheur(k));
+            let regles: Vec&lt;serde_json::Value&gt; = (0..3)
+                .map(|j| {
+                    let (cd, ck) = capteur(1_000 + (k * 7 + j * 13) % 690);
+                    serde_json::json!({&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:format!(&quot;{cd}/{ck}&quot;),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0})
+                })
+                .collect();
+            let g = serde_json::json!({
+                &quot;nodes&quot;:[{&quot;id&quot;:&quot;t&quot;,&quot;type&quot;:&quot;when_state&quot;,&quot;point&quot;:format!(&quot;{d}/{key}&quot;)},
+                         {&quot;id&quot;:&quot;c&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:regles},
+                         {&quot;id&quot;:&quot;a&quot;,&quot;type&quot;:&quot;toggle&quot;,&quot;point&quot;:format!(&quot;maison:l{k}/on&quot;)}],
+                &quot;edges&quot;:[{&quot;from&quot;:&quot;t&quot;,&quot;to&quot;:&quot;c&quot;},{&quot;from&quot;:&quot;c&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;a&quot;}]
+            });
+            let a = autos
+                .save(
+                    Automation {
+                        id: String::new(),
+                        name: format!(&quot;A{k}&quot;),
+                        enabled: true,
+                        mode: Mode::Restart,
+                        graph: serde_json::from_value::&lt;Graph&gt;(g).unwrap(),
+                        author: Author::Human,
+                        approved: None,
+                        approved_version: None,
+                        activation: None,
+                        note: None,
+                        created: 0,
+                        updated: 0,
+                    },
+                    humain,
+                )
+                .await
+                .unwrap();
+            autos.approve(&amp;a.id, &amp;a.fingerprint(), humain).await.unwrap();
+        }
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        fois.store(0, Ordering::Relaxed);
+        manques.store(0, Ordering::Relaxed);
+        let depuis = arrivees.lock().unwrap().len();
+        // Le bus revient : 5 000 valeurs republiées d&#39;un coup sur 700 capteurs (7 chacun),
+        // puis cinq vrais déclencheurs.
+        let mut v = 1.0;
+        for i in 0..5_000usize {
+            v += 1.0;
+            tx.send((1_000 + (i * 7_919) % 700, v)).unwrap();
+        }
+        let mut sondes = Vec::new();
+        for j in 0..5 {
+            v += 1.0;
+            let k = 20 + 17 * j;
+            sondes.push((k, Instant::now()));
+            tx.send((declencheur(k), v)).unwrap();
+        }
+        tokio::time::sleep(Duration::from_secs(3)).await;
+        let arr = arrivees.lock().unwrap();
+        let mut lat = Vec::new();
+        let mut perdues = 0;
+        for (k, t0) in &amp;sondes {
+            match arr[depuis..].iter().find(|(a, t)| a == k &amp;&amp; t &gt;= t0) {
+                Some((_, t)) =&gt; lat.push(*t - *t0),
+                None =&gt; perdues += 1,
+            }
+        }
+        println!(
+            &quot;- {} : déclencheurs après l&#39;inondation : {} perdus sur 5, latence médiane {} ; retards du moteur {} ({} événements manqués)&quot;,
+            if coalescence { &quot;avec tampon d&#39;entrée (dernière valeur, 10 ms)&quot; } else { &quot;sans tampon d&#39;entrée                        &quot; },
+            perdues,
+            q(&amp;mut lat, 0.5),
+            fois.load(Ordering::Relaxed),
+            manques.load(Ordering::Relaxed)
+        );
+        cancel.cancel();
+    });
+}
+
+fn main() {
+    let fois = Arc::new(AtomicUsize::new(0));
+    let manques = Arc::new(AtomicU64::new(0));
+    tracing::subscriber::set_global_default(tracing_subscriber::registry().with(Retards { fois: fois.clone(), manques: manques.clone() })).unwrap();
+    println!(&quot;# Pannes : un bus qui tombe, puis l&#39;inondation à son retour&quot;);
+    println!(&quot;\n## P1 — un bus de 50 appareils mort 15 s (de 5 s à 20 s), 10 ordres/s vers lui, 10 ordres/s vers un autre pilote&quot;);
+    p1(false);
+    p1(true);
+    if std::env::args().nth(1).as_deref() == Some(&quot;p1&quot;) {
+        return;
+    }
+    println!(&quot;\n## P2 — le bus revient et republie 5 000 valeurs d&#39;un coup ; 400 automatismes réels&quot;);
+    for _ in 0..3 {
+        p2(false, &amp;fois, &amp;manques);
+        p2(true, &amp;fois, &amp;manques);
+    }
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>src/bin/veille.rs</code></summary><pre class="rust"><code>//! B3 : la mémoire résidente d&#39;un processus Rust minimal avec un runtime Tokio,
+//! l&#39;ordre de grandeur d&#39;« un processus par pilote ».
+fn main() {
+    if std::env::args().nth(1).as_deref() == Some(&quot;enfant&quot;) {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        rt.block_on(async { tokio::time::sleep(std::time::Duration::from_secs(3)).await });
+        return;
+    }
+    let mut enfants: Vec&lt;std::process::Child&gt; = (0..10)
+        .map(|_| std::process::Command::new(std::env::current_exe().unwrap()).arg(&quot;enfant&quot;).spawn().unwrap())
+        .collect();
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    let mut total = 0u64;
+    for e in &amp;enfants {
+        let out = std::process::Command::new(&quot;ps&quot;).args([&quot;-o&quot;, &quot;rss=&quot;, &quot;-p&quot;, &amp;e.id().to_string()]).output().unwrap();
+        total += String::from_utf8_lossy(&amp;out.stdout).trim().parse::&lt;u64&gt;().unwrap_or(0);
+    }
+    println!(&quot;- processus Rust minimal avec un runtime Tokio : {} Kio de RSS en moyenne (10 processus, machine de test)&quot;, total / 10);
+    for e in &amp;mut enfants {
+        let _ = e.wait();
+    }
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>linux-couts/src/main.rs (conteneur rust:1-alpine)</code></summary><pre class="rust"><code>//! Linux musl : RSS d&#39;un processus minimal par pilote, et d&#39;un thread + runtime par pilote.
+fn rss_kio(pid: u32) -&gt; u64 {
+    std::fs::read_to_string(format!(&quot;/proc/{pid}/status&quot;)).ok()
+        .and_then(|s| s.lines().find(|l| l.starts_with(&quot;VmRSS:&quot;)).map(|l| l.split_whitespace().nth(1).unwrap().parse().unwrap()))
+        .unwrap_or(0)
+}
+fn main() {
+    if std::env::args().nth(1).as_deref() == Some(&quot;enfant&quot;) {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        rt.block_on(async { tokio::time::sleep(std::time::Duration::from_secs(3)).await });
+        return;
+    }
+    let mut enfants: Vec&lt;std::process::Child&gt; = (0..10)
+        .map(|_| std::process::Command::new(std::env::current_exe().unwrap()).arg(&quot;enfant&quot;).spawn().unwrap())
+        .collect();
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    let total: u64 = enfants.iter().map(|e| rss_kio(e.id())).sum();
+    println!(&quot;- Linux musl : processus minimal avec un runtime Tokio : {} Kio de RSS en moyenne&quot;, total / 10);
+    for e in &amp;mut enfants { let _ = e.wait(); }
+    let moi = std::process::id();
+    let avant = rss_kio(moi);
+    let (tx, rx) = std::sync::mpsc::channel::&lt;()&gt;();
+    let rx = std::sync::Arc::new(std::sync::Mutex::new(rx));
+    let mut fils = Vec::new();
+    for _ in 0..40 {
+        let rx = rx.clone();
+        fils.push(std::thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+            rt.block_on(async { tokio::time::sleep(std::time::Duration::from_secs(2)).await });
+            drop(rx);
+        }));
+    }
+    std::thread::sleep(std::time::Duration::from_millis(500));
+    let apres = rss_kio(moi);
+    println!(&quot;- Linux musl : 40 threads avec chacun un runtime Tokio : {} Kio de RSS, soit {} Kio par pilote&quot;, apres - avant, (apres - avant) / 40);
+    drop(tx);
+    for f in fils { let _ = f.join(); }
+}</code></pre></details>
+</section>
+
+        <footer><span>Moli OS · analyse V3 : le pattern, la mémoire, le coût des choix · 21 octobre 2026</span><a href="#top">Haut de page ↑</a></footer>
+      </article>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const printButton = document.getElementById('print-document');
+      printButton.hidden = false;
+      printButton.addEventListener('click', () => window.print());
+      const sections = Array.from(document.querySelectorAll('article > section[id]'));
+      const links = Array.from(document.querySelectorAll('aside nav a'));
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting);
+          if (!visible.length) return;
+          const section = visible[0].target;
+          for (const link of links) {
+            if (decodeURIComponent(link.hash.slice(1)) === section.id) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          }
+        }, { rootMargin: '-10% 0px -75% 0px' });
+        sections.forEach(section => observer.observe(section));
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,3186 @@
+<!doctype html>
+<html lang="fr" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Analyse V2 Moli OS : workflows de toute forme, cloisons contre les appareils muets, mémoire calibrée sur deux Home Assistant réels et relance rapide sur une autre machine, mesurés contre le vrai moteur.">
+  <meta name="source-markdown" content="isolation-reactivite-runtime-v2.md">
+  <meta name="source-sha256" content="38affd9ae55a2f2e05d1a9ec381322f8e744db063447905c5364706fa7dfb5d0">
+  <title>Workflows, cloisons et secours · Moli OS</title>
+  <style>
+    :root {
+      --paper: #fffdf8; --page: #f0f1ec; --ink: #1d302a; --muted: #52615a;
+      --line: #d4ddd4; --soft: #f4f6f1; --green: #195744; --green-soft: #e6eee5;
+      --warm: #8b3b22; --warm-soft: #fae9df; --amber: #835c00; --amber-soft: #fbf0d6;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 90px; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 var(--sans); }
+    a { color: var(--green); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    button { font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--warm); outline-offset: 4px; }
+    .skip { position: fixed; top: 8px; left: 8px; z-index: 20; padding: 10px 16px; background: var(--paper); transform: translateY(-160%); }
+    .skip:focus { transform: none; }
+    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: var(--paper); }
+    .topbar-inner { max-width: 1440px; min-height: 68px; padding: 12px 36px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 750; }
+    .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; background: var(--green); color: white; border-radius: 7px; font: 23px/1 var(--serif); }
+    .brand-sub { border-left: 1px solid var(--line); padding-left: 15px; margin-left: 4px; font-size: 12px; font-weight: 500; color: var(--muted); }
+    .actions { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+    .print { border: 1px solid var(--line); padding: 8px 13px; border-radius: 5px; color: var(--ink); background: var(--soft); min-height: 42px; }
+    .print:hover { background: var(--green-soft); border-color: var(--green); }
+    .frame { max-width: 1440px; margin: auto; padding: 34px 36px 60px; display: grid; grid-template-columns: 238px minmax(0, 1fr); align-items: start; gap: 38px; }
+    aside { position: sticky; top: 95px; max-height: calc(100dvh - 115px); overflow-y: auto; padding-right: 12px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 750; }
+    aside .eyebrow { color: var(--muted); margin: 8px 0 17px 9px; }
+    aside ul, .mobile-toc ul { list-style: none; padding: 0; margin: 0; }
+    aside li { margin: 0 0 3px; }
+    aside a { display: block; padding: 8px 9px; color: var(--muted); font-size: 12px; line-height: 1.5; text-decoration: none; border-left: 2px solid transparent; }
+    aside a:hover, aside a[aria-current="location"] { background: var(--green-soft); color: var(--green); border-left-color: var(--green); }
+    .sidebar-note { margin: 23px 9px 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 12px; color: var(--muted); }
+    main { min-width: 0; }
+    .cover { padding: 8px 0 30px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 24px; color: var(--muted); font-size: 12px; }
+    .status { padding: 3px 9px; border: 1px solid #e0bdaa; color: var(--warm); border-radius: 3px; background: var(--warm-soft); font-weight: 650; }
+    h1 { font: 500 clamp(40px, 4.9vw, 72px)/1.06 var(--serif); letter-spacing: -.035em; margin: 0 0 23px; }
+    h1 span { display: block; color: var(--green); }
+    .lead { max-width: 760px; font-size: 18px; line-height: 1.65; margin: 0; color: var(--muted); }
+    .verdict { border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .verdict-head { padding: 15px 21px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line); }
+    .verdict-head span { font-size: 12px; color: var(--muted); }
+    .verdict-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: 20px 18px 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-top: 4px solid var(--line); }
+    .card:nth-child(4n) { border-right: 0; }
+    .card:nth-last-child(-n+4) { border-bottom: 0; }
+    .card.ok { border-top-color: var(--green); }
+    .card.high { border-top-color: var(--warm); }
+    .card.mid { border-top-color: #c79a2e; }
+    .card .number { font: 11px var(--mono); color: var(--muted); margin-bottom: 10px; display: block; }
+    .card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .card p { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+    .figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .figure-item { padding: 16px 18px; border-right: 1px solid var(--line); }
+    .figure-item:last-child { border-right: 0; }
+    .figure-item strong { display: block; font: 24px/1.3 var(--mono); color: var(--green); }
+    .figure-item span { font-size: 12px; color: var(--muted); line-height: 1.45; display: block; }
+    figure.diagram { margin: 0 0 22px; padding: 18px; background: var(--paper); border: 1px solid var(--line); }
+    figure.diagram svg { display: block; width: 100%; height: auto; }
+    figure.diagram figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .sev { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 750; letter-spacing: .02em; white-space: nowrap; vertical-align: 2px; }
+    .sev-high { background: var(--warm-soft); color: var(--warm); border: 1px solid #e0bdaa; }
+    .sev-crit { background: var(--warm); color: white; border: 1px solid var(--warm); }
+    .sev-mid { background: var(--amber-soft); color: var(--amber); border: 1px solid #e8d29b; }
+    .sev-low { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+    .sev-ok { background: var(--green-soft); color: var(--green); border: 1px solid #b9cdbd; }
+    h3 .sev { margin-left: 8px; font-size: 12px; }
+    .mobile-toc { display: none; }
+    article { padding: 32px 38px 36px; background: var(--paper); border: 1px solid var(--line); overflow-wrap: break-word; }
+    article > p { color: var(--muted); font-size: 13.5px; }
+    article p { margin: 0 0 1.15em; }
+    article h2 { font-size: clamp(23px, 2.2vw, 29px); font-weight: 650; line-height: 1.3; letter-spacing: -.025em; margin: 40px 0 21px; padding-top: 30px; border-top: 1px solid var(--line); text-wrap: balance; }
+    article h3 { margin: 30px 0 15px; font-size: 19px; font-weight: 650; line-height: 1.4; }
+    article ul, article ol { padding-left: 24px; margin: 0 0 22px; }
+    article li { padding-left: 3px; margin-bottom: 9px; }
+    code { background: var(--soft); padding: 2px 5px; font: .86em var(--mono); overflow-wrap: anywhere; }
+    pre { background: var(--soft); padding: 18px; white-space: pre-wrap; line-height: 1.6; overflow-wrap: anywhere; }
+    pre code { padding: 0; background: transparent; font-size: 12px; }
+    details.code { border: 1px solid var(--line); margin: 0 0 22px; }
+    details.code > summary { padding: 13px 18px; cursor: pointer; font-weight: 650; font-size: 14px; min-height: 48px; }
+    details.code[open] > summary { border-bottom: 1px solid var(--line); }
+    details.code pre { margin: 0; max-height: 640px; overflow: auto; white-space: pre; }
+    .table-wrap { max-width: 100%; overflow-x: auto; margin: 22px 0; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 12.5px; line-height: 1.6; }
+    th, td { padding: 11px 12px; vertical-align: top; text-align: left; border-bottom: 1px solid var(--line); }
+    th { background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 750; }
+    td:first-child { font-weight: 600; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr > * + * { border-left: 1px solid #e5eae1; }
+    footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 21px; color: var(--muted); font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1100px) {
+      .frame { grid-template-columns: 205px minmax(0, 1fr); gap: 24px; padding-inline: 24px; }
+      .topbar-inner { padding-inline: 24px; }
+      article { padding: 25px; }
+      .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card:nth-child(4n) { border-right: 1px solid var(--line); }
+      .card:nth-child(2n) { border-right: 0; }
+      .card:nth-last-child(-n+4) { border-bottom: 1px solid var(--line); }
+      .card:nth-last-child(-n+2) { border-bottom: 0; }
+      .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .figure-item:nth-child(2) { border-right: 0; }
+      .figure-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    }
+    @media (max-width: 780px) {
+      .frame { display: block; padding: 24px 16px 40px; }
+      .topbar-inner { padding-inline: 16px; }
+      aside, .brand-sub { display: none; }
+      .actions { gap: 12px; font-size: 12px; }
+      .cover { padding-top: 0; }
+      h1 { font-size: clamp(38px, 9vw, 58px); }
+      .lead { font-size: 16px; }
+      article { padding: 18px; }
+      .verdict-grid { grid-template-columns: 1fr; }
+      .card, .card:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .card:last-child { border-bottom: 0; }
+      .figures { grid-template-columns: 1fr; }
+      .figure-item, .figure-item:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .figure-item:last-child { border-bottom: 0; }
+      figure.diagram { padding: 12px; overflow-x: auto; }
+      figure.diagram svg { min-width: 760px; }
+      .mobile-toc { display: block; padding: 0 17px; margin: 0 0 22px; background: var(--paper); border: 1px solid var(--line); }
+      .mobile-toc summary { padding: 13px 0; min-height: 50px; cursor: pointer; font-size: 14px; font-weight: 650; }
+      .mobile-toc a { display: block; padding: 8px 0; font-size: 13px; }
+      .mobile-toc ul { padding-bottom: 13px; }
+    }
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      body { background: white; font-size: 10pt; color: black; }
+      .topbar, aside, .mobile-toc, .skip { display: none; }
+      .frame { display: block; max-width: none; padding: 0; }
+      h1 { font-size: 34pt; }
+      .lead { font-size: 12pt; }
+      article { border: 0; padding: 0; }
+      article h2 { break-after: avoid; font-size: 16pt; }
+      article h3 { break-after: avoid; font-size: 12pt; }
+      .verdict, .figures, figure.diagram, pre, tr { break-inside: avoid; }
+      details.code pre { max-height: none; white-space: pre-wrap; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; font-size: 9pt; }
+      th, td { padding: 6px 7px; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#document">Aller au document</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">m</span>Moli OS<span class="brand-sub">Propositions techniques</span></a>
+      <div class="actions"><a href="isolation-reactivite-runtime-v2.md">Source Markdown</a><button class="print" id="print-document" type="button" hidden>Imprimer / PDF</button></div>
+    </div>
+  </header>
+  <div class="frame">
+    <aside>
+      <p class="eyebrow">Dans ce document</p>
+      <nav aria-label="Sommaire du document"><ul>
+<li><a href="#1-réponse-courte">1. Réponse courte</a></li>
+<li><a href="#2-données-de-référence--deux-home-assistant-réels">2. Données de référence : deux Home Assistant réels</a></li>
+<li><a href="#3-workflows--tous-les-types">3. Workflows : tous les types</a></li>
+<li><a href="#4-tampons-et-cloisons">4. Tampons et cloisons</a></li>
+<li><a href="#5-mémoire--peut-on-se-lâcher-">5. Mémoire : peut-on se lâcher ?</a></li>
+<li><a href="#6-relancer-vite-sur-une-autre-machine">6. Relancer vite sur une autre machine</a></li>
+<li><a href="#7-plan-proposé">7. Plan proposé</a></li>
+<li><a href="#8-limites">8. Limites</a></li>
+<li><a href="#annexe-a--bancs-dessai">Annexe A — Bancs d'essai</a></li>
+<li><a href="#annexe-b--données-des-deux-instances">Annexe B — Données des deux instances</a></li>
+      </ul></nav>
+      <p class="sidebar-note">Tout passe par le hub.<br>Rien ne doit l'arrêter.<br>Six bancs rejouables.</p>
+    </aside>
+    <main>
+      <div class="cover">
+        <div class="meta"><span class="status">Analyse V2 · aucune modification du code</span><span>21 octobre 2026</span><span>Workflows, cloisons, mémoire, secours · commit bd1714d</span></div>
+        <h1>Tout passe par le hub,<span>rien ne doit l'arrêter.</span></h1>
+        <p class="lead">Des workflows de toute forme, des appareils qui ne répondent pas, une mémoire mieux employée et une reprise rapide sur une autre machine : mesuré sur le vrai moteur, calibré sur deux Home Assistant très chargés. La <a href="isolation-reactivite-runtime.html">première analyse</a> reste valable.</p>
+      </div>
+
+      <section class="verdict" aria-label="Verdict de la V2">
+        <div class="verdict-head"><strong class="eyebrow">Ce que la V2 établit</strong><span>Deux défauts à corriger, des solutions mesurées, des précautions.</span></div>
+        <div class="verdict-grid">
+          <div class="card high"><span class="number">01 / RAFALES · W2</span><h2>Le moteur perd des déclencheurs</h2><p>Un retard du bus neutralise aussi les événements encore en file : 5 sur 5 perdus juste après 5&nbsp;000 événements.</p><span class="sev sev-high">À corriger</span></div>
+          <div class="card high"><span class="number">02 / TEMPORAIRE</span><h2>« Allume 30 minutes » s'oublie</h2><p>L'attente vit en mémoire : un redémarrage ou une bascule la perd, la lumière reste allumée.</p><span class="sev sev-high">À corriger</span></div>
+          <div class="card ok"><span class="number">03 / COMPILÉ · I1 I2</span><h2>Un moteur compilé</h2><p>3 à 11&nbsp;ns par événement au lieu de 0,9 à 54&nbsp;µs ; un agrégat lu en 1&nbsp;ns au lieu de 150&nbsp;µs par SQLite.</p><span class="sev sev-ok">Solution mesurée</span></div>
+          <div class="card ok"><span class="number">04 / THREADS · C1 K1</span><h2>Un thread par pilote</h2><p>Le cœur reste à 0,1&nbsp;ms avec six pilotes bloquants, le moteur voit tout ; 52&nbsp;Kio par pilote.</p><span class="sev sev-ok">Solution mesurée</span></div>
+          <div class="card ok"><span class="number">05 / VOIES · C2 C3</span><h2>Une voie par appareil</h2><p>Derrière un pont avec une lampe muette : 100&nbsp;% des ordres sains réussis au lieu de 16&nbsp;%.</p><span class="sev sev-ok">Solution mesurée</span></div>
+          <div class="card mid"><span class="number">06 / HUB</span><h2>Tout passe par le hub</h2><p>Vérifié. Ses tâches doivent tourner sur le runtime du cœur, et il doit se protéger des inondations.</p><span class="sev sev-mid">Précaution</span></div>
+          <div class="card ok"><span class="number">07 / MÉMOIRE · M</span><h2>On peut se lâcher</h2><p>Valeurs des deux maisons : 1&nbsp;Mio ; 24&nbsp;h d'historique : 1,4&nbsp;Mio ; 7 jours : 8,8&nbsp;Mio en format compact.</p><span class="sev sev-ok">Solution mesurée</span></div>
+          <div class="card mid"><span class="number">08 / SECOURS · R</span><h2>Relancer ailleurs</h2><p>Hub reconstruit en 11 à 14&nbsp;ms depuis 20&nbsp;Kio ; secours passif, une seule machine maîtresse.</p><span class="sev sev-mid">Précaution</span></div>
+        </div>
+      </section>
+
+      <div class="figures" aria-label="Chiffres clés mesurés">
+        <div class="figure-item"><strong>×5&nbsp;000</strong><span>moteur compilé contre balayage, à 10&nbsp;000 automatismes</span></div>
+        <div class="figure-item"><strong>100&nbsp;%</strong><span>d'ordres sains réussis avec une voie par appareil, contre 16&nbsp;%</span></div>
+        <div class="figure-item"><strong>8,8&nbsp;Mio</strong><span>pour 7 jours d'historique des deux maisons en mémoire</span></div>
+        <div class="figure-item"><strong>11&nbsp;ms</strong><span>pour reconstruire le hub depuis l'instantané, sur une autre machine</span></div>
+      </div>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 560" role="img" aria-labelledby="diagram-title diagram-desc" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="diagram-title">Architecture cible</title>
+          <desc id="diagram-desc">La machine principale contient le runtime du cœur avec le hub, le moteur compilé et l'API, et les pilotes chacun sur leur thread, avec des voies par appareil et une passerelle pour les API partagées. Elle pousse un instantané et un journal vers une machine de secours passive, qui ne se connecte à aucun appareil et ne reprend la main qu'après une bascule avec une nouvelle époque.</desc>
+          <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#52615a"/></marker></defs>
+          <rect x="8" y="8" width="670" height="544" rx="10" fill="#fffdf8" stroke="#1d302a" stroke-width="1.3"/>
+          <text x="26" y="34" font-size="15" font-weight="700" fill="#1d302a">Machine principale</text>
+          <rect x="24" y="48" width="638" height="196" rx="8" fill="#e6eee5" stroke="#195744"/>
+          <text x="40" y="72" font-size="13.5" font-weight="700" fill="#195744">Runtime du cœur · aucun pilote ne s'y exécute</text>
+          <rect x="40" y="86" width="196" height="144" rx="7" fill="#fffdf8" stroke="#195744"/>
+          <text x="138" y="110" font-size="14" font-weight="700" text-anchor="middle" fill="#1d302a">Hub</text>
+          <text x="138" y="132" font-size="11.5" text-anchor="middle" fill="#52615a">modèle, bus, garde, journal</text>
+          <text x="138" y="152" font-size="11.5" text-anchor="middle" fill="#195744">budget d'entrée par pilote</text>
+          <text x="138" y="170" font-size="11.5" text-anchor="middle" fill="#195744">coalescence par point</text>
+          <text x="138" y="190" font-size="11.5" text-anchor="middle" fill="#195744">tâches internes sur le cœur</text>
+          <text x="138" y="212" font-size="11" text-anchor="middle" fill="#52615a">valeurs, 24 h ou 7 j compacts</text>
+          <rect x="250" y="86" width="230" height="144" rx="7" fill="#fffdf8" stroke="#195744"/>
+          <text x="365" y="110" font-size="14" font-weight="700" text-anchor="middle" fill="#1d302a">Moteur compilé</text>
+          <text x="365" y="132" font-size="11.5" text-anchor="middle" fill="#52615a">plans compilés à la validation</text>
+          <text x="365" y="152" font-size="11.5" text-anchor="middle" fill="#52615a">index par point, échéances</text>
+          <text x="365" y="172" font-size="11.5" text-anchor="middle" fill="#52615a">agrégats au fil de l'eau</text>
+          <text x="365" y="192" font-size="11.5" text-anchor="middle" fill="#195744">baux et exécutions durables</text>
+          <text x="365" y="212" font-size="11" text-anchor="middle" fill="#195744">rien de perdu sur un retard</text>
+          <rect x="494" y="86" width="152" height="144" rx="7" fill="#fffdf8" stroke="#d4ddd4"/>
+          <text x="570" y="110" font-size="14" font-weight="700" text-anchor="middle" fill="#1d302a">API</text>
+          <text x="570" y="132" font-size="11.5" text-anchor="middle" fill="#52615a">tableau de bord</text>
+          <text x="570" y="152" font-size="11.5" text-anchor="middle" fill="#52615a">MCP, REST, SSE</text>
+          <text x="570" y="172" font-size="11.5" text-anchor="middle" fill="#52615a">historique lu</text>
+          <text x="570" y="192" font-size="11.5" text-anchor="middle" fill="#52615a">en mémoire</text>
+          <line x1="236" y1="158" x2="246" y2="158" stroke="#52615a" stroke-width="1.3" marker-end="url(#fl)"/>
+          <line x1="480" y1="158" x2="490" y2="158" stroke="#52615a" stroke-width="1.3" marker-end="url(#fl)"/>
+          <rect x="24" y="286" width="200" height="176" rx="7" fill="#fffdf8" stroke="#195744"/>
+          <text x="38" y="308" font-size="12.5" font-weight="700" fill="#1d302a">Pont partagé (Hue, Z2M…)</text>
+          <rect x="38" y="320" width="172" height="62" rx="5" fill="#e6eee5" stroke="#195744"/>
+          <text x="48" y="340" font-size="11" fill="#195744">passerelle : 4 requêtes max,</text>
+          <text x="48" y="356" font-size="11" fill="#195744">équité, ordres avant sondage</text>
+          <text x="48" y="372" font-size="11" fill="#195744">disjoncteur du pont</text>
+          <rect x="38" y="392" width="52" height="56" rx="4" fill="#fffdf8" stroke="#195744"/>
+          <text x="64" y="416" font-size="10.5" text-anchor="middle" fill="#1d302a">voie</text>
+          <text x="64" y="432" font-size="10.5" text-anchor="middle" fill="#1d302a">lampe 1</text>
+          <rect x="96" y="392" width="52" height="56" rx="4" fill="#fffdf8" stroke="#195744"/>
+          <text x="122" y="416" font-size="10.5" text-anchor="middle" fill="#1d302a">voie</text>
+          <text x="122" y="432" font-size="10.5" text-anchor="middle" fill="#1d302a">lampe 2</text>
+          <rect x="154" y="392" width="56" height="56" rx="4" fill="#fae9df" stroke="#8b3b22"/>
+          <text x="182" y="412" font-size="10.5" text-anchor="middle" fill="#8b3b22">muette</text>
+          <text x="182" y="428" font-size="10.5" text-anchor="middle" fill="#8b3b22">disjonctée</text>
+          <text x="182" y="442" font-size="10" text-anchor="middle" fill="#8b3b22">hors ligne</text>
+          <rect x="238" y="286" width="200" height="176" rx="7" fill="#fffdf8" stroke="#195744"/>
+          <text x="252" y="308" font-size="12.5" font-weight="700" fill="#1d302a">Appareils Wi-Fi isolés</text>
+          <text x="252" y="332" font-size="11" fill="#52615a">une voie par appareil :</text>
+          <text x="252" y="350" font-size="11" fill="#52615a">file bornée, un ordre en vol,</text>
+          <text x="252" y="368" font-size="11" fill="#52615a">échéance revérifiée,</text>
+          <text x="252" y="386" font-size="11" fill="#52615a">la dernière consigne gagne,</text>
+          <text x="252" y="404" font-size="11" fill="#52615a">disjoncteur par appareil</text>
+          <text x="252" y="440" font-size="11" fill="#195744">16 % → 100 % d'ordres sains (C2)</text>
+          <rect x="452" y="286" width="210" height="176" rx="7" fill="#fffdf8" stroke="#195744"/>
+          <text x="466" y="308" font-size="12.5" font-weight="700" fill="#1d302a">API cloud</text>
+          <text x="466" y="332" font-size="11" fill="#52615a">budget de requêtes,</text>
+          <text x="466" y="350" font-size="11" fill="#52615a">recul sur 429 et 5xx,</text>
+          <text x="466" y="368" font-size="11" fill="#52615a">un seul rafraîchissement de jeton,</text>
+          <text x="466" y="386" font-size="11" fill="#52615a">cache avec valeur périmée,</text>
+          <text x="466" y="404" font-size="11" fill="#52615a">compteur de refus de session</text>
+          <path d="M124 262 H556 M338 262 V282 M556 262 V282" stroke="#52615a" stroke-width="1.3" fill="none"/>
+          <line x1="124" y1="282" x2="124" y2="234" stroke="#52615a" stroke-width="1.3" marker-end="url(#fl)" marker-start="url(#fl)"/>
+          <text x="24" y="488" font-size="12.5" font-weight="700" fill="#1d302a">Pilotes · un thread et un runtime chacun : un pilote qui bloque ne bloque que lui (C1).</text>
+          <text x="24" y="508" font-size="11.5" fill="#52615a">États et ordres passent tous par le hub ; le moteur voit tout, quel que soit le thread du pilote (K1).</text>
+          <text x="24" y="526" font-size="11.5" fill="#52615a">Coût d'un pilote isolé : ~52 Kio de RSS. Tâches du hub lancées sur le runtime du cœur, jamais chez l'appelant.</text>
+          <rect x="702" y="8" width="290" height="544" rx="10" fill="#fbf0d6" stroke="#c79a2e"/>
+          <text x="720" y="34" font-size="15" font-weight="700" fill="#835c00">Machine de secours</text>
+          <text x="720" y="56" font-size="12" fill="#835c00">passive tant qu'on ne bascule pas</text>
+          <rect x="718" y="74" width="258" height="122" rx="7" fill="#fffdf8" stroke="#c79a2e"/>
+          <text x="732" y="98" font-size="12.5" font-weight="700" fill="#1d302a">Reçoit en continu</text>
+          <text x="732" y="120" font-size="11" fill="#52615a">instantané : 20 à 54 Kio compressés</text>
+          <text x="732" y="138" font-size="11" fill="#52615a">fichiers métier à chaque écriture</text>
+          <text x="732" y="156" font-size="11" fill="#52615a">journal : ~9 octets par changement</text>
+          <text x="732" y="174" font-size="11" fill="#52615a">coffre chiffré, même clé maître</text>
+          <rect x="718" y="210" width="258" height="122" rx="7" fill="#fffdf8" stroke="#c79a2e"/>
+          <text x="732" y="234" font-size="12.5" font-weight="700" fill="#1d302a">Ne fait jamais</text>
+          <text x="732" y="256" font-size="11" fill="#52615a">aucune connexion MQTT, Tuya, Nuki</text>
+          <text x="732" y="274" font-size="11" fill="#52615a">aucun rafraîchissement de jeton</text>
+          <text x="732" y="292" font-size="11" fill="#52615a">aucune session cloud</text>
+          <text x="732" y="310" font-size="11" fill="#52615a">aucun ordre aux appareils</text>
+          <rect x="718" y="346" width="258" height="150" rx="7" fill="#fffdf8" stroke="#c79a2e"/>
+          <text x="732" y="370" font-size="12.5" font-weight="700" fill="#1d302a">À la bascule</text>
+          <text x="732" y="392" font-size="11" fill="#52615a">décidée par un humain</text>
+          <text x="732" y="410" font-size="11" fill="#52615a">ou le chien de garde de l'hôte</text>
+          <text x="732" y="428" font-size="11" fill="#52615a">époque + 1, ancienne arrêtée</text>
+          <text x="732" y="446" font-size="11" fill="#52615a">hub reconstruit en 11 à 14 ms</text>
+          <text x="732" y="464" font-size="11" fill="#52615a">baux et exécutions repris</text>
+          <text x="732" y="482" font-size="11" fill="#52615a">valeurs « reprises, non confirmées »</text>
+          <line x1="662" y1="140" x2="714" y2="140" stroke="#835c00" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#fl)"/>
+        </svg>
+        <figcaption>Architecture cible proposée. Vert : en place ou mesuré dans les bancs. Rouge : appareil en défaut, cloisonné. Ambre : secours passif.</figcaption>
+      </figure>
+
+      <details class="mobile-toc"><summary>Sommaire</summary><ul>
+<li><a href="#1-réponse-courte">1. Réponse courte</a></li>
+<li><a href="#2-données-de-référence--deux-home-assistant-réels">2. Données de référence : deux Home Assistant réels</a></li>
+<li><a href="#3-workflows--tous-les-types">3. Workflows : tous les types</a></li>
+<li><a href="#4-tampons-et-cloisons">4. Tampons et cloisons</a></li>
+<li><a href="#5-mémoire--peut-on-se-lâcher-">5. Mémoire : peut-on se lâcher ?</a></li>
+<li><a href="#6-relancer-vite-sur-une-autre-machine">6. Relancer vite sur une autre machine</a></li>
+<li><a href="#7-plan-proposé">7. Plan proposé</a></li>
+<li><a href="#8-limites">8. Limites</a></li>
+<li><a href="#annexe-a--bancs-dessai">Annexe A — Bancs d'essai</a></li>
+<li><a href="#annexe-b--données-des-deux-instances">Annexe B — Données des deux instances</a></li>
+      </ul></details>
+
+      <article id="document">
+<p>Date : 21 octobre 2026. Statut : <strong>analyse, aucune modification du code</strong>. Base analysée : <code>main</code> au commit <code>bd1714d</code>. La <a href="isolation-reactivite-runtime.md">première analyse</a> reste valable et inchangée ; cette V2 l'approfondit sur quatre demandes.</p>
+<p>Méthode : lecture du code ; cinq bancs d'essai exécutés hors du dépôt contre les vraies crates <code>moli-runtime</code> et <code>moli-automation</code> (<a href="#annexe-a--bancs-dessai">annexe A</a>) ; comptes agrégés de deux Home Assistant réels très chargés, appelés ici « instance A » et « instance B » (aucun nom de lieu, d'appareil ni d'entité n'est repris). Machine de test : Apple M4, runtime Tokio à 2 workers comme en production. Les durées absolues ne se transposent pas au Pi Zero 2 W (D10), les effets relatifs si ; les extrapolations sont marquées « estimé ».</p>
+
+<section id="1-réponse-courte" class="level2">
+<h2>1. Réponse courte</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Réponse</th>
+<th>Preuve</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Le moteur tient-il des workflows complexes ?</td>
+<td>Oui à l'échelle d'une maison : moins de 3 ms entre un événement et l'action, à 400 automatismes. Mais chaque automatisme coûte à <strong>chaque</strong> événement, une rafale retarde les actions jusqu'à 161 ms, et un retard du bus <strong>perd des déclencheurs</strong>, y compris ceux arrivés après la rafale.</td>
+<td>W1, W2</td>
+</tr>
+<tr class="even">
+<td>« Allume 30 minutes » est-il fiable ?</td>
+<td>Non : l'attente vit en mémoire ; un redémarrage ou une bascule l'efface, la lumière reste allumée.</td>
+<td>lecture du code</td>
+</tr>
+<tr class="odd">
+<td>Un moteur compilé changerait-il la donne ?</td>
+<td>Oui : de ×280 (100 automatismes) à ×5 000 (10 000) sur le chemin chaud, soit 3 à 11 ns par événement au lieu de 0,9 à 54 µs ; agrégats lus en 1 ns au lieu de 150 à 190 µs par SQLite ; calculs ×23 à ×27.</td>
+<td>I1 à I4</td>
+</tr>
+<tr class="even">
+<td>Des tampons peuvent-ils empêcher le blocage ?</td>
+<td>Une file ne libère pas un thread bloqué ; il faut une <strong>cloison</strong> : un thread par pilote (~52 Kio chacun) garde le cœur à ≤ 0,1 ms de médiane avec six pilotes bloquants. Les files servent ailleurs : une <strong>voie par appareil</strong> fait passer de 16 % à 100 % d'ordres réussis derrière un pont dont une lampe est muette.</td>
+<td>C1 à C3</td>
+</tr>
+<tr class="odd">
+<td>« Tout passe par le moteur » ?</td>
+<td>Vérifié : le hub est le point de convergence et le moteur voit tout, même avec des pilotes sur leurs propres threads (réaction en 0,2 ms). Deux précautions : les tâches propres au hub doivent tourner sur le runtime du cœur, et le hub doit se protéger des inondations.</td>
+<td>K1, lecture du code</td>
+</tr>
+<tr class="even">
+<td>Peut-on se lâcher en mémoire ?</td>
+<td>Oui, avec un format compact : les valeurs courantes des deux maisons réunies tiennent dans 1 Mio, 24 h d'historique dans 1,4 Mio, 7 jours dans 8,8 Mio (40,7 Mio en format naïf).</td>
+<td>M1 à M3</td>
+</tr>
+<tr class="odd">
+<td>Relancer vite ailleurs ?</td>
+<td>Réaliste : instantané de 20 à 54 Kio compressé, hub reconstruit en 11 à 14 ms, journal de 1,3 Mio par jour. Conditions : rendre durables les workflows en cours, une seule machine maîtresse à la fois, secours passif.</td>
+<td>M4, R1, R2</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="2-données-de-référence--deux-home-assistant-réels" class="level2">
+<h2>2. Données de référence : deux Home Assistant réels</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th></th>
+<th>Instance A</th>
+<th>Instance B</th>
+<th>Réunies</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Appareils</td>
+<td>206</td>
+<td>290</td>
+<td>496</td>
+</tr>
+<tr class="even">
+<td>Entités enregistrées / actives</td>
+<td>1 524 / 977</td>
+<td>1 830 / 1 274</td>
+<td>3 354 / 2 251</td>
+</tr>
+<tr class="odd">
+<td>États vivants</td>
+<td>986</td>
+<td>1 278</td>
+<td>2 264</td>
+</tr>
+<tr class="even">
+<td>Automatismes actifs</td>
+<td>12</td>
+<td>10</td>
+<td>22</td>
+</tr>
+<tr class="odd">
+<td>Changements par seconde, moyenne / pointe</td>
+<td>0,51 / 39</td>
+<td>0,98 / 239</td>
+<td>~1,5</td>
+</tr>
+<tr class="even">
+<td>Pointe sur une minute</td>
+<td>214</td>
+<td>1 471</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Taille moyenne d'un jeu d'attributs (Recorder)</td>
+<td>229 caractères</td>
+<td>1 365 caractères</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p>Les deux instances réunies produisent ~163 000 relevés par jour sur 1 487 séries. La distribution est très concentrée : une série médiane change 0,7 fois par jour, les 1 % les plus actives font 51 % du trafic, les 10 % les plus actives 98 %. Les bancs suivants sont calibrés sur ces chiffres, puis poussés à 10 fois au-delà.</p>
+</section>
+<section id="3-workflows--tous-les-types" class="level2">
+<h2>3. Workflows : tous les types</h2>
+<section id="31-ce-que-le-moteur-sait-faire-aujourdhui" class="level3">
+<h3>3.1 Ce que le moteur sait faire aujourd'hui</h3>
+<p>Un automatisme est un graphe à la manière de n8n (<code>moli-automation/src/model.rs</code>) :</p>
+<ul>
+<li><strong>Déclencheurs :</strong> changement d'état, seuil (avec durée « depuis »), occurrence (appui), heure, soleil, période, démarrage, manuel.</li>
+<li><strong>Logique :</strong> <code>If</code> avec des règles ET/OU sur un état, l'heure ou le soleil ; l'imbrication passe par des <code>If</code> en chaîne.</li>
+<li><strong>Actions :</strong> <code>Set</code>, <code>Toggle</code>, <code>Scene</code>, <code>Wait</code>, <code>WaitFor</code>, <code>Notify</code>, <code>Write</code> (texte rédigé par l'assistant).</li>
+<li><strong>Modes d'exécution :</strong> <code>restart</code>, <code>single</code>, <code>queued</code>.</li>
+</ul>
+<p>Plafonds actuels : 400 automatismes (<code>lib.rs:994</code>), 60 nœuds et 120 liens par graphe (<code>check.rs:16-17</code>), 100 étapes par exécution (<code>run.rs:17</code>), ni boucle, ni variable, ni calcul, ni lecture d'historique. Garde-fou anti-emballement : au-delà de 20 lancements par minute, l'automatisme est <strong>éteint</strong> (<code>engine.rs:15-16</code>). Un automatisme branché sur un capteur bavard (puissance, mouvement) est donc coupé, pas ralenti.</p>
+<p>À côté du moteur, le hub porte déjà des primitives durables : minuteurs, compteurs, plannings, calculs (agrégats min/max/moyenne), scènes et, depuis <code>5bf57b1</code>, <strong>durées avec couverture connue</strong> (<code>moli-runtime/src/durations.rs</code>, échantillonnées sous le verrou du modèle avec un index par point et un écrivain durable à part). C'est le bon germe pour les agrégats en mémoire.</p>
+</section>
+<section id="32-le-vrai-moteur-sous-charge" class="level3">
+<h3>3.2 Le vrai moteur sous charge</h3>
+<p>Chaque automatisme du banc a 1 déclencheur, 3 conditions imbriquées de 3 règles et 1 action ; 10 % sont temporaires (« allume 30 min »), 10 % attendent une condition (<code>wait_for</code>) ; 1 800 capteurs et 400 lampes, la forme d'une grosse maison.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Automatismes</th>
+<th>Mémoire du moteur</th>
+<th>Croisière, p50 / p99</th>
+<th>Rafale de 2 000 événements : action au milieu / après</th>
+<th>Rafale de 5 000 : action au milieu / après</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>50</td>
+<td>0,7 Mio</td>
+<td>0,4 / 2,2 ms</td>
+<td>6,4 / 11,5 ms</td>
+<td>12,8 / 23,3 ms</td>
+</tr>
+<tr class="even">
+<td>100</td>
+<td>1,1 Mio</td>
+<td>0,4 / 1,3 ms</td>
+<td>10,5 / 18,6 ms</td>
+<td>40,3 ms / <strong>perdues</strong></td>
+</tr>
+<tr class="odd">
+<td>200</td>
+<td>2,0 Mio</td>
+<td>0,5 / 0,9 ms</td>
+<td>21,9 / 33,7 ms</td>
+<td>36,1 / 70,0 ms</td>
+</tr>
+<tr class="even">
+<td>400</td>
+<td>3,7 Mio</td>
+<td>0,5 / 2,9 ms</td>
+<td>36,6 / 59,7 ms</td>
+<td>80 ms (pire 161 ms) / <strong>perdues</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Lecture :</p>
+<ul>
+<li>En croisière, le moteur est très réactif.</li>
+<li>Dans une rafale (un pont qui se reconnecte et republie tout), chaque événement coûte au moteur environ <strong>60 ns par automatisme</strong>, qu'il le concerne ou non : il les parcourt tous (<code>engine.rs:351-357</code>). À 400 automatismes, ~30 µs par événement ; estimé 0,3 à 0,6 ms sur un Pi Zero 2 W, soit un retard du bus dès qu'une rafale dépasse ~1 000 événements.</li>
+<li>Créer et valider les automatismes un par un coûte de plus en plus cher : 0,3 s pour 50, 17,5 s pour 400 (environ 60 ms par enregistrement quand 300 existent).</li>
+</ul>
+</section>
+<section id="33-un-retard-du-bus-perd-des-déclencheurs-même-après-la-rafale--élevé" class="level3">
+<h3>3.3 Un retard du bus perd des déclencheurs, même après la rafale <span class="sev sev-high">Élevé</span></h3>
+<p>À 5 000 événements, le moteur prend du retard sur le bus (<code>Lagged</code>) et les cinq déclencheurs injectés <strong>juste après</strong> la rafale ne partent jamais. Le mécanisme est dans le code :</p>
+<ol type="1">
+<li>Sur <code>Lagged</code>, le moteur appelle <code>remember_all()</code> (<code>engine.rs:77-85</code>), qui recopie les valeurs <strong>actuelles</strong> du hub dans sa table <code>last</code> (<code>engine.rs:340-349</code>).</li>
+<li>Ces valeurs contiennent déjà les événements encore en file.</li>
+<li>Quand le moteur lit ensuite ces événements, <code>on_state</code> voit <code>valeur précédente == nouvelle valeur</code> et s'arrête (<code>engine.rs:351-356</code>).</li>
+</ol>
+<p>Un retard ne perd donc pas seulement les événements sautés ; il neutralise aussi ceux qui restent. Correctif simple : sur <code>Lagged</code>, comparer l'instantané à <code>last</code> et produire une transition pour chaque valeur qui a changé, au lieu d'écraser <code>last</code>.</p>
+</section>
+<section id="34-workflows-temporaires--élevé" class="level3">
+<h3>3.4 Workflows temporaires <span class="sev sev-high">Élevé</span></h3>
+<p>« Allume pendant 5 minutes » devient <code>set on → wait 300 → set off</code> (<code>moli-assistant/src/before.rs:86</code>). L'attente est une tâche en mémoire ; à l'arrêt, les exécutions en cours sont interrompues (<code>engine.rs:99-113</code>) et rien ne les reprend au démarrage. Après un redémarrage, une mise à jour ou une bascule, la lumière reste allumée.</p>
+<p>Proposition : un <strong>bail</strong> durable, primitive à part entière.</p>
+<ul>
+<li><code>allumer le salon pour 30 minutes</code> = un ordre et une échéance absolue, persistés ensemble (une écriture synchronisée, 3,4 à 3,7 ms mesurées, une seule fois au lancement).</li>
+<li>Le retour est conditionnel : il n'éteint que si la valeur est toujours celle que le bail a posée ; si quelqu'un a changé la lumière entre-temps, le bail s'éteint sans rien faire.</li>
+<li>Un nouveau « 30 minutes » prolonge le bail au lieu d'en empiler un second.</li>
+<li>Au redémarrage ou sur la machine de secours, un bail échu s'applique une fois, un bail en cours reprend son attente, comme les minuteurs AUTO-H1 le font déjà pour leur état.</li>
+<li>C'est un ordre de la famille, jugé par la garde et journalisé comme les autres ; ce n'est pas un automatisme permanent, il n'a pas besoin d'une validation par PIN.</li>
+</ul>
+<p>10 000 baux en attente coûtent 0,3 à 0,4 ms d'ordonnancement au total (tas binaire, I4).</p>
+</section>
+<section id="35-les-lectures-dont-les-workflows-ont-besoin" class="level3">
+<h3>3.5 Les lectures dont les workflows ont besoin</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Lecture</th>
+<th>Aujourd'hui</th>
+<th>Mesure</th>
+<th>Proposition</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>États et conditions imbriquées</td>
+<td>Chaque règle relit la valeur par son nom texte, prend deux fois le verrou du modèle et reconvertit sa constante JSON (<code>run.rs:544-625</code>)</td>
+<td>Balayage : 1,8 à 2,1 µs par événement à 400 automatismes, 48 à 54 µs à 10 000 ; compilé : 3 à 11 ns (I1)</td>
+<td>Compiler à la validation : points numérotés, constantes typées, règles en arbre</td>
+</tr>
+<tr class="even">
+<td>Historique et agrégats (« moyenne 1 h », « allumé depuis »)</td>
+<td>Pas dans les graphes ; SQLite en <code>spawn_blocking</code> pour l'historique</td>
+<td>SQLite : 150 à 190 µs par lecture, plus un passage de thread ; fenêtre en mémoire : 3,7 à 4,2 µs ; agrégat tenu au fil de l'eau : 5 à 6 ns par relevé, 1 ns par lecture (I2)</td>
+<td>Agrégats incrémentaux déclarés par les plans compilés, comme les durées ; SQLite pour le long terme seulement</td>
+</tr>
+<tr class="odd">
+<td>Services extérieurs (météo, agenda, HTTP)</td>
+<td>Pilotes et profils qui publient des points ; météo lue à la demande</td>
+<td>—</td>
+<td>Toujours en amont : une source publie des valeurs avec leur fraîcheur (<code>max_age</code>), le workflow lit un état ; jamais d'attente réseau dans la boucle du moteur. Une étape <code>fetch</code> explicite, si elle existe un jour, a une échéance et une sortie « délai dépassé »</td>
+</tr>
+<tr class="even">
+<td>Variables et calculs</td>
+<td>Absents</td>
+<td>Interprété depuis le JSON : 743 à 754 ns ; compilé : 28 à 32 ns (I3)</td>
+<td>Langage d'expressions typé, non Turing-complet, compilé à la validation ; variables d'exécution bornées</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="36-le-moteur-cible" class="level3">
+<h3>3.6 Le moteur cible</h3>
+<pre class="text"><code>validation humaine ──► compilation ──► plan exécutable
+                         │   points numérotés, constantes typées, expressions compilées,
+                         │   bornes vérifiées (nœuds, profondeur, boucles, sous-workflows)
+                         ▼
+hub ──(événements des points indexés seulement)──► file du moteur ──► index par point
+                                                                   ├─► agrégats au fil de l&#39;eau
+horloge : prochaine échéance (tas), pas de balayage à 1 Hz ────────┤
+                                                                   ▼
+                                     exécutions : machines à états ; curseur et baux
+                                     persistés aux points d&#39;attente (wait, wait_for, bail)</code></pre>
+<ol type="1">
+<li><strong>Compiler à la validation.</strong> La validation humaine porte déjà sur une empreinte exacte ; la compilation produit au même moment un plan exécutable, sans relire le JSON ensuite.</li>
+<li><strong>Filtrer à la source.</strong> Le hub ne transmet au moteur que les événements des points indexés (déclencheurs, conditions en attente). Une rafale de capteurs qu'aucun workflow ne regarde n'entre plus dans sa file.</li>
+<li><strong>Index et horloge par échéance.</strong> Un événement ne réveille que ses déclencheurs ; l'heure ne réveille le moteur qu'à la prochaine échéance due (aujourd'hui : chaque seconde, avec un recalcul du soleil par déclencheur, <code>engine.rs:499-536</code>).</li>
+<li><strong>Exécution durable.</strong> Une exécution est une machine à états ; son curseur et ses baux sont persistés aux points d'attente. Un redémarrage ou une bascule la reprend.</li>
+<li><strong>Workflows façon n8n.</strong> Sous-workflows appelés par identifiant (profondeur bornée), boucles sur des listes bornées, variables typées, branches d'erreur et de délai. Toujours déterministe, toujours sous la garde, jamais de LLM dans l'exécution.</li>
+<li><strong>Garde-fou d'emballement.</strong> Remplacer l'extinction au-delà de 20 lancements par minute par un anti-rebond et une coalescence par déclencheur ; l'extinction reste le dernier recours, annoncé.</li>
+</ol>
+<p>Options étudiées :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Effet</th>
+<th>Coût</th>
+<th>Choix</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A. Garder le moteur, corriger la perte sur retard, indexer les déclencheurs d'état, rendre <code>wait</code> durable</td>
+<td>Supprime les deux défauts graves</td>
+<td>Faible à moyen</td>
+<td><strong>d'abord</strong></td>
+</tr>
+<tr class="even">
+<td>B. Moteur compilé, filtré à la source, exécution durable</td>
+<td>Tient 10 000 automatismes, workflows complexes</td>
+<td>Moyen à élevé</td>
+<td><strong>ensuite, par étapes</strong></td>
+</tr>
+<tr class="odd">
+<td>C. Moteur de workflows généraliste ou script embarqué (Lua, Rhai, WASM)</td>
+<td>Flexible</td>
+<td>Déterminisme, garde et relecture humaine plus difficiles ; mémoire</td>
+<td>non</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+</section>
+<section id="4-tampons-et-cloisons" class="level2">
+<h2>4. Tampons et cloisons</h2>
+<section id="41-ce-quun-tampon-résout-et-ce-quil-ne-résout-pas" class="level3">
+<h3>4.1 Ce qu'un tampon résout, et ce qu'il ne résout pas</h3>
+<ul>
+<li><strong>Un tampon (une file) absorbe une différence de vitesse :</strong> un appareil lent, une rafale. Il doit être borné, avoir une règle quand il est plein (refuser, coalescer, remplacer) et une échéance (un ordre trop vieux ne part pas).</li>
+<li><strong>Un tampon ne libère pas un thread occupé :</strong> si un pilote bloque son worker, la file derrière lui n'avance plus. Contre cela, il faut une <strong>cloison</strong> : un thread à part.</li>
+<li>La V1 a montré que deux pilotes bloquants gèlent la maison (E2). Les mesures ci-dessous disent quelle cloison ou quelle file résout quel cas.</li>
+</ul>
+</section>
+<section id="42--tout-passe-par-le-moteur---vérification" class="level3">
+<h3>4.2 « Tout passe par le moteur » : vérification</h3>
+<p>C'est exact. Chaque valeur passe par <code>ctx.set_state</code> (verrou du modèle puis bus), chaque ordre par <code>hub.command</code> (garde, échéance, journal), et le moteur d'automatismes est un abonné du bus. Mettre un pilote sur son propre thread ne coupe rien : le hub est une mémoire partagée et ses canaux Tokio fonctionnent d'un runtime à l'autre.</p>
+<p>Preuve (K1) : capteur → vrai moteur → lampe. Le capteur et la lampe tournent sur leurs propres threads, deux pilotes bloquants aussi, et le moteur reste sur le runtime du cœur.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Configuration</th>
+<th>Médiane</th>
+<th>Pire</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pilotes partagés sur les 2 workers</td>
+<td>5,5 à 12,1 ms</td>
+<td>202 à 204 ms</td>
+</tr>
+<tr class="even">
+<td>Pilotes isolés, un thread chacun</td>
+<td>0,2 ms</td>
+<td>0,4 à 1,9 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>Deux précautions découlent de cette convergence :</p>
+<ol type="1">
+<li><strong>Les tâches propres au hub doivent tourner sur le runtime du cœur.</strong> Aujourd'hui elles partent par <code>tokio::spawn</code>, donc sur le runtime de <strong>l'appelant</strong>. Le pilote des aides (<code>moli-helpers/src/lib.rs:605-632</code>) démarre ainsi les horloges globales des calculs (<code>computed_clock.rs:16</code>), des dépendances (<code>dependency_hub.rs:456</code>) et des durées (<code>duration_hub.rs:279</code>). Avec un thread par pilote, ces horloges vivraient sur le thread du pilote des aides : s'il bloque, tous les calculs de la maison s'arrêtent. Le hub doit recevoir à sa construction le <code>Handle</code> du runtime du cœur et y lancer ses tâches.</li>
+<li><strong>Le hub doit se protéger des inondations.</strong> Un pilote isolé qui publie 100 000 valeurs par seconde ne bloque plus personne par son thread, mais il prend le verrou du modèle et remplit le bus. Il faut un budget d'événements par pilote, et une coalescence par point au-delà de ce budget (la dernière valeur gagne).</li>
+</ol>
+</section>
+<section id="43-un-thread-par-pilote-c1" class="level3">
+<h3>4.3 Un thread par pilote (C1)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Ordres servis en 2 s</th>
+<th>Médiane</th>
+<th>Pire</th>
+<th>Pire retard d'une minuterie de 10 ms</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2 pilotes bloquants partagés</td>
+<td>9</td>
+<td>1,6 à 6,7 ms</td>
+<td>~200 ms</td>
+<td>~195 ms</td>
+</tr>
+<tr class="even">
+<td>6 pilotes bloquants isolés</td>
+<td>87 à 93</td>
+<td>≤ 0,1 ms</td>
+<td>0,2 à 48 ms</td>
+<td>3 à 44 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>Coût mesuré : <strong>51 à 52 Kio de RSS par pilote isolé</strong> au repos (40 pilotes : ~2 Mio). La pile de 2 Mio est réservée mais seules les pages touchées comptent ; chaque runtime a sa propre roue de minuteries et son descripteur epoll. Pour un Pi Zero 2 W, c'est acceptable pour tous les pilotes, et indispensable pour ceux qui décodent des données hostiles ou font du calcul (XML, audio).</p>
+</section>
+<section id="44-une-voie-par-appareil-derrière-un-pont-c2" class="level3">
+<h3>4.4 Une voie par appareil derrière un pont (C2)</h3>
+<p>Un pont, 20 lampes, une lampe muette (chaque requête vers elle attend 4 s, le délai de <code>moli-net</code>), 25 ordres par seconde pendant 10 s :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Stratégie</th>
+<th>Ordres aux lampes saines réussis</th>
+<th>Médiane</th>
+<th>Pire</th>
+<th>Lampe muette</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Boucle unique</td>
+<td><strong>37 à 42 sur 237 (16 à 18 %)</strong></td>
+<td>~4,0 s</td>
+<td>4,6 s</td>
+<td>4,0 s, ou refus immédiat quand la file est pleine</td>
+</tr>
+<tr class="even">
+<td>Voie par appareil</td>
+<td>237 sur 237</td>
+<td>32 ms</td>
+<td>33 à 37 ms</td>
+<td>5,0 s (délai de l'ordre), file bornée</td>
+</tr>
+<tr class="odd">
+<td>Voies + disjoncteur</td>
+<td>237 sur 237</td>
+<td>32 ms</td>
+<td>33 à 52 ms</td>
+<td>refus en moins d'1 ms une fois le disjoncteur ouvert (après deux délais de 4 s), appareil hors ligne</td>
+</tr>
+</tbody>
+</table></div>
+<p>La boucle unique est le modèle le plus courant dans le dépôt (V1, section 5.2) : une lampe muette fait échouer plus de huit ordres sur dix vers les lampes <strong>saines</strong>. Une voie par appareil (file bornée à 8, un ordre en vol, échéance revérifiée avant l'envoi) les isole complètement.</p>
+</section>
+<section id="45-une-api-partagée-qui-ne-traite-que-4-requêtes-à-la-fois-c3" class="level3">
+<h3>4.5 Une API partagée qui ne traite que 4 requêtes à la fois (C3)</h3>
+<p>C'est le cas « une seule API » : Hue, Zigbee2MQTT, TaHoma, ou un service cloud.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Stratégie</th>
+<th>Ordres aux lampes saines réussis</th>
+<th>Médiane</th>
+<th>Pire</th>
+<th>Lampe muette</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Tâche par ordre, sans plafond par appareil</td>
+<td>237 sur 237</td>
+<td><strong>1,43 à 1,45 s</strong></td>
+<td>3,7 à 4,0 s</td>
+<td>5,0 s</td>
+</tr>
+<tr class="even">
+<td>Voie par appareil (une requête en vol)</td>
+<td>237 sur 237</td>
+<td>32 ms</td>
+<td>34 à 51 ms</td>
+<td>5,0 s</td>
+</tr>
+<tr class="odd">
+<td>Voies + disjoncteur</td>
+<td>237 sur 237</td>
+<td>32 ms</td>
+<td>35 à 52 ms</td>
+<td>refus en moins d'1 ms une fois ouvert</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lancer une tâche par ordre sans plafond par appareil semble plus « parallèle », mais les requêtes vers la lampe muette occupent les 4 places de l'API et les lampes saines attendent 1,4 s en médiane. Une voie par appareil limite chaque appareil à <strong>une</strong> requête en vol : la lampe muette ne prend jamais plus d'une place.</p>
+</section>
+<section id="46-api-cloud--quotas-pannes-jetons" class="level3">
+<h3>4.6 API cloud : quotas, pannes, jetons</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Règle</th>
+<th>Pourquoi</th>
+<th>Déjà dans le dépôt</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Budget de requêtes (seau à jetons) par fournisseur</td>
+<td>Ne jamais dépasser un quota, même en rafale</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Recul exponentiel avec gigue sur 429 et 5xx, <code>Retry-After</code> respecté</td>
+<td>Une panne du service ne devient pas une tempête</td>
+<td>Ariston 15 min, Voltalis 10 min, Netatmo borné</td>
+</tr>
+<tr class="odd">
+<td>Compteur de refus de session</td>
+<td>Éviter un bannissement du compte</td>
+<td>Ariston (<code>MAX_SESSION_REFUSALS</code>) ; manque à Landroid</td>
+</tr>
+<tr class="even">
+<td>Un seul rafraîchissement de jeton en vol</td>
+<td>Les jetons OAuth tournants s'invalident entre eux</td>
+<td>Netatmo n'active que des jetons persistés</td>
+</tr>
+<tr class="odd">
+<td>Cache des lectures avec durée de vie, valeur périmée servie pendant la relecture, cache négatif</td>
+<td>Une panne n'empile pas les appels (défaut constaté sur la météo, V1 5.5)</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Disjoncteur par fournisseur</td>
+<td>Échouer vite, signaler, sonder plus tard</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="47-une-boîte-à-outils-commune-dans-moli-runtime" class="level3">
+<h3>4.7 Une boîte à outils commune dans <code>moli-runtime</code></h3>
+<p>Plutôt que chaque pilote réinvente ces mécanismes, <code>moli-runtime</code> peut fournir :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Outil</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Voies</code></td>
+<td>Une file bornée par appareil, un ordre en vol, échéance revérifiée, coalescence des consignes (« la dernière gagne », l'ancienne répond « remplacée »), disjoncteur par appareil qui vide la file et passe l'appareil hors ligne</td>
+</tr>
+<tr class="even">
+<td><code>Passerelle</code></td>
+<td>Concurrence plafonnée d'une API partagée, équité entre appareils (tourniquet), priorité des ordres sur le sondage, débit plafonné, disjoncteur global si le pont lui-même tombe</td>
+</tr>
+<tr class="odd">
+<td><code>spawn_driver_isole</code></td>
+<td>Le superviseur actuel, sur un thread et un runtime dédiés au pilote</td>
+</tr>
+<tr class="even">
+<td>Budget d'entrée du hub</td>
+<td>Plafond d'événements par pilote et coalescence par point au-delà</td>
+</tr>
+<tr class="odd">
+<td><code>Handle</code> du cœur</td>
+<td>Les tâches internes du hub ne dépendent plus du thread de l'appelant</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les pilotes Samsung, Twinkly, Ariston et Android TV contiennent déjà des versions locales de ces idées (V1, section 2.7). Les généraliser corrige d'un coup les pilotes à boucle unique relevés en V1.</p>
+</section>
+</section>
+<section id="5-mémoire--peut-on-se-lâcher-" class="level2">
+<h2>5. Mémoire : peut-on se lâcher ?</h2>
+<section id="51-mesures" class="level3">
+<h3>5.1 Mesures</h3>
+<p>Allocateur qui compte chaque octet, forme réelle des deux instances réunies.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Mesure</th>
+<th>Résultat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Types du cœur</td>
+<td><code>Value</code> 24 o, <code>Sample</code> 32 o, <code>Arc&lt;str&gt;</code> 16 o</td>
+</tr>
+<tr class="even">
+<td>Modèle du hub : 496 appareils, 2 264 valeurs</td>
+<td><strong>1,00 Mio</strong> (~464 o par valeur, définitions comprises)</td>
+</tr>
+<tr class="odd">
+<td>Même modèle ×10 (22 640 valeurs)</td>
+<td>9,86 Mio : coût linéaire</td>
+</tr>
+<tr class="even">
+<td>Ajouter « dernier changement » et « valeur précédente » à chaque valeur</td>
+<td>+32 o par valeur, soit ~72 Kio (calcul sur les tailles mesurées)</td>
+</tr>
+<tr class="odd">
+<td>24 h d'historique (161 000 relevés)</td>
+<td>naïf 5,48 Mio ; compact <strong>1,37 Mio</strong> ; mixte 2,28 Mio</td>
+</tr>
+<tr class="even">
+<td>7 jours d'historique (1,13 million de relevés)</td>
+<td>naïf 40,7 Mio ; compact <strong>8,78 Mio</strong> ; mixte 15,1 Mio</td>
+</tr>
+<tr class="odd">
+<td>Mémoire du moteur d'automatismes actuel</td>
+<td>~9,4 Kio par automatisme (3,7 Mio pour 400)</td>
+</tr>
+</tbody>
+</table></div>
+<p>« Compact » : décalage en secondes sur 4 octets et valeur sur 4 octets, en colonnes par série. « Naïf » : un <code>(u64, Value)</code> de 32 octets par relevé dans une <code>VecDeque</code>. Le format compte plus que la quantité : ×4,6. Les seaux par minute n'aident pas ici, parce que les séries les plus actives changent moins d'une fois par seconde.</p>
+</section>
+<section id="52-deux-profils" class="level3">
+<h3>5.2 Deux profils</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th></th>
+<th>Profil sobre (Pi Zero 2 W, 512 Mo)</th>
+<th>Profil généreux (2 Go et plus)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Valeurs courantes, dernier changement, valeur précédente</td>
+<td>toutes</td>
+<td>toutes</td>
+</tr>
+<tr class="even">
+<td>Agrégats au fil de l'eau</td>
+<td>ceux déclarés par les workflows</td>
+<td>ceux des workflows et du tableau de bord</td>
+</tr>
+<tr class="odd">
+<td>Historique en mémoire, format compact</td>
+<td>24 h des points lus par un workflow ou un écran</td>
+<td>7 jours de tout</td>
+</tr>
+<tr class="even">
+<td>Instantané pour la relance</td>
+<td>toutes les 10 s</td>
+<td>chaque seconde</td>
+</tr>
+<tr class="odd">
+<td>Surcoût mesuré à l'échelle des deux maisons</td>
+<td>~3 Mio</td>
+<td>~12 à 15 Mio</td>
+</tr>
+<tr class="even">
+<td>Budget de référence</td>
+<td>32 Mio de mémoire anonyme (PERFORMANCE.md)</td>
+<td>128 Mio, plafond actuel du conteneur</td>
+</tr>
+</tbody>
+</table></div>
+<p>Dans les deux profils, SQLite (puis Turso, D13) reste la mémoire durable et le long terme, et l'archive reste le long terme hors de la machine. La mémoire sert la réactivité ; elle ne remplace pas la durabilité. À titre de comparaison, Home Assistant occupe de l'ordre de 2 Gio sur la même maison (<a href="../PERFORMANCE.md">PERFORMANCE.md</a>).</p>
+</section>
+</section>
+<section id="6-relancer-vite-sur-une-autre-machine" class="level2">
+<h2>6. Relancer vite sur une autre machine</h2>
+<section id="61-ce-qui-est-déjà-durable-et-ce-qui-ne-lest-pas" class="level3">
+<h3>6.1 Ce qui est déjà durable, et ce qui ne l'est pas</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>État</th>
+<th>Aujourd'hui</th>
+<th>Pour la relance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Configuration, profils, automatismes, étiquettes, plan, personnes</td>
+<td>fichiers</td>
+<td>répliquer à chaque écriture</td>
+</tr>
+<tr class="even">
+<td>Coffre des secrets</td>
+<td><code>secrets.enc</code> chiffré ; clé maître hors disque</td>
+<td>répliquer le fichier ; la clé vient du même gestionnaire de secrets</td>
+</tr>
+<tr class="odd">
+<td>États métier (minuteurs, compteurs, plannings, durées, occurrences consommées)</td>
+<td>fichiers bornés, fsync, renommage atomique</td>
+<td>répliquer à chaque écriture</td>
+</tr>
+<tr class="even">
+<td>Valeurs courantes</td>
+<td>cache <code>state.json</code> toutes les 60 s</td>
+<td>instantané fréquent, valeurs marquées « reprises, non confirmées »</td>
+</tr>
+<tr class="odd">
+<td>Journal d'audit</td>
+<td><code>journal.jsonl</code> en ajout</td>
+<td>flux répliqué</td>
+</tr>
+<tr class="even">
+<td>Historique, énergie</td>
+<td>SQLite ; long terme vers l'archive (D13)</td>
+<td>l'archive couvre le long terme ; la fenêtre récente se reconstruit ou accepte un trou</td>
+</tr>
+<tr class="odd">
+<td>Exécutions en cours, baux</td>
+<td><strong>en mémoire, perdues</strong></td>
+<td>à rendre durables (3.4)</td>
+</tr>
+<tr class="even">
+<td>Demandes d'approbation (10 min)</td>
+<td>en mémoire</td>
+<td>perte acceptable, ou répliquées</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="62-le-mécanisme-proposé" class="level3">
+<h3>6.2 Le mécanisme proposé</h3>
+<ol type="1">
+<li><strong>Instantané et journal.</strong> La machine principale pousse à la machine de secours un instantané de l'état d'exécution (20 à 54 Kio compressés selon ce qu'il contient, écrit et synchronisé en 7,5 à 10 ms) toutes les quelques secondes, plus les fichiers métier à chaque écriture et le journal des changements (1,3 Mio par jour compressé, 9 octets par changement, R2). Même contrat que l'archive : HTTP borné, aucun disque partagé.</li>
+<li><strong>Secours passif.</strong> La machine de secours tourne, à jour, mais <strong>ne se connecte à aucun appareil ni service</strong> : pas de MQTT avec le même identifiant client, pas de session Tuya locale (une seule par appareil), pas de rafraîchissement de jeton OAuth (les jetons tournants s'invalideraient entre eux), pas de connexion cloud qui ferait bannir le compte.</li>
+<li><strong>Bascule.</strong> Un humain ou le chien de garde de l'hôte décide. La machine de secours incrémente une <strong>époque</strong>, l'écrit, active ses pilotes, reprend les baux et les exécutions, et se fait trouver sous le même nom (alias mDNS ou DNS, tunnel).</li>
+<li><strong>Jamais deux maîtres.</strong> L'ancienne machine, si elle revient, voit une époque plus grande et reste passive. Une bascule par chien de garde doit d'abord arrêter l'ancienne (conteneur ou alimentation) avant d'activer la nouvelle.</li>
+<li><strong>Valeurs reprises.</strong> Elles gardent leur horodatage d'origine et ne sont pas des changements : le moteur ne déclenche rien dessus (déjà le cas au démarrage). Les pilotes les confirment en quelques secondes.</li>
+</ol>
+</section>
+<section id="63-délai-de-reprise-et-perte" class="level3">
+<h3>6.3 Délai de reprise et perte</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Étape</th>
+<th>Mesuré ou estimé</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lire l'instantané et reconstruire le hub (496 appareils, 2 264 valeurs)</td>
+<td><strong>11 à 14 ms</strong> mesurées (R1)</td>
+</tr>
+<tr class="even">
+<td>Démarrage jusqu'à « sain »</td>
+<td>≤ 2 s (budget actuel)</td>
+</tr>
+<tr class="odd">
+<td>Reconnexion des pilotes</td>
+<td>quelques secondes en local ; plus pour les services cloud (connexion, quotas) — estimé</td>
+</tr>
+<tr class="even">
+<td>Perte de valeurs</td>
+<td>l'intervalle de l'instantané (1 à 10 s selon le profil) ; les pilotes reconfirment tout</td>
+</tr>
+<tr class="odd">
+<td>Perte d'état métier</td>
+<td>nulle si la réplication précède l'acquittement ; sinon l'intervalle de poussée</td>
+</tr>
+</tbody>
+</table></div>
+<p>Une reprise en moins de 30 s après la décision de bascule est réaliste (estimé). Le délai dépend surtout de la décision (humaine ou chien de garde) et des reconnexions aux appareils.</p>
+</section>
+<section id="64-pièges-par-intégration" class="level3">
+<h3>6.4 Pièges par intégration</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Intégration</th>
+<th>Piège</th>
+<th>Règle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>MQTT (Zigbee2MQTT, Frigate, Bambu)</td>
+<td>même identifiant client : les deux se déconnectent mutuellement</td>
+<td>secours passif, aucune connexion</td>
+</tr>
+<tr class="even">
+<td>Tuya local, pont Nuki</td>
+<td>une session ou une requête à la fois</td>
+<td>idem</td>
+</tr>
+<tr class="odd">
+<td>OAuth (Netatmo et autres)</td>
+<td>jetons tournants</td>
+<td>ne rafraîchir que sur la machine maîtresse ; jetons repris du coffre répliqué</td>
+</tr>
+<tr class="even">
+<td>Appairages (Hue, Android TV, Cast)</td>
+<td>clés et certificats</td>
+<td>dans le coffre : portables avec lui</td>
+</tr>
+<tr class="odd">
+<td>Réseau (mDNS, SSDP, Wake-on-LAN)</td>
+<td>dépend du réseau local</td>
+<td>machine de secours sur le même réseau</td>
+</tr>
+<tr class="even">
+<td>Téléphones, tableaux de bord, tunnel</td>
+<td>pointent une adresse</td>
+<td>un nom stable plutôt qu'une adresse</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+</section>
+<section id="7-plan-proposé" class="level2">
+<h2>7. Plan proposé</h2>
+<p>Chaque piste est notée en impact (risque de panne ou de latence évité) et en effort (taille du changement, risque de régression).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th></th>
+<th>Effort faible</th>
+<th>Effort moyen</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Impact fort</strong></td>
+<td>correction de la perte sur retard du bus (3.3) · tâches du hub sur le <code>Handle</code> du cœur (4.2) · bail durable pour « pendant N minutes » (3.4) · index des déclencheurs d'état (3.6, option A) · budget d'entrée du hub (4.2)</td>
+<td>voies par appareil et passerelle dans <code>moli-runtime</code> (4.7) · un thread par pilote (4.3) · exécution durable des workflows (3.6) · réplication et secours passif (6.2)</td>
+</tr>
+<tr class="even">
+<td><strong>Impact modéré</strong></td>
+<td>horloge par échéance au lieu de 1 Hz (3.6) · anti-rebond à la place de l'extinction à 20/min (3.6) · règles cloud (4.6) · profil mémoire sobre (5.2)</td>
+<td>moteur compilé et filtré à la source (3.6, option B) · langage d'expressions et sous-workflows (3.6) · profil généreux (5.2) · bascule par chien de garde avec époque (6.2)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les recommandations de la V1 restent valables (sentinelle des briques, détecteur de gel, XML hors des workers, démarrage découplé…). Plusieurs se recoupent : un thread par pilote traite à la fois le gel par blocage (V1 3.1) et les décodeurs coûteux (V1 E8).</p>
+<p>Chaque lot se vérifie par un banc rejouable de l'annexe A :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Lot</th>
+<th>Preuve d'acceptation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Perte sur retard</td>
+<td>W2 rejoué : les déclencheurs injectés après une rafale de 5 000 événements partent tous</td>
+</tr>
+<tr class="even">
+<td>Bail durable</td>
+<td>« allume 30 min », redémarrage au milieu : la lumière s'éteint à l'échéance, une seule fois ; changée à la main entre-temps, elle n'est pas éteinte</td>
+</tr>
+<tr class="odd">
+<td>Index et filtrage à la source</td>
+<td>W2 rejoué à 400 automatismes : retard d'une action derrière 5 000 événements de bruit inférieur à 5 ms</td>
+</tr>
+<tr class="even">
+<td>Thread par pilote</td>
+<td>C1 rejoué dans <code>moli-os</code> : six pilotes bloquants, <code>/api/health</code> répond en moins de 5 ms</td>
+</tr>
+<tr class="odd">
+<td>Voies et passerelle</td>
+<td>C2 et C3 rejoués sur Hue et Tuya simulés : 100 % des ordres sains réussis, appareil muet refusé vite et hors ligne</td>
+</tr>
+<tr class="even">
+<td>Relance ailleurs</td>
+<td>arrêt brutal de la machine principale : la secours reprend après décision, sans double maître, baux compris</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="8-limites" class="level2">
+<h2>8. Limites</h2>
+<ul>
+<li>Bancs synthétiques sur Apple M4 : les rapports entre options sont fiables, les durées absolues ne le sont pas pour le Pi ; aucune mesure sur de vrais appareils.</li>
+<li>Les comptes des deux instances viennent d'une capture du 17 octobre 2026 ; les attributs de <code>states.json</code> sont expurgés (au plus 7 clés par entité), d'où l'usage des tailles du Recorder.</li>
+<li>Le banc I1 compare des algorithmes, pas deux moteurs complets ; le banc W, lui, mesure le vrai moteur.</li>
+<li>La bascule n'a pas été jouée de bout en bout ; seules ses briques (instantané, relecture, journal) ont été mesurées.</li>
+</ul>
+</section>
+<section id="annexe-a--bancs-dessai" class="level2">
+<h2>Annexe A — Bancs d'essai</h2>
+<p>Une crate jetable <strong>hors du dépôt</strong>, qui dépend par chemin de <code>moli-runtime</code>, <code>moli-core</code> et <code>moli-automation</code>, avec le <code>Cargo.lock</code> du dépôt. Cinq binaires : <code>moteur</code> (W), <code>index</code> (I), <code>cloisons</code> (C), <code>convergence</code> (K1), <code>memoire</code> (M), <code>relance</code> (R).</p>
+<pre class="toml"><code>[package]
+name = &quot;preuves-v2&quot;
+version = &quot;0.1.0&quot;
+edition = &quot;2024&quot;
+publish = false
+
+[workspace]
+
+[dependencies]
+moli-runtime = { path = &quot;&lt;dépôt&gt;/crates/moli-runtime&quot; }
+moli-core = { path = &quot;&lt;dépôt&gt;/crates/moli-core&quot; }
+moli-automation = { path = &quot;&lt;dépôt&gt;/crates/moli-automation&quot; }
+anyhow = &quot;1&quot;
+tokio = { version = &quot;1&quot;, features = [&quot;rt-multi-thread&quot;, &quot;macros&quot;, &quot;sync&quot;, &quot;time&quot;] }
+tokio-util = &quot;0.7&quot;
+serde_json = &quot;1&quot;
+tracing = &quot;0.1&quot;
+tracing-subscriber = { version = &quot;0.3&quot;, default-features = false, features = [&quot;fmt&quot;, &quot;registry&quot;, &quot;std&quot;] }
+flate2 = &quot;1&quot;
+rusqlite = { version = &quot;0.40&quot;, default-features = false, features = [&quot;bundled&quot;] }
+
+[profile.release]
+opt-level = &quot;s&quot;</code></pre>
+<p>Reproduire : copier le <code>Cargo.lock</code> du dépôt, puis <code>cargo run --release --bin &lt;nom&gt;</code> (<code>moteur</code> accepte une liste de tailles, par exemple <code>-- 50 400</code>).</p>
+<p>Sorties brutes :</p>
+<pre class="text"><code># Le vrai moteur d&#39;automatismes sous charge (2 workers, machine de test)
+Chaque automatisme : 1 déclencheur, 3 conditions imbriquées de 3 règles, 1 action ;
+10 % sont temporaires (« allume 30 min »), 10 % attendent une condition (wait_for).
+N =  50 : chargement 0.29 s, mémoire du moteur 698 Kio ; croisière p50 0.4 ms p99 2.2 ms (20 actions)
+        rafale  2000 : sondes au milieu p50 6.4 ms max 6.9 ms perdues 0 ; sonde après p50 11.5 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 12.8 ms max 13.5 ms perdues 0 ; sonde après p50 23.3 ms ; retards du moteur 0 (0 événements manqués)
+N = 100 : chargement 1.01 s, mémoire du moteur 1154 Kio ; croisière p50 0.4 ms p99 1.3 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 10.5 ms max 10.6 ms perdues 0 ; sonde après p50 18.6 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 40.3 ms max 40.7 ms perdues 0 ; sonde après p50 — ; retards du moteur 3 (1441 événements manqués)
+N = 200 : chargement 5.38 s, mémoire du moteur 2066 Kio ; croisière p50 0.5 ms p99 0.9 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 21.9 ms max 22.5 ms perdues 0 ; sonde après p50 33.7 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 36.1 ms max 36.2 ms perdues 0 ; sonde après p50 70.0 ms ; retards du moteur 0 (0 événements manqués)
+N = 400 : chargement 17.55 s, mémoire du moteur 3766 Kio ; croisière p50 0.5 ms p99 2.9 ms (19 actions)
+        rafale  2000 : sondes au milieu p50 36.6 ms max 38.3 ms perdues 0 ; sonde après p50 59.7 ms ; retards du moteur 0 (0 événements manqués)
+        rafale  5000 : sondes au milieu p50 80.1 ms max 161.0 ms perdues 0 ; sonde après p50 — ; retards du moteur 2 (1483 événements manqués)
+
+# Workflows complexes : balayage d&#39;aujourd&#39;hui contre moteur compilé (machine de test)
+
+## I1 — trouver les workflows à lancer et évaluer leurs 9 règles
+200 000 événements (20 000 pour N = 10 000), dont 10 % sur un déclencheur ; temps moyen par événement.
+- N =    100 : balayage       908 ns/événement ; compilé     3 ns/événement ; ×282 ; 20000 lancements
+- N =    400 : balayage      1788 ns/événement ; compilé     3 ns/événement ; ×664 ; 20000 lancements
+- N =   1000 : balayage      4222 ns/événement ; compilé     3 ns/événement ; ×1263 ; 20000 lancements
+- N =  10000 : balayage     47574 ns/événement ; compilé    10 ns/événement ; ×4825 ; 2000 lancements
+
+## I2 — lire « moyenne sur 1 h » d&#39;un capteur qui change chaque seconde
+- SQLite (index (point, ts), 3 600 lignes lues) : 192 µs par lecture, plus le passage par un thread bloquant
+- balayage d&#39;une fenêtre en mémoire : 3.7 µs par lecture
+- agrégat tenu au fil de l&#39;eau : 5 ns par relevé reçu, 1.0 ns par lecture
+
+## I3 — variables et calculs : « (moyenne 1 h du salon − 2) &gt; 19 et (présence ou 7 h ≤ heure &lt; 22 h) »
+- interprété depuis le JSON : 743 ns ; compilé une fois à la validation : 28 ns (×27)
+
+## I4 — « allume 30 minutes » en bail durable : 10 000 baux
+- ordonnancement de 10 000 échéances (tas binaire) et extraction des 5000 dues : 0.31 ms au total
+- écrire un bail de façon durable (ajout + fsync) : 3.4 ms, une seule fois au lancement ; rien pendant l&#39;attente
+
+# Cloisons : un matériel muet ou un pilote bloquant ne doit pas arrêter le reste
+
+## C1 — un thread par pilote contre les deux workers partagés
+- 2 pilotes bloquants partagés :   9 ordres en 2 s, médiane   2.7 ms, pire 200.2 ms ; pire retard d&#39;une minuterie de 10 ms  195.0 ms
+- 6 pilotes bloquants isolés   :  87 ordres en 2 s, médiane   0.1 ms, pire  47.7 ms ; pire retard d&#39;une minuterie de 10 ms   43.6 ms
+- coût : 40 pilotes isolés au repos ajoutent 2048 Kio de RSS, soit 51 Kio par pilote (pile de 2 Mio réservée, seules les pages touchées comptent)
+
+## C2 — un pont, 20 lampes, une lampe muette (API du pont sans limite de concurrence)
+- boucle unique       : lampes saines 37/237 réussis, médiane 3992.8 ms, pire 4622.8 ms ; lampe muette : médiane 4002.2 ms, réponse la plus rapide   0.0 ms
+- voie par appareil   : lampes saines 237/237 réussis, médiane  32.0 ms, pire   33.6 ms ; lampe muette : médiane 5001.7 ms, réponse la plus rapide 4002.1 ms
+- voies + disjoncteur : lampes saines 237/237 réussis, médiane  32.0 ms, pire   42.1 ms ; lampe muette : médiane 2972.5 ms, réponse la plus rapide   0.0 ms
+
+## C3 — le même pont, mais son API ne traite que 4 requêtes à la fois
+- tâche par ordre     : lampes saines 237/237 réussis, médiane 1453.1 ms, pire 3991.4 ms ; lampe muette : médiane 5001.2 ms, réponse la plus rapide 4001.6 ms
+- voie par appareil   : lampes saines 237/237 réussis, médiane  32.0 ms, pire   51.2 ms ; lampe muette : médiane 5001.8 ms, réponse la plus rapide 4002.2 ms
+- voies + disjoncteur : lampes saines 237/237 réussis, médiane  32.0 ms, pire   52.1 ms ; lampe muette : médiane 2854.3 ms, réponse la plus rapide   0.0 ms
+
+# Le moteur voit tout, même quand les pilotes vivent sur leurs propres threads
+Capteur → moteur d&#39;automatismes réel → lampe, avec deux pilotes qui bloquent 200 ms en boucle.
+- pilotes partagés (2 workers)     : 20 actions sur 40 événements, médiane 12.1 ms, pire 204.2 ms ; capteur sur « coeur », lampe sur « coeur », moteur sur « coeur »
+- pilotes isolés (un thread chacun) : 20 actions sur 40 événements, médiane 0.2 ms, pire 1.9 ms ; capteur sur « pilote-capteurs », lampe sur « pilote-lampes », moteur sur « coeur »
+
+# Mémoire : l&#39;état utile d&#39;une maison en Rust
+
+## M1 — tailles des types du cœur
+- Value 24 o, Sample 32 o, (u64, Value) 32 o, Arc&lt;str&gt; 16 o
+
+## M2 — modèle du hub à l&#39;échelle des deux Home Assistant réunis
+- ×1 : 496 appareils, 2264 valeurs → 1.00 Mio pour le modèle du hub (≈ 464 o par valeur, définitions comprises)
+- ×10 : 4960 appareils, 22640 valeurs → 9.86 Mio pour le modèle du hub (≈ 457 o par valeur, définitions comprises)
+
+## M3 — garder l&#39;historique récent en mémoire (taux réels, 1 487 séries)
+- fenêtre 1 j : 161398 relevés → naïf 5.48 Mio ; compact 1.37 Mio ; mixte (seaux/minute pour les séries &gt; 1/min) 2.28 Mio
+- fenêtre 7 j : 1129783 relevés → naïf 40.71 Mio ; compact 8.78 Mio ; mixte (seaux/minute pour les séries &gt; 1/min) 15.14 Mio
+
+## M4 — instantané pour une relance ailleurs
+- instantané d&#39;exécution (2 264 valeurs + 400 automatismes) : JSON 877 Kio en 9.7 ms, gzip 54 Kio en 1.0 ms, écriture + fsync 7.5 ms, relecture 10.5 ms (400 automatismes relus)
+
+# Relance ailleurs depuis l&#39;état
+- R1 : instantané de 20 Kio compressé ; décompression, lecture et reconstruction du hub (496 appareils, 2 264 valeurs) : 14 ms
+- R2 : journal d&#39;une journée (163387 changements) : 3.0 Mio brut, 1.3 Mio compressé, produit en 46 ms ; soit 9 octets par changement</code></pre>
+<p>Codes sources :</p>
+<details class="code"><summary>Code complet de <code>src/bin/moteur.rs</code></summary><pre class="rust"><code>//! W1-W3 : le vrai moteur `moli-automation` sous des workflows réalistes, jusqu&#39;à son
+//! plafond (400 automatismes). Combien coûte un événement, combien attend une action
+//! derrière une rafale, et un déclencheur peut-il être perdu ?
+
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicIsize, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+use moli_automation::{Actor, Author, Automation, Automations, Config, Graph, Mode};
+use moli_core::{Access, Device, DeviceId, Kind, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
+use tracing_subscriber::layer::SubscriberExt;
+
+struct Compte;
+static OCTETS: AtomicIsize = AtomicIsize::new(0);
+unsafe impl GlobalAlloc for Compte {
+    unsafe fn alloc(&amp;self, l: Layout) -&gt; *mut u8 {
+        let p = unsafe { System.alloc(l) };
+        if !p.is_null() {
+            OCTETS.fetch_add(l.size() as isize, Ordering::Relaxed);
+        }
+        p
+    }
+    unsafe fn dealloc(&amp;self, p: *mut u8, l: Layout) {
+        unsafe { System.dealloc(p, l) };
+        OCTETS.fetch_sub(l.size() as isize, Ordering::Relaxed);
+    }
+    unsafe fn realloc(&amp;self, p: *mut u8, l: Layout, n: usize) -&gt; *mut u8 {
+        let q = unsafe { System.realloc(p, l, n) };
+        if !q.is_null() {
+            OCTETS.fetch_add(n as isize - l.size() as isize, Ordering::Relaxed);
+        }
+        q
+    }
+}
+#[global_allocator]
+static A: Compte = Compte;
+
+/// Compte les avertissements « automations lagged » du moteur et les événements manqués.
+struct Retards {
+    fois: Arc&lt;AtomicUsize&gt;,
+    manques: Arc&lt;AtomicU64&gt;,
+}
+impl&lt;S: tracing::Subscriber&gt; tracing_subscriber::Layer&lt;S&gt; for Retards {
+    fn on_event(&amp;self, e: &amp;tracing::Event&lt;&#39;_&gt;, _: tracing_subscriber::layer::Context&lt;&#39;_, S&gt;) {
+        if *e.metadata().level() != tracing::Level::WARN {
+            return;
+        }
+        struct V(bool, u64);
+        impl tracing::field::Visit for V {
+            fn record_debug(&amp;mut self, f: &amp;tracing::field::Field, v: &amp;dyn std::fmt::Debug) {
+                if f.name() == &quot;message&quot; &amp;&amp; format!(&quot;{v:?}&quot;).contains(&quot;automations lagged&quot;) {
+                    self.0 = true;
+                }
+            }
+            fn record_u64(&amp;mut self, f: &amp;tracing::field::Field, v: u64) {
+                if f.name() == &quot;missed&quot; {
+                    self.1 = v;
+                }
+            }
+        }
+        let mut v = V(false, 0);
+        e.record(&amp;mut v);
+        if v.0 {
+            self.fois.fetch_add(1, Ordering::Relaxed);
+            self.manques.fetch_add(v.1, Ordering::Relaxed);
+        }
+    }
+}
+
+const CAPTEURS: usize = 1_800; // 360 appareils × 5 valeurs
+const LAMPES: usize = 400; // une lampe par automatisme
+const CHAUDS: usize = 10; // capteurs partagés par 20 % des automatismes
+const BRUIT: std::ops::Range&lt;usize&gt; = 1_000..1_700; // capteurs qui ne déclenchent rien
+
+fn capteur(s: usize) -&gt; (DeviceId, String) {
+    (DeviceId::from(format!(&quot;maison:c{}&quot;, s / 5)), format!(&quot;v{}&quot;, s % 5))
+}
+fn lampe(k: usize) -&gt; PointId {
+    PointId::from(format!(&quot;maison:l{k}/on&quot;))
+}
+
+struct Banc {
+    arrivees: Mutex&lt;Vec&lt;(usize, Instant)&gt;&gt;,
+}
+
+struct Maison {
+    banc: Arc&lt;Banc&gt;,
+    injections: Mutex&lt;Option&lt;mpsc::UnboundedReceiver&lt;(usize, f64)&gt;&gt;&gt;,
+}
+
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            let numerique = |key: String| PointSpec {
+                key: key.clone().into(),
+                label: key.into(),
+                kind: Kind::Numeric { min: None, max: None, step: None },
+                access: Access { read: true, write: false },
+                unit: None,
+                semantic: Semantic::Other,
+            };
+            for d in 0..CAPTEURS / 5 {
+                let id = DeviceId::from(format!(&quot;maison:c{d}&quot;));
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;capteur {d}&quot;).into(),
+                    manufacturer: None,
+                    model: None,
+                    description: None,
+                    native_room: None,
+                    members: vec![],
+                    points: (0..5).map(|k| numerique(format!(&quot;v{k}&quot;))).collect(),
+                });
+                for k in 0..5 {
+                    ctx.set_state(&amp;id, &amp;format!(&quot;v{k}&quot;), Value::Float(0.0));
+                }
+            }
+            for k in 0..LAMPES {
+                let id = DeviceId::from(format!(&quot;maison:l{k}&quot;));
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;lampe {k}&quot;).into(),
+                    manufacturer: None,
+                    model: None,
+                    description: None,
+                    native_room: None,
+                    members: vec![],
+                    points: vec![PointSpec {
+                        key: &quot;on&quot;.into(),
+                        label: &quot;on&quot;.into(),
+                        kind: Kind::Binary,
+                        access: Access { read: true, write: true },
+                        unit: None,
+                        semantic: Semantic::OnOff,
+                    }],
+                });
+                ctx.set_state(&amp;id, &quot;on&quot;, Value::Bool(false));
+            }
+            let mut injections = self.injections.lock().unwrap().take().expect(&quot;une seule exécution&quot;);
+            ctx.ready();
+            loop {
+                tokio::select! {
+                    cmd = ctx.next_command() =&gt; {
+                        let Some(cmd) = cmd else { return Ok(()) };
+                        let k: usize = cmd.device.id.as_str()[&quot;maison:l&quot;.len()..].parse().unwrap();
+                        self.banc.arrivees.lock().unwrap().push((k, Instant::now()));
+                        ctx.set_state(&amp;cmd.device.id, &amp;cmd.key, cmd.value.clone());
+                        cmd.reply(Ok(()));
+                    }
+                    inj = injections.recv() =&gt; {
+                        let Some((s, v)) = inj else { return Ok(()) };
+                        let (id, key) = capteur(s);
+                        ctx.set_state(&amp;id, &amp;key, Value::Float(v));
+                    }
+                }
+            }
+        })
+    }
+}
+
+/// Le déclencheur de l&#39;automatisme k, et s&#39;il passe ses conditions.
+fn declencheur(k: usize, n: usize) -&gt; usize {
+    if k &lt; n / 5 { k % CHAUDS } else { 100 + k }
+}
+fn passe(k: usize) -&gt; bool {
+    k % 2 == 0
+}
+
+fn graphe(k: usize, n: usize) -&gt; serde_json::Value {
+    let t = declencheur(k, n);
+    let (td, tk) = capteur(t);
+    let regle = |j: usize| {
+        let (d, key) = capteur(BRUIT.start + (k * 7 + j * 13) % 690);
+        if passe(k) {
+            serde_json::json!({&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:format!(&quot;{d}/{key}&quot;),&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0})
+        } else {
+            serde_json::json!({&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:format!(&quot;{d}/{key}&quot;),&quot;op&quot;:&quot;gt&quot;,&quot;value&quot;:1e9})
+        }
+    };
+    let mut nodes = vec![
+        serde_json::json!({&quot;id&quot;:&quot;t&quot;,&quot;type&quot;:&quot;when_state&quot;,&quot;point&quot;:format!(&quot;{td}/{tk}&quot;)}),
+        serde_json::json!({&quot;id&quot;:&quot;c1&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[regle(0),regle(1),regle(2)]}),
+        serde_json::json!({&quot;id&quot;:&quot;c2&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[regle(3),regle(4),regle(5)]}),
+        serde_json::json!({&quot;id&quot;:&quot;c3&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[regle(6),regle(7),regle(8)]}),
+        serde_json::json!({&quot;id&quot;:&quot;a&quot;,&quot;type&quot;:&quot;toggle&quot;,&quot;point&quot;:lampe(k).as_str()}),
+    ];
+    let mut edges = vec![
+        serde_json::json!({&quot;from&quot;:&quot;t&quot;,&quot;to&quot;:&quot;c1&quot;}),
+        serde_json::json!({&quot;from&quot;:&quot;c1&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;c2&quot;}),
+        serde_json::json!({&quot;from&quot;:&quot;c2&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;c3&quot;}),
+        serde_json::json!({&quot;from&quot;:&quot;c3&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;a&quot;}),
+    ];
+    match k % 10 {
+        // Workflow temporaire : « allume 30 minutes ».
+        4 =&gt; {
+            nodes.push(serde_json::json!({&quot;id&quot;:&quot;w&quot;,&quot;type&quot;:&quot;wait&quot;,&quot;seconds&quot;:1800}));
+            nodes.push(serde_json::json!({&quot;id&quot;:&quot;b&quot;,&quot;type&quot;:&quot;toggle&quot;,&quot;point&quot;:lampe(k).as_str()}));
+            edges.push(serde_json::json!({&quot;from&quot;:&quot;a&quot;,&quot;to&quot;:&quot;w&quot;}));
+            edges.push(serde_json::json!({&quot;from&quot;:&quot;w&quot;,&quot;to&quot;:&quot;b&quot;}));
+        }
+        // Attente d&#39;une condition qui ne vient pas (réévaluée à chaque événement).
+        6 =&gt; {
+            let (d, key) = capteur(1_799);
+            nodes.push(serde_json::json!({&quot;id&quot;:&quot;wf&quot;,&quot;type&quot;:&quot;wait_for&quot;,&quot;timeout_s&quot;:600,
+                &quot;rule&quot;:{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:format!(&quot;{d}/{key}&quot;),&quot;op&quot;:&quot;eq&quot;,&quot;value&quot;:12345}}));
+            edges.push(serde_json::json!({&quot;from&quot;:&quot;a&quot;,&quot;to&quot;:&quot;wf&quot;}));
+        }
+        _ =&gt; {}
+    }
+    serde_json::json!({&quot;nodes&quot;: nodes, &quot;edges&quot;: edges})
+}
+
+fn automatisme(k: usize, n: usize) -&gt; Automation {
+    Automation {
+        id: String::new(),
+        name: format!(&quot;Automatisme {k}&quot;),
+        enabled: true,
+        mode: Mode::Restart,
+        graph: serde_json::from_value::&lt;Graph&gt;(graphe(k, n)).unwrap(),
+        author: Author::Human,
+        approved: None,
+        approved_version: None,
+        activation: None,
+        note: None,
+        created: 0,
+        updated: 0,
+    }
+}
+
+const HUMAIN: Actor = Actor { human: true, author: Author::Human };
+
+struct Mesure {
+    latences: Vec&lt;Duration&gt;,
+    perdus: usize,
+}
+
+/// Latences des automatismes « passants » déclenchés par chaque sonde.
+fn latences(banc: &amp;Banc, sondes: &amp;[(usize, Instant)], n: usize, depuis: usize) -&gt; Mesure {
+    let arrivees = banc.arrivees.lock().unwrap();
+    let mut m = Mesure { latences: vec![], perdus: 0 };
+    for &amp;(s, t0) in sondes {
+        for k in (0..n).filter(|&amp;k| passe(k) &amp;&amp; declencheur(k, n) == s) {
+            match arrivees[depuis..].iter().find(|(a, t)| *a == k &amp;&amp; *t &gt;= t0) {
+                Some((_, t)) =&gt; m.latences.push(*t - t0),
+                None =&gt; m.perdus += 1,
+            }
+        }
+    }
+    m.latences.sort();
+    m
+}
+
+fn ms(d: Duration) -&gt; String {
+    format!(&quot;{:.1} ms&quot;, d.as_secs_f64() * 1e3)
+}
+fn q(v: &amp;[Duration], p: f64) -&gt; String {
+    if v.is_empty() { &quot;—&quot;.into() } else { ms(v[((v.len() - 1) as f64 * p) as usize]) }
+}
+
+fn essai(n: usize, retards: &amp;Arc&lt;AtomicUsize&gt;, manques: &amp;Arc&lt;AtomicU64&gt;) {
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    rt.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let banc = Arc::new(Banc { arrivees: Mutex::new(vec![]) });
+        let (tx, rx) = mpsc::unbounded_channel();
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { banc: banc.clone(), injections: Mutex::new(Some(rx)) }), cancel.clone());
+        while hub.state(&amp;lampe(LAMPES - 1)).is_none() {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        let (autos, _tache) = Automations::start(&amp;hub, Config::default(), None, cancel.clone()).await.unwrap();
+        let avant = OCTETS.load(Ordering::Relaxed);
+        let t = Instant::now();
+        for k in 0..n {
+            let a = autos.save(automatisme(k, n), HUMAIN).await.unwrap();
+            autos.approve(&amp;a.id, &amp;a.fingerprint(), HUMAIN).await.unwrap();
+        }
+        let charge = t.elapsed();
+        let memoire = (OCTETS.load(Ordering::Relaxed) - avant) as f64;
+        let mut valeur = 1.0;
+        let mut injecte = |s: usize, sondes: &amp;mut Vec&lt;(usize, Instant)&gt;, sonde: bool| {
+            valeur += 1.0;
+            if sonde {
+                sondes.push((s, Instant::now()));
+            }
+            tx.send((s, valeur)).unwrap();
+        };
+        // Les workflows en attente (« 30 minutes », « attendre que ») démarrent.
+        let mut amorces = vec![];
+        for k in (0..n).filter(|k| passe(*k) &amp;&amp; matches!(k % 10, 4 | 6)) {
+            injecte(declencheur(k, n), &amp;mut amorces, false);
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        // W1 — régime de croisière : 10 déclencheurs par seconde pendant 5 s.
+        let depuis = banc.arrivees.lock().unwrap().len();
+        let mut sondes = vec![];
+        for i in 0..50 {
+            let k = (i * 37) % n;
+            let s = if declencheur(k, n) &lt; CHAUDS { 100 + (k | 1) } else { declencheur(k, n) };
+            injecte(s, &amp;mut sondes, true);
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        let croisiere = latences(&amp;banc, &amp;sondes, n, depuis);
+        let mut lignes = vec![format!(
+            &quot;N = {n:&gt;3} : chargement {:.2} s, mémoire du moteur {:.0} Kio ; croisière p50 {} p99 {} ({} actions)&quot;,
+            charge.as_secs_f64(),
+            memoire / 1024.0,
+            q(&amp;croisiere.latences, 0.5),
+            q(&amp;croisiere.latences, 0.99),
+            croisiere.latences.len()
+        )];
+        // W2 — rafale de bruit (reconnexion d&#39;un pont qui republie tout) avec des sondes
+        // au milieu et une après.
+        for rafale in [2_000usize, 5_000] {
+            retards.store(0, Ordering::Relaxed);
+            manques.store(0, Ordering::Relaxed);
+            let depuis = banc.arrivees.lock().unwrap().len();
+            let (mut milieu, mut apres, mut _rien) = (vec![], vec![], vec![]);
+            let sonde_k = |i: usize| -&gt; usize {
+                // Un automatisme passant à déclencheur propre, jamais un capteur chaud.
+                let k = (n / 5 + 2 * i) &amp; !1;
+                declencheur(k.min(n - 2) &amp; !1, n)
+            };
+            for i in 0..rafale {
+                if i == rafale / 2 {
+                    for j in 0..5 {
+                        injecte(sonde_k(j), &amp;mut milieu, true);
+                    }
+                    injecte(0, &amp;mut milieu, true); // un capteur chaud : plusieurs automatismes
+                }
+                injecte(BRUIT.start + (i * 7919) % (BRUIT.end - BRUIT.start), &amp;mut _rien, false);
+            }
+            for j in 5..10 {
+                injecte(sonde_k(j), &amp;mut apres, true);
+            }
+            tokio::time::sleep(Duration::from_secs(4)).await;
+            let m = latences(&amp;banc, &amp;milieu, n, depuis);
+            let a = latences(&amp;banc, &amp;apres, n, depuis);
+            lignes.push(format!(
+                &quot;        rafale {rafale:&gt;5} : sondes au milieu p50 {} max {} perdues {} ; sonde après p50 {} ; retards du moteur {} ({} événements manqués)&quot;,
+                q(&amp;m.latences, 0.5),
+                q(&amp;m.latences, 1.0),
+                m.perdus,
+                q(&amp;a.latences, 0.5),
+                retards.load(Ordering::Relaxed),
+                manques.load(Ordering::Relaxed)
+            ));
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+        for l in lignes {
+            println!(&quot;{l}&quot;);
+        }
+        cancel.cancel();
+        tokio::time::sleep(Duration::from_millis(200)).await;
+    });
+}
+
+fn main() {
+    let fois = Arc::new(AtomicUsize::new(0));
+    let manques = Arc::new(AtomicU64::new(0));
+    let abonne = tracing_subscriber::registry().with(Retards { fois: fois.clone(), manques: manques.clone() });
+    tracing::subscriber::set_global_default(abonne).unwrap();
+    println!(&quot;# Le vrai moteur d&#39;automatismes sous charge (2 workers, machine de test)&quot;);
+    println!(&quot;Chaque automatisme : 1 déclencheur, 3 conditions imbriquées de 3 règles, 1 action ;&quot;);
+    println!(&quot;10 % sont temporaires (« allume 30 min »), 10 % attendent une condition (wait_for).&quot;);
+    let n_list: Vec&lt;usize&gt; = std::env::args().skip(1).filter_map(|a| a.parse().ok()).collect();
+    for n in if n_list.is_empty() { vec![50, 100, 200, 400] } else { n_list } {
+        essai(n, &amp;fois, &amp;manques);
+    }
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>src/bin/index.rs</code></summary><pre class="rust"><code>//! I1-I4 : ce que coûte un workflow complexe selon la façon de l&#39;exécuter.
+//! Même charge, deux moteurs : un balayage à la manière d&#39;aujourd&#39;hui (chaînes, JSON
+//! relu à chaque évaluation) et un moteur compilé (points numérotés, règles compilées,
+//! index par point, agrégats tenus au fil de l&#39;eau).
+
+use std::collections::{BTreeMap, BinaryHeap, HashMap, VecDeque};
+use std::hint::black_box;
+use std::time::Instant;
+
+use moli_core::Value;
+
+#[derive(Clone, Copy)]
+enum Op {
+    Ge,
+    Gt,
+    Eq,
+}
+
+struct Regle {
+    point: String,
+    op: Op,
+    valeur: serde_json::Value,
+}
+
+struct Auto {
+    declencheur: String,
+    regles: Vec&lt;Regle&gt;, // 3 conditions de 3 règles, mises bout à bout
+}
+
+fn nom(p: usize) -&gt; String {
+    format!(&quot;z2m:0x00158d00{:08x}/temperature_{}&quot;, p / 5, p % 5)
+}
+
+/// N automatismes : déclencheur propre, 9 règles sur des points de contexte.
+fn automatismes(n: usize) -&gt; Vec&lt;Auto&gt; {
+    (0..n)
+        .map(|k| Auto {
+            declencheur: nom(k),
+            regles: (0..9)
+                .map(|j| Regle {
+                    point: nom(20_000 + (k * 7 + j * 13) % 2_000),
+                    op: if j == 8 { Op::Eq } else if k % 2 == 0 { Op::Ge } else { Op::Gt },
+                    valeur: if j == 8 { serde_json::json!(0.0) } else { serde_json::json!(0) },
+                })
+                .collect(),
+        })
+        .collect()
+}
+
+// ---- moteur à balayage, comme aujourd&#39;hui -----------------------------------------
+
+struct Balayage {
+    autos: Vec&lt;Auto&gt;,
+    derniers: HashMap&lt;String, Value&gt;,
+    etat: BTreeMap&lt;String, Value&gt;,
+}
+
+fn comparer(cur: &amp;Value, op: Op, attendu: &amp;Value) -&gt; bool {
+    match (cur.as_f64(), attendu.as_f64(), op) {
+        (Some(c), Some(v), Op::Ge) =&gt; c &gt;= v,
+        (Some(c), Some(v), Op::Gt) =&gt; c &gt; v,
+        (Some(c), Some(v), Op::Eq) =&gt; (c - v).abs() &lt; 1e-9,
+        _ =&gt; false,
+    }
+}
+
+impl Balayage {
+    fn tient(&amp;self, r: &amp;Regle) -&gt; bool {
+        let point = r.point.clone(); // PointId::from(point)
+        let Some(cur) = self.etat.get(&amp;point).cloned() else { return false }; // hub.state
+        let attendu = r.valeur.clone(); // canonical_expected
+        comparer(&amp;cur, r.op, &amp;Value::from_json(&amp;attendu)) // same / as_f64
+    }
+    fn evenement(&amp;mut self, point: &amp;str, v: Value) -&gt; usize {
+        self.etat.insert(point.to_owned(), v.clone());
+        let cle = point.to_string();
+        let avant = self.derniers.insert(cle.clone(), v.clone());
+        if avant.as_ref() == Some(&amp;v) {
+            return 0;
+        }
+        let mut lances = 0;
+        for a in &amp;self.autos {
+            if a.declencheur == cle &amp;&amp; a.regles.iter().all(|r| self.tient(r)) {
+                lances += 1;
+            }
+        }
+        lances
+    }
+}
+
+// ---- moteur compilé et indexé ----------------------------------------------------
+
+struct Compile {
+    etat: Vec&lt;f64&gt;,
+    par_point: Vec&lt;Vec&lt;u32&gt;&gt;,
+    regles: Vec&lt;Vec&lt;(u32, Op, f64)&gt;&gt;,
+}
+
+impl Compile {
+    fn depuis(autos: &amp;[Auto], points: &amp;HashMap&lt;String, u32&gt;) -&gt; Self {
+        let mut par_point = vec![Vec::new(); points.len()];
+        let mut regles = Vec::with_capacity(autos.len());
+        for (k, a) in autos.iter().enumerate() {
+            par_point[points[&amp;a.declencheur] as usize].push(k as u32);
+            regles.push(
+                a.regles
+                    .iter()
+                    .map(|r| (points[&amp;r.point], r.op, Value::from_json(&amp;r.valeur).as_f64().unwrap()))
+                    .collect(),
+            );
+        }
+        Self { etat: vec![0.0; points.len()], par_point, regles }
+    }
+    fn evenement(&amp;mut self, p: u32, v: f64) -&gt; usize {
+        let avant = std::mem::replace(&amp;mut self.etat[p as usize], v);
+        if avant == v {
+            return 0;
+        }
+        let mut lances = 0;
+        for &amp;a in &amp;self.par_point[p as usize] {
+            if self.regles[a as usize].iter().all(|&amp;(q, op, x)| {
+                let c = self.etat[q as usize];
+                match op {
+                    Op::Ge =&gt; c &gt;= x,
+                    Op::Gt =&gt; c &gt; x,
+                    Op::Eq =&gt; (c - x).abs() &lt; 1e-9,
+                }
+            }) {
+                lances += 1;
+            }
+        }
+        lances
+    }
+}
+
+fn i1() {
+    println!(&quot;\n## I1 — trouver les workflows à lancer et évaluer leurs 9 règles&quot;);
+    println!(&quot;200 000 événements (20 000 pour N = 10 000), dont 10 % sur un déclencheur ; temps moyen par événement.&quot;);
+    for n in [100usize, 400, 1_000, 10_000] {
+        let autos = automatismes(n);
+        let mut points: HashMap&lt;String, u32&gt; = HashMap::new();
+        for p in (0..n).chain(20_000..22_000).chain(30_000..32_000) {
+            let id = points.len() as u32;
+            points.entry(nom(p)).or_insert(id);
+        }
+        let evenements = if n &gt;= 10_000 { 20_000usize } else { 200_000 };
+        let flux: Vec&lt;usize&gt; = (0..evenements)
+            .map(|i| if i % 10 == 0 { (i * 7919) % n } else { 30_000 + (i * 104_729) % 2_000 })
+            .collect();
+        // Balayage.
+        let mut b = Balayage { autos: automatismes(n), derniers: HashMap::new(), etat: BTreeMap::new() };
+        for p in 20_000..22_000 {
+            b.etat.insert(nom(p), Value::Float(0.0));
+        }
+        let noms: Vec&lt;String&gt; = flux.iter().map(|&amp;p| nom(p)).collect();
+        let t = Instant::now();
+        let mut total_b = 0;
+        for (i, p) in noms.iter().enumerate() {
+            total_b += b.evenement(p, Value::Float((i + 1) as f64));
+        }
+        let ns_b = t.elapsed().as_nanos() as f64 / flux.len() as f64;
+        // Compilé.
+        let mut c = Compile::depuis(&amp;autos, &amp;points);
+        let ids: Vec&lt;u32&gt; = flux.iter().map(|&amp;p| points[&amp;nom(p)]).collect();
+        let t = Instant::now();
+        let mut total_c = 0;
+        for (i, &amp;p) in ids.iter().enumerate() {
+            total_c += c.evenement(p, (i + 1) as f64);
+        }
+        let ns_c = t.elapsed().as_nanos() as f64 / flux.len() as f64;
+        assert_eq!(total_b, total_c, &quot;les deux moteurs lancent les mêmes workflows&quot;);
+        println!(
+            &quot;- N = {n:&gt;6} : balayage {:&gt;9.0} ns/événement ; compilé {:&gt;5.0} ns/événement ; ×{:.0} ; {} lancements&quot;,
+            ns_b,
+            ns_c,
+            ns_b / ns_c,
+            black_box(total_c)
+        );
+    }
+}
+
+fn i2() {
+    println!(&quot;\n## I2 — lire « moyenne sur 1 h » d&#39;un capteur qui change chaque seconde&quot;);
+    let conn = rusqlite::Connection::open_in_memory().unwrap();
+    conn.execute_batch(
+        &quot;CREATE TABLE samples (point INTEGER, ts INTEGER, num REAL, PRIMARY KEY (point, ts)) WITHOUT ROWID;&quot;,
+    )
+    .unwrap();
+    let maintenant: i64 = 1_792_000_000_000;
+    {
+        let tx = conn.unchecked_transaction().unwrap();
+        let mut ins = tx.prepare(&quot;INSERT INTO samples VALUES (?1, ?2, ?3)&quot;).unwrap();
+        for p in 0..20i64 {
+            for s in 0..86_400i64 {
+                ins.execute((p, maintenant - (86_400 - s) * 1000, (s % 100) as f64)).unwrap();
+            }
+        }
+        drop(ins);
+        tx.commit().unwrap();
+    }
+    let mut req = conn.prepare(&quot;SELECT avg(num) FROM samples WHERE point = ?1 AND ts &gt;= ?2&quot;).unwrap();
+    let t = Instant::now();
+    let mut s = 0.0;
+    for i in 0..2_000i64 {
+        let v: f64 = req.query_row((i % 20, maintenant - 3_600_000), |r| r.get(0)).unwrap();
+        s += v;
+    }
+    let sql = t.elapsed().as_nanos() as f64 / 2_000.0;
+    let fenetre: VecDeque&lt;(i64, f64)&gt; = (0..3_600).map(|s| (maintenant - (3_600 - s) * 1000, (s % 100) as f64)).collect();
+    let t = Instant::now();
+    for _ in 0..2_000 {
+        s += black_box(&amp;fenetre).iter().map(|(_, v)| v).sum::&lt;f64&gt;() / fenetre.len() as f64;
+    }
+    let balayage = t.elapsed().as_nanos() as f64 / 2_000.0;
+    // Agrégat tenu au fil de l&#39;eau : somme et compte glissants, mis à jour à chaque relevé.
+    let (mut somme, mut compte, mut fen) = (0.0f64, 0usize, VecDeque::new());
+    let t = Instant::now();
+    for i in 0..1_000_000i64 {
+        let ts = maintenant + i * 1000;
+        let v = (i % 100) as f64;
+        fen.push_back((ts, v));
+        somme += v;
+        compte += 1;
+        while fen.front().is_some_and(|(t0, _)| *t0 &lt; ts - 3_600_000) {
+            let (_, ancien) = fen.pop_front().unwrap();
+            somme -= ancien;
+            compte -= 1;
+        }
+    }
+    let maj = t.elapsed().as_nanos() as f64 / 1_000_000.0;
+    let t = Instant::now();
+    for _ in 0..1_000_000 {
+        s += black_box(somme) / black_box(compte) as f64;
+    }
+    let lecture = t.elapsed().as_nanos() as f64 / 1_000_000.0;
+    black_box(s);
+    println!(
+        &quot;- SQLite (index (point, ts), 3 600 lignes lues) : {:.0} µs par lecture, plus le passage par un thread bloquant&quot;,
+        sql / 1000.0
+    );
+    println!(&quot;- balayage d&#39;une fenêtre en mémoire : {:.1} µs par lecture&quot;, balayage / 1000.0);
+    println!(&quot;- agrégat tenu au fil de l&#39;eau : {:.0} ns par relevé reçu, {:.1} ns par lecture&quot;, maj, lecture);
+}
+
+// ---- I3 : variables et calculs ----------------------------------------------------
+
+fn interpreter(e: &amp;serde_json::Value, vars: &amp;HashMap&lt;String, f64&gt;) -&gt; f64 {
+    if let Some(c) = e.get(&quot;const&quot;) {
+        return c.as_f64().unwrap();
+    }
+    if let Some(v) = e.get(&quot;var&quot;) {
+        return vars[v.as_str().unwrap()];
+    }
+    let args: Vec&lt;f64&gt; = e[&quot;args&quot;].as_array().unwrap().iter().map(|a| interpreter(a, vars)).collect();
+    match e[&quot;op&quot;].as_str().unwrap() {
+        &quot;sub&quot; =&gt; args[0] - args[1],
+        &quot;gt&quot; =&gt; f64::from(u8::from(args[0] &gt; args[1])),
+        &quot;and&quot; =&gt; f64::from(u8::from(args.iter().all(|a| *a != 0.0))),
+        &quot;or&quot; =&gt; f64::from(u8::from(args.iter().any(|a| *a != 0.0))),
+        &quot;between&quot; =&gt; f64::from(u8::from(args[1] &lt;= args[0] &amp;&amp; args[0] &lt; args[2])),
+        _ =&gt; unreachable!(),
+    }
+}
+
+enum Expr {
+    Const(f64),
+    Var(usize),
+    Sub(Box&lt;Expr&gt;, Box&lt;Expr&gt;),
+    Gt(Box&lt;Expr&gt;, Box&lt;Expr&gt;),
+    And(Vec&lt;Expr&gt;),
+    Or(Vec&lt;Expr&gt;),
+    Between(Box&lt;Expr&gt;, Box&lt;Expr&gt;, Box&lt;Expr&gt;),
+}
+
+fn compiler(e: &amp;serde_json::Value, slots: &amp;HashMap&lt;&amp;str, usize&gt;) -&gt; Expr {
+    if let Some(c) = e.get(&quot;const&quot;) {
+        return Expr::Const(c.as_f64().unwrap());
+    }
+    if let Some(v) = e.get(&quot;var&quot;) {
+        return Expr::Var(slots[v.as_str().unwrap()]);
+    }
+    let a: Vec&lt;Expr&gt; = e[&quot;args&quot;].as_array().unwrap().iter().map(|x| compiler(x, slots)).collect();
+    let mut it = a.into_iter();
+    match e[&quot;op&quot;].as_str().unwrap() {
+        &quot;sub&quot; =&gt; Expr::Sub(Box::new(it.next().unwrap()), Box::new(it.next().unwrap())),
+        &quot;gt&quot; =&gt; Expr::Gt(Box::new(it.next().unwrap()), Box::new(it.next().unwrap())),
+        &quot;and&quot; =&gt; Expr::And(it.collect()),
+        &quot;or&quot; =&gt; Expr::Or(it.collect()),
+        &quot;between&quot; =&gt; Expr::Between(Box::new(it.next().unwrap()), Box::new(it.next().unwrap()), Box::new(it.next().unwrap())),
+        _ =&gt; unreachable!(),
+    }
+}
+
+fn evaluer(e: &amp;Expr, v: &amp;[f64]) -&gt; f64 {
+    match e {
+        Expr::Const(c) =&gt; *c,
+        Expr::Var(i) =&gt; v[*i],
+        Expr::Sub(a, b) =&gt; evaluer(a, v) - evaluer(b, v),
+        Expr::Gt(a, b) =&gt; f64::from(u8::from(evaluer(a, v) &gt; evaluer(b, v))),
+        Expr::And(xs) =&gt; f64::from(u8::from(xs.iter().all(|x| evaluer(x, v) != 0.0))),
+        Expr::Or(xs) =&gt; f64::from(u8::from(xs.iter().any(|x| evaluer(x, v) != 0.0))),
+        Expr::Between(x, lo, hi) =&gt; {
+            let x = evaluer(x, v);
+            f64::from(u8::from(evaluer(lo, v) &lt;= x &amp;&amp; x &lt; evaluer(hi, v)))
+        }
+    }
+}
+
+fn i3() {
+    println!(&quot;\n## I3 — variables et calculs : « (moyenne 1 h du salon − 2) &gt; 19 et (présence ou 7 h ≤ heure &lt; 22 h) »&quot;);
+    let e = serde_json::json!({&quot;op&quot;:&quot;and&quot;,&quot;args&quot;:[
+        {&quot;op&quot;:&quot;gt&quot;,&quot;args&quot;:[{&quot;op&quot;:&quot;sub&quot;,&quot;args&quot;:[{&quot;var&quot;:&quot;moyenne_salon&quot;},{&quot;const&quot;:2.0}]},{&quot;const&quot;:19.0}]},
+        {&quot;op&quot;:&quot;or&quot;,&quot;args&quot;:[{&quot;var&quot;:&quot;presence&quot;},{&quot;op&quot;:&quot;between&quot;,&quot;args&quot;:[{&quot;var&quot;:&quot;heure&quot;},{&quot;const&quot;:7.0},{&quot;const&quot;:22.0}]}]}
+    ]});
+    let mut vars = HashMap::new();
+    vars.insert(&quot;moyenne_salon&quot;.to_owned(), 21.5);
+    vars.insert(&quot;presence&quot;.to_owned(), 0.0);
+    vars.insert(&quot;heure&quot;.to_owned(), 18.0);
+    let t = Instant::now();
+    let mut s = 0.0;
+    for _ in 0..200_000 {
+        s += interpreter(black_box(&amp;e), &amp;vars);
+    }
+    let interp = t.elapsed().as_nanos() as f64 / 200_000.0;
+    let slots: HashMap&lt;&amp;str, usize&gt; = [(&quot;moyenne_salon&quot;, 0), (&quot;presence&quot;, 1), (&quot;heure&quot;, 2)].into();
+    let c = compiler(&amp;e, &amp;slots);
+    let valeurs = [21.5, 0.0, 18.0];
+    let t = Instant::now();
+    for _ in 0..200_000 {
+        s += evaluer(black_box(&amp;c), black_box(&amp;valeurs));
+    }
+    let comp = t.elapsed().as_nanos() as f64 / 200_000.0;
+    black_box(s);
+    println!(&quot;- interprété depuis le JSON : {interp:.0} ns ; compilé une fois à la validation : {comp:.0} ns (×{:.0})&quot;, interp / comp);
+}
+
+// ---- I4 : workflows temporaires en baux durables ----------------------------------
+
+fn i4() {
+    println!(&quot;\n## I4 — « allume 30 minutes » en bail durable : 10 000 baux&quot;);
+    let mut tas = BinaryHeap::new();
+    let t = Instant::now();
+    for i in 0..10_000u64 {
+        tas.push(std::cmp::Reverse((1_792_000_000_000 + (i * 7_919) % 1_800_000, i)));
+    }
+    let mut dus = 0;
+    while let Some(std::cmp::Reverse((echeance, _))) = tas.peek() {
+        if *echeance &gt; 1_792_000_900_000 {
+            break;
+        }
+        tas.pop();
+        dus += 1;
+    }
+    let ordo = t.elapsed();
+    let chemin = std::env::temp_dir().join(&quot;moli-baux-essai.jsonl&quot;);
+    let t = Instant::now();
+    {
+        use std::io::Write;
+        let mut f = std::fs::File::create(&amp;chemin).unwrap();
+        for i in 0..20 {
+            writeln!(f, &quot;{{\&quot;bail\&quot;:{i},\&quot;point\&quot;:\&quot;lumieres:salon/on\&quot;,\&quot;echeance\&quot;:1792001800000,\&quot;retour\&quot;:false}}&quot;).unwrap();
+            f.sync_data().unwrap();
+        }
+    }
+    let unitaire = t.elapsed() / 20;
+    let _ = std::fs::remove_file(&amp;chemin);
+    println!(
+        &quot;- ordonnancement de 10 000 échéances (tas binaire) et extraction des {dus} dues : {:.2} ms au total&quot;,
+        ordo.as_secs_f64() * 1e3
+    );
+    println!(
+        &quot;- écrire un bail de façon durable (ajout + fsync) : {:.1} ms, une seule fois au lancement ; rien pendant l&#39;attente&quot;,
+        unitaire.as_secs_f64() * 1e3
+    );
+}
+
+fn main() {
+    println!(&quot;# Workflows complexes : balayage d&#39;aujourd&#39;hui contre moteur compilé (machine de test)&quot;);
+    i1();
+    i2();
+    i3();
+    i4();
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>src/bin/cloisons.rs</code></summary><pre class="rust"><code>//! C1-C3 : des cloisons pour qu&#39;un matériel muet ou un pilote qui bloque n&#39;arrête pas
+//! le reste. Mesuré contre le vrai `moli-runtime`, runtime principal à 2 workers.
+
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+use moli_core::{Access, Device, DeviceId, InstanceId, Kind, Origin, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio::sync::{Semaphore, mpsc};
+use tokio_util::sync::CancellationToken;
+
+fn runtime() -&gt; tokio::runtime::Runtime {
+    tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap()
+}
+
+fn lampe(id: DeviceId, instance: &amp;InstanceId) -&gt; Device {
+    Device {
+        id,
+        instance: instance.clone(),
+        native_name: &quot;lampe fictive&quot;.into(),
+        manufacturer: None,
+        model: None,
+        description: None,
+        native_room: None,
+        members: vec![],
+        points: vec![PointSpec {
+            key: &quot;on&quot;.into(),
+            label: &quot;on&quot;.into(),
+            kind: Kind::Binary,
+            access: Access { read: true, write: true },
+            unit: None,
+            semantic: Semantic::OnOff,
+        }],
+    }
+}
+
+fn ms(d: Duration) -&gt; String {
+    format!(&quot;{:.1} ms&quot;, d.as_secs_f64() * 1e3)
+}
+
+fn quantile(v: &amp;mut [Duration], p: f64) -&gt; String {
+    if v.is_empty() {
+        return &quot;—&quot;.into();
+    }
+    v.sort();
+    ms(v[((v.len() - 1) as f64 * p) as usize])
+}
+
+async fn attendre_running(hub: &amp;Hub, instance: &amp;str) {
+    loop {
+        let ok = hub
+            .snapshot()
+            .drivers
+            .iter()
+            .any(|d| d.instance.as_str() == instance &amp;&amp; format!(&quot;{:?}&quot;, d.status) == &quot;Running&quot;);
+        if ok {
+            return;
+        }
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+}
+
+// ---- C1 : un thread par pilote ------------------------------------------------------
+
+struct Sain;
+impl Driver for Sain {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;sain&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let id = ctx.device_id(&quot;l1&quot;);
+            ctx.upsert_device(lampe(id, &amp;ctx.instance().clone()));
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                ctx.set_state(&amp;cmd.device.id, &amp;cmd.key, cmd.value.clone());
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+struct Bloquant;
+impl Driver for Bloquant {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;bloquant&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            ctx.ready();
+            loop {
+                std::thread::sleep(Duration::from_millis(200));
+                tokio::task::yield_now().await;
+            }
+        })
+    }
+}
+
+struct Inactif;
+impl Driver for Inactif {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;inactif&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+/// Le pilote tourne sur son propre thread, avec son propre runtime Tokio : s&#39;il bloque,
+/// il ne bloque que lui. Ses sous-tâches (`tokio::spawn`) restent aussi chez lui.
+fn isole(hub: &amp;Hub, nom: &amp;str, pilote: Arc&lt;dyn Driver&gt;, cancel: CancellationToken) {
+    let (hub, nom) = (hub.clone(), InstanceId::from(nom));
+    std::thread::Builder::new()
+        .name(format!(&quot;pilote-{nom}&quot;))
+        .spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+            rt.block_on(async move {
+                let _ = spawn_driver(&amp;hub, nom, pilote, cancel).await;
+            });
+        })
+        .unwrap();
+}
+
+fn rss_kio() -&gt; u64 {
+    let pid = std::process::id().to_string();
+    let out = std::process::Command::new(&quot;ps&quot;).args([&quot;-o&quot;, &quot;rss=&quot;, &quot;-p&quot;, &amp;pid]).output().unwrap();
+    String::from_utf8_lossy(&amp;out.stdout).trim().parse().unwrap_or(0)
+}
+
+async fn mesurer_coeur(hub: &amp;Hub) -&gt; (usize, String, String, String) {
+    let p = PointId::from(&quot;sain:l1/on&quot;);
+    let pire_retard = Arc::new(AtomicU64::new(0));
+    let stop = CancellationToken::new();
+    let (r, s) = (pire_retard.clone(), stop.clone());
+    let sonde = tokio::spawn(async move {
+        while !s.is_cancelled() {
+            let t = Instant::now();
+            tokio::time::sleep(Duration::from_millis(10)).await;
+            let retard = t.elapsed().saturating_sub(Duration::from_millis(10));
+            r.fetch_max(retard.as_micros() as u64, Ordering::Relaxed);
+        }
+    });
+    let mut lat = vec![];
+    let fin = Instant::now() + Duration::from_secs(2);
+    let mut v = false;
+    while Instant::now() &lt; fin {
+        v = !v;
+        let t = Instant::now();
+        let _ = hub.command(&amp;p, Value::Bool(v), Origin::Ui, None).await;
+        lat.push(t.elapsed());
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    stop.cancel();
+    let _ = sonde.await;
+    let n = lat.len();
+    let med = quantile(&amp;mut lat, 0.5);
+    let max = quantile(&amp;mut lat, 1.0);
+    (n, med, max, ms(Duration::from_micros(pire_retard.load(Ordering::Relaxed))))
+}
+
+fn c1() {
+    println!(&quot;\n## C1 — un thread par pilote contre les deux workers partagés&quot;);
+    for (titre, combien, isoles) in [
+        (&quot;2 pilotes bloquants partagés &quot;, 2usize, false),
+        (&quot;6 pilotes bloquants isolés   &quot;, 6, true),
+    ] {
+        runtime().block_on(async {
+            let hub = Hub::new(HubOptions::default()).unwrap();
+            let cancel = CancellationToken::new();
+            spawn_driver(&amp;hub, &quot;sain&quot;.into(), Arc::new(Sain), cancel.clone());
+            attendre_running(&amp;hub, &quot;sain&quot;).await;
+            for i in 0..combien {
+                let nom = format!(&quot;bloquant{i}&quot;);
+                if isoles {
+                    isole(&amp;hub, &amp;nom, Arc::new(Bloquant), cancel.clone());
+                } else {
+                    spawn_driver(&amp;hub, nom.as_str().into(), Arc::new(Bloquant), cancel.clone());
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            let (n, med, max, retard) = mesurer_coeur(&amp;hub).await;
+            println!(&quot;- {titre}: {n:&gt;3} ordres en 2 s, médiane {med:&gt;8}, pire {max:&gt;8} ; pire retard d&#39;une minuterie de 10 ms {retard:&gt;9}&quot;);
+            cancel.cancel();
+        });
+    }
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        let avant = rss_kio();
+        for i in 0..40 {
+            isole(&amp;hub, &amp;format!(&quot;inactif{i}&quot;), Arc::new(Inactif), cancel.clone());
+        }
+        for i in 0..40 {
+            attendre_running(&amp;hub, &amp;format!(&quot;inactif{i}&quot;)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        let apres = rss_kio();
+        println!(
+            &quot;- coût : 40 pilotes isolés au repos ajoutent {} Kio de RSS, soit {:.0} Kio par pilote (pile de 2 Mio réservée, seules les pages touchées comptent)&quot;,
+            apres.saturating_sub(avant),
+            apres.saturating_sub(avant) as f64 / 40.0
+        );
+        cancel.cancel();
+    });
+}
+
+// ---- C2/C3 : un pont, vingt lampes, une muette ------------------------------------
+
+const LAMPES: usize = 20;
+const MUETTE: usize = 0;
+
+#[derive(Clone, Copy, PartialEq)]
+enum Strategie {
+    /// Une seule boucle attend chaque réponse (le modèle le plus courant dans le dépôt).
+    BoucleUnique,
+    /// Une tâche par ordre, sans plafond par appareil.
+    TacheParOrdre,
+    /// Une voie par appareil : file bornée, un ordre en vol, échéance revérifiée.
+    Voies,
+    /// Voies + disjoncteur par appareil : après 2 échecs, refus immédiat 30 s.
+    VoiesDisjoncteur,
+}
+
+struct Pont {
+    strategie: Strategie,
+    /// L&#39;API du pont n&#39;accepte que `concurrence` requêtes à la fois.
+    api: Arc&lt;Semaphore&gt;,
+}
+
+async fn appel(api: &amp;Semaphore, appareil: usize) -&gt; Result&lt;(), String&gt; {
+    let _jeton = api.acquire().await.unwrap();
+    if appareil == MUETTE {
+        // Aucune réponse : le délai de 4 s par étape de moli-net finit par tomber.
+        tokio::time::sleep(Duration::from_secs(4)).await;
+        Err(&quot;délai dépassé&quot;.into())
+    } else {
+        tokio::time::sleep(Duration::from_millis(30)).await;
+        Ok(())
+    }
+}
+
+fn indice(cmd: &amp;CommandRequest) -&gt; usize {
+    cmd.device.id.as_str()[&quot;pont:lampe&quot;.len()..].parse().unwrap()
+}
+
+impl Driver for Pont {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;pont&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            for i in 0..LAMPES {
+                let id = ctx.device_id(&amp;format!(&quot;lampe{i}&quot;));
+                ctx.upsert_device(lampe(id.clone(), &amp;ctx.instance().clone()));
+                ctx.set_availability(&amp;id, true);
+            }
+            ctx.ready();
+            match self.strategie {
+                Strategie::BoucleUnique =&gt; {
+                    while let Some(cmd) = ctx.next_command().await {
+                        let i = indice(&amp;cmd);
+                        let r = appel(&amp;self.api, i).await;
+                        cmd.reply(r);
+                    }
+                }
+                Strategie::TacheParOrdre =&gt; {
+                    let mut taches = tokio::task::JoinSet::new();
+                    while let Some(cmd) = ctx.next_command().await {
+                        let api = self.api.clone();
+                        taches.spawn(async move {
+                            let i = indice(&amp;cmd);
+                            let r = appel(&amp;api, i).await;
+                            cmd.reply(r);
+                        });
+                        while taches.try_join_next().is_some() {}
+                    }
+                }
+                Strategie::Voies | Strategie::VoiesDisjoncteur =&gt; {
+                    let disjoncteur = self.strategie == Strategie::VoiesDisjoncteur;
+                    let mut voies = Vec::new();
+                    let mut taches = tokio::task::JoinSet::new();
+                    let hors_ligne = Arc::new(Mutex::new(Vec::&lt;usize&gt;::new()));
+                    for i in 0..LAMPES {
+                        let (tx, mut rx) = mpsc::channel::&lt;CommandRequest&gt;(8);
+                        voies.push(tx);
+                        let api = self.api.clone();
+                        let hors_ligne = hors_ligne.clone();
+                        taches.spawn(async move {
+                            let (mut echecs, mut ouvert_jusqua) = (0u32, None::&lt;Instant&gt;);
+                            while let Some(cmd) = rx.recv().await {
+                                if cmd.abandoned() {
+                                    cmd.reply(Err(&quot;expiré avant l&#39;envoi&quot;.into()));
+                                    continue;
+                                }
+                                if let Some(t) = ouvert_jusqua {
+                                    if Instant::now() &lt; t {
+                                        cmd.reply(Err(&quot;injoignable : disjoncteur ouvert&quot;.into()));
+                                        continue;
+                                    }
+                                    ouvert_jusqua = None; // essai à demi-ouvert
+                                }
+                                let r = appel(&amp;api, i).await;
+                                if r.is_err() {
+                                    echecs += 1;
+                                    if disjoncteur &amp;&amp; echecs &gt;= 2 {
+                                        ouvert_jusqua = Some(Instant::now() + Duration::from_secs(30));
+                                        hors_ligne.lock().unwrap().push(i);
+                                        // Les ordres déjà en file n&#39;attendent pas : refus immédiat.
+                                        while let Ok(c) = rx.try_recv() {
+                                            c.reply(Err(&quot;injoignable : disjoncteur ouvert&quot;.into()));
+                                        }
+                                    }
+                                } else {
+                                    echecs = 0;
+                                }
+                                cmd.reply(r);
+                            }
+                        });
+                    }
+                    loop {
+                        tokio::select! {
+                            cmd = ctx.next_command() =&gt; {
+                                let Some(cmd) = cmd else { break };
+                                let i = indice(&amp;cmd);
+                                if let Err(e) = voies[i].try_send(cmd) {
+                                    let cmd = match e {
+                                        mpsc::error::TrySendError::Full(c) | mpsc::error::TrySendError::Closed(c) =&gt; c,
+                                    };
+                                    cmd.reply(Err(&quot;file de l&#39;appareil pleine&quot;.into()));
+                                }
+                                let tombes: Vec&lt;usize&gt; = std::mem::take(&amp;mut *hors_ligne.lock().unwrap());
+                                for t in tombes {
+                                    ctx.set_availability(&amp;ctx.device_id(&amp;format!(&quot;lampe{t}&quot;)), false);
+                                }
+                            }
+                            fin = taches.join_next() =&gt; {
+                                // Une voie qui meurt fait relancer tout le pilote : jamais en silence.
+                                anyhow::bail!(&quot;voie arrêtée : {fin:?}&quot;);
+                            }
+                        }
+                    }
+                }
+            }
+            Ok(())
+        })
+    }
+}
+
+fn pont(strategie: Strategie, concurrence: usize) -&gt; String {
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(
+            &amp;hub,
+            &quot;pont&quot;.into(),
+            Arc::new(Pont { strategie, api: Arc::new(Semaphore::new(concurrence)) }),
+            cancel.clone(),
+        );
+        attendre_running(&amp;hub, &quot;pont&quot;).await;
+        let saines = Arc::new(Mutex::new(Vec::new()));
+        let echecs_sains = Arc::new(AtomicUsize::new(0));
+        let muette = Arc::new(Mutex::new(Vec::new()));
+        let mut taches = Vec::new();
+        // 10 s, 25 ordres par seconde, répartis sur les 20 lampes : 1,25 par seconde vers la muette.
+        for n in 0..250usize {
+            let i = n % LAMPES;
+            let (hub, saines, echecs_sains, muette) = (hub.clone(), saines.clone(), echecs_sains.clone(), muette.clone());
+            taches.push(tokio::spawn(async move {
+                let p = PointId::from(format!(&quot;pont:lampe{i}/on&quot;));
+                let t = Instant::now();
+                let r = hub.command(&amp;p, Value::Bool(n % 2 == 0), Origin::Ui, None).await;
+                let d = t.elapsed();
+                if i == MUETTE {
+                    muette.lock().unwrap().push(d);
+                } else if r.is_ok() {
+                    saines.lock().unwrap().push(d);
+                } else {
+                    echecs_sains.fetch_add(1, Ordering::Relaxed);
+                }
+            }));
+            tokio::time::sleep(Duration::from_millis(40)).await;
+        }
+        for t in taches {
+            let _ = t.await;
+        }
+        cancel.cancel();
+        let mut s = saines.lock().unwrap().clone();
+        let mut m = muette.lock().unwrap().clone();
+        format!(
+            &quot;lampes saines {}/{} réussis, médiane {:&gt;8}, pire {:&gt;9} ; lampe muette : médiane {:&gt;9}, réponse la plus rapide {:&gt;8}&quot;,
+            s.len(),
+            s.len() + echecs_sains.load(Ordering::Relaxed),
+            quantile(&amp;mut s, 0.5),
+            quantile(&amp;mut s, 1.0),
+            quantile(&amp;mut m, 0.5),
+            quantile(&amp;mut m, 0.0)
+        )
+    })
+}
+
+fn main() {
+    println!(&quot;# Cloisons : un matériel muet ou un pilote bloquant ne doit pas arrêter le reste&quot;);
+    c1();
+    println!(&quot;\n## C2 — un pont, 20 lampes, une lampe muette (API du pont sans limite de concurrence)&quot;);
+    for (titre, s) in [
+        (&quot;boucle unique      &quot;, Strategie::BoucleUnique),
+        (&quot;voie par appareil  &quot;, Strategie::Voies),
+        (&quot;voies + disjoncteur&quot;, Strategie::VoiesDisjoncteur),
+    ] {
+        println!(&quot;- {titre} : {}&quot;, pont(s, 1_000));
+    }
+    println!(&quot;\n## C3 — le même pont, mais son API ne traite que 4 requêtes à la fois&quot;);
+    for (titre, s) in [
+        (&quot;tâche par ordre    &quot;, Strategie::TacheParOrdre),
+        (&quot;voie par appareil  &quot;, Strategie::Voies),
+        (&quot;voies + disjoncteur&quot;, Strategie::VoiesDisjoncteur),
+    ] {
+        println!(&quot;- {titre} : {}&quot;, pont(s, 4));
+    }
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>src/bin/convergence.rs</code></summary><pre class="rust"><code>//! V1 : « tout passe par le moteur ». Le vrai moteur d&#39;automatismes reste sur le runtime
+//! principal ; les pilotes tournent chacun sur leur thread. Le moteur voit-il tout, et
+//! reste-t-il réactif quand deux pilotes bloquent ?
+
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+use moli_automation::{Actor, Author, Automation, Automations, Config, Graph, Mode};
+use moli_core::{Access, Device, DeviceId, InstanceId, Kind, PointId, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
+
+fn point(cle: &amp;str, kind: Kind, ecriture: bool) -&gt; PointSpec {
+    PointSpec {
+        key: cle.into(),
+        label: cle.into(),
+        kind,
+        access: Access { read: true, write: ecriture },
+        unit: None,
+        semantic: Semantic::Other,
+    }
+}
+
+fn appareil(id: DeviceId, instance: &amp;InstanceId, p: PointSpec) -&gt; Device {
+    Device {
+        id,
+        instance: instance.clone(),
+        native_name: &quot;fictif&quot;.into(),
+        manufacturer: None,
+        model: None,
+        description: None,
+        native_room: None,
+        members: vec![],
+        points: vec![p],
+    }
+}
+
+/// Un capteur : sa valeur change quand le banc le demande, et il note sur quel thread.
+struct Capteur {
+    injections: Mutex&lt;Option&lt;mpsc::UnboundedReceiver&lt;f64&gt;&gt;&gt;,
+    thread: Arc&lt;Mutex&lt;String&gt;&gt;,
+}
+impl Driver for Capteur {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;capteur&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let id = ctx.device_id(&quot;c0&quot;);
+            ctx.upsert_device(appareil(id.clone(), &amp;ctx.instance().clone(), point(&quot;v&quot;, Kind::Numeric { min: None, max: None, step: None }, false)));
+            ctx.set_state(&amp;id, &quot;v&quot;, Value::Float(0.0));
+            *self.thread.lock().unwrap() = std::thread::current().name().unwrap_or(&quot;?&quot;).to_owned();
+            let mut rx = self.injections.lock().unwrap().take().unwrap();
+            ctx.ready();
+            while let Some(v) = rx.recv().await {
+                ctx.set_state(&amp;id, &quot;v&quot;, Value::Float(v));
+            }
+            Ok(())
+        })
+    }
+}
+
+/// Une lampe : note l&#39;instant où l&#39;ordre du moteur arrive, et sur quel thread.
+struct Lampe {
+    arrivees: Arc&lt;Mutex&lt;Vec&lt;Instant&gt;&gt;&gt;,
+    thread: Arc&lt;Mutex&lt;String&gt;&gt;,
+}
+impl Driver for Lampe {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;lampe&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let id = ctx.device_id(&quot;l0&quot;);
+            ctx.upsert_device(appareil(id.clone(), &amp;ctx.instance().clone(), point(&quot;on&quot;, Kind::Binary, true)));
+            ctx.set_state(&amp;id, &quot;on&quot;, Value::Bool(false));
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                self.arrivees.lock().unwrap().push(Instant::now());
+                *self.thread.lock().unwrap() = std::thread::current().name().unwrap_or(&quot;?&quot;).to_owned();
+                ctx.set_state(&amp;cmd.device.id, &amp;cmd.key, cmd.value.clone());
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+struct Bloquant;
+impl Driver for Bloquant {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;bloquant&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            ctx.ready();
+            loop {
+                std::thread::sleep(Duration::from_millis(200));
+                tokio::task::yield_now().await;
+            }
+        })
+    }
+}
+
+fn isole(hub: &amp;Hub, nom: &amp;str, pilote: Arc&lt;dyn Driver&gt;, cancel: CancellationToken) {
+    let (hub, nom) = (hub.clone(), InstanceId::from(nom));
+    std::thread::Builder::new()
+        .name(format!(&quot;pilote-{nom}&quot;))
+        .spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+            rt.block_on(async move {
+                let _ = spawn_driver(&amp;hub, nom, pilote, cancel).await;
+            });
+        })
+        .unwrap();
+}
+
+fn essai(isoles: bool) {
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .thread_name(&quot;coeur&quot;)
+        .enable_all()
+        .build()
+        .unwrap();
+    rt.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let (tx, rx) = mpsc::unbounded_channel();
+        let arrivees = Arc::new(Mutex::new(Vec::new()));
+        let (t_capteur, t_lampe) = (Arc::new(Mutex::new(String::new())), Arc::new(Mutex::new(String::new())));
+        let pilotes: Vec&lt;(&amp;str, Arc&lt;dyn Driver&gt;)&gt; = vec![
+            (&quot;capteurs&quot;, Arc::new(Capteur { injections: Mutex::new(Some(rx)), thread: t_capteur.clone() })),
+            (&quot;lampes&quot;, Arc::new(Lampe { arrivees: arrivees.clone(), thread: t_lampe.clone() })),
+            (&quot;bloquant1&quot;, Arc::new(Bloquant)),
+            (&quot;bloquant2&quot;, Arc::new(Bloquant)),
+        ];
+        for (nom, p) in pilotes {
+            if isoles {
+                isole(&amp;hub, nom, p, cancel.clone());
+            } else {
+                spawn_driver(&amp;hub, nom.into(), p, cancel.clone());
+            }
+        }
+        while hub.state(&amp;PointId::from(&quot;lampes:l0/on&quot;)).is_none() || hub.state(&amp;PointId::from(&quot;capteurs:c0/v&quot;)).is_none() {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        let (autos, _tache) = Automations::start(&amp;hub, Config::default(), None, cancel.clone()).await.unwrap();
+        let graphe = serde_json::json!({
+            &quot;nodes&quot;: [
+                {&quot;id&quot;:&quot;t&quot;,&quot;type&quot;:&quot;when_state&quot;,&quot;point&quot;:&quot;capteurs:c0/v&quot;},
+                {&quot;id&quot;:&quot;c&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:&quot;capteurs:c0/v&quot;,&quot;op&quot;:&quot;ge&quot;,&quot;value&quot;:0}]},
+                {&quot;id&quot;:&quot;a&quot;,&quot;type&quot;:&quot;toggle&quot;,&quot;point&quot;:&quot;lampes:l0/on&quot;}
+            ],
+            &quot;edges&quot;: [{&quot;from&quot;:&quot;t&quot;,&quot;to&quot;:&quot;c&quot;},{&quot;from&quot;:&quot;c&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;a&quot;}]
+        });
+        let humain = Actor { human: true, author: Author::Human };
+        let a = autos
+            .save(
+                Automation {
+                    id: String::new(),
+                    name: &quot;capteur → lampe&quot;.into(),
+                    enabled: true,
+                    mode: Mode::Restart,
+                    graph: serde_json::from_value::&lt;Graph&gt;(graphe).unwrap(),
+                    author: Author::Human,
+                    approved: None,
+                    approved_version: None,
+                    activation: None,
+                    note: None,
+                    created: 0,
+                    updated: 0,
+                },
+                humain,
+            )
+            .await
+            .unwrap();
+        autos.approve(&amp;a.id, &amp;a.fingerprint(), humain).await.unwrap();
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        let mut injections = Vec::new();
+        for i in 1..=40 {
+            injections.push(Instant::now());
+            tx.send(f64::from(i)).unwrap();
+            tokio::time::sleep(Duration::from_millis(150)).await;
+        }
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        let arr = arrivees.lock().unwrap().clone();
+        let mut lat: Vec&lt;Duration&gt; = injections
+            .iter()
+            .filter_map(|t0| arr.iter().find(|t| *t &gt;= t0).map(|t| *t - *t0))
+            .collect();
+        lat.sort();
+        let q = |p: f64| lat.get(((lat.len().max(1) - 1) as f64 * p) as usize).map_or(&quot;—&quot;.into(), |d| format!(&quot;{:.1} ms&quot;, d.as_secs_f64() * 1e3));
+        println!(
+            &quot;- pilotes {} : {} actions sur 40 événements, médiane {}, pire {} ; capteur sur « {} », lampe sur « {} », moteur sur « coeur »&quot;,
+            if isoles { &quot;isolés (un thread chacun)&quot; } else { &quot;partagés (2 workers)    &quot; },
+            lat.len(),
+            q(0.5),
+            q(1.0),
+            t_capteur.lock().unwrap(),
+            t_lampe.lock().unwrap()
+        );
+        cancel.cancel();
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    });
+}
+
+fn main() {
+    println!(&quot;# Le moteur voit tout, même quand les pilotes vivent sur leurs propres threads&quot;);
+    println!(&quot;Capteur → moteur d&#39;automatismes réel → lampe, avec deux pilotes qui bloquent 200 ms en boucle.&quot;);
+    essai(false);
+    essai(true);
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>src/bin/memoire.rs</code></summary><pre class="rust"><code>//! M1-M4 : ce que coûte en mémoire l&#39;état « utile » d&#39;une maison, mesuré octet par
+//! octet avec un allocateur qui compte, sur la forme réelle de deux Home Assistant
+//! chargés (comptes agrégés, aucune donnée nominative).
+
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::collections::{HashMap, VecDeque};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicIsize, Ordering};
+use std::time::{Duration, Instant};
+
+use moli_core::{Access, Device, Kind, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio_util::sync::CancellationToken;
+
+struct Compte;
+static OCTETS: AtomicIsize = AtomicIsize::new(0);
+static BLOCS: AtomicIsize = AtomicIsize::new(0);
+
+unsafe impl GlobalAlloc for Compte {
+    unsafe fn alloc(&amp;self, l: Layout) -&gt; *mut u8 {
+        let p = unsafe { System.alloc(l) };
+        if !p.is_null() {
+            OCTETS.fetch_add(l.size() as isize, Ordering::Relaxed);
+            BLOCS.fetch_add(1, Ordering::Relaxed);
+        }
+        p
+    }
+    unsafe fn dealloc(&amp;self, p: *mut u8, l: Layout) {
+        unsafe { System.dealloc(p, l) };
+        OCTETS.fetch_sub(l.size() as isize, Ordering::Relaxed);
+        BLOCS.fetch_sub(1, Ordering::Relaxed);
+    }
+    unsafe fn realloc(&amp;self, p: *mut u8, l: Layout, n: usize) -&gt; *mut u8 {
+        let q = unsafe { System.realloc(p, l, n) };
+        if !q.is_null() {
+            OCTETS.fetch_add(n as isize - l.size() as isize, Ordering::Relaxed);
+        }
+        q
+    }
+}
+
+#[global_allocator]
+static A: Compte = Compte;
+
+fn tas() -&gt; (isize, isize) {
+    (OCTETS.load(Ordering::Relaxed), BLOCS.load(Ordering::Relaxed))
+}
+
+/// Octets demandés, plus 16 o d&#39;en-tête par bloc (ordre de grandeur des allocateurs).
+fn cout(avant: (isize, isize), apres: (isize, isize)) -&gt; f64 {
+    ((apres.0 - avant.0) + 16 * (apres.1 - avant.1)) as f64
+}
+
+fn mio(o: f64) -&gt; String {
+    if o &gt;= 1024.0 * 1024.0 {
+        format!(&quot;{:.2} Mio&quot;, o / 1024.0 / 1024.0)
+    } else {
+        format!(&quot;{:.0} Kio&quot;, o / 1024.0)
+    }
+}
+
+/// Forme réunie des deux instances : 496 appareils, 2 264 valeurs vivantes, dont
+/// 419 nombres, 454 binaires, 318 textes et 1 073 absentes (injoignables, inconnues).
+struct Maison {
+    appareils: usize,
+    valeurs: usize,
+}
+
+const CLES: [&amp;str; 8] = [
+    &quot;temperature&quot;, &quot;humidity&quot;, &quot;battery&quot;, &quot;linkquality&quot;, &quot;power&quot;, &quot;state&quot;, &quot;illuminance&quot;, &quot;mode&quot;,
+];
+const TEXTES: [&amp;str; 6] = [&quot;heat_cool&quot;, &quot;idle&quot;, &quot;playing&quot;, &quot;paused&quot;, &quot;auto&quot;, &quot;standby&quot;];
+
+fn valeur(i: usize) -&gt; (Kind, Value) {
+    // Proportions observées : 18,5 % nombres, 20 % binaires, 14 % textes, 47,5 % absentes.
+    match i % 200 {
+        0..37 =&gt; (
+            Kind::Numeric {
+                min: None,
+                max: None,
+                step: None,
+            },
+            Value::Float(20.0 + (i % 17) as f64 * 0.5),
+        ),
+        37..77 =&gt; (Kind::Binary, Value::Bool(i % 3 == 0)),
+        77..105 =&gt; (Kind::Text, Value::Text(TEXTES[i % TEXTES.len()].into())),
+        _ =&gt; (Kind::Text, Value::Null),
+    }
+}
+
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            let mut n = 0;
+            for d in 0..self.appareils {
+                let par = self.valeurs / self.appareils + usize::from(d &lt; self.valeurs % self.appareils);
+                let id = ctx.device_id(&amp;format!(&quot;0x00158d00{d:08x}&quot;));
+                let points: Vec&lt;PointSpec&gt; = (0..par)
+                    .map(|k| PointSpec {
+                        key: format!(&quot;{}_{k}&quot;, CLES[(d + k) % CLES.len()]).into(),
+                        label: CLES[(d + k) % CLES.len()].into(),
+                        kind: valeur(n + k).0,
+                        access: Access {
+                            read: true,
+                            write: k == 0,
+                        },
+                        unit: None,
+                        semantic: Semantic::Other,
+                    })
+                    .collect();
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;Appareil fictif {d}&quot;).into(),
+                    manufacturer: Some(&quot;Fabricant&quot;.into()),
+                    model: Some(&quot;Modèle-X1&quot;.into()),
+                    description: None,
+                    native_room: Some(&quot;Pièce&quot;.into()),
+                    members: vec![],
+                    points: points.clone(),
+                });
+                for p in &amp;points {
+                    ctx.set_state(&amp;id, &amp;p.key, valeur(n).1);
+                    n += 1;
+                }
+            }
+            ctx.ready();
+            std::future::pending::&lt;()&gt;().await;
+            Ok(())
+        })
+    }
+}
+
+fn modele(echelle: usize) {
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap();
+    rt.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let avant = tas();
+        let (appareils, valeurs) = (496 * echelle, 2_264 * echelle);
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { appareils, valeurs }), cancel.clone());
+        while hub.stats().points &lt; valeurs || hub.snapshot().drivers.iter().all(|d| format!(&quot;{:?}&quot;, d.status) != &quot;Running&quot;) {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        let apres = tas();
+        let c = cout(avant, apres);
+        println!(
+            &quot;- ×{echelle} : {appareils} appareils, {valeurs} valeurs → {} pour le modèle du hub (≈ {:.0} o par valeur, définitions comprises)&quot;,
+            mio(c),
+            c / valeurs as f64
+        );
+        cancel.cancel();
+    });
+}
+
+/// Taux réels (changements par jour) par vingtile de séries, deux instances réunies.
+const VINGTILES: [f64; 20] = [
+    0.28, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.33, 0.48, 0.63, 0.9, 1.14, 1.41, 2.16, 3.57, 5.73,
+    9.22, 21.92, 140.88, 1990.22,
+];
+const SERIES: usize = 1_487;
+
+fn taux(serie: usize) -&gt; f64 {
+    VINGTILES[serie * 20 / SERIES]
+}
+
+fn fenetres(jours: f64) {
+    let total: f64 = (0..SERIES).map(|s| taux(s) * jours).sum();
+    // a) naïf : (horodatage, Value) dans une VecDeque par série.
+    let avant = tas();
+    let mut naif: HashMap&lt;u32, VecDeque&lt;(u64, Value)&gt;&gt; = HashMap::new();
+    for s in 0..SERIES {
+        let n = (taux(s) * jours).round() as usize;
+        let q = naif.entry(s as u32).or_default();
+        for i in 0..n {
+            q.push_back((1_792_000_000_000 + i as u64 * 1000, Value::Float(i as f64)));
+        }
+    }
+    let c_naif = cout(avant, tas());
+    // b) compact : décalage en secondes (u32) + valeur f32, colonnes par série.
+    let avant = tas();
+    let mut compact: HashMap&lt;u32, (Vec&lt;u32&gt;, Vec&lt;f32&gt;)&gt; = HashMap::new();
+    for s in 0..SERIES {
+        let n = (taux(s) * jours).round() as usize;
+        let (t, v) = compact.entry(s as u32).or_default();
+        t.reserve_exact(n);
+        v.reserve_exact(n);
+        for i in 0..n {
+            t.push(i as u32);
+            v.push(i as f32);
+        }
+    }
+    let c_compact = cout(avant, tas());
+    // c) mixte : brut compact sous 1 changement/min, seaux par minute au-delà.
+    let avant = tas();
+    let mut mixte: HashMap&lt;u32, (Vec&lt;u32&gt;, Vec&lt;f32&gt;)&gt; = HashMap::new();
+    let mut seaux: HashMap&lt;u32, Vec&lt;[f32; 5]&gt;&gt; = HashMap::new();
+    for s in 0..SERIES {
+        let n = (taux(s) * jours).round() as usize;
+        if taux(s) &lt;= 1_440.0 {
+            let (t, v) = mixte.entry(s as u32).or_default();
+            t.reserve_exact(n);
+            v.reserve_exact(n);
+            for i in 0..n {
+                t.push(i as u32);
+                v.push(i as f32);
+            }
+        } else {
+            let minutes = (1_440.0 * jours) as usize;
+            let b = seaux.entry(s as u32).or_default();
+            b.reserve_exact(minutes);
+            for m in 0..minutes {
+                b.push([m as f32, 0.0, 1.0, 0.5, 3.0]);
+            }
+        }
+    }
+    let c_mixte = cout(avant, tas());
+    println!(
+        &quot;- fenêtre {jours} j : {:.0} relevés → naïf {} ; compact {} ; mixte (seaux/minute pour les séries &gt; 1/min) {}&quot;,
+        total,
+        mio(c_naif),
+        mio(c_compact),
+        mio(c_mixte)
+    );
+    drop((naif, compact, mixte, seaux));
+}
+
+fn instantane() {
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap();
+    rt.block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison { appareils: 496, valeurs: 2_264 }), cancel.clone());
+        while hub.stats().points &lt; 2_264 {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        // État d&#39;exécution : valeurs, définitions, et 400 automatismes de 8 nœuds.
+        let graphe = serde_json::json!({
+            &quot;name&quot;: &quot;Automatisme fictif&quot;, &quot;mode&quot;: &quot;restart&quot;, &quot;enabled&quot;: true,
+            &quot;nodes&quot;: [
+                {&quot;id&quot;:&quot;t&quot;,&quot;type&quot;:&quot;when_state&quot;,&quot;point&quot;:&quot;maison:0x00158d0000000001/temperature_0&quot;},
+                {&quot;id&quot;:&quot;c1&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:&quot;maison:0x00158d0000000002/state_1&quot;,&quot;op&quot;:&quot;eq&quot;,&quot;value&quot;:true},{&quot;kind&quot;:&quot;time&quot;,&quot;after&quot;:&quot;07:00&quot;,&quot;before&quot;:&quot;22:00&quot;}]},
+                {&quot;id&quot;:&quot;c2&quot;,&quot;type&quot;:&quot;if&quot;,&quot;rules&quot;:[{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:&quot;maison:0x00158d0000000003/power_2&quot;,&quot;op&quot;:&quot;gt&quot;,&quot;value&quot;:100}]},
+                {&quot;id&quot;:&quot;a1&quot;,&quot;type&quot;:&quot;set&quot;,&quot;point&quot;:&quot;maison:0x00158d0000000004/mode_0&quot;,&quot;value&quot;:true},
+                {&quot;id&quot;:&quot;w&quot;,&quot;type&quot;:&quot;wait&quot;,&quot;seconds&quot;:1800},
+                {&quot;id&quot;:&quot;a2&quot;,&quot;type&quot;:&quot;set&quot;,&quot;point&quot;:&quot;maison:0x00158d0000000004/mode_0&quot;,&quot;value&quot;:false},
+                {&quot;id&quot;:&quot;n&quot;,&quot;type&quot;:&quot;notify&quot;,&quot;message&quot;:&quot;Message fictif&quot;},
+                {&quot;id&quot;:&quot;wf&quot;,&quot;type&quot;:&quot;wait_for&quot;,&quot;rule&quot;:{&quot;kind&quot;:&quot;state&quot;,&quot;point&quot;:&quot;maison:0x00158d0000000005/state_3&quot;,&quot;op&quot;:&quot;eq&quot;,&quot;value&quot;:false},&quot;timeout_s&quot;:600}
+            ],
+            &quot;edges&quot;: [{&quot;from&quot;:&quot;t&quot;,&quot;to&quot;:&quot;c1&quot;},{&quot;from&quot;:&quot;c1&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;c2&quot;},{&quot;from&quot;:&quot;c2&quot;,&quot;port&quot;:&quot;yes&quot;,&quot;to&quot;:&quot;a1&quot;},
+                      {&quot;from&quot;:&quot;a1&quot;,&quot;to&quot;:&quot;w&quot;},{&quot;from&quot;:&quot;w&quot;,&quot;to&quot;:&quot;a2&quot;},{&quot;from&quot;:&quot;a2&quot;,&quot;to&quot;:&quot;n&quot;},{&quot;from&quot;:&quot;c2&quot;,&quot;port&quot;:&quot;no&quot;,&quot;to&quot;:&quot;wf&quot;}]
+        });
+        let automatismes: Vec&lt;serde_json::Value&gt; = (0..400).map(|_| graphe.clone()).collect();
+        let t = Instant::now();
+        let etat = serde_json::json!({
+            &quot;version&quot;: 1,
+            &quot;maison&quot;: hub.snapshot(),
+            &quot;automatismes&quot;: automatismes,
+        });
+        let octets = serde_json::to_vec(&amp;etat).unwrap();
+        let t_json = t.elapsed();
+        let t = Instant::now();
+        let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+        std::io::Write::write_all(&amp;mut gz, &amp;octets).unwrap();
+        let compresse = gz.finish().unwrap();
+        let t_gz = t.elapsed();
+        let chemin = std::env::temp_dir().join(&quot;moli-instantane-essai.json.gz&quot;);
+        let t = Instant::now();
+        {
+            use std::io::Write;
+            let mut f = std::fs::File::create(&amp;chemin).unwrap();
+            f.write_all(&amp;compresse).unwrap();
+            f.sync_all().unwrap();
+        }
+        let t_ecriture = t.elapsed();
+        let t = Instant::now();
+        let relu: serde_json::Value = serde_json::from_slice(&amp;octets).unwrap();
+        let t_lecture = t.elapsed();
+        let _ = std::fs::remove_file(&amp;chemin);
+        println!(
+            &quot;- instantané d&#39;exécution (2 264 valeurs + 400 automatismes) : JSON {} en {:.1} ms, gzip {} en {:.1} ms, écriture + fsync {:.1} ms, relecture {:.1} ms ({} automatismes relus)&quot;,
+            mio(octets.len() as f64),
+            t_json.as_secs_f64() * 1e3,
+            mio(compresse.len() as f64),
+            t_gz.as_secs_f64() * 1e3,
+            t_ecriture.as_secs_f64() * 1e3,
+            t_lecture.as_secs_f64() * 1e3,
+            relu[&quot;automatismes&quot;].as_array().map_or(0, Vec::len)
+        );
+        cancel.cancel();
+    });
+}
+
+fn main() {
+    println!(&quot;# Mémoire : l&#39;état utile d&#39;une maison en Rust&quot;);
+    println!(&quot;\n## M1 — tailles des types du cœur&quot;);
+    println!(
+        &quot;- Value {} o, Sample {} o, (u64, Value) {} o, Arc&lt;str&gt; {} o&quot;,
+        std::mem::size_of::&lt;Value&gt;(),
+        std::mem::size_of::&lt;moli_core::Sample&gt;(),
+        std::mem::size_of::&lt;(u64, Value)&gt;(),
+        std::mem::size_of::&lt;Arc&lt;str&gt;&gt;()
+    );
+    println!(&quot;\n## M2 — modèle du hub à l&#39;échelle des deux Home Assistant réunis&quot;);
+    modele(1);
+    modele(10);
+    println!(&quot;\n## M3 — garder l&#39;historique récent en mémoire (taux réels, 1 487 séries)&quot;);
+    fenetres(1.0);
+    fenetres(7.0);
+    println!(&quot;\n## M4 — instantané pour une relance ailleurs&quot;);
+    instantane();
+}</code></pre></details>
+<details class="code"><summary>Code complet de <code>src/bin/relance.rs</code></summary><pre class="rust"><code>//! R1-R2 : relancer ailleurs depuis l&#39;état. Combien de temps pour reconstruire un hub
+//! complet depuis un instantané, et combien pèse le journal des changements entre deux
+//! instantanés au rythme réel des deux maisons (163 000 relevés par jour).
+
+use std::io::Write;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+
+use moli_core::{Access, Device, DeviceId, Kind, PointSpec, Semantic, Value};
+use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio_util::sync::CancellationToken;
+
+/// Republie un instantané : appareils puis valeurs, comme le ferait une reprise.
+struct Restaure(Arc&lt;serde_json::Value&gt;);
+
+impl Driver for Restaure {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;restaure&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            for d in self.0[&quot;devices&quot;].as_array().unwrap() {
+                let mut device: Device = serde_json::from_value(d.clone()).unwrap();
+                device.instance = ctx.instance().clone();
+                let natif = device.id.as_str().split_once(&#39;:&#39;).unwrap().1.to_owned();
+                device.id = ctx.device_id(&amp;natif);
+                let id = device.id.clone();
+                ctx.upsert_device(device);
+                if let Some(etat) = d[&quot;state&quot;].as_object() {
+                    for (cle, s) in etat {
+                        ctx.set_state(&amp;id, cle, Value::from_json(&amp;s[&quot;value&quot;]));
+                    }
+                }
+            }
+            ctx.ready();
+            std::future::pending::&lt;()&gt;().await;
+            Ok(())
+        })
+    }
+}
+
+/// La maison d&#39;origine : 496 appareils, 2 264 valeurs.
+struct Origine;
+impl Driver for Origine {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;origine&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            let mut n = 0usize;
+            for d in 0..496usize {
+                let par = 2_264 / 496 + usize::from(d &lt; 2_264 % 496);
+                let id = ctx.device_id(&amp;format!(&quot;0x00158d00{d:08x}&quot;));
+                let points: Vec&lt;PointSpec&gt; = (0..par)
+                    .map(|k| PointSpec {
+                        key: format!(&quot;valeur_{k}&quot;).into(),
+                        label: &quot;valeur&quot;.into(),
+                        kind: Kind::Numeric { min: None, max: None, step: None },
+                        access: Access { read: true, write: false },
+                        unit: None,
+                        semantic: Semantic::Other,
+                    })
+                    .collect();
+                ctx.upsert_device(Device {
+                    id: id.clone(),
+                    instance: instance.clone(),
+                    native_name: format!(&quot;Appareil fictif {d}&quot;).into(),
+                    manufacturer: None,
+                    model: None,
+                    description: None,
+                    native_room: None,
+                    members: vec![],
+                    points: points.clone(),
+                });
+                for p in &amp;points {
+                    n += 1;
+                    ctx.set_state(&amp;id, &amp;p.key, Value::Float(n as f64 / 7.0));
+                }
+            }
+            ctx.ready();
+            std::future::pending::&lt;()&gt;().await;
+            Ok(())
+        })
+    }
+}
+
+fn main() {
+    println!(&quot;# Relance ailleurs depuis l&#39;état&quot;);
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().unwrap();
+    rt.block_on(async {
+        let source = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;source, &quot;maison&quot;.into(), Arc::new(Origine), cancel.clone());
+        while source.stats().points &lt; 2_264 {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        let instantane = serde_json::to_vec(&amp;source.snapshot()).unwrap();
+        let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+        gz.write_all(&amp;instantane).unwrap();
+        let compresse = gz.finish().unwrap();
+        // R1 : la machine de secours lit l&#39;instantané et reconstruit son hub.
+        let t = Instant::now();
+        let mut lu = Vec::new();
+        std::io::Read::read_to_end(&amp;mut flate2::read::GzDecoder::new(&amp;compresse[..]), &amp;mut lu).unwrap();
+        let etat: serde_json::Value = serde_json::from_slice(&amp;lu).unwrap();
+        let cible = Hub::new(HubOptions::default()).unwrap();
+        spawn_driver(&amp;cible, &quot;maison&quot;.into(), Arc::new(Restaure(Arc::new(etat))), cancel.clone());
+        while cible.stats().points &lt; 2_264 || cible.state(&amp;moli_core::PointId::new(&amp;DeviceId::from(&quot;maison:0x00158d00000001ef&quot;), &quot;valeur_3&quot;)).is_none() {
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        }
+        let reprise = t.elapsed();
+        println!(
+            &quot;- R1 : instantané de {} Kio compressé ; décompression, lecture et reconstruction du hub (496 appareils, 2 264 valeurs) : {:.0} ms&quot;,
+            compresse.len() / 1024,
+            reprise.as_secs_f64() * 1e3
+        );
+        cancel.cancel();
+    });
+    // R2 : journal des changements entre deux instantanés, au rythme réel.
+    let par_jour = 163_387usize;
+    let mut brut = Vec::new();
+    let t = Instant::now();
+    for i in 0..par_jour {
+        // (série, décalage en ms, valeur) en texte compact, une ligne par changement.
+        writeln!(brut, &quot;{} {} {:.2}&quot;, (i * 7_919) % 1_487, i * 529, (i % 1_000) as f64 / 10.0).unwrap();
+    }
+    let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+    gz.write_all(&amp;brut).unwrap();
+    let compresse = gz.finish().unwrap();
+    println!(
+        &quot;- R2 : journal d&#39;une journée ({par_jour} changements) : {:.1} Mio brut, {:.1} Mio compressé, produit en {:.0} ms ; soit {:.0} octets par changement&quot;,
+        brut.len() as f64 / 1_048_576.0,
+        compresse.len() as f64 / 1_048_576.0,
+        t.elapsed().as_secs_f64() * 1e3,
+        compresse.len() as f64 / par_jour as f64
+    );
+}</code></pre></details>
+</section>
+<section id="annexe-b--données-des-deux-instances" class="level2">
+<h2>Annexe B — Données des deux instances</h2>
+<p>Comptes tirés des résumés et des agrégats d'une capture hors ligne : registres expurgés, analyses du Recorder et activité par série. Aucune base n'a été déchiffrée pour cette analyse ; aucun nom n'est repris. Les quantiles de changements par série et par jour (1 487 séries) :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Quantile</th>
+<th>10 %</th>
+<th>25 %</th>
+<th>50 %</th>
+<th>75 %</th>
+<th>90 %</th>
+<th>95 %</th>
+<th>99 %</th>
+<th>max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Changements par jour</td>
+<td>0,3</td>
+<td>0,3</td>
+<td>0,7</td>
+<td>5,1</td>
+<td>36,5</td>
+<td>285</td>
+<td>2 876</td>
+<td>12 458</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+
+        <footer><span>Moli OS · analyse V2 : workflows, cloisons, mémoire, secours · 21 octobre 2026</span><a href="#top">Haut de page ↑</a></footer>
+      </article>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const printButton = document.getElementById('print-document');
+      printButton.hidden = false;
+      printButton.addEventListener('click', () => window.print());
+      const sections = Array.from(document.querySelectorAll('article > section[id]'));
+      const links = Array.from(document.querySelectorAll('aside nav a'));
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting);
+          if (!visible.length) return;
+          const section = visible[0].target;
+          for (const link of links) {
+            if (decodeURIComponent(link.hash.slice(1)) === section.id) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          }
+        }, { rootMargin: '-10% 0px -75% 0px' });
+        sections.forEach(section => observer.observe(section));
+      }
+    })();
+  </script>
+</body>
+</html>

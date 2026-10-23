@@ -1,0 +1,2408 @@
+<!doctype html>
+<html lang="fr" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Analyse Moli OS : isolation des pannes entre pilotes et briques, réactivité du runtime Tokio et optimisation Rust, avec sept preuves exécutables contre moli-runtime.">
+  <meta name="source-markdown" content="isolation-reactivite-runtime.md">
+  <meta name="source-sha256" content="6b50669308608ada1b3db641a8424ffd5d2f2a7dae66370afadd7ba2a1e276a0">
+  <title>Isolation et réactivité · Moli OS</title>
+  <style>
+    :root {
+      --paper: #fffdf8; --page: #f0f1ec; --ink: #1d302a; --muted: #52615a;
+      --line: #d4ddd4; --soft: #f4f6f1; --green: #195744; --green-soft: #e6eee5;
+      --warm: #8b3b22; --warm-soft: #fae9df; --amber: #835c00; --amber-soft: #fbf0d6;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 90px; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 var(--sans); }
+    a { color: var(--green); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    button { font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--warm); outline-offset: 4px; }
+    .skip { position: fixed; top: 8px; left: 8px; z-index: 20; padding: 10px 16px; background: var(--paper); transform: translateY(-160%); }
+    .skip:focus { transform: none; }
+    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: var(--paper); }
+    .topbar-inner { max-width: 1440px; min-height: 68px; padding: 12px 36px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 750; }
+    .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; background: var(--green); color: white; border-radius: 7px; font: 23px/1 var(--serif); }
+    .brand-sub { border-left: 1px solid var(--line); padding-left: 15px; margin-left: 4px; font-size: 12px; font-weight: 500; color: var(--muted); }
+    .actions { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+    .print { border: 1px solid var(--line); padding: 8px 13px; border-radius: 5px; color: var(--ink); background: var(--soft); min-height: 42px; }
+    .print:hover { background: var(--green-soft); border-color: var(--green); }
+    .frame { max-width: 1440px; margin: auto; padding: 34px 36px 60px; display: grid; grid-template-columns: 238px minmax(0, 1fr); align-items: start; gap: 38px; }
+    aside { position: sticky; top: 95px; max-height: calc(100dvh - 115px); overflow-y: auto; padding-right: 12px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 750; }
+    aside .eyebrow { color: var(--muted); margin: 8px 0 17px 9px; }
+    aside ul, .mobile-toc ul { list-style: none; padding: 0; margin: 0; }
+    aside li { margin: 0 0 3px; }
+    aside a { display: block; padding: 8px 9px; color: var(--muted); font-size: 12px; line-height: 1.5; text-decoration: none; border-left: 2px solid transparent; }
+    aside a:hover, aside a[aria-current="location"] { background: var(--green-soft); color: var(--green); border-left-color: var(--green); }
+    .sidebar-note { margin: 23px 9px 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 12px; color: var(--muted); }
+    main { min-width: 0; }
+    .cover { padding: 8px 0 30px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 24px; color: var(--muted); font-size: 12px; }
+    .status { padding: 3px 9px; border: 1px solid #e0bdaa; color: var(--warm); border-radius: 3px; background: var(--warm-soft); font-weight: 650; }
+    h1 { font: 500 clamp(40px, 4.9vw, 72px)/1.06 var(--serif); letter-spacing: -.035em; margin: 0 0 23px; }
+    h1 span { display: block; color: var(--green); }
+    .lead { max-width: 760px; font-size: 18px; line-height: 1.65; margin: 0; color: var(--muted); }
+    .verdict { border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .verdict-head { padding: 15px 21px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line); }
+    .verdict-head span { font-size: 12px; color: var(--muted); }
+    .verdict-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: 20px 18px 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-top: 4px solid var(--line); }
+    .card:nth-child(4n) { border-right: 0; }
+    .card:nth-last-child(-n+4) { border-bottom: 0; }
+    .card.ok { border-top-color: var(--green); }
+    .card.high { border-top-color: var(--warm); }
+    .card.mid { border-top-color: #c79a2e; }
+    .card .number { font: 11px var(--mono); color: var(--muted); margin-bottom: 10px; display: block; }
+    .card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .card p { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+    .figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .figure-item { padding: 16px 18px; border-right: 1px solid var(--line); }
+    .figure-item:last-child { border-right: 0; }
+    .figure-item strong { display: block; font: 24px/1.3 var(--mono); color: var(--green); }
+    .figure-item span { font-size: 12px; color: var(--muted); line-height: 1.45; display: block; }
+    figure.diagram { margin: 0 0 22px; padding: 18px; background: var(--paper); border: 1px solid var(--line); }
+    figure.diagram svg { display: block; width: 100%; height: auto; }
+    figure.diagram figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .sev { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 750; letter-spacing: .02em; white-space: nowrap; vertical-align: 2px; }
+    .sev-high { background: var(--warm-soft); color: var(--warm); border: 1px solid #e0bdaa; }
+    .sev-crit { background: var(--warm); color: white; border: 1px solid var(--warm); }
+    .sev-mid { background: var(--amber-soft); color: var(--amber); border: 1px solid #e8d29b; }
+    .sev-low { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+    .sev-ok { background: var(--green-soft); color: var(--green); border: 1px solid #b9cdbd; }
+    h3 .sev { margin-left: 8px; font-size: 12px; }
+    .mobile-toc { display: none; }
+    article { padding: 32px 38px 36px; background: var(--paper); border: 1px solid var(--line); overflow-wrap: break-word; }
+    article > p { color: var(--muted); font-size: 13.5px; }
+    article p { margin: 0 0 1.15em; }
+    article h2 { font-size: clamp(23px, 2.2vw, 29px); font-weight: 650; line-height: 1.3; letter-spacing: -.025em; margin: 40px 0 21px; padding-top: 30px; border-top: 1px solid var(--line); text-wrap: balance; }
+    article h3 { margin: 30px 0 15px; font-size: 19px; font-weight: 650; line-height: 1.4; }
+    article ul, article ol { padding-left: 24px; margin: 0 0 22px; }
+    article li { padding-left: 3px; margin-bottom: 9px; }
+    code { background: var(--soft); padding: 2px 5px; font: .86em var(--mono); overflow-wrap: anywhere; }
+    pre { background: var(--soft); padding: 18px; white-space: pre-wrap; line-height: 1.6; overflow-wrap: anywhere; }
+    pre code { padding: 0; background: transparent; font-size: 12px; }
+    details.code { border: 1px solid var(--line); margin: 0 0 22px; }
+    details.code > summary { padding: 13px 18px; cursor: pointer; font-weight: 650; font-size: 14px; min-height: 48px; }
+    details.code[open] > summary { border-bottom: 1px solid var(--line); }
+    details.code pre { margin: 0; max-height: 640px; overflow: auto; white-space: pre; }
+    .table-wrap { max-width: 100%; overflow-x: auto; margin: 22px 0; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 12.5px; line-height: 1.6; }
+    th, td { padding: 11px 12px; vertical-align: top; text-align: left; border-bottom: 1px solid var(--line); }
+    th { background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 750; }
+    td:first-child { font-weight: 600; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr > * + * { border-left: 1px solid #e5eae1; }
+    footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 21px; color: var(--muted); font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1100px) {
+      .frame { grid-template-columns: 205px minmax(0, 1fr); gap: 24px; padding-inline: 24px; }
+      .topbar-inner { padding-inline: 24px; }
+      article { padding: 25px; }
+      .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card:nth-child(4n) { border-right: 1px solid var(--line); }
+      .card:nth-child(2n) { border-right: 0; }
+      .card:nth-last-child(-n+4) { border-bottom: 1px solid var(--line); }
+      .card:nth-last-child(-n+2) { border-bottom: 0; }
+      .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .figure-item:nth-child(2) { border-right: 0; }
+      .figure-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    }
+    @media (max-width: 780px) {
+      .frame { display: block; padding: 24px 16px 40px; }
+      .topbar-inner { padding-inline: 16px; }
+      aside, .brand-sub { display: none; }
+      .actions { gap: 12px; font-size: 12px; }
+      .cover { padding-top: 0; }
+      h1 { font-size: clamp(38px, 9vw, 58px); }
+      .lead { font-size: 16px; }
+      article { padding: 18px; }
+      .verdict-grid { grid-template-columns: 1fr; }
+      .card, .card:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .card:last-child { border-bottom: 0; }
+      .figures { grid-template-columns: 1fr; }
+      .figure-item, .figure-item:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .figure-item:last-child { border-bottom: 0; }
+      figure.diagram { padding: 12px; overflow-x: auto; }
+      figure.diagram svg { min-width: 760px; }
+      .mobile-toc { display: block; padding: 0 17px; margin: 0 0 22px; background: var(--paper); border: 1px solid var(--line); }
+      .mobile-toc summary { padding: 13px 0; min-height: 50px; cursor: pointer; font-size: 14px; font-weight: 650; }
+      .mobile-toc a { display: block; padding: 8px 0; font-size: 13px; }
+      .mobile-toc ul { padding-bottom: 13px; }
+    }
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      body { background: white; font-size: 10pt; color: black; }
+      .topbar, aside, .mobile-toc, .skip { display: none; }
+      .frame { display: block; max-width: none; padding: 0; }
+      h1 { font-size: 34pt; }
+      .lead { font-size: 12pt; }
+      article { border: 0; padding: 0; }
+      article h2 { break-after: avoid; font-size: 16pt; }
+      article h3 { break-after: avoid; font-size: 12pt; }
+      .verdict, .figures, figure.diagram, pre, tr { break-inside: avoid; }
+      details.code pre { max-height: none; white-space: pre-wrap; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; font-size: 9pt; }
+      th, td { padding: 6px 7px; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#document">Aller au document</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">m</span>Moli OS<span class="brand-sub">Propositions techniques</span></a>
+      <div class="actions"><a href="isolation-reactivite-runtime.md">Source Markdown</a><button class="print" id="print-document" type="button" hidden>Imprimer / PDF</button></div>
+    </div>
+  </header>
+  <div class="frame">
+    <aside>
+      <p class="eyebrow">Dans ce document</p>
+      <nav aria-label="Sommaire du document"><ul>
+<li><a href="#1-réponse-courte">1. Réponse courte</a></li>
+<li><a href="#2-ce-qui-protège-déjà-la-maison">2. Ce qui protège déjà la maison</a></li>
+<li><a href="#3-les-façons-dont-un-module-atteint-encore-la-maison">3. Les façons dont un module atteint encore la maison</a></li>
+<li><a href="#4-réactivité">4. Réactivité</a></li>
+<li><a href="#5-pilotes-et-services-tiers">5. Pilotes et services tiers</a></li>
+<li><a href="#6-optimisation-rust">6. Optimisation Rust</a></li>
+<li><a href="#7-plan-proposé">7. Plan proposé</a></li>
+<li><a href="#8-limites-de-cette-analyse">8. Limites de cette analyse</a></li>
+<li><a href="#annexe-a--preuves-exécutables">Annexe A — Preuves exécutables</a></li>
+<li><a href="#annexe-b--grille-par-pilote">Annexe B — Grille par pilote</a></li>
+      </ul></nav>
+      <p class="sidebar-note">Une panique est isolée.<br>Un blocage, un silence, une brique : pas encore.<br>Huit preuves rejouables.</p>
+    </aside>
+    <main>
+      <div class="cover">
+        <div class="meta"><span class="status">Analyse · aucune modification du code</span><span>21 octobre 2026</span><span>Runtime, pilotes, briques · commit d0ce806</span></div>
+        <h1>Ce qui tombe,<span>ce qui tient.</span></h1>
+        <p class="lead">Un pilote qui panique est isolé et relancé sans que la maison le remarque. Un pilote qui bloque, qui se tait ou qui traite tout à la file, une brique qui panique, une faute de processus ne le sont pas encore. Lecture du cœur et de 45 crates, huit expériences contre le vrai code, et un plan court pour fermer ces brèches.</p>
+      </div>
+
+      <section class="verdict" aria-label="Verdict par forme de panne">
+        <div class="verdict-head"><strong class="eyebrow">Une panne de module emporte-t-elle la maison ?</strong><span>Huit formes de panne, prouvées ou tracées dans le code.</span></div>
+        <div class="verdict-grid">
+          <div class="card ok"><span class="number">01 / PANIQUE · E1</span><h2>Un pilote panique</h2><p>Capturée, relancée de 1&nbsp;s à 60&nbsp;s, ordres refusés, appareils hors ligne. Le reste de la maison ne voit rien.</p><span class="sev sev-ok">Maîtrisé</span></div>
+          <div class="card high"><span class="number">02 / BLOCAGE · E2 E8</span><h2>Un pilote bloque ou calcule</h2><p>Deux workers : deux appels bloquants gèlent toute la maison. Une réponse XML hostile de 1&nbsp;Mio occupe un worker 96,6&nbsp;s.</p><span class="sev sev-high">Élevé</span></div>
+          <div class="card high"><span class="number">03 / SILENCE · E3</span><h2>Un pilote se tait</h2><p>« running » mais muet, ou « prêt » avant d'être connecté : chaque ordre échoue à 5&nbsp;s, rien ne le relance.</p><span class="sev sev-high">Élevé</span></div>
+          <div class="card high"><span class="number">04 / BRIQUES · E4</span><h2>Une brique panique</h2><p>Automatismes, historique, énergie, minuteurs, horloges : simple <code>tokio::spawn</code>, arrêt silencieux, santé au vert.</p><span class="sev sev-high">Élevé</span></div>
+          <div class="card high"><span class="number">05 / FILE D'ATTENTE</span><h2>Un appareil est lent</h2><p>Les pilotes qui font leurs E/S dans leur boucle font attendre leurs autres ordres. Luminaires : toutes les lumières.</p><span class="sev sev-high">Élevé</span></div>
+          <div class="card mid"><span class="number">06 / ABANDON</span><h2>Un ordre part trop tard</h2><p>Neuf pilotes émettent encore après que l'appelant a lu « délai dépassé » ; après l'échéance, le journal le dit aussi.</p><span class="sev sev-mid">Moyen</span></div>
+          <div class="card mid"><span class="number">07 / PROCESSUS · E7</span><h2>Une faute de processus</h2><p>Pile, mémoire, <code>abort</code> : tout le processus tombe (code&nbsp;134). Aucun cas trouvé dans le code.</p><span class="sev sev-mid">Moyen</span></div>
+          <div class="card mid"><span class="number">08 / DÉMARRAGE</span><h2>Un pilote ne se construit pas</h2><p>Un fichier de données illisible (<code>phones.json</code>) et toute la maison refuse de démarrer.</p><span class="sev sev-mid">Moyen</span></div>
+        </div>
+      </section>
+
+      <div class="figures" aria-label="Chiffres clés mesurés">
+        <div class="figure-item"><strong>~100&nbsp;000</strong><span>ordres aller-retour par seconde dans le cœur (machine de test, 2 workers)</span></div>
+        <div class="figure-item"><strong>0,06&nbsp;ms</strong><span>médiane d'un ordre pendant qu'un autre pilote panique en boucle</span></div>
+        <div class="figure-item"><strong>×500</strong><span>latence médiane d'un ordre quand deux pilotes bloquent leurs workers</span></div>
+        <div class="figure-item"><strong>96,6&nbsp;s</strong><span>de CPU sur un worker pour décoder 1&nbsp;Mio de XML hostile (Netgear, Huawei)</span></div>
+      </div>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 600" role="img" aria-labelledby="diagram-title diagram-desc" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="diagram-title">Domaines de panne de Moli OS</title>
+          <desc id="diagram-desc">Un seul processus contient le runtime Tokio à deux workers. Dans le runtime, le hub au centre ; à gauche les pilotes supervisés, dont un pilote figé non détecté ; à droite les briques lancées sans superviseur ; en bas l'API. Hors du runtime mais dans le processus : le pool bloquant, le thread du journal et le démarrage. Hors du processus : la relance Docker, le chien de garde de l'hôte et le service d'archive.</desc>
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#52615a"/></marker>
+          </defs>
+          <rect x="8" y="8" width="984" height="486" rx="10" fill="#fffdf8" stroke="#8b3b22" stroke-width="1.5" stroke-dasharray="6 5"/>
+          <text x="26" y="34" font-size="15" font-weight="700" fill="#1d302a">Processus moli-os · un seul espace mémoire</text>
+          <text x="974" y="34" font-size="12" text-anchor="end" fill="#8b3b22">pile, mémoire, abort → tout s'arrête (E7)</text>
+          <rect x="24" y="50" width="716" height="430" rx="8" fill="#f4f6f1" stroke="#d4ddd4"/>
+          <text x="40" y="74" font-size="13.5" font-weight="700" fill="#1d302a">Runtime Tokio · 2 workers partagés par tout</text>
+          <text x="724" y="74" font-size="12" text-anchor="end" fill="#8b3b22">2 appels bloquants = maison gelée (E2)</text>
+
+          <rect x="40" y="92" width="206" height="372" rx="7" fill="#e6eee5" stroke="#195744"/>
+          <text x="54" y="116" font-size="13" font-weight="700" fill="#195744">Pilotes · superviseur</text>
+          <text x="54" y="134" font-size="11" fill="#195744">catch_unwind + attente 1→60 s (E1)</text>
+          <rect x="54" y="148" width="178" height="54" rx="5" fill="#fffdf8" stroke="#195744"/>
+          <text x="66" y="171" font-size="12.5" font-weight="650" fill="#1d302a">z2m, hue, tuya…</text>
+          <text x="66" y="190" font-size="11" fill="#52615a">panique → relancé ✓</text>
+          <rect x="54" y="214" width="178" height="54" rx="5" fill="#fffdf8" stroke="#195744"/>
+          <text x="66" y="237" font-size="12.5" font-weight="650" fill="#1d302a">ordre ≤ 5 s, file ≤ 64</text>
+          <text x="66" y="256" font-size="11" fill="#52615a">try_send : jamais d'attente ✓</text>
+          <rect x="54" y="280" width="178" height="66" rx="5" fill="#fae9df" stroke="#8b3b22"/>
+          <text x="66" y="303" font-size="12.5" font-weight="650" fill="#8b3b22">pilote figé</text>
+          <text x="66" y="321" font-size="11" fill="#8b3b22">« running » mais muet,</text>
+          <text x="66" y="337" font-size="11" fill="#8b3b22">jamais relancé (E3)</text>
+          <rect x="54" y="358" width="178" height="92" rx="5" fill="#fae9df" stroke="#8b3b22"/>
+          <text x="66" y="381" font-size="12.5" font-weight="650" fill="#8b3b22">pilote bloquant</text>
+          <text x="66" y="399" font-size="11" fill="#8b3b22">E/S synchrone, calcul long,</text>
+          <text x="66" y="415" font-size="11" fill="#8b3b22">XML hostile : 96,6 s (E8) ;</text>
+          <text x="66" y="431" font-size="11" fill="#8b3b22">invisible du superviseur</text>
+
+          <rect x="276" y="150" width="210" height="160" rx="8" fill="#fffdf8" stroke="#1d302a" stroke-width="1.4"/>
+          <text x="381" y="178" font-size="16" font-weight="700" text-anchor="middle" fill="#1d302a">Hub</text>
+          <text x="381" y="202" font-size="12" text-anchor="middle" fill="#52615a">modèle · RwLock std</text>
+          <text x="381" y="222" font-size="12" text-anchor="middle" fill="#52615a">bus broadcast · 1 024</text>
+          <text x="381" y="242" font-size="12" text-anchor="middle" fill="#52615a">garde · ordres · journal</text>
+          <text x="381" y="270" font-size="11" text-anchor="middle" fill="#195744">abonné lent → Lagged,</text>
+          <text x="381" y="286" font-size="11" text-anchor="middle" fill="#195744">personne n'attend (E5) ✓</text>
+
+          <rect x="276" y="360" width="210" height="100" rx="8" fill="#fffdf8" stroke="#d4ddd4"/>
+          <text x="381" y="386" font-size="13.5" font-weight="700" text-anchor="middle" fill="#1d302a">API · SSE · MCP</text>
+          <text x="381" y="408" font-size="11" text-anchor="middle" fill="#52615a">corps, quotas, flux bornés</text>
+          <text x="381" y="426" font-size="11" text-anchor="middle" fill="#195744">panique = une connexion ✓</text>
+          <text x="381" y="444" font-size="11" text-anchor="middle" fill="#52615a">/api/health lit le hub</text>
+
+          <rect x="516" y="92" width="210" height="372" rx="7" fill="#fae9df" stroke="#8b3b22"/>
+          <text x="530" y="116" font-size="13" font-weight="700" fill="#8b3b22">Briques · tokio::spawn</text>
+          <text x="530" y="134" font-size="11" fill="#8b3b22">panique = arrêt silencieux (E4)</text>
+          <rect x="530" y="148" width="182" height="40" rx="5" fill="#fffdf8" stroke="#8b3b22"/>
+          <text x="542" y="173" font-size="12.5" font-weight="650" fill="#1d302a">moteur d'automatismes</text>
+          <rect x="530" y="196" width="182" height="40" rx="5" fill="#fffdf8" stroke="#8b3b22"/>
+          <text x="542" y="221" font-size="12.5" font-weight="650" fill="#1d302a">historique</text>
+          <rect x="530" y="244" width="182" height="40" rx="5" fill="#fffdf8" stroke="#8b3b22"/>
+          <text x="542" y="269" font-size="12.5" font-weight="650" fill="#1d302a">énergie</text>
+          <rect x="530" y="292" width="182" height="40" rx="5" fill="#fffdf8" stroke="#8b3b22"/>
+          <text x="542" y="317" font-size="12.5" font-weight="650" fill="#1d302a">minuteurs · entretien</text>
+          <rect x="530" y="340" width="182" height="40" rx="5" fill="#fffdf8" stroke="#8b3b22"/>
+          <text x="542" y="365" font-size="12.5" font-weight="650" fill="#1d302a">horloges des calculs</text>
+          <text x="530" y="408" font-size="11" fill="#8b3b22">handles attendus</text>
+          <text x="530" y="424" font-size="11" fill="#8b3b22">seulement à l'arrêt</text>
+          <text x="530" y="440" font-size="11" fill="#8b3b22">(main.rs:490-500)</text>
+
+          <line x1="246" y1="230" x2="272" y2="230" stroke="#52615a" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <line x1="486" y1="230" x2="512" y2="230" stroke="#52615a" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <line x1="381" y1="356" x2="381" y2="314" stroke="#52615a" stroke-width="1.4" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+
+          <rect x="758" y="50" width="218" height="124" rx="8" fill="#e6eee5" stroke="#195744"/>
+          <text x="772" y="76" font-size="13" font-weight="700" fill="#195744">Pool bloquant</text>
+          <text x="772" y="98" font-size="11.5" fill="#1d302a">SQLite (3 connexions),</text>
+          <text x="772" y="116" font-size="11.5" fill="#1d302a">fichiers, DNS</text>
+          <text x="772" y="140" font-size="11" fill="#195744">hors des workers ✓</text>
+          <rect x="758" y="186" width="218" height="104" rx="8" fill="#e6eee5" stroke="#195744"/>
+          <text x="772" y="212" font-size="13" font-weight="700" fill="#195744">Thread du journal</text>
+          <text x="772" y="234" font-size="11.5" fill="#1d302a">audit écrit hors runtime ✓</text>
+          <text x="772" y="256" font-size="11" fill="#835c00">canal non borné</text>
+          <rect x="758" y="302" width="218" height="178" rx="8" fill="#fbf0d6" stroke="#c79a2e"/>
+          <text x="772" y="328" font-size="13" font-weight="700" fill="#835c00">Démarrage</text>
+          <text x="772" y="350" font-size="11.5" fill="#1d302a">construction des pilotes</text>
+          <text x="772" y="368" font-size="11.5" fill="#1d302a">et des briques</text>
+          <text x="772" y="392" font-size="11" fill="#835c00">une erreur de données</text>
+          <text x="772" y="408" font-size="11" fill="#835c00">= rien ne démarre (3.5)</text>
+
+          <rect x="8" y="512" width="316" height="80" rx="8" fill="#fffdf8" stroke="#d4ddd4"/>
+          <text x="24" y="540" font-size="13" font-weight="700" fill="#1d302a">Docker · restart: unless-stopped</text>
+          <text x="24" y="562" font-size="11.5" fill="#52615a">relance le processus après une faute ;</text>
+          <text x="24" y="579" font-size="11.5" fill="#52615a">boucle si l'entrée fautive revient</text>
+          <rect x="342" y="512" width="316" height="80" rx="8" fill="#fffdf8" stroke="#d4ddd4"/>
+          <text x="358" y="540" font-size="13" font-weight="700" fill="#1d302a">Chien de garde de l'hôte</text>
+          <text x="358" y="562" font-size="11.5" fill="#52615a">cron sur /api/health, relance après</text>
+          <text x="358" y="579" font-size="11.5" fill="#52615a">deux échecs : attrape un gel total</text>
+          <rect x="676" y="512" width="316" height="80" rx="8" fill="#e6eee5" stroke="#195744"/>
+          <text x="692" y="540" font-size="13" font-weight="700" fill="#195744">moli-archive · autre processus</text>
+          <text x="692" y="562" font-size="11.5" fill="#1d302a">sa panne n'emporte pas le cœur (D13) :</text>
+          <text x="692" y="579" font-size="11.5" fill="#1d302a">le précédent d'une vraie isolation</text>
+        </svg>
+        <figcaption>Domaines de panne observés dans le code. Vert : protégé. Rouge : une panne s'y propage ou y reste silencieuse. Ambre : risque borné.</figcaption>
+      </figure>
+
+      <details class="mobile-toc"><summary>Sommaire</summary><ul>
+<li><a href="#1-réponse-courte">1. Réponse courte</a></li>
+<li><a href="#2-ce-qui-protège-déjà-la-maison">2. Ce qui protège déjà la maison</a></li>
+<li><a href="#3-les-façons-dont-un-module-atteint-encore-la-maison">3. Les façons dont un module atteint encore la maison</a></li>
+<li><a href="#4-réactivité">4. Réactivité</a></li>
+<li><a href="#5-pilotes-et-services-tiers">5. Pilotes et services tiers</a></li>
+<li><a href="#6-optimisation-rust">6. Optimisation Rust</a></li>
+<li><a href="#7-plan-proposé">7. Plan proposé</a></li>
+<li><a href="#8-limites-de-cette-analyse">8. Limites de cette analyse</a></li>
+<li><a href="#annexe-a--preuves-exécutables">Annexe A — Preuves exécutables</a></li>
+<li><a href="#annexe-b--grille-par-pilote">Annexe B — Grille par pilote</a></li>
+      </ul></details>
+
+      <article id="document">
+<p>Date : 21 octobre 2026. Statut : <strong>analyse, aucune modification du code</strong>. Base analysée : <code>main</code> au commit <code>d0ce806</code>. Les exemples sont fictifs.</p>
+<p>Périmètre : 57 crates, environ 125 000 lignes de Rust hors tests (160 000 avec). Le cœur (<code>moli-runtime</code>, <code>moli-os</code>, <code>moli-api</code>, <code>moli-automation</code>, <code>moli-history</code>, <code>moli-net</code>) a été lu en détail. Les 45 crates de pilotes et de briques ont été lues selon une même grille (trois relectures parallèles), et chaque constat de gravité élevée a été revérifié dans le code. Huit expériences ont été exécutées contre le vrai <code>moli-runtime</code> et la vraie version de <code>roxmltree</code>, dans des crates jetables hors du dépôt (<a href="#annexe-a--preuves-exécutables">annexe A</a>). Les décisions de l'<a href="../ARCHITECTURE.md">architecture</a> (D0 à D13) sont tenues pour acquises.</p>
+
+<section id="1-réponse-courte" class="level2">
+<h2>1. Réponse courte</h2>
+<p><strong>Oui pour les paniques des pilotes, pas encore pour le reste.</strong> Le cœur sépare bien les pilotes entre eux : un pilote qui panique est capturé, relancé avec une attente croissante, ses ordres en attente sont refusés et ses appareils passent hors ligne ; le reste de la maison ne voit rien (E1 : 3 paniques en 3,5 s, 156 ordres sur 156 servis pendant ce temps, médiane 0,06 ms).</p>
+<p>Mais « planter » prend plusieurs formes, et le superviseur n'en attrape qu'une :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Défaillance d'un module</th>
+<th>Effet aujourd'hui</th>
+<th>Preuve</th>
+<th>Gravité</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Panique dans <code>Driver::run</code></td>
+<td>Isolée, relancée (1 s → 60 s), statut public</td>
+<td>E1</td>
+<td><span class="sev sev-ok">Maîtrisé</span></td>
+</tr>
+<tr class="even">
+<td>Appel bloquant ou calcul long sur un worker</td>
+<td>Un seul : absorbé par le second worker. Deux : toute la maison avance par pas de ~200 ms. Une réponse XML hostile de 1 Mio occupe un worker 96,6 s</td>
+<td>E2, E8</td>
+<td><span class="sev sev-high">Élevé</span></td>
+</tr>
+<tr class="odd">
+<td>Pilote figé, ou « prêt » avant d'être connecté</td>
+<td>Reste <code>running</code> pour toujours ; chaque ordre échoue au bout de 5 s ; jamais relancé</td>
+<td>E3</td>
+<td><span class="sev sev-high">Élevé</span></td>
+</tr>
+<tr class="even">
+<td>Panique dans une brique (moteur d'automatismes, historique, énergie, horloges)</td>
+<td>La brique meurt en silence, rien ne la relance, <code>/api/health</code> reste vert</td>
+<td>E4</td>
+<td><span class="sev sev-high">Élevé</span></td>
+</tr>
+<tr class="odd">
+<td>Appareil lent derrière un pilote qui traite tout à la file</td>
+<td>Les autres ordres du pilote expirent ; pour le pilote des luminaires, toutes les lumières de la maison attendent</td>
+<td>lecture du code</td>
+<td><span class="sev sev-high">Élevé</span> (luminaires), Moyen ailleurs</td>
+</tr>
+<tr class="even">
+<td>Ordre émis après que l'appelant a renoncé</td>
+<td>L'appelant lit « délai dépassé », l'appareil agit quand même, et après l'échéance le journal dit aussi « délai dépassé » (9 pilotes)</td>
+<td>lecture du code</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>Faute de processus (débordement de pile, mémoire, <code>abort</code>)</td>
+<td>Tout le processus s'arrête (code 134) ; Docker relance ; boucle possible si l'entrée fautive persiste</td>
+<td>E7</td>
+<td><span class="sev sev-mid">Moyen</span> (aucun cas trouvé)</td>
+</tr>
+<tr class="even">
+<td>Erreur à la construction d'un pilote (fichier de données illisible)</td>
+<td>Toute la maison refuse de démarrer</td>
+<td>lecture du code</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Réactivité.</strong> Le cœur est très rapide et bien découplé : environ 100 000 ordres aller-retour par seconde sur la machine de test, un abonné lent ne freine personne (E5), le verrou global du modèle n'est pas un goulot à l'échelle d'une maison (E6). Les risques de latence sont aux bords : deux workers seulement, des pilotes qui font leurs entrées-sorties dans leur boucle de commandes, et un moteur d'automatismes qui traite tous les événements à la file, écritures disque synchronisées comprises.</p>
+<p><strong>Pilotes et services tiers.</strong> La grille est rassurante sur l'essentiel : aucun <code>std::thread::sleep</code>, aucun <code>std::net</code> synchrone, aucun canal non borné, des tampons toujours plafonnés, des décodeurs qui vérifient avant d'indexer, pas de récursion sur des données réseau. Les défauts sont des défauts de forme, répétés : entrées-sorties dans la boucle de commandes, garde d'abandon pas toujours appliquée, quelques sous-tâches lâchées, deux pilotes qui se déclarent prêts avant d'être connectés, un décodeur XML au coût quadratique.</p>
+<p><strong>Optimisation Rust.</strong> La base est saine et sobre : identifiants <code>Arc&lt;str&gt;</code>, bus <code>broadcast</code> à valeurs partagées, files bornées, SQLite hors des workers, <code>unsafe</code> interdit dans les 57 crates, LTO complète. Les gains restants sont petits et localisés : allocations évitables sur le chemin le plus chaud du hub, balayages linéaires et horloge à 1 Hz dans le moteur d'automatismes, images de caméra copiées trois ou quatre fois.</p>
+</section>
+<section id="2-ce-qui-protège-déjà-la-maison" class="level2">
+<h2>2. Ce qui protège déjà la maison</h2>
+<section id="21-le-superviseur-des-pilotes" class="level3">
+<h3>2.1 Le superviseur des pilotes</h3>
+<ul>
+<li>Chaque pilote tourne dans sa tâche ; <code>catch_unwind</code> enveloppe <code>run</code> (<code>crates/moli-runtime/src/supervisor.rs:38</code>). Un retour <code>Ok</code> ou <code>Err</code> est traité comme une panne.</li>
+<li>Attente de 1 s doublée jusqu'à 60 s, remise à 1 s après 60 s de bon fonctionnement (<code>supervisor.rs:16-19</code>, <code>45-47</code>).</li>
+<li>À chaque panne : file d'ordres vidée (<code>drain</code>, l. 50), appareils hors ligne (l. 51), statut <code>Backoff { error, retry_in_ms }</code> publié sur le bus (l. 53-59).</li>
+<li>Le même <code>DriverCtx</code> survit aux relances (l. 28-29) : la file n'est jamais recréée, aucun ordre ne tombe dans un trou pendant le redémarrage.</li>
+<li><code>panic = "unwind"</code> est gardé volontairement en release (<code>Cargo.toml:129</code>) : sans lui, <code>catch_unwind</code> ne servirait à rien.</li>
+</ul>
+</section>
+<section id="22-le-contrat-dun-ordre" class="level3">
+<h3>2.2 Le contrat d'un ordre</h3>
+<ul>
+<li>File par pilote bornée à 64 ordres (<code>hub.rs:59</code>), remplie par <code>try_send</code> : une file pleine répond <code>Busy</code> tout de suite, l'appelant n'attend jamais (<code>hub.rs:1807-1825</code>).</li>
+<li>Échéance de 5 s portée par l'ordre (<code>hub.rs:115</code>, <code>1806</code>). Un ordre périmé n'est jamais remis au pilote (<code>driver.rs:574-586</code>) ; le pilote peut revérifier juste avant l'émission (<code>CommandRequest::abandoned</code>, <code>SendPermit::begin_send</code>, <code>driver.rs:136-190</code>).</li>
+<li>Prise ou abandon tranchés par un seul <code>compare_exchange</code> sur un <code>AtomicU8</code> (<code>driver.rs:96-108</code>) : un ordre est pris ou abandonné, jamais les deux.</li>
+<li>Exactement une ligne de journal par ordre, même si l'appelant disparaît (<code>Observer</code>, <code>Delivery</code> et leurs <code>Drop</code>, <code>hub.rs:354-424</code>).</li>
+</ul>
+</section>
+<section id="23-le-bus-et-le-modèle" class="level3">
+<h3>2.3 Le bus et le modèle</h3>
+<ul>
+<li>Bus <code>tokio::sync::broadcast</code> de 1 024 événements (<code>hub.rs:114</code>, <code>583</code>). Un abonné lent reçoit <code>Lagged(n)</code> au lieu de freiner les autres ; le SSE et l'historique se resynchronisent par un instantané (<code>moli-api/src/sse.rs:128-131</code>, <code>moli-history/src/lib.rs:343-352</code>).</li>
+<li>Un état n'est émis que s'il change (<code>hub.rs:2416</code>).</li>
+<li>Identités et valeurs partagées à coût constant : <code>DeviceId</code> et <code>PointId</code> sont des <code>Arc&lt;str&gt;</code> (<code>moli-core/src/id.rs:11-20</code>), <code>Value::Text</code> porte un <code>Arc&lt;str&gt;</code>, les appareils et les lignes de journal sont des <code>Arc</code>. Diffuser un événement à N abonnés coûte N incréments de compteur, pas N copies.</li>
+<li>Verrous tolérants à l'empoisonnement (<code>unwrap_or_else(PoisonError::into_inner)</code>, <code>hub.rs:2794-2800</code>) : une panique sous verrou ne condamne pas le hub.</li>
+<li>Aucun verrou <code>std</code> n'est tenu à travers un <code>.await</code> : pour un futur <code>Send</code> (tous ceux des pilotes et de <code>tokio::spawn</code>), le compilateur le refuse. Cette garantie vient du système de types, pas d'une relecture.</li>
+<li>L'ordre de prise des verrous est documenté (<code>computed/mod.rs:1-2</code>, mise en garde de <a href="../components/coeur.md">coeur.md</a>). Une recherche automatique sur les 39 méthodes qui prennent le verrou du modèle n'a trouvé aucune reprise de ce verrou déjà tenu.</li>
+</ul>
+</section>
+<section id="24-entrées-et-sorties" class="level3">
+<h3>2.4 Entrées et sorties</h3>
+<ul>
+<li>SQLite toujours hors des workers (<code>spawn_blocking</code>, <code>moli-history/src/lib.rs:258-264</code>, <code>moli-energy/src/lib.rs:447-453</code>). Trois connexions séparées pour l'historique : écrivain, lecteur, agents (<code>store.rs:190-192</code>). WAL et <code>synchronous = NORMAL</code> (<code>store.rs:278-279</code>), écritures par lots de 2 s ou 1 000 lignes (<code>lib.rs:39-41</code>), compactage borné quand l'écrivain sature (<code>lib.rs:389-414</code>). Le SQL des agents est en lecture seule, limité en taille et coupé à 2 s par un <code>progress_handler</code> (<code>store.rs:294-306</code>, <code>915-920</code>). La purge tourne hors des workers, par lots de 5 000 lignes avec une pause de 2 ms (<code>retention.rs:36-38</code>).</li>
+<li>Journal d'audit écrit par un thread dédié (<code>journal_log.rs:55-59</code>) : enregistrer une ligne ne touche jamais au disque depuis un worker.</li>
+<li>États métier écrits par <code>tokio::fs</code>, avec fsync du fichier, renommage et fsync du dossier (<code>state_file.rs</code>).</li>
+<li>Réseau commun (<code>moli-net</code>) : délai de 4 s par étape (<code>lib.rs:45</code>), corps bornés à 4 Mio et 16 Mio (<code>lib.rs:53-56</code>, <code>76-86</code>), keepalive TCP 60 s puis 15 s contre les appareils débranchés sans bruit (<code>lib.rs:400-404</code>), TLS épinglé, connexion réutilisée pour les images de caméra, <code>AbortOnDrop</code> sur la tâche de connexion des requêtes uniques (<code>once.rs:111-117</code>).</li>
+</ul>
+</section>
+<section id="25-surfaces" class="level3">
+<h3>2.5 Surfaces</h3>
+<ul>
+<li>Corps limités à 256 Kio par défaut, 4 Mio pour la voix et les imports (<code>moli-api/src/lib.rs:62-64</code>, <code>383</code>). Quotas d'écriture par appelant et par classe (<code>limit.rs</code>). Flux SSE comptés : 8 par appelant, 64 au total (<code>sse.rs:30-32</code>).</li>
+<li>Une panique dans un handler HTTP ne coûte que la connexion concernée (tâche hyper).</li>
+<li>Les appels au LLM sont bornés (45 s pour une conversation, 10 à 30 s pour le reste : <code>moli-assistant/src/llm.rs:12-19</code>) et ne sont jamais sur le chemin d'un ordre.</li>
+</ul>
+</section>
+<section id="26-sûreté-et-sobriété" class="level3">
+<h3>2.6 Sûreté et sobriété</h3>
+<ul>
+<li><code>unsafe_code = "forbid"</code> hérité par les 57 crates (<code>Cargo.toml:109</code>) : un pilote ne peut pas corrompre la mémoire d'un autre (les dépendances mises à part).</li>
+<li>Briques dormantes tant qu'elles ne sont pas configurées (D1), pilotes à l'écoute plutôt qu'en sondage quand l'appareil le permet, release <code>opt-level = "s"</code>, <code>lto = "fat"</code>, <code>codegen-units = 1</code>, binaire musl statique sur <code>scratch</code>.</li>
+<li>Le service d'archive (D13) tourne déjà dans un processus séparé : un précédent utile.</li>
+</ul>
+</section>
+<section id="27-les-bons-modèles-de-pilote-déjà-dans-le-dépôt" class="level3">
+<h3>2.7 Les bons modèles de pilote, déjà dans le dépôt</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Modèle</th>
+<th>Où</th>
+<th>Ce qu'il fait bien</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Acteur + <code>JoinSet</code></td>
+<td><code>moli-ariston/src/lib.rs:122-141</code>, <code>299-303</code>, Voltalis, Overkiz</td>
+<td>entrées-sorties hors de la boucle ; une panique de tâche remonte par <code>join_next</code> ; sortie propre par <code>abort_all</code></td>
+</tr>
+<tr class="even">
+<td>File d'un ordre en vol</td>
+<td><code>moli-samsung/src/queue.rs:1-116</code></td>
+<td>file de 4, sondage sous <code>timeout(12 s)</code>, ordres bornés par <code>timeout_at(deadline)</code>, garde <code>OfflineOnDrop</code></td>
+</tr>
+<tr class="odd">
+<td>Tâche de fond surveillée</td>
+<td><code>moli-androidtv-driver/src/driver.rs:178</code>, <code>moli-androidtv/src/tracked.rs:13-32</code></td>
+<td><code>background.join_next()</code> relance le pilote si une tâche meurt ; lecteur <code>abort-on-drop</code></td>
+</tr>
+<tr class="even">
+<td>Client déplacé dans la tâche</td>
+<td><code>moli-twinkly/src/runtime.rs:131-302</code></td>
+<td>aucun verrou pendant l'E/S, paniques propagées, file de 8</td>
+</tr>
+<tr class="odd">
+<td>Décodeur borné</td>
+<td><code>moli-cast/src/dns.rs:19,58-71</code>, <code>moli-tuya/src/protocol.rs:299-368</code>, <code>moli-asuswrt/src/json.rs:7-26</code></td>
+<td>longueur, profondeur et nombre d'éléments plafonnés avant toute indexation</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+</section>
+<section id="3-les-façons-dont-un-module-atteint-encore-la-maison" class="level2">
+<h2>3. Les façons dont un module atteint encore la maison</h2>
+<section id="31-gel-par-appel-bloquant-ou-calcul-long--élevé" class="level3">
+<h3>3.1 Gel par appel bloquant ou calcul long <span class="sev sev-high">Élevé</span></h3>
+<p>Le runtime n'a que deux workers par défaut (<code>moli-os/src/config.rs:179-181</code>, <code>moli.example.toml:8</code>). Tokio ne préempte pas : une tâche qui ne rend pas la main garde son worker. Un <code>catch_unwind</code> n'y peut rien, il n'y a pas de panique ; un <code>timeout</code> non plus, il ne s'applique qu'aux points d'attente.</p>
+<p>Mesure E2 (machine de test, 2 workers, un pilote sain recevant un ordre toutes les 20 ms) :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Ordres servis en 2 s</th>
+<th>Médiane</th>
+<th>Pire</th>
+<th>Retard max d'une minuterie de 10 ms</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Référence</td>
+<td>89 à 91</td>
+<td>0,05 ms</td>
+<td>0,1 à 6 ms</td>
+<td>4 à 8 ms</td>
+</tr>
+<tr class="even">
+<td>1 pilote bloquant (200 ms sans rendre la main)</td>
+<td>90 à 91</td>
+<td>0,04 ms</td>
+<td>0,1 à 4 ms</td>
+<td>4 à 8 ms</td>
+</tr>
+<tr class="odd">
+<td>2 pilotes bloquants</td>
+<td><strong>10</strong></td>
+<td><strong>27 à 46 ms</strong></td>
+<td><strong>34 à 58 ms</strong></td>
+<td><strong>200 à 374 ms</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Un appel bloquant est absorbé par le vol de tâches de Tokio ; deux suffisent à geler toute la maison : API, SSE, moteur d'automatismes, horloges et tous les autres pilotes partagent ces deux workers.</p>
+<p>Le cœur est presque propre : SQLite, journal et états métier sont hors des workers ; seule exception, le coffre relit son petit fichier en <code>std::fs</code> avant d'écrire (<code>moli-runtime/src/secrets.rs:163</code>). Les sources trouvées sont dans les pilotes et quelques calculs faits sur place :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>Où</th>
+<th>Coût</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Décodage XML au coût quadratique en nombre d'attributs (<code>roxmltree</code> 0.21.1 cherche les doublons par balayage), fait en ligne dans l'async, plafonné à 1 Mio mais pas en attributs</td>
+<td><code>moli-netgear/src/xml.rs:16-34</code>, <code>moli-huawei-lte/src/xml.rs:14-26</code></td>
+<td><strong>mesuré (E8) : 0,16 s pour 64 Kio, 2,75 s pour 256 Kio, 96,6 s pour 1 Mio</strong>, à chaque cycle de 60 s si la réponse hostile revient ; le délai de 30 s du cycle ne peut pas l'interrompre</td>
+</tr>
+<tr class="even">
+<td>Rééchantillonnage FIR (63 coefficients) d'une phrase entière avant de la dire par la sonnette</td>
+<td><code>moli-reolink/src/talk.rs:37-40</code>, <code>moli-audio/src/pcm.rs:35-48</code></td>
+<td>estimé 30 à 100 ms pour 10 s de voix sur la machine de test, davantage sur le Pi</td>
+</tr>
+<tr class="odd">
+<td>Encodage FLAC d'une réponse vocale entière</td>
+<td><code>moli-assistant/src/satellite.rs:283-292</code></td>
+<td>quelques ms à dizaines de ms selon la durée</td>
+</tr>
+<tr class="even">
+<td>Lectures <code>/proc</code> et <code>/sys</code> en <code>std::fs</code> dans la boucle</td>
+<td><code>moli-host/src/lib.rs:179-213</code>, <code>638-704</code></td>
+<td>microsecondes en général, dizaines de ms pour certains capteurs (<code>drivetemp</code>, <code>nvme</code> ; estimé)</td>
+</tr>
+<tr class="odd">
+<td><code>std::fs::write</code> sous <code>Mutex</code> std depuis des handlers async</td>
+<td><code>moli-phones/src/lib.rs:195-199</code></td>
+<td>sensible sur carte SD</td>
+</tr>
+<tr class="even">
+<td>Gros JSON (2 à 4 Mio) parsés en ligne</td>
+<td>Z2M <code>lib.rs:148</code>, Overkiz <code>/setup/devices</code>, carte météo</td>
+<td>10 à 40 ms, rarement</td>
+</tr>
+<tr class="odd">
+<td>Agrégation d'un rapport d'énergie sur toute la plage</td>
+<td><code>moli-energy/src/lib.rs:323-339</code>, <code>report.rs:119-161</code></td>
+<td>proportionnel à la plage demandée</td>
+</tr>
+</tbody>
+</table></div>
+<p>Options étudiées :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Effet</th>
+<th>Coût</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A. Lint <code>clippy::disallowed_methods</code> (<code>std::fs::*</code>, <code>std::thread::sleep</code>, <code>std::net::*</code>) dans les crates async, exceptions annotées</td>
+<td>Empêche à la compilation</td>
+<td>Faible</td>
+</tr>
+<tr class="even">
+<td>B. Détecteur de gel : une tâche mesure le retard d'une minuterie de 100 ms, journalise au-delà de 50 ms et publie le pire retard dans <code>/api/health</code></td>
+<td>Détecte en production, y compris un interblocage</td>
+<td>Faible</td>
+</tr>
+<tr class="odd">
+<td>C. Décodages et calculs lourds en <code>spawn_blocking</code>, avec un pré-contrôle bon marché (nombre d'attributs, taille)</td>
+<td>Supprime les sources connues</td>
+<td>Faible</td>
+</tr>
+<tr class="even">
+<td>D. Passer à 3 ou 4 workers sur un Pi Zero 2 W (4 cœurs)</td>
+<td>Plus de marge ; un worker inactif est parqué et ne coûte rien au repos</td>
+<td>Faible, à mesurer (RSS)</td>
+</tr>
+<tr class="odd">
+<td>E. <code>tokio-metrics</code> par tâche supervisée (D8, décidée mais absente de <code>Cargo.lock</code>)</td>
+<td>Attribue le temps de worker à chaque pilote</td>
+<td>Moyen</td>
+</tr>
+</tbody>
+</table></div>
+<p>Choix : A, B et C tout de suite (C en premier pour le XML), D après mesure sur le matériel cible, E avec la page Système.</p>
+</section>
+<section id="32-pilote-figé-ou-qui-se-dit-prêt-trop-tôt--élevé" class="level3">
+<h3>3.2 Pilote figé, ou qui se dit prêt trop tôt <span class="sev sev-high">Élevé</span></h3>
+<p>Le superviseur ne réagit qu'au retour ou à la panique de <code>run</code> (<code>supervisor.rs:36-44</code>). Un pilote qui attend indéfiniment reste <code>running</code> : chaque ordre échoue au bout de 5 s, la file finit pleine (<code>Busy</code>), et rien ne le relance (E3 : ordre en <code>Timeout</code> après 5,0 s, statut toujours <code>running</code> 10 s plus tard). Aucun indicateur de dernière activité n'est exposé.</p>
+<p>La grille a trouvé des variantes de ce silence :</p>
+<ul>
+<li><strong>Prêt avant d'être connecté</strong> : ESPHome (<code>moli-esphome/src/lib.rs:227</code>) et Frigate (<code>moli-frigate/src/lib.rs:365</code>) appellent <code>ctx.ready()</code> avant toute connexion et gèrent leurs reconnexions en interne ; la panne du broker de Frigate n'est journalisée qu'en <code>debug</code> (<code>lib.rs:438</code>). Le superviseur ne voit jamais l'échec.</li>
+<li><strong>Parqué pour de bon</strong> : une seule réponse <code>Invalid</code> (une page HTML servie pendant un redémarrage du modem, par exemple) met ASUSWRT et Huawei LTE en attente d'un humain jusqu'au prochain redémarrage (<code>moli-asuswrt/src/runtime.rs:166-173</code>, <code>moli-huawei-lte/src/runtime.rs:176-192</code>) ; Netgear, lui, repart avec attente croissante.</li>
+<li><strong>Connexion à moitié ouverte</strong> : le keepalive TCP n'est posé que par <code>PinnedHttps::connect</code> (<code>moli-net/src/lib.rs:400</code>), pas par <code>PinnedTls::connect</code> (l. 286-303) ni <code>WebSocket::open</code> (<code>ws.rs:67-83</code>). Le WebSocket cloud de Tuya envoie un ping mais n'attend pas le pong (<code>moli-tuya/src/cloud.rs:423-426</code>) : une connexion morte n'est vue qu'à la fin des retransmissions TCP (de l'ordre du quart d'heure), et les capteurs endormis (fuite, porte) restent muets jusqu'à la resynchronisation de 30 min.</li>
+<li><strong>Adresse figée</strong> : Roborock résout l'hôte une seule fois et ne retourne jamais (<code>moli-roborock/src/lib.rs:103</code>) ; une adresse DHCP qui change le laisse injoignable sans relance.</li>
+</ul>
+<p>Options étudiées :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Effet</th>
+<th>Coût</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A. Vivacité gérée par le superviseur : <code>DriverCtx</code> note la dernière progression (événement publié, ordre pris, <code>ready</code>) dans un <code>AtomicU64</code> ; chaque pilote déclare un silence maximal ; le <code>select!</code> du superviseur gagne une branche qui abandonne <code>run</code> et relance</td>
+<td>Attrape aussi les cas inconnus</td>
+<td>Moyen</td>
+</tr>
+<tr class="even">
+<td>B. Règles de revue : <code>ready()</code> seulement après la première réponse ; toute attente réseau sous délai ou keepalive (keepalive ajouté à <code>PinnedTls</code> et <code>WebSocket</code>) ; ping/pong vérifié</td>
+<td>Prévient</td>
+<td>Faible</td>
+</tr>
+<tr class="odd">
+<td>C. N ordres consécutifs en <code>Timeout</code> déclenchent une relance</td>
+<td>Signal gratuit, déjà disponible</td>
+<td>Faible</td>
+</tr>
+</tbody>
+</table></div>
+<p>Choix : A (générique) et C (immédiat), B comme règles de revue et petites corrections. Abandonner le futur de <code>run</code> ne marche qu'aux points d'attente : un pilote bloquant (3.1) reste hors d'atteinte.</p>
+</section>
+<section id="33-briques-hors-superviseur--élevé" class="level3">
+<h3>3.3 Briques hors superviseur <span class="sev sev-high">Élevé</span></h3>
+<p>Le dépôt contient <strong>un seul</strong> <code>catch_unwind</code> : celui des pilotes (<code>supervisor.rs:38</code>). Les briques sont lancées par un simple <code>tokio::spawn</code> et leur handle n'est attendu qu'à l'arrêt (<code>moli-os/src/main.rs:490-500</code>) :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Brique</th>
+<th>Lancement</th>
+<th>Si elle panique</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Moteur d'automatismes</td>
+<td><code>moli-automation/src/lib.rs:315</code></td>
+<td>plus aucun automatisme ne se déclenche</td>
+</tr>
+<tr class="even">
+<td>Historique (enregistreur, écrivain, purge)</td>
+<td><code>moli-history/src/lib.rs:146-172</code></td>
+<td>l'historique s'arrête</td>
+</tr>
+<tr class="odd">
+<td>Énergie (enregistreur)</td>
+<td><code>moli-energy/src/lib.rs:166</code></td>
+<td>kWh et € ne sont plus comptés</td>
+</tr>
+<tr class="even">
+<td>Ordonnanceur des minuteurs</td>
+<td><code>main.rs:1542</code></td>
+<td>les minuteurs n'expirent plus</td>
+</tr>
+<tr class="odd">
+<td>Entretien (expiration des demandes, cache d'état)</td>
+<td><code>main.rs:925</code></td>
+<td>les demandes n'expirent plus, <code>state.json</code> n'est plus écrit</td>
+</tr>
+<tr class="even">
+<td>Horloges des calculs et des dépendances</td>
+<td><code>computed_clock.rs:16</code>, <code>dependency_hub.rs:444</code></td>
+<td>valeurs calculées figées ; l'indicateur « démarrée » reste vrai, rien ne les relance</td>
+</tr>
+</tbody>
+</table></div>
+<p>E4 le montre : une brique abonnée au bus meurt au troisième événement, la maison continue, personne n'est prévenu. Les causes possibles existent : invariants en <code>expect</code> ou <code>unwrap</code> (<code>dependencies/store.rs</code>, douze <code>unwrap</code> après chargement ; <code>computed/engine.rs:187</code> ; <code>scene_hub.rs:316</code>). Aucun n'est un bogue aujourd'hui, chacun est un arrêt silencieux potentiel demain. Les sous-tâches lâchées par les pilotes ont le même défaut à plus petite échelle (section 5.4).</p>
+<p>Options étudiées :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Effet</th>
+<th>Coût</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A. <code>supervise(nom, fabrique)</code> générique, même boucle que <code>spawn_driver</code> (capture, attente croissante, statut publié dans l'instantané et <code>/api/health</code>)</td>
+<td>Auto-guérison</td>
+<td>Moyen : chaque brique doit pouvoir repartir (réabonnement, instantané ; l'historique et le moteur savent déjà le faire après un <code>Lagged</code>)</td>
+</tr>
+<tr class="even">
+<td>B. Sentinelle : un <code>JoinSet</code> des briques ; à toute sortie, journal, notice et santé « dégradée »</td>
+<td>Plus de panne silencieuse</td>
+<td>Faible</td>
+</tr>
+<tr class="odd">
+<td>C. Arrêt volontaire du processus si une brique meurt (Docker relance)</td>
+<td>État propre garanti</td>
+<td>Faible, mais toute la maison redémarre</td>
+</tr>
+</tbody>
+</table></div>
+<p>Choix : B d'abord, puis A pour le moteur, l'historique, l'énergie et les minuteurs. C reste une solution honnête pour une brique qui ne sait pas repartir.</p>
+</section>
+<section id="34-fautes-de-processus--moyen" class="level3">
+<h3>3.4 Fautes de processus <span class="sev sev-mid">Moyen</span></h3>
+<p>Tout tourne dans un seul processus. Un débordement de pile, un échec d'allocation, un dépassement du plafond mémoire du conteneur (<code>mem_limit: 128m</code>, <code>compose.yaml:18</code>), une double panique ou un <code>abort</code> arrêtent toute la maison : E7 provoque un débordement de pile dans un pilote, le processus sort en code 134 (<code>SIGABRT</code>), le superviseur n'a rien vu. Docker relance (<code>restart: unless-stopped</code>, <code>compose.yaml:11</code>) : la maison est indisponible le temps du démarrage (budget 2 s) et des reconnexions ; les dernières valeurs reprises datent d'au plus une minute (<code>main.rs:705-707</code>). Si la faute vient d'une entrée qui revient à chaque connexion, la relance tourne en boucle.</p>
+<p>Exposition constatée : faible. Aucune récursion non bornée sur des données réseau (<code>serde_json</code> s'arrête à 128 niveaux, <code>roxmltree</code> est itératif et limite les entités à 10 niveaux, les parcours internes sont bornés, par exemple <code>moli-automation/src/check.rs:980</code> ou <code>moli-asuswrt/src/json.rs:7-26</code>), corps de réponse bornés, <code>unsafe</code> interdit. Un seul point d'allocation non plafonné a été relevé : <code>moli-audio::pcm::resample</code> ne borne pas la taille de sortie (<code>pcm.rs:52-63</code>) ; les appelants actuels passent des fréquences sûres.</p>
+<p>Options étudiées :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Effet</th>
+<th>Coût</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A. Garder un seul processus, maintenir les règles (pas de récursion sur une entrée réseau, tailles bornées) et fuzzer les décodeurs exposés (trames ESPHome, Tuya, SOAP, XML)</td>
+<td>Prévient</td>
+<td>Faible à moyen</td>
+</tr>
+<tr class="even">
+<td>B. Disjoncteur de redémarrage : après 3 démarrages anormaux en 10 min, démarrer sans les pilotes qui démarraient au moment des pannes, et le dire</td>
+<td>Évite la boucle</td>
+<td>Moyen</td>
+</tr>
+<tr class="odd">
+<td>C. Processus séparés pour les pilotes à risque, reliés au hub par une socket locale, comme l'archive</td>
+<td>Vrai confinement mémoire et pile</td>
+<td>Élevé (IPC, empaquetage, mémoire)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Choix : A. C ne se justifie que si un pilote non relu doit tourner, ou si un décodeur ne peut pas être durci ; B seulement si une boucle est observée.</p>
+</section>
+<section id="35-démarrage-couplé--moyen" class="level3">
+<h3>3.5 Démarrage couplé <span class="sev sev-mid">Moyen</span></h3>
+<p><code>spawn_drivers</code> propage toute erreur de construction (<code>main.rs:1111-1162</code>, <code>?</code> aux lignes 1123 à 1153), et <code>serve</code> s'arrête (<code>main.rs:436</code>). Or certaines constructions lisent des données d'exécution, pas seulement la configuration :</p>
+<ul>
+<li><code>moli_phones::open</code> lit <code>phones.json</code> ; illisible, c'est une erreur (<code>moli-phones/src/lib.rs:179-185</code>). Ce fichier est écrit sans fsync (<code>lib.rs:195-199</code>) : une coupure de courant au mauvais moment peut le laisser vide.</li>
+<li><code>ProfileDriver::new</code> lit le fichier de profil (<code>moli-profile/src/lib.rs:314-315</code>).</li>
+<li>L'ouverture de l'historique, de l'énergie et des automatismes est aussi fatale (<code>main.rs:420-434</code>, <code>462</code>).</li>
+</ul>
+<p>Scénario : une coupure pendant l'écriture de <code>phones.json</code>, et la maison entière refuse de démarrer ; le tableau de bord, éteint, ne peut même pas le dire.</p>
+<p>Refuser une <strong>configuration</strong> invalide au démarrage reste juste (<code>check-config</code> fait la même chose). Le problème, ce sont les <strong>données</strong>. Recommandation : à <code>serve</code>, un pilote dont la construction échoue est inscrit avec un statut d'attente qui dit pourquoi, les autres démarrent ; <code>phones.json</code> passe par l'écriture atomique synchronisée déjà utilisée ailleurs. Le cas des bases (historique, énergie) mérite une décision : démarrer sans elles en le signalant, ou attendre un humain.</p>
+</section>
+</section>
+<section id="4-réactivité" class="level2">
+<h2>4. Réactivité</h2>
+<section id="41-les-chemins-chauds" class="level3">
+<h3>4.1 Les chemins chauds</h3>
+<pre class="text"><code>Pilote ── ctx.set_state ──► Hub : verrou d&#39;écriture du modèle (µs)
+                                  │ valeur changée ?
+                                  ▼
+                         broadcast (1 024) ──► SSE (instantané si retard)
+                                  │        ──► historique (lots de 2 s, SQLite hors workers)
+                                  │        ──► énergie
+                                  │        ──► moteur d&#39;automatismes (une seule file)
+                                  │        ──► pilote des luminaires (une seule file)
+Surface ── hub.command ──► validation ─► garde ─► try_send (64) ─► tâche du pilote ─► réseau
+                ▲                                                        │
+                └────────── réponse (oneshot, échéance 5 s) ◄────────────┘</code></pre>
+</section>
+<section id="42-mesures" class="level3">
+<h3>4.2 Mesures</h3>
+<p>Machine de test : Apple M4, runtime à 2 workers comme en production. Les valeurs absolues ne se transposent pas au Pi Zero 2 W (D10), les effets relatifs si.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Expérience</th>
+<th>Résultat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>E1, pilote qui panique en boucle</td>
+<td>3 paniques capturées en 3,5 s, statut <code>backoff (4000 ms)</code> ; pilote sain : 156 ordres sur 156, médiane 0,06 ms, pire 1,5 ms</td>
+</tr>
+<tr class="even">
+<td>E5, débit brut du cœur</td>
+<td>3 000 ordres aller-retour (surface → hub → pilote → réponse) en 23 à 31 ms, soit ~100 000 par seconde, pire 0,08 ms</td>
+</tr>
+<tr class="odd">
+<td>E5, abonné lent</td>
+<td>l'abonné rapide reçoit les 6 000 événements, l'abonné lent en perd 4 975 (<code>Lagged</code>) sans ralentir personne</td>
+</tr>
+<tr class="even">
+<td>E6, verrou global</td>
+<td><code>hub.snapshot()</code> sur 720 valeurs : 0,02 à 0,05 ms ; avec 16 tâches qui copient tout en boucle, médiane des ordres 0,09 à 0,12 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le verrou global (<code>std::sync::RwLock&lt;Model&gt;</code>) n'est pas un goulot : le découper (sharding, <code>arc-swap</code>) n'apporterait rien de mesurable à cette échelle.</p>
+</section>
+<section id="43-le-moteur-dautomatismes--une-seule-file--moyen" class="level3">
+<h3>4.3 Le moteur d'automatismes : une seule file <span class="sev sev-mid">Moyen</span></h3>
+<ul>
+<li>Une seule boucle traite tous les événements de la maison (<code>engine.rs:72-98</code>). Pour un appui (occurrence), elle attend l'admission durable, avec fsync (<code>occurrences.rs:164</code>), et les verrous des minuteurs ; pendant ce temps, aucun autre déclencheur n'est examiné.</li>
+<li>Sur <code>Lagged</code>, les valeurs sont relues mais les transitions manquées sont perdues (<code>engine.rs:77-85</code>) : un « quand la porte s'ouvre » survenu pendant le retard ne partira jamais. Le journal le signale, c'est honnête, mais c'est une perte.</li>
+<li>Chaque changement d'état parcourt tous les automatismes actifs et tous leurs déclencheurs, et alloue une <code>String</code> (<code>engine.rs:351-357</code>) ; la carte <code>last</code> (<code>HashMap&lt;String, Value&gt;</code>) recopie l'état que le hub connaît déjà.</li>
+<li>L'horloge bat à 1 Hz, reparcourt tout, formate une date à chaque seconde et recalcule le soleil pour chaque déclencheur solaire (<code>engine.rs:499-536</code>), alors que tous les déclencheurs horaires sont à la minute.</li>
+<li>Chaque exécution en attente (<code>WaitFor</code>) réévalue sa règle à chaque événement de la maison (<code>run.rs:427-445</code>).</li>
+</ul>
+<p>Recommandations : indexer les déclencheurs d'état par point, comme <code>occurrence_index</code> le fait déjà pour les appuis ; garder <code>last</code> sous clé <code>PointId</code> ou, mieux, porter la valeur précédente dans <code>Event::State</code> (le hub la connaît sous son verrou d'écriture) ; une horloge qui dort jusqu'à la prochaine minute due ; sortir l'admission durable de la boucle de distribution ; sur <code>Lagged</code>, comparer l'instantané relu aux valeurs connues pour rejouer les transitions franches.</p>
+</section>
+<section id="44-réveils-au-repos" class="level3">
+<h3>4.4 Réveils au repos</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>Fréquence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Horloge du moteur d'automatismes</td>
+<td>1 par seconde</td>
+</tr>
+<tr class="even">
+<td>Calendrier des réservations</td>
+<td>1 par seconde (<code>moli-reservations/src/timeline.rs:41-49</code> reconstruit une table de 4 096 entrées au plus)</td>
+</tr>
+<tr class="odd">
+<td>Lots de l'historique</td>
+<td>1 toutes les 2 s</td>
+</tr>
+<tr class="even">
+<td>Sonos</td>
+<td>4 connexions TCP neuves toutes les 2 s par enceinte (<code>moli-sonos/src/lib.rs:19</code>, <code>243-262</code>), soit ~172 000 par jour et par enceinte</td>
+</tr>
+<tr class="odd">
+<td>Reolink</td>
+<td>1 requête par seconde (<code>moli-reolink/src/lib.rs:33</code>)</td>
+</tr>
+<tr class="even">
+<td>Tapo</td>
+<td>1 connexion TCP toutes les 5 s par appareil, même injoignable</td>
+</tr>
+<tr class="odd">
+<td>Entretien, pilote des personnes, keepalive SSE</td>
+<td>1 toutes les 15 s</td>
+</tr>
+<tr class="even">
+<td>Twinkly</td>
+<td>4 à 7 requêtes toutes les 15 s, dont la version du micrologiciel, qui ne change pas (<code>moli-twinkly/src/api.rs:232</code>)</td>
+</tr>
+<tr class="odd">
+<td>Alexa</td>
+<td>une connexion TLS neuve par enceinte toutes les 30 s</td>
+</tr>
+<tr class="even">
+<td>Routeurs (ASUSWRT, Netgear, Huawei)</td>
+<td>un cycle par minute, TCP et TLS rouverts à chaque requête (<code>moli-net/src/lib.rs:562-581</code>), chaque réponse décodée deux fois</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le budget est tenu (0,24 % de CPU mesuré, <a href="../PERFORMANCE.md">PERFORMANCE.md</a>). Sur le matériel cible, l'horloge à 1 Hz et les connexions rouvertes à chaque sondage (Sonos en tête) sont les plus grosses dépenses constantes, et les plus faciles à supprimer.</p>
+</section>
+</section>
+<section id="5-pilotes-et-services-tiers" class="level2">
+<h2>5. Pilotes et services tiers</h2>
+<p>Lecture des 45 crates de pilotes et de briques selon la même grille : structure de la boucle, durée de vie des sous-tâches, attentes sans délai, appels bloquants, croissance non bornée, surface de panique, coût au repos, verrous. Tableau complet par crate en <a href="#annexe-b--grille-par-pilote">annexe B</a>.</p>
+<section id="51-ce-que-la-grille-ne-trouve-pas" class="level3">
+<h3>5.1 Ce que la grille ne trouve pas</h3>
+<ul>
+<li>Aucun <code>std::thread::sleep</code>, aucun <code>std::net</code> synchrone, aucun <code>block_on</code> dans le code de production des pilotes.</li>
+<li>Aucun canal non borné ; tous les tampons réseau sont plafonnés (MQTT 4 Mio, SSE et WebSocket 1 Mio, Cast 256 Kio, ESPHome 32 Kio, Tuya 4 Kio…).</li>
+<li>Des décodeurs qui vérifient longueur, somme de contrôle ou signature avant d'indexer (Tuya, miIO de Roborock, protobuf d'Android TV, DNS de Cast, RTSP de Reolink).</li>
+<li>Des <code>unwrap</code> et <code>expect</code> de production limités à des invariants (clé <code>ring</code>, aléa système).</li>
+</ul>
+</section>
+<section id="52-le-défaut-dominant--la-boucle-qui-fait-elle-même-ses-entrées-sorties" class="level3">
+<h3>5.2 Le défaut dominant : la boucle qui fait elle-même ses entrées-sorties</h3>
+<p>Beaucoup de pilotes attendent la réponse réseau <strong>dans</strong> le <code>select!</code> qui lit leurs commandes. Pendant cette attente, <code>next_command()</code> n'est plus lu : les ordres suivants vieillissent dans la file et expirent à 5 s, et les événements de l'appareil s'accumulent.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Pilote</th>
+<th>Attente en ligne au pire</th>
+<th>Où</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Luminaires</strong> (<code>lumieres</code>)</td>
+<td>≤ 5 s par réglage et par ampoule (réglages en série, ampoules en parallèle), soit jusqu'à ~15 s ; <strong>une seule instance sert tous les luminaires de la maison</strong> et cesse de lire le bus pendant ce temps (<code>Lagged</code>, puis relecture de tous les luminaires)</td>
+<td><code>moli-lights/src/lib.rs:829-838</code>, <code>479-507</code></td>
+</tr>
+<tr class="even">
+<td>Telegram</td>
+<td>10 conversations × 15 s = 150 s</td>
+<td><code>moli-telegram/src/lib.rs:182-217</code></td>
+</tr>
+<tr class="odd">
+<td>Tapo</td>
+<td>2 tentatives × 3 requêtes × 4 s = 24 s</td>
+<td><code>moli-tapo/src/lib.rs:235-249</code></td>
+</tr>
+<tr class="even">
+<td>Reolink</td>
+<td>jusqu'à ~24 s (relecture, événements, reconnexion)</td>
+<td><code>moli-reolink/src/lib.rs:505-512</code></td>
+</tr>
+<tr class="odd">
+<td>Sonos</td>
+<td>4 requêtes SOAP de ≤ 4 s par sondage, soit ≤ 16 s</td>
+<td><code>moli-sonos/src/lib.rs:381</code>, <code>393</code></td>
+</tr>
+<tr class="even">
+<td>Philips</td>
+<td>4 requêtes HTTPS, ~8 s quand le téléviseur dort (justement quand on l'allume)</td>
+<td><code>moli-philips/src/lib.rs:734</code>, <code>740</code></td>
+</tr>
+<tr class="odd">
+<td>Alexa</td>
+<td>≤ 20 s par appel, sondage séquentiel par enceinte</td>
+<td><code>moli-alexa/src/lib.rs:298-305</code>, <code>351-381</code></td>
+</tr>
+<tr class="even">
+<td>Hue</td>
+<td>rechargement complet ≤ 2 × 4 s</td>
+<td><code>moli-hue/src/lib.rs:182</code>, <code>193</code></td>
+</tr>
+<tr class="odd">
+<td>Moonraker, Nuki, IGD, Host, téléphones, profils</td>
+<td>de quelques secondes à plusieurs dizaines (Host : sondes de 1,5 s par machine, en série)</td>
+<td>voir annexe B</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le cas des luminaires est le plus sensible : une ampoule annoncée en ligne mais lente (un relais Wi-Fi qui met 5 s à acquitter) retient les ordres de tous les autres luminaires, y compris Zigbee. Ce n'est pas une panne qui se propage, c'est une latence qui se propage.</p>
+<p>Le modèle à suivre existe déjà dans le dépôt (section 2.7) : acteur avec <code>JoinSet</code> (Ariston, Voltalis, Overkiz), file d'un ordre en vol (Samsung), client déplacé dans la tâche (Twinkly). Pour les luminaires : traiter chaque luminaire dans sa propre tâche (ou une tâche par ordre, annulable), et laisser la boucle principale ne faire que distribuer.</p>
+</section>
+<section id="53-ordres-émis-après-abandon--moyen" class="level3">
+<h3>5.3 Ordres émis après abandon <span class="sev sev-mid">Moyen</span></h3>
+<p>L'architecture pose qu'« un ordre que personne n'attend plus n'est jamais exécuté » et le cœur fournit les outils (<code>abandoned()</code>, <code>send_permit</code>, <code>web_if</code>, <code>begin_send</code>). Neuf pilotes ne s'en servent pas, ou pas jusqu'au bout :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Pilote</th>
+<th>Ce qui part trop tard</th>
+<th>Où</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hue</td>
+<td>le PUT part jusqu'à 4,5 s après la prise de l'ordre, sans revérification</td>
+<td><code>moli-hue/src/lib.rs:354-358</code></td>
+</tr>
+<tr class="even">
+<td>Tuya</td>
+<td>échéance propre au pilote ; un appelant parti ou un permis révoqué sont ignorés</td>
+<td><code>moli-tuya/src/device.rs:49-54</code></td>
+</tr>
+<tr class="odd">
+<td>Philips</td>
+<td>GET, POST puis touche, sans revérification</td>
+<td><code>moli-philips/src/lib.rs:596-611</code></td>
+</tr>
+<tr class="even">
+<td>Alexa</td>
+<td>envoi, réouverture de session puis renvoi (jusqu'à ~7 appels)</td>
+<td><code>moli-alexa/src/lib.rs:384-399</code></td>
+</tr>
+<tr class="odd">
+<td>Moonraker</td>
+<td>pause ou annulation d'impression (une commande de <strong>machine</strong>) envoyée sans <code>abandoned()</code></td>
+<td><code>moli-moonraker/src/lib.rs:247-261</code></td>
+</tr>
+<tr class="even">
+<td>Tapo</td>
+<td>la seconde tentative repart après un nouveau handshake</td>
+<td><code>moli-tapo/src/lib.rs:237-248</code></td>
+</tr>
+<tr class="odd">
+<td>Telegram</td>
+<td>les conversations 2 à 10 partent après abandon</td>
+<td><code>moli-telegram/src/lib.rs:202-215</code></td>
+</tr>
+<tr class="even">
+<td>Profils, téléphones</td>
+<td><code>timeout_at(deadline)</code> seulement ; la notification Expo part même après abandon</td>
+<td><code>moli-profile/src/lib.rs:831-851</code>, <code>moli-phones/src/lib.rs:683-686</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Effet : l'appelant (la famille, un automatisme) lit « délai dépassé », et l'appareil agit quand même quelques secondes plus tard. Le cœur attend la réponse jusqu'à l'échéance de 5 s, même après le départ de l'appelant (<code>hub.rs:339-348</code>) ; un envoi qui part <strong>après</strong> cette échéance est donc journalisé « délai dépassé » alors que l'appareil a obéi : l'écran et le journal disent la même chose fausse, ce qui touche la règle 7 (« toute écriture est journalisée… résultat »). Un test de contrat commun (« un ordre abandonné avant l'émission ne part pas »), joué contre chaque pilote avec un faux serveur, fermerait le sujet.</p>
+</section>
+<section id="54-sous-tâches-lâchées" class="level3">
+<h3>5.4 Sous-tâches lâchées</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Pilote</th>
+<th>Sous-tâche</th>
+<th>Risque</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>IPP</td>
+<td>le travailleur d'impression est détaché (<code>moli-ipp/src/lib.rs:497-535</code>)</td>
+<td>s'il panique, l'imprimante répond « file pleine » pour toujours, statut <code>running</code> ; après un redémarrage pendant une panne de papier, l'ancien travailleur boucle et garde jusqu'à 32 Mio de documents</td>
+</tr>
+<tr class="even">
+<td>Reolink</td>
+<td>une tâche par appui sur la sonnette et par message vocal (<code>moli-reolink/src/lib.rs:643</code>, <code>682</code>)</td>
+<td>N appuis = N visites à la suite, sans plafond ni déduplication ; des durées de configuration non bornées font paniquer <code>Instant + Duration</code> dans la tâche (<code>listen.rs:73</code>, <code>door.rs:212</code>)</td>
+</tr>
+<tr class="odd">
+<td>Tuya</td>
+<td><code>JoinSet</code> jamais joint, trois tâches de réception UDP hors du <code>JoinSet</code> (<code>moli-tuya/src/lib.rs:124-204</code>, <code>379</code>)</td>
+<td>une panique rend un appareil muet sans signal</td>
+</tr>
+<tr class="even">
+<td>Sonos</td>
+<td>annonce détachée (<code>moli-sonos/src/announce.rs:109</code>)</td>
+<td>une panique laisse le compteur d'attente incrémenté : file « pleine » après trois</td>
+</tr>
+<tr class="odd">
+<td>ESPHome, Philips, luminaires, Hue</td>
+<td>tâches détachées bornées dans le temps (15 s à 90 s)</td>
+<td>chevauchement avec la nouvelle instance après un redémarrage</td>
+</tr>
+</tbody>
+</table></div>
+<p>Règle proposée : toute sous-tâche vit dans un <code>JoinSet</code> que la boucle du pilote joint dans son <code>select!</code> ; une sortie inattendue fait retourner <code>run</code>, donc relancer le pilote (le modèle d'Android TV).</p>
+</section>
+<section id="55-services-tiers--relances-et-quotas" class="level3">
+<h3>5.5 Services tiers : relances et quotas</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Pilote</th>
+<th>Constat</th>
+<th>Risque</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Landroid</td>
+<td>un 401 ou 403 efface la session et relance la connexion toutes les 10 s, sans compteur (<code>moli-landroid/src/cloud.rs:224-227</code>, <code>lib.rs:45</code>, <code>613</code>)</td>
+<td>~12 appels par minute sans fin vers un service dont le code note lui-même qu'il bannit ; Ariston a déjà le bon garde-fou (<code>MAX_SESSION_REFUSALS</code>)</td>
+</tr>
+<tr class="even">
+<td>Overkiz</td>
+<td>toute erreur de lecture non classée redémarre le pilote (<code>moli-overkiz/src/lib.rs:460</code>) et l'abonnement aux événements n'est jamais désenregistré</td>
+<td>des abonnements orphelins s'accumulent côté Somfy</td>
+</tr>
+<tr class="odd">
+<td>Météo</td>
+<td>le verrou est tenu pendant la requête (15 s) et un échec ne rafraîchit pas l'horodatage (<code>moli-weather/src/lib.rs:260-284</code>)</td>
+<td>panne d'Open-Meteo : chaque requête refait l'appel, la k-ième attend k × 15 s</td>
+</tr>
+<tr class="even">
+<td>Telegram, météo</td>
+<td>aucun recul sur 429</td>
+<td>quota dépassé plus longtemps</td>
+</tr>
+<tr class="odd">
+<td>Hue</td>
+<td><code>GET /clip/v2/resource</code> limité à 4 Mio et 4 s pour tout l'échange ; une réponse trop grosse n'est jamais rejouée (<code>moli-hue/src/lib.rs:265</code>, <code>273</code>)</td>
+<td>très grosse installation (supposé) : redémarrage en boucle sans rien publier</td>
+</tr>
+<tr class="even">
+<td>Netgear</td>
+<td>4 096 octets de texte au plus par élément (<code>moli-netgear/src/xml.rs:44-51</code>), or l'inventaire V1 arrive en un seul nœud</td>
+<td>selon la grille, au-delà de 50 à 70 appareils le cycle échoue et le pilote redémarre en boucle</td>
+</tr>
+<tr class="odd">
+<td>Frigate</td>
+<td>tout sujet MQTT <code>…/&lt;nom&gt;/motion</code> crée une caméra, sans plafond ni validation, sur un broker sans authentification (<code>moli-frigate/src/lib.rs:415-432</code>)</td>
+<td>un client du réseau peut créer des appareils à volonté</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les reculs sur 429 et 5xx sont bons ailleurs : Ariston 15 min, Voltalis 10 min, Netatmo <code>Retry-After</code> borné, Landroid 1 h sur 429.</p>
+</section>
+<section id="56-images-de-caméra--trois-ou-quatre-copies" class="level3">
+<h3>5.6 Images de caméra : trois ou quatre copies</h3>
+<p>Le pilote ne décode ni ne réencode : le JPEG passe tel quel, ce qui est juste. Mais <code>media::Image</code> porte un <code>Vec&lt;u8&gt;</code> (<code>moli-runtime/src/media.rs:15</code>), d'où une copie à la sortie de hyper (<code>to_vec()</code>, <code>moli-reolink/src/lib.rs:180</code>, <code>moli-frigate/src/lib.rs:77</code>), une pour le cache partagé (<code>hub.rs:2287</code>) et une par lecteur (<code>hub.rs:2282</code>). Avec <code>bytes::Bytes</code>, déjà dans l'arbre de dépendances (hyper, <code>moli-net</code>), ces trois copies deviennent des incréments de compteur.</p>
+</section>
+</section>
+<section id="6-optimisation-rust" class="level2">
+<h2>6. Optimisation Rust</h2>
+<section id="61-ce-qui-est-déjà-le-bon-choix" class="level3">
+<h3>6.1 Ce qui est déjà le bon choix</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Choix</th>
+<th>Où</th>
+<th>Pourquoi c'est juste</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Identités et textes en <code>Arc&lt;str&gt;</code></td>
+<td><code>moli-core/src/id.rs</code>, <code>value.rs</code></td>
+<td>clones à coût constant, diffusion sans copie</td>
+</tr>
+<tr class="even">
+<td><code>broadcast</code> + <code>mpsc</code> bornés + <code>oneshot</code></td>
+<td><code>hub.rs</code></td>
+<td>contre-pression explicite, aucun producteur bloqué</td>
+</tr>
+<tr class="odd">
+<td><code>try_send</code> plutôt que <code>send().await</code> vers les pilotes</td>
+<td><code>hub.rs:1807</code></td>
+<td>l'appelant ne dépend jamais de la santé du pilote</td>
+</tr>
+<tr class="even">
+<td>CAS sur <code>AtomicU8</code> pour prendre ou abandonner un ordre</td>
+<td><code>driver.rs:96-108</code></td>
+<td>exclusion sans verrou</td>
+</tr>
+<tr class="odd">
+<td>Verrous <code>std</code> (pas <code>tokio::sync</code>) pour les sections courtes</td>
+<td><code>hub.rs</code></td>
+<td>plus rapides ; le compilateur interdit de les garder à travers un <code>.await</code></td>
+</tr>
+<tr class="even">
+<td>SQLite dans <code>spawn_blocking</code>, trois connexions, lots</td>
+<td><code>moli-history</code></td>
+<td>les workers ne touchent jamais le disque</td>
+</tr>
+<tr class="odd">
+<td>Thread dédié au journal</td>
+<td><code>journal_log.rs</code></td>
+<td>une écriture d'audit ne coûte qu'un envoi sur canal</td>
+</tr>
+<tr class="even">
+<td>Corps et files bornés partout</td>
+<td><code>moli-net</code>, <code>moli-api</code>, pilotes</td>
+<td>mémoire prévisible sous 128 Mio</td>
+</tr>
+<tr class="odd">
+<td><code>unsafe</code> interdit, clippy pédant en erreur</td>
+<td><code>Cargo.toml</code></td>
+<td>sûreté mémoire de toutes les intégrations</td>
+</tr>
+<tr class="even">
+<td>LTO complète, une unité de code, taille optimisée, musl statique</td>
+<td><code>Cargo.toml:123-128</code></td>
+<td>image et RSS minimales</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="62-leviers-restants" class="level3">
+<h3>6.2 Leviers restants</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Levier</th>
+<th>Constat</th>
+<th>Gain attendu</th>
+<th>Coût</th>
+<th>Décision proposée</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pré-contrôle et <code>spawn_blocking</code> du XML</td>
+<td>E8 : 96,6 s pour 1 Mio d'attributs</td>
+<td>supprime un gel de worker sur entrée hostile</td>
+<td>faible (compter les attributs avant de parser)</td>
+<td>faire</td>
+</tr>
+<tr class="even">
+<td>Allocations du chemin le plus chaud</td>
+<td><code>DriverCtx::owns</code> appelle <code>DeviceId::instance()</code>, qui alloue, à chaque <code>set_state</code> (<code>driver.rs:601-603</code>, <code>id.rs:74</code>) ; <code>PointId::split</code> alloue un <code>DeviceId</code> (<code>id.rs:87</code>) ; <code>record_state_update</code> construit trois fois le même <code>PointId</code> (<code>hub.rs:2418</code>, <code>2424</code>, <code>2431</code>)</td>
+<td>quelques dizaines de ns par mise à jour, sur le chemin le plus fréquent</td>
+<td>faible : comparer un préfixe, découper en <code>(&amp;str, &amp;str)</code>, construire le <code>PointId</code> une fois</td>
+<td>faire</td>
+</tr>
+<tr class="odd">
+<td>Images en <code>Bytes</code></td>
+<td>5.6</td>
+<td>trois copies de moins par image (jusqu'à 16 Mio)</td>
+<td>faible</td>
+<td>faire</td>
+</tr>
+<tr class="even">
+<td>Connexions réutilisées dans les sondages</td>
+<td>Sonos, routeurs, Alexa, Tapo (4.4)</td>
+<td>moins de handshakes TCP et TLS, moins de tâches hyper</td>
+<td>faible à moyen</td>
+<td>faire pour Sonos d'abord</td>
+</tr>
+<tr class="odd">
+<td>Index des déclencheurs d'état</td>
+<td>4.3</td>
+<td>proportionnel au nombre d'automatismes</td>
+<td>moyen</td>
+<td>faire</td>
+</tr>
+<tr class="even">
+<td>Horloge alignée sur la minute</td>
+<td>4.3, 4.4</td>
+<td>réveils ÷ 60</td>
+<td>faible</td>
+<td>faire</td>
+</tr>
+<tr class="odd">
+<td><code>/api/health</code> sans copie complète</td>
+<td><code>rest.rs:23</code> copie toute la maison pour ne rendre que les pilotes</td>
+<td>petit, budget santé 5 ms</td>
+<td>faible (<code>hub.drivers()</code>)</td>
+<td>faire</td>
+</tr>
+<tr class="even">
+<td>Journal sur canal borné</td>
+<td><code>std::sync::mpsc::channel()</code> non borné (<code>journal_log.rs:55</code>) : disque bloqué = mémoire qui monte</td>
+<td>sûreté mémoire</td>
+<td>faible (<code>sync_channel</code> + compteur existant)</td>
+<td>faire</td>
+</tr>
+<tr class="odd">
+<td>Sessions MCP plafonnées</td>
+<td><code>LocalSessionManager</code> sans plafond (<code>mcp.rs:43</code>), sessions gardées 5 min par défaut, 120 requêtes par 10 s autorisées par appelant</td>
+<td>borne la mémoire face à un agent qui dérape</td>
+<td>faible</td>
+<td>faire</td>
+</tr>
+<tr class="even">
+<td>SSE : sérialiser une fois par événement</td>
+<td><code>sse.rs:124</code> sérialise pour chaque abonné</td>
+<td>faible (64 flux au plus)</td>
+<td>faible</td>
+<td>si une mesure le demande</td>
+</tr>
+<tr class="odd">
+<td>Découper le verrou global</td>
+<td>E6</td>
+<td>non mesurable</td>
+<td>élevé</td>
+<td>ne pas faire</td>
+</tr>
+<tr class="even">
+<td>Allocateur <code>mimalloc</code></td>
+<td>malloc de musl lent sous contention</td>
+<td>possible sur CPU, au prix de RSS</td>
+<td>faible</td>
+<td>mesurer d'abord</td>
+</tr>
+<tr class="odd">
+<td><code>opt-level = 3</code> ciblé</td>
+<td>profil <code>s</code> partout</td>
+<td>inconnu</td>
+<td>faible</td>
+<td>seulement avec un profil CPU</td>
+</tr>
+<tr class="even">
+<td><code>tokio-metrics</code> (D8)</td>
+<td>décidé, pas livré</td>
+<td>observabilité par pilote</td>
+<td>moyen</td>
+<td>faire</td>
+</tr>
+</tbody>
+</table></div>
+<p>Un point de cohérence à garder en tête : l'événement d'un état est émis après la libération du verrou d'écriture (<code>hub.rs:2390-2439</code>). Deux écrivains concurrents d'un même point pourraient donc publier dans l'ordre inverse de leurs écritures. Aujourd'hui chaque point n'a qu'un écrivain (son pilote), l'invariant tient ; il mérite d'être écrit.</p>
+</section>
+</section>
+<section id="7-plan-proposé" class="level2">
+<h2>7. Plan proposé</h2>
+<p>Méthode : chaque piste est notée en impact (risque de panne ou de latence évité, nombre de pilotes touchés) et en effort (taille du changement, risque de régression), puis rangée dans une matrice.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th></th>
+<th>Effort faible</th>
+<th>Effort moyen</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Impact fort</strong></td>
+<td>P1 · sentinelle des briques (3.3 B) · détecteur de gel (3.1 B) · XML pré-contrôlé et hors workers (3.1 C) · lint anti-bloquant (3.1 A) · relance après N <code>Timeout</code> (3.2 C) · <code>ready()</code> après connexion (ESPHome, Frigate) · démarrage découplé des pilotes et <code>phones.json</code> synchronisé (3.5) · compteur de refus de session pour Landroid</td>
+<td>P2 · supervision générique des briques (3.3 A) · vivacité des pilotes (3.2 A) · luminaires en tâches par luminaire (5.2) · moteur d'automatismes indexé, admission hors de la boucle (4.3) · test de contrat « ordre abandonné » pour tous les pilotes (5.3)</td>
+</tr>
+<tr class="even">
+<td><strong>Impact modéré</strong></td>
+<td>P3 · images en <code>Bytes</code> · allocations du chemin chaud · <code>/api/health</code> léger · journal borné · plafond des sessions MCP · horloge à la minute · keepalive sur <code>PinnedTls</code> et <code>WebSocket</code> · recul sur 429 (Telegram, météo)</td>
+<td>P3 · sous-tâches en <code>JoinSet</code> joint (IPP, Reolink, Tuya, Sonos) · autres pilotes à E/S en ligne (Telegram, Tapo, Reolink, Sonos d'abord) · connexions réutilisées dans les sondages · <code>tokio-metrics</code> (D8) · fuzz des décodeurs exposés · workers selon le matériel</td>
+</tr>
+</tbody>
+</table></div>
+<p>Hors plan pour l'instant : processus séparés par pilote, découpage du verrou global, changement d'allocateur, <code>opt-level</code> différencié.</p>
+<p>Chaque lot se vérifie par une preuve rejouable, sur le modèle de l'annexe A :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Lot</th>
+<th>Preuve d'acceptation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sentinelle, puis supervision des briques</td>
+<td>E4 rejoué : la panne est visible dans <code>/api/health</code>, puis la brique repart seule</td>
+</tr>
+<tr class="even">
+<td>Détecteur de gel</td>
+<td>E2 rejoué : le pire retard de minuterie apparaît dans <code>/api/health</code> et au journal</td>
+</tr>
+<tr class="odd">
+<td>XML</td>
+<td>E8 rejoué contre <code>moli-netgear</code> et <code>moli-huawei-lte</code> : la réponse hostile est refusée en moins d'une milliseconde, sans occuper de worker</td>
+</tr>
+<tr class="even">
+<td>Vivacité des pilotes</td>
+<td>E3 rejoué : le pilote figé est relancé après son silence maximal, statut <code>backoff</code> explicite</td>
+</tr>
+<tr class="odd">
+<td>Démarrage découplé</td>
+<td><code>phones.json</code> vidé : la maison démarre, le pilote des téléphones dit pourquoi il attend</td>
+</tr>
+<tr class="even">
+<td>Luminaires</td>
+<td>un membre qui met 5 s à répondre ne retarde pas l'ordre d'un autre luminaire (médiane inchangée)</td>
+</tr>
+<tr class="odd">
+<td>Ordre abandonné</td>
+<td>pour chaque pilote, faux serveur : un ordre abandonné avant l'émission n'atteint jamais le serveur</td>
+</tr>
+<tr class="even">
+<td>Moteur d'automatismes</td>
+<td>un appui dont l'admission durable est ralentie ne retarde pas un « quand l'état change » ; budget <code>/api/automations</code> inchangé</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="8-limites-de-cette-analyse" class="level2">
+<h2>8. Limites de cette analyse</h2>
+<ul>
+<li>Lecture du code et expériences synthétiques : aucun test de charge sur de vrais appareils, aucune mesure sur le Pi Zero 2 W. Les durées marquées « estimé » ne sont pas mesurées.</li>
+<li>La bascule vers Turso (D13, ticket C1) n'est pas encore dans <code>main</code> : la partie stockage porte sur <code>rusqlite</code>.</li>
+<li>La grille des pilotes est une lecture statique ; les constats élevés ont été revérifiés dans le code, les autres sont rapportés tels que la grille les a relevés.</li>
+<li>Hors champ : interface web, application mobile, internes du service d'archive (processus séparé, hors du domaine de panne du cœur), décodeurs tiers (<code>symphonia</code>).</li>
+</ul>
+</section>
+<section id="annexe-a--preuves-exécutables" class="level2">
+<h2>Annexe A — Preuves exécutables</h2>
+<p>Deux crates jetables, <strong>hors du dépôt</strong>. La première dépend de <code>moli-runtime</code> et <code>moli-core</code> par chemin et lance chaque expérience dans un runtime à deux workers, comme <code>moli-os serve</code> par défaut ; la seconde chronomètre <code>roxmltree</code> à la version exacte du dépôt. Rien n'est modifié dans le projet.</p>
+<pre class="toml"><code># preuves/Cargo.toml (dans un dossier hors du dépôt)
+[package]
+name = &quot;preuves&quot;
+version = &quot;0.1.0&quot;
+edition = &quot;2024&quot;
+publish = false
+
+[workspace]
+
+[dependencies]
+moli-runtime = { path = &quot;&lt;dépôt&gt;/crates/moli-runtime&quot; }
+moli-core = { path = &quot;&lt;dépôt&gt;/crates/moli-core&quot; }
+anyhow = &quot;1&quot;
+tokio = { version = &quot;1&quot;, features = [&quot;rt-multi-thread&quot;, &quot;macros&quot;, &quot;sync&quot;, &quot;time&quot;] }
+tokio-util = &quot;0.7&quot;</code></pre>
+<p>Reproduire : copier le <code>Cargo.lock</code> du dépôt dans le dossier, puis <code>cargo run --release</code> (E7 se lance seule avec <code>cargo run --release -- pile</code>).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Pilote de test</th>
+<th>Comportement</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Sain</code></td>
+<td>publie une lampe fictive, obéit à chaque ordre</td>
+</tr>
+<tr class="even">
+<td><code>Panique</code></td>
+<td>indexe un tableau vide aussitôt prêt (comme un octet réseau mal lu)</td>
+</tr>
+<tr class="odd">
+<td><code>Bloquant</code></td>
+<td><code>std::thread::sleep(200 ms)</code> puis <code>yield_now</code>, en boucle</td>
+</tr>
+<tr class="even">
+<td><code>Fige</code></td>
+<td>publie sa lampe, se dit prêt, puis <code>std::future::pending()</code></td>
+</tr>
+<tr class="odd">
+<td><code>Maison</code></td>
+<td>publie 120 appareils de 6 valeurs</td>
+</tr>
+<tr class="even">
+<td><code>Recursif</code></td>
+<td>décode récursivement 4 Mio de <code>[</code> (réponse hostile)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sortie brute d'une passe (les écarts entre passes sont donnés dans le rapport) :</p>
+<pre class="text"><code>## E1 — un pilote qui panique en boucle
+- paniques capturées en 3,5 s : 3
+- statut du pilote fautif : backoff (4000 ms)
+- ordres au pilote sain pendant ce temps : 156 réussis, 0 échoués, médiane 0.06 ms, max 0.90 ms
+## E2 — un appel bloquant dans un pilote (2 workers)
+- référence            ordres :  89 ok / 0 ko, médiane    0.06 ms, max    6.16 ms ; retard max d&#39;une minuterie 10 ms :    7.90 ms
+- 1 pilote bloquant    ordres :  90 ok / 0 ko, médiane    0.05 ms, max    1.07 ms ; retard max d&#39;une minuterie 10 ms :    7.62 ms
+- 2 pilotes bloquants  ordres :  10 ok / 0 ko, médiane   26.96 ms, max   36.49 ms ; retard max d&#39;une minuterie 10 ms :  199.51 ms
+## E3 — un pilote figé dans une attente sans délai
+- ordre envoyé : Some(Timeout) après 5003.63 ms
+- statut après 10 s : running (aucun redémarrage : le superviseur ne voit ni panique ni retour)
+## E4 — une « brique » lancée par tokio::spawn qui panique
+- ordres traités par la maison : 22 ; événements vus par la brique : 3 (morte au 3e)
+- tâche de la brique terminée : true ; rien ne la relance, le hub reste « sain »
+## E5 — un abonné lent sur le bus ne freine ni les pilotes ni les autres abonnés
+- 3000 ordres en 26.45 ms (113434 ordres/s, pire 0.07 ms), événements reçus par l&#39;abonné rapide : 6000, perdus par l&#39;abonné lent (Lagged) : 4975
+## E6 — verrou global du modèle : 720 valeurs, lecteurs qui copient tout en continu
+- hub.snapshot() : 0.02 ms en moyenne
+-  0 lecteurs en boucle : ordres 45 ok / 0 ko, médiane 0.04 ms, max 0.14 ms
+-  4 lecteurs en boucle : ordres 48 ok / 0 ko, médiane 0.10 ms, max 0.35 ms
+- 16 lecteurs en boucle : ordres 48 ok / 0 ko, médiane 0.12 ms, max 1.67 ms
+## E7 — débordement de pile dans un pilote (processus séparé)
+thread &#39;tokio-rt-worker&#39; has overflowed its stack
+fatal runtime error: stack overflow, aborting
+(code de sortie 134)
+## E8 — roxmltree 0.21.1, un seul élément, attributs distincts
+   63 Kio,   7404 attributs :     0.16 s (parse ok = true)
+  255 Kio,  27324 attributs :     2.75 s (parse ok = true)
+ 1023 Kio, 105425 attributs :    96.59 s (parse ok = true)</code></pre>
+<details class="code"><summary>Code complet de la crate de preuves (<code>preuves/src/main.rs</code>)</summary><pre class="rust"><code>//! Preuves exécutables, hors dépôt, contre le vrai `moli-runtime` (aucune
+//! modification du projet). Chaque expérience a son runtime à 2 workers,
+//! comme la configuration par défaut de `moli-os serve`.
+
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::time::{Duration, Instant};
+
+use moli_core::{
+    Access, Device, DeviceId, DriverStatus, Event, InstanceId, Kind, Origin, PointId, PointSpec,
+    Semantic, Value,
+};
+use moli_runtime::{BoxFuture, Driver, DriverCtx, Hub, HubOptions, spawn_driver};
+use tokio_util::sync::CancellationToken;
+
+fn runtime() -&gt; tokio::runtime::Runtime {
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap()
+}
+
+fn lampe(id: &amp;DeviceId, instance: &amp;InstanceId) -&gt; Device {
+    Device {
+        id: id.clone(),
+        instance: instance.clone(),
+        native_name: &quot;lampe fictive&quot;.into(),
+        manufacturer: None,
+        model: None,
+        description: None,
+        native_room: None,
+        members: vec![],
+        points: vec![PointSpec {
+            key: &quot;on&quot;.into(),
+            label: &quot;on&quot;.into(),
+            kind: Kind::Binary,
+            access: Access {
+                read: true,
+                write: true,
+            },
+            unit: None,
+            semantic: Semantic::OnOff,
+        }],
+    }
+}
+
+/// Un pilote sain : publie une lampe et obéit.
+struct Sain;
+impl Driver for Sain {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;sain&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let id = ctx.device_id(&quot;l1&quot;);
+            ctx.upsert_device(lampe(&amp;id, &amp;ctx.instance().clone()));
+            ctx.ready();
+            while let Some(cmd) = ctx.next_command().await {
+                ctx.set_state(&amp;cmd.device.id, &amp;cmd.key, cmd.value.clone());
+                cmd.reply(Ok(()));
+            }
+            Ok(())
+        })
+    }
+}
+
+/// Panique aussitôt prêt.
+struct Panique;
+impl Driver for Panique {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;panique&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            ctx.ready();
+            let v: Vec&lt;u8&gt; = Vec::new();
+            let _ = v[3]; // index hors bornes, comme un octet réseau mal parsé
+            Ok(())
+        })
+    }
+}
+
+/// Bloque son thread (E/S synchrone, calcul long) 200 ms, puis rend la main.
+struct Bloquant;
+impl Driver for Bloquant {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;bloquant&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            ctx.ready();
+            loop {
+                std::thread::sleep(Duration::from_millis(200));
+                tokio::task::yield_now().await;
+            }
+        })
+    }
+}
+
+/// Publie sa lampe, se dit prêt, puis attend pour toujours (lecture réseau
+/// sans délai sur un appareil qui ne répond plus).
+struct Fige;
+impl Driver for Fige {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;fige&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let id = ctx.device_id(&quot;l1&quot;);
+            ctx.upsert_device(lampe(&amp;id, &amp;ctx.instance().clone()));
+            ctx.ready();
+            std::future::pending::&lt;()&gt;().await;
+            Ok(())
+        })
+    }
+}
+
+fn point(instance: &amp;str) -&gt; PointId {
+    PointId::new(&amp;DeviceId::new(&amp;InstanceId::from(instance), &quot;l1&quot;), &quot;on&quot;)
+}
+
+fn status(hub: &amp;Hub, instance: &amp;str) -&gt; String {
+    hub.snapshot()
+        .drivers
+        .iter()
+        .find(|d| d.instance.as_str() == instance)
+        .map(|d| match &amp;d.status {
+            DriverStatus::Backoff { retry_in_ms, .. } =&gt; format!(&quot;backoff ({retry_in_ms} ms)&quot;),
+            other =&gt; format!(&quot;{other:?}&quot;).to_lowercase(),
+        })
+        .unwrap_or_default()
+}
+
+async fn until_running(hub: &amp;Hub, instance: &amp;str) {
+    while status(hub, instance) != &quot;running&quot; {
+        tokio::time::sleep(Duration::from_millis(5)).await;
+    }
+}
+
+/// Latences d&#39;ordres successifs vers le pilote sain pendant `pendant`.
+async fn ordres(hub: &amp;Hub, pendant: Duration) -&gt; (usize, usize, Duration, Duration) {
+    let p = point(&quot;sain&quot;);
+    let fin = Instant::now() + pendant;
+    let (mut ok, mut ko, mut toutes) = (0, 0, Vec::new());
+    let mut v = false;
+    while Instant::now() &lt; fin {
+        v = !v;
+        let t = Instant::now();
+        match hub.command(&amp;p, Value::Bool(v), Origin::Ui, None).await {
+            Ok(()) =&gt; ok += 1,
+            Err(_) =&gt; ko += 1,
+        }
+        toutes.push(t.elapsed());
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    toutes.sort();
+    let med = toutes.get(toutes.len() / 2).copied().unwrap_or_default();
+    let max = toutes.last().copied().unwrap_or_default();
+    (ok, ko, med, max)
+}
+
+/// Retard maximal d&#39;une minuterie de 10 ms (latence d&#39;ordonnancement).
+fn sonde(stop: CancellationToken) -&gt; (Arc&lt;AtomicU64&gt;, tokio::task::JoinHandle&lt;()&gt;) {
+    let pire = Arc::new(AtomicU64::new(0));
+    let p = pire.clone();
+    let h = tokio::spawn(async move {
+        while !stop.is_cancelled() {
+            let t = Instant::now();
+            tokio::time::sleep(Duration::from_millis(10)).await;
+            let retard = t.elapsed().saturating_sub(Duration::from_millis(10));
+            p.fetch_max(u64::try_from(retard.as_micros()).unwrap(), Ordering::Relaxed);
+        }
+    });
+    (pire, h)
+}
+
+fn ms(d: Duration) -&gt; String {
+    format!(&quot;{:.2} ms&quot;, d.as_secs_f64() * 1000.0)
+}
+
+fn experience_panique() {
+    println!(&quot;\n## E1 — un pilote qui panique en boucle&quot;);
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let mut bus = hub.subscribe();
+        let paniques = Arc::new(AtomicUsize::new(0));
+        let n = paniques.clone();
+        tokio::spawn(async move {
+            while let Ok(e) = bus.recv().await {
+                if let Event::DriverStatus {
+                    instance,
+                    status: DriverStatus::Backoff { .. },
+                } = e
+                    &amp;&amp; instance.as_str() == &quot;panique&quot;
+                {
+                    n.fetch_add(1, Ordering::Relaxed);
+                }
+            }
+        });
+        spawn_driver(&amp;hub, &quot;sain&quot;.into(), Arc::new(Sain), cancel.clone());
+        until_running(&amp;hub, &quot;sain&quot;).await;
+        spawn_driver(&amp;hub, &quot;panique&quot;.into(), Arc::new(Panique), cancel.clone());
+        let (ok, ko, med, max) = ordres(&amp;hub, Duration::from_millis(3500)).await;
+        println!(&quot;- paniques capturées en 3,5 s : {}&quot;, paniques.load(Ordering::Relaxed));
+        println!(&quot;- statut du pilote fautif : {}&quot;, status(&amp;hub, &quot;panique&quot;));
+        println!(&quot;- ordres au pilote sain pendant ce temps : {ok} réussis, {ko} échoués, médiane {}, max {}&quot;, ms(med), ms(max));
+        cancel.cancel();
+    });
+}
+
+fn experience_blocage() {
+    println!(&quot;\n## E2 — un appel bloquant dans un pilote (2 workers)&quot;);
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;hub, &quot;sain&quot;.into(), Arc::new(Sain), cancel.clone());
+        until_running(&amp;hub, &quot;sain&quot;).await;
+        for (phase, bloquants) in [(&quot;référence&quot;, 0), (&quot;1 pilote bloquant&quot;, 1), (&quot;2 pilotes bloquants&quot;, 2)] {
+            for i in 0..bloquants {
+                let name = format!(&quot;bloquant{i}&quot;);
+                if status(&amp;hub, &amp;name).is_empty() {
+                    spawn_driver(&amp;hub, name.as_str().into(), Arc::new(Bloquant), cancel.clone());
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            let stop = CancellationToken::new();
+            let (pire, h) = sonde(stop.clone());
+            let (ok, ko, med, max) = ordres(&amp;hub, Duration::from_secs(2)).await;
+            stop.cancel();
+            let _ = h.await;
+            println!(
+                &quot;- {phase:&lt;20} ordres : {ok:&gt;3} ok / {ko} ko, médiane {:&gt;10}, max {:&gt;10} ; retard max d&#39;une minuterie 10 ms : {:&gt;10}&quot;,
+                ms(med),
+                ms(max),
+                ms(Duration::from_micros(pire.load(Ordering::Relaxed)))
+            );
+        }
+        cancel.cancel();
+    });
+}
+
+fn experience_fige() {
+    println!(&quot;\n## E3 — un pilote figé dans une attente sans délai&quot;);
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        let debut = Instant::now();
+        spawn_driver(&amp;hub, &quot;fige&quot;.into(), Arc::new(Fige), cancel.clone());
+        until_running(&amp;hub, &quot;fige&quot;).await;
+        let p = point(&quot;fige&quot;);
+        let t = Instant::now();
+        let r = hub.command(&amp;p, Value::Bool(true), Origin::Ui, None).await;
+        println!(&quot;- ordre envoyé : {:?} après {}&quot;, r.err(), ms(t.elapsed()));
+        tokio::time::sleep(Duration::from_secs(5)).await;
+        println!(
+            &quot;- statut après {:.0} s : {} (aucun redémarrage : le superviseur ne voit ni panique ni retour)&quot;,
+            debut.elapsed().as_secs_f64(),
+            status(&amp;hub, &quot;fige&quot;)
+        );
+        cancel.cancel();
+    });
+}
+
+fn experience_brique() {
+    println!(&quot;\n## E4 — une « brique » lancée par tokio::spawn qui panique (moteur d&#39;automatismes, historique…)&quot;);
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;hub, &quot;sain&quot;.into(), Arc::new(Sain), cancel.clone());
+        until_running(&amp;hub, &quot;sain&quot;).await;
+        let vus = Arc::new(AtomicUsize::new(0));
+        let v = vus.clone();
+        let mut bus = hub.subscribe();
+        let brique = tokio::spawn(async move {
+            while let Ok(e) = bus.recv().await {
+                if matches!(e, Event::State { .. }) {
+                    let n = v.fetch_add(1, Ordering::Relaxed) + 1;
+                    if n == 3 {
+                        let parts: Vec&lt;&amp;str&gt; = &quot;a&quot;.split(&#39;:&#39;).collect();
+                        let _ = parts[1]; // invariant cassé dans une brique
+                    }
+                }
+            }
+        });
+        let (ok, _, _, _) = ordres(&amp;hub, Duration::from_millis(500)).await;
+        println!(&quot;- ordres traités par la maison : {ok} ; événements vus par la brique : {} (morte au 3e)&quot;, vus.load(Ordering::Relaxed));
+        println!(&quot;- tâche de la brique terminée : {} ; rien ne la relance, le hub reste « sain »&quot;, brique.is_finished());
+        cancel.cancel();
+    });
+}
+
+fn experience_abonne_lent() {
+    println!(&quot;\n## E5 — un abonné lent sur le bus ne freine ni les pilotes ni les autres abonnés&quot;);
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;hub, &quot;sain&quot;.into(), Arc::new(Sain), cancel.clone());
+        until_running(&amp;hub, &quot;sain&quot;).await;
+        let (mut rapide, mut lent) = (hub.subscribe(), hub.subscribe());
+        let recus = Arc::new(AtomicUsize::new(0));
+        let r = recus.clone();
+        tokio::spawn(async move {
+            while rapide.recv().await.is_ok() {
+                r.fetch_add(1, Ordering::Relaxed);
+            }
+        });
+        let perdus = Arc::new(AtomicU64::new(0));
+        let pl = perdus.clone();
+        tokio::spawn(async move {
+            loop {
+                match lent.recv().await {
+                    Ok(_) =&gt; tokio::time::sleep(Duration::from_millis(50)).await,
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) =&gt; {
+                        pl.fetch_add(n, Ordering::Relaxed);
+                    }
+                    Err(_) =&gt; break,
+                }
+            }
+        });
+        let p = point(&quot;sain&quot;);
+        let t = Instant::now();
+        let mut pire = Duration::ZERO;
+        for i in 0..3000 {
+            let u = Instant::now();
+            hub.command(&amp;p, Value::Bool(i % 2 == 0), Origin::Ui, None)
+                .await
+                .unwrap();
+            pire = pire.max(u.elapsed());
+        }
+        let total = t.elapsed();
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        println!(
+            &quot;- 3000 ordres en {} ({:.0} ordres/s, pire {}), événements reçus par l&#39;abonné rapide : {}, perdus par l&#39;abonné lent (Lagged) : {}&quot;,
+            ms(total),
+            3000.0 / total.as_secs_f64(),
+            ms(pire),
+            recus.load(Ordering::Relaxed),
+            perdus.load(Ordering::Relaxed)
+        );
+        cancel.cancel();
+    });
+}
+
+/// 120 appareils × 6 points publiés par un pilote « maison ».
+struct Maison;
+impl Driver for Maison {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;maison&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            let instance = ctx.instance().clone();
+            for d in 0..120 {
+                let id = ctx.device_id(&amp;format!(&quot;d{d}&quot;));
+                let mut dev = lampe(&amp;id, &amp;instance);
+                dev.points = (0..6)
+                    .map(|k| PointSpec {
+                        key: format!(&quot;p{k}&quot;).into(),
+                        label: &quot;p&quot;.into(),
+                        kind: Kind::Numeric {
+                            min: None,
+                            max: None,
+                            step: None,
+                        },
+                        access: Access {
+                            read: true,
+                            write: false,
+                        },
+                        unit: None,
+                        semantic: Semantic::Other,
+                    })
+                    .collect();
+                ctx.upsert_device(dev);
+                for k in 0..6 {
+                    ctx.set_state(&amp;id, &amp;format!(&quot;p{k}&quot;), Value::Float(f64::from(d * k)));
+                }
+            }
+            ctx.ready();
+            std::future::pending::&lt;()&gt;().await;
+            Ok(())
+        })
+    }
+}
+
+fn experience_verrou() {
+    println!(&quot;\n## E6 — verrou global du modèle : 720 valeurs, lecteurs qui copient tout en continu&quot;);
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;hub, &quot;sain&quot;.into(), Arc::new(Sain), cancel.clone());
+        spawn_driver(&amp;hub, &quot;maison&quot;.into(), Arc::new(Maison), cancel.clone());
+        until_running(&amp;hub, &quot;sain&quot;).await;
+        until_running(&amp;hub, &quot;maison&quot;).await;
+        let t = Instant::now();
+        for _ in 0..200 {
+            std::hint::black_box(hub.snapshot());
+        }
+        println!(&quot;- hub.snapshot() (copie complète, ce que font /api/health, /api/devices, chaque SSE) : {} en moyenne&quot;, ms(t.elapsed() / 200));
+        for lecteurs in [0usize, 4, 16] {
+            let stop = CancellationToken::new();
+            for _ in 0..lecteurs {
+                let (h, s) = (hub.clone(), stop.clone());
+                tokio::spawn(async move {
+                    while !s.is_cancelled() {
+                        std::hint::black_box(h.snapshot());
+                        tokio::task::yield_now().await;
+                    }
+                });
+            }
+            let (ok, ko, med, max) = ordres(&amp;hub, Duration::from_secs(1)).await;
+            stop.cancel();
+            println!(&quot;- {lecteurs:&gt;2} lecteurs en boucle : ordres {ok} ok / {ko} ko, médiane {}, max {}&quot;, ms(med), ms(max));
+        }
+        cancel.cancel();
+    });
+}
+
+/// Un parseur récursif naïf, comme on en écrit pour du XML ou du JSON maison :
+/// il construit l&#39;arbre des éléments imbriqués.
+#[derive(Debug)]
+enum Noeud {
+    Liste(Vec&lt;Noeud&gt;),
+}
+
+#[inline(never)]
+fn analyser(octets: &amp;[u8], i: &amp;mut usize) -&gt; Noeud {
+    let mut enfants = Vec::new();
+    while *i &lt; octets.len() &amp;&amp; octets[*i] == b&#39;[&#39; {
+        *i += 1;
+        enfants.push(analyser(std::hint::black_box(octets), i));
+    }
+    Noeud::Liste(enfants)
+}
+
+fn profondeur(octets: &amp;[u8]) -&gt; usize {
+    let mut i = 0;
+    let arbre = analyser(octets, &amp;mut i);
+    let Noeud::Liste(enfants) = std::hint::black_box(&amp;arbre);
+    let n = enfants.len() + i;
+    std::mem::forget(arbre);
+    n
+}
+
+struct Recursif;
+impl Driver for Recursif {
+    fn kind(&amp;self) -&gt; &amp;&#39;static str {
+        &quot;recursif&quot;
+    }
+    fn run&lt;&#39;a&gt;(&amp;&#39;a self, ctx: &amp;&#39;a mut DriverCtx) -&gt; BoxFuture&lt;&#39;a, anyhow::Result&lt;()&gt;&gt; {
+        Box::pin(async move {
+            ctx.ready();
+            // Réponse hostile ou corrompue : 4 Mio de crochets ouvrants.
+            let hostile = vec![b&#39;[&#39;; 4 * 1024 * 1024];
+            let n = profondeur(std::hint::black_box(&amp;hostile));
+            anyhow::bail!(&quot;profondeur {n}&quot;)
+        })
+    }
+}
+
+fn experience_pile() {
+    runtime().block_on(async {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let cancel = CancellationToken::new();
+        spawn_driver(&amp;hub, &quot;recursif&quot;.into(), Arc::new(Recursif), cancel.clone());
+        tokio::time::sleep(Duration::from_secs(2)).await;
+        println!(&quot;non atteint si la pile déborde : {}&quot;, status(&amp;hub, &quot;recursif&quot;));
+    });
+}
+
+fn main() {
+    if std::env::args().nth(1).as_deref() == Some(&quot;pile&quot;) {
+        experience_pile();
+        return;
+    }
+    // Les paniques provoquées exprès ne polluent pas la sortie.
+    std::panic::set_hook(Box::new(|_| {}));
+    println!(&quot;# Preuves exécutables contre moli-runtime (2 workers tokio)&quot;);
+    experience_panique();
+    experience_blocage();
+    experience_fige();
+    experience_brique();
+    experience_abonne_lent();
+    experience_verrou();
+    println!(&quot;\n## E7 — débordement de pile dans un pilote (processus séparé)&quot;);
+    let out = std::process::Command::new(std::env::current_exe().unwrap())
+        .arg(&quot;pile&quot;)
+        .output()
+        .unwrap();
+    println!(
+        &quot;- code de sortie du processus : {:?} ; stdout : {:?} ; stderr : {:?}&quot;,
+        out.status,
+        String::from_utf8_lossy(&amp;out.stdout).trim(),
+        String::from_utf8_lossy(&amp;out.stderr).lines().next().unwrap_or(&quot;&quot;)
+    );
+}</code></pre></details>
+<details class="code"><summary>Code complet du chronométrage XML (<code>xmlbench/src/main.rs</code>, dépendance <code>roxmltree = "=0.21.1"</code>)</summary><pre class="rust"><code>use std::time::Instant;
+fn main() {
+    for budget in [64 * 1024, 256 * 1024, 1024 * 1024] {
+        // Un seul élément, autant d&#39;attributs distincts que le plafond le permet.
+        let mut xml = String::from(&quot;&lt;a&quot;);
+        let mut i = 0u32;
+        while xml.len() + 16 &lt; budget {
+            xml.push_str(&amp;format!(&quot; b{i}=\&quot;\&quot;&quot;));
+            i += 1;
+        }
+        xml.push_str(&quot;/&gt;&quot;);
+        let opts = roxmltree::ParsingOptions { allow_dtd: false, nodes_limit: 30_001, ..Default::default() };
+        let t = Instant::now();
+        let ok = roxmltree::Document::parse_with_options(&amp;xml, opts).is_ok();
+        println!(&quot;{:&gt;5} Kio, {:&gt;6} attributs : {:&gt;8.2} s (parse ok = {ok})&quot;, xml.len() / 1024, i, t.elapsed().as_secs_f64());
+    }
+}</code></pre></details>
+</section>
+<section id="annexe-b--grille-par-pilote" class="level2">
+<h2>Annexe B — Grille par pilote</h2>
+<p>Légende : « en ligne » = entrées-sorties faites dans la boucle qui lit les commandes ; « détachée » = sous-tâche dont personne n'attend la fin.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Crate</th>
+<th>Modèle d'E/S</th>
+<th>Sous-tâches</th>
+<th>Attente sans délai</th>
+<th>Bloquant ou calcul long</th>
+<th>Non borné</th>
+<th>Gravité max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>z2m</td>
+<td>MQTT (rumqttc), une boucle</td>
+<td>aucune</td>
+<td>non</td>
+<td>gros JSON des capacités (≤ 4 Mio) en ligne</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="even">
+<td>hue</td>
+<td>HTTPS épinglé + SSE</td>
+<td>PUT détaché ≤ 4,5 s</td>
+<td>non (inactivité 10 min + keepalive)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>esphome</td>
+<td>TCP chiffré (Noise)</td>
+<td>lecteur et <code>JoinSet</code> bornés ; tâche vocale non annulée</td>
+<td>une recherche LAN sans délai global</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>tuya</td>
+<td>TCP par appareil, UDP, WebSocket et HTTPS cloud</td>
+<td><code>JoinSet</code> jamais joint, 3 réceptions UDP hors <code>JoinSet</code></td>
+<td>WebSocket cloud (pong ignoré)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>sonos</td>
+<td>SOAP toutes les 2 s + annonces</td>
+<td>annonce détachée ≤ ~90 s</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>androidtv</td>
+<td>TLS 6466/8009</td>
+<td>lecteur <code>abort-on-drop</code></td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="odd">
+<td>androidtv-driver</td>
+<td>TLS, deux boucles</td>
+<td><code>JoinSet</code> surveillé</td>
+<td>une attente d'écriture sans délai</td>
+<td>génération RSA en <code>spawn_blocking</code></td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="even">
+<td>cast</td>
+<td>mDNS + TLS 8009</td>
+<td><code>abort-on-drop</code></td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="odd">
+<td>philips</td>
+<td>HTTPS digest + télécommande Android</td>
+<td>4 tâches détachées (≤ 60 s)</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>samsung</td>
+<td>HTTPS + WebSocket par ordre</td>
+<td><code>JoinSet</code>, un ordre en vol</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td>aucune</td>
+</tr>
+<tr class="odd">
+<td>wyoming</td>
+<td>TCP, sonde 60 s</td>
+<td>aucune</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td>aucune</td>
+</tr>
+<tr class="even">
+<td>alexa</td>
+<td>HTTPS cloud</td>
+<td>aucune</td>
+<td>non (20 s par appel)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>twinkly</td>
+<td>HTTP</td>
+<td><code>JoinSet</code>, paniques propagées</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="even">
+<td>nuki</td>
+<td>HTTP (pont mono-requête)</td>
+<td>aucune</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>lights</td>
+<td>bus du hub + ordres aux membres</td>
+<td>relance après mise sous tension, détachée ≤ 15 s</td>
+<td>non (5 s par le hub)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-high">Élevé</span></td>
+</tr>
+<tr class="even">
+<td>ariston</td>
+<td>HTTPS cloud, acteur + <code>JoinSet</code></td>
+<td>jointes</td>
+<td>non (10 s)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="odd">
+<td>voltalis</td>
+<td>idem</td>
+<td>jointes</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="even">
+<td>netatmo</td>
+<td>HTTPS, une tâche dans le <code>select!</code></td>
+<td>aucune</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="odd">
+<td>overkiz</td>
+<td>HTTPS local ou cloud, <code>JoinSet</code></td>
+<td>jointes</td>
+<td>non</td>
+<td>gros JSON en ligne</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>landroid</td>
+<td>HTTPS + MQTT sur WebSocket</td>
+<td>aucune</td>
+<td>réception bornée par ping/pong 25 s</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>roborock</td>
+<td>UDP miIO</td>
+<td>aucune</td>
+<td>non</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="even">
+<td>bambu</td>
+<td>MQTT TLS épinglé</td>
+<td>aucune</td>
+<td>non (keepalive 30 s)</td>
+<td>non</td>
+<td>état AMS non plafonné (imprimante de confiance)</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="odd">
+<td>moonraker</td>
+<td>HTTP, sondage en ligne</td>
+<td>aucune</td>
+<td>non (4 s)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>frigate</td>
+<td>MQTT clair + HTTP (images)</td>
+<td>aucune</td>
+<td>non</td>
+<td>non</td>
+<td>caméras créées par sujet MQTT</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>reolink</td>
+<td>HTTPS épinglé 1 Hz + RTSP</td>
+<td>2 familles de tâches détachées</td>
+<td>non</td>
+<td>rééchantillonnage audio en ligne</td>
+<td>une tâche par appui</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>tapo</td>
+<td>HTTP (KLAP), en ligne</td>
+<td>aucune</td>
+<td>non (4 s)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>telegram</td>
+<td>HTTPS par commande, en série</td>
+<td>aucune</td>
+<td>non (15 s × 10)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>weather</td>
+<td>service paresseux (hors <code>Driver</code>)</td>
+<td>aucune</td>
+<td>non (15 s)</td>
+<td>non</td>
+<td>requêtes en file sur panne</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>ipp</td>
+<td>HTTP + travailleur d'impression</td>
+<td><strong>détaché</strong></td>
+<td>envoi jusqu'à 15 min (voulu)</td>
+<td>non</td>
+<td>non (64 documents, 32 Mio)</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>igd</td>
+<td>SOAP + SSDP</td>
+<td>aucune</td>
+<td>non par appel ; découverte sans plafond</td>
+<td>non</td>
+<td>candidats SSDP</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>asuswrt</td>
+<td>HTTP(S), cycle de 60 s</td>
+<td>aucune</td>
+<td>non (5 s par échange, 30 s par cycle)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>netgear</td>
+<td>SOAP/XML, cycle de 60 s</td>
+<td>aucune</td>
+<td>non</td>
+<td><strong>XML quadratique en ligne (E8)</strong></td>
+<td>non</td>
+<td><span class="sev sev-high">Élevé</span></td>
+</tr>
+<tr class="odd">
+<td>huawei-lte</td>
+<td>XML, cycle de 60 s</td>
+<td>aucune</td>
+<td>non</td>
+<td><strong>XML quadratique en ligne (E8)</strong></td>
+<td>non</td>
+<td><span class="sev sev-high">Élevé</span></td>
+</tr>
+<tr class="even">
+<td>host</td>
+<td><code>select!</code> + sondes, tout en ligne</td>
+<td>aucune</td>
+<td>non (1,5 s par sonde)</td>
+<td><code>std::fs</code> sur <code>/proc</code> et <code>/sys</code></td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>presence</td>
+<td>UDP + <code>tokio::fs</code></td>
+<td>aucune</td>
+<td>non</td>
+<td>balayage de 3 s en ligne</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="even">
+<td>phones</td>
+<td><code>select!</code>, notifications Expo en ligne</td>
+<td>aucune</td>
+<td>non (15 s)</td>
+<td><code>std::fs</code> sous <code>Mutex</code> std</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>profile</td>
+<td>requêtes séquentielles, sockets propres</td>
+<td>2 tâches hyper sans handle</td>
+<td>non (5 s)</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="even">
+<td>reservations</td>
+<td>relève ICS + tic de 1 s</td>
+<td>aucune</td>
+<td>non (10 s)</td>
+<td>analyse iCal ≤ 1 Mio en ligne</td>
+<td>non (budget 3 660)</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="odd">
+<td>helpers</td>
+<td>boucle de commandes, délègue au hub</td>
+<td>aucune</td>
+<td>non</td>
+<td>non</td>
+<td>non (128 par type)</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="even">
+<td>energy</td>
+<td>enregistreur + pilote <code>Points</code></td>
+<td>enregistreur <strong>non supervisé</strong></td>
+<td>non</td>
+<td>agrégation de rapport en ligne</td>
+<td>non</td>
+<td><span class="sev sev-mid">Moyen</span></td>
+</tr>
+<tr class="odd">
+<td>audio</td>
+<td>bibliothèque synchrone</td>
+<td>sans objet</td>
+<td>sans objet</td>
+<td>CPU chez l'appelant</td>
+<td>taille de sortie de <code>resample</code></td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="even">
+<td>ambiance</td>
+<td>fonction async, 3 lampes en parallèle</td>
+<td>aucune</td>
+<td>bornée par le hub</td>
+<td>non</td>
+<td>non</td>
+<td><span class="sev sev-low">Faible</span></td>
+</tr>
+<tr class="odd">
+<td>alarm, rollup, media-catalog, media-target</td>
+<td>bibliothèques pures</td>
+<td>sans objet</td>
+<td>sans objet</td>
+<td>non</td>
+<td><code>rollup</code> : une statistique par heure, à borner chez l'appelant</td>
+<td>aucune à Faible</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+
+        <footer><span>Moli OS · analyse d'isolation et de réactivité · 21 octobre 2026</span><a href="#top">Haut de page ↑</a></footer>
+      </article>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const printButton = document.getElementById('print-document');
+      printButton.hidden = false;
+      printButton.addEventListener('click', () => window.print());
+      const sections = Array.from(document.querySelectorAll('article > section[id]'));
+      const links = Array.from(document.querySelectorAll('aside nav a'));
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting);
+          if (!visible.length) return;
+          const section = visible[0].target;
+          for (const link of links) {
+            if (decodeURIComponent(link.hash.slice(1)) === section.id) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          }
+        }, { rootMargin: '-10% 0px -75% 0px' });
+        sections.forEach(section => observer.observe(section));
+      }
+    })();
+  </script>
+</body>
+</html>
