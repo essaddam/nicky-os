@@ -1,0 +1,172 @@
+{
+  "version": 6,
+  "recorded_at": "2026-10-27T12:08:37.205394+00:00",
+  "base_commit": "a83589366f67d6b8273a10ad41658d688e498fda",
+  "scope": "Empreintes du worktree non commité à la rédaction finale ; ni signature des anciennes sorties de tests ni manifeste de déploiement. Le présent manifeste est exclu de lui-même.",
+  "files": {
+    "crates/moli-core/src/value.rs": {
+      "bytes": 3783,
+      "sha256": "e675b8a62e8c3fd2254063f240ac874ba99823ff89d2aa4abad6089df45e1f83"
+    },
+    "crates/moli-core/src/spec.rs": {
+      "bytes": 27030,
+      "sha256": "bd2ed6bda235d23911c635ec6c01986d8329f939536639b382efe5bd81fb1846"
+    },
+    "crates/moli-core/src/lib.rs": {
+      "bytes": 2266,
+      "sha256": "48c8dbd9f4b74650f5d0c2e9f01c1b8e1fb664dd341f8647781f0bebed278af2"
+    },
+    "crates/moli-runtime/src/hub.rs": {
+      "bytes": 114177,
+      "sha256": "eb726fe297b344b3f71cecffd1d687696a0bafee46449dbfd9844650775c95c0"
+    },
+    "crates/moli-history/src/policy.rs": {
+      "bytes": 19819,
+      "sha256": "3b244120253f33d4d74703b53e2a0ee3520a0211ec7028d2811d193435a69399"
+    },
+    "crates/moli-history/src/store.rs": {
+      "bytes": 60612,
+      "sha256": "a1633d1434b52bb3af63e171bcc1f8035188a2862823ad95282a2301f28f71bb"
+    },
+    "crates/moli-rollup/src/lib.rs": {
+      "bytes": 38727,
+      "sha256": "3d38622549e0a2fc07db9f28d63c37e7c17dfa658f5e319e772c6bafe9983123"
+    },
+    "crates/moli-profile/src/profile.rs": {
+      "bytes": 66179,
+      "sha256": "20218765f24413a53a05939845e6191527d2c761e42e63d6da059cdc3cc4975d"
+    },
+    "crates/moli-automation/src/engine.rs": {
+      "bytes": 38112,
+      "sha256": "1213009f360b4d7ec54e561710f1faf537ebb6884dc180619feb6d5890707384"
+    },
+    "crates/moli-automation/src/run.rs": {
+      "bytes": 30597,
+      "sha256": "1dd99bf9f89d15165db724e71f9e246e3fa119b25bff9b894996cf25fe1b6cbb"
+    },
+    "crates/moli-assistant/src/house.rs": {
+      "bytes": 19030,
+      "sha256": "ea3c6c8d0db1007931e45da561d637a14831eb36c018e5f99ca3e5a1e7dff1b8"
+    },
+    "crates/moli-overkiz/src/model.rs": {
+      "bytes": 30602,
+      "sha256": "fbd0e24c1ec04405ba616efd76c9872149180996a9da90f01961be47f670870b"
+    },
+    "tools/mqtt-live-probe/Cargo.toml": {
+      "bytes": 1133,
+      "sha256": "3b6ad772784339b130651e0fa05855839050d43abc27b0a2b9729ec89cb75186"
+    },
+    "tools/mqtt-live-probe/Cargo.lock": {
+      "bytes": 33275,
+      "sha256": "57ccd6f3334ddcb3bd5ab4cbc9facdd7dc62de023f8edcf42a1dfbe604ada12e"
+    },
+    "tools/mqtt-live-probe/README.md": {
+      "bytes": 25319,
+      "sha256": "11e78ce89527d3396ae8d84cfccad6dc6ded5d4d0e5e3950852ada038308eebd"
+    },
+    "tools/mqtt-live-probe/src/house.rs": {
+      "bytes": 100239,
+      "sha256": "56b2749546dafb34dcb6c29d92a26d68a469649440880fc88b1700a1186625cc"
+    },
+    "tools/mqtt-live-probe/src/house_enums.rs": {
+      "bytes": 57223,
+      "sha256": "a45d666e91dba946690525dbacef0d9c9e6c715bcb7c094b1be4b52572cb45c7"
+    },
+    "tools/mqtt-live-probe/src/enum_catalogue.rs": {
+      "bytes": 32293,
+      "sha256": "79facf568d4489cb0b398032cc91f50e7622cfbaffe52d6676ce8ef72a8b9168"
+    },
+    "tools/mqtt-live-probe/src/enum_store.rs": {
+      "bytes": 20824,
+      "sha256": "437c581b6a0a9d85c9a1b22c531ac88e1dfc9319f4bd17fc58483127e2c71b86"
+    },
+    "tools/mqtt-live-probe/src/hub_projection.rs": {
+      "bytes": 9096,
+      "sha256": "30e8f9e7e76c26fb6f8951957e661ac5eff535e0dc37c4eeec01a16c9b4a952a"
+    },
+    "tools/mqtt-live-probe/src/house_wire_tests.rs": {
+      "bytes": 7680,
+      "sha256": "aa89e16442f53e9527245edc394a30b409fa6ecc11f4c34a9136a29efde1227a"
+    },
+    "tools/mqtt-live-probe/src/gateway_runtime/mod.rs": {
+      "bytes": 34391,
+      "sha256": "f45caee2b8f3730badffc54ba8c8d2dc63c8e7c8e7ee6a768bc27c1ee68189fc"
+    },
+    "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": {
+      "bytes": 44116,
+      "sha256": "91c171e816498fa7d33bc891666973d8e5a8f0faf3677c4e9ba02df6f6b73661"
+    },
+    "tools/mqtt-live-probe/src/gateway_runtime/commands.rs": {
+      "bytes": 29799,
+      "sha256": "4a867bee85e2caf87f85c871a9c9904459b0c91df727068bd6515e024d4665e3"
+    },
+    "tools/mqtt-live-probe/web-runtime/poc-controls.test.mjs": {
+      "bytes": 22671,
+      "sha256": "b2142ee6124d53e580c7eb098eb59cb99ac1e631d70de217536e736e3014f021"
+    },
+    "tools/mqtt-live-probe/web-runtime/public/service-worker.js": {
+      "bytes": 3007,
+      "sha256": "d0b75c8dca73c13479acce1ecee531bfad65d6e2f58f69f81ece7d87a6adbfc3"
+    },
+    "docs/proposition/analyse/poc-interface-mqtt.html": {
+      "bytes": 131233,
+      "sha256": "21269b305b1a822c1779df09f0ebbbe22c420a79b672bdcd49d4fc5668180416"
+    },
+    "locales/fr/mqtt-poc.json": {
+      "bytes": 10779,
+      "sha256": "f5bc38ff55d7ce6a3ffceea4d144e939a89d6d1d66a8b0ec454f24457287a0d8"
+    },
+    "locales/en/mqtt-poc.json": {
+      "bytes": 9986,
+      "sha256": "32061ba260a4f3d8561c74bf45796063b1955158c92fc766a7d10adc0a53d27f"
+    },
+    "docs/README.md": {
+      "bytes": 7546,
+      "sha256": "1a4cccd1de3ac0fc9dfe34b9cca8cba99148fae4ddba1fdf553123125b039f66"
+    },
+    "docs/proposition/enumerations-api-mqtt.md": {
+      "bytes": 14414,
+      "sha256": "3f40488f0a5cb3623ff8acf37938ac3d5cff112e1636d254bc9a61f293ada6cf"
+    },
+    "docs/proposition/analyse/v6/README.md": {
+      "bytes": 1227,
+      "sha256": "6ae4d6694f85af4b7ebcb88516b5d74dd9e2763504edcd13151957bcc693a49c"
+    },
+    "docs/proposition/analyse/v6/bancs/Cargo.lock": {
+      "bytes": 3271,
+      "sha256": "3dcd1e80a37efcd8b0a6589301deae3835d73127f842e5244b61bc159b5b1e0d"
+    },
+    "docs/proposition/analyse/v6/bancs/Cargo.toml": {
+      "bytes": 294,
+      "sha256": "284092f32b9e1f6a96340b5b90f4db7b48b24bb251105adf5eb342e71c64d090"
+    },
+    "docs/proposition/analyse/v6/bancs/README.md": {
+      "bytes": 8370,
+      "sha256": "4a74bd725eadda49536ce269d14157408cc624a6d9bb9a02407e926b988d7545"
+    },
+    "docs/proposition/analyse/v6/bancs/resultats-historiques-2026-10-27.json": {
+      "bytes": 15535,
+      "sha256": "7297ce736348eae0e9a659fcf01fbc4f25418cb7868572d478eb13d05270a8cf"
+    },
+    "docs/proposition/analyse/v6/bancs/src/main.rs": {
+      "bytes": 13284,
+      "sha256": "306ff2274d17bf139eb489005cb82db3dbd9cbb9105a431ac6fe87332dacb85b"
+    },
+    "docs/proposition/analyse/v6/bancs/src/meter.rs": {
+      "bytes": 2941,
+      "sha256": "cf00055393d7ca2a479033657005831018b04cc1c1dea589b82d802b7e37e72b"
+    },
+    "docs/proposition/analyse/v6/index.html": {
+      "bytes": 69162,
+      "sha256": "6c1a932782b1cf4ff34a82b841232920c89885dea34b69bbb73a1fbc06b8d9b9"
+    },
+    "docs/proposition/analyse/v6/mesures.json": {
+      "bytes": 12367,
+      "sha256": "4778194054a035518fd17af4b70dab59c5baeaf87ac388763da644fc8808b797"
+    },
+    "docs/proposition/analyse/v6/preuves.json": {
+      "bytes": 10246,
+      "sha256": "33edb0c27f9bdbfcc1cfec34dc15f5cb31d17259c8f0fd9699ace7ba0eba9374"
+    }
+  }
+}

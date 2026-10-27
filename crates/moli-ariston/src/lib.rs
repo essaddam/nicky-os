@@ -15,7 +15,8 @@
 //! the network runs beside the loop, so an answer is always on time.
 
 mod api;
-mod model;
+/// Pure device/state/command codec, also used by modular MQTT hosts.
+pub mod model;
 
 use std::collections::HashMap;
 use std::sync::Arc;

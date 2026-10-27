@@ -562,6 +562,7 @@ fn show(v: &Value) -> String {
     match v {
         Value::Bool(b) => yes_no(*b),
         Value::Int(i) => i.to_string(),
+        Value::EnumCode(code) => format!("enum_code:{code}"),
         Value::Float(f) => decimal(&format!("{f}")),
         Value::Text(t) => t.to_string(),
         Value::Null => "—".into(),
@@ -827,6 +828,16 @@ async fn notify(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn enum_codes_never_compare_as_numbers_or_booleans_without_schema_context() {
+        assert!(!same(&Value::EnumCode(7), &serde_json::json!(7)));
+        assert!(!same(&Value::EnumCode(1), &serde_json::json!(true)));
+        assert!(!same(&Value::EnumCode(0), &serde_json::json!(false)));
+        assert!(!same(&Value::EnumCode(7), &serde_json::json!("7")));
+        assert!(same(&Value::Int(7), &serde_json::json!(7.0)));
+        assert!(same(&Value::from("ON"), &serde_json::json!(true)));
+    }
 
     #[test]
     fn windows_wrap_around_midnight() {

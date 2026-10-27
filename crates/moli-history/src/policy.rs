@@ -102,7 +102,9 @@ pub fn family(semantic: Semantic, unit: Option<&Unit>, kind: &Kind, key: &str) -
                 | Kind::Timer { .. }
                 | Kind::TimerCommand { .. }
                 | Kind::Temporal { .. } => Family::Other,
-                Kind::Binary | Kind::Enum { .. } | Kind::Text => Family::States,
+                Kind::Binary | Kind::Enum { .. } | Kind::EnumCode { .. } | Kind::Text => {
+                    Family::States
+                }
             },
         },
     }

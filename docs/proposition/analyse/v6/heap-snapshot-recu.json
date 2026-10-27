@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "started_utc": "2026-10-27T13:15:22.396162+00:00",
+  "status": "captured",
+  "configuration": {
+    "houses": 20,
+    "copies_per_source": 10,
+    "seconds": 120,
+    "rate_per_house": 8,
+    "layout": "per-house",
+    "storage": "memory"
+  },
+  "guard": {
+    "budget_rss_bytes": 1073741824,
+    "sample_period_seconds": 0.5,
+    "scope": "worker_only",
+    "kind": "sampled_rss_watchdog_not_cgroup",
+    "exceeded": false,
+    "rss_peak_sampled_bytes": 554303488,
+    "samples": 320,
+    "rss_at_measured_start_bytes": 525238272
+  },
+  "artifacts": {
+    "location": "private_temporary_directory",
+    "supervisor_stdout": "supervisor.stdout",
+    "supervisor_stderr": "supervisor.stderr"
+  },
+  "captures": [
+    {
+      "started_utc": "2026-10-27T13:16:00.766367+00:00",
+      "tool": "leaks",
+      "stdout": "start-leaks.stdout",
+      "stderr": "start-leaks.stderr",
+      "exit_code": 0,
+      "finished_utc": "2026-10-27T13:16:06.091109+00:00",
+      "seconds": 5.3247541669989005,
+      "stdout_bytes": 141,
+      "stderr_bytes": 0,
+      "label": "start",
+      "graph": "start.memgraph",
+      "graph_bytes": 8959006,
+      "success": true
+    },
+    {
+      "started_utc": "2026-10-27T13:16:30.769326+00:00",
+      "tool": "leaks",
+      "stdout": "end-leaks.stdout",
+      "stderr": "end-leaks.stderr",
+      "exit_code": 0,
+      "finished_utc": "2026-10-27T13:16:35.652630+00:00",
+      "seconds": 4.883340208994923,
+      "stdout_bytes": 139,
+      "stderr_bytes": 0,
+      "label": "end",
+      "graph": "end.memgraph",
+      "graph_bytes": 9330712,
+      "success": true
+    }
+  ],
+  "analysis": [
+    {
+      "label": "start",
+      "tools": [
+        {
+          "started_utc": "2026-10-27T13:18:02.926143+00:00",
+          "tool": "heap",
+          "stdout": "start-heap.stdout",
+          "stderr": "start-heap.stderr",
+          "exit_code": 0,
+          "finished_utc": "2026-10-27T13:18:03.757965+00:00",
+          "seconds": 0.831869417001144,
+          "stdout_bytes": 33746,
+          "stderr_bytes": 0,
+          "success": true
+        },
+        {
+          "started_utc": "2026-10-27T13:18:03.758134+00:00",
+          "tool": "vmmap",
+          "stdout": "start-vmmap.stdout",
+          "stderr": "start-vmmap.stderr",
+          "exit_code": 0,
+          "finished_utc": "2026-10-27T13:18:03.994830+00:00",
+          "seconds": 0.2367192909878213,
+          "stdout_bytes": 6075,
+          "stderr_bytes": 0,
+          "success": true
+        },
+        {
+          "started_utc": "2026-10-27T13:18:03.994949+00:00",
+          "tool": "malloc_history",
+          "stdout": "start-malloc_history.stdout",
+          "stderr": "start-malloc_history.stderr",
+          "exit_code": 0,
+          "finished_utc": "2026-10-27T13:18:05.087149+00:00",
+          "seconds": 1.0922262079984648,
+          "stdout_bytes": 650636,
+          "stderr_bytes": 0,
+          "success": true
+        }
+      ]
+    },
+    {
+      "label": "end",
+      "tools": [
+        {
+          "started_utc": "2026-10-27T13:18:05.087294+00:00",
+          "tool": "heap",
+          "stdout": "end-heap.stdout",
+          "stderr": "end-heap.stderr",
+          "exit_code": 0,
+          "finished_utc": "2026-10-27T13:18:05.851326+00:00",
+          "seconds": 0.764055166990147,
+          "stdout_bytes": 32709,
+          "stderr_bytes": 0,
+          "success": true
+        },
+        {
+          "started_utc": "2026-10-27T13:18:05.851441+00:00",
+          "tool": "vmmap",
+          "stdout": "end-vmmap.stdout",
+          "stderr": "end-vmmap.stderr",
+          "exit_code": 0,
+          "finished_utc": "2026-10-27T13:18:06.080712+00:00",
+          "seconds": 0.22929204200045206,
+          "stdout_bytes": 6075,
+          "stderr_bytes": 0,
+          "success": true
+        },
+        {
+          "started_utc": "2026-10-27T13:18:06.080820+00:00",
+          "tool": "malloc_history",
+          "stdout": "end-malloc_history.stdout",
+          "stderr": "end-malloc_history.stderr",
+          "exit_code": 0,
+          "finished_utc": "2026-10-27T13:18:07.227043+00:00",
+          "seconds": 1.1462496250023833,
+          "stdout_bytes": 541081,
+          "stderr_bytes": 0,
+          "success": true
+        }
+      ]
+    }
+  ],
+  "physical_commands": 0,
+  "interpretation": "raw_capture_only_no_memory_attribution_conclusion",
+  "binary_sha256": "e396c05dee3de4c084e6fbe2ea1cfaa686341ad7894aea0479e7edfee3fcb925",
+  "measured_started_utc": "2026-10-27T13:16:00.765960+00:00",
+  "load_result": {
+    "workflow_parity": false,
+    "workflow_expected_per_kind": 200,
+    "seconds": 120.006576875,
+    "profile": "release"
+  },
+  "supervisor_exit_code": 0,
+  "finished_utc": "2026-10-27T13:18:07.227161+00:00"
+}

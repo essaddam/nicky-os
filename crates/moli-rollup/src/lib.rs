@@ -393,6 +393,7 @@ fn state(value: &Value) -> Option<String> {
         Value::Bool(b) => Some(b.to_string()),
         Value::Int(i) => Some(i.to_string()),
         Value::Float(f) => Some(f.to_string()),
+        Value::EnumCode(code) => Some(format!("enum_code:{code}")),
         Value::Text(t) => Some(t.to_string()),
     }
 }
@@ -641,6 +642,37 @@ mod tests {
     const MIN: u64 = 60_000;
     /// 2026-01-05T00:00:00Z, a Monday.
     const T0: u64 = 1_767_571_200_000;
+
+    #[test]
+    fn enum_codes_are_categorical_and_never_contribute_to_numeric_summaries() {
+        let anchor = (T0 - MIN, Value::EnumCode(7));
+        for aggregation in [Aggregation::TimeWeighted, Aggregation::Sum] {
+            let stats = hourly(
+                &rule(aggregation, None),
+                Some(&anchor),
+                &[(T0 + MIN, Value::EnumCode(255))],
+                T0,
+                T0 + HOUR_MS,
+            )
+            .unwrap();
+            assert_eq!(stats[0].quality, Quality::Empty);
+            assert_eq!(stats[0].aggregate, None);
+            assert_eq!(stats[0].covered_ms, 0);
+        }
+        let stats = hourly(
+            &rule(Aggregation::Durations, None),
+            Some(&anchor),
+            &[(T0 + MIN, Value::Int(7))],
+            T0,
+            T0 + HOUR_MS,
+        )
+        .unwrap();
+        let Some(Aggregate::Durations { ms }) = &stats[0].aggregate else {
+            panic!("categorical durations expected");
+        };
+        assert_eq!(ms["enum_code:7"], MIN);
+        assert_eq!(ms["7"], HOUR_MS - MIN);
+    }
 
     fn rule(aggregation: Aggregation, freshness_ms: Option<u64>) -> Rollup {
         Rollup {

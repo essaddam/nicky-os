@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-27T15:48:53.809421+00:00",
+  "base_git": "a83589366f67d6b8273a10ad41658d688e498fda",
+  "scope": "local synthetic stereo WAV T0 engine, standalone package",
+  "toolchain": "1.99.1",
+  "jobs": 2,
+  "format": "pass",
+  "clippy": "pass -D warnings",
+  "tests": {
+    "library": 18,
+    "binary": 1,
+    "integration": 2,
+    "total_passed": 21,
+    "failed": 0
+  },
+  "demo": {
+    "sources": 2,
+    "sample_rate": 48000,
+    "channels": 2,
+    "frames_per_output": 9600,
+    "samples_per_output": 19200,
+    "max_observed_block_frames": 997,
+    "wav_file_bytes": 38444,
+    "pcm_sha256": "95b7ed2b458f3c650472c371690c9f9f75f0974b42a483b984998ac0382dbb91",
+    "null_and_wav_match": true
+  },
+  "bounds": {
+    "max_output_block_frames": 1024,
+    "max_pcm_queue_slots": 4,
+    "max_pcm_queue_payload_bytes": 16384,
+    "max_queue_entries": 16,
+    "input_buffer_bytes": 65536,
+    "max_decoder_packet_frames": 1152,
+    "max_source_file_bytes": 10485760,
+    "max_source_seconds": 120,
+    "max_wav_output_seconds": 60,
+    "rss_claimed": false
+  },
+  "construction_and_restore": "stopped; fresh session; no automatic decoder",
+  "physical_outputs": 0,
+  "music_provider_calls": 0,
+  "master_modified": false,
+  "mqtt_adapter_implemented": false,
+  "full_music_engine": false,
+  "flac_qualified": false,
+  "source_sha256": {
+    "tools/music-engine-poc/src/decode.rs": "48501ec4d1d5d8c0c18f421f1bb9ddf677b2624c56631137dd0e06a966b49850",
+    "tools/music-engine-poc/src/engine.rs": "05614f70852e800db86e7be85e6655040865c91f032dc539c37f51b9a3992c09",
+    "tools/music-engine-poc/src/lib.rs": "9093f391b8dbad422dc1a4df61b5566ab7ffc6e58231c54ea13259b629e02e8e",
+    "tools/music-engine-poc/src/main.rs": "51fc91339cd63edab7aa1f44462916016dd445772be86fa8e6be9f9fab322beb",
+    "tools/music-engine-poc/src/sink.rs": "c1fd18fba8190489633869ac7da9e94e7ec8d3dff442a322a586bf7dfa84551c",
+    "tools/music-engine-poc/src/source.rs": "12ae6a29a1bbe29cde6c165e7ada569e03696c002b2e4dddc457d9e684042eb7",
+    "tools/music-engine-poc/tests/cli.rs": "af6c6a9e0bd737723d82c39403467dfb86999dae674a45d9e4ff7bc7a9d6add8",
+    "tools/music-engine-poc/Cargo.toml": "eb5bc8eef0167964a1b499e27b8a44e9675466e849da543b39534f6340aeb312",
+    "tools/music-engine-poc/Cargo.lock": "3f6833876338778b5ec2a4492bb34cf0a1dbada6e614bf7790efd4828fd79106",
+    "tools/music-engine-poc/check.sh": "5cee46bb06743e39d87bcb0c58c6b90869404c81bf6e736574996dde93b83ad2"
+  }
+}

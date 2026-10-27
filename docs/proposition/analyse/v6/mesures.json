@@ -1,0 +1,395 @@
+{
+  "version": 6,
+  "recorded_date": "2026-10-27",
+  "units": {
+    "memory": "octets ; 1 Mio = 1048576 octets",
+    "cpu": "pourcentage d’un cœur logique ; temps CPU / durée murale × 100"
+  },
+  "scope": "POC de passerelle web et ponts MQTT ; aucune commande physique ; données publiques agrégées uniquement",
+  "live_local": {
+    "when_utc": "2026-10-27T11:24:16.045645+00:00",
+    "duration_seconds": 20.008,
+    "platform": "Darwin",
+    "architecture": "arm64",
+    "logical_cpus": 10,
+    "processes": {
+      "gateway": {
+        "rss_before_bytes": 7651328,
+        "rss_after_bytes": 7569408,
+        "cpu_seconds_delta": 0.06,
+        "cpu_percent_one_core": 0.2999
+      },
+      "hub_and_bridges": {
+        "rss_before_bytes": 21315584,
+        "rss_after_bytes": 21200896,
+        "cpu_seconds_delta": 0.61,
+        "cpu_percent_one_core": 3.0488
+      }
+    },
+    "traffic": [
+      {
+        "source": "A",
+        "received_delta": 204,
+        "published_delta": 46,
+        "projected_channels": 1789
+      },
+      {
+        "source": "B",
+        "received_delta": 120,
+        "published_delta": 0,
+        "projected_channels": 0
+      }
+    ],
+    "memory_details": {
+      "description_disk_bytes": 1634419,
+      "description_ram_bytes": 0,
+      "description_storage": "disk",
+      "gateway_requested": 4823865,
+      "gateway_rss": 7569408,
+      "retained_payload_bytes": 3038842,
+      "retained_topics": 1815,
+      "rust_rss": 21200896
+    },
+    "hub_devices": 416,
+    "hub_points": 1831,
+    "scope": "Trafic courant réel, builds debug, sans injection de charge ni commande physique ; pourcentage rapporté à un cœur logique."
+  },
+  "multichannel_snapshot": {
+    "physical_multichannel_devices": 189,
+    "physical_temp_and_humidity_devices": 10,
+    "physical_temp_and_humidity_known_values": 5,
+    "media_shapes": {
+      "media_title": {
+        "described": 6,
+        "known_samples": 6,
+        "max_bytes": 48,
+        "median_bytes": 28,
+        "le16": 1,
+        "le64": 6
+      },
+      "media_artist": {
+        "described": 0,
+        "known_samples": 0,
+        "max_bytes": null,
+        "median_bytes": null,
+        "le16": 0,
+        "le64": 0
+      },
+      "media_album_name": {
+        "described": 0,
+        "known_samples": 0,
+        "max_bytes": null,
+        "median_bytes": null,
+        "le16": 0,
+        "le64": 0
+      }
+    },
+    "scope": "Lecture passive de retained virtuels ; ni fraîcheur physique prouvée ni distribution exhaustive des médias."
+  },
+  "upstream_a_process": {
+    "duration_seconds": 20,
+    "rss_before_bytes": 1280401408,
+    "rss_after_bytes": 1277829120,
+    "cpu_seconds_delta": 2,
+    "cpu_percent_one_core": 9.9999,
+    "scope": "Processus HA A sur un autre hôte ; aucun comparatif CPU à parité fonctionnelle.",
+    "comparison": "Autre machine, autres fonctions ; aucune équivalence de périmètre ou facteur de gain établi."
+  },
+  "upstream_b_process": {
+    "rss_bytes": null,
+    "cpu_percent_one_core": null,
+    "status": "non mesuré ; processus non visible dans l’accès autorisé"
+  },
+  "historical_gateway_samples": {
+    "node": {
+      "rss_mib": 69.32,
+      "heap_used_mib": 19.79,
+      "retained_payload_mib": 2.81,
+      "retained_topics": 1814,
+      "source": "capture utilisateur du 27 octobre avant remplacement Rust"
+    },
+    "rust_memory": {
+      "rss_bytes": 10731520,
+      "live_requested_bytes": 7190099,
+      "description_ram_bytes": 1550560,
+      "description_disk_bytes": 0,
+      "retained_payload_bytes": 2949989,
+      "scope": "mesure ponctuelle avant déploiement enums ; 1788 canaux"
+    },
+    "rust_disk": {
+      "rss_bytes": 9142272,
+      "live_requested_bytes": 5073160,
+      "description_ram_bytes": 0,
+      "description_disk_bytes": 1550560,
+      "hub_rss_bytes": 18382848,
+      "scope": "autre phase d’échauffement avant déploiement enums ; 1788 canaux"
+    },
+    "node_fixed_cost": {
+      "trials": 3,
+      "empty_rss_mib": 39.5,
+      "imports_rss_mib": [
+        69.3,
+        70.6
+      ],
+      "empty_broker_increment_mib": [
+        0.8,
+        1.3
+      ],
+      "scope": "processus de mesure séparés ; aucune ventilation exacte du processus vivant"
+    },
+    "warning": "RSS, tas utilisé et payload logique ne s’additionnent pas. Captures non simultanées ; pas d’attribution causale des écarts RAM/disque/enums.",
+    "hub_reference": {
+      "rss_mib": 24.34,
+      "live_requested_mib": 11.75,
+      "scope": "Capture utilisateur avant migration ; allocations incluses dans RSS, pas cumulables."
+    }
+  },
+  "instrumented_bridge_means": {
+    "scope": "compteurs cumulatifs du binaire debug, démarrage inclus ; distincts du créneau ps de 20 s",
+    "received": 110466,
+    "retained_received": 6491,
+    "published": 22186,
+    "rejected": 70,
+    "raw_messages_per_second": 16.9843,
+    "transformation": {
+      "mean_us": 18.4067,
+      "samples": 110466
+    },
+    "generic_calculation": {
+      "mean_us": 2256.7302,
+      "samples": 22417
+    },
+    "preparation": {
+      "mean_us": 16336.8818,
+      "samples": 5802
+    },
+    "mqtt_echo": {
+      "mean_us": 54868.8306,
+      "samples": 21014,
+      "pending_in_tracking_window": 0,
+      "tracking_bound": 64
+    },
+    "warning": "Durées murales moyennes instrumentées, pas des p95 ni un temps de réponse physique. Différence publications/échos non interprétable comme pertes."
+  },
+  "enumerations": {
+    "explicit_option_lists": 96,
+    "entries_before_sharing": 418,
+    "utf8_bytes_before_sharing": 2837,
+    "shared_catalogues": 43,
+    "measured_requested_bytes": 8014,
+    "known_selected": 61,
+    "unavailable": 35,
+    "numeric_looking_preserved_as_enums": 5,
+    "selected_native_text_bytes_in_those_states": 0,
+    "source_a": {
+      "lists": 65,
+      "entries": 259,
+      "utf8_bytes": 1644,
+      "max_cardinality": 12
+    },
+    "source_b": {
+      "lists": 31,
+      "entries": 159,
+      "utf8_bytes": 1193,
+      "max_cardinality": 37
+    },
+    "value_bytes": 24,
+    "sample_bytes": 32,
+    "kind_bytes": 48,
+    "enum_membership_mask_bytes": 32,
+    "live_previous_verification": {
+      "channels": 1789,
+      "expected_enum_channels": 116,
+      "known_enum_codes": 39,
+      "missing_active_catalogue_entries": 0,
+      "scope": "lecture du déploiement enums, source A seulement ; capture antérieure à la fenêtre CPU"
+    },
+    "warning": "8014 octets : allocations demandées des tables après libération des temporaires, Arc compris ; hors métadonnées allocateur/RSS/JSON/routage. Un u8 sélectionné ne réduit pas tout Sample à un octet."
+  },
+  "text_offline": {
+    "scope": "deux exports HA privés expurgés rejoués dans le vrai convertisseur ; pas un corpus de titres médias complet",
+    "source_a": {
+      "before_count": 309,
+      "after_count": 276,
+      "before_utf8_bytes": 2634,
+      "after_utf8_bytes": 2427,
+      "buckets": {
+        "0_to_8": 200,
+        "9_to_16": 18,
+        "17_to_64": 58
+      }
+    },
+    "source_b": {
+      "before_count": 252,
+      "after_count": 218,
+      "before_utf8_bytes": 3007,
+      "after_utf8_bytes": 2833,
+      "buckets": {
+        "0_to_8": 113,
+        "9_to_16": 17,
+        "17_to_64": 88
+      }
+    },
+    "total_after_count": 494,
+    "total_after_utf8_bytes": 5260,
+    "buckets": {
+      "0_to_8": 313,
+      "9_to_16": 35,
+      "17_to_64": 146
+    },
+    "at_most_16_fraction": 0.7044534412955465,
+    "media_title_fields_in_sanitized_exports": 0,
+    "warning": "Le relevé retained live de six titres est distinct de ces exports et ne prouve ni leur fraîcheur ni une distribution générale des titres."
+  },
+  "text_microbenchmark": {
+    "architecture": "ARM64",
+    "hardware_class": "Apple M4",
+    "os": "macOS",
+    "rust": "1.99.1",
+    "optimization": "O3, target-cpu=native",
+    "runs": 5,
+    "operations_per_run": 50000,
+    "allocation_counter_separate_from_timing": true,
+    "cases": [
+      {
+        "utf8_bytes": 16,
+        "new_allocation_requested_bytes": 32,
+        "clone_allocations": 0,
+        "create_median_ns": 33.1,
+        "clone_median_ns": 4.59,
+        "replacement_median_ns": 30.1,
+        "value_and_allocation_bytes": 56,
+        "sample_and_allocation_bytes": 64
+      },
+      {
+        "utf8_bytes": 64,
+        "new_allocation_requested_bytes": 80,
+        "clone_allocations": 0,
+        "create_median_ns": 26.4,
+        "clone_median_ns": 3.92,
+        "replacement_median_ns": 25.4,
+        "value_and_allocation_bytes": 104,
+        "sample_and_allocation_bytes": 112
+      },
+      {
+        "utf8_bytes": 256,
+        "new_allocation_requested_bytes": 272,
+        "clone_allocations": 0,
+        "create_median_ns": 28.2,
+        "clone_median_ns": 3.57,
+        "replacement_median_ns": 27,
+        "value_and_allocation_bytes": 296,
+        "sample_and_allocation_bytes": 304
+      },
+      {
+        "utf8_bytes": 4096,
+        "new_allocation_requested_bytes": 4112,
+        "clone_allocations": 0,
+        "create_median_ns": 64.1,
+        "clone_median_ns": 3.36,
+        "replacement_median_ns": 65.4,
+        "value_and_allocation_bytes": 4136,
+        "sample_and_allocation_bytes": 4144
+      }
+    ],
+    "equal_text_skip_4096_ns": 82.8,
+    "inline_candidate_value_bytes_by_capacity": {
+      "15": 24,
+      "16": 24,
+      "24": 32,
+      "32": 40
+    },
+    "warning": "Microbanc synthétique, hors RSS/allocateur système/transport ; prototype inline non livré, layout non garanti entre cibles/compilateurs."
+  },
+  "room_virtual_fixture": {
+    "rooms": 17,
+    "points_total": 34,
+    "combined_devices": 17,
+    "separate_devices": 34,
+    "combined_requested_bytes": 9408,
+    "separate_requested_bytes": 13624,
+    "difference_requested_bytes": 4216,
+    "combined_json_bytes": 6121,
+    "separate_json_bytes": 7634,
+    "device_bytes": 160,
+    "point_spec_bytes": 112,
+    "kind_bytes": 48,
+    "value_bytes": 24,
+    "sample_bytes": 32,
+    "warning": "Fixture structurelle, hors index Hub, disponibilités et états ; pas une mesure RSS globale."
+  },
+  "parity_registry_snapshot": {
+    "source_a": {
+      "enabled_registry_devices": 291,
+      "devices_with_active_entity": 284,
+      "enabled_entities": 1303,
+      "described_entities": 1295,
+      "excluded_text_entities": 8,
+      "rooms": 17,
+      "floors": 2,
+      "lights": 31,
+      "mqtt_light_contracts": 25,
+      "switches": 141,
+      "mqtt_switch_contracts": 43,
+      "covers": 8,
+      "water_heaters": 1,
+      "media_players": 53
+    },
+    "source_b": {
+      "enabled_registry_devices": 201,
+      "devices_with_active_entity": 163,
+      "enabled_entities": 990,
+      "described_entities": 0,
+      "rooms": 17,
+      "floors": 4,
+      "lights": 34,
+      "switches": 21,
+      "covers": 1,
+      "water_heaters": 1,
+      "media_players": 33
+    },
+    "scope": "registre activé lu par SSH le 27 octobre ; ne pas comparer un total de canaux/attributs à un total d’entités ; pas de déduplication physique entre maisons"
+  },
+  "cover_capability_snapshot": {
+    "source_a": {
+      "covers": 8,
+      "overkiz": 7,
+      "group": 1,
+      "supported_features_11": 8,
+      "position_missing": 8,
+      "assumed_state_true": 6,
+      "assumed_state_missing": 2,
+      "state_unknown": 6,
+      "state_unavailable": 2
+    },
+    "source_b": {
+      "covers": 1,
+      "overkiz": 1,
+      "supported_features_11": 1,
+      "position_missing": 1,
+      "assumed_state_missing": 1,
+      "state_closed": 1
+    },
+    "capabilities_11": [
+      "OPEN (1)",
+      "CLOSE (2)",
+      "STOP (8)"
+    ],
+    "set_position_capability_4_present": 0,
+    "native_unit_tests_passed": 3,
+    "poc_ha_command_route": false,
+    "physical_commands_sent": 0,
+    "warning": "Source A : absence de retour confirmée par le propriétaire. Un libellé HA closed ou un statut d’exécution ne prouve pas une position mesurée."
+  },
+  "structural_scale_only": {
+    "hub_declared_points": 1831,
+    "sample_size": 32,
+    "sample_slots_if_all_present_bytes": 58592,
+    "point_spec_size": 112,
+    "point_specs_fixed_bytes": 205072,
+    "devices": 416,
+    "device_size": 160,
+    "devices_fixed_bytes": 66560,
+    "scope": "Calcul structurel indicatif, hors chaînes/index/capacités/runtime ; pas une ventilation du RSS."
+  }
+}

@@ -1,0 +1,72 @@
+<!doctype html><html lang="fr"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V6 · Instantanés mémoire sous budget de 1 Gio</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#203044;font:16px/1.65 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:28px 20px 60px}header,section{padding:25px;background:white;border:1px solid #dce3ea;border-radius:14px;margin-bottom:20px;min-width:0}h1{font-size:clamp(29px,4vw,42px);line-height:1.15;letter-spacing:-.035em}h2{font-size:23px}h3{font-size:18px}a{color:#3157a5}code{overflow-wrap:anywhere;font-size:.88em;background:#f1f4f8;padding:2px 4px}.note{padding:15px;background:#eef3fa;border-left:3px solid #3157a5}.warn{background:#fff5e9;border-color:#a46d35}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px 10px;border-bottom:1px solid #dce3ea}th{background:#f5f7fa}.muted{font-size:13px;color:#5b6778}li+li{margin-top:9px}@media(max-width:600px){main{padding:12px}header,section{padding:18px}table{font-size:12px}}@media print{body{background:white}section,header{border:0;padding:0}.scroll{overflow:visible}tr{break-inside:avoid}}</style>
+<main><header><p class="muted">Moli · Dossier V6 · 27 octobre 2026</p>
+<h1>La mémoire part surtout dans les descriptions et les tampons MQTT.</h1>
+<p>Deux graphes mémoire réels du worker à vingt maisons ont été capturés et analysés avec les outils Apple.
+Le budget surveillé est de <strong>1 Gio</strong> ; le maximum RSS échantillonné atteint <strong>528,62 Mio</strong>, sans franchissement observé.</p>
+<p class="note">La seconde capture contient 1 650 718 allocations malloc pour 304,91 Mio de tailles arrondies.
+Les nœuds d’arbres JSON représentent 69,69 Mio, les allocations attribuées à <code>String::clone</code>
+44,43 Mio. Une autre vue des piles montre environ 76 Mio de tampons MQTT.</p>
+<p><a href="charge.html">Campagne de charge</a> · <a href="index.html">Dossier V6</a> ·
+<a href="heap-snapshot-recu.json">Reçu des captures</a> · <a href="heap-snapshot-analyse.json">Mesures et sources</a></p></header>
+<section id="budget"><h2>01 · Budget et méthode</h2>
+<p>1 Gio signifie 1 073 741 824 octets. Le contrôleur vérifie le RSS du seul worker toutes les 0,5 seconde et peut arrêter son groupe de processus.
+Sur ce poste macOS sans Docker installé, cette garde est une <strong>surveillance échantillonnée</strong>, avec dépassement possible entre mesures, et non un plafond cgroup strict.
+Elle n’a pas été déclenchée lors des 320 observations.</p>
+<p>Le même binaire optimisé est lancé avec <code>MallocStackLogging=lite</code>. Les allocations passent par l’allocateur système.
+<code>leaks --noContent --outputGraph</code> enregistre deux memgraphs privés, puis <code>heap</code>, <code>vmmap</code> et <code>malloc_history</code>
+les analysent hors ligne. Les symboles du binaire suffisent à rattacher les allocations aux chemins Rust ; les fichiers bruts restent hors dépôt.</p>
+<p class="warn">Le profilage a perturbé l’initialisation : incidents MQTT et redémarrages ont été observés. La première capture n’est pas un état stabilisé ;
+la seconde correspond au modèle complet de 31 540 points et 31 250 retained. Les deux instants ne forment pas un test de fuite à modèle constant.
+La parité des workflows du passage profilé est fausse ; les résultats fonctionnels et CPU de référence viennent des passages non instrumentés.</p></section>
+<section id="types"><h2>02 · Vue par allocations : ce qui occupe le tas</h2>
+<div class="scroll"><table><thead><tr><th>Origine reconnue dans les piles</th><th>Capture initiale, Mio</th><th>Seconde capture, Mio</th><th>Blocs seconde capture</th></tr></thead><tbody><tr><td>Nœuds BTreeMap de serde_json::Value</td><td>82,91</td><td>69,69</td><td>107 893</td></tr><tr><td>Allocations attribuées au symbole String::clone</td><td>36,70</td><td>44,43</td><td>1 046 704</td></tr><tr><td>Nœuds BTreeMap des canaux House</td><td>11,18</td><td>15,38</td><td>4 500</td></tr><tr><td>Nœuds BTreeMap de Sample</td><td>6,74</td><td>7,44</td><td>11 969</td></tr><tr><td>Autres allocations</td><td>143,50</td><td>167,96</td><td>479 652</td></tr></tbody></table></div>
+<p>Ces lignes sont une partition des classes dérivées par l’outil, tailles malloc arrondies comprises. Elles ne sont pas des tailles logiques de textes,
+et l’optimisation du compilateur peut fusionner des symboles. <code>String::clone</code> ne veut pas dire que tous ces octets sont des titres musicaux :
+les identifiants, clés et métadonnées sont aussi des chaînes.</p>
+<p>Le calcul structurel des 31 540 Sample de 32 octets donnerait seulement environ 0,96 Mio, hors index et clés.
+Le POC garde les canaux et descriptions dans des conteneurs dynamiques, plusieurs représentations JSON et le modèle du Hub :
+ce coût est très supérieur au seul stockage des valeurs. Les canaux température et humidité restent indépendants ; les supprimer ne serait pas l’optimisation recherchée.</p>
+<p><strong>Priorité :</strong> remplacer les copies profondes de descriptions par une vue canonique immuable ou une lecture froide, et sérialiser des structures typées
+plutôt que conserver partout des arbres JSON à clés répétées. La méthode <code>metadata::Bank::read()</code> clone actuellement le JSON en mode RAM ;
+<code>House::publications()</code> construit et compare aussi des versions. Les snapshots montrent ces chemins, sans prouver que toutes leurs allocations sont inutiles. Une pile indique le site d’allocation, pas le propriétaire actuel : canonique, publication en attente et temporaire peuvent se mêler.</p></section>
+<section id="buffers"><h2>03 · Vue par piles : le coût du chargement initial reste dans les buffers</h2>
+<div class="scroll"><table><thead><tr><th>Groupe observé</th><th>Volume arrondi</th><th>Blocs</th><th>Source privée relative</th></tr></thead><tbody><tr><td>Tampons de lecture du broker</td><td>≈ 46,2 Mio</td><td>40</td><td>end-malloc_history.stdout:3211</td></tr><tr><td>Tampons d’écriture MQTT des ponts</td><td>≈ 29,4 Mio</td><td>20</td><td>end-malloc_history.stdout:3221</td></tr><tr><td>Copies de payloads dans le hook du broker</td><td>≈ 39,4 Mio</td><td>31250</td><td>end-malloc_history.stdout:32</td></tr></tbody></table></div>
+<p class="note">Cette vue recoupe la précédente : <strong>ne pas additionner les deux tableaux</strong>. Les piles sont inclusives ;
+un parent et son descendant ne représentent pas deux allocations distinctes.</p>
+<p>Le broker lit de gros registres et descriptions au démarrage ; ses <code>BytesMut</code> grossissent. Les clients MQTT des ponts conservent eux aussi un tampon d’écriture devenu grand.
+La source montre des buffers réutilisés entre paquets ; les mesures trouvent 40 gros tampons de lecture et 20 d’écriture.
+Ce sont des capacités à examiner, en plus des payloads retained nécessaires.</p>
+<p><strong>Piste concrète :</strong> rendre une grosse capacité de lecture après un paquet froid, lorsque le tampon ne contient plus de fragment en attente,
+et mesurer une politique analogue pour l’écriture. Il faut conserver les bornes, l’assemblage des paquets partiels et les données réellement retenues.
+Le gain potentiel doit être vérifié avant/après ; environ 76 Mio de buffers observés ne garantissent pas 76 Mio de RSS libérés.</p></section>
+<section id="automations"><h2>04 · Une copie de tous les états pour les automatismes</h2><p>Le chemin <code>remember_all</code> du moteur construit une mémoire précédente sur les états du Hub. Les piles lui attribuent environ 8 Mio, dont 4,76 Mio de clés et 3,08 Mio de table. Le banc ne référence pourtant que 60 entrées dans ses quarante graphes.</p><p>Une piste est de partager les identifiants et de limiter cette mémoire précédente aux dépendances nécessaires. Les canaux restent tous conservés dans le Hub. Cette optimisation doit préserver les franchissements de seuil, les transitions, les changements de graphes et la reprise après perte du bus ; elle n’est pas livrée ici.</p></section>
+<section id="interpretation"><h2>05 · Occupation, réserve et suspicion de fuite</h2>
+<p>Les tailles malloc passent de 281,02 à 304,91 Mio,
+alors que leur nombre diminue de 26 774. Le modèle et les files évoluaient encore : ce changement ne démontre pas une fuite.</p>
+<p>L’empreinte physique rapportée par vmmap passe de 425,7 à
+315,9 Mio. Le RSS, cette empreinte, les tailles malloc arrondies et les octets demandés au Meter
+sont des mesures distinctes. Des zones d’allocateur vides ou réservées et des pages partagées expliquent aussi une partie des écarts ; aucune soustraction unique ne les ventile précisément.</p>
+<p>Une recherche de fuites sur la seconde capture signale <strong>31 648 blocs, 29,80 Mio</strong>.
+Le mode conservateur produit le même signalement. Le premier groupe contient 15 grands tampons d’écriture <code>rumqttc / BytesMut</code> pour 22 986 752 octets ; l’autre racine principale vient de <code>remember_all</code>.
+Ce résultat demande validation : capacité encore possédée, pointeurs encodés ou intérieurs et vraie mémoire sans propriétaire ne se distinguent pas par le RSS.
+La libération après fermeture des connexions et la croissance sur une durée plus longue restent à tester avant de conclure à une fuite Rust.</p>
+<ol><li><strong>D’abord :</strong> réduire les copies de descriptions et mesurer le tas vivant par catégories.</li>
+<li><strong>Ensuite :</strong> rendre les grandes capacités réseau après initialisation, sans perdre les paquets partiels.</li>
+<li><strong>Puis :</strong> suivre un état stabilisé et la fermeture des connexions pour qualifier les blocs signalés par leaks.</li>
+<li><strong>Enfin :</strong> comparer release, mêmes données et mêmes clients, avec le RSS, l’empreinte et les compteurs séparés.</li></ol>
+<p>La représentation inline des textes courts peut supprimer de petites allocations ; elle n’explique pas à elle seule les dizaines de Mio d’arbres JSON et de buffers.
+Aucune optimisation de stockage n’est présentée comme déjà livrée par cette analyse.</p></section>
+<section id="preuves"><h2>06 · Preuves conservées</h2>
+<p>Les deux memgraphs font 8,54 et 8,90 Mio.
+Les captures et les six analyses natives ont réussi. Les fichiers publics contiennent les totaux, empreintes des artefacts, lignes sources et limites ;
+les graphes bruts et les sorties complètes restent dans leur dossier temporaire privé.</p>
+<p><a href="heap-snapshot-recu.json">Reçu natif</a> · <a href="heap-snapshot-analyse.json">Agrégats exacts et empreintes</a> ·
+<a href="charge-empreintes.json">Code et vérifications</a> ·
+<a href="../../../../tools/mqtt-live-probe/snapshot-load.py">Capture reproductible</a> ·
+<a href="../../../../tools/mqtt-live-probe/analyze-heap-snapshot.py">Analyse reproductible</a>.</p>
+<p class="muted">Documentation primaire : <a href="https://developer.apple.com/library/archive/documentation/Performance/Conceptual/ManagingMemory/Articles/MallocDebug.html">journalisation malloc Apple</a>,
+<a href="https://developer.apple.com/documentation/xcode/gathering-information-about-memory-use">graphes mémoire et piles d’allocation</a>.
+Les aides des outils installés précisent les options de cette capture. Aucune commande physique n’a été envoyée.</p></section></main></html>

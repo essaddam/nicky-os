@@ -1,0 +1,1833 @@
+{
+  "schema": 1,
+  "profile": "release",
+  "physical_commands": 0,
+  "topologies": [
+    {
+      "active_modules": 4,
+      "all_modules_offline_after_shutdown": true,
+      "availability_before_shutdown": {
+        "apple-tv": true,
+        "ariston": true,
+        "tahoma": true,
+        "weather": true
+      },
+      "broker": {
+        "clients": 1,
+        "description_disk_bytes": 0,
+        "description_ram_bytes": 18384,
+        "description_storage": "memory",
+        "retained_payload_bytes": 31865,
+        "retained_topics": 74
+      },
+      "child_processes": 0,
+      "command_results": [
+        {
+          "module": "apple-tv",
+          "request_id": "probe-0",
+          "result": {
+            "native": {
+              "operation": "set_volume",
+              "volume": 1.0
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "ariston",
+          "request_id": "probe-1",
+          "result": {
+            "native": {
+              "action": "switch",
+              "body": true,
+              "gateway": "A1B2C3D4E5F6"
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "tahoma",
+          "request_id": "probe-2",
+          "result": {
+            "native": {
+              "actions": [
+                {
+                  "commands": [
+                    {
+                      "name": "open",
+                      "parameters": []
+                    }
+                  ],
+                  "deviceURL": "rts://1234-5678-9012/16700001"
+                }
+              ],
+              "label": "Moli"
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        }
+      ],
+      "expected_test_commands": 3,
+      "failed_groups": {},
+      "groups": [
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 2084869,
+          "allocator_peak_bytes": 2095142,
+          "commands_rejected": 0,
+          "commands_seen": 3,
+          "commands_simulated": 3,
+          "dropped_incoming_events": 0,
+          "group": "merged",
+          "module_count": 4,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 11,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 3,
+                "codes": 11,
+                "entry_bytes": 110,
+                "entry_capacity_bytes": 110,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 366,
+                "owned_capacity_bytes": 427,
+                "packed_bytes": 61,
+                "packed_capacity_bytes": 61,
+                "shared_tables": 0,
+                "snapshot_bytes": 780
+              },
+              "devices": 6,
+              "free_text_utf8_bytes": 0,
+              "kind": "tahoma",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "tahoma",
+              "observed_slots": 4,
+              "points": 8,
+              "processing_calls": 7,
+              "processing_mean_ns": 28631,
+              "value_container_bytes": 96
+            },
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 2,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 1,
+                "codes": 2,
+                "entry_bytes": 20,
+                "entry_capacity_bytes": 20,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 148,
+                "owned_capacity_bytes": 163,
+                "packed_bytes": 15,
+                "packed_capacity_bytes": 15,
+                "shared_tables": 0,
+                "snapshot_bytes": 198
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 0,
+              "kind": "ariston",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "ariston",
+              "observed_slots": 13,
+              "points": 13,
+              "processing_calls": 7,
+              "processing_mean_ns": 23250,
+              "value_container_bytes": 312
+            },
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 38,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 2,
+                "codes": 38,
+                "entry_bytes": 380,
+                "entry_capacity_bytes": 380,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 572,
+                "owned_capacity_bytes": 729,
+                "packed_bytes": 157,
+                "packed_capacity_bytes": 157,
+                "shared_tables": 0,
+                "snapshot_bytes": 2262
+              },
+              "devices": 2,
+              "free_text_utf8_bytes": 0,
+              "kind": "weather",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "weather",
+              "observed_slots": 38,
+              "points": 38,
+              "processing_calls": 7,
+              "processing_mean_ns": 48440,
+              "value_container_bytes": 912
+            },
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 11,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 4,
+                "codes": 11,
+                "entry_bytes": 110,
+                "entry_capacity_bytes": 110,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 430,
+                "owned_capacity_bytes": 639,
+                "packed_bytes": 209,
+                "packed_capacity_bytes": 209,
+                "shared_tables": 0,
+                "snapshot_bytes": 945
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 43,
+              "kind": "apple-tv",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "apple-tv",
+              "observed_slots": 11,
+              "points": 13,
+              "processing_calls": 7,
+              "processing_mean_ns": 18595,
+              "value_container_bytes": 264
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        }
+      ],
+      "initial_observed_points": 66,
+      "initial_semantic_digest": "54c2276b9ca50092db9b8972f8cd1263f4e1f3618bb4cc2452b2addb17c1eaeb",
+      "messages": 189,
+      "mode": "merged",
+      "module_groups": 1,
+      "observed_points_end": 66,
+      "physical_commands": 0,
+      "resources": {
+        "merged": {
+          "cpu_percent_one_core": 0.5793072512309793,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 7700480,
+          "samples": 25
+        }
+      },
+      "scope": "fixture-based modular MQTT host; native codecs, no API connection or physical executor; RSS is per process; no cross-process mmap",
+      "simulated_commands": 3,
+      "total_processes": 1,
+      "status": "PASS",
+      "case": "merged"
+    },
+    {
+      "active_modules": 4,
+      "all_modules_offline_after_shutdown": true,
+      "availability_before_shutdown": {
+        "apple-tv": true,
+        "ariston": true,
+        "tahoma": true,
+        "weather": true
+      },
+      "broker": {
+        "clients": 1,
+        "description_disk_bytes": 0,
+        "description_ram_bytes": 18386,
+        "description_storage": "memory",
+        "retained_payload_bytes": 31914,
+        "retained_topics": 74
+      },
+      "child_processes": 2,
+      "command_results": [
+        {
+          "module": "apple-tv",
+          "request_id": "probe-0",
+          "result": {
+            "native": {
+              "operation": "set_volume",
+              "volume": 1.0
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "ariston",
+          "request_id": "probe-1",
+          "result": {
+            "native": {
+              "action": "switch",
+              "body": true,
+              "gateway": "A1B2C3D4E5F6"
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "tahoma",
+          "request_id": "probe-2",
+          "result": {
+            "native": {
+              "actions": [
+                {
+                  "commands": [
+                    {
+                      "name": "open",
+                      "parameters": []
+                    }
+                  ],
+                  "deviceURL": "rts://1234-5678-9012/16700001"
+                }
+              ],
+              "label": "Moli"
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        }
+      ],
+      "expected_test_commands": 3,
+      "failed_groups": {},
+      "groups": [
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 1450753,
+          "allocator_peak_bytes": 1619105,
+          "commands_rejected": 0,
+          "commands_seen": 2,
+          "commands_simulated": 2,
+          "dropped_incoming_events": 0,
+          "group": "comfort",
+          "module_count": 3,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 11,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 3,
+                "codes": 11,
+                "entry_bytes": 110,
+                "entry_capacity_bytes": 110,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 366,
+                "owned_capacity_bytes": 427,
+                "packed_bytes": 61,
+                "packed_capacity_bytes": 61,
+                "shared_tables": 0,
+                "snapshot_bytes": 780
+              },
+              "devices": 6,
+              "free_text_utf8_bytes": 0,
+              "kind": "tahoma",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "tahoma",
+              "observed_slots": 4,
+              "points": 8,
+              "processing_calls": 8,
+              "processing_mean_ns": 23942,
+              "value_container_bytes": 96
+            },
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 2,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 1,
+                "codes": 2,
+                "entry_bytes": 20,
+                "entry_capacity_bytes": 20,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 148,
+                "owned_capacity_bytes": 163,
+                "packed_bytes": 15,
+                "packed_capacity_bytes": 15,
+                "shared_tables": 0,
+                "snapshot_bytes": 198
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 0,
+              "kind": "ariston",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "ariston",
+              "observed_slots": 13,
+              "points": 13,
+              "processing_calls": 8,
+              "processing_mean_ns": 24270,
+              "value_container_bytes": 312
+            },
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 38,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 2,
+                "codes": 38,
+                "entry_bytes": 380,
+                "entry_capacity_bytes": 380,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 572,
+                "owned_capacity_bytes": 729,
+                "packed_bytes": 157,
+                "packed_capacity_bytes": 157,
+                "shared_tables": 0,
+                "snapshot_bytes": 2262
+              },
+              "devices": 2,
+              "free_text_utf8_bytes": 0,
+              "kind": "weather",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "weather",
+              "observed_slots": 38,
+              "points": 38,
+              "processing_calls": 8,
+              "processing_mean_ns": 42375,
+              "value_container_bytes": 912
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        },
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 141329,
+          "allocator_peak_bytes": 142681,
+          "commands_rejected": 0,
+          "commands_seen": 1,
+          "commands_simulated": 1,
+          "dropped_incoming_events": 0,
+          "group": "media",
+          "module_count": 1,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 11,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 4,
+                "codes": 11,
+                "entry_bytes": 110,
+                "entry_capacity_bytes": 110,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 430,
+                "owned_capacity_bytes": 639,
+                "packed_bytes": 209,
+                "packed_capacity_bytes": 209,
+                "shared_tables": 0,
+                "snapshot_bytes": 945
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 43,
+              "kind": "apple-tv",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "apple-tv",
+              "observed_slots": 11,
+              "points": 13,
+              "processing_calls": 7,
+              "processing_mean_ns": 28559,
+              "value_container_bytes": 264
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        }
+      ],
+      "initial_observed_points": 66,
+      "initial_semantic_digest": "54c2276b9ca50092db9b8972f8cd1263f4e1f3618bb4cc2452b2addb17c1eaeb",
+      "messages": 189,
+      "mode": "grouped",
+      "module_groups": 2,
+      "observed_points_end": 66,
+      "physical_commands": 0,
+      "resources": {
+        "comfort": {
+          "cpu_percent_one_core": 0.0,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 6356992,
+          "samples": 24
+        },
+        "media": {
+          "cpu_percent_one_core": 0.0,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 3342336,
+          "samples": 24
+        },
+        "supervisor-broker-observer": {
+          "cpu_percent_one_core": 1.379021724140169,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 4734976,
+          "samples": 24
+        }
+      },
+      "scope": "fixture-based modular MQTT host; native codecs, no API connection or physical executor; RSS is per process; no cross-process mmap",
+      "simulated_commands": 3,
+      "total_processes": 3,
+      "status": "PASS",
+      "case": "grouped"
+    },
+    {
+      "active_modules": 4,
+      "all_modules_offline_after_shutdown": true,
+      "availability_before_shutdown": {
+        "apple-tv": true,
+        "ariston": true,
+        "tahoma": true,
+        "weather": true
+      },
+      "broker": {
+        "clients": 1,
+        "description_disk_bytes": 0,
+        "description_ram_bytes": 18388,
+        "description_storage": "memory",
+        "retained_payload_bytes": 31917,
+        "retained_topics": 74
+      },
+      "child_processes": 4,
+      "command_results": [
+        {
+          "module": "ariston",
+          "request_id": "probe-1",
+          "result": {
+            "native": {
+              "action": "switch",
+              "body": true,
+              "gateway": "A1B2C3D4E5F6"
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "apple-tv",
+          "request_id": "probe-0",
+          "result": {
+            "native": {
+              "operation": "set_volume",
+              "volume": 1.0
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "tahoma",
+          "request_id": "probe-2",
+          "result": {
+            "native": {
+              "actions": [
+                {
+                  "commands": [
+                    {
+                      "name": "open",
+                      "parameters": []
+                    }
+                  ],
+                  "deviceURL": "rts://1234-5678-9012/16700001"
+                }
+              ],
+              "label": "Moli"
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        }
+      ],
+      "expected_test_commands": 3,
+      "failed_groups": {},
+      "groups": [
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 1390831,
+          "allocator_peak_bytes": 1618820,
+          "commands_rejected": 0,
+          "commands_seen": 1,
+          "commands_simulated": 1,
+          "dropped_incoming_events": 0,
+          "group": "tahoma",
+          "module_count": 1,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 11,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 3,
+                "codes": 11,
+                "entry_bytes": 110,
+                "entry_capacity_bytes": 110,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 366,
+                "owned_capacity_bytes": 427,
+                "packed_bytes": 61,
+                "packed_capacity_bytes": 61,
+                "shared_tables": 0,
+                "snapshot_bytes": 780
+              },
+              "devices": 6,
+              "free_text_utf8_bytes": 0,
+              "kind": "tahoma",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "tahoma",
+              "observed_slots": 4,
+              "points": 8,
+              "processing_calls": 7,
+              "processing_mean_ns": 16714,
+              "value_container_bytes": 96
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        },
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 1387165,
+          "allocator_peak_bytes": 1569123,
+          "commands_rejected": 0,
+          "commands_seen": 1,
+          "commands_simulated": 1,
+          "dropped_incoming_events": 0,
+          "group": "ariston",
+          "module_count": 1,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 2,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 1,
+                "codes": 2,
+                "entry_bytes": 20,
+                "entry_capacity_bytes": 20,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 148,
+                "owned_capacity_bytes": 163,
+                "packed_bytes": 15,
+                "packed_capacity_bytes": 15,
+                "shared_tables": 0,
+                "snapshot_bytes": 198
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 0,
+              "kind": "ariston",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "ariston",
+              "observed_slots": 13,
+              "points": 13,
+              "processing_calls": 7,
+              "processing_mean_ns": 28535,
+              "value_container_bytes": 312
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        },
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 164715,
+          "allocator_peak_bytes": 180948,
+          "commands_rejected": 0,
+          "commands_seen": 0,
+          "commands_simulated": 0,
+          "dropped_incoming_events": 0,
+          "group": "weather",
+          "module_count": 1,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 38,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 2,
+                "codes": 38,
+                "entry_bytes": 380,
+                "entry_capacity_bytes": 380,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 572,
+                "owned_capacity_bytes": 729,
+                "packed_bytes": 157,
+                "packed_capacity_bytes": 157,
+                "shared_tables": 0,
+                "snapshot_bytes": 2262
+              },
+              "devices": 2,
+              "free_text_utf8_bytes": 0,
+              "kind": "weather",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "weather",
+              "observed_slots": 38,
+              "points": 38,
+              "processing_calls": 8,
+              "processing_mean_ns": 55458,
+              "value_container_bytes": 912
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        },
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 141335,
+          "allocator_peak_bytes": 142684,
+          "commands_rejected": 0,
+          "commands_seen": 1,
+          "commands_simulated": 1,
+          "dropped_incoming_events": 0,
+          "group": "apple-tv",
+          "module_count": 1,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 11,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 4,
+                "codes": 11,
+                "entry_bytes": 110,
+                "entry_capacity_bytes": 110,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 430,
+                "owned_capacity_bytes": 639,
+                "packed_bytes": 209,
+                "packed_capacity_bytes": 209,
+                "shared_tables": 0,
+                "snapshot_bytes": 945
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 43,
+              "kind": "apple-tv",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "apple-tv",
+              "observed_slots": 11,
+              "points": 13,
+              "processing_calls": 7,
+              "processing_mean_ns": 23315,
+              "value_container_bytes": 264
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        }
+      ],
+      "initial_observed_points": 66,
+      "initial_semantic_digest": "54c2276b9ca50092db9b8972f8cd1263f4e1f3618bb4cc2452b2addb17c1eaeb",
+      "messages": 189,
+      "mode": "isolated",
+      "module_groups": 4,
+      "observed_points_end": 66,
+      "physical_commands": 0,
+      "resources": {
+        "apple-tv": {
+          "cpu_percent_one_core": 0.0,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 3375104,
+          "samples": 24
+        },
+        "ariston": {
+          "cpu_percent_one_core": 0.0,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 6045696,
+          "samples": 24
+        },
+        "supervisor-broker-observer": {
+          "cpu_percent_one_core": 1.9361314914625845,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 4767744,
+          "samples": 24
+        },
+        "tahoma": {
+          "cpu_percent_one_core": 0.0,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 6045696,
+          "samples": 24
+        },
+        "weather": {
+          "cpu_percent_one_core": 0.0,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 3620864,
+          "samples": 24
+        }
+      },
+      "scope": "fixture-based modular MQTT host; native codecs, no API connection or physical executor; RSS is per process; no cross-process mmap",
+      "simulated_commands": 3,
+      "total_processes": 5,
+      "status": "PASS",
+      "case": "isolated"
+    },
+    {
+      "active_modules": 0,
+      "broker_started": false,
+      "child_processes": 0,
+      "mode": "isolated",
+      "module_groups": 0,
+      "physical_commands": 0,
+      "status": "PASS",
+      "case": "disabled"
+    },
+    {
+      "active_modules": 5,
+      "all_modules_offline_after_shutdown": true,
+      "availability_before_shutdown": {
+        "apple-tv": true,
+        "ariston": true,
+        "music": true,
+        "tahoma": true,
+        "weather": true
+      },
+      "broker": {
+        "clients": 1,
+        "description_disk_bytes": 0,
+        "description_ram_bytes": 21344,
+        "description_storage": "memory",
+        "retained_payload_bytes": 36477,
+        "retained_topics": 84
+      },
+      "child_processes": 2,
+      "command_results": [
+        {
+          "module": "ariston",
+          "request_id": "probe-1",
+          "result": {
+            "native": {
+              "action": "switch",
+              "body": true,
+              "gateway": "A1B2C3D4E5F6"
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "tahoma",
+          "request_id": "probe-3",
+          "result": {
+            "native": {
+              "actions": [
+                {
+                  "commands": [
+                    {
+                      "name": "open",
+                      "parameters": []
+                    }
+                  ],
+                  "deviceURL": "rts://1234-5678-9012/16700001"
+                }
+              ],
+              "label": "Moli"
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "apple-tv",
+          "request_id": "probe-0",
+          "result": {
+            "native": {
+              "operation": "set_volume",
+              "volume": 1.0
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        },
+        {
+          "module": "music",
+          "request_id": "probe-2",
+          "result": {
+            "native": {
+              "operation": {
+                "index": 0,
+                "operation": "play"
+              },
+              "output": "null",
+              "physical_sent": false
+            },
+            "sent": false,
+            "state_confirmed": false,
+            "status": "simulated"
+          }
+        }
+      ],
+      "expected_test_commands": 4,
+      "failed_groups": {},
+      "groups": [
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 1443806,
+          "allocator_peak_bytes": 1619105,
+          "commands_rejected": 0,
+          "commands_seen": 2,
+          "commands_simulated": 2,
+          "dropped_incoming_events": 0,
+          "group": "comfort",
+          "module_count": 3,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 11,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 3,
+                "codes": 11,
+                "entry_bytes": 110,
+                "entry_capacity_bytes": 110,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 366,
+                "owned_capacity_bytes": 427,
+                "packed_bytes": 61,
+                "packed_capacity_bytes": 61,
+                "shared_tables": 0,
+                "snapshot_bytes": 780
+              },
+              "devices": 6,
+              "free_text_utf8_bytes": 0,
+              "kind": "tahoma",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "tahoma",
+              "observed_slots": 4,
+              "points": 8,
+              "processing_calls": 7,
+              "processing_mean_ns": 22393,
+              "value_container_bytes": 96
+            },
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 2,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 1,
+                "codes": 2,
+                "entry_bytes": 20,
+                "entry_capacity_bytes": 20,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 148,
+                "owned_capacity_bytes": 163,
+                "packed_bytes": 15,
+                "packed_capacity_bytes": 15,
+                "shared_tables": 0,
+                "snapshot_bytes": 198
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 0,
+              "kind": "ariston",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "ariston",
+              "observed_slots": 13,
+              "points": 13,
+              "processing_calls": 7,
+              "processing_mean_ns": 17982,
+              "value_container_bytes": 312
+            },
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 38,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 2,
+                "codes": 38,
+                "entry_bytes": 380,
+                "entry_capacity_bytes": 380,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 572,
+                "owned_capacity_bytes": 729,
+                "packed_bytes": 157,
+                "packed_capacity_bytes": 157,
+                "shared_tables": 0,
+                "snapshot_bytes": 2262
+              },
+              "devices": 2,
+              "free_text_utf8_bytes": 0,
+              "kind": "weather",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "weather",
+              "observed_slots": 38,
+              "points": 38,
+              "processing_calls": 7,
+              "processing_mean_ns": 29393,
+              "value_container_bytes": 912
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        },
+        {
+          "allocation_scope": "whole process, including shared resources; not a per-module RSS",
+          "allocator_live_bytes": 241448,
+          "allocator_peak_bytes": 291473,
+          "commands_rejected": 0,
+          "commands_seen": 2,
+          "commands_simulated": 2,
+          "dropped_incoming_events": 0,
+          "group": "media",
+          "module_count": 2,
+          "modules": [
+            {
+              "adapter": null,
+              "catalogue": {
+                "active_choices": 11,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 4,
+                "codes": 11,
+                "entry_bytes": 110,
+                "entry_capacity_bytes": 110,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 430,
+                "owned_capacity_bytes": 639,
+                "packed_bytes": 209,
+                "packed_capacity_bytes": 209,
+                "shared_tables": 0,
+                "snapshot_bytes": 945
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 43,
+              "kind": "apple-tv",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "apple-tv",
+              "observed_slots": 11,
+              "points": 13,
+              "processing_calls": 8,
+              "processing_mean_ns": 32510,
+              "value_container_bytes": 264
+            },
+            {
+              "adapter": {
+                "output": "null",
+                "pcm_on_mqtt": false,
+                "physical_outputs": 0,
+                "rendered_frames": 5824,
+                "samples": 11648
+              },
+              "catalogue": {
+                "active_choices": 10,
+                "catalogue_capacity": 4,
+                "catalogue_struct_bytes": 64,
+                "catalogues": 2,
+                "codes": 10,
+                "entry_bytes": 100,
+                "entry_capacity_bytes": 100,
+                "entry_struct_bytes": 10,
+                "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                "overhead_bytes": 292,
+                "owned_capacity_bytes": 353,
+                "packed_bytes": 61,
+                "packed_capacity_bytes": 61,
+                "shared_tables": 0,
+                "snapshot_bytes": 707
+              },
+              "devices": 1,
+              "free_text_utf8_bytes": 6,
+              "kind": "music",
+              "measurement": "logical counters and wall processing time; not per-module RSS or total heap",
+              "module": "music",
+              "observed_slots": 8,
+              "points": 10,
+              "processing_calls": 8,
+              "processing_mean_ns": 75390,
+              "value_container_bytes": 192
+            }
+          ],
+          "physical_commands": 0,
+          "shared_mqtt_connections": 1
+        }
+      ],
+      "initial_observed_points": 74,
+      "initial_semantic_digest": "9e6a08a3335cd156235300c6bc4396613a1e9091a467df5010d28f38935609d2",
+      "messages": 213,
+      "mode": "grouped",
+      "module_groups": 2,
+      "observed_points_end": 74,
+      "physical_commands": 0,
+      "resources": {
+        "comfort": {
+          "cpu_percent_one_core": 0.19812277187725513,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 6340608,
+          "samples": 24
+        },
+        "media": {
+          "cpu_percent_one_core": 0.19812277187725513,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 3702784,
+          "samples": 24
+        },
+        "supervisor-broker-observer": {
+          "cpu_percent_one_core": 1.1887366312635308,
+          "cpu_scope": "process over shared observation window; failed processes have shorter windows",
+          "rss_peak_sampled_bytes": 4816896,
+          "samples": 24
+        }
+      },
+      "scope": "fixture-based modular MQTT host; native codecs, no API connection or physical executor; RSS is per process; no cross-process mmap",
+      "simulated_commands": 4,
+      "total_processes": 3,
+      "status": "PASS",
+      "case": "with-music"
+    }
+  ],
+  "master_tests": {
+    "merged": {
+      "status": "PASS",
+      "first_health": {
+        "alive": true,
+        "phase": "ready",
+        "ready": true
+      },
+      "before": {
+        "error": null,
+        "groups": [
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "merged",
+            "last_heartbeat_ms": 1012,
+            "modules": [
+              "tahoma",
+              "ariston",
+              "weather",
+              "apple-tv"
+            ],
+            "phase": "running",
+            "role": "broker-and-modules",
+            "rss_bytes": 6553600,
+            "rss_peak_bytes": 6553600
+          }
+        ],
+        "master_rss_bytes": 2637824,
+        "phase": "ready",
+        "ready": true,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "after_fault": null,
+      "final": {
+        "phase": "stopped",
+        "ready": false,
+        "groups": [
+          {
+            "id": "merged",
+            "modules": [
+              "tahoma",
+              "ariston",
+              "weather",
+              "apple-tv"
+            ],
+            "role": "broker-and-modules",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 6553600,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          }
+        ],
+        "error": null,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "master_rss_bytes": 2637824,
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "stop_seconds": 0.0008014589984668419,
+      "owned_children_gone": true
+    },
+    "grouped": {
+      "status": "PASS",
+      "first_health": {
+        "alive": true,
+        "phase": "loading",
+        "ready": false
+      },
+      "before": {
+        "error": null,
+        "groups": [
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "transport",
+            "last_heartbeat_ms": 1019,
+            "modules": [],
+            "phase": "running",
+            "role": "broker",
+            "rss_bytes": 3014656,
+            "rss_peak_bytes": 3014656
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "comfort",
+            "last_heartbeat_ms": 1027,
+            "modules": [
+              "tahoma",
+              "ariston",
+              "weather"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 6307840,
+            "rss_peak_bytes": 6307840
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "media",
+            "last_heartbeat_ms": 1027,
+            "modules": [
+              "apple-tv"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 3342336,
+            "rss_peak_bytes": 3342336
+          }
+        ],
+        "master_rss_bytes": 2719744,
+        "phase": "ready",
+        "ready": true,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "after_fault": null,
+      "final": {
+        "phase": "stopped",
+        "ready": false,
+        "groups": [
+          {
+            "id": "transport",
+            "modules": [],
+            "role": "broker",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 3014656,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          },
+          {
+            "id": "comfort",
+            "modules": [
+              "tahoma",
+              "ariston",
+              "weather"
+            ],
+            "role": "modules",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 6307840,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          },
+          {
+            "id": "media",
+            "modules": [
+              "apple-tv"
+            ],
+            "role": "modules",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 3342336,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          }
+        ],
+        "error": null,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "master_rss_bytes": 2719744,
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "stop_seconds": 0.0008119580015772954,
+      "owned_children_gone": true
+    },
+    "isolated-fault": {
+      "status": "PASS",
+      "first_health": {
+        "alive": true,
+        "phase": "loading",
+        "ready": false
+      },
+      "before": {
+        "error": null,
+        "groups": [
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "transport",
+            "last_heartbeat_ms": 1017,
+            "modules": [],
+            "phase": "running",
+            "role": "broker",
+            "rss_bytes": 3080192,
+            "rss_peak_bytes": 3080192
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "tahoma",
+            "last_heartbeat_ms": 1017,
+            "modules": [
+              "tahoma"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 6029312,
+            "rss_peak_bytes": 6029312
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "ariston",
+            "last_heartbeat_ms": 1017,
+            "modules": [
+              "ariston"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 6012928,
+            "rss_peak_bytes": 6012928
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "weather",
+            "last_heartbeat_ms": 1017,
+            "modules": [
+              "weather"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 3538944,
+            "rss_peak_bytes": 3538944
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "apple-tv",
+            "last_heartbeat_ms": 1017,
+            "modules": [
+              "apple-tv"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 3342336,
+            "rss_peak_bytes": 3342336
+          }
+        ],
+        "master_rss_bytes": 2850816,
+        "phase": "ready",
+        "ready": true,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "after_fault": {
+        "error": null,
+        "groups": [
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "transport",
+            "last_heartbeat_ms": 2006,
+            "modules": [],
+            "phase": "running",
+            "role": "broker",
+            "rss_bytes": 3096576,
+            "rss_peak_bytes": 3096576
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "tahoma",
+            "last_heartbeat_ms": 2019,
+            "modules": [
+              "tahoma"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 6045696,
+            "rss_peak_bytes": 6045696
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "ariston",
+            "last_heartbeat_ms": 2019,
+            "modules": [
+              "ariston"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 6029312,
+            "rss_peak_bytes": 6029312
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "weather",
+            "last_heartbeat_ms": 2019,
+            "modules": [
+              "weather"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 3555328,
+            "rss_peak_bytes": 3555328
+          },
+          {
+            "cpu_percent_one_core": null,
+            "exit_code": null,
+            "host_reports_ready": false,
+            "id": "apple-tv",
+            "last_heartbeat_ms": 1017,
+            "modules": [
+              "apple-tv"
+            ],
+            "phase": "failed",
+            "role": "modules",
+            "rss_bytes": null,
+            "rss_peak_bytes": 3342336
+          }
+        ],
+        "master_rss_bytes": 2965504,
+        "phase": "degraded",
+        "ready": false,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "final": {
+        "phase": "stopped",
+        "ready": false,
+        "groups": [
+          {
+            "id": "transport",
+            "modules": [],
+            "role": "broker",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 3096576,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          },
+          {
+            "id": "tahoma",
+            "modules": [
+              "tahoma"
+            ],
+            "role": "modules",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 6045696,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          },
+          {
+            "id": "ariston",
+            "modules": [
+              "ariston"
+            ],
+            "role": "modules",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 6029312,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          },
+          {
+            "id": "weather",
+            "modules": [
+              "weather"
+            ],
+            "role": "modules",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 3555328,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          },
+          {
+            "id": "apple-tv",
+            "modules": [
+              "apple-tv"
+            ],
+            "role": "modules",
+            "phase": "failed",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 3342336,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          }
+        ],
+        "error": null,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "master_rss_bytes": 2965504,
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "stop_seconds": 0.001675084000453353,
+      "owned_children_gone": true
+    },
+    "disabled": {
+      "status": "PASS",
+      "first_health": {
+        "alive": true,
+        "phase": "loading",
+        "ready": false
+      },
+      "before": {
+        "error": null,
+        "groups": [],
+        "master_rss_bytes": 2605056,
+        "phase": "ready",
+        "ready": true,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "after_fault": null,
+      "final": {
+        "phase": "stopped",
+        "ready": false,
+        "groups": [],
+        "error": null,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "master_rss_bytes": 2605056,
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "stop_seconds": 0.0005235410062596202,
+      "owned_children_gone": true
+    },
+    "with-music": {
+      "status": "PASS",
+      "first_health": {
+        "alive": true,
+        "phase": "loading",
+        "ready": false
+      },
+      "before": {
+        "error": null,
+        "groups": [
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "transport",
+            "last_heartbeat_ms": 1017,
+            "modules": [],
+            "phase": "running",
+            "role": "broker",
+            "rss_bytes": 3047424,
+            "rss_peak_bytes": 3047424
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "comfort",
+            "last_heartbeat_ms": 1017,
+            "modules": [
+              "tahoma",
+              "ariston",
+              "weather"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 6356992,
+            "rss_peak_bytes": 6356992
+          },
+          {
+            "cpu_percent_one_core": 0.0,
+            "exit_code": null,
+            "host_reports_ready": true,
+            "id": "media",
+            "last_heartbeat_ms": 1017,
+            "modules": [
+              "apple-tv",
+              "music"
+            ],
+            "phase": "running",
+            "role": "modules",
+            "rss_bytes": 3457024,
+            "rss_peak_bytes": 3457024
+          }
+        ],
+        "master_rss_bytes": 2736128,
+        "phase": "ready",
+        "ready": true,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "after_fault": null,
+      "final": {
+        "phase": "stopped",
+        "ready": false,
+        "groups": [
+          {
+            "id": "transport",
+            "modules": [],
+            "role": "broker",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 3047424,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          },
+          {
+            "id": "comfort",
+            "modules": [
+              "tahoma",
+              "ariston",
+              "weather"
+            ],
+            "role": "modules",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 6356992,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          },
+          {
+            "id": "media",
+            "modules": [
+              "apple-tv",
+              "music"
+            ],
+            "role": "modules",
+            "phase": "stopped",
+            "host_reports_ready": false,
+            "last_heartbeat_ms": null,
+            "rss_bytes": null,
+            "rss_peak_bytes": 3457024,
+            "cpu_percent_one_core": null,
+            "exit_code": null
+          }
+        ],
+        "error": null,
+        "startup_order": [
+          "http_bound",
+          "planner_started",
+          "hosts_started"
+        ],
+        "master_rss_bytes": 2736128,
+        "surface": "loopback HTTP GET health/status; bounded connections; no business, MQTT, audio or write API"
+      },
+      "stop_seconds": 0.0014848749997327104,
+      "owned_children_gone": true
+    },
+    "invalid-config": {
+      "status": "PASS",
+      "health_survives_invalid_configuration": true
+    },
+    "closed-stdout-planner": {
+      "status": "PASS",
+      "fixture": "closed-stdout-planner",
+      "cancel_during_startup": false,
+      "health_stays_available": true,
+      "owned_children_gone": true,
+      "stop_seconds": 0.00971758300147485,
+      "error_reported": "startup_or_supervision_failed"
+    },
+    "heartbeat-without-ready": {
+      "status": "PASS",
+      "fixture": "heartbeat-without-ready",
+      "cancel_during_startup": false,
+      "health_stays_available": true,
+      "owned_children_gone": true,
+      "stop_seconds": 0.006495084002381191,
+      "error_reported": "startup_or_supervision_failed"
+    },
+    "closed-stdout-planner-cancel": {
+      "status": "PASS",
+      "fixture": "closed-stdout-planner",
+      "cancel_during_startup": true,
+      "health_stays_available": true,
+      "owned_children_gone": true,
+      "stop_seconds": 0.00460979099443648,
+      "error_reported": null
+    }
+  },
+  "binaries": {
+    "host": {
+      "bytes": 3265728,
+      "sha256": "c985522030038ed8d064353cfe3201aa998860060ae2243c89efc4a311e0bb9c"
+    },
+    "master": {
+      "bytes": 1155136,
+      "sha256": "75a712bb09a1822f603ba5252c122ac4c81ed7a138c56b86920288616a933dac"
+    }
+  },
+  "checks": {
+    "fmt": {
+      "status": "PASS",
+      "command": [
+        "cargo",
+        "fmt",
+        "--manifest-path",
+        "tools/module-host-poc/Cargo.toml",
+        "--",
+        "--check"
+      ],
+      "tests_passed": 0
+    },
+    "clippy": {
+      "status": "PASS",
+      "command": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "--manifest-path",
+        "tools/module-host-poc/Cargo.toml",
+        "--all-targets",
+        "-j2",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "tests_passed": 0
+    },
+    "module_tests": {
+      "status": "PASS",
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--manifest-path",
+        "tools/module-host-poc/Cargo.toml",
+        "-j2"
+      ],
+      "tests_passed": 46
+    },
+    "native_model_tests": {
+      "status": "PASS",
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--manifest-path",
+        "Cargo.toml",
+        "-p",
+        "moli-ariston",
+        "-p",
+        "moli-overkiz",
+        "--lib",
+        "-j2"
+      ],
+      "tests_passed": 81
+    }
+  },
+  "master_business_symbols_absent": true,
+  "semantic_parity": true,
+  "validated_at": "2026-10-27T16:21:28.876356+00:00"
+}

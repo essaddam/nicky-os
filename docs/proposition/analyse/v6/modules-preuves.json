@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "generated_at": "2026-10-27T16:24:51.542272+00:00",
+  "base_git": "a83589366f67d6b8273a10ad41658d688e498fda",
+  "scope": "isolated standalone module and master prototype; fixtures only; no physical command or new production startup",
+  "validated_at": "2026-10-27T16:21:28.876356+00:00",
+  "checks": {
+    "fmt": {
+      "status": "PASS",
+      "command": [
+        "cargo",
+        "fmt",
+        "--manifest-path",
+        "tools/module-host-poc/Cargo.toml",
+        "--",
+        "--check"
+      ],
+      "tests_passed": 0
+    },
+    "clippy": {
+      "status": "PASS",
+      "command": [
+        "cargo",
+        "clippy",
+        "--offline",
+        "--manifest-path",
+        "tools/module-host-poc/Cargo.toml",
+        "--all-targets",
+        "-j2",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "tests_passed": 0
+    },
+    "module_tests": {
+      "status": "PASS",
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--manifest-path",
+        "tools/module-host-poc/Cargo.toml",
+        "-j2"
+      ],
+      "tests_passed": 46
+    },
+    "native_model_tests": {
+      "status": "PASS",
+      "command": [
+        "cargo",
+        "test",
+        "--offline",
+        "--manifest-path",
+        "Cargo.toml",
+        "-p",
+        "moli-ariston",
+        "-p",
+        "moli-overkiz",
+        "--lib",
+        "-j2"
+      ],
+      "tests_passed": 81
+    }
+  },
+  "runtime_cases": {
+    "merged": "PASS",
+    "grouped": "PASS",
+    "isolated": "PASS",
+    "disabled": "PASS",
+    "with-music": "PASS"
+  },
+  "master_cases": {
+    "merged": "PASS",
+    "grouped": "PASS",
+    "isolated-fault": "PASS",
+    "disabled": "PASS",
+    "with-music": "PASS",
+    "invalid-config": "PASS",
+    "closed-stdout-planner": "PASS",
+    "heartbeat-without-ready": "PASS",
+    "closed-stdout-planner-cancel": "PASS"
+  },
+  "regressions_reproduced_before_fix": [
+    {
+      "test": "runtime::contract_tests::maximum_merged_group_boots_without_blocking_the_mqtt_pump",
+      "before": {
+        "exit_code": 101,
+        "message": "MQTT initialization deadlocked: Elapsed(())",
+        "timeout_seconds": 6
+      },
+      "after": "PASS; 32 modules and 1216 observed slots"
+    },
+    {
+      "test": "runtime::contract_tests::new_generation_discards_old_values_and_availability",
+      "before": {
+        "exit_code": 101,
+        "message": "assertion failed: audit.current.is_empty()"
+      },
+      "after": "PASS; old generation values and availability discarded"
+    }
+  ],
+  "music_t0": {
+    "manifest": "tools/music-engine-poc/results.json",
+    "source_hashes_match_accepted_manifest": true,
+    "root_reran_check_sh": true,
+    "tests_passed": 21,
+    "demo": {
+      "sources": 2,
+      "sample_rate": 48000,
+      "channels": 2,
+      "frames_per_output": 9600,
+      "samples_per_output": 19200,
+      "max_observed_block_frames": 997,
+      "wav_file_bytes": 38444,
+      "pcm_sha256": "95b7ed2b458f3c650472c371690c9f9f75f0974b42a483b984998ac0382dbb91",
+      "null_and_wav_match": true
+    },
+    "mqtt_adapter_result": {
+      "output": "null",
+      "pcm_on_mqtt": false,
+      "physical_outputs": 0,
+      "rendered_frames": 5824,
+      "samples": 11648
+    },
+    "full_music_engine": false
+  },
+  "report_browser": {
+    "surface": "Chrome through AgentsRoom extension",
+    "desktop_width": 1440,
+    "mobile_width": 390,
+    "document_width_matches_viewport": true,
+    "sections": 6,
+    "missing_internal_anchors": 0,
+    "table_scroll_containers": true,
+    "viewport_reset": true
+  },
+  "privacy_check": {
+    "command": "sh scripts/leak-check.sh",
+    "generic_patterns": "PASS",
+    "private_denylist_available": false
+  },
+  "limits": [
+    "No physical/API transport for fixtures",
+    "No production guard integration",
+    "No OS container, cgroup, cross-process shared memory, hot reload or automatic restart",
+    "Master telemetry HTTP only; abrupt module death does not yet invalidate MQTT device state",
+    "RSS sums count shared pages more than once; peaks not necessarily simultaneous; ps measurement CPU excluded",
+    "No production Linux/musl or Music Assistant feature parity qualification"
+  ],
+  "sha256": {
+    "crates/moli-ariston/src/lib.rs": "1ad28005a92c4b5c69f370d1f719b3d363dd96736538f2f12777e0af64b37bd0",
+    "crates/moli-ariston/src/model.rs": "5b4d376bb232d38980fc60b550a1aa0524a3fb509a3099c21759dc8067c4e91f",
+    "crates/moli-automation/src/sun.rs": "c80f561c1f675712cd31c603d901ea67303741ea081802c7ca827a70812f25f0",
+    "crates/moli-core/src/lib.rs": "48c8dbd9f4b74650f5d0c2e9f01c1b8e1fb664dd341f8647781f0bebed278af2",
+    "crates/moli-core/src/spec.rs": "bd2ed6bda235d23911c635ec6c01986d8329f939536639b382efe5bd81fb1846",
+    "crates/moli-core/src/value.rs": "e675b8a62e8c3fd2254063f240ac874ba99823ff89d2aa4abad6089df45e1f83",
+    "crates/moli-overkiz/src/lib.rs": "4b00fe07a9ba10594bb1a5ae07385134858a115b7e41067c95d96fe1b3a5d22e",
+    "crates/moli-overkiz/src/model.rs": "fbd0e24c1ec04405ba616efd76c9872149180996a9da90f01961be47f670870b",
+    "docs/proposition/analyse/v6/modules-resultats.json": "8b8e7785d8db06c572e46a8b19f97949dbcc90612e9659742b3edd0f0e42ed63",
+    "docs/proposition/analyse/v6/modules.html": "5a0e0a6cb89b0a84c27cc202d4ba94592ce4d1824024d011ff3c1491a4555639",
+    "docs/proposition/analyse/v6/sources-solaire.md": "32316b5187de81f6c5d4b61b12c5b122b11cbc4dfe5a6221955c92554087e5ad",
+    "tools/module-host-poc/.gitignore": "337613937fda3acd2ba7834aa3e1b1eacfe04c9cafb336dfd6dfb7b6827d8f3e",
+    "tools/module-host-poc/Cargo.lock": "5ebac6c642faa362dc7d8f41d451d70de322acd4a202d7673b200c8f3c4ec275",
+    "tools/module-host-poc/Cargo.toml": "aea8f14a851f286596a2882f35222e02d8cf0d0c1bccc5bcd781a7c3c37b75a5",
+    "tools/module-host-poc/README.md": "593412f1d8aec8068baf6d890940acce440c4839de3f2094d6c0c1c72254a363",
+    "tools/module-host-poc/examples/continuous.toml": "5a329b45743c414c78d3ce8daf9cb1637be5e891483c5bc4a1f4f3da2bcef35d",
+    "tools/module-host-poc/examples/disabled.toml": "24677a9d57918266616ac47243394400fdee7de4f7b46b4406c14fe68229f724",
+    "tools/module-host-poc/examples/grouped.toml": "a2ac62f2449fdef1af41def24474950ea67353ed34a64353039bc47daad4876d",
+    "tools/module-host-poc/examples/isolated.toml": "2dc3e07309c005437e71cf90de0c050ff425e5e6765b70617f1b92aad998ee4b",
+    "tools/module-host-poc/examples/merged.toml": "cc2e7208d87105ba0765d369895f038f6acca79026e2a1580d41b2a75e716d55",
+    "tools/module-host-poc/examples/with-music.toml": "6006f16dd176cc6765a3987286092c0473db00425e27341a48b4eb1d98b1ccd2",
+    "tools/module-host-poc/render-report.py": "320967a27648df6b1f4319921b012694fe20203ec46f1d1c6cbef128d8e3038d",
+    "tools/module-host-poc/run-poc.py": "5bd79ab1092701e82c3edd08ae6035e8427943358c3be5f18ecd741d23a8e3da",
+    "tools/module-host-poc/src/adapter.rs": "9869a01de8a14109ce6bef7cb4a9645ec833f15acf79322a3608992b3d25dcd4",
+    "tools/module-host-poc/src/apple_tv.rs": "9b2c645e684fdd0810c9e573f85c28c00d69a26d877ba2b0b61852ca4ba170ff",
+    "tools/module-host-poc/src/layout.rs": "c50da7f30f999176ccc0aacea161b7cab27c049505aedb4b5b5e40bd6a8ff75f",
+    "tools/module-host-poc/src/main.rs": "a99663fbb1431e32cda32d75dbe34b929ff23ef770c5ca7a04a3361ca6925b99",
+    "tools/module-host-poc/src/master.rs": "408d4aa599652ca8d8528d2df4106dadbc55e32198f118ecb42280d5114b003f",
+    "tools/module-host-poc/src/module.rs": "849a44bd7511fa13f7f8639cfaf155f89aea1f6a39536768fda1104ceffea21d",
+    "tools/module-host-poc/src/music.rs": "bcf8911185ae8cfb3af1978542a75868408148fb3e52b76eeada8bb72d32f6e3",
+    "tools/module-host-poc/src/native.rs": "3f4a9f3520517be5e6d4e4474597384fb4bc2942dcedb343bd6f4f99b3750d5e",
+    "tools/module-host-poc/src/runtime.rs": "81d07b9dda62095fefacc41ee1cd07d7980e1c2effdcd8ee136fe834a0cb1865",
+    "tools/module-host-poc/src/weather.rs": "996c9ecc25d8d4910be7d03d133a226fc500b2262757ea7732d03e40eef126ff",
+    "tools/moteur-integre-banc/src/memory.rs": "3f7062ab7277089a4787c4a0b12d65983170689b935a2c21a1d241fe432d1607",
+    "tools/mqtt-live-probe/src/enum_catalogue.rs": "79facf568d4489cb0b398032cc91f50e7622cfbaffe52d6676ce8ef72a8b9168",
+    "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": "91c171e816498fa7d33bc891666973d8e5a8f0faf3677c4e9ba02df6f6b73661"
+  },
+  "publication_whitespace_normalization": {
+    "reason": "Trailing spaces and extra empty lines removed for git diff --check; no semantic change.",
+    "files": {
+      "tools/module-host-poc/examples/disabled.toml": {
+        "validated_sha256": "875913029be298338a16834fe8a29f81f83348dcf42414692382aaaa93a119af",
+        "publication_sha256": "24677a9d57918266616ac47243394400fdee7de4f7b46b4406c14fe68229f724"
+      },
+      "tools/module-host-poc/examples/isolated.toml": {
+        "validated_sha256": "87d7138ab7de28778650a7bd0bf879b8137e36242c311ea20e642c5cddfb9f6e",
+        "publication_sha256": "2dc3e07309c005437e71cf90de0c050ff425e5e6765b70617f1b92aad998ee4b"
+      },
+      "tools/module-host-poc/examples/merged.toml": {
+        "validated_sha256": "9d0a81f38df3220d3220c676290da31e55d471595dd62ec0053cf8603b2d6796",
+        "publication_sha256": "cc2e7208d87105ba0765d369895f038f6acca79026e2a1580d41b2a75e716d55"
+      }
+    }
+  }
+}

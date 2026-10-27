@@ -1,0 +1,30 @@
+mode = "grouped"
+seconds = 5
+
+[[modules]]
+id = "tahoma"
+kind = "tahoma"
+
+[[modules]]
+id = "ariston"
+kind = "ariston"
+
+[[modules]]
+id = "weather"
+kind = "weather"
+
+[[modules]]
+id = "apple-tv"
+kind = "apple-tv"
+
+[[modules]]
+id = "music"
+kind = "music"
+
+[[groups]]
+id = "comfort"
+modules = ["tahoma", "ariston", "weather"]
+
+[[groups]]
+id = "media"
+modules = ["apple-tv", "music"]

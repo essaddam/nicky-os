@@ -780,6 +780,7 @@ fn words(v: &Value) -> String {
         Value::Bool(b) => yes_no(*b),
         Value::Float(f) => decimal(&format!("{}", (f * 10.0).round() / 10.0)),
         Value::Int(i) => i.to_string(),
+        Value::EnumCode(code) => format!("enum_code:{code}"),
         Value::Text(t) => t.to_string(),
         Value::Null => "—".into(),
     }

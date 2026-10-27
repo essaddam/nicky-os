@@ -12,8 +12,8 @@ aucune logique d'appareil (c'est le rôle des [pilotes](pilotes.md)) et aucun LL
 | `DeviceId` | `<instance>:<identifiant natif stable>` (`z2m:0x00158d…`, `hue:<uuid>`, `tuya:<devid>`). **Jamais dérivé d'un nom.** |
 | `PointId` | `<device>/<clé>` (`hue:<uuid>/on`) : une valeur d'un appareil |
 | `Device` | nom natif, fabricant, modèle, pièce native, membres (groupes Hue), `points` |
-| `PointSpec` | clé, libellé, `kind` (`binary` / `numeric{min,max,step}` / `enum{values}` / `text`), accès lecture/écriture, unité, sémantique (`on_off`, `brightness`, `power`…) |
-| `Value` | `Null`, `Bool`, `Int`, `Float`, `Text` ; `validate(kind, value)` refuse ce qui ne colle pas |
+| `PointSpec` | clé, libellé, `kind` (`binary` / `numeric{min,max,step}` / `enum{values}` / `enum_code{catalogue,version,codes}` / `text`), accès lecture/écriture, unité, sémantique (`on_off`, `brightness`, `power`…) |
+| `Value` | `Null`, `Bool`, `Int`, `Float`, `Text`, `EnumCode(u8)` ; `validate(kind, value)` refuse ce qui ne colle pas |
 | `Label` | nom et pièce choisis par l'humain : **une étiquette ne change jamais une identité** |
 | `Event` | `device_upserted`, `device_removed`, `state`, `availability`, `driver_status`, `label_changed`, `journal`, `approval_requested`, `approval_resolved`, `notice` |
 | `Origin` | `ui`, `api`, `mcp`, `cli`, `system`, `assistant`, `automation` : par où arrive une action |
@@ -24,6 +24,27 @@ ambiante garde sa sémantique physique (`temperature`, `humidity`…), même si 
 d'un équipement réseau. `diagnostic` ne se déduit jamais d'une clé ou d'une unité ; le
 pilote ou le profil doit la déclarer. Les symboles de trafic `B`, `B/s`, `Mbit/s` restent
 des `Unit::Other` et ne sont jamais des compteurs d'énergie.
+
+### Sélections énumérées codées
+
+`Kind::EnumCode` porte une référence de catalogue, sa version et un masque de
+256 codes autorisés (32 octets fixes, sans allocation). `Value::EnumCode(u8)`
+conserve la sélection sans chaîne et sans vue numérique : `as_f64()` retourne
+`None`. Les catalogues natifs et leurs libellés restent à la frontière du
+système, dans l’adaptateur et la description initiale. `Kind::Enum` demeure
+compatible avec les pilotes historiques qui utilisent des valeurs textuelles.
+
+Le code est sérialisé comme un entier JSON. Le lecteur générique garde cet
+entier comme `Int` ; seule la validation contre un schéma `EnumCode` peut le
+convertir en sélection typée. Une chaîne « 1 » n’est jamais convertie en code
+par le cœur. Les anciens états mis en cache sans référence de catalogue ne
+sont pas restaurés pour ce type. Un changement de référence ou de masque
+invalide la sélection courante jusqu’au prochain état validé.
+
+L’enveloppe `Value` reste de 24 octets et `Sample` de 32 octets sur la plateforme
+64 bits mesurée : le code utilise un octet, sans prétendre ramener tout le
+sample à un octet. L’historique utilise une catégorie distincte pour les codes ;
+ils sont exclus des moyennes, extrema et autres calculs numériques.
 
 ## `moli-runtime` : le hub
 

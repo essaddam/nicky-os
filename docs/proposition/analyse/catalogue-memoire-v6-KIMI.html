@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Moli — V6-KIMI : une mémoire, quatre flux, des preuves</title>
+<style>
+:root{--paper:#f3f0e7;--paper2:#fbfaf4;--ink:#18332d;--muted:#5c6e66;--forest:#123f37;--forest2:#1f6250;--line:#c7cbbd;--gold:#b87b35;--gold2:#f1e2c5;--blue:#35677c;--blue2:#e0ebef;--red:#994b3c;--red2:#f4dfd7;--green:#23684e;--green2:#dce9dc;--shadow:5px 5px 0 rgba(24,51,45,.09);--serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;--sans:"Avenir Next","Gill Sans","Trebuchet MS",Verdana,sans-serif;--mono:"SFMono-Regular","Cascadia Code","Liberation Mono",Menlo,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.68 var(--sans)}body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(24,51,45,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(24,51,45,.025) 1px,transparent 1px);background-size:32px 32px;z-index:-1}a{color:#176653}a:focus-visible,button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:4px}button,select{font:inherit}button{cursor:pointer}code{font:12px/1.65 var(--mono);overflow-wrap:anywhere}pre{padding:22px;overflow:auto;background:#153c34;color:#f2f4e9;font:12px/1.75 var(--mono);border-left:4px solid var(--gold);white-space:pre-wrap;overflow-wrap:anywhere}p{max-width:1180px}h1,h2,h3,h4{font-family:var(--serif);line-height:1.12}h1{font-size:clamp(44px,6.4vw,88px);letter-spacing:-.035em;margin:20px 0 24px;max-width:1030px}h2{font-size:clamp(31px,3.5vw,47px);letter-spacing:-.018em;margin:12px 0 24px}h3{font-size:26px;margin:36px 0 16px}h4{font-size:20px;margin:26px 0 10px}.lead{font-size:21px;line-height:1.55;max-width:1020px}.small,.muted{font-size:13px;color:var(--muted)}.eyebrow,.tag{font:600 11px/1.4 var(--mono);letter-spacing:.11em;text-transform:uppercase}.eyebrow{color:var(--muted)}.tag{display:inline-block;padding:5px 8px;border:1px solid currentColor}.tag-ok{color:var(--green)}.tag-test{color:var(--blue)}.tag-calc{color:#7c5a20}.tag-intent{color:#765a78}.tag-proposal{color:#8b4f27}.tag-stop{color:var(--red)}.skip{position:absolute;left:-9999px}.skip:focus{left:12px;top:12px;padding:12px;background:white;z-index:50}.shell{display:grid;grid-template-columns:248px minmax(0,1fr)}aside{position:sticky;top:0;height:100vh;padding:30px 24px;background:var(--forest);color:#edf2e7;overflow:auto}aside .brand{font:27px var(--serif)}aside .brand small{display:block;margin-top:6px;font:10px var(--mono);letter-spacing:.14em;color:#b8cec1}aside p{font-size:12px;color:#bad0c3}nav{margin-top:26px}nav a{display:grid;grid-template-columns:28px 1fr;gap:7px;padding:7px 0;color:#e5eee5;text-decoration:none;font-size:12px;line-height:1.45}nav a span:first-child{color:#92b6a4;font-family:var(--mono)}nav a:hover,nav a:focus{color:#ffd88d;text-decoration:underline}aside .side-note{margin-top:28px;padding-top:18px;border-top:1px solid #487165}main{min-width:0;max-width:1580px;padding:52px 5vw 36px}section{padding:48px 0;border-bottom:1px solid var(--line);scroll-margin-top:24px}section:last-of-type{border-bottom:0}.hero{position:relative;padding-bottom:44px;border-bottom:3px solid var(--forest)}.hero:after{content:"K";position:absolute;right:1%;top:-38px;font:240px/1 var(--serif);color:rgba(31,98,80,.045);pointer-events:none;z-index:-1}.hero .badge{display:inline-block;padding:7px 10px;border:1px solid var(--gold);color:#85501f;font:11px var(--mono);letter-spacing:.05em}.hero-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}.hero-links a{display:inline-block;padding:11px 14px;border:1px solid #769381;text-decoration:none;font-size:13px;font-weight:600;background:var(--paper2)}.hero-links a:first-child{background:var(--forest2);color:white;border-color:var(--forest2)}.hero-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.65fr);gap:42px;align-items:end}.verdict-card{background:var(--forest);color:#f3f4e9;padding:28px;box-shadow:var(--shadow);border-top:5px solid var(--gold)}.verdict-card h2{font-size:31px;margin:0 0 16px}.verdict-card p{font-size:14px;color:#d4e1d5}.verdict-card strong{color:#ffd98e}.rule{height:1px;background:var(--line);margin:24px 0}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:24px 0}.card,.proof-card{min-width:0;background:var(--paper2);border:1px solid var(--line);padding:19px}.card{border-top:4px solid var(--forest2)}.card h3{font:22px var(--serif);margin:7px 0 10px}.card p,.proof-card p{font-size:13px;margin:8px 0}.card .big{font:32px var(--serif);display:block;margin:6px 0}.card ul{font-size:13px;padding-left:18px}.notice{margin:24px 0;padding:20px 22px;background:var(--gold2);border-left:4px solid var(--gold)}.notice strong{color:#75461d}.recommend{margin:24px 0;padding:22px;background:var(--green2);border-left:4px solid var(--green)}.stop{background:var(--red2);border-left-color:var(--red)}.blue{background:var(--blue2);border-left-color:var(--blue)}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.scroll{overflow:auto;margin:18px 0;border:1px solid var(--line);background:var(--paper2)}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:12px 13px;border-bottom:1px solid #dce0d4;text-align:left;vertical-align:top;min-width:94px}th{background:#dfe6dc;font:600 11px/1.45 var(--mono);color:#2e4a3c}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#f0f3e9}td small{color:var(--muted)}.num{text-align:right;font-family:var(--mono);white-space:nowrap}.label{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.flow-tabs{display:flex;gap:0;flex-wrap:wrap;margin:26px 0 0;border-bottom:1px solid var(--forest)}.flow-tabs button{padding:12px 16px;background:transparent;color:var(--ink);border:1px solid var(--line);border-bottom:0;margin-right:4px;min-height:46px}.flow-tabs button[aria-selected="true"]{background:var(--forest);color:white;border-color:var(--forest)}.flow-panel{padding:24px;background:var(--paper2);border:1px solid var(--line);border-top:0;margin-bottom:24px}.flow-panel h3{margin-top:0}.flow-panel ul{columns:2;column-gap:34px;font-size:14px}.pipeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin:26px 0}.pipeline>div{position:relative;padding:17px 15px;background:#e5eadf;border-top:1px solid #9db19f;border-bottom:1px solid #9db19f;min-width:0}.pipeline>div:not(:last-child){border-right:1px solid #9db19f}.pipeline>div:not(:last-child):after{content:"→";position:absolute;right:-10px;top:34%;z-index:2;background:var(--paper);color:var(--forest2);font:21px var(--serif);width:20px;text-align:center}.pipeline b{display:block;font-size:12px;margin-bottom:7px}.pipeline code{font-size:11px}.pipeline small{display:block;margin-top:7px;font-size:11px;line-height:1.55;color:var(--muted)}.type-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:24px 0}.type{background:var(--paper2);border:1px solid var(--line);padding:18px;border-bottom:4px solid var(--forest2)}.type h3{font-size:22px;margin:4px 0 10px}.type p{font-size:13px}.type .role{font:10px var(--mono);letter-spacing:.08em;color:var(--muted)}details{margin:16px 0;border:1px solid var(--line);background:var(--paper2)}summary{padding:13px 15px;cursor:pointer;font-weight:600;font-size:14px}details>div,details>pre,details>table,details>.scroll{margin:0 16px 16px}details>pre{margin:0;border-left:0}.proof-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.proof-card{border-top:3px solid var(--blue)}.proof-card h4{margin:4px 0 8px}.proof-card .status{font:10px var(--mono);color:var(--muted)}.proof-card[hidden]{display:none}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.filters button{padding:8px 11px;border:1px solid #81998a;background:var(--paper2);color:var(--ink);min-height:40px}.filters button[aria-pressed="true"]{background:var(--forest);color:white}.checklist{list-style:none;padding:0}.checklist li{padding:9px 0 9px 25px;position:relative;border-bottom:1px solid #d9dfd2;font-size:14px}.checklist li:before{content:"";position:absolute;left:2px;top:14px;width:11px;height:11px;border:2px solid var(--forest2)}.checklist li.stop-item:before{border-color:var(--red)}.metric-select{display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin:18px 0}.metric-select label{display:grid;gap:6px;font-size:12px;font-weight:600}.metric-select select{padding:10px 12px;background:var(--paper2);border:1px solid #7c9587;color:var(--ink);min-height:44px;max-width:100%}.metric-hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:18px 0}.metric-hero>div{background:var(--paper2);padding:16px}.metric-hero b{display:block;font:28px var(--serif)}.metric-hero span{font-size:11px;color:var(--muted)}.bar-row{display:grid;grid-template-columns:145px 1fr 110px;align-items:center;gap:12px;margin:10px 0;font-size:12px}.bar-track{height:18px;background:#dfe5da}.bar-fill{height:100%;background:var(--forest2)}.bar-value{text-align:right;font-family:var(--mono)}.callout-number{font:52px/1 var(--serif);color:var(--forest2)}.foot-note{font-size:12px;color:var(--muted)}footer{padding-top:30px;font-size:12px;color:var(--muted)}.toc-inline{display:flex;gap:8px 16px;flex-wrap:wrap;font-size:13px}.source-list li{margin-bottom:10px}.source-list code{font-size:11px}.nowrap{white-space:nowrap}.decision-line{display:grid;grid-template-columns:110px 1fr;gap:16px;padding:15px 0;border-bottom:1px solid var(--line)}.decision-line b{font:11px var(--mono);color:var(--muted)}.decision-line p{margin:0;font-size:14px}.kicker{display:flex;align-items:center;gap:12px;margin-bottom:16px}.kicker .index{font:28px var(--serif);color:var(--gold)}.kicker .line{height:1px;background:var(--line);flex:1}.mini-diagram{display:grid;grid-template-columns:1fr 42px 1fr 42px 1fr;align-items:center;gap:8px;margin:22px 0}.mini-diagram .node{padding:16px;background:#e5eadf;border:1px solid #b5c3b2;font-size:13px}.mini-diagram .arrow{text-align:center;font:26px var(--serif);color:var(--gold)}.mini-diagram .node strong{display:block;font:20px var(--serif);margin-bottom:5px}.mini-diagram .node small{font-size:11px;color:var(--muted)}
+@media(max-width:1180px){.cards,.type-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}.pipeline>div{margin-bottom:18px}.pipeline>div:after{display:none}.proof-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){.shell{display:block}aside{position:static;height:auto;padding:20px 22px}aside .brand small{display:inline;margin-left:10px}aside p{display:none}nav{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:14px}nav a{display:block;padding:4px 0}nav a span:first-child{margin-right:6px}aside .side-note{display:none}main{padding:32px 22px}.hero-grid{grid-template-columns:1fr}.verdict-card{max-width:600px}.three{grid-template-columns:1fr}.metric-hero{grid-template-columns:repeat(2,minmax(0,1fr))}.mini-diagram{grid-template-columns:1fr}.mini-diagram .arrow{transform:rotate(90deg)}.flow-panel ul{columns:1}}
+@media(max-width:600px){main{padding:25px 15px}h1{font-size:46px}.lead{font-size:18px}.cards,.two,.type-grid,.proof-grid{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr}.pipeline>div{margin-bottom:7px}.hero:after{font-size:150px}.bar-row{grid-template-columns:105px 1fr 82px;gap:7px}.metric-hero{grid-template-columns:1fr}.decision-line{grid-template-columns:1fr;gap:4px}.flow-tabs button{flex:1;padding:10px 7px;font-size:12px}.flow-panel{padding:17px}th,td{padding:10px;min-width:100px}pre{padding:16px;font-size:11px}.callout-number{font-size:40px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+@media print{body{background:white;font-size:11px}body:before,aside,.hero-links,.flow-tabs,.filters,.metric-select,.skip{display:none}.shell{display:block}main{max-width:none;padding:0}section{padding:22px 0;break-inside:auto}h1{font-size:42px}h2{font-size:25px}h3{font-size:19px}.hero-grid{grid-template-columns:1fr}.verdict-card{color:var(--ink);background:#eef3e9;box-shadow:none}.verdict-card p{color:var(--ink)}.verdict-card strong{color:var(--ink)}.cards,.type-grid{grid-template-columns:repeat(2,1fr)}.proof-grid{grid-template-columns:repeat(2,1fr)}.card,.proof-card,.type,.flow-panel{break-inside:avoid}.scroll{overflow:visible}table{font-size:9px}th,td{padding:6px;min-width:0}pre{white-space:pre-wrap;font-size:9px}details>*{display:block!important}details summary{display:none}.pipeline{grid-template-columns:repeat(5,1fr)}.pipeline>div{margin:0;padding:8px}.pipeline>div:after{display:none}.mini-diagram{grid-template-columns:1fr 25px 1fr 25px 1fr}.mini-diagram .arrow{transform:none}.metric-hero{grid-template-columns:repeat(4,1fr)}a{color:inherit;text-decoration:none}.hero:after{display:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<div class="shell">
+<aside>
+  <div class="brand">Moli / V6-KIMI<small>ATLAS DES DÉCISIONS</small></div>
+  <p>Une mémoire, quatre flux,<br>et seulement les preuves utiles.</p>
+  <nav aria-label="Sommaire">
+    <a href="#verdict"><span>01</span><span>Le choix KIMI</span></a>
+    <a href="#revue"><span>02</span><span>Ce que V6 prouve — et ne prouve pas</span></a>
+    <a href="#modele"><span>03</span><span>Quatre mémoires, quatre propriétaires</span></a>
+    <a href="#mqtt"><span>04</span><span>MQTT : du paquet à l’état</span></a>
+    <a href="#agregats"><span>05</span><span>Agrégats exacts et anti-tempête</span></a>
+    <a href="#workflows"><span>06</span><span>Workflows : causes et état courant</span></a>
+    <a href="#virtuels"><span>07</span><span>Réel, alias, composite, exécution</span></a>
+    <a href="#identite"><span>08</span><span>Un seul annuaire</span></a>
+    <a href="#memoire"><span>09</span><span>Mesures et copies à traiter d’abord</span></a>
+    <a href="#persistance"><span>10</span><span>Reprise et D13</span></a>
+    <a href="#migration"><span>11</span><span>Migration par portes</span></a>
+    <a href="#ponts"><span>12</span><span>Ponts MQTT réels mesurés</span></a>
+    <a href="#qualification"><span>13</span><span>Matrice de preuves</span></a>
+    <a href="#corpus"><span>14</span><span>Ce que l’export change</span></a>
+    <a href="#sources"><span>15</span><span>Sources et reproduction</span></a>
+  </nav>
+  <div class="side-note">PROPOSITION<br>Aucune migration,<br>aucun appareil commandé.</div>
+</aside>
+<main id="contenu">
+<header class="hero">
+  <span class="badge">V6-KIMI · REVUE PRAGMATIQUE · 26 OCTOBRE 2026</span>
+  <div class="hero-grid">
+    <div>
+      <h1>Une mémoire.<br>Pas un deuxième moteur.</h1>
+      <p class="lead">La V6 sait mesurer des layouts. Cette version replace ces résultats dans Moli : messages MQTT, valeurs partagées, calculs, workflows et appareils virtuels. Elle garde les bonnes idées, écarte les doublons et fait de chaque optimisation une décision à prouver.</p>
+      <div class="hero-links">
+        <a href="#verdict">Lire la décision</a>
+        <a href="#mqtt">Suivre un message MQTT</a>
+        <a href="#agregats">Voir les agrégats</a>
+        <a href="#qualification">Vérifier les preuves</a>
+      </div>
+    </div>
+    <div class="verdict-card">
+      <span class="eyebrow" style="color:#b8cec1">Décision courte</span>
+      <h2>Go incrémental.<br>No-go global.</h2>
+      <p><strong>Conserver</strong> le Hub, les identités stables, la garde, les moteurs K1/K3 et D13.</p>
+      <p><strong>Optimiser d’abord</strong> les copies de vues, les allocations de chemins chauds et les index de déclencheurs.</p>
+      <p><strong>Ne pas migrer</strong> vers une <code>Bank</code> universelle de 7 régions et 18 layouts sans preuve sur le moteur intégré.</p>
+    </div>
+  </div>
+</header>
+
+<section id="verdict">
+  <div class="kicker"><span class="index">01</span><span class="eyebrow">Le choix KIMI</span><span class="line"></span></div>
+  <h2>La V6 devient une bibliothèque d’expériences,<br>pas un plan de réécriture.</h2>
+  <p class="lead">L’objectif n’est pas de gagner quelques nanosecondes sur une structure synthétique. Il est de rendre Moli plus simple à faire évoluer, rapide dans les vrais chemins et fidèle après une panne.</p>
+  <div class="cards">
+    <article class="card"><span class="tag tag-ok">CONSERVER</span><h3>Une seule source</h3><p>Le <code>PointId</code> stable et son état courant dans le Hub. Les vues lisent cette source, elles ne la dupliquent pas.</p></article>
+    <article class="card"><span class="tag tag-test">CORRIGER D’ABORD</span><h3>Copies et parcours</h3><p><code>Model::view</code> clone chaque état par appareil. <code>PointId::split</code> et <code>PointId::new</code> allouent. Les déclencheurs d’état parcourent les graphes actifs.</p></article>
+    <article class="card"><span class="tag tag-calc">CONDITIONNER</span><h3>Handles et layouts</h3><p>Indices compacts, CSR, <code>Row64</code>, <code>Row96</code> ou 128 alignés : seulement après mesure sur les vraies crates et la cible ARM64.</p></article>
+    <article class="card"><span class="tag tag-stop">ÉCARTER</span><h3>Le modèle universel</h3><p>Pas de second allocateur <code>u64</code>, de second moteur de calcul, de graphe général des zones, ou de persistance de la RAM <code>repr(C)</code>.</p></article>
+  </div>
+  <div class="recommend"><strong>La proposition la plus utile de V6 est déjà sa plus simple :</strong> une valeur physique possède son état ; un alias ne possède qu’une référence ; un calcul possède un état dérivé ; un workflow possède une exécution. Ces quatre objets ne doivent pas être compressés dans une même sémantique de « ligne ».</div>
+  <h3>Le parcours en quatre flux, interactif</h3>
+  <div class="flow-tabs" role="tablist" aria-label="Choisir un flux">
+    <button id="tab-mqtt" role="tab" aria-selected="true" aria-controls="flow-panel" data-flow="mqtt">MQTT</button>
+    <button id="tab-aggregate" role="tab" aria-selected="false" aria-controls="flow-panel" data-flow="aggregate">Agrégats</button>
+    <button id="tab-workflow" role="tab" aria-selected="false" aria-controls="flow-panel" data-flow="workflow">Workflows</button>
+    <button id="tab-virtual" role="tab" aria-selected="false" aria-controls="flow-panel" data-flow="virtual">Réel ↔ virtuel</button>
+  </div>
+  <div class="flow-panel" id="flow-panel" role="tabpanel" aria-live="polite">
+    <h3 id="flow-title">MQTT : transformer une fois, conserver typé</h3>
+    <p id="flow-text">Le paquet est décodé par l’adaptateur propriétaire, jamais par une règle générique du style « toute température divisée par dix ». Le hub reçoit des valeurs typées ; le JSON ne reste pas en mémoire permanente.</p>
+    <ul id="flow-rules"><li>Identité IEEE stable, nom de topic mutable.</li><li>Bornes explicites : 4 Mio entrant, 256 Kio sortant dans le pilote actuel.</li><li>Aucun état optimiste après une commande.</li><li>L’état confirmé revient par observation.</li></ul>
+  </div>
+</section>
+
+<section id="revue">
+  <div class="kicker"><span class="index">02</span><span class="eyebrow">Revue de V6</span><span class="line"></span></div>
+  <h2>Les preuves sont bonnes.<br>Leur périmètre n’est pas celui du produit.</h2>
+  <div class="two">
+    <div>
+      <h3>Ce qu’il faut garder</h3>
+      <ul class="checklist">
+        <li><strong>Alias sans copie.</strong> Les tests établissent courant, précédent et dates lus depuis la source.</li>
+        <li><strong>Identifiants générationnels.</strong> Un ancien handle ne doit jamais désigner un nouvel objet après réemploi.</li>
+        <li><strong>Index et CSR.</strong> Les mesures montrent l’intérêt d’accéder directement aux fiches et aux membres plutôt que de scanner.</li>
+        <li><strong>Layouts réels.</strong> Les 18 tailles et offsets sont vérifiés, sans <code>packed</code> ni transmutation.</li>
+        <li><strong>Discipline des périmètres.</strong> Calculé, mesuré, simulé et livré sont déjà distingués dans V6.</li>
+        <li><strong>Coût des miroirs.</strong> Le fanout confirme que recopier des lignes coûte du temps et de la mémoire.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Ce qui bloque une migration globale</h3>
+      <ul class="checklist stop-item">
+        <li><strong>Trois types testés seulement</strong> (<code>Null</code>, entier, composite), loin des timers, boutons, compteurs, plannings et scènes de Moli.</li>
+        <li><strong>Identité durable non implémentée.</strong> L’allocateur <code>u64</code>, la boot-epoch et la persistance restent à concevoir.</li>
+        <li><strong>Cycle de vie incomplet.</strong> Suppression d’une source, aliases restants, rechargement et concurrence ne forment pas encore un contrat produit.</li>
+        <li><strong>Pools append-only.</strong> La rétention des contenus variables n’est ni collectée ni bornée comme il le faudrait en production.</li>
+        <li><strong>Coût global absent.</strong> Index, textes, capacités libres, temporaires, fragmentation, historique et RSS complet ne sont pas dans les 2 624 octets de démonstration.</li>
+        <li><strong>Architecture concurrente différente.</strong> La sonde de faux partage multicœur ne représente pas le verrou d’écriture unique du Hub.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="notice"><strong>Conclusion de revue :</strong> V6 répond « comment ranger et indexer des structures Rust ? ». Elle ne répond pas encore « comment faire vivre MQTT, la garde, D13, les agrégats et les workflows dans Moli ? ». V6-KIMI répond à cette deuxième question sans jeter la première.</div>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Sujet</th><th scope="col">V6, prototype</th><th scope="col">V6-KIMI, proposition</th><th scope="col">Pourquoi</th></tr></thead>
+    <tbody>
+      <tr><td>Identité</td><td>UUID installation + nouvel ID <code>u64</code></td><td><code>DeviceId</code>/<code>PointId</code> persistants ; <code>catalog.id</code> unique ; handles internes dérivés</td><td>Les identifiants numériques existent déjà dans l’historique et D13.</td></tr>
+      <tr><td>Valeurs</td><td><code>Row96</code> pour tous les objets</td><td><code>Value</code> typée et structures par responsabilité</td><td>Un lieu, une mesure, une action et une exécution n’ont pas les mêmes invariants.</td></tr>
+      <tr><td>Calculs</td><td><code>Calc48</code> et nouvel ordonnanceur</td><td>K1 pour le courant, K3 pour la durée, <code>moli-rollup</code> pour le temps</td><td>Trois contrats différents déjà testés, au lieu d’un quatrième moteur.</td></tr>
+      <tr><td>Graphes</td><td><code>Edge24</code> + CSR général</td><td>Index métier ciblés, CSR seulement si le profilage le justifie</td><td>La garde et les relations ne sont pas interchangeables.</td></tr>
+      <tr><td>Précédent</td><td><code>previous_payload</code> sur chaque ligne</td><td><code>last</code> propre aux transitions ; historique pour le passé ; précédent global seulement si un consommateur l’exige</td><td>Le besoin est réel pour <code>from</code> et les seuils, pas nécessairement pour chaque objet.</td></tr>
+      <tr><td>Persistance</td><td>Format explicite à écrire</td><td>D13 : Turso, journal immuable, archive ; caches dérivés</td><td>Aucune deuxième séquence ou vérité durable.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="modele">
+  <div class="kicker"><span class="index">03</span><span class="eyebrow">Modèle cible</span><span class="line"></span></div>
+  <h2>Quatre mémoires,<br>quatre propriétaires.</h2>
+  <p>Plutôt que sept régions logiques, V6-KIMI distingue les objets par leur durée de vie, leur autorité et leur chemin de mutation. Cela évite qu’un cache devienne accidentellement une vérité métier.</p>
+  <div class="type-grid">
+    <article class="type"><span class="role">A · CATALOGUE</span><h3>Définitions</h3><p><code>Arc&lt;Device&gt;</code>, <code>PointSpec</code>, labels, pilotes, plans et contrats. Partagés, remplacés par nouvelle description, jamais confondus avec une mesure.</p><p class="muted">Autorité : pilotes + configuration validée.</p></article>
+    <article class="type"><span class="role">B · OBSERVATIONS</span><h3>État courant</h3><p><code>Value</code>, réception, disponibilité et métadonnées de fraîcheur. Une seule observation canonique par point, sans JSON persistant.</p><p class="muted">Autorité : le Hub sous son verrou court.</p></article>
+    <article class="type"><span class="role">C · PROJECTIONS</span><h3>Calculs et exécutions</h3><p>Index inverses, agrégats, durées, scènes et runs de workflows. Chacun garde ses propres bornes et sa sémantique.</p><p class="muted">Autorité : moteurs déterministes spécialisés.</p></article>
+    <article class="type"><span class="role">D · DURABLE &amp; TRANSPORT</span><h3>Preuves et messages</h3><p>Turso, outbox, fichiers métier, archive Parquet, bus et buffers. Les données ont un propriétaire et une échéance explicites.</p><p class="muted">Autorité : D13 et les fichiers métier, jamais un dump mémoire.</p></article>
+  </div>
+  <div class="mini-diagram">
+    <div class="node"><strong>Définitions</strong><small>Quel est ce point, qui le possède, quelles unités et quels droits ?</small></div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>Observation unique</strong><small>Quelle est la dernière valeur réellement reçue ?</small></div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>Projections</strong><small>Quelles vues, calculs et workflows en dérivent ?</small></div>
+  </div>
+  <p class="muted">Le durable entoure ce chemin : chaque écriture destinée à l’historique suit le contrat D13 ; les lectures et publications utilisent des instantanés cohérents, jamais des pointeurs de <code>Vec</code>.</p>
+  <h3>La règle d’or</h3>
+  <div class="recommend"><strong>Une vue ne devient pas une nouvelle mesure parce qu’elle possède un nouvel identifiant.</strong> Un alias résout la source. Un résultat calculé, lui, a une nouvelle valeur, une provenance et une fraîcheur propres. Une exécution de workflow reste hors des deux : c’est un enregistrement de travail, avec cause, état d’avancement, lignée et résultat.</div>
+</section>
+
+<section id="mqtt">
+  <div class="kicker"><span class="index">04</span><span class="eyebrow">MQTT → mémoire</span><span class="line"></span></div>
+  <h2>Le message est transformé au bord,<br>puis oublié.</h2>
+  <p>La bonne place de la conversion est l’adaptateur qui connaît l’appareil et son contrat. Le broker transporte ; le pilote comprend ; le Hub conserve. Une réplication MQTT, si elle existe un jour, préserve les messages natifs et ne refait pas leur canonisation.</p>
+  <div class="pipeline" aria-label="Chaîne MQTT">
+    <div><b>1 · PAQUET</b><code>topic + payload + retain</code><small>Entrée hostile, taille limitée.</small></div>
+    <div><b>2 · ROUTAGE</b><code>catalog.by_name</code><small>Friendly name mutable ; IEEE reste l’identité.</small></div>
+    <div><b>3 · CODEC</b><code>entry.decode</code><small>Clés connues, enum, booléens, chemins composés.</small></div>
+    <div><b>4 · HUB</b><code>set_state</code><small>Valeur typée, état unique, fraîcheur renouvelée.</small></div>
+    <div><b>5 · PROJECTIONS</b><code>bus + index</code><small>Changement publié ; calculs et workflows ciblés.</small></div>
+  </div>
+  <div class="two">
+    <div>
+      <h3>Ce qui reste en mémoire</h3>
+      <ul class="checklist">
+        <li><code>Arc&lt;Device&gt;</code> et les spécifications partagées ;</li>
+        <li>les valeurs <code>Value</code> typées, les textes en <code>Arc&lt;str&gt;</code> ;</li>
+        <li>la disponibilité et les métadonnées nécessaires ;</li>
+        <li>les index précompilés et les reçus réellement requis.</li>
+      </ul>
+      <h3>Ce qui disparaît</h3>
+      <ul class="checklist">
+        <li>le buffer du paquet après décodage ;</li>
+        <li>l’arbre <code>serde_json::Value</code> et les chaînes temporaires ;</li>
+        <li>les champs inconnus ou sans contrat ;</li>
+        <li>toute valeur demandée mais non encore confirmée par l’appareil.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Le contrat actuel, vérifié</h3>
+      <div class="scroll"><table>
+        <thead><tr><th scope="col">Élément</th><th scope="col">Implémentation réelle</th><th scope="col">Conséquence KIMI</th></tr></thead>
+        <tbody>
+          <tr><td>Identité</td><td><code>DeviceId::new(instance, ieee)</code> dans <code>catalog.rs:104</code></td><td>Ne jamais créer un appareil depuis son seul nom de topic.</td></tr>
+          <tr><td>Décodage</td><td><code>Entry::decode</code> dans <code>catalog.rs:145</code></td><td>Conserver les codecs par contrat ; pas de conversion universelle.</td></tr>
+          <tr><td>Bornes</td><td><code>set_max_packet_size(4 MiB, 256 KiB)</code> dans <code>lib.rs:81</code></td><td>Garder ces limites visibles et mesurer les pics de parsing.</td></tr>
+          <tr><td>Commande</td><td><code>Entry::encode</code> puis QoS 1, <code>retain = false</code> dans <code>lib.rs:243</code></td><td>Validation et garde avant encodage ; jamais d’état forcé.</td></tr>
+          <tr><td>Retained sensible</td><td>Entrée keypad refusée si retenue dans <code>keypad.rs:19</code></td><td>Ne jamais rejouer une action ou un code à l’abonnement.</td></tr>
+          <tr><td>Luminosité</td><td>Domaine natif déclaré par chaque <code>PointSpec</code> (0..254 dans l’exemple étudié)</td><td>Pas de passage implicite à 0..100 ; conversion seulement par plan explicite et par appareil, pas dans le codec partagé.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+  <h3>Les types de messages n’ont pas la même durée de vie</h3>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Message</th><th scope="col">État mémoire attendu</th><th scope="col">Republication / reconnexion</th><th scope="col">Interdit</th></tr></thead>
+    <tbody>
+      <tr><td>Découverte <code>bridge/devices</code></td><td>Catalogue remplacé après parsing valide ; appareils supprimés retirés.</td><td>Reconstruction des descriptions, pas invention d’état frais.</td><td>Identité dérivée du friendly name ou conservation d’un appareil supprimé.</td></tr>
+      <tr><td>État capteur</td><td>Observation courante unique ; réception renouvelée.</td><td>Le cache garde l’âge ; un retained n’est pas une mesure neuve. Exigence de révision : aujourd’hui le drapeau <code>retain</code> ne remonte pas jusqu’à <code>record_state</code> hors keypad — le faire remonter est un préalable avant tout pont.</td><td>Zéro ou vrai inventé en cas de champ absent ou de mauvaise unité.</td></tr>
+      <tr><td>Occurrence / bouton</td><td>Identité d’occurrence + journal, pas de booléen persistant.</td><td>Live-only, anti-doublon par requête ; jamais de rejeu d’un ancien appui.</td><td>Retained comme preuve d’une nouvelle intention.</td></tr>
+      <tr><td>Commande</td><td>Enveloppe limitée, échéance, journal, permis vivant.</td><td>Non retained ; échec ou délai sans exécution tardive.</td><td>Confondre <code>try_publish</code> réussi avec effet physique.</td></tr>
+      <tr><td>Disponibilité</td><td>Booléen séparé de la valeur et de la fraîcheur.</td><td>Hors ligne propage inconnu aux projections, pas <code>false</code> ou zéro.</td><td>Confondre appareil en ligne et mesure encore fraîche.</td></tr>
+      <tr><td>Historique</td><td>Pas de gros objet en mémoire ; requêtes bornées et pages.</td><td>REST + archive, SSE pour les deltas ; export découpé.</td><td>Un historique complet dans un seul message MQTT.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Commande : cinq vérités à ne pas fusionner</h3>
+  <div class="mini-diagram">
+    <div class="node"><strong>Demande validée</strong><small>Type, bornes, garde et permis.</small></div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>Acceptée localement</strong><small><code>try_publish</code> réussit la mise en file du pilote.</small></div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>Transport et observation</strong><small>Broker, appareil et retour d’état sont distincts.</small></div>
+  </div>
+  <p>Une commande n’est donc pas « terminée » par un HTTP 200 ou un PUBACK : le journal décrit ce qui est réellement connu. L’état observé reste inchangé tant que l’appareil n’a pas répondu. Un ordre expiré, abandonné ou révoqué ne doit plus partir, et une réponse tardive ne le fait pas revivre.</p>
+  <div class="notice"><strong>Choix de transport :</strong> MQTT pour la télémétrie et les intégrations ; REST pour les commandes et lectures ; SSE pour l’état initial puis les deltas ; requêtes d’historique bornées et agrégées. Pas de MQTT navigateur direct contournant la garde, ni de WebSocket ajouté par habitude.</div>
+</section>
+
+<section id="agregats">
+  <div class="kicker"><span class="index">05</span><span class="eyebrow">Agrégats</span><span class="line"></span></div>
+  <h2>Recalculer peu de sources,<br>plutôt que delta juste… sauf quand il est faux.</h2>
+  <p>Le calcul incrémental <code>somme += nouvelle - ancienne</code> paraît séduisant. Il devient fragile dès qu’une source disparaît, change d’unité, expire, revient hors ligne, ou qu’un événement arrive en retard. Avec 32 sources au plus, le recalcul borné de K1 est une meilleure base de départ : simple, déterministe et déjà testé.</p>
+  <div class="three">
+    <article class="card"><span class="tag tag-ok">COURANT · K1</span><h3>Min / max / moyenne</h3><p>Dernières valeurs utilisables, avec fraîcheur. <code>mean</code> est calculé avec mise à l’échelle et correction, pas avec une moyenne naïve qui déborde.</p><p class="muted">Résultat propre, horodatage source le plus ancien.</p></article>
+    <article class="card"><span class="tag tag-test">TEMPS · ROLLUP</span><h3>Moyenne pondérée</h3><p>Les fenêtres utilisent les échantillons historiques et le temps pendant lequel chaque valeur est couverte. Une heure inconnue n’est pas une heure à zéro.</p><p class="muted">Autre algorithme, autres données, autre propriétaire.</p></article>
+    <article class="card"><span class="tag tag-calc">DURÉE · K3</span><h3>Couverture explicite</h3><p>Temps dans l’état, temps connu, temps inconnu, checkpoints persistants. Une interruption ne devient pas du temps observé.</p><p class="muted">Aucune substitution par <code>previous_payload</code>.</p></article>
+  </div>
+  <h3>Le pipeline d’un calcul courant</h3>
+  <div class="pipeline">
+    <div><b>1 · NORMALISER</b><code>sources.sort + dédoublonner</code><small>Au plus 32 sources, définition validée.</small></div>
+    <div><b>2 · FILTRER</b><code>numeric + online + unité + fini</code><small>Ratios explicites uniquement.</small></div>
+    <div><b>3 · VÉRIFIER LE TEMPS</b><code>[observation, observation + max_age)</code><small>Égalité de fin = périmé.</small></div>
+    <div><b>4 · CALCULER</b><code>min | max | mean</code><small>Borné et reproductible.</small></div>
+    <div><b>5 · PUBLIER</b><code>Sample + source_ts</code><small>Null si aucune source valide ; jamais zéro.</small></div>
+  </div>
+  <div class="two">
+    <div>
+      <h3>Anti-tempête sans polling obligatoire</h3>
+      <ol>
+        <li>L’observation physique est écrite immédiatement.</li>
+        <li>L’index inverse ne marque que les calculs concernés ; la file sale déduplique leurs identités.</li>
+        <li>Le scheduler actif coalesce les vagues et applique l’ordre topologique, profondeur ≤ 16 et travail ≤ 8 192 lectures/arêtes.</li>
+        <li>Le résultat n’est publié que s’il change ; la fraîcheur suit néanmoins les observations identiques.</li>
+      </ol>
+      <p>Le « 50 ms » du corpus est donc une <strong>option de réglage à mesurer</strong>, pas une constante architecturale. Si une fenêtre est nécessaire pour une famille très bavarde, elle est bornée, configurable et ne retarde jamais les chemins critiques. Sans calcul configuré, aucune tâche périodique ne tourne.</p>
+    </div>
+    <div>
+      <h3>Et la somme ?</h3>
+      <p>Ajouter <code>AggregateOp::Sum</code> est une petite extension du moteur existant, pas une raison de créer <code>Calc48</code>. La proposition est de réutiliser les mêmes entrées et de refuser tout débordement non fini.</p>
+      <ul class="checklist">
+        <li>Recalculer les 32 valeurs au lieu d’appliquer des deltas non prouvés.</li>
+        <li>Conserver les mêmes règles d’unité et de fraîcheur.</li>
+        <li>Distinguer <strong>somme de puissances instantanées (W)</strong> et <strong>énergie sur une période (Wh)</strong> : la deuxième appartient à l’intégration temporelle et à <code>moli-energy</code>, pas à <code>Sum</code>.</li>
+        <li>Ne passer à l’incrémental que si un banc prouve le besoin et couvre retraits, restaurations et corrections tardives. Le banc arithmétique de la sonde (debug) mesure le recalcul de 32 sources à ≈ 2 344 ns contre ≈ 19 ns pour le delta, sans allocation dans les deux cas : le gain existe, la preuve de sûreté reste à écrire.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="recommend"><strong>Le cache du résultat n’est pas une observation nouvelle.</strong> Il est recalculé au démarrage, exclu du cache périodique et porte la plus ancienne date des sources réellement utilisées. Une modification de définition ne rétrodate pas sa publication ; <code>ts</code> et <code>source_ts</code> restent distincts.</div>
+</section>
+
+<section id="workflows">
+  <div class="kicker"><span class="index">06</span><span class="eyebrow">Workflows</span><span class="line"></span></div>
+  <h2>Le déclencheur se souvient.<br>La condition relit le présent.</h2>
+  <p>Les workflows n’ont pas besoin d’un état global « précédent » pour chaque objet. Ils ont besoin d’une mémoire de transition, d’une cause bornée et d’un accès cohérent à l’état courant au moment d’évaluer une condition.</p>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Moment</th><th scope="col">Donnée utilisée</th><th scope="col">Propriétaire actuel</th><th scope="col">Décision KIMI</th></tr></thead>
+    <tbody>
+      <tr><td>Avant un changement</td><td>Dernière valeur vue</td><td><code>Automations::last</code></td><td>Conserver cette mémoire spécialisée ; ne pas ajouter une précédente universelle.</td></tr>
+      <tr><td><code>when_state.from</code></td><td>Valeur précédente + valeur reçue</td><td><code>on_state</code> dans <code>engine.rs:351</code></td><td>Une première valeur n’est pas une transition. Les types sont comparés canoniquement.</td></tr>
+      <tr><td>Franchissement de seuil</td><td><code>was_in</code> contre <code>now_in</code></td><td>Idem</td><td>Ne pas recalculer un faux historique ; les valeurs Null restent non numériques.</td></tr>
+      <tr><td>Condition <code>if</code> ou <code>wait_for</code></td><td>Valeur actuelle</td><td><code>hub.state</code> dans <code>run.rs:594</code></td><td>Une attente ne fige pas une ancienne valeur.</td></tr>
+      <tr><td>Cause d’un run</td><td><code>why</code>, occurrence et corrélation</td><td><code>Run</code> dans <code>run.rs:19</code></td><td>Pas de copie complète du Hub ; conserver seulement la cause utile.</td></tr>
+      <tr><td>Action</td><td>Cible physique, garde, permis</td><td><code>hub.command_*</code></td><td>Annulation possible jusqu’à l’émission ; réponse et état observé séparés.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Deux files d’événements, deux contrats</h3>
+  <div class="two">
+    <div class="notice blue"><strong>États ordinaires.</strong> Le Hub n’émet pas de changement pour une valeur identique, mais une observation identique rafraîchit néanmoins les calculs et la fraîcheur. Une pulsation explicite est un autre contrat : elle peut produire un événement répété, en plus de son occurrence dédiée. Les workflows d’état utilisent <code>last</code> pour détecter les transitions.</div>
+    <div class="notice"><strong>Occurrences.</strong> Deux appuis identiques sont deux événements. La consommation est enregistrée avant les actions, en direct au plus une fois. Une ancienne occurrence ne doit pas activer une nouvelle version après une attente de persistance.</div>
+  </div>
+  <h3>L’optimisation réellement utile : indexer les déclencheurs d’état</h3>
+  <p><code>on_state</code> parcourt aujourd’hui chaque déclencheur de chaque automatisation active. Le bon remède n’est pas un graphe <code>Edge24</code> universel : c’est un index <code>PointId → déclencheurs actifs</code>, reconstruit avec la même discipline de versions que <code>occurrence_index</code>.</p>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Exigence</th><th scope="col">Contrat proposé</th></tr></thead>
+    <tbody>
+      <tr><td>Version et activation</td><td>Chaque entrée conserve empreinte, activation et identité du déclencheur ; une ancienne définition ne reçoit pas un événement appartenant à une nouvelle activation.</td></tr>
+      <tr><td>File déjà consommée</td><td>Une mise à jour de l’index ne « relit » pas les valeurs et ne change pas <code>last</code> pour les événements déjà en attente.</td></tr>
+      <tr><td>Perte du bus</td><td><code>Lagged</code> provoque la resynchronisation explicite et <code>remember_all</code>, sans inventer les occurrences manquées.</td></tr>
+      <tr><td>Mesure</td><td>Comparer travail par observation, latence de propagation et mémoire de l’index, avec 0, 1 et 400 automatismes, puis des points sans abonné.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="recommend"><strong>La garde ne disparaît jamais dans une vue.</strong> Un workflow validé agit comme <code>Origin::Automation</code>, avec la lignée et le permis correspondants. La cible physique est résolue avant chaque effet, et aucun verrou du modèle n’est conservé pendant une attente réseau, humaine ou de minuterie.</div>
+</section>
+
+<section id="virtuels">
+  <div class="kicker"><span class="index">07</span><span class="eyebrow">Appareils réels et virtuels</span><span class="line"></span></div>
+  <h2>« Virtuel » n’est pas un type unique.<br>C’est une composition à expliciter.</h2>
+  <p>Le corpus distingue déjà les pointeurs des valeurs calculées. Le code ajoute les composites comme les luminaires : ils possèdent des points dérivés et un traducteur de commandes. V6-KIMI conserve ces distinctions au lieu de réduire tous les virtuels à <code>Alias32</code>.</p>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Objet</th><th scope="col">État propre ?</th><th scope="col">Commande possible ?</th><th scope="col">Disponibilité / suppression</th><th scope="col">Exemple</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Appareil physique</strong></td><td>Oui, observations du pilote</td><td>Oui, via propriétaire et garde</td><td>Disponibilité du pilote ; retrait retire état et index</td><td>Capteur IEEE Z2M, appareil HTTP</td></tr>
+      <tr><td><strong>Alias / vue</strong></td><td><strong>Non</strong> : résolution de la source</td><td>Seulement par résolution vers la source physique</td><td>Suit explicitement la source ; source absente → indisponible, jamais zéro</td><td>Température d’une pièce exposée ailleurs</td></tr>
+      <tr><td><strong>Calcul</strong></td><td>Oui, valeur dérivée + provenance</td><td>Lecture seule en général</td><td>Exclusions/péremption ; recalcul au démarrage</td><td>Moyenne K1, durée K3</td></tr>
+      <tr><td><strong>Composite virtuel</strong></td><td>Oui, projection des membres</td><td>Oui, traduite en ordres bornés vers les membres</td><td>Politique explicite ; liens inverses mis à jour</td><td>Luminaire <code>lumieres:*</code></td></tr>
+      <tr><td><strong>Action / binding</strong></td><td><strong>Non</strong> : occurrences et journal</td><td>Oui, avec identité d’occurrence et garde</td><td>Pas d’état « pressé » persistant</td><td>Bouton, « Identifier »</td></tr>
+      <tr><td><strong>Exécution de workflow</strong></td><td>Run, cause, étape, résultat</td><td>Effets via la garde et le permis</td><td>Annulation par lignée ; reprise limitée au contrat</td><td>Run d’un graphe validé</td></tr>
+    </tbody>
+  </table></div>
+  <h3>La résolution d’un alias, sans illusion de gratuité</h3>
+  <pre>PointId de la vue
+  → annuaire unique (et éventuellement handle + génération)
+  → ViewSpec { source, policy, presentation }
+  → observation canonique de la source
+  → disponibilité et droits de la cible physique</pre>
+  <ul class="checklist">
+    <li>Aucune <code>Sample</code> nouvelle pour un alias ; aucune allocation de fiche d’état à la lecture.</li>
+    <li>Les chaînes d’alias sont aplaties à la configuration ; les cycles sont refusés.</li>
+    <li>Les calculs peuvent, eux, dépendre d’autres calculs via le DAG K1 borné à 16 niveaux.</li>
+    <li>La suppression d’une source invalide la vue et les index. Aucun ancien handle ne désigne un remplaçant.</li>
+    <li>La disponibilité d’un composite est une politique explicite (<code>any</code>, <code>all</code> ou règle métier), jamais une supposition.</li>
+  </ul>
+  <h3>Zones : une sélection, pas une commande générique</h3>
+  <p>Une pièce ou une zone ne devient pas automatiquement un appareil virtuel commandable. D12 impose déjà que « éteindre la pièce » vise les lampes et luminaires, jamais la télé, l’enceinte ou les prises. La sélection doit donc conserver sa sémantique et les pièces protégées de chaque cible.</p>
+  <div class="notice"><strong>Une zone est un <code>SelectionSpec</code> borné</strong> : membres explicites, types de points autorisés, déduplication des identités, expansion des pièces protégées et refus des cibles croisées. Le CSR peut accélérer son parcours ; il ne décide jamais quelles actions sont sûres.</div>
+</section>
+
+<section id="identite">
+  <div class="kicker"><span class="index">08</span><span class="eyebrow">Identités et annuaire</span><span class="line"></span></div>
+  <h2>Les noms restent l’identité.<br>Les numéros restent des adresses logiques.</h2>
+  <p>Le projet possède déjà deux représentations complémentaires : les identités stables <code>DeviceId</code>/<code>PointId</code> et les identifiants numériques de l’historique. D13 conserve ces derniers dans <code>catalog(id, point)</code>, avec les mêmes IDs au retour arrière. Il ne faut pas introduire un troisième système parallèle.</p>
+  <div class="mini-diagram">
+    <div class="node"><strong>PointId persistant</strong><small>API, définitions, labels, historique, archive</small></div>
+    <div class="arrow">↔</div>
+    <div class="node"><strong>catalog.id</strong><small>Entier durable, écrit avant usage et conservé par D13</small></div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>Handle interne</strong><small>Index + génération éventuelle, dérivé de l’annuaire</small></div>
+  </div>
+  <div class="two">
+    <div>
+      <h3>Règles non négociables</h3>
+      <ul class="checklist">
+        <li>L’annuaire a <strong>un seul propriétaire</strong> et une écriture durable avant le premier usage.</li>
+        <li>Un ID annulé par transaction ne doit pas être réattribué à un autre point ; l’implémentation actuelle le documente déjà dans <code>store.rs:352</code>.</li>
+        <li>Au redémarrage, le nom reconstruit le handle ; le handle seul ne prouve rien.</li>
+        <li>Un handle n’est jamais une identité publique, une adresse mémoire ou un pointeur de <code>Vec</code>.</li>
+        <li>Un handle périmé est refusé après suppression/réemploi ; l’épuisement est une erreur, jamais un rebouclage.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Si MQTT porte aussi un numéro</h3>
+      <p>La décision antérieure V2 autorise le numéro <strong>en plus du nom</strong>, jamais à sa place. Le client qui ne connaît pas ce numéro redemande la méta ; il ne devine pas.</p>
+      <p>Cela ne justifie pas de faire transiter les numéros d’annuaire par les ponts d’intégration. Le pont de la section « Ponts MQTT réels mesurés » rejoue les messages natifs avec leur provenance ; les numéros restent une méta servie par l’API. Le contrat reste à versionner avec ses abonnés et son mécanisme de resynchronisation.</p>
+      <h3>Pourquoi ne pas utiliser seulement <code>u64</code> ?</h3>
+      <p>D13 réserve 19 bits au point dans la clé d’un relevé. Le mapping doit donc respecter cette borne et rester identique au rollback. Un nouvel ID <code>u64</code> indépendant ajouterait une conversion supplémentaire et un risque de divergence.</p>
+    </div>
+  </div>
+  <div class="recommend"><strong>Optimisation pragmatique :</strong> avant de généraliser les handles, ajouter une lecture empruntée de <code>PointId</code> qui évite de reformer un <code>DeviceId</code> à chaque split, et réutiliser les identifiants déjà présents dans les descriptions. Le gain se mesure d’abord ; l’annuaire compact se déploie ensuite seulement là où il sert.</div>
+</section>
+
+<section id="memoire">
+  <div class="kicker"><span class="index">09</span><span class="eyebrow">Mesures et copies</span><span class="line"></span></div>
+  <h2>Le layout compte.<br>Les copies du chemin comptent davantage.</h2>
+  <h3>Mesures KIMI des types actuels, pas un budget RAM</h3>
+  <p>Ces tailles ont été obtenues avec <code>size_of</code>/<code>align_of</code> sur macOS ARM64, Rust 1.91. Elles décrivent les conteneurs, pas le contenu des tas, les capacités ou la RSS. Elles empêchent une comparaison naïve entre <code>Sample</code> et <code>Row96</code>.</p>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Type actuel</th><th class="num">Taille</th><th class="num">Alignement</th><th scope="col">Lecture</th></tr></thead>
+    <tbody>
+      <tr><td><code>DeviceId</code> / <code>PointId</code></td><td class="num">16 o</td><td class="num">8 o</td><td>Handle <code>Arc&lt;str&gt;</code>, pas les octets de la chaîne.</td></tr>
+      <tr><td><code>Value</code></td><td class="num">24 o</td><td class="num">8 o</td><td>Variant typée ; texte partagé séparément.</td></tr>
+      <tr><td><code>Sample</code></td><td class="num">32 o</td><td class="num">8 o</td><td>Valeur + un timestamp ; aucun précédent.</td></tr>
+      <tr><td><code>Option&lt;Sample&gt;</code></td><td class="num">32 o</td><td class="num">8 o</td><td>Niche du compilateur, pas une promesse portable.</td></tr>
+      <tr><td><code>PointSpec</code></td><td class="num">112 o</td><td class="num">8 o</td><td>Description et contraintes ; comparaison possible avec V6 seulement à périmètre égal.</td></tr>
+      <tr><td><code>Device</code></td><td class="num">160 o</td><td class="num">8 o</td><td>Description conteneur, hors points et chaînes.</td></tr>
+      <tr><td><code>Arc&lt;Device&gt;</code></td><td class="num">8 o</td><td class="num">8 o</td><td>Partage déjà présent ; le clone incrémente un compteur atomique.</td></tr>
+    </tbody>
+  </table></div>
+  <p><a href="https://doc.rust-lang.org/reference/type-layout.html">La référence Rust</a> rappelle que la taille inclut le padding et que le layout <code>Rust</code> ordinaire n’a pas de garantie portable. Les offsets V6 sont donc des preuves sur une cible, pas un format de fichier. <code>repr(C, align(N))</code> augmente aussi la taille au prochain multiple de <code>N</code>.</p>
+  <h3>Comparaison du moteur intégré existant, 496 appareils synthétiques</h3>
+  <p>Le banc V5 lie les vraies crates et le vrai moteur d’automatismes. Les trois layouts sont des adaptateurs de rejeu, <strong>pas trois implémentations du Hub</strong>. Cela mesure le coût d’un adaptateur, pas la promesse d’une migration.</p>
+  <div class="metric-select">
+    <label>Disposition à comparer
+      <select id="layout-choice-kimi">
+        <option value="uniform96">uniform96</option>
+        <option value="compact64">compact64</option>
+        <option value="columns">columns</option>
+      </select>
+    </label>
+    <span class="tag tag-test">CAPTURE V5 · COMPTAGE</span>
+  </div>
+  <div class="metric-hero" id="layout-metrics" aria-live="polite"></div>
+  <div id="layout-bars"></div>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Layout</th><th class="num">Adaptateur vivant</th><th class="num">Vivant final processus</th><th class="num">Anonyme stable</th><th scope="col">Portée</th></tr></thead>
+    <tbody>
+      <tr><td>uniform96</td><td class="num">218 240 o</td><td class="num">2 907 447 o</td><td class="num">3 522 560 o</td><td>Référence du banc, 3 rondes agrégées dans la capture.</td></tr>
+      <tr><td>compact64</td><td class="num">170 624 o</td><td class="num">2 859 831 o</td><td class="num">3 477 504 o</td><td>−47 616 o sur l’adaptateur et le vivant final ; environ 1,64 % du final.</td></tr>
+      <tr><td>columns</td><td class="num">234 112 o</td><td class="num">2 923 317 o</td><td class="num">3 543 040 o</td><td>Plus coûteux ici que compact64 ; pas de classement universel.</td></tr>
+    </tbody>
+  </table></div>
+  <p>La différence entre uniform96 et compact64 est réelle, mais limitée par rapport au processus. Cela justifie la règle KIMI : <strong>profiler les chemins et les propriétaires avant de changer chaque ligne</strong>. Source : <a href="../../../tools/moteur-integre-banc/sorties/campagnes/20261025T140712Z/resultats.json">capture intégrée V5</a>.</p>
+  <h3>Trois chantiers qui précèdent Row96/128</h3>
+  <div class="three">
+    <article class="card"><span class="callout-number">01</span><h3>Vues sans copie profonde</h3><p><code>Model::view</code> clone <code>BTreeMap&lt;Arc&lt;str&gt;, Sample&gt;</code> pour chaque appareil (<code>hub.rs:2841</code>). Évaluer d’abord des vues empruntées pour la sérialisation synchrone et des instantanés <code>Arc</code> seulement quand la durée de vie l’exige.</p><p class="muted"><code>Arc::make_mut</code> est une option, pas une réponse automatique : un appareil muté pendant qu’un snapshot existe paierait une copie.</p></article>
+    <article class="card"><span class="callout-number">02</span><h3>Chemins sans allocations</h3><p><code>PointId::split</code> reconstruit un <code>DeviceId</code> ; <code>PointId::new</code> formate une nouvelle chaîne. Une vue <code>split_ref</code>, des recherches empruntées et des clés déjà internées réduisent le travail sans changer le contrat public.</p><p class="muted">Cibler d’abord <code>record_state</code>, <code>hub.state</code>, <code>rooms_of</code> et les boucles de calcul.</p></article>
+    <article class="card"><span class="callout-number">03</span><h3>Index au bon niveau</h3><p>Indexer les déclencheurs <code>when_state</code>/<code>when_threshold</code> et réutiliser les index inverses K1/K3/luminaires avant toute généralisation CSR.</p><p class="muted">Un accès direct utile bat une nouvelle structure sophistiquée appliquée au mauvais problème.</p></article>
+  </div>
+  <h3>Concurrence : ne pas optimiser un problème inexistant</h3>
+  <p>Le Hub utilise un <code>RwLock</code> de modèle, avec des mutations centralisées et des règles d’ordre documentées entre modèle et signaux. Les sondes V6 sur quatre écrivains et le faux partage sont utiles pour comprendre le cache, mais elles ne démontrent pas qu’il faut fragmenter le Hub ou ajouter des atomiques.</p>
+  <p>La règle reste : pas de réseau, de disque, d’attente humaine ou d’<code>await</code> sous le verrou du modèle ; préparer un instantané, libérer, puis calculer/sérialiser/transmettre. <a href="https://github.com/tokio-rs/tokio/blob/master/tokio/src/sync/rwlock.rs">Tokio documente aussi une politique équitable de préférence aux écrivains</a>, différente de l’implémentation dépendante de l’OS de <code>std::sync::RwLock</code> : changer de verrou n’est pas une optimisation neutre.</p>
+</section>
+
+<section id="persistance">
+  <div class="kicker"><span class="index">10</span><span class="eyebrow">Persistance et reprise</span><span class="line"></span></div>
+  <h2>La mémoire se reconstruit.<br>Elle ne devient pas le format de sauvegarde.</h2>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Objet</th><th scope="col">Vérité durable</th><th scope="col">Au redémarrage</th><th scope="col">À ne pas faire</th></tr></thead>
+    <tbody>
+      <tr><td>Descriptions et labels</td><td>Configuration, <code>labels.toml</code>, définitions validées</td><td>Republication et reconstruction des index</td><td>Inférer l’identité depuis un nom ou une position.</td></tr>
+      <tr><td>Observations</td><td>Cache actuel + historique D13</td><td>Âge original conservé ; jamais présenté comme frais</td><td>Restaurer une observation calculée comme si elle était mesurée.</td></tr>
+      <tr><td>Calculs K1</td><td>Définitions validées</td><td>Recalcul depuis les sources ; exclusions si invalides</td><td>Restaurer directement leur valeur projetée.</td></tr>
+      <tr><td>Durées K3</td><td><code>durations.json</code> et checkpoints</td><td>Intervalle ouvert fermé au checkpoint ; nouvelle observation requise</td><td>Compter l’arrêt comme du temps connu.</td></tr>
+      <tr><td>Runs et occurrences</td><td>Fichiers métier versionnés et reçus</td><td>Interruption signalée, effets non rejoués aveuglément</td><td>Confondre reprise et seconde exécution.</td></tr>
+      <tr><td>Historique et archive</td><td>Turso récent, outbox, journal immuable, Parquet</td><td>Reprise par <code>durable_upto</code>/<code>published_upto</code>/<code>generation</code></td><td>Recréer une séquence parallèle ou reconstruire depuis des tables mutables.</td></tr>
+      <tr><td>Handles internes</td><td><strong>Non persistés</strong> ; seule l’annuaire <code>catalog.id</code> fait foi</td><td>Recréés depuis les identités stables</td><td>Sérialiser <code>repr(C)</code>, <code>HashMap</code> ou adresses.</td></tr>
+    </tbody>
+  </table></div>
+  <p>D13 est une architecture cible en cours de déploiement par lots, pas une affirmation que tous les chemins sont déjà migrés. Le service d’archive est distinct ; le récent, l’outbox et les lectures gardent leurs tickets et leurs preuves. Voir <a href="../../ARCHITECTURE.md">ARCHITECTURE, D13</a> et <a href="../../components/historique-energie.md">Historique &amp; énergie</a>.</p>
+  <div class="notice"><strong>Point critique de toute migration :</strong> observation, publication du bus et admission dans l’outbox doivent conserver un ordre et une identité cohérents. La V6 ne couvre pas cette transaction. Elle doit être conçue avec D13, pas ajoutée après la <code>Bank</code>.</div>
+</section>
+
+<section id="migration">
+  <div class="kicker"><span class="index">11</span><span class="eyebrow">Migration par portes</span><span class="line"></span></div>
+  <h2>On avance par preuves réversibles.<br>Pas par grande réécriture.</h2>
+  <div class="decision-line"><b>PHASE 0 · BASE</b><p><strong>Mesurer sans changer la sémantique.</strong> Toolchain 1.99.1, tests complets, capture intégrée actuelle, copies de snapshots, allocations par observation et budget D13. Aucune optimisation acceptée sans scénario reproductible.</p></div>
+  <div class="decision-line"><b>PHASE 1 · FLUX</b><p><strong>Petites modifications à faible risque.</strong> <code>split_ref</code>/recherches empruntées, vues de lecture sans copie profonde, index des déclencheurs d’état. API, messages et comportement inchangés. Adopter seulement si le gain est répétable et les budgets restent verts.</p></div>
+  <div class="decision-line"><b>PHASE 2 · ANNUAIRE</b><p><strong>Unifier les handles avec <code>catalog.id</code>.</strong> Une seule source d’allocation, tests de non-réutilisation, restart, suppression et rechargement. Déployer dans les chemins chauds qui en bénéficient, pas comme nouvelle API publique.</p></div>
+  <div class="decision-line"><b>PHASE 3 · VUES</b><p><strong>Formaliser <code>ViewSpec</code> seulement si le besoin produit est confirmé.</strong> Alias aplatis, disponibilité explicite, suppression, garde et notifications. Les composites existants migrent au cas par cas ; aucune zone générique commandable.</p></div>
+  <div class="decision-line"><b>PHASE 4 · LAYOUTS</b><p><strong>Comparer Row64/Row96/128 sur le vrai moteur.</strong> Inclure toutes les charges, la reconstruction, la persistance, les pics et la cible ARM64. Le faux partage multicœur n’entre en discussion que si la concurrence réelle le démontre.</p></div>
+  <h3>Conditions d’arrêt</h3>
+  <ul class="checklist stop-item">
+    <li>Un gain limité à un microbenchmark, absent du chemin intégré : on documente et on s’arrête.</li>
+    <li>Une nouvelle structure exige deux vérités durables, un second scheduler ou un second allocateur : on la refuse.</li>
+    <li>Une régression &gt; 20 %, un dépassement de budget ou une perte sémantique : on revient au jalon précédent.</li>
+    <li>Un cas de suppression, d’unité, de reconnexion ou de reprise non défini : la phase ne se termine pas.</li>
+  </ul>
+  <h3>Budgets inchangés</h3>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Mesure</th><th scope="col">Plafond du projet</th><th scope="col">Preuve attendue</th></tr></thead>
+    <tbody>
+      <tr><td>Mémoire anonyme</td><td>≤ 32 Mio</td><td><code>memory.stat</code> du cgroup, stable et pic, pas <code>size_of</code> ou un total de zones.</td></tr>
+      <tr><td>CPU au repos</td><td>≤ 0,5 %</td><td>Aucun client, régime stabilisé, aucune tâche inactive ajoutée.</td></tr>
+      <tr><td>API</td><td>p95 listes ≤ 25 ms ; santé ≤ 5 ms</td><td>Mesures de bout en bout, avec vues et persistance actives.</td></tr>
+      <tr><td>Démarrage</td><td>≤ 2 s jusqu’à sain</td><td>Reconstruction et rechargement inclus.</td></tr>
+      <tr><td>Image</td><td>≤ 40 Mo</td><td>Image réelle ARM64, symboles conservés.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Voir <a href="../../PERFORMANCE.md">PERFORMANCE.md</a> et la <a href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">documentation cgroup v2</a> pour <code>memory.current</code>, <code>memory.peak</code> et <code>memory.stat</code>.</p>
+</section>
+
+<section id="ponts">
+  <div class="kicker"><span class="index">12</span><span class="eyebrow">Ponts MQTT mesurés sur deux brokers réels</span><span class="line"></span></div>
+  <h2>Plusieurs brokers personnels,<br>un seul Hub qui garde la vérité.</h2>
+  <p>Un équipement qui ne parle que MQTT sur son propre broker (Home Assistant, DarwinMQTT, un capteur autonome) ne doit pas devenir une exception : un <strong>pont d’intégration</strong> s’abonne à chaque broker externe, transforme chaque message une fois au bord, puis le rejoue dans le Hub de Moli avec une provenance explicite. Ce n’est pas une haute disponibilité : rien n’est répliqué, la garde et les sessions restent locales. Une sonde Rust réelle (<code>tools/mqtt-live-probe</code>) a vérifié ce chemin de bout en bout contre deux brokers Home Assistant réels, en lecture seule, sans publier aucun ordre, sans écrire aucun fichier et sans exporter aucun topic, nom ou valeur.</p>
+  <h3>Correction d’un chiffre : 68 n’était pas le nombre d’appareils</h3>
+  <div class="cards">
+    <article class="card"><span class="big">68</span><p><strong>entrées du catalogue Z2M d’un broker</strong> — les appareils annoncés par <code>bridge/devices</code>, rien de plus. Ce n’est ni le total de la maison, ni le total des entités.</p></article>
+    <article class="card"><span class="big">74</span><p><strong>groupes d’appareils distincts dans la découverte HA</strong> du même broker (identités <code>dev.ids</code>/<code>cns</code>, jamais exportées) — jusqu’à 21 entités sur un seul appareil ; 27 sur le second broker.</p></article>
+    <article class="card"><span class="big">692</span><p><strong>configurations d’entités HA</strong>, pas 692 appareils : 319 capteurs, 76 selects, 70 métadonnées <code>device_automation</code> (des déclencheurs, pas des automatismes), 47 boutons…</p></article>
+    <article class="card"><span class="big">96</span><p><strong>appareils sur le Hub partagé avec deux brokers distincts</strong> = 68 + 26 importés sans collision + 2 agrégats synthétiques. La coexistence multi-ponts est prouvée, IDs clients uniques, aucune erreur de transport.</p></article>
+  </div>
+  <p class="muted">Le nombre total d’appareils d’une maison n’est pas mesurable depuis le seul MQTT : les automatismes internes de Home Assistant et les intégrations sans MQTT ne laissent aucune trace sur le broker. Aucun comptage MQTT ne sera présenté comme un inventaire de la maison.</p>
+  <h3>La découverte dominante : Home Assistant publie tout, par <code>mqtt_statestream</code></h3>
+  <p>L’audit élargi (<code>--all-topics</code>, souscription <code>#</code> explicite, pas le défaut) a répondu à la question « d’où viennent tous ces messages » : sur le broker principal, <strong>7 310 des 8 002 messages de la famille <code>homeassistant</code> appartiennent à <code>mqtt_statestream</code></strong> — l’intégration que l’utilisateur avait activée (<code>base_topic: homeassistant/statestream</code>, attributs et horodatages inclus). Chaque entité HA incluse y est reflétée : <code>…/state</code> (821 messages) plus chaque attribut en topic retained individuel (6 489 messages), profondeur 5 quasi uniforme. Le second broker présente le même motif. Conséquence directe pour Moli : <strong>un pont qui sait lire <code>homeassistant/statestream/#</code> atteint toutes les entités de HA</strong>, y compris celles sans découverte MQTT (capteurs template, entrées, automatisations vues comme états), avec des payloads majoritairement scalaires (3 168 chaînes JSON, 2 065 textes libres, 1 147 nombres sur la fenêtre mesurée).</p>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Mesure (30 s, lecture seule)</th><th class="num">Broker A</th><th class="num">Broker B</th><th scope="col">Conséquence pour Moli</th></tr></thead>
+    <tbody>
+      <tr><td>Messages / retained</td><td class="num">8 584 / 7 034</td><td class="num">2 954 / 2 934</td><td>Le broker est surtout un magasin retained : tout arrive d’un coup à l’abonnement. Un retained reçu n’est pas une mesure neuve.</td></tr>
+      <tr><td>Familles de topics</td><td class="num">homeassistant 8 002 · zigbee2mqtt 371 · $SYS 167 · autres 44</td><td class="num">homeassistant 2 896 · zigbee2mqtt 55 · alarmo 3</td><td>La configuration est un flux vivant, pas un import unique ; la famille <code>alarmo</code> n’existe que sur le broker B.</td></tr>
+      <tr><td>Groupes d’appareils / entités HA</td><td class="num">74 / 692</td><td class="num">27 / 267</td><td>Deux ordres de grandeur distincts : appareil, entité, topic. Ne jamais les confondre dans un comptage.</td></tr>
+      <tr><td>Topics d’état / partagés</td><td class="num">92 / 74</td><td class="num">29 / 28</td><td>74 topics portent plusieurs points : un topic n’est jamais une identité de point.</td></tr>
+      <tr><td>Payload maximal observé</td><td class="num">511 238 o</td><td class="num">343 689 o</td><td>Confirme la borne entrante de 4 Mio ; les gros objets existent réellement.</td></tr>
+      <tr><td>Traitement (binaire debug)</td><td class="num">p50 ≈ 241 µs/message, hub_apply p50 ≈ 6,9 µs</td><td class="num">p50 ≈ 391 µs/message</td><td>Le chemin parse → decode → hub tient largement le débit observé ; aucune erreur de transport.</td></tr>
+      <tr><td>Agrégat K1 réel (≈20 sources °C)</td><td class="num">91 contrôles · 0 écart</td><td class="num">98 contrôles · 0 écart</td><td>Le moteur calculé actuel est vérifié à parité avec un recalcul naïf de référence, sur données réelles des deux brokers.</td></tr>
+      <tr><td>Abonnements acceptés / refusés</td><td class="num">2 / 0</td><td class="num">2 / 0</td><td>En audit, un wildcard suffit ; en production, le pont souscrit les préfixes configurés, jamais <code>#</code> par défaut.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Le pont proposé : bidirectionnel, borné, avec provenance</h3>
+  <div class="two">
+    <div>
+      <h3>Entrant (broker externe → Moli)</h3>
+      <ul class="checklist">
+        <li>Chaque broker externe est une <code>InstanceId</code> distincte : la provenance est structurelle ; en collision de nom, on ne fusionne jamais par topic ni par nom — l’identité reste <code>DeviceId(instance, identifiant natif)</code>.</li>
+        <li>La découverte HA est consommée comme un catalogue vivant : tombstone = retrait, pas oubli ; <code>statestream</code> fournit les entités sans découverte.</li>
+        <li>Textes libres (titres de musiques, applications, programmes) : bornes explicites de longueur, jamais transformés en énumérations ; les énumérations restent fermées (<code>enum_options</code> observées : 76).</li>
+        <li>Un retained rejoué à l’abonnement est marqué comme tel : aujourd’hui <code>record_state</code> ne reçoit pas le drapeau <code>retain</code> hors keypad — le faire remonter est un préalable.</li>
+        <li><code>expire_after</code> et <code>force_update</code> sont absents des configurations observées, mais le pont doit les honorer : une mesure expirée devient inconnue, pas figée.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Sortant (Moli → broker externe), sélectif</h3>
+      <ul class="checklist">
+        <li>Republication d’états choisis, jamais du bus entier ; anti-boucle : un message entrant par un pont ne repart jamais par ce pont.</li>
+        <li>Une commande reçue d’un broker externe n’est jamais <code>Origin::Ui</code> : elle entre par le chemin de commande ordinaire, avec garde et permis.</li>
+        <li>Codes, PIN et gabarits de commande d’alarme : jamais stockés, rejoués ni journalisés.</li>
+        <li>Actions système d’un hôte (volume, veille, arrêt via DarwinMQTT/macOS) : mêmes règles qu’une commande physique, pièces protégées comprises ; pas d’état optimiste publié avant confirmation.</li>
+      </ul>
+    </div>
+  </div>
+  <h3>Alarme : vérifiée, et à relire ainsi</h3>
+  <p>Aucune configuration <code>alarm_control_panel</code> MQTT Discovery n’existe sur aucun des deux brokers ; la famille <code>alarmo</code> n’apparaît que sur le broker B (3 messages, contenus non exportés). Autrement dit : l’alarme bien configurée existe dans Home Assistant, mais ne publie son état que sur un seul des deux brokers — le pont doit donc traiter la présence d’un flux comme une donnée de configuration, pas comme une hypothèse. Si Alarmo est activé ailleurs, son contrat public impose le traitement le plus strict : état retained en lecture, événements non retained, commandes avec code jamais transportées par Moli.</p>
+  <h3>Différence observée entre les deux brokers</h3>
+  <p>Les deux brokers de la passe 17 sont des Mosquitto de Home Assistant avec le même compte de test, mais ils ne se comportent pas pareil : sur le broker A, chaque publication du pont revient sur sa souscription (32 aller-retours sur 32) ; sur le broker B, <strong>aucune</strong> publication du pont n’est revenue (12 publiées, 0 écho, 0 commande auto-test reçue), sans aucune erreur de transport. L’hypothèse à vérifier est côté broker B (ACL ou configuration qui filtre les écrits du compte) ; la leçon pour Moli tient déjà : <strong>le pont doit mesurer par broker si ses écrits reviennent</strong>, et signaler un broker qui accepte les lectures mais pas les écrits, au lieu de croire que la publication a réussi.</p>
+  <h3>Les types de valeurs réellement stockés, mesurés</h3>
+  <p>La sonde classe chaque point du catalogue Z2M réel selon le <code>Kind</code> Moli qu’il produit, et chaque valeur appliquée au Hub selon sa forme <code>Value</code>. C’est la réponse mesurée à « quels types doit stocker une box domotique » : quatre formes scalaires suffisent au chemin chaud, le reste est du contrat (bornes, énumérations fermées) porté par <code>PointSpec</code>, pas par de nouvelles structures.</p>
+  <div class="two">
+    <div class="scroll"><table>
+      <thead><tr><th scope="col">Kind du catalogue réel</th><th class="num">Points</th><th scope="col">Rôle</th></tr></thead>
+      <tbody>
+        <tr><td><code>numeric</code> (entier ou décimal, borné)</td><td class="num">333</td><td>Mesures et réglages : <code>Value::Int</code> quand c’est entier, <code>Value::Float</code> sinon.</td></tr>
+        <tr><td><code>enum</code> (valeurs fermées)</td><td class="num">124</td><td>Listes HA <code>select</code> : ensemble fini connu à la configuration, jamais ouvert à l’exécution.</td></tr>
+        <tr><td><code>binary</code> (booléen)</td><td class="num">113</td><td>Contacts, présence, états on/off.</td></tr>
+        <tr><td><code>text</code> (libre)</td><td class="num">11</td><td>Le plus rare : à borner en longueur, jamais à énumérer (titres, applications, programmes).</td></tr>
+      </tbody>
+    </table></div>
+    <div class="scroll"><table>
+      <thead><tr><th scope="col">Valeur appliquée au Hub</th><th class="num">Occurrences (30 s)</th></tr></thead>
+      <tbody>
+        <tr><td><code>int</code></td><td class="num">783</td></tr>
+        <tr><td><code>text</code></td><td class="num">313</td></tr>
+        <tr><td><code>bool</code></td><td class="num">301</td></tr>
+        <tr><td><code>float</code></td><td class="num">170</td></tr>
+        <tr><td><code>null</code> (inconnu explicite)</td><td class="num">150</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <p class="muted">Côté payloads bruts (tous topics confondus) : 3 168 chaînes JSON, 2 065 textes libres, 1 147 nombres — la domination du texte vient de <code>statestream</code> et des attributs, pas des points Z2M. Les deux vues sont nécessaires : le <code>Kind</code> borne ce que Moli stocke ; la forme brute borne ce que le pont doit savoir lire.</p>
+  <div class="notice"><strong>Correction de périmètre du POC — 26 octobre 2026.</strong> L’arbre à 15 nœuds décrit ci-dessous était une partition synthétique par hachage ; il ne représentait ni les vraies pièces ni leurs étages. Le miroir initial ne couvrait que le catalogue Z2M et son affichage résumait incorrectement les appareils multicanaux. La projection corrigée lit le registre Home Assistant et statestream : identités natives stables, tous les canaux décrits avec leurs propres libellés/unités/valeurs, parent réel de chaque pièce, génériques conditionnels avec couverture connue/inconnue. Le mode <code>--virtual-tree</code> utilise désormais cette projection POC distincte de K1. Les temps de transformation, calcul/préparation et aller-retour MQTT, les volumes et le débit sont prévus en retained par pont. <strong>La projection V3 est relue indépendamment sur le broker A ; l’accès du compte de test au préfixe virtuel du broker B reste à résoudre. Les anciennes mesures ne valident pas cette nouvelle chaîne.</strong> Voir <a href="../../../tools/mqtt-live-probe/README.md">le contrat actuel de la sonde</a>.</div>
+  <h3>Contrat MQTT virtuel V3 : la hiérarchie est dans les données</h3>
+  <p>La correction du POC remplace la partition synthétique par le registre réel. Une maison est identifiée par l’identité stable de son installation, les pièces portent leur vrai <code>parent</code>, et les appareils décrivent tous leurs canaux. La racine est <code>moli-probe/maison/&lt;id&gt;/</code> : <code>config</code> contient la description complète ; <code>canal/&lt;id&gt;/state</code> contient la valeur du seul canal modifié ; <code>noeud/&lt;id&gt;/state</code> les génériques ; <code>systeme/state</code> les compteurs et temps moyens. Les IDs sont indépendants des noms et de l’ordre des ponts. Les IDs locaux sont qualifiés par la maison. Le topic est une adresse canonique par ID ; le lien <code>parent</code> porte l’imbrication réelle, sans changer l’adresse lors d’un renommage ou déplacement. Plusieurs sources dans une même maison exigent un rattachement explicite, pas une déduction depuis le broker.</p>
+  <p>Une interface s’abonne au MQTT virtuel, reçoit le manifeste et les retained courants dans un ordre quelconque, résout les références, puis traite les seuls changements. <strong>MQTT transporte les publications ; c’est la projection qui produit le différentiel.</strong> Les noms, unités et paramètres acceptés ne sont plus répétés dans chaque état. Le manifeste repart à l’initialisation ou lors d’un changement de description. Les températures d’eau, consignes et diagnostics ne deviennent pas des températures ambiantes ; les couvertures connues/inconnues restent visibles.</p>
+  <div class="scroll"><table><thead><tr><th>Information</th><th>Où elle vit</th><th>Quand elle est envoyée</th></tr></thead><tbody>
+    <tr><td>Noms, unités, parents, listes d’applications, contrats et bornes de commandes</td><td>Description froide, en mémoire ou fichier privé selon le propriétaire de la donnée</td><td>Instantané initial retained, puis modification réelle de description</td></tr>
+    <tr><td>Valeur typée, qualité et réception d’un canal</td><td>État actif et index de routage</td><td>Changement de valeur/qualité ; retained par canal</td></tr>
+    <tr><td>Moyennes, nombres d’ouvertures, éclairages et chauffages actifs</td><td>Calcul déterministe sur les canaux de la portée réelle</td><td>Résultat changé, avec couverture ; membres et unités dans le manifeste</td></tr>
+    <tr><td>Ordres humains</td><td>Paramètres bornés selon le contrat disponible</td><td>Sur intention explicite, jamais retained ni rejoués comme un état</td></tr>
+  </tbody></table></div>
+  <p>Dans le POC, un fichier temporaire privé 0600 sert de description froide ; les chaînes de noms sont libérées du modèle actif. Cela ne supprime ni les index, ni les unités utiles aux calculs, ni les temporaires de sérialisation, ni le cache de pages de l’OS. Un fichier sur tmpfs ne réduit pas la RAM totale. <strong>Cette projection JSON ne constitue pas une implémentation Row64.</strong> Le README décrit les bornes et la distinction entre mémoire allouée, pic et RSS.</p>
+  <div class="notice"><strong>Ne pas déplacer le coût hors du tableau.</strong> Le POC publie encore un manifeste retained dans Mosquitto. Libérer les noms du processus de projection ne prouve pas que la RAM totale baisse : le cache retained du broker, les temporaires et les pages de fichiers restent à mesurer. Pour le MQTT virtuel embarqué cible, la retenue doit être une vue de la donnée canonique, pas une seconde collection de payloads JSON.</div>
+  <div class="scroll"><table><thead><tr><th>Propriétaire de description</th><th>Représentation cible</th><th>RAM permanente utile</th></tr></thead><tbody>
+    <tr><td>Pilote natif / modèle d’appareil connu</td><td>Descripteur partagé en données statiques du programme</td><td>Référence de modèle ; pas une copie des noms et contrats pour chaque appareil</td></tr>
+    <tr><td>Profil déclaratif, noms humains, hiérarchie</td><td>Fichier privé, versionné, indexé par IDs stables</td><td>Petit index et offsets utiles au routage ; description lue à froid</td></tr>
+    <tr><td>Catalogue dynamique d’applications</td><td>Catalogue borné sur disque, associé aux IDs natifs et à une révision</td><td>Handle de l’application courante et disponibilité ; liste complète hors état actif</td></tr>
+    <tr><td>Abonnement d’une interface</td><td>Parcours de l’instantané cohérent : manifeste froid puis valeurs actives ; ordre de livraison indépendant côté client</td><td>Tampon d’envoi borné. Le futur écrivain devra transmettre par blocs sans reconstruire tout le JSON en RAM</td></tr>
+  </tbody></table></div>
+  <p class="muted">La lecture/transmission par blocs et le fournisseur retained du broker embarqué restent une cible d’architecture. Le POC utilise encore <code>serde_json</code> et <code>rumqttc</code>, donc un document temporaire complet lors de l’envoi. La ligne de canal de cette projection JSON occupe 256 octets hors allocations ; elle n’est pas la Row64 de l’étude.</p>
+  <h3>Interactions retrouvées : éclairages groupés et réglages réels</h3>
+  <p>Les luminaires d’une pièce partagent une tuile : clic simple pour basculer, clic droit ou appui prolongé pour la liste de chaque luminaire. Sur une lumière seule, le clic bascule et le clic droit ouvre les réglages. Les curseurs suivent les bornes déclarées, notamment l’échelle 254 de certaines sources. Les messages de commande sont non retained et le retour d’état confirme l’effet. Les tests navigateur utilisent un transport simulé : aucun appareil réel n’a été commandé.</p>
+  <p class="muted">Les actions du POC utilisent les commandes MQTT natives déclarées par les sources. Le futur routage par des topics de commande virtuels doit passer par le Hub et sa garde, avec une origine externe ; ce raccordement de production n’est pas livré par cette sonde. Une capacité absente reste indisponible.</p>
+  <h3>Apple TV : des scalaires courts, du texte borné et un catalogue froid</h3>
+  <p>L’observation réelle trouve une Apple TV parmi 37 lecteurs médias : identifiant d’application de 16 octets, nom de 7 octets, titre de 21 octets, horodatage de position de 32 octets, et catalogue de 33 applications dont le nom le plus long fait 20 octets. Ce sont des longueurs observées sur un instantané, pas des maxima universels. La sonde publie les champs médias et garde le catalogue <code>source_list</code> dans la description. Les textes restent bornés à 4 Kio.</p>
+  <div class="scroll"><table><thead><tr><th>Champ</th><th>Représentation cible à expérimenter</th><th>Coût de la valeur, hors ligne/index</th></tr></thead><tbody>
+    <tr><td>Lecture, pause, veille ; disponibilité</td><td>État fermé déclaré et bits de qualité</td><td>Petit code/bitset ; compter ensuite l’alignement et la ligne réelle</td></tr>
+    <tr><td>Application connue</td><td>Handle vers un catalogue mutable, identité = bundle ID natif ; nom en description froide</td><td>2 ou 4 o pour le handle selon la borne choisie, plus catalogue/index/génération</td></tr>
+    <tr><td>Volume, durée, position</td><td>Nombre typé ; pas de réduction de précision sans budget explicite</td><td>8 o pour un scalaire 64 bits ; l’actuel <code>Value</code> Rust occupe 24 o</td></tr>
+    <tr><td>Ancre de progression</td><td>Position + timestamp UTC normalisé ; l’interface extrapole pendant la lecture</td><td>Deux scalaires 64 bits, plus état/qualité ; éviter un message artificiel chaque seconde</td></tr>
+    <tr><td>Titre, artiste, album, identifiant inconnu</td><td>Inline court jusqu’à 16 o, puis annexe de texte bornée ; aucune énumération de texte libre</td><td>Capacité de texte ≠ taille du <code>Value</code> ; annexe et propriétaire à compter</td></tr>
+    <tr><td>Catalogue d’apps, icônes, commandes acceptées</td><td>Description froide sur disque, chargée/transmise à la demande ; images hors lignes de valeurs</td><td>Ne pas inclure silencieusement catalogue, fichiers et caches dans « zéro octet »</td></tr>
+  </tbody></table></div>
+  <p>Mesure de contrôle : <code>size_of&lt;Value&gt; = 24 o</code>, <code>size_of&lt;Sample&gt; = 32 o</code> dans la toolchain utilisée. Les handles de 2/4 octets et le texte inline sont une proposition de layout à mesurer, pas une économie déjà livrée. Un timestamp ISO de 32 caractères peut devenir un entier UTC de 8 octets dans le modèle canonique, sans imposer le même encodage sur le fil.</p>
+  <p>Home Assistant expose des contrôles de lecture et le lancement via <code>select_source</code> ; pyatv distingue la liste/l’ouverture d’apps via Companion et les capacités disponibles. Sa propriété d’application décrit celle qui joue un média, pas une preuve de l’app au premier plan. Un simple nom dans <code>source_list</code> ne crée donc ni un bundle ID ni un ordre de lancement fiable. Le catalogue, les capacités et l’inconnu doivent rester distincts. Aucun nouveau pilote Apple TV ni lancement d’application réel n’est revendiqué ici. Sources : <a href="https://www.home-assistant.io/integrations/apple_tv/">intégration Apple TV officielle</a>, <a href="https://pyatv.dev/api/interface/">contrats pyatv</a>, <a href="https://github.com/home-assistant/core/blob/dev/homeassistant/components/apple_tv/media_player.py">adaptateur HA</a>.</p>
+  <h3>Textes : la frontière mesurée, pas devinée</h3>
+  <p>La question « peut-on borner les textes, et 8 octets suffisent-ils ? » a maintenant une réponse mesurée sur le réel. <strong>Dans le Hub</strong> (valeurs réellement appliquées) : 100 % des textes tiennent en 16 octets, ≈ 99 % en 8 (641 ≤ 8 o, 5 entre 9 et 16 o). <strong>Sur le broker</strong> (statestream + attributs) : la majorité fait 17–64 o (3 071), puis 9–16 o (1 216), ≤ 8 o (882), 65–256 o (86) — et <strong>2 payloads dépassent 4 000 o</strong> (cartes et attributs volumineux). Conclusion d’architecture : un petit texte inline (16 o couvre tout le chemin chaud observé) + une <strong>mémoire annexe bornée</strong> pour le long (titres de musiques, programmes, attributs), jamais illimitée : la borne haute utile observée est 4 Kio ; au-delà, c’est du contenu, pas de l’état. Les noms de chansons ou d’applications ne deviennent ni des énumérations ni des chaînes sans borne : <code>Text</code> court inline, long en annexe avec ticket d’âge.</p>
+  <h3>Arbre de virtuels republié : maison → étage → pièce → zone</h3>
+  <p>Le mode <code>--virtual-tree</code> installe un arbre de virtuels calculés par le vrai moteur K1 sur les sources réelles, partition déterministe par hash stable du <code>PointId</code> (jamais par nom) : <code>maison</code> (toutes les sources), 2 <code>etage</code>, 4 <code>piece</code>, 8 <code>zone</code> — <strong>15 nœuds mesurés, 2 624 contrôles de parité sans écart</strong> en une minute. Chaque nœud est republié retained sur <code>moli-probe/maison/…</code> uniquement sur changement (13 publications, 13 retours, 0 perdu ; aller-retour p50 ≈ 10 ms en retained, avec un pic isolé à 4 s lié à la rafale retained de démarrage). Hub partagé : 84 appareils = 68 Z2M + 15 virtuels + 1 agrégat racine.</p>
+  <h3>Miroir intégral et agrégats métier</h3>
+  <p>Le mode <code>--virtual-mirror</code> crée <strong>un virtuel par appareil physique</strong> : 64 topics <code>moli-probe/appareil/NNN/state</code> (numérotés, jamais nommés) republiant l’état décodé de leur source — 327 republications mesurées en une minute. Les agrégats « normaux » demandés sont ajoutés au-dessus de l’arbre : <code>reseau/linkquality-moyenne</code> et <code>reseau/linkquality-min</code> (la réponse « ping » du maillage Zigbee — le maillon le plus faible), <code>energie/batterie-min</code> et <code>energie/batterie-moyenne</code> — 19 virtuels au total, parité vérifiée sur chacun. <strong>Limite honnête</strong> : « nombre d’appareils en ligne » n’est pas exprimable en K1 aujourd’hui (Min/Max/Mean sur points numériques ; la disponibilité n’est pas un point) — c’est l’extension <code>Count</code>/<code>Sum</code> déjà identifiée, pas un contournement.</p>
+  <p>Les alias <strong>non calculés</strong> suivent le contrat inverse : détectés par capacité (<code>contact</code> → porte, <code>occupancy</code> → présence, <code>brightness</code> → lumière, <code>power</code>+<code>state</code> → prise, <code>position</code> → volet), 4 rôles trouvés sur le broker réel ; leur état est republié depuis la source, sans état propre. Le <strong>chemin de commande retour</strong> est prouvé par auto-test : la sonde publie <code>{"state":"ON"}</code> sur <code>alias/lumiere/set</code> et <code>alias/porte/set</code> — résultat mesuré : <strong>2 reçues, 1 acceptée (lumière), 1 refusée (porte, virtuel en lecture seule)</strong>, validation bornée en microsecondes, aucune exécution sur un appareil.</p>
+  <h3>Republication d’un virtuel, mesurée de bout en bout</h3>
+  <p>Le drapeau <code>--republish moli-probe</code> fait republier l’agrégat K1 (la moyenne des températures réelles) sur le topic neutre <code>moli-probe/aggregate/state</code>, <strong>uniquement quand sa valeur change</strong> : événement Hub → publication QoS 1 non retained → lecture du retour sur la souscription. Sur la fenêtre de 30 s, l’agrégat n’a changé qu’une fois (les températures bougent peu) : <strong>1 publication, 1 retour observé, 0 sans réponse, aller-retour ≈ 4,5 ms</strong> dont le broker et le réseau local ; le traitement interne est négligeable (<code>hub_apply</code> p50 ≈ 6,4 µs). La chaîne « message entrant → mémoire → calcul → virtuel publié » est donc prouvée avec le vrai moteur, sur le vrai broker, sans fenêtre fixe ni polling.</p>
+  <div class="recommend"><strong>Règle de sortie confirmée par la mesure :</strong> publier un virtuel seulement sur changement suffit — une publication en 30 s pour 1 717 valeurs entrantes. Aucune temporisation de 50 ms n’est nécessaire à ce débit ; la fenêtre configurable reste une option pour les familles bavardes, pas une constante.</div>
+  <h3>Interface web preuve de concept : la maison se construit toute seule</h3>
+  <p>La page <code>docs/proposition/analyse/poc-interface-mqtt.html</code> se connecte au broker en <strong>MQTT sur WebSocket</strong> (port 1884 du broker, vérifié ouvert) et prouve le modèle « tout à l’ouverture, puis différentiels » : à la souscription <code>moli-probe/#</code>, le broker livre d’un coup le document <code>moli-probe/config</code> (retained) puis tous les états retained ; après, seuls les changements arrivent. <strong>Mesuré dans un vrai navigateur</strong> : 19 cartes d’arbre et 68 cartes d’appareils nommés, construites sans aucune ligne codée en dur ; valeurs réelles affichées ; zéro erreur console. Un mauvais mot de passe est refusé proprement (« Not authorized »), le transport et l’authentification sont donc prouvés dans les deux sens.</p>
+  <p>Chaque état retained porte désormais <strong>son nom et son unité</strong> (nœuds) ou une enveloppe nom + état (appareils), calculés une fois depuis la mémoire : un client peut reconstruire l’interface depuis les seuls états, la config restant le document de structure et de contrats. L’aspect suit les maquettes « tableaux de bord » du projet : cartes par pièce avec icône teintée, tuiles d’appareils (icône, nom, état concaténé), rangées d’actions (Ouvrir/Stop/Fermer, Allumer/Éteindre), chips d’ambiance, panneau de détail au clic. Vérifié en navigateur : 14 cartes de pièces/zones avec valeurs, 73 tuiles d’appareils nommés, dialogue de détail complet, commande publiée et journalisée.</p>
+  <p>Le document <code>config</code> (35 986 octets ici) porte : les nœuds avec noms lisibles, topics et unités ; chaque appareil avec son nom d’affichage, ses points (clé, genre, unité) et son alimentation ; chaque rôle avec son topic d’état, son topic de commande et son contrat borné. C’est lui qui permet de reconstruire une interface complète à la première ouverture — y compris les ordres disponibles, puisque le contrat de commande voyage avec. La règle tient : les noms vivent sur le broker de la maison pour les gens ; l’identité reste l’ID stable pour la machine ; le rapport et la sonde n’exportent aucun nom.</p>
+  <h3>Noms lisibles ou identités dans les topics ?</h3>
+  <p>La tentation est connue : <code>maison/exterieur/meteo</code> se lit mieux que <code>maison/etage/0/state</code>. Les preuves du terrain tranchent autrement. Le renommage casse le fil : Zigbee2MQTT publie sous le nom lisible, et tout renommage laisse des retained fantômes et casse les abonnés ; Home Assistant statestream publie sous <code>entity_id</code>, jamais sous le nom d’affichage. Deux pièces peuvent porter le même nom ; les accents et espaces traversent mal l’outillage ; et un topic retained nommé est une carte permanente de la maison pour quiconque lit le broker. La réponse mesurée : <strong>topics = identités stables, noms = document <code>config</code> retained</strong> — la page POC reconstruit l’affichage lisible depuis la config (vérifié en navigateur : toutes les cartes nommées). Compromis acceptable si des topics lisibles sont voulus malgré tout : un slug figé à la création, jamais re-minté au renommage, avec tombstone sur l’ancien topic. Et la hiérarchie juste : <code>exterieur</code> est pair de <code>maison</code>, pas un étage.</p>
+  <div class="notice"><strong>Lecture mémoire pour générer tout cela :</strong> la config est assemblée une fois par catalogue (pas par message) depuis les structures déjà en mémoire ; les états repartent des événements du Hub, jamais d’un parcours complet. Le coût par différentiel reste celui mesuré : <code>hub_apply</code> p50 ≈ 4,5 µs, publication sur changement seulement.</div>
+  <div class="notice"><strong>Différence à ne plus confondre :</strong> ce pont d’intégration connecte des brokers personnels au Hub. La « haute disponibilité » (répliquer sessions, garde et effets vers un second Moli) reste un sujet séparé et non retenu — un pont ne réplique ni la garde, ni les effets, ni la reprise D13.</div>
+</section>
+
+<section id="qualification">
+  <div class="kicker"><span class="index">13</span><span class="eyebrow">Matrice de preuves</span><span class="line"></span></div>
+  <h2>Ce qui a été réellement vérifié<br>pour cette version.</h2>
+  <div class="filters" aria-label="Filtrer les preuves">
+    <button data-filter="all" aria-pressed="true">Tout</button>
+    <button data-filter="kimi" aria-pressed="false">Rejoué par KIMI</button>
+    <button data-filter="existing" aria-pressed="false">Artefacts existants</button>
+    <button data-filter="limit" aria-pressed="false">Limites</button>
+  </div>
+  <div class="proof-grid" id="proof-grid">
+    <article class="proof-card" data-proof="kimi"><span class="status">TEST KIMI · RUST</span><h4>24 / 24 structurels V6</h4><p>Compilation et exécution directes : layouts, aliases, epochs, topologie, précédent, pool et refus.</p><code>rustc --edition=2024 -D warnings --test …/main.rs</code></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">TEST KIMI · AUDIT</span><h4>Vérificateur V6 complet</h4><p>18 layouts, 12 scénarios × 3 variantes, 23 sondes d’index, 1 296 + 3 024 échantillons, liens et confidentialité : statut <code>pass</code>.</p><code>verifier.run()</code></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">TEST KIMI · NAVIGATEUR</span><h4>12 parcours, 4 374 assertions</h4><p>Simulation V6 rejouée dans Chromium : deux modes de notification, six scénarios, retour arrière, transitions et absence de débordement.</p><code>window.runMemoryLessonChecks()</code></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">TEST KIMI · CŒUR</span><h4>222 tests core + runtime</h4><p><code>cargo test -p moli-core -p moli-runtime</code> : tous réussis, garde, reprise, calculs, commandes et occurrences.</p></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">TEST KIMI · RÉFÉRENCE</span><h4>29 tests du banc mémoire</h4><p>Soirée, calendrier, minuteries et 100 maisons identiques : tous réussis avec la toolchain disponible.</p></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">TEST KIMI · INTÉGRÉ</span><h4>496 appareils, 3 rondes</h4><p>Vrai Hub + vraie automatisation sur transport factice : 1 488 observations, 1 506 états, 3 runs et 16 oracles réussis, aucun effet réseau.</p></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">MESURE KIMI · MICRO</span><h4>7 cas sémantiques + 54 échantillons</h4><p>Banc V6 local : lookup indexé 32,34 ns ; fanout 64 canonique 67,54 ns contre miroir 247,97 ns ; CSR 94,93 ns contre scan 15 733,73 ns. macOS ARM64, 3 rondes ; aucune comparaison absolue avec Linux.</p></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">MESURE KIMI · TYPES</span><h4><code>size_of</code> réels du code</h4><p><code>Value</code> 24 o, <code>Sample</code> 32 o, <code>PointSpec</code> 112 o, <code>Device</code> 160 o. Pas de RSS inférée.</p></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">TEST KIMI · WORKSPACE</span><h4 id="workspace-proof">1 590 tests réussis ; anti-fuite global à trier</h4><p id="workspace-detail">Rust 1.99.1 sous Lima ARM64 : format, Clippy <code>-D warnings</code>, 1 590 tests et 44 paquets du catalogue validés. Build web et i18n réussis. Le <code>leak-check</code> global signale 52 occurrences dans des artefacts de worktrees ; le fichier V6-KIMI est propre.</p></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">SONDE RUST · BROKERS RÉELS</span><h4>14 passages, 2 brokers, miroir + arbre + commandes</h4><p><code>tools/mqtt-live-probe</code> contre deux brokers Home Assistant réels : Hub partagé de 96 appareils sans collision, miroir d’un virtuel par appareil physique (64 topics, 327 republications), arbre de 15 virtuels + 4 agrégats métier (linkquality, batterie) avec parité sans écart, chemin de commande retour prouvé (1 acceptée bornée, 1 refusée lecture seule). Tout est retained sous la racine neutre <code>moli-probe</code> ; aucun appareil commandé, aucun topic ou valeur exporté.</p><code>--virtual-tree --virtual-mirror --self-test-commands</code></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">SONDE RUST · HORS LIGNE</span><h4>32 tests + Clippy strict</h4><p>Fixtures réelles re-jouées dans le Hub : retained réappliqués détectés, retraits de sources → indisponible explicite, course pré-catalogue bufferisée puis rejouée, payloads inconnus sans effet, préfixe de republication confiné à la racine neutre, contrat de commande borné (brightness ≤ 254, états ON/OFF, refus lecture seule et rôle inconnu), partition d’arbre déterministe et complète, agrégats extra bornés à 32 sources réelles, valeurs bornées (pas de NaN, textes ≤ 256 o), borne d’allocation vérifiée isolément. Banc arithmétique debug : recalcul 32 sources ≈ 2 344 ns, delta ≈ 19 ns, 0 octet.</p></article>
+    <article class="proof-card" data-proof="kimi"><span class="status">POC WEB · MQTT/WEBSOCKET RÉEL</span><h4>L’interface se construit de la config retained</h4><p><code>poc-interface-mqtt.html</code> connectée au broker par WebSocket (port 1884) : instantané retained (config + états) puis différentiels ; 19 cartes d’arbre et 68 cartes d’appareils nommés construites sans rien de codé en dur ; valeurs réelles affichées ; mauvais mot de passe refusé proprement ; zéro erreur console.</p><code>ws://&lt;courtier&gt;:1884 + moli-probe/#</code></article>
+    <article class="proof-card" data-proof="existing"><span class="status">CAPTURE EXISTANTE · V5</span><h4>Moteur intégré comparé</h4><p>uniform96, compact64 et columns comparés devant le vrai Hub ; limites explicites : adaptateurs, pas migration interne.</p></article>
+    <article class="proof-card" data-proof="existing"><span class="status">CAPTURE EXISTANTE · V6</span><h4>Alignement contrôlé</h4><p>336 groupes, 3 024 échantillons, 144 captures mémoire et 540 groupes de parité validés par le vérificateur.</p></article>
+    <article class="proof-card" data-proof="limit"><span class="status">LIMITE · NON REJOUÉ</span><h4>Alignement Linux-only</h4><p>L’édition locale du banc d’alignement échoue sur les appels Linux <code>sched_getcpu</code>/<code>sched_setaffinity</code> sous macOS. Les artefacts vérifiés sont utilisés, aucun succès de compilation n’est revendiqué.</p></article>
+    <article class="proof-card" data-proof="limit"><span class="status">LIMITE · ENVIRONNEMENT</span><h4>Docker CLI absent, Lima utilisé</h4><p>Le client Docker est absent du Mac. Le garde-fou complet a été exécuté dans une VM Lima ARM64 avec <code>nerdctl</code>. Le banc d’alignement reste non rejoué localement ; la qualification sur la cible réelle reste distincte.</p></article>
+    <article class="proof-card" data-proof="limit"><span class="status">LIMITE · PÉRIMÈTRE</span><h4>Lecture réelle, aucune commande physique</h4><p>Deux brokers réels ont été lus (abonnements seuls) ; aucun appareil n’a été commandé, aucune panne, reconnexion ou session persistante n’a été éprouvée. Les preuves portent sur le code, les fixtures, les flux réels en lecture et les artefacts publics.</p></article>
+  </div>
+  <h3>Tests exigés avant chaque phase</h3>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Domaine</th><th scope="col">Cas qui doivent échouer si le contrat casse</th><th scope="col">Preuve complémentaire</th></tr></thead>
+    <tbody>
+      <tr><td>MQTT</td><td>JSON malformé, champ inconnu, mauvais type/unité, composite, friendly name changé, message retained, file pleine, réponse tardive</td><td>Octets et allocations en pic ; état final identique ; aucune commande physique.</td></tr>
+      <tr><td>Agrégats</td><td>Null, zéro, NaN/infini, unités incompatibles, source périmée/future, retrait, 32 sources, chaîne &gt;16, dépassement de travail</td><td>Parité d’un recalcul naïf de référence, timestamps et absence de valeur.</td></tr>
+      <tr><td>Anti-tempête</td><td>Rafale continue sur une même source et sur plusieurs DAG, rafale sur point sans abonné, scheduler inactif</td><td>Nombre de calculs/publications, latence maximale et mémoire de files.</td></tr>
+      <tr><td>Workflows</td><td>Première valeur, <code>from</code>, seuil, <code>wait_for</code>, brouillon modifié pendant l’attente, <code>Lagged</code>, double occurrence</td><td>Version/activation et état courant corrects ; aucun effet tardif.</td></tr>
+      <tr><td>Alias / composite</td><td>Source supprimée/réinsérée, ancien handle, cycle, source hors ligne, membre dupliqué, cible protégée</td><td>Indisponibilité explicite ; aucun zéro inventé ; garde sur chaque cible physique.</td></tr>
+      <tr><td>Reprise</td><td><code>kill -9</code> pendant observation, outbox, checkpoint, validation et reconstruction</td><td>IDs stables, séquences contiguës, <code>replay_floor</code>, pas d’effet rejoué.</td></tr>
+      <tr><td>Performance</td><td>0/1/400 automatismes, 77 appareils et formes ×10, listes fréquentes, démarrage, <code>Lagged</code></td><td>Cgroup anonyme, RSS, p95, allocations, CPU au repos et image ARM64.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="corpus">
+  <div class="kicker"><span class="index">14</span><span class="eyebrow">Lecture critique de l’export</span><span class="line"></span></div>
+  <h2>Les intentions sont retenues.<br>Les réponses de l’assistant ne sont pas des faits.</h2>
+  <p>L’archive fournie contient <strong>5 conversations sur 6</strong>, 43 messages balisés dont 23 utilisateur, pour 165 330 octets de Markdown. Une conversation triviale est exclue par l’export ; le début de la quatrième conversation manque. Le document d’index duplique les cinq fils : ils ne sont pas comptés deux fois. Aucun contenu privé n’est republié ici.</p>
+  <div class="scroll"><table>
+    <thead><tr><th scope="col">Intention du corpus</th><th scope="col">Verdict KIMI</th><th scope="col">Justification code / tests</th></tr></thead>
+    <tbody>
+      <tr><td>Tableaux contigus et index <code>u32</code></td><td><span class="tag tag-calc">ADOPTION CONDITIONNELLE</span></td><td>Utile sur les chemins chauds, mais l’identité reste le <code>PointId</code> ; <code>catalog.id</code> existe déjà.</td></tr>
+      <tr><td>Alias sans duplication et index inverse</td><td><span class="tag tag-ok">ADOPTION</span></td><td>Cohérent avec V6 et les liens inverses de K1/luminaires.</td></tr>
+      <tr><td>Résultats calculés en cache</td><td><span class="tag tag-ok">DÉJÀ PRÉSENT</span></td><td>K1 possède un état projeté ; recalcul borné, index inverse et reprise sans cache de valeur.</td></tr>
+      <tr><td>Moyenne incrémentale par delta</td><td><span class="tag tag-calc">OPTION MESURÉE, NON ADOPTÉE</span></td><td>Banc arithmétique (debug, hors Hub) : recalcul de 32 sources ≈ 2 344 ns, delta ≈ 19 ns, 0 octet alloué dans les deux chemins. Le gain existe mais le delta reste conditionné à des tests de retraits, d’unités, de fraîcheur et de révisions tardives ; le recalcul borné reste le défaut prouvé à parité sur broker réel (91 contrôles, 0 écart).</td></tr>
+      <tr><td>Regroupement fixe autour de 50 ms</td><td><span class="tag tag-ok">MESURÉ INUTILE ICI</span></td><td>Sur broker réel : 1 796 valeurs appliquées → 175 états changés en 30 s sans aucune fenêtre ; la file sale coalesce déjà à ce débit. La republication d’un virtuel sur changement n’a émis qu’une fois, aller-retour ≈ 4,5 ms. Une fenêtre configurable reste possible pour les familles bavardes, jamais un poll global.</td></tr>
+      <tr><td>Publication seulement sur changement</td><td><span class="tag tag-ok">DÉJÀ PRÉSENT</span></td><td>Pour les états ordinaires, le bus suit ce contrat ; les rafraîchissements identiques restent visibles des calculs sans événement brut. Les pulsations explicites et leurs occurrences dédiées restent un contrat distinct.</td></tr>
+      <tr><td>Conversion dans des adaptateurs</td><td><span class="tag tag-ok">ADOPTION</span></td><td>Z2M fait déjà <code>Entry::decode</code>/<code>encode</code>. Le broker ne doit pas comprendre chaque format.</td></tr>
+      <tr><td>Historique paginé plutôt que gros MQTT</td><td><span class="tag tag-ok">ADOPTION</span></td><td>REST, SSE et archive D13 ; aucune raison de faire transiter un historique complet par un topic.</td></tr>
+      <tr><td>QoS 1 + identifiant + confirmation plutôt que « QoS 2 magique »</td><td><span class="tag tag-ok">ADOPTION</span></td><td>Identités d’occurrence, journal et observation ; l’effet physique n’est jamais déduit du PUBACK.</td></tr>
+      <tr><td>Bridge = haute disponibilité complète</td><td><span class="tag tag-stop">NON RETENU</span></td><td>Un pont ne réplique pas les sessions, la garde ou les effets. La reprise D13 et la réplication métier sont des sujets séparés.</td></tr>
+      <tr><td>Ponts MQTT d’intégration multi-brokers</td><td><span class="tag tag-ok">ADOPTION BORNÉE</span></td><td>Mesuré sur deux brokers réels : deux clients distincts, un Hub partagé, 96 appareils sans collision, 0 erreur de transport. Provenance par <code>InstanceId</code>, anti-boucle, garde conservée, commandes externes jamais <code>Origin::Ui</code>. Voir la section Ponts.</td></tr>
+      <tr><td>Chaînage de virtuels</td><td><span class="tag tag-calc">BORNÉ</span></td><td>Alias aplatis ; calculs uniquement via DAG K1, profondeur ≤16, cycles refusés.</td></tr>
+      <tr><td>MQTT direct depuis le navigateur</td><td><span class="tag tag-stop">NON PRIORITAIRE</span></td><td>REST + SSE couvrent les besoins sans exposer le broker ni court-circuiter la garde.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Les mentions de produits et versions présentes dans les conversations ne sont pas considérées comme vérifiées par l’archive. Elles n’entrent pas dans la décision sans documentation officielle ou preuve locale.</p>
+</section>
+
+<section id="sources">
+  <div class="kicker"><span class="index">15</span><span class="eyebrow">Sources et reproduction</span><span class="line"></span></div>
+  <h2>Une proposition qu’on peut contrôler.</h2>
+  <div class="two">
+    <div>
+      <h3>Code et décisions du projet</h3>
+      <ul class="source-list">
+        <li><a href="catalogue-memoire-v6.html">V6 original</a> — layouts, simulations, bancs et limites.</li>
+        <li><a href="../../../crates/moli-runtime/src/hub.rs"><code>crates/moli-runtime/src/hub.rs:512, 2073, 2385, 2836</code></a> — modèle, observations et copies de vues.</li>
+        <li><a href="../../../crates/moli-core/src/id.rs"><code>crates/moli-core/src/id.rs:11</code></a> — identités stables.</li>
+        <li><a href="../../../crates/moli-z2m/src/catalog.rs"><code>crates/moli-z2m/src/catalog.rs:104, 145, 173</code></a> — identité, décodage et encodage MQTT.</li>
+        <li><a href="../../../crates/moli-z2m/src/lib.rs"><code>crates/moli-z2m/src/lib.rs:81, 139, 238</code></a> — bornes, messages et commande.</li>
+        <li><a href="../../../crates/moli-core/src/aggregate.rs"><code>crates/moli-core/src/aggregate.rs:62</code></a> — agrégation bornée, unités, fraîcheur et moyenne.</li>
+        <li><a href="../../../crates/moli-runtime/src/computed/mod.rs"><code>crates/moli-runtime/src/computed/mod.rs:22</code></a> — index inverse et file sale.</li>
+        <li><a href="../../../crates/moli-runtime/src/computed/engine.rs"><code>crates/moli-runtime/src/computed/engine.rs:108</code></a> — propagation topologique et provenance.</li>
+        <li><a href="../../../crates/moli-automation/src/engine.rs"><code>crates/moli-automation/src/engine.rs:341, 351</code></a> — mémoire <code>last</code> et déclencheurs.</li>
+        <li><a href="../../../crates/moli-automation/src/run.rs"><code>crates/moli-automation/src/run.rs:19, 594</code></a> — runs et lecture courante.</li>
+        <li><a href="../../../crates/moli-lights/src/lib.rs"><code>crates/moli-lights/src/lib.rs:388, 805</code></a> — composite luminaire et index des membres.</li>
+        <li><a href="../../../crates/moli-history/src/store.rs"><code>crates/moli-history/src/store.rs:352</code></a> — IDs persistants et cache après commit.</li>
+        <li><a href="../../../tools/storage-bench/src/schema.rs"><code>tools/storage-bench/src/schema.rs:24, 202</code></a> — <code>catalog.id</code> et rollback identique.</li>
+        <li><a href="../../../tools/mqtt-live-probe/README.md"><code>tools/mqtt-live-probe</code></a> — sonde Rust de pont MQTT vers Hub, 33 tests, résultats des 15 passages réels et rejeu.</li>
+        <li><a href="poc-interface-mqtt.html"><code>poc-interface-mqtt.html</code></a> — interface web POC : maison auto-construite depuis <code>moli-probe/config</code> retained, puis différentiels, en MQTT sur WebSocket.</li>
+        <li><a href="../../components/calculs.md">Points calculés K1</a>, <a href="../../components/durees.md">durées K3</a>, <a href="../../components/automatismes.md">workflows</a>, <a href="../../components/profils.md">profils</a>.</li>
+        <li><a href="../memoire-v2.md">Étude mémoire V2</a> — annuaire, numéros internes et décisions antérieures.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Documentation externe</h3>
+      <ul class="source-list">
+        <li><a href="https://doc.rust-lang.org/reference/type-layout.html">Rust Reference — Type layout</a> : taille, alignement, <code>repr(C)</code> et absence de garantie du layout ordinaire.</li>
+        <li><a href="https://doc.rust-lang.org/std/sync/struct.Arc.html">Rust <code>Arc</code></a> : partage d’allocation et copie-on-write avec <code>make_mut</code>.</li>
+        <li><a href="https://github.com/tokio-rs/tokio/blob/master/tokio/src/sync/rwlock.rs">Tokio <code>RwLock</code></a> : équité et préférence aux écrivains.</li>
+        <li><a href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html">Linux cgroup v2</a> : <code>memory.current</code>, <code>memory.peak</code>, <code>memory.stat</code>.</li>
+        <li><a href="https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html">OASIS MQTT 5.0</a> : QoS, sessions, retained et expiration.</li>
+        <li><a href="https://docs.rs/rumqttc/0.25.1/rumqttc/struct.AsyncClient.html#method.try_publish">Rumqttc <code>try_publish</code></a> : envoi à l’EventLoop, pas confirmation du broker ou de l’appareil.</li>
+        <li><a href="https://docs.rs/rumqttc/0.25.1/rumqttc/struct.Publish.html">Rumqttc <code>Publish</code></a> : drapeaux <code>dup</code>/<code>retain</code>, QoS et payload — la preuve que le drapeau retained existe au bord et doit être transporté.</li>
+        <li><a href="https://www.home-assistant.io/docs/mqtt/discovery/">Home Assistant — MQTT Discovery</a> : préfixe <code>homeassistant</code>, formes entité/appareil, tombstones, <code>unique_id</code>, <code>identifiers</code>/<code>connections</code>, modes de disponibilité.</li>
+        <li><a href="https://www.home-assistant.io/integrations/sensor.mqtt/">Home Assistant — capteur MQTT</a> : <code>expire_after</code>, <code>force_update</code>, <code>json_attributes_topic</code>, états <code>unknown</code>/<code>None</code>.</li>
+        <li><a href="https://www.home-assistant.io/integrations/alarm_control_panel.mqtt/">Home Assistant — alarme MQTT</a> : états et transitions, code local ou distant, gabarit de commande pouvant porter le code.</li>
+        <li><a href="https://www.home-assistant.io/integrations/mqtt_statestream/">Home Assistant — mqtt_statestream</a> : republication retained de chaque entité et de chaque attribut — 7 310 des 8 002 messages <code>homeassistant</code> observés sur le broker réel.</li>
+        <li><a href="https://github.com/nielsfaber/alarmo">Alarmo (<code>mqtt.py</code>)</a> : état retained, événements non retained, commandes avec code — jamais stockées ni rejouées par un pont Moli.</li>
+        <li><a href="https://github.com/home-assistant-plugins/macos-mqtt">macos-mqtt</a> (base de DarwinMQTT) : LWT retained, commandes <code>/set</code>, capteurs système — et ses écarts à ne pas copier (pas de TLS, état optimiste, textes non bornés).</li>
+        <li><a href="https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html">Zigbee2MQTT — topics et messages</a> : états, commandes et confirmations.</li>
+      </ul>
+      <h3>Commandes principales</h3>
+      <pre>rustc --edition=2024 -D warnings --test \
+  tools/memoire-structure-v6/main.rs -o /tmp/v6-tests &amp;&amp; /tmp/v6-tests
+
+cargo test -p moli-core -p moli-runtime
+cargo test --release --offline --manifest-path tools/memoire-banc/Cargo.toml
+cargo +1.99.1 test --workspace
+
+cargo run --release --offline --manifest-path \
+  tools/moteur-integre-banc/Cargo.toml -- \
+  --devices 496 --rounds 3 --layout uniform96
+
+RUSTUP_TOOLCHAIN=1.99.1 cargo test --offline \
+  --manifest-path tools/mqtt-live-probe/Cargo.toml -- --test-threads=1
+
+target/mqtt-live-probe/debug/mqtt-live-probe \
+  --host &lt;courtier-a&gt; --host &lt;courtier-b&gt; \
+  --seconds 30 --bridges 2 --all-topics   # mot de passe saisi masqué</pre>
+      <p class="muted">Les sorties de microbenchmark macOS sont informatives et non comparables aux valeurs absolues Linux ARM64 publiées. Le rapport ne prétend pas rejouer les campagnes Docker, les appareils physiques ou la production.</p>
+    </div>
+  </div>
+  <h3>Décision finale</h3>
+  <div class="recommend"><strong>La meilleure architecture pour le but de Moli n’est pas la plus compacte sur le papier : c’est celle qui garde une seule vérité par donnée et un seul propriétaire par décision.</strong><br>Commencer par les copies et les index ; partager les états ; recalculer les agrégats bornés ; conserver les causes de workflows ; unifier l’annuaire avant les handles ; ne qualifier les layouts que sur le moteur intégré. Et ouvrir les ponts MQTT d’intégration bornés — mesurés sur deux brokers réels — sans jamais en attendre une haute disponibilité. C’est la V6-KIMI proposée.</div>
+</section>
+<footer>
+  V6-KIMI · proposition non livrée · exemples synthétiques · aucune commande physique · <a href="catalogue-memoire-v6.html">retour à V6</a><br>
+  Les chemins du dépôt sont cités pour navigation et revue. Aucune archive de conversation ni donnée d’une maison réelle n’est incluse.
+</footer>
+</main>
+</div>
+<script>
+'use strict';
+(() => {
+  const flows = {
+    mqtt: {
+      title: 'MQTT : transformer une fois, conserver typé',
+      text: 'Le paquet est décodé par l’adaptateur propriétaire, jamais par une règle générique du style « toute température divisée par dix ». Le hub reçoit des valeurs typées ; le JSON ne reste pas en mémoire permanente.',
+      rules: ['Identité IEEE stable, nom de topic mutable.', 'Bornes explicites : 4 Mio entrant, 256 Kio sortant dans le pilote actuel.', 'Aucun état optimiste après une commande.', 'L’état confirmé revient par observation.']
+    },
+    aggregate: {
+      title: 'Agrégats : bornés, cohérents, sans zéro inventé',
+      text: 'K1 recalcule au plus 32 sources utilisables avec unités et fraîcheur explicites. Les fenêtres temporelles et les durées ont leurs propres moteurs ; elles ne sont pas une moyenne des dernières valeurs.',
+      rules: ['Recalcul borné avant optimisation incrémentale.', 'File sale dédupliquée, ordre topologique.', 'Aucune tâche fixe de 50 ms sans besoin mesuré.', 'Null quand aucune source valide.']
+    },
+    workflow: {
+      title: 'Workflows : mémoire de transition, lecture courante',
+      text: 'La mémoire last sert aux transitions from et aux franchissements de seuil. Après une attente, une condition relit le Hub. Le run garde sa cause et sa lignée, jamais une copie de toute la maison.',
+      rules: ['Indexer les déclencheurs d’état, pas recréer un graphe universel.', 'Brouillons inertes et versions vérifiées.', 'Occurrences consommées avant effet.', 'Garde et permis jusqu’à l’émission.']
+    },
+    virtual: {
+      title: 'Réel et virtuel : quatre contrats, pas un seul',
+      text: 'L’alias résout une source sans état. Le calcul possède une valeur dérivée. Le composite projette ses membres et traduit les ordres. Le workflow possède une exécution, qui n’est pas une mesure.',
+      rules: ['Source supprimée → vue indisponible.', 'Cycles refusés, calculs bornés à 16 niveaux.', 'Disponibilité par politique explicite.', 'Zone = sélection sûre, jamais commande générique.']
+    }
+  };
+  const layouts = {
+    uniform96: {adapter:218240, final:2907447, steady:3522560},
+    compact64: {adapter:170624, final:2859831, steady:3477504},
+    columns: {adapter:234112, final:2923317, steady:3543040}
+  };
+  const format = n => n.toLocaleString('fr-FR');
+  const bytes = n => `${format(n)} o`;
+  const mib = n => (n / 1048576).toFixed(3).replace('.', ',');
+  function selectFlow(id) {
+    const flow = flows[id];
+    if (!flow) throw new Error(`Flux inconnu : ${id}`);
+    for (const button of document.querySelectorAll('[data-flow]')) button.setAttribute('aria-selected', String(button.dataset.flow === id));
+    document.getElementById('flow-title').textContent = flow.title;
+    document.getElementById('flow-text').textContent = flow.text;
+    const rules = document.getElementById('flow-rules');
+    rules.replaceChildren(...flow.rules.map(text => {
+      const item = document.createElement('li');
+      item.textContent = text;
+      return item;
+    }));
+    return snapshot();
+  }
+  function setLayout(id) {
+    const layout = layouts[id];
+    if (!layout) throw new Error(`Layout inconnu : ${id}`);
+    document.getElementById('layout-choice-kimi').value = id;
+    document.getElementById('layout-metrics').innerHTML = [
+      ['Adaptateur', bytes(layout.adapter)],
+      ['Vivant final', bytes(layout.final)],
+      ['Anonyme stable', bytes(layout.steady)],
+      ['Vivant final, Mio', `${mib(layout.final)} Mio`]
+    ].map(([label,value]) => `<div><span>${label}</span><b>${value}</b></div>`).join('');
+    const max = Math.max(...Object.values(layouts).map(x => x.final));
+    document.getElementById('layout-bars').innerHTML = Object.entries(layouts).map(([name,row]) => {
+      const width = (row.final / max * 100).toFixed(2);
+      return `<div class="bar-row"><span>${name}</span><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div><span class="bar-value">${mib(row.final)} Mio</span></div>`;
+    }).join('');
+    return snapshot();
+  }
+  function filterProof(filter) {
+    if (!['all','kimi','existing','limit'].includes(filter)) throw new Error(`Filtre inconnu : ${filter}`);
+    for (const button of document.querySelectorAll('[data-filter]')) button.setAttribute('aria-pressed', String(button.dataset.filter === filter));
+    for (const card of document.querySelectorAll('[data-proof]')) card.hidden = filter !== 'all' && card.dataset.proof !== filter;
+    return snapshot();
+  }
+  function snapshot() {
+    return {
+      version: 'V6-KIMI',
+      flow: document.querySelector('[data-flow][aria-selected="true"]')?.dataset.flow,
+      layout: document.getElementById('layout-choice-kimi').value,
+      filter: document.querySelector('[data-filter][aria-pressed="true"]')?.dataset.filter,
+      visibleProofs: [...document.querySelectorAll('[data-proof]')].filter(x => !x.hidden).length,
+      flows: Object.keys(flows),
+      layouts: Object.keys(layouts)
+    };
+  }
+  for (const button of document.querySelectorAll('[data-flow]')) {
+    button.addEventListener('click', () => selectFlow(button.dataset.flow));
+    button.addEventListener('keydown', event => {
+      const ids = Object.keys(flows);
+      const current = ids.indexOf(button.dataset.flow);
+      let next;
+      if (event.key === 'ArrowRight') next = (current + 1) % ids.length;
+      else if (event.key === 'ArrowLeft') next = (current - 1 + ids.length) % ids.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = ids.length - 1;
+      else return;
+      event.preventDefault();
+      const target = document.querySelector(`[data-flow="${ids[next]}"]`);
+      selectFlow(ids[next]);
+      target.focus();
+    });
+  }
+  document.getElementById('layout-choice-kimi').addEventListener('change', event => setLayout(event.target.value));
+  for (const button of document.querySelectorAll('[data-filter]')) button.addEventListener('click', () => filterProof(button.dataset.filter));
+  selectFlow('mqtt');
+  setLayout('uniform96');
+  filterProof('all');
+  window.kimiReport = {selectFlow, setLayout, filterProof, snapshot, flows, layouts};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+{
+  "protocole": {
+    "date": "2026-10-27",
+    "compilateur": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "processeur": "Apple M4",
+    "architecture": "aarch64",
+    "systeme": "macOS",
+    "optimisation": "rustc -C opt-level=3 -C target-cpu=native",
+    "iterations_par_echantillon": 50000,
+    "repetitions": 5,
+    "echauffement_operations": 1000,
+    "entrees": "Chaînes synthétiques : é et à répétés, longueurs mesurées en octets UTF-8.",
+    "provenance_textes": "Ancien mini-banc hors dépôt : source publique Value recompilée directement en O3, dépendances serde précompilées. Aucune donnée privée.",
+    "provenance_objets": "Ancien mini-banc hors dépôt : vrais types moli_core dans une fixture synthétique, constructeur depuis la bibliothèque Cargo disponible, parcours du banc optimisé O3.",
+    "provenance_disposition": "Prototype indépendant compilé seul avec rustc, sans dépendance.",
+    "source_value_sha256": "e675b8a62e8c3fd2254063f240ac874ba99823ff89d2aa4abad6089df45e1f83",
+    "comparaison": "Les sources publiées ici utilisent maintenant la dépendance Cargo réelle moli-core. Une nouvelle exécution est une nouvelle mesure, pas un remplacement de ces résultats.",
+    "limites": [
+      "Tailles demandées à l’allocateur, sans sa comptabilité interne ni le RSS.",
+      "Chronométrage sans compteurs à lire séparément des allocations instrumentées.",
+      "Médianes de cinq échantillons dans un processus, pas des percentiles de latence du moteur.",
+      "Mémoire et parcours de la fixture ne mesurent ni le Hub, ni ses index, ni les commandes.",
+      "Le layout repr(Rust) peut changer avec la cible ou le compilateur."
+    ]
+  },
+  "textes_disposition_initiale": {
+    "architecture": "aarch64",
+    "fixed_text_16_bytes": 18,
+    "fixed_text_256_bytes": 258,
+    "fixed_text_4096_bytes": 4098,
+    "fixed_text_64_bytes": 66,
+    "iterations": 50000,
+    "kind": "layout",
+    "os": "macos",
+    "proposed_inline16_enum_bytes": 24,
+    "real_core_sample_bytes": 32,
+    "real_core_value_bytes": 24,
+    "repetitions": 5,
+    "value_bytes": 24
+  },
+  "textes_avec_compteurs": [
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 42.29834,
+      "median_ns_per_op": 40.39916,
+      "min_ns_per_op": 40.2225,
+      "operation": "create_drop",
+      "peak_requested_bytes_above_start": 32,
+      "requested_allocation_bytes_per_op": 32.0,
+      "utf8_bytes": 16
+    },
+    {
+      "allocation_calls_per_op": 0.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 5.91,
+      "median_ns_per_op": 5.83916,
+      "min_ns_per_op": 5.44334,
+      "operation": "clone_drop",
+      "peak_requested_bytes_above_start": 0,
+      "requested_allocation_bytes_per_op": 0.0,
+      "utf8_bytes": 16
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 40.82418,
+      "median_ns_per_op": 32.9475,
+      "min_ns_per_op": 32.85832,
+      "operation": "replace_changed",
+      "peak_requested_bytes_above_start": 32,
+      "requested_allocation_bytes_per_op": 32.0,
+      "utf8_bytes": 16
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 34.19666,
+      "median_ns_per_op": 31.92,
+      "min_ns_per_op": 29.83666,
+      "operation": "replace_identical_without_check",
+      "peak_requested_bytes_above_start": 32,
+      "requested_allocation_bytes_per_op": 32.0,
+      "utf8_bytes": 16
+    },
+    {
+      "allocation_calls_per_op": 0.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 1.93666,
+      "median_ns_per_op": 1.85084,
+      "min_ns_per_op": 1.85,
+      "operation": "skip_identical_by_bytes",
+      "peak_requested_bytes_above_start": 0,
+      "requested_allocation_bytes_per_op": 0.0,
+      "utf8_bytes": 16
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 31.26916,
+      "median_ns_per_op": 31.02084,
+      "min_ns_per_op": 29.12584,
+      "operation": "create_drop",
+      "peak_requested_bytes_above_start": 80,
+      "requested_allocation_bytes_per_op": 80.0,
+      "utf8_bytes": 64
+    },
+    {
+      "allocation_calls_per_op": 0.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 4.1575,
+      "median_ns_per_op": 4.11084,
+      "min_ns_per_op": 4.10334,
+      "operation": "clone_drop",
+      "peak_requested_bytes_above_start": 0,
+      "requested_allocation_bytes_per_op": 0.0,
+      "utf8_bytes": 64
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 29.75666,
+      "median_ns_per_op": 29.05082,
+      "min_ns_per_op": 27.495,
+      "operation": "replace_changed",
+      "peak_requested_bytes_above_start": 80,
+      "requested_allocation_bytes_per_op": 80.0,
+      "utf8_bytes": 64
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 28.32416,
+      "median_ns_per_op": 26.33666,
+      "min_ns_per_op": 26.10166,
+      "operation": "replace_identical_without_check",
+      "peak_requested_bytes_above_start": 80,
+      "requested_allocation_bytes_per_op": 80.0,
+      "utf8_bytes": 64
+    },
+    {
+      "allocation_calls_per_op": 0.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 2.35084,
+      "median_ns_per_op": 2.35,
+      "min_ns_per_op": 2.34584,
+      "operation": "skip_identical_by_bytes",
+      "peak_requested_bytes_above_start": 0,
+      "requested_allocation_bytes_per_op": 0.0,
+      "utf8_bytes": 64
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 30.14,
+      "median_ns_per_op": 28.45334,
+      "min_ns_per_op": 28.3775,
+      "operation": "create_drop",
+      "peak_requested_bytes_above_start": 272,
+      "requested_allocation_bytes_per_op": 272.0,
+      "utf8_bytes": 256
+    },
+    {
+      "allocation_calls_per_op": 0.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 4.00584,
+      "median_ns_per_op": 3.61334,
+      "min_ns_per_op": 3.61332,
+      "operation": "clone_drop",
+      "peak_requested_bytes_above_start": 0,
+      "requested_allocation_bytes_per_op": 0.0,
+      "utf8_bytes": 256
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 28.8675,
+      "median_ns_per_op": 28.14582,
+      "min_ns_per_op": 27.77332,
+      "operation": "replace_changed",
+      "peak_requested_bytes_above_start": 272,
+      "requested_allocation_bytes_per_op": 272.0,
+      "utf8_bytes": 256
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 28.7275,
+      "median_ns_per_op": 28.00084,
+      "min_ns_per_op": 27.9525,
+      "operation": "replace_identical_without_check",
+      "peak_requested_bytes_above_start": 272,
+      "requested_allocation_bytes_per_op": 272.0,
+      "utf8_bytes": 256
+    },
+    {
+      "allocation_calls_per_op": 0.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 5.825,
+      "median_ns_per_op": 5.7075,
+      "min_ns_per_op": 5.70332,
+      "operation": "skip_identical_by_bytes",
+      "peak_requested_bytes_above_start": 0,
+      "requested_allocation_bytes_per_op": 0.0,
+      "utf8_bytes": 256
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 89.85084,
+      "median_ns_per_op": 82.78332,
+      "min_ns_per_op": 68.13666,
+      "operation": "create_drop",
+      "peak_requested_bytes_above_start": 4112,
+      "requested_allocation_bytes_per_op": 4112.0,
+      "utf8_bytes": 4096
+    },
+    {
+      "allocation_calls_per_op": 0.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 3.76334,
+      "median_ns_per_op": 3.64082,
+      "min_ns_per_op": 3.50834,
+      "operation": "clone_drop",
+      "peak_requested_bytes_above_start": 0,
+      "requested_allocation_bytes_per_op": 0.0,
+      "utf8_bytes": 4096
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 84.33084,
+      "median_ns_per_op": 73.30334,
+      "min_ns_per_op": 66.94166,
+      "operation": "replace_changed",
+      "peak_requested_bytes_above_start": 4112,
+      "requested_allocation_bytes_per_op": 4112.0,
+      "utf8_bytes": 4096
+    },
+    {
+      "allocation_calls_per_op": 1.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 80.51,
+      "median_ns_per_op": 79.45,
+      "min_ns_per_op": 69.35166,
+      "operation": "replace_identical_without_check",
+      "peak_requested_bytes_above_start": 4112,
+      "requested_allocation_bytes_per_op": 4112.0,
+      "utf8_bytes": 4096
+    },
+    {
+      "allocation_calls_per_op": 0.0,
+      "kind": "measurement",
+      "live_requested_bytes_delta": 0,
+      "max_ns_per_op": 95.62668,
+      "median_ns_per_op": 83.84916,
+      "min_ns_per_op": 83.6525,
+      "operation": "skip_identical_by_bytes",
+      "peak_requested_bytes_above_start": 0,
+      "requested_allocation_bytes_per_op": 0.0,
+      "utf8_bytes": 4096
+    }
+  ],
+  "textes_temps_sans_compteurs": [
+    {
+      "max_ns_per_op": 34.64916,
+      "median_ns_per_op": 33.0875,
+      "min_ns_per_op": 32.14666,
+      "operation": "create_drop",
+      "utf8_bytes": 16
+    },
+    {
+      "max_ns_per_op": 5.0025,
+      "median_ns_per_op": 4.59084,
+      "min_ns_per_op": 4.58918,
+      "operation": "clone_drop",
+      "utf8_bytes": 16
+    },
+    {
+      "max_ns_per_op": 38.78166,
+      "median_ns_per_op": 30.065,
+      "min_ns_per_op": 29.81584,
+      "operation": "replace_changed",
+      "utf8_bytes": 16
+    },
+    {
+      "max_ns_per_op": 28.44834,
+      "median_ns_per_op": 27.89668,
+      "min_ns_per_op": 26.55834,
+      "operation": "replace_identical_without_check",
+      "utf8_bytes": 16
+    },
+    {
+      "max_ns_per_op": 1.76668,
+      "median_ns_per_op": 1.76166,
+      "min_ns_per_op": 1.75918,
+      "operation": "skip_identical_by_bytes",
+      "utf8_bytes": 16
+    },
+    {
+      "max_ns_per_op": 27.6025,
+      "median_ns_per_op": 26.37666,
+      "min_ns_per_op": 26.3575,
+      "operation": "create_drop",
+      "utf8_bytes": 64
+    },
+    {
+      "max_ns_per_op": 3.93,
+      "median_ns_per_op": 3.92,
+      "min_ns_per_op": 3.91916,
+      "operation": "clone_drop",
+      "utf8_bytes": 64
+    },
+    {
+      "max_ns_per_op": 25.635,
+      "median_ns_per_op": 25.39,
+      "min_ns_per_op": 24.315,
+      "operation": "replace_changed",
+      "utf8_bytes": 64
+    },
+    {
+      "max_ns_per_op": 24.6675,
+      "median_ns_per_op": 24.3925,
+      "min_ns_per_op": 24.2575,
+      "operation": "replace_identical_without_check",
+      "utf8_bytes": 64
+    },
+    {
+      "max_ns_per_op": 2.59166,
+      "median_ns_per_op": 2.58582,
+      "min_ns_per_op": 2.55416,
+      "operation": "skip_identical_by_bytes",
+      "utf8_bytes": 64
+    },
+    {
+      "max_ns_per_op": 35.055,
+      "median_ns_per_op": 28.1725,
+      "min_ns_per_op": 26.93334,
+      "operation": "create_drop",
+      "utf8_bytes": 256
+    },
+    {
+      "max_ns_per_op": 3.60166,
+      "median_ns_per_op": 3.5675,
+      "min_ns_per_op": 3.56418,
+      "operation": "clone_drop",
+      "utf8_bytes": 256
+    },
+    {
+      "max_ns_per_op": 27.97,
+      "median_ns_per_op": 26.97166,
+      "min_ns_per_op": 26.53,
+      "operation": "replace_changed",
+      "utf8_bytes": 256
+    },
+    {
+      "max_ns_per_op": 27.84666,
+      "median_ns_per_op": 27.38084,
+      "min_ns_per_op": 27.195,
+      "operation": "replace_identical_without_check",
+      "utf8_bytes": 256
+    },
+    {
+      "max_ns_per_op": 6.085,
+      "median_ns_per_op": 5.94,
+      "min_ns_per_op": 5.745,
+      "operation": "skip_identical_by_bytes",
+      "utf8_bytes": 256
+    },
+    {
+      "max_ns_per_op": 72.68916,
+      "median_ns_per_op": 64.14584,
+      "min_ns_per_op": 62.60582,
+      "operation": "create_drop",
+      "utf8_bytes": 4096
+    },
+    {
+      "max_ns_per_op": 3.4975,
+      "median_ns_per_op": 3.36084,
+      "min_ns_per_op": 3.1825,
+      "operation": "clone_drop",
+      "utf8_bytes": 4096
+    },
+    {
+      "max_ns_per_op": 73.45416,
+      "median_ns_per_op": 65.42166,
+      "min_ns_per_op": 65.31916,
+      "operation": "replace_changed",
+      "utf8_bytes": 4096
+    },
+    {
+      "max_ns_per_op": 76.8975,
+      "median_ns_per_op": 66.36832,
+      "min_ns_per_op": 64.605,
+      "operation": "replace_identical_without_check",
+      "utf8_bytes": 4096
+    },
+    {
+      "max_ns_per_op": 84.27082,
+      "median_ns_per_op": 82.84916,
+      "min_ns_per_op": 81.93084,
+      "operation": "skip_identical_by_bytes",
+      "utf8_bytes": 4096
+    }
+  ],
+  "objets_et_virtuels": [
+    {
+      "device_bytes": 160,
+      "kind": "core_layout",
+      "kind_bytes": 48,
+      "point_spec_bytes": 112,
+      "sample_bytes": 32,
+      "value_bytes": 24
+    },
+    {
+      "devices": 17,
+      "excluded": "Hub,indexes,availability,values,snapshots,driver,commands,allocator_overhead,RSS",
+      "kind": "fixture_schema_only",
+      "max_ns_scan_34_point_keys": 16.28584,
+      "median_ns_scan_34_point_keys": 15.46334,
+      "min_ns_scan_34_point_keys": 15.2225,
+      "outer_device_vec_bytes": 2720,
+      "point_vec_capacity_bytes": 3808,
+      "points": 34,
+      "requested_live_bytes": 9408,
+      "requested_peak_bytes_during_build": 9418,
+      "requested_total_bytes_during_build": 10105,
+      "separate_devices": false,
+      "serialized_descriptor_bytes": 6121
+    },
+    {
+      "devices": 34,
+      "excluded": "Hub,indexes,availability,values,snapshots,driver,commands,allocator_overhead,RSS",
+      "kind": "fixture_schema_only",
+      "max_ns_scan_34_point_keys": 25.15168,
+      "median_ns_scan_34_point_keys": 20.14666,
+      "min_ns_scan_34_point_keys": 19.58918,
+      "outer_device_vec_bytes": 5440,
+      "point_vec_capacity_bytes": 3808,
+      "points": 34,
+      "requested_live_bytes": 13624,
+      "requested_peak_bytes_during_build": 13636,
+      "requested_total_bytes_during_build": 15188,
+      "separate_devices": true,
+      "serialized_descriptor_bytes": 7634
+    }
+  ],
+  "dispositions_inline": {
+    "architecture": "aarch64",
+    "pointer_bytes": 8,
+    "arc_str_bytes": 16,
+    "alignement": 8,
+    "variantes": "Null, Bool, Int, Float, EnumCode, Inline { len:u8, bytes:[u8;N] }, Shared(Arc<str>)",
+    "resultats": [
+      {
+        "inline_bytes": 15,
+        "candidate_size": 24,
+        "text_enum_size": 24,
+        "nested_value_size": 24
+      },
+      {
+        "inline_bytes": 16,
+        "candidate_size": 24,
+        "text_enum_size": 24,
+        "nested_value_size": 24
+      },
+      {
+        "inline_bytes": 24,
+        "candidate_size": 32,
+        "text_enum_size": 32,
+        "nested_value_size": 32
+      },
+      {
+        "inline_bytes": 32,
+        "candidate_size": 40,
+        "text_enum_size": 40,
+        "nested_value_size": 40
+      }
+    ]
+  }
+}

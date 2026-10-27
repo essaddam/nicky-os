@@ -2085,10 +2085,11 @@ impl Hub {
                 return;
             }
             // A number observed under the previous unit is not a measurement
-            // under this descriptor, even before any calculation indexes it.
+            // under this descriptor. Codes also belong to an exact catalogue
+            // identity/version/membership; never reinterpret an existing code.
             // Invalidate at the model boundary, without tracking dormant sources
             // or renewing their age. No unit conversion can recover provenance.
-            let changed_units: Vec<_> = device
+            let changed_definitions: Vec<_> = device
                 .points
                 .iter()
                 .filter(|point| {
@@ -2097,7 +2098,12 @@ impl Hub {
                             .devices
                             .get(&device.id)
                             .and_then(|before| before.point(&point.key))
-                            .is_some_and(|before| before.unit != point.unit)
+                            .is_some_and(|before| {
+                                before.unit != point.unit
+                                    || (matches!(before.kind, moli_core::Kind::EnumCode { .. })
+                                        || matches!(point.kind, moli_core::Kind::EnumCode { .. }))
+                                        && before.kind != point.kind
+                            })
                 })
                 .map(|point| point.key.clone())
                 .collect();
@@ -2114,7 +2120,7 @@ impl Hub {
                     .is_some_and(|point| point.kind.uses_state_cache())
             });
             let mut restored = Vec::new();
-            for key in changed_units {
+            for key in changed_definitions {
                 let discarded = cached.remove(&key).is_some();
                 if let Some(sample) = states.get_mut(&key) {
                     if sample.value != Value::Null {
@@ -2132,7 +2138,11 @@ impl Hub {
                 }
             }
             for point in &device.points {
-                if !point.kind.uses_state_cache() {
+                // The legacy cache has no catalogue/version reference. A plain
+                // cached integer cannot prove which enum catalogue produced it.
+                if !point.kind.uses_state_cache()
+                    || matches!(point.kind, moli_core::Kind::EnumCode { .. })
+                {
                     if cached.remove(&point.key).is_some() {
                         self.0.state_dirty.store(true, Ordering::Release);
                     }
@@ -2410,6 +2420,15 @@ impl Hub {
             let Some(spec) = model.devices.get(device).and_then(|d| d.point(key)) else {
                 return;
             };
+            let value =
+                if matches!(spec.kind, moli_core::Kind::EnumCode { .. }) && value != Value::Null {
+                    let Ok(canonical) = validate(&spec.kind, &value) else {
+                        return;
+                    };
+                    canonical
+                } else {
+                    value
+                };
             let key = spec.key.clone();
             if self.0.durations.active.load(Ordering::Acquire) {
                 self.0.durations.sample(
@@ -3063,6 +3082,161 @@ mod schedule_timer_interop_tests {
         assert_eq!(
             hub.state(&PointId::new(&device, "active")).unwrap().value,
             Value::Bool(true)
+        );
+    }
+}
+
+#[cfg(test)]
+mod enum_code_tests {
+    use super::*;
+    use moli_core::{Access, EnumCodes, Kind, PointSpec, Semantic};
+
+    fn kind(catalogue: u32, version: u32, allowed: &[u8]) -> Kind {
+        let mut codes = EnumCodes::empty();
+        for code in allowed {
+            codes.insert(*code);
+        }
+        Kind::EnumCode {
+            catalogue,
+            version,
+            codes,
+        }
+    }
+
+    fn descriptor(kind: Kind) -> Device {
+        Device {
+            id: "fixture:coded".into(),
+            instance: "fixture".into(),
+            native_name: "Synthetic coded state".into(),
+            manufacturer: None,
+            model: None,
+            description: None,
+            native_room: None,
+            members: vec![],
+            points: vec![PointSpec {
+                key: "mode".into(),
+                label: "Mode".into(),
+                kind,
+                access: Access {
+                    read: true,
+                    write: false,
+                },
+                unit: None,
+                semantic: Semantic::Other,
+            }],
+        }
+    }
+
+    #[test]
+    fn enum_code_state_is_canonical_before_storage_and_broadcast() {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let device = descriptor(kind(4, 1, &[0, 7, 255]));
+        hub.upsert_device(device.clone());
+        let point = PointId::new(&device.id, "mode");
+        let mut events = hub.subscribe();
+        hub.set_state(&device.id, "mode", Value::Int(7));
+        assert_eq!(hub.state(&point).unwrap().value, Value::EnumCode(7));
+        assert!(matches!(
+            events.try_recv().unwrap(),
+            Event::State {
+                value: Value::EnumCode(7),
+                ..
+            }
+        ));
+        for value in [
+            Value::EnumCode(8),
+            Value::Int(-1),
+            Value::Int(256),
+            Value::Float(7.0),
+            Value::from("7"),
+        ] {
+            hub.set_state(&device.id, "mode", value);
+            assert_eq!(hub.state(&point).unwrap().value, Value::EnumCode(7));
+            assert!(events.try_recv().is_err());
+        }
+        hub.set_state(&device.id, "mode", Value::EnumCode(255));
+        assert_eq!(hub.state(&point).unwrap().value, Value::EnumCode(255));
+        hub.set_state(&device.id, "mode", Value::Null);
+        assert_eq!(hub.state(&point).unwrap().value, Value::Null);
+    }
+
+    #[test]
+    fn enum_code_kind_changes_invalidate_state_even_if_the_byte_still_exists() {
+        for replacement in [
+            kind(5, 1, &[7]),
+            kind(4, 2, &[7]),
+            kind(4, 1, &[7, 8]),
+            Kind::Numeric {
+                min: None,
+                max: None,
+                step: None,
+            },
+        ] {
+            let hub = Hub::new(HubOptions::default()).unwrap();
+            let mut device = descriptor(kind(4, 1, &[7]));
+            hub.upsert_device(device.clone());
+            hub.set_state(&device.id, "mode", Value::EnumCode(7));
+            let mut events = hub.subscribe();
+            device.points[0].kind = replacement;
+            hub.upsert_device(device.clone());
+            assert_eq!(
+                hub.state(&PointId::new(&device.id, "mode")).unwrap().value,
+                Value::Null
+            );
+            assert!(matches!(
+                events.try_recv().unwrap(),
+                Event::DeviceUpserted { .. }
+            ));
+            assert!(matches!(
+                events.try_recv().unwrap(),
+                Event::State {
+                    value: Value::Null,
+                    ..
+                }
+            ));
+        }
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let mut device = descriptor(Kind::Numeric {
+            min: None,
+            max: None,
+            step: None,
+        });
+        hub.upsert_device(device.clone());
+        hub.set_state(&device.id, "mode", Value::Int(7));
+        device.points[0].kind = kind(4, 1, &[7]);
+        hub.upsert_device(device.clone());
+        assert_eq!(
+            hub.state(&PointId::new(&device.id, "mode")).unwrap().value,
+            Value::Null
+        );
+    }
+
+    #[test]
+    fn enum_code_cache_without_catalogue_reference_is_never_reinterpreted() {
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let device = descriptor(kind(4, 1, &[7]));
+        let cached: Sample = serde_json::from_str(r#"{"value":7,"ts":123}"#).unwrap();
+        hub.write()
+            .restored
+            .insert(device.id.clone(), [("mode".into(), cached.clone())].into());
+        hub.upsert_device(device.clone());
+        assert!(hub.state(&PointId::new(&device.id, "mode")).is_none());
+        assert!(!hub.read().restored.contains_key(&device.id));
+        assert!(hub.0.state_dirty.load(Ordering::Acquire));
+        let legacy = Hub::new(HubOptions::default()).unwrap();
+        let ordinary = descriptor(Kind::Numeric {
+            min: None,
+            max: None,
+            step: None,
+        });
+        legacy.write().restored.insert(
+            ordinary.id.clone(),
+            [("mode".into(), cached.clone())].into(),
+        );
+        legacy.upsert_device(ordinary.clone());
+        assert_eq!(
+            legacy.state(&PointId::new(&ordinary.id, "mode")),
+            Some(cached)
         );
     }
 }

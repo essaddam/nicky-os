@@ -304,6 +304,7 @@ fn show(value: &Value) -> String {
         Value::Null => "?".to_owned(),
         Value::Bool(b) => b.to_string(),
         Value::Int(i) => i.to_string(),
+        Value::EnumCode(code) => format!("enum_code:{code}"),
         Value::Float(f) => trim(*f),
         Value::Text(t) => {
             let t: String = t.chars().take(40).collect();

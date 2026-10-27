@@ -1,0 +1,324 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-10-27T13:44:38.649375+00:00",
+  "budget": {
+    "budget_rss_bytes": 1073741824,
+    "sample_period_seconds": 0.5,
+    "scope": "worker_only",
+    "kind": "sampled_rss_watchdog_not_cgroup",
+    "exceeded": false,
+    "rss_peak_sampled_bytes": 554303488,
+    "samples": 320,
+    "rss_at_measured_start_bytes": 525238272
+  },
+  "binary_sha256": "e396c05dee3de4c084e6fbe2ea1cfaa686341ad7894aea0479e7edfee3fcb925",
+  "snapshots": [
+    {
+      "label": "start",
+      "heap_blocks": 1677492,
+      "heap_bytes_rounded_allocations": 294669008,
+      "allocation_classes": {
+        "json_nodes": {
+          "label": "Nœuds BTreeMap de serde_json::Value",
+          "bytes": 86936704,
+          "blocks": 129423,
+          "lines": [
+            65,
+            119
+          ]
+        },
+        "string_clone_symbol": {
+          "label": "Allocations attribuées au symbole String::clone",
+          "bytes": 38482752,
+          "blocks": 957952,
+          "lines": [
+            110,
+            111,
+            112,
+            113,
+            114,
+            115,
+            116,
+            117,
+            118
+          ]
+        },
+        "house_channels_tree": {
+          "label": "Nœuds BTreeMap des canaux House",
+          "bytes": 11719680,
+          "blocks": 3270,
+          "lines": [
+            120,
+            138
+          ]
+        },
+        "sample_trees": {
+          "label": "Nœuds BTreeMap de Sample",
+          "bytes": 7064064,
+          "blocks": 10840,
+          "lines": [
+            129,
+            141
+          ]
+        },
+        "other": {
+          "label": "Autres allocations",
+          "bytes": 150465808,
+          "blocks": 576007,
+          "lines": []
+        }
+      },
+      "classes_source": "start-heap.stdout",
+      "physical_footprint_bytes_rounded": 446378803,
+      "physical_footprint_peak_bytes_rounded": 534878618,
+      "selected_stack_groups": {
+        "broker_read_buffers": {
+          "blocks": 36,
+          "bytes_rounded": 29045555,
+          "line": 4009,
+          "label": "Tampons de lecture du broker",
+          "source": "start-malloc_history.stdout",
+          "scope": "plus grand groupe observé de cette pile ; arrondi ; vue distincte des classes heap"
+        },
+        "mqtt_write_buffers": {
+          "blocks": 14,
+          "bytes_rounded": 16777216,
+          "line": 4019,
+          "label": "Tampons d’écriture MQTT des ponts",
+          "source": "start-malloc_history.stdout",
+          "scope": "plus grand groupe observé de cette pile ; arrondi ; vue distincte des classes heap"
+        },
+        "broker_payload_copies": {
+          "blocks": 4199,
+          "bytes_rounded": 31457280,
+          "line": 473,
+          "label": "Copies de payloads dans le hook du broker",
+          "source": "start-malloc_history.stdout",
+          "scope": "plus grand groupe observé de cette pile ; arrondi ; vue distincte des classes heap"
+        }
+      }
+    },
+    {
+      "label": "end",
+      "heap_blocks": 1650718,
+      "heap_bytes_rounded_allocations": 319717440,
+      "allocation_classes": {
+        "json_nodes": {
+          "label": "Nœuds BTreeMap de serde_json::Value",
+          "bytes": 73079680,
+          "blocks": 107893,
+          "lines": [
+            109,
+            119
+          ]
+        },
+        "string_clone_symbol": {
+          "label": "Allocations attribuées au symbole String::clone",
+          "bytes": 46588448,
+          "blocks": 1046704,
+          "lines": [
+            110,
+            111,
+            112,
+            113,
+            114,
+            115,
+            116,
+            117,
+            118
+          ]
+        },
+        "house_channels_tree": {
+          "label": "Nœuds BTreeMap des canaux House",
+          "bytes": 16128000,
+          "blocks": 4500,
+          "lines": [
+            120,
+            134
+          ]
+        },
+        "sample_trees": {
+          "label": "Nœuds BTreeMap de Sample",
+          "bytes": 7806080,
+          "blocks": 11969,
+          "lines": [
+            121,
+            139
+          ]
+        },
+        "other": {
+          "label": "Autres allocations",
+          "bytes": 176115232,
+          "blocks": 479652,
+          "lines": []
+        }
+      },
+      "classes_source": "end-heap.stdout",
+      "physical_footprint_bytes_rounded": 331245158,
+      "physical_footprint_peak_bytes_rounded": 534878618,
+      "selected_stack_groups": {
+        "broker_read_buffers": {
+          "blocks": 40,
+          "bytes_rounded": 48444211,
+          "line": 3211,
+          "label": "Tampons de lecture du broker",
+          "source": "end-malloc_history.stdout",
+          "scope": "plus grand groupe observé de cette pile ; arrondi ; vue distincte des classes heap"
+        },
+        "mqtt_write_buffers": {
+          "blocks": 20,
+          "bytes_rounded": 30828134,
+          "line": 3221,
+          "label": "Tampons d’écriture MQTT des ponts",
+          "source": "end-malloc_history.stdout",
+          "scope": "plus grand groupe observé de cette pile ; arrondi ; vue distincte des classes heap"
+        },
+        "broker_payload_copies": {
+          "blocks": 31250,
+          "bytes_rounded": 41313894,
+          "line": 32,
+          "label": "Copies de payloads dans le hook du broker",
+          "source": "end-malloc_history.stdout",
+          "scope": "plus grand groupe observé de cette pile ; arrondi ; vue distincte des classes heap"
+        }
+      }
+    }
+  ],
+  "leak_diagnostics": [
+    {
+      "source": "end-leak-scan.stdout",
+      "blocks_flagged": 31648,
+      "bytes_flagged": 31248784,
+      "interpretation": "signalement de l’outil ; fuite Rust non confirmée"
+    },
+    {
+      "source": "end-leak-conservative.stdout",
+      "blocks_flagged": 31648,
+      "bytes_flagged": 31248784,
+      "interpretation": "signalement de l’outil ; fuite Rust non confirmée"
+    }
+  ],
+  "flagged_root_groups": {
+    "network_write_buffers": {
+      "blocks": 15,
+      "bytes": 22986752
+    },
+    "other_roots": {
+      "blocks": 31633,
+      "bytes": 8262032,
+      "remember_all_seen": true
+    }
+  },
+  "profile_context": {
+    "bootstrap_stable": false,
+    "workflow_parity": false,
+    "hub_points_final": 31540,
+    "retained_topics_final": 31250,
+    "broker_errors": {
+      "MQTT read failed": 4,
+      "MQTT send failed": 7,
+      "MQTT send timeout": 1
+    },
+    "physical_commands": 0,
+    "qualification": "profilage perturbant l’initialisation ; snapshots non comparables comme deux états stabilisés ; seconde capture au modèle complet"
+  },
+  "private_artifacts": {
+    "end-heap.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "end-heap.stdout": {
+      "bytes": 32709,
+      "sha256": "77487e5dda3e7461f949352d7accc49a23094762792ccfde4cf8ab4a873aed40"
+    },
+    "end-leak-conservative.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "end-leak-conservative.stdout": {
+      "bytes": 4006239,
+      "sha256": "c0fa87817c72727232b6c0275f3cb6577454f9f72160f7c9bbbd22d77af1deb8"
+    },
+    "end-leak-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "end-leak-scan.stdout": {
+      "bytes": 4006239,
+      "sha256": "c0fa87817c72727232b6c0275f3cb6577454f9f72160f7c9bbbd22d77af1deb8"
+    },
+    "end-leaks.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "end-leaks.stdout": {
+      "bytes": 139,
+      "sha256": "5102ea3b573111b640a0f42dec44d1a97dfa80e690e85db414ffcec6ebbd2a9d"
+    },
+    "end-malloc_history.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "end-malloc_history.stdout": {
+      "bytes": 541081,
+      "sha256": "901aea47a4c1f8ddacda2dd348a1fb2fd0e32624df9ade52924620e13b8c14e4"
+    },
+    "end-vmmap.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "end-vmmap.stdout": {
+      "bytes": 6075,
+      "sha256": "b0054a3e7c46dc6a5fe9d72bbca4ffca485d1b5b6e7dae9515adea18f9a36456"
+    },
+    "end.memgraph": {
+      "bytes": 9330712,
+      "sha256": "4caadd222e1b732a21436e2065f99eccff71ee005f8289de834107a2f5796718"
+    },
+    "start-heap.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "start-heap.stdout": {
+      "bytes": 33746,
+      "sha256": "6674351a1c16cdcb4bd7cec7f3fc1dcf6fa2e78233b0a9a873e2a2d409134375"
+    },
+    "start-leaks.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "start-leaks.stdout": {
+      "bytes": 141,
+      "sha256": "15844ac900aa3be08b0342303a983d3507588a7fe2efd302d528316bfeb4c869"
+    },
+    "start-malloc_history.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "start-malloc_history.stdout": {
+      "bytes": 650636,
+      "sha256": "6a214d8faf93d5d0472faa5af5605c5aca245ba71804bd0e0a050fbfba7c1269"
+    },
+    "start-vmmap.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "start-vmmap.stdout": {
+      "bytes": 6075,
+      "sha256": "8662da73d4f4b4d4c28d6319b53642cd78084af19c8463c6228626d0ddd171e8"
+    },
+    "start.memgraph": {
+      "bytes": 8959006,
+      "sha256": "df13242495219e654f34868b31a0f575cb2a4a9eadbfdfde77d4f353ecf346e7"
+    },
+    "supervisor.stderr": {
+      "bytes": 480,
+      "sha256": "e2e8fe1331055e0cb9abf3b0032c7c971f852ff0b27522668ccf63a75c681c33"
+    },
+    "supervisor.stdout": {
+      "bytes": 114135,
+      "sha256": "6361c6b4c07d82091a70c60497f47ff18ddd3273d4605e20c58be5b38f0a518a"
+    }
+  },
+  "privacy": "captures et sorties brutes hors dépôt ; aucun PID, adresse ou chemin personnel dans ce résumé"
+}

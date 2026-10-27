@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "Moli",
+  "short_name": "Moli",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#edf0f5",
+  "theme_color": "#edf0f5",
+  "icons": [
+    { "src": "./icons/moli.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "./icons/moli-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/moli-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

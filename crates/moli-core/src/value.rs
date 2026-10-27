@@ -10,6 +10,9 @@ pub enum Value {
     Bool(bool),
     Int(i64),
     Float(f64),
+    /// Schema-bound catalogue code; plain JSON numbers never infer this type.
+    #[serde(skip_deserializing)]
+    EnumCode(u8),
     Text(Arc<str>),
 }
 
@@ -36,6 +39,7 @@ impl Value {
             Self::Null => serde_json::Value::Null,
             Self::Bool(b) => (*b).into(),
             Self::Int(i) => (*i).into(),
+            Self::EnumCode(code) => (*code).into(),
             Self::Float(f) => {
                 serde_json::Number::from_f64(*f).map_or(serde_json::Value::Null, Into::into)
             }
@@ -103,5 +107,22 @@ mod tests {
     #[test]
     fn compound_json_is_kept_as_text() {
         assert_eq!(Value::from_json(&json!([1, 2])), Value::from("[1,2]"));
+    }
+
+    #[test]
+    fn enum_codes_serialize_as_numbers_but_require_a_schema_to_decode() {
+        for code in [0, 1, 127, 255] {
+            let value = Value::EnumCode(code);
+            assert_eq!(value.to_json(), json!(code));
+            assert_eq!(serde_json::to_value(&value).unwrap(), json!(code));
+            assert_eq!(Value::from_json(&json!(code)), Value::Int(i64::from(code)));
+            assert_eq!(
+                serde_json::from_value::<Value>(json!(code)).unwrap(),
+                Value::Int(i64::from(code))
+            );
+            assert_eq!(value.as_f64(), None);
+        }
+        assert!(std::mem::size_of::<Value>() <= 24);
+        assert!(std::mem::size_of::<crate::Sample>() <= 32);
     }
 }

@@ -1,0 +1,682 @@
+{
+  "schema": 1,
+  "when_utc": "2026-10-27T12:38:55.151874+00:00",
+  "profile": "release",
+  "platform": "darwin",
+  "binary_sha256": "831108f3d9f3bf7f5ec7f23827355bdc5d7d7b6e5ee35cb478c90a3711b25e2a",
+  "physical_commands": 0,
+  "cases": [
+    {
+      "configured_rate_per_house": 8,
+      "copies_per_source": 1,
+      "generator": {
+        "active_sessions": 0,
+        "begin_ms": 4030,
+        "bytes_sent": 566627,
+        "commands_refused": 0,
+        "elapsed_ms": 13036,
+        "initial_messages_sent": 6810,
+        "last_send_ms": 10033,
+        "last_wave_ms": 10033,
+        "paused": true,
+        "protocol_errors": 0,
+        "ready_sessions": 0,
+        "session_waves_completed": 2,
+        "sessions": 2,
+        "slow_writes": 0,
+        "update_messages_sent": 102,
+        "waves_completed": 1
+      },
+      "houses": 2,
+      "layout": "per-house",
+      "observers": [
+        {
+          "bytes": 1564288,
+          "connected": false,
+          "error_scope": "includes normal final worker shutdown",
+          "errors": 1,
+          "messages": 1695,
+          "pubacks": 1,
+          "system_gauges": [
+            [
+              {
+                "id": "messages_recus",
+                "valeur": 3832
+              },
+              {
+                "id": "messages_retenus",
+                "valeur": 3780
+              },
+              {
+                "id": "messages_publies",
+                "valeur": 1694
+              },
+              {
+                "id": "messages_par_seconde",
+                "valeur": 296.9956002351768
+              },
+              {
+                "echantillons": 3832,
+                "id": "transformation_moyenne",
+                "valeur": 4.108699634655532
+              },
+              {
+                "echantillons": 54,
+                "id": "calcul_moyen",
+                "valeur": 144.7623148148148
+              },
+              {
+                "echantillons": 7,
+                "id": "preparation_moyenne",
+                "valeur": 3273.529571428571
+              },
+              {
+                "echantillons": 1694,
+                "id": "reponse_moyenne",
+                "valeur": 2289.998599173554
+              },
+              {
+                "id": "echos_recus",
+                "valeur": 1694
+              },
+              {
+                "id": "echos_en_attente",
+                "valeur": 0
+              },
+              {
+                "id": "messages_ecartes",
+                "valeur": 0
+              },
+              {
+                "id": "canaux",
+                "valeur": 1609
+              },
+              {
+                "id": "canaux_observes",
+                "valeur": 1609
+              }
+            ]
+          ],
+          "unique_topics": 1632
+        },
+        {
+          "bytes": 1443167,
+          "connected": false,
+          "error_scope": "includes normal final worker shutdown",
+          "errors": 1,
+          "messages": 1554,
+          "pubacks": 1,
+          "system_gauges": [
+            [
+              {
+                "id": "messages_recus",
+                "valeur": 3082
+              },
+              {
+                "id": "messages_retenus",
+                "valeur": 3030
+              },
+              {
+                "id": "messages_publies",
+                "valeur": 1553
+              },
+              {
+                "id": "messages_par_seconde",
+                "valeur": 238.8631185095298
+              },
+              {
+                "echantillons": 3082,
+                "id": "transformation_moyenne",
+                "valeur": 4.696813108371188
+              },
+              {
+                "echantillons": 67,
+                "id": "calcul_moyen",
+                "valeur": 111.24435820895522
+              },
+              {
+                "echantillons": 7,
+                "id": "preparation_moyenne",
+                "valeur": 2990.357285714286
+              },
+              {
+                "echantillons": 1553,
+                "id": "reponse_moyenne",
+                "valeur": 1282.1947971667742
+              },
+              {
+                "id": "echos_recus",
+                "valeur": 1553
+              },
+              {
+                "id": "echos_en_attente",
+                "valeur": 0
+              },
+              {
+                "id": "messages_ecartes",
+                "valeur": 0
+              },
+              {
+                "id": "canaux",
+                "valeur": 1466
+              },
+              {
+                "id": "canaux_observes",
+                "valeur": 1466
+              }
+            ]
+          ],
+          "unique_topics": 1491
+        }
+      ],
+      "physical_commands": 0,
+      "profile": "release",
+      "resources": {
+        "cpu_percent_one_core": 1.1423896199051968,
+        "cpu_seconds_delta": 0.08000000000000002,
+        "end": {
+          "cpu_seconds": 0.28,
+          "rss_bytes": 62062592
+        },
+        "rss_measured_peak_sampled_bytes": 62062592,
+        "rss_peak_sampled_bytes": 62078976,
+        "samples": [
+          {
+            "cpu_seconds": 0.0,
+            "phase": "bootstrap_or_drain",
+            "rss_bytes": 4472832
+          },
+          {
+            "cpu_seconds": 0.12,
+            "phase": "bootstrap_or_drain",
+            "rss_bytes": 58851328
+          },
+          {
+            "cpu_seconds": 0.15,
+            "phase": "bootstrap_or_drain",
+            "rss_bytes": 59195392
+          },
+          {
+            "cpu_seconds": 0.17,
+            "phase": "bootstrap_or_drain",
+            "rss_bytes": 59555840
+          },
+          {
+            "cpu_seconds": 0.2,
+            "phase": "bootstrap_or_drain",
+            "rss_bytes": 59998208
+          },
+          {
+            "cpu_seconds": 0.22,
+            "phase": "measured",
+            "rss_bytes": 61947904
+          },
+          {
+            "cpu_seconds": 0.23,
+            "phase": "measured",
+            "rss_bytes": 62013440
+          },
+          {
+            "cpu_seconds": 0.24,
+            "phase": "measured",
+            "rss_bytes": 62013440
+          },
+          {
+            "cpu_seconds": 0.25,
+            "phase": "measured",
+            "rss_bytes": 62013440
+          },
+          {
+            "cpu_seconds": 0.26,
+            "phase": "measured",
+            "rss_bytes": 62029824
+          },
+          {
+            "cpu_seconds": 0.27,
+            "phase": "measured",
+            "rss_bytes": 62029824
+          },
+          {
+            "cpu_seconds": 0.28,
+            "phase": "measured",
+            "rss_bytes": 62062592
+          },
+          {
+            "cpu_seconds": 0.28,
+            "phase": "bootstrap_or_drain",
+            "rss_bytes": 62062592
+          },
+          {
+            "cpu_seconds": 0.29,
+            "phase": "bootstrap_or_drain",
+            "rss_bytes": 62078976
+          }
+        ],
+        "start": {
+          "cpu_seconds": 0.2,
+          "rss_bytes": 61489152
+        }
+      },
+      "schema": 1,
+      "scope": "synthetic replay from historical exports; real House/Hub/MQTT/automation/broker; generator excluded from worker resources; no web UI or physical device",
+      "seconds": 7.00286475,
+      "sources": [
+        {
+          "initial_messages": 3777,
+          "initial_payload_bytes": 48820,
+          "physical_publications": 0,
+          "registry_devices": 290,
+          "registry_entities": 1830,
+          "registry_floors": 2,
+          "registry_rooms": 17,
+          "registry_template_bytes": 549107,
+          "state_entities": 1278,
+          "states_matching_registry": 1274,
+          "states_without_registry": 4,
+          "synthetic_identities": true,
+          "updatable_points": 1343
+        },
+        {
+          "initial_messages": 3027,
+          "initial_payload_bytes": 38245,
+          "physical_publications": 0,
+          "registry_devices": 206,
+          "registry_entities": 1524,
+          "registry_floors": 4,
+          "registry_rooms": 17,
+          "registry_template_bytes": 454034,
+          "state_entities": 986,
+          "states_matching_registry": 977,
+          "states_without_registry": 9,
+          "synthetic_identities": true,
+          "updatable_points": 1241
+        }
+      ],
+      "storage": "memory",
+      "worker": {
+        "after_drain": {
+          "allocator_live_bytes": 29458300,
+          "allocator_peak_bytes": 29799494,
+          "broker": {
+            "brokers": [
+              {
+                "clients": 2,
+                "description_disk_bytes": 0,
+                "description_ram_bytes": 1118889,
+                "description_storage": "memory",
+                "retained_payload_bytes": 2120618,
+                "retained_topics": 1633
+              },
+              {
+                "clients": 2,
+                "description_disk_bytes": 0,
+                "description_ram_bytes": 1026801,
+                "description_storage": "memory",
+                "retained_payload_bytes": 1897854,
+                "retained_topics": 1492
+              }
+            ],
+            "clients": 4,
+            "count": 2,
+            "description_disk_bytes": 0,
+            "description_ram_bytes": 2145690,
+            "errors": {},
+            "retained_payload_bytes": 4018472,
+            "retained_topics": 3125
+          },
+          "drivers_running": 3,
+          "hub_devices": 669,
+          "hub_points": 3154,
+          "sources": [
+            {
+              "connected": true,
+              "projection": {
+                "active_channel_struct_bytes": 272,
+                "channels": 1609,
+                "devices": 290,
+                "enum_catalogue": {
+                  "active_choices": 66,
+                  "catalogue_capacity": 13,
+                  "catalogue_struct_bytes": 64,
+                  "catalogues": 13,
+                  "codes": 66,
+                  "entry_bytes": 660,
+                  "entry_capacity_bytes": 660,
+                  "entry_struct_bytes": 10,
+                  "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                  "overhead_bytes": 1628,
+                  "owned_capacity_bytes": 2649,
+                  "packed_bytes": 1021,
+                  "packed_capacity_bytes": 1021,
+                  "shared_tables": 0,
+                  "snapshot_bytes": 5685
+                },
+                "enum_channels": 66,
+                "enum_code_bytes": 32,
+                "enum_json_storage_bytes": 2112,
+                "hot_label_bytes": 0,
+                "light_command_contracts": 0,
+                "metadata_bytes": 1118881,
+                "nodes": 21,
+                "observed_channels": 1609,
+                "pending_native_bytes": 20,
+                "rejected": 0,
+                "standalone_entities": 104,
+                "switch_command_contracts": 0,
+                "text_values_utf8_bytes": 2736,
+                "unmatched_messages": 27
+              },
+              "published": 1695,
+              "received": 3832
+            },
+            {
+              "connected": true,
+              "projection": {
+                "active_channel_struct_bytes": 272,
+                "channels": 1466,
+                "devices": 201,
+                "enum_catalogue": {
+                  "active_choices": 99,
+                  "catalogue_capacity": 13,
+                  "catalogue_struct_bytes": 64,
+                  "catalogues": 13,
+                  "codes": 99,
+                  "entry_bytes": 990,
+                  "entry_capacity_bytes": 990,
+                  "entry_struct_bytes": 10,
+                  "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                  "overhead_bytes": 1958,
+                  "owned_capacity_bytes": 3148,
+                  "packed_bytes": 1190,
+                  "packed_capacity_bytes": 1190,
+                  "shared_tables": 0,
+                  "snapshot_bytes": 7640
+                },
+                "enum_channels": 42,
+                "enum_code_bytes": 38,
+                "enum_json_storage_bytes": 1344,
+                "hot_label_bytes": 0,
+                "light_command_contracts": 0,
+                "metadata_bytes": 1026793,
+                "nodes": 23,
+                "observed_channels": 1466,
+                "pending_native_bytes": 0,
+                "rejected": 0,
+                "standalone_entities": 28,
+                "switch_command_contracts": 0,
+                "text_values_utf8_bytes": 2930,
+                "unmatched_messages": 26
+              },
+              "published": 1554,
+              "received": 3082
+            }
+          ]
+        },
+        "bootstrap": {
+          "allocator_live_bytes": 29021938,
+          "allocator_peak_bytes": 39363981,
+          "broker": {
+            "brokers": [
+              {
+                "clients": 2,
+                "description_disk_bytes": 0,
+                "description_ram_bytes": 1118889,
+                "description_storage": "memory",
+                "retained_payload_bytes": 2032237,
+                "retained_topics": 1278
+              },
+              {
+                "clients": 2,
+                "description_disk_bytes": 0,
+                "description_ram_bytes": 1026801,
+                "description_storage": "memory",
+                "retained_payload_bytes": 1843878,
+                "retained_topics": 1278
+              }
+            ],
+            "clients": 4,
+            "count": 2,
+            "description_disk_bytes": 0,
+            "description_ram_bytes": 2145690,
+            "errors": {},
+            "retained_payload_bytes": 3876115,
+            "retained_topics": 2556
+          },
+          "drivers_running": 3,
+          "hub_devices": 669,
+          "hub_points": 3154,
+          "sources": [
+            {
+              "connected": true,
+              "projection": {
+                "active_channel_struct_bytes": 272,
+                "channels": 1609,
+                "devices": 290,
+                "enum_catalogue": {
+                  "active_choices": 66,
+                  "catalogue_capacity": 13,
+                  "catalogue_struct_bytes": 64,
+                  "catalogues": 13,
+                  "codes": 66,
+                  "entry_bytes": 660,
+                  "entry_capacity_bytes": 660,
+                  "entry_struct_bytes": 10,
+                  "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                  "overhead_bytes": 1628,
+                  "owned_capacity_bytes": 2649,
+                  "packed_bytes": 1021,
+                  "packed_capacity_bytes": 1021,
+                  "shared_tables": 0,
+                  "snapshot_bytes": 5685
+                },
+                "enum_channels": 66,
+                "enum_code_bytes": 32,
+                "enum_json_storage_bytes": 2112,
+                "hot_label_bytes": 0,
+                "light_command_contracts": 0,
+                "metadata_bytes": 1118881,
+                "nodes": 21,
+                "observed_channels": 1609,
+                "pending_native_bytes": 20,
+                "rejected": 0,
+                "standalone_entities": 104,
+                "switch_command_contracts": 0,
+                "text_values_utf8_bytes": 2733,
+                "unmatched_messages": 25
+              },
+              "published": 1248,
+              "received": 3781
+            },
+            {
+              "connected": true,
+              "projection": {
+                "active_channel_struct_bytes": 272,
+                "channels": 1466,
+                "devices": 201,
+                "enum_catalogue": {
+                  "active_choices": 99,
+                  "catalogue_capacity": 13,
+                  "catalogue_struct_bytes": 64,
+                  "catalogues": 13,
+                  "codes": 99,
+                  "entry_bytes": 990,
+                  "entry_capacity_bytes": 990,
+                  "entry_struct_bytes": 10,
+                  "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                  "overhead_bytes": 1958,
+                  "owned_capacity_bytes": 3148,
+                  "packed_bytes": 1190,
+                  "packed_capacity_bytes": 1190,
+                  "shared_tables": 0,
+                  "snapshot_bytes": 7640
+                },
+                "enum_channels": 42,
+                "enum_code_bytes": 38,
+                "enum_json_storage_bytes": 1344,
+                "hot_label_bytes": 0,
+                "light_command_contracts": 0,
+                "metadata_bytes": 1026793,
+                "nodes": 23,
+                "observed_channels": 1466,
+                "pending_native_bytes": 0,
+                "rejected": 0,
+                "standalone_entities": 28,
+                "switch_command_contracts": 0,
+                "text_values_utf8_bytes": 2928,
+                "unmatched_messages": 22
+              },
+              "published": 1248,
+              "received": 3031
+            }
+          ]
+        },
+        "bootstrap_seconds": 4.021243375,
+        "bootstrap_stable": true,
+        "measured_end": {
+          "allocator_live_bytes": 29416899,
+          "allocator_peak_bytes": 29799494,
+          "broker": {
+            "brokers": [
+              {
+                "clients": 2,
+                "description_disk_bytes": 0,
+                "description_ram_bytes": 1118889,
+                "description_storage": "memory",
+                "retained_payload_bytes": 2120618,
+                "retained_topics": 1633
+              },
+              {
+                "clients": 2,
+                "description_disk_bytes": 0,
+                "description_ram_bytes": 1026801,
+                "description_storage": "memory",
+                "retained_payload_bytes": 1897854,
+                "retained_topics": 1492
+              }
+            ],
+            "clients": 4,
+            "count": 2,
+            "description_disk_bytes": 0,
+            "description_ram_bytes": 2145690,
+            "errors": {},
+            "retained_payload_bytes": 4018472,
+            "retained_topics": 3125
+          },
+          "drivers_running": 3,
+          "hub_devices": 669,
+          "hub_points": 3154,
+          "sources": [
+            {
+              "connected": true,
+              "projection": {
+                "active_channel_struct_bytes": 272,
+                "channels": 1609,
+                "devices": 290,
+                "enum_catalogue": {
+                  "active_choices": 66,
+                  "catalogue_capacity": 13,
+                  "catalogue_struct_bytes": 64,
+                  "catalogues": 13,
+                  "codes": 66,
+                  "entry_bytes": 660,
+                  "entry_capacity_bytes": 660,
+                  "entry_struct_bytes": 10,
+                  "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                  "overhead_bytes": 1628,
+                  "owned_capacity_bytes": 2649,
+                  "packed_bytes": 1021,
+                  "packed_capacity_bytes": 1021,
+                  "shared_tables": 0,
+                  "snapshot_bytes": 5685
+                },
+                "enum_channels": 66,
+                "enum_code_bytes": 32,
+                "enum_json_storage_bytes": 2112,
+                "hot_label_bytes": 0,
+                "light_command_contracts": 0,
+                "metadata_bytes": 1118881,
+                "nodes": 21,
+                "observed_channels": 1609,
+                "pending_native_bytes": 20,
+                "rejected": 0,
+                "standalone_entities": 104,
+                "switch_command_contracts": 0,
+                "text_values_utf8_bytes": 2736,
+                "unmatched_messages": 27
+              },
+              "published": 1693,
+              "received": 3832
+            },
+            {
+              "connected": true,
+              "projection": {
+                "active_channel_struct_bytes": 272,
+                "channels": 1466,
+                "devices": 201,
+                "enum_catalogue": {
+                  "active_choices": 99,
+                  "catalogue_capacity": 13,
+                  "catalogue_struct_bytes": 64,
+                  "catalogues": 13,
+                  "codes": 99,
+                  "entry_bytes": 990,
+                  "entry_capacity_bytes": 990,
+                  "entry_struct_bytes": 10,
+                  "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+                  "overhead_bytes": 1958,
+                  "owned_capacity_bytes": 3148,
+                  "packed_bytes": 1190,
+                  "packed_capacity_bytes": 1190,
+                  "shared_tables": 0,
+                  "snapshot_bytes": 7640
+                },
+                "enum_channels": 42,
+                "enum_code_bytes": 38,
+                "enum_json_storage_bytes": 1344,
+                "hot_label_bytes": 0,
+                "light_command_contracts": 0,
+                "metadata_bytes": 1026793,
+                "nodes": 23,
+                "observed_channels": 1466,
+                "pending_native_bytes": 0,
+                "rejected": 0,
+                "standalone_entities": 28,
+                "switch_command_contracts": 0,
+                "text_values_utf8_bytes": 2930,
+                "unmatched_messages": 26
+              },
+              "published": 1552,
+              "received": 3082
+            }
+          ]
+        },
+        "physical_commands": 0,
+        "workflow_start_error": null,
+        "workflows": {
+          "automations": 4,
+          "copies_per_source": 1,
+          "houses": 2,
+          "local_notices": 2,
+          "notices_observer_lagged_messages": 0,
+          "opening_duration_mean_ms": 0.0,
+          "opening_duration_p95_ms": 0,
+          "opening_duration_samples": 2,
+          "opening_runs_done": 2,
+          "runs_failed": 0,
+          "runs_observer_lagged_messages": 0,
+          "source_count": 2,
+          "synthetic_opening_commands": 2,
+          "synthetic_threshold_commands": 0,
+          "threshold_duration_mean_ms": null,
+          "threshold_duration_p95_ms": null,
+          "threshold_duration_samples": 0,
+          "threshold_runs_done": 0
+        }
+      },
+      "workflow_expected_per_kind": 2,
+      "workflow_parity": false,
+      "name": "smoke",
+      "exit_code": 0
+    }
+  ]
+}

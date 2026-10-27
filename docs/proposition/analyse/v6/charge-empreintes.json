@@ -1,0 +1,240 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-10-27T13:51:45.920347+00:00",
+  "base_commit": "a83589366f67d6b8273a10ad41658d688e498fda",
+  "scope": "État final du complément charge et mémoire ; les empreintes historiques du dossier initial sont conservées séparément. Aucune sortie ancienne n’est signée rétroactivement.",
+  "checks": {
+    "rust_toolchain": "1.99.1",
+    "test_command": "RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR=target/mqtt-live-probe CARGO_BUILD_JOBS=2 cargo test --offline --manifest-path tools/mqtt-live-probe/Cargo.toml -j2",
+    "tests": {
+      "passed": 167,
+      "failed": 0,
+      "ignored": 1,
+      "enum_audit": 13,
+      "main": 126,
+      "gateway": 28,
+      "note": "exécutions ; des tests du même module sont compilés dans plusieurs binaires"
+    },
+    "clippy_command": "RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR=target/mqtt-live-probe CARGO_BUILD_JOBS=2 cargo clippy --offline --manifest-path tools/mqtt-live-probe/Cargo.toml --all-targets -j2 -- -D warnings",
+    "clippy": "PASS",
+    "fmt": "PASS",
+    "python_ast": "PASS",
+    "load_cases": 9,
+    "load_passed": [
+      "smoke",
+      "two-shared-memory",
+      "twenty-partitioned-memory",
+      "twenty-burst-memory",
+      "twenty-soak-memory",
+      "twenty-accounting-memory"
+    ],
+    "load_not_validated": [
+      "twenty-shared-memory",
+      "twenty-partitioned-disk",
+      "twenty-burst-disk"
+    ],
+    "snapshot_native_capture": "captured",
+    "snapshot_guard": {
+      "budget_rss_bytes": 1073741824,
+      "sample_period_seconds": 0.5,
+      "scope": "worker_only",
+      "kind": "sampled_rss_watchdog_not_cgroup",
+      "exceeded": false,
+      "rss_peak_sampled_bytes": 554303488,
+      "samples": 320,
+      "rss_at_measured_start_bytes": 525238272
+    },
+    "browser": {
+      "tool": "Chrome AgentsRoom",
+      "pages": [
+        "charge.html",
+        "memoire-1g.html"
+      ],
+      "widths": [
+        1440,
+        390
+      ],
+      "horizontal_overflow": false,
+      "scope": "émulation mobile, pas de test iPhone physique"
+    },
+    "physical_commands": 0,
+    "html_json_svg_links": "PASS",
+    "leak_check": "PASS — motifs génériques ; liste privée absente"
+  },
+  "release_binary": {
+    "sha256": "e396c05dee3de4c084e6fbe2ea1cfaa686341ad7894aea0479e7edfee3fcb925",
+    "bytes": 6368752
+  },
+  "files": {
+    "tools/mqtt-live-probe/src/main.rs": {
+      "bytes": 103121,
+      "sha256": "e35d7d659ab0075eda74324889fa7adc375184875d255cda991b88640d0daa49"
+    },
+    "tools/mqtt-live-probe/src/load_fixture.rs": {
+      "bytes": 40722,
+      "sha256": "2115fa63fa9bc8e9a3953d01005baf04d327ee16e865ffab83b1d6ff3fc99f44"
+    },
+    "tools/mqtt-live-probe/src/load_wire.rs": {
+      "bytes": 19648,
+      "sha256": "fa6a2cdd3a245926db6fb4ca246af69ee65ec751fd25c438b7703d4095ddf357"
+    },
+    "tools/mqtt-live-probe/src/load_workflows.rs": {
+      "bytes": 32708,
+      "sha256": "72357853a047346bc70e737e1684aea134a05c411f1c15d9712fa531a4ab4219"
+    },
+    "tools/mqtt-live-probe/src/load_test.rs": {
+      "bytes": 28724,
+      "sha256": "364d1c6bb99513de8279b41053e0d88a35bf6637e6dce154f773015e20492ca1"
+    },
+    "tools/mqtt-live-probe/src/house.rs": {
+      "bytes": 100239,
+      "sha256": "56b2749546dafb34dcb6c29d92a26d68a469649440880fc88b1700a1186625cc"
+    },
+    "tools/mqtt-live-probe/src/hub_projection.rs": {
+      "bytes": 9096,
+      "sha256": "30e8f9e7e76c26fb6f8951957e661ac5eff535e0dc37c4eeec01a16c9b4a952a"
+    },
+    "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": {
+      "bytes": 44116,
+      "sha256": "91c171e816498fa7d33bc891666973d8e5a8f0faf3677c4e9ba02df6f6b73661"
+    },
+    "tools/mqtt-live-probe/src/metadata.rs": {
+      "bytes": 5648,
+      "sha256": "a067016e2feb4095aaba39828d7948f0681269187fa069fbe2b87216f05c0bd0"
+    },
+    "tools/mqtt-live-probe/Cargo.toml": {
+      "bytes": 1193,
+      "sha256": "bf7db378e4ff42772ff9da003f1862f7c78f696588a30b37ac1e895d49ed384c"
+    },
+    "tools/mqtt-live-probe/Cargo.lock": {
+      "bytes": 33520,
+      "sha256": "93636394c45280646451db5b0ff4ba3b3c45a45ba24f2d99fc04a60c3573a4e2"
+    },
+    "tools/mqtt-live-probe/README.md": {
+      "bytes": 27524,
+      "sha256": "007d1695d18307f8ef471b958787678581f24ffb8b63b89776fb571efe84810f"
+    },
+    "tools/mqtt-live-probe/.gitignore": {
+      "bytes": 23,
+      "sha256": "337613937fda3acd2ba7834aa3e1b1eacfe04c9cafb336dfd6dfb7b6827d8f3e"
+    },
+    "tools/mqtt-live-probe/run-load.py": {
+      "bytes": 9078,
+      "sha256": "d13067ae4170151d80fade84fedfb3964cf0990450a16ba71a38bafa2843ba4b"
+    },
+    "tools/mqtt-live-probe/render-load-report.py": {
+      "bytes": 23452,
+      "sha256": "d4af65d23db1e91bddb851d78bf53b0f115471ca3b7bf7e22e1e823f02df74cf"
+    },
+    "tools/mqtt-live-probe/snapshot-load.py": {
+      "bytes": 14499,
+      "sha256": "bff373643326a5effa2d6e2f075982bb9a98b51399b47a3bdd8a1dfba1c1e8ca"
+    },
+    "tools/mqtt-live-probe/analyze-heap-snapshot.py": {
+      "bytes": 20023,
+      "sha256": "c1709a9f58faef644cba10222dba96a6f6ee4fc34d7cee1e6e62f402a6b09f7d"
+    },
+    "crates/moli-automation/src/engine.rs": {
+      "bytes": 38112,
+      "sha256": "1213009f360b4d7ec54e561710f1faf537ebb6884dc180619feb6d5890707384"
+    },
+    "docs/proposition/analyse/v6/README.md": {
+      "bytes": 1922,
+      "sha256": "b29a3b9e93c9afbda218841cc1839d4c1111b6b486beac3b4f2d8fc217f2c1e2"
+    },
+    "docs/proposition/analyse/v6/bancs/Cargo.lock": {
+      "bytes": 3271,
+      "sha256": "3dcd1e80a37efcd8b0a6589301deae3835d73127f842e5244b61bc159b5b1e0d"
+    },
+    "docs/proposition/analyse/v6/bancs/Cargo.toml": {
+      "bytes": 294,
+      "sha256": "284092f32b9e1f6a96340b5b90f4db7b48b24bb251105adf5eb342e71c64d090"
+    },
+    "docs/proposition/analyse/v6/bancs/README.md": {
+      "bytes": 8370,
+      "sha256": "4a74bd725eadda49536ce269d14157408cc624a6d9bb9a02407e926b988d7545"
+    },
+    "docs/proposition/analyse/v6/bancs/resultats-historiques-2026-10-27.json": {
+      "bytes": 15535,
+      "sha256": "7297ce736348eae0e9a659fcf01fbc4f25418cb7868572d478eb13d05270a8cf"
+    },
+    "docs/proposition/analyse/v6/bancs/src/main.rs": {
+      "bytes": 13284,
+      "sha256": "306ff2274d17bf139eb489005cb82db3dbd9cbb9105a431ac6fe87332dacb85b"
+    },
+    "docs/proposition/analyse/v6/bancs/src/meter.rs": {
+      "bytes": 2941,
+      "sha256": "cf00055393d7ca2a479033657005831018b04cc1c1dea589b82d802b7e37e72b"
+    },
+    "docs/proposition/analyse/v6/charge-initial-echec.json": {
+      "bytes": 22580,
+      "sha256": "dcf4126a139cdeb07b8e31bbd8f43765e02228ddabf7c4a4787b3d4d6c39b704"
+    },
+    "docs/proposition/analyse/v6/charge-protocole.md": {
+      "bytes": 3780,
+      "sha256": "09e8a8a702d8f5100d714ce5e91c8830c2f38ef292a14f992afd7f324b387d0c"
+    },
+    "docs/proposition/analyse/v6/charge-ressources.svg": {
+      "bytes": 91185,
+      "sha256": "7e0d12a07b04427427f56c1e31475a8d9acf43422df481183461d892a5f82874"
+    },
+    "docs/proposition/analyse/v6/charge-resultats.json": {
+      "bytes": 1418739,
+      "sha256": "982ad3e10e63163a8f9c4b2aad848248a10fb5b5914d582e52d936e361028faf"
+    },
+    "docs/proposition/analyse/v6/charge.html": {
+      "bytes": 110406,
+      "sha256": "d0883b87709e5606840e9558d6adf3da8e21b5396ffed1820be4f3d37b293093"
+    },
+    "docs/proposition/analyse/v6/empreintes.json": {
+      "bytes": 6917,
+      "sha256": "c01db076960d71f78f57fbc68b2c397dee8d8281a3c02029ae8b0b0ef6913df0"
+    },
+    "docs/proposition/analyse/v6/heap-snapshot-analyse.json": {
+      "bytes": 10135,
+      "sha256": "7a0b314ea2029608574c4d412e2ebe9f7b6eee169cba5444412ded6d64a5ec28"
+    },
+    "docs/proposition/analyse/v6/heap-snapshot-recu.json": {
+      "bytes": 4735,
+      "sha256": "10b90d76bc55fe6d65e590459b888b7e0222c9809bb75d9ffab0bdd1d8cce0c9"
+    },
+    "docs/proposition/analyse/v6/index.html": {
+      "bytes": 69599,
+      "sha256": "628a51186619354c82c88e3dce56532803fd8766fe30cb86b77ec94fb1efbe7d"
+    },
+    "docs/proposition/analyse/v6/memoire-1g.html": {
+      "bytes": 11613,
+      "sha256": "1df5500a91a35b2cdd9f069b114d483d41c0a563c6642e32efa278645f85fb49"
+    },
+    "docs/proposition/analyse/v6/mesures.json": {
+      "bytes": 12367,
+      "sha256": "4778194054a035518fd17af4b70dab59c5baeaf87ac388763da644fc8808b797"
+    },
+    "docs/proposition/analyse/v6/preuves.json": {
+      "bytes": 10246,
+      "sha256": "33edb0c27f9bdbfcc1cfec34dc15f5cb31d17259c8f0fd9699ace7ba0eba9374"
+    }
+  },
+  "publication_whitespace_normalization": {
+    "reason": "Whitespace-only cleanup before first publication; historical fingerprints and results above preserved.",
+    "recorded_at_utc": "2026-10-27T16:35:16.541366+00:00",
+    "files": {
+      "docs/proposition/analyse/v6/charge-ressources.svg": {
+        "before": "7e0d12a07b04427427f56c1e31475a8d9acf43422df481183461d892a5f82874",
+        "after": "114b2a667cb68ee6dc2bd9689a6307e3019ec3ce1772865d1fcd93bdfa297ecb"
+      },
+      "docs/proposition/analyse/v6/charge.html": {
+        "before": "d0883b87709e5606840e9558d6adf3da8e21b5396ffed1820be4f3d37b293093",
+        "after": "d5a490bfeecbfbba53ecccf8e15482755968535fcdd8c98d6641afa59a3157d8"
+      },
+      "tools/mqtt-live-probe/analyze-heap-snapshot.py": {
+        "before": "c1709a9f58faef644cba10222dba96a6f6ee4fc34d7cee1e6e62f402a6b09f7d",
+        "after": "334d64e02476bf2a84239c042bdf0e242c7a694a89cc868801df6ebf2fdeea52"
+      },
+      "tools/mqtt-live-probe/render-load-report.py": {
+        "before": "d4af65d23db1e91bddb851d78bf53b0f115471ca3b7bf7e22e1e823f02df74cf",
+        "after": "de77ec5f6e200152c42313aa2c468eb60005d40994151994148494fdc9cebb13"
+      }
+    }
+  }
+}

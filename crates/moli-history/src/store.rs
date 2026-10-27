@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS points (
 CREATE TABLE IF NOT EXISTS samples (
     point_id INTEGER NOT NULL REFERENCES points(id),
     ts       INTEGER NOT NULL,           -- ms since the Unix epoch
-    kind     TEXT    NOT NULL,           -- b(ool) i(nt) f(loat) t(ext) z(null)
-    num      REAL,                       -- bool as 0/1, int, float
+    kind     TEXT    NOT NULL,           -- b(ool) i(nt) f(loat) e(num code) t(ext) z(null)
+    num      REAL,                       -- bool as 0/1, int, float, tagged enum byte
     txt      TEXT,
     PRIMARY KEY (point_id, ts)
 ) WITHOUT ROWID;
@@ -218,6 +218,8 @@ fn encode(value: &Value) -> (&'static str, Option<f64>, Option<&str>) {
         Value::Bool(b) => ("b", Some(f64::from(u8::from(*b))), None),
         Value::Int(i) => ("i", Some(*i as f64), None),
         Value::Float(f) => ("f", Some(*f), None),
+        // The byte uses the scalar storage column but keeps a categorical tag.
+        Value::EnumCode(code) => ("e", Some(f64::from(*code)), None),
         Value::Text(t) => ("t", None, Some(t)),
     }
 }
@@ -228,6 +230,9 @@ fn decode(kind: &str, num: Option<f64>, txt: Option<String>) -> Value {
         ("b", Some(n), _) => Value::Bool(n != 0.0),
         ("i", Some(n), _) => Value::Int(n as i64),
         ("f", Some(n), _) => Value::Float(n),
+        ("e", Some(n), _) if (0.0..=255.0).contains(&n) && n.fract() == 0.0 => {
+            Value::EnumCode(u8::try_from(n as i64).expect("bounded enum code"))
+        }
         ("t", _, Some(t)) => Value::Text(t.into()),
         _ => Value::Null,
     }
@@ -824,7 +829,7 @@ impl Store {
             )
             .optional()?;
         let (total, numeric): (i64, i64) = conn.query_row(
-            "SELECT COUNT(*), COUNT(num) FROM samples WHERE point_id = ?1 AND ts BETWEEN ?2 AND ?3",
+            "SELECT COUNT(*), COUNT(CASE WHEN kind IN ('b', 'i', 'f') THEN num END) FROM samples WHERE point_id = ?1 AND ts BETWEEN ?2 AND ?3",
             params![id, from_ts, to_ts],
             |r| Ok((r.get(0)?, r.get(1)?)),
         )?;
@@ -856,7 +861,7 @@ impl Store {
             let width = ((to_ts - from_ts) / max).max(1);
             let mut stmt = conn.prepare(
                 "SELECT MIN(ts), AVG(num), MIN(num), MAX(num), COUNT(*) FROM samples
-                 WHERE point_id = ?1 AND ts BETWEEN ?2 AND ?3 AND num IS NOT NULL
+                 WHERE point_id = ?1 AND ts BETWEEN ?2 AND ?3 AND num IS NOT NULL AND kind IN ('b', 'i', 'f')
                  GROUP BY (ts - ?2) / ?4 ORDER BY 1",
             )?;
             series.buckets = stmt
@@ -1024,6 +1029,8 @@ mod tests {
             (p("d/f"), Value::Float(21.5), 1_000),
             (p("d/t"), Value::from("short_release"), 1_000),
             (p("d/z"), Value::Null, 1_000),
+            (p("d/mode"), Value::EnumCode(0), 1_000),
+            (p("d/mode"), Value::EnumCode(255), 2_000),
         ];
         store.insert(&rows, false).unwrap();
         let s = store.series("d/on", 0, 10_000, 100).unwrap();
@@ -1045,6 +1052,14 @@ mod tests {
         );
         assert_eq!(store.series("unknown", 0, 10_000, 100).unwrap().total, 0);
         drop(store);
+        let reopened = Store::open(&dir.join("history.db")).unwrap();
+        let codes = reopened.series("d/mode", 0, 10_000, 100).unwrap().raw;
+        assert_eq!(
+            codes,
+            vec![(1_000, Value::EnumCode(0)), (2_000, Value::EnumCode(255))]
+        );
+        assert!(codes.iter().all(|(_, value)| value.as_f64().is_none()));
+        drop(reopened);
         let _ = std::fs::remove_dir_all(dir);
     }
 
@@ -1074,6 +1089,36 @@ mod tests {
         );
         assert_eq!(s.buckets[0].min, 0.0);
         assert_eq!(s.before, Some((5_000, Value::Float(-1.0))));
+        drop(store);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn enum_codes_are_never_averaged_in_buckets() {
+        let (store, dir) = store("enum-buckets");
+        let mut rows: Vec<_> = (0u8..20)
+            .map(|code| (p("d/mode"), Value::EnumCode(code), u64::from(code) + 100))
+            .collect();
+        rows.extend([
+            (p("d/mixed"), Value::Float(2.0), 1),
+            (p("d/mixed"), Value::EnumCode(255), 2),
+            (p("d/mixed"), Value::Float(4.0), 3),
+        ]);
+        store.insert(&rows, false).unwrap();
+        let categorical = store.series("d/mode", 0, 1000, 5).unwrap();
+        assert!(categorical.buckets.is_empty());
+        assert!(categorical.truncated);
+        assert_eq!(categorical.raw.len(), 5);
+        assert!(
+            categorical
+                .raw
+                .iter()
+                .all(|(_, value)| matches!(value, Value::EnumCode(_)))
+        );
+        let mixed = store.series("d/mixed", 0, 1000, 1).unwrap();
+        assert_eq!(mixed.buckets.len(), 1);
+        assert_eq!(mixed.buckets[0].avg, 3.0);
+        assert_eq!(mixed.buckets[0].count, 2);
         drop(store);
         let _ = std::fs::remove_dir_all(dir);
     }

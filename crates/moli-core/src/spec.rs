@@ -7,6 +7,84 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::Value;
 
+/// A fixed 256-bit membership mask with no labels and no heap allocation.
+/// Serialized as a sorted list of active byte codes; decoding rejects duplicates.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct EnumCodes([u8; 32]);
+
+impl EnumCodes {
+    #[must_use]
+    pub const fn empty() -> Self {
+        Self([0; 32])
+    }
+
+    /// Adds a code, returning whether it was absent.
+    pub fn insert(&mut self, code: u8) -> bool {
+        let byte = &mut self.0[usize::from(code / 8)];
+        let mask = 1 << (code % 8);
+        let absent = *byte & mask == 0;
+        *byte |= mask;
+        absent
+    }
+
+    #[must_use]
+    pub fn contains(&self, code: u8) -> bool {
+        self.0[usize::from(code / 8)] & (1 << (code % 8)) != 0
+    }
+
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.iter().count()
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.iter().all(|byte| *byte == 0)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = u8> + '_ {
+        (u8::MIN..=u8::MAX).filter(|code| self.contains(*code))
+    }
+}
+
+impl Serialize for EnumCodes {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(Some(self.len()))?;
+        for code in self.iter() {
+            sequence.serialize_element(&code)?;
+        }
+        sequence.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for EnumCodes {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct CodesVisitor;
+        impl<'de> serde::de::Visitor<'de> for CodesVisitor {
+            type Value = EnumCodes;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("at most 256 unique byte codes")
+            }
+
+            fn visit_seq<A: serde::de::SeqAccess<'de>>(
+                self,
+                mut sequence: A,
+            ) -> Result<EnumCodes, A::Error> {
+                let mut codes = EnumCodes::empty();
+                while let Some(code) = sequence.next_element::<u8>()? {
+                    if !codes.insert(code) {
+                        return Err(serde::de::Error::custom("duplicate enum code"));
+                    }
+                }
+                Ok(codes)
+            }
+        }
+        deserializer.deserialize_seq(CodesVisitor)
+    }
+}
+
 /// Shape of the values a point accepts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -46,6 +124,12 @@ pub enum Kind {
     },
     Enum {
         values: Vec<Arc<str>>,
+    },
+    /// Membership and catalogue identity only; labels belong to cold metadata.
+    EnumCode {
+        catalogue: u32,
+        version: u32,
+        codes: EnumCodes,
     },
     Text,
 }
@@ -323,6 +407,8 @@ pub struct PointSpec {
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum ValueError {
+    #[error("invalid enum code")]
+    InvalidEnumCode,
     #[error("invalid temporal value")]
     InvalidTemporal,
     #[error("expected a button press (null)")]
@@ -362,6 +448,16 @@ pub fn validate(kind: &Kind, value: &Value) -> Result<Value, ValueError> {
             .ok_or(ValueError::ExpectedNumber);
     }
     match (kind, value) {
+        (Kind::EnumCode { codes, .. }, value) => {
+            let code = match value {
+                Value::EnumCode(code) => Some(*code),
+                Value::Int(code) => u8::try_from(*code).ok(),
+                _ => None,
+            };
+            code.filter(|code| codes.contains(*code))
+                .map(Value::EnumCode)
+                .ok_or(ValueError::InvalidEnumCode)
+        }
         (Kind::Temporal { spec }, Value::Text(text)) if spec.accepts_shape(text) => {
             Ok(value.clone())
         }
@@ -462,6 +558,122 @@ fn valid_timer(kind: &Kind, value: &Value) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn coded_kind() -> Kind {
+        let mut codes = EnumCodes::empty();
+        for code in [0, 3, 255] {
+            assert!(codes.insert(code));
+        }
+        Kind::EnumCode {
+            catalogue: 7,
+            version: 2,
+            codes,
+        }
+    }
+
+    #[test]
+    fn enum_code_round_trip_uses_the_kind_and_preserves_legacy_scalars() {
+        let kind = coded_kind();
+        assert_eq!(
+            serde_json::to_value(&kind).unwrap(),
+            serde_json::json!({
+                "type":"enum_code", "catalogue":7, "version":2, "codes":[0,3,255]
+            })
+        );
+        let decoded: Kind = serde_json::from_value(serde_json::to_value(&kind).unwrap()).unwrap();
+        assert_eq!(decoded, kind);
+        for code in [0, 3, 255] {
+            let restored: Value =
+                serde_json::from_value(serde_json::to_value(Value::EnumCode(code)).unwrap())
+                    .unwrap();
+            assert_eq!(restored, Value::Int(i64::from(code)));
+            assert_eq!(validate(&decoded, &restored), Ok(Value::EnumCode(code)));
+            assert_eq!(
+                validate(&decoded, &Value::EnumCode(code)),
+                Ok(Value::EnumCode(code))
+            );
+        }
+        let legacy: Kind =
+            serde_json::from_value(serde_json::json!({"type":"enum", "values":["off","on"]}))
+                .unwrap();
+        assert_eq!(validate(&legacy, &Value::from("on")), Ok(Value::from("on")));
+        assert_eq!(
+            validate(&Kind::Text, &Value::from("3")),
+            Ok(Value::from("3"))
+        );
+        assert_eq!(serde_json::from_str::<Value>("3").unwrap(), Value::Int(3));
+    }
+
+    #[test]
+    fn enum_code_validation_rejects_unknown_codes_and_untyped_conversions() {
+        let kind = coded_kind();
+        for value in [
+            Value::EnumCode(1),
+            Value::Int(1),
+            Value::Int(-1),
+            Value::Int(256),
+            Value::Float(3.0),
+            Value::from("3"),
+            Value::Bool(true),
+            Value::Null,
+        ] {
+            assert_eq!(validate(&kind, &value), Err(ValueError::InvalidEnumCode));
+        }
+        assert_eq!(
+            validate(
+                &Kind::EnumCode {
+                    catalogue: 7,
+                    version: 2,
+                    codes: EnumCodes::empty()
+                },
+                &Value::EnumCode(0)
+            ),
+            Err(ValueError::InvalidEnumCode)
+        );
+        for kind in [
+            Kind::Computed,
+            Kind::Numeric {
+                min: None,
+                max: None,
+                step: None,
+            },
+        ] {
+            assert_eq!(
+                validate(&kind, &Value::EnumCode(3)),
+                Err(ValueError::ExpectedNumber)
+            );
+            assert!(!coded_kind().is_numeric());
+        }
+        assert_eq!(
+            validate(&Kind::Text, &Value::EnumCode(3)),
+            Err(ValueError::ExpectedText)
+        );
+    }
+
+    #[test]
+    fn enum_code_mask_is_fixed_and_deserialization_is_bounded_and_unique() {
+        assert_eq!(std::mem::size_of::<EnumCodes>(), 32);
+        assert!(!std::mem::needs_drop::<EnumCodes>());
+        let mut codes = EnumCodes::empty();
+        assert!(codes.is_empty());
+        for code in u8::MIN..=u8::MAX {
+            assert!(codes.insert(code));
+            assert!(codes.contains(code));
+            assert!(!codes.insert(code));
+        }
+        assert_eq!(codes.len(), 256);
+        assert_eq!(
+            codes.iter().collect::<Vec<_>>(),
+            (u8::MIN..=u8::MAX).collect::<Vec<_>>()
+        );
+        let json = serde_json::to_value(codes).unwrap();
+        assert_eq!(serde_json::from_value::<EnumCodes>(json).unwrap(), codes);
+        for input in ["[1,1]", "[256]", "[-1]", "[1.0]", "[\"1\"]", "null", "{}"] {
+            assert!(serde_json::from_str::<EnumCodes>(input).is_err(), "{input}");
+        }
+        let reordered: EnumCodes = serde_json::from_str("[255,0,3]").unwrap();
+        assert_eq!(serde_json::to_string(&reordered).unwrap(), "[0,3,255]");
+    }
 
     #[test]
     fn unit_symbols_round_trip() {

@@ -20,7 +20,8 @@ mod api;
 #[cfg(test)]
 mod fake;
 mod follow;
-mod model;
+/// Pure device/state/command codec, also used by modular MQTT hosts.
+pub mod model;
 
 use std::collections::VecDeque;
 use std::sync::Arc;

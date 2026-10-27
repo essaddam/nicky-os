@@ -1,0 +1,226 @@
+{
+  "version": 6,
+  "date": "2026-10-27",
+  "implementation_base": "a83589366f67d6b8273a10ad41658d688e498fda",
+  "worktree": "Modifications non commitées ; les empreintes fournies situent les sources à la rédaction, pas rétroactivement les anciens journaux.",
+  "test_environment": {
+    "rust": "1.99.1",
+    "platform": "macOS ARM64",
+    "build": "debug pour les tests ; O3 pour le microbanc historique texte",
+    "jobs": 2
+  },
+  "records": [
+    {
+      "id": "P01",
+      "category": "contrat courant rejoué",
+      "status": "PASS",
+      "passed": 1,
+      "physical_commands": 0,
+      "command": "RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR=target/mqtt-live-probe cargo test --offline --manifest-path tools/mqtt-live-probe/Cargo.toml all_channels_keep_their_units_values_and_entity_room_override -- --test-threads=1",
+      "scope": "Deux entités température/humidité d’un appareil ; valeurs, unités, priorité de pièce de l’entité.",
+      "source": "tools/mqtt-live-probe/src/house.rs"
+    },
+    {
+      "id": "P02",
+      "category": "TCP local courant rejoué",
+      "status": "PASS",
+      "passed": 1,
+      "physical_commands": 0,
+      "command": "RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR=target/mqtt-live-probe cargo test --offline --manifest-path tools/mqtt-live-probe/Cargo.toml real_mqtt_loopback_replays_all_channels_and_publishes_metrics_with_echo -- --test-threads=1",
+      "scope": "Vrai TCP MQTT local vers le Hub ; publications multicanaux, métriques et écho. Sources synthétiques, pas de maison commandée.",
+      "source": "tools/mqtt-live-probe/src/house_wire_tests.rs"
+    },
+    {
+      "id": "P03",
+      "category": "contrat RTS courant rejoué",
+      "status": "PASS",
+      "passed": 2,
+      "physical_commands": 0,
+      "command": "RUSTUP_TOOLCHAIN=1.99.1 cargo test --offline -p moli-overkiz an_rts_ -j2",
+      "scope": "Volet sans position inventée, portail avec ses seules options déclarées.",
+      "source": "crates/moli-overkiz/src/model.rs"
+    },
+    {
+      "id": "P04",
+      "category": "contrat RTS courant rejoué",
+      "status": "PASS",
+      "passed": 1,
+      "physical_commands": 0,
+      "command": "RUSTUP_TOOLCHAIN=1.99.1 cargo test --offline -p moli-overkiz orders_are_what_the_box_expects -j2",
+      "scope": "Payloads attendus par la box sur fixtures ; pas de livraison physique.",
+      "source": "crates/moli-overkiz/src/model.rs"
+    },
+    {
+      "id": "P05",
+      "category": "lot enums précédent, consigné",
+      "status": "RECORDED_PASS",
+      "passed": 144,
+      "ignored": 1,
+      "command": "RUSTUP_TOOLCHAIN=1.99.1 CARGO_TARGET_DIR=target/mqtt-live-probe cargo test --offline --manifest-path tools/mqtt-live-probe/Cargo.toml -j2",
+      "details": {
+        "enum_audit": 13,
+        "main_probe": 103,
+        "web_gateway": 28
+      },
+      "scope": "Des tests du pool sont compilés dans plusieurs binaires ; exécutions non équivalentes à 144 contrats distincts. Pas de relance complète pour ce dossier documentaire.",
+      "source": "tools/mqtt-live-probe"
+    },
+    {
+      "id": "P06",
+      "category": "lot enums précédent, consigné",
+      "status": "RECORDED_PASS",
+      "passed": 17,
+      "command": "node --test tools/mqtt-live-probe/web-runtime/poc-controls.test.mjs",
+      "scope": "VM/statique : couleurs, brouillons, sorties séparées, cache PWA, offline, version exacte enum et code zéro. Client MQTT simulé ; aucune qualification physique."
+    },
+    {
+      "id": "P07",
+      "category": "lot enums précédent, consigné",
+      "status": "RECORDED_PASS",
+      "passed": 50,
+      "command": "RUSTUP_TOOLCHAIN=1.99.1 cargo test --offline -p moli-core -j2",
+      "scope": "29 unitaires + 21 intégration. EnumCode, masque, schéma, allocations de validation ; Value 24 et Sample 32 sur cible mesurée."
+    },
+    {
+      "id": "P08",
+      "category": "lot enums précédent, consigné",
+      "status": "RECORDED_PASS",
+      "passed": 31,
+      "scope": "Runtime : trois tests enum ciblés et 28 tests d’intégration Hub, restauration/versions/observations.",
+      "sources": [
+        "crates/moli-runtime/src/hub.rs",
+        "crates/moli-runtime/tests"
+      ]
+    },
+    {
+      "id": "P09",
+      "category": "lot enums précédent, consigné",
+      "status": "RECORDED_PASS",
+      "passed": 82,
+      "details": {
+        "history": 72,
+        "rollup": 1,
+        "profile": 2,
+        "automation": 1,
+        "assistant": 6
+      },
+      "scope": "Compatibilité ciblée : catégorie historique distincte, exclusion des codes des moyennes, comparaison native explicite. Pas de suite workspace complète."
+    },
+    {
+      "id": "P10",
+      "category": "lot enums précédent, consigné",
+      "status": "RECORDED_PASS",
+      "commands": [
+        "RUSTUP_TOOLCHAIN=1.99.1 cargo check --workspace --all-targets -j2",
+        "RUSTUP_TOOLCHAIN=1.99.1 cargo clippy --workspace --all-targets -j2 -- -D warnings",
+        "RUSTUP_TOOLCHAIN=1.99.1 cargo fmt --all -- --check"
+      ],
+      "scope": "Compilation et lints de tout le workspace ; ne remplace pas le garde-fou complet avant intégration."
+    },
+    {
+      "id": "P11",
+      "category": "lot enums précédent, consigné",
+      "status": "RECORDED_PASS",
+      "commands": [
+        "node scripts/i18n-check.mjs",
+        "sh scripts/leak-check.sh"
+      ],
+      "scope": "3770 clés FR/EN et zéro texte d’interface hors catalogue consignés au lot enums ; recontrôle des fichiers ajoutés au dossier dans P17."
+    },
+    {
+      "id": "P12",
+      "category": "observation réelle passive",
+      "status": "MEASURED",
+      "artifact": "mesures.json",
+      "scope": "20,008 s CPU/RSS local ; HA A fenêtre distincte 20 s ; 189 appareils multicanaux et formes de six titres retained. Aucun ordre physique. Pas de comparaison CPU à parité."
+    },
+    {
+      "id": "P13",
+      "category": "audit hors ligne réel",
+      "status": "MEASURED",
+      "artifact": "mesures.json",
+      "commands": [
+        "enum-audit <states-A.json> <states-B.json>",
+        "mqtt-live-probe --offline-enum-audit <states-A.json> <states-B.json>"
+      ],
+      "scope": "Snapshots privés déjà disponibles, sans réseau ni commande. 96 listes,418 choix,43 tables,8014 octets alloués demandés ;494 textes restants. Le contenu privé n’est pas joint."
+    },
+    {
+      "id": "P14",
+      "category": "microbanc synthétique",
+      "status": "MEASURED",
+      "artifact": "mesures.json",
+      "reproduction": "bancs/README.md",
+      "scope": "Microbanc historique texte : source Value isolée, 5 × 50 000 opérations, allocations et timings séparés ; layout inline prototype et 17 vs 34 objets. Les nouvelles exécutions Cargo utilisent le vrai moli-core, distinctes des timings historiques."
+    },
+    {
+      "id": "P15",
+      "category": "lecture source et exports",
+      "status": "VERIFIED_WITH_LIMITS",
+      "artifact": "mesures.json",
+      "scope": "Neuf covers, masque 11, position absente ; actions natives RTS disponibles, route HA du POC absente. Un statut closed n’est pas une preuve de retour physique."
+    },
+    {
+      "id": "P16",
+      "category": "navigateur réel lot enums précédent",
+      "status": "RECORDED_PASS",
+      "scope": "Chrome AgentsRoom : code zéro, versions arrivant après état, réordonnancement, largeur 390 px ; fixtures retirées. Tunnel public 503 Tunnel Disconnected, HTTP/WS locaux disponibles. Pas de test sur iPhone physique."
+    },
+    {
+      "id": "P17",
+      "category": "dossier documentaire",
+      "status": "PASS",
+      "scope": "HTML local autonome vérifié dans Chrome AgentsRoom : ordinateur 1440 px et émulation mobile 390 px, navigation et absence de débordement. JSON et liens locaux contrôlés. Pas de test sur iPhone physique.",
+      "checks": {
+        "html_sections": 15,
+        "duplicate_ids": 0,
+        "missing_local_links": 0,
+        "invalid_nesting": 0,
+        "draft_placeholders": 0,
+        "json_parse": "PASS",
+        "chrome_desktop": {
+          "width": 1440,
+          "document_width": 1440
+        },
+        "chrome_mobile": {
+          "width": 390,
+          "height": 844,
+          "document_width": 390,
+          "horizontal_overflow": false
+        },
+        "external_scripts": 0,
+        "leak_check": "PASS — motifs génériques ; aucune liste noire privée disponible"
+      }
+    },
+    {
+      "id": "P18",
+      "category": "qualification de la maison",
+      "status": "NOT_PROVEN",
+      "scope": "Parité SourceB, fraîcheur authentifiée AppleTV, commandesHAcover/heater/media, groupes métier MQTT et retours physiques. Aucun test physique autorisé/exécuté pour ce dossier."
+    },
+    {
+      "id": "P19",
+      "category": "budget production",
+      "status": "NOT_PROVEN",
+      "scope": "Maximum mémoire release et charge soutenue, p95, CPUNode/Rust à corpus/client identiques, mémoire navigateur et HA B, pool texte livré."
+    },
+    {
+      "id": "P20",
+      "category": "bancs publics courants",
+      "status": "PASS",
+      "commands": [
+        "cargo run --release --manifest-path docs/proposition/analyse/v6/bancs/Cargo.toml -- verifier",
+        "cargo run --release --no-default-features --manifest-path docs/proposition/analyse/v6/bancs/Cargo.toml -- verifier"
+      ],
+      "scope": "Mini-package important le vrai Core. Contrôles courts avec et sans compteurs, textes/virtuels/disposition, Clippy -D warnings et rustfmt verts ; allocations fixture 9408/13624 reproduites. Rust 1.99.1, source synthétique, aucun accès maison. Commandes détaillées dans bancs/README.md."
+    },
+    {
+      "id": "P21",
+      "category": "couverture de tests encore manquante",
+      "status": "NOT_PROVEN",
+      "scope": "Préférence temperature_entity_id/humidity_entity_id constatée dans build_generics mais sans test dédié. Le test area_id vérifie seulement la pièce de l’entité. Plusieurs humidités agrégées ne sont pas un cas explicitement couvert."
+    }
+  ],
+  "source_manifest": "empreintes.json",
+  "privacy": "Noms, adresses réseau, identifiants natifs et valeurs de médias exclus. Les agrégats ne sont pas des exports de maison."
+}

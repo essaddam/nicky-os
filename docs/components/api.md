@@ -438,7 +438,10 @@ Installation et limites : [paquet Netatmo](../../integrations/netatmo/README.md)
 **`PointSpec`** : `{key, label, kind, access:{read, write}, unit?, semantic}`.
 
 - `kind` : `{"type":"binary"}`, `{"type":"numeric","min"?,"max"?,"step"?}`,
-  `{"type":"enum","values":[…]}`, `{"type":"text"}`.
+  `{"type":"enum","values":[…]}`, `{"type":"enum_code","catalogue":1,"version":1,"codes":[0,2]}`, `{"type":"text"}`.
+  Pour `enum_code`, la valeur JSON est un entier de 0 à 255 présent dans `codes`.
+  Son interprétation vient du catalogue versionné de la description initiale,
+  jamais de sa position dans une liste ni d’une conversion de texte en nombre.
 - `unit` : symbole (`W`, `kWh`, `Wh`, `VA`, `V`, `mV`, `A`, `°C`, `%`, `lx`, `hPa`, `dB`,
   `ppm`, `s`, `min`, `h`, ou tout autre texte).
 - `semantic` : `on_off`, `brightness`, `color_temp`, `color`, `power`, `apparent_power`,

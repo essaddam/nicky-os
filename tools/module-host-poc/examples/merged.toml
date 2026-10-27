@@ -1,0 +1,18 @@
+mode = "merged"
+seconds = 5
+
+[[modules]]
+id = "tahoma"
+kind = "tahoma"
+
+[[modules]]
+id = "ariston"
+kind = "ariston"
+
+[[modules]]
+id = "weather"
+kind = "weather"
+
+[[modules]]
+id = "apple-tv"
+kind = "apple-tv"

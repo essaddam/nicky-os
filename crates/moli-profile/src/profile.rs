@@ -898,6 +898,7 @@ fn check_write_map(map: &BTreeMap<String, String>, kind: &Kind) -> Result<(), St
             return Ok(());
         }
         Kind::Text => return Ok(()),
+        Kind::EnumCode { .. } => return Err("enum code requires a catalogue-aware adapter".into()),
         Kind::Computed
         | Kind::Schedule
         | Kind::Button
@@ -989,7 +990,9 @@ impl CompiledWrite {
     /// The text `{value}` stands for: through `map`, numbers with `decimals`.
     pub fn value_text(&self, value: &Value) -> Result<String, String> {
         let raw = match value {
-            Value::Null => return Err(moli_i18n::tr!("pilotes.profile.aucune_valeur")),
+            Value::Null | Value::EnumCode(_) => {
+                return Err(moli_i18n::tr!("pilotes.profile.aucune_valeur"));
+            }
             Value::Bool(b) => b.to_string(),
             Value::Text(text) => text.to_string(),
             Value::Int(_) | Value::Float(_) => {
@@ -1230,7 +1233,8 @@ impl CompiledPoint {
                 }
             }
             Kind::Text => Value::Text(as_text.into()),
-            Kind::Computed
+            Kind::EnumCode { .. }
+            | Kind::Computed
             | Kind::Schedule
             | Kind::Button
             | Kind::CounterCommand { .. }
@@ -1287,6 +1291,23 @@ mod tests {
 
     fn try_compile(text: &str) -> Result<Compiled, ProfileError> {
         Profile::parse(text).and_then(|p| p.compile(Source::Builtin))
+    }
+
+    #[test]
+    fn enum_codes_are_not_rendered_as_native_numbers_without_a_catalogue_adapter() {
+        let compiled = compile("daikin-brp069");
+        assert!(!compiled.writes.is_empty());
+        for write in &compiled.writes {
+            assert!(write.value_text(&Value::EnumCode(7)).is_err());
+        }
+        let mut codes = moli_core::EnumCodes::empty();
+        codes.insert(7);
+        let kind = Kind::EnumCode {
+            catalogue: 1,
+            version: 1,
+            codes,
+        };
+        assert!(check_write_map(&[("7".into(), "heat".into())].into(), &kind).is_err());
     }
 
     #[test]

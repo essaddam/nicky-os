@@ -46,7 +46,9 @@ pub use occurrence::{
     InvalidRequestId, MAX_OCCURRENCE_SEQUENCE, Occurrence, OccurrenceId, OccurrenceStatus,
     RequestId,
 };
-pub use spec::{Access, Kind, MAX_TEXT, PointSpec, Semantic, Unit, ValueError, validate};
+pub use spec::{
+    Access, EnumCodes, Kind, MAX_TEXT, PointSpec, Semantic, Unit, ValueError, validate,
+};
 pub use temporal::{TemporalFormat, TemporalSpec};
 pub use timer::{
     DEFAULT_TIMER_SECONDS, MAX_TIMER_SECONDS, TimerField, TimerOperation, TimerRecipient,

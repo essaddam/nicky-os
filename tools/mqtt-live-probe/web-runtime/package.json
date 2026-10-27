@@ -1,0 +1,7 @@
+{
+  "name": "moli-mqtt-poc-runtime",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node server.mjs", "test": "node --test *.test.mjs" },
+  "dependencies": { "aedes": "1.2.0", "mqtt": "5.10.3", "ws": "8.22.0" }
+}
