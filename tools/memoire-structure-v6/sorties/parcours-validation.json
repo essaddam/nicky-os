@@ -1,0 +1,162 @@
+{
+  "status": "pass",
+  "scope": "Simulation documentaire JavaScript, sans moteur Rust, réseau, timings CPU ni RSS.",
+  "cases": 12,
+  "transition_checks": 8,
+  "assertions": 4374,
+  "results": [
+    {
+      "case": "mqtt",
+      "mode": "source_unique",
+      "steps": 9,
+      "source_writes": 1,
+      "alias_writes": 0,
+      "calculation_writes": 1,
+      "publications": 2,
+      "commands": 0
+    },
+    {
+      "case": "api",
+      "mode": "source_unique",
+      "steps": 9,
+      "source_writes": 1,
+      "alias_writes": 0,
+      "calculation_writes": 1,
+      "publications": 2,
+      "commands": 0
+    },
+    {
+      "case": "command",
+      "mode": "source_unique",
+      "steps": 10,
+      "source_writes": 1,
+      "alias_writes": 0,
+      "calculation_writes": 0,
+      "publications": 1,
+      "commands": 1
+    },
+    {
+      "case": "blocked",
+      "mode": "source_unique",
+      "steps": 5,
+      "source_writes": 0,
+      "alias_writes": 0,
+      "calculation_writes": 0,
+      "publications": 0,
+      "commands": 0
+    },
+    {
+      "case": "same",
+      "mode": "source_unique",
+      "steps": 7,
+      "source_writes": 1,
+      "alias_writes": 0,
+      "calculation_writes": 0,
+      "publications": 0,
+      "commands": 0
+    },
+    {
+      "case": "action",
+      "mode": "source_unique",
+      "steps": 6,
+      "source_writes": 0,
+      "alias_writes": 0,
+      "calculation_writes": 0,
+      "publications": 0,
+      "commands": 2
+    },
+    {
+      "case": "mqtt",
+      "mode": "alias_topics",
+      "steps": 9,
+      "source_writes": 1,
+      "alias_writes": 0,
+      "calculation_writes": 1,
+      "publications": 4,
+      "commands": 0
+    },
+    {
+      "case": "api",
+      "mode": "alias_topics",
+      "steps": 9,
+      "source_writes": 1,
+      "alias_writes": 0,
+      "calculation_writes": 1,
+      "publications": 4,
+      "commands": 0
+    },
+    {
+      "case": "command",
+      "mode": "alias_topics",
+      "steps": 10,
+      "source_writes": 1,
+      "alias_writes": 0,
+      "calculation_writes": 0,
+      "publications": 2,
+      "commands": 1
+    },
+    {
+      "case": "blocked",
+      "mode": "alias_topics",
+      "steps": 5,
+      "source_writes": 0,
+      "alias_writes": 0,
+      "calculation_writes": 0,
+      "publications": 0,
+      "commands": 0
+    },
+    {
+      "case": "same",
+      "mode": "alias_topics",
+      "steps": 7,
+      "source_writes": 1,
+      "alias_writes": 0,
+      "calculation_writes": 0,
+      "publications": 0,
+      "commands": 0
+    },
+    {
+      "case": "action",
+      "mode": "alias_topics",
+      "steps": 6,
+      "source_writes": 0,
+      "alias_writes": 0,
+      "calculation_writes": 0,
+      "publications": 0,
+      "commands": 2
+    }
+  ],
+  "actual_report": true,
+  "controls": "pass",
+  "advanced": {
+    "layouts": 18,
+    "budgets": 36
+  },
+  "alignment_views": {
+    "serial": 48,
+    "parallel": 6,
+    "geometry": 2
+  },
+  "operation_charts": 5,
+  "console_errors": [],
+  "external_requests": [],
+  "body_horizontal_overflow": false,
+  "browser": "Chromium CDP isolated profile",
+  "browser_user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+  "screenshots": {
+    "alignment_desktop": "v6-alignement-desktop.png",
+    "alignment_memory": "v6-alignement-memoire.png",
+    "alignment_mobile": "v6-alignement-mobile.png"
+  },
+  "source_sha256": {
+    "tools/memoire-structure-v6/exemple-pedagogique.json": "ef1c6451a5275c4f1e82bb4846a1759d5441dc158f73a49208e70319f3ab3bd5",
+    "tools/memoire-structure-v6/pedagogie.py": "115c0a84bfbb95bbe9c7619ed9e3a60be5c041c19344f7b6cb2caa93321d5cc1",
+    "tools/memoire-structure-v6/parcours-tests.js": "d7ec1f9c5b1eacc40b1ec0e136230fe51c0a32ea77d96bd7a3b3acdf95ccb0ba",
+    "tools/memoire-structure-v6/rapport.py": "b2bb41ebc136eb54afc4bb579b48c0da6146bd709b87c8e4edebae1f7506d61e",
+    "tools/memoire-structure-v6/alignement.py": "5e4106b9e6213c536cb028991d48cc9ba531d9e6f4327a6c164bdf745b650355",
+    "tools/memoire-structure-v6/alignement-banc/sorties/resultats.json": "fcccd038968d085c70a0a0aa2169322acf3459d22e8f7468792eb6972c71e493",
+    "tools/memoire-structure-v6/operations-banc/sorties/resultats.json": "d7cdd3d5ce13e2ef80e2634e22bb81531c2704222b0289aa52e794f40472a981",
+    "docs/proposition/analyse/catalogue-memoire-v6.html": "0bfd554dccc2c64534f10dc48968c6124078904ad5a1a3679bc5b2b50a430e2d"
+  },
+  "validated_utc": "2026-10-26T08:34:27+00:00"
+}

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 417" width="1000" height="417" role="img" aria-labelledby="passif-t passif-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="passif-t">Le mode passif, composant par composant</title>
+  <desc id="passif-d">Deux colonnes, actif et secours passif, pour neuf composants : le hub, le courtier, le journal et la base tournent des deux côtés, en copie sur le secours ; le moteur d'automatismes et le moteur du temps tiennent leur état sans rien faire partir ; les pilotes, les ponts radio, l'assistant et les notifications sont arrêtés ; l'API est en lecture seule. L'époque est la seule porte entre les deux modes.</desc>
+  <rect width="1000" height="417" fill="#fffdf8"/>
+          <defs>
+            <marker id="passif-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="passif-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="passif-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="passif-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="470.0" y="30.0" font-size="11.5" fill="#195744" font-weight="700" text-anchor="middle">ACTIF</text>
+          <text x="817.0" y="30.0" font-size="11.5" fill="#b07d12" font-weight="700" text-anchor="middle">SECOURS (PASSIF)</text>
+          <text x="16.0" y="62.0" font-size="11" fill="#1d302a" font-weight="700">Hub : valeurs, santé</text>
+          <rect x="320.0" y="46.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="62.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">écrit, date, numérote</text>
+          <rect x="667.0" y="46.0" width="300.0" height="24.0" rx="12" fill="#fbf0d6" stroke="#b07d12" stroke-width="1.2"/>
+          <text x="817.0" y="62.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">applique les sorties reçues</text>
+          <text x="16.0" y="94.0" font-size="11" fill="#1d302a" font-weight="700">Courtier</text>
+          <rect x="320.0" y="78.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="94.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">modules, écrans, appareils</text>
+          <rect x="667.0" y="78.0" width="300.0" height="24.0" rx="12" fill="#fbf0d6" stroke="#b07d12" stroke-width="1.2"/>
+          <text x="817.0" y="94.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">le pont y publie</text>
+          <text x="16.0" y="126.0" font-size="11" fill="#1d302a" font-weight="700">Journal</text>
+          <rect x="320.0" y="110.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="126.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">écrit</text>
+          <rect x="667.0" y="110.0" width="300.0" height="24.0" rx="12" fill="#fbf0d6" stroke="#b07d12" stroke-width="1.2"/>
+          <text x="817.0" y="126.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">copie, écrite par le pont</text>
+          <text x="16.0" y="158.0" font-size="11" fill="#1d302a" font-weight="700">Base (maison.db, moli.db)</text>
+          <rect x="320.0" y="142.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="158.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">écrit, exporte</text>
+          <rect x="667.0" y="142.0" width="300.0" height="24.0" rx="12" fill="#fbf0d6" stroke="#b07d12" stroke-width="1.2"/>
+          <text x="817.0" y="158.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">copie ; n'exporte pas</text>
+          <text x="16.0" y="190.0" font-size="11" fill="#1d302a" font-weight="700">Moteur d'automatismes</text>
+          <rect x="320.0" y="174.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="190.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">agit</text>
+          <rect x="667.0" y="174.0" width="300.0" height="24.0" rx="12" fill="#fbf0d6" stroke="#b07d12" stroke-width="1.2"/>
+          <text x="817.0" y="190.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">applique le journal, n'agit pas</text>
+          <text x="16.0" y="222.0" font-size="11" fill="#1d302a" font-weight="700">Moteur du temps</text>
+          <rect x="320.0" y="206.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="222.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">fait partir les heures</text>
+          <rect x="667.0" y="206.0" width="300.0" height="24.0" rx="12" fill="#fbf0d6" stroke="#b07d12" stroke-width="1.2"/>
+          <text x="817.0" y="222.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">tient ses fiches, rien ne part</text>
+          <text x="16.0" y="254.0" font-size="11" fill="#1d302a" font-weight="700">Pilotes, ponts radio</text>
+          <rect x="320.0" y="238.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="254.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">en marche</text>
+          <rect x="667.0" y="238.0" width="300.0" height="24.0" rx="12" fill="#eef0ec" stroke="#52615a" stroke-width="1.2"/>
+          <text x="817.0" y="254.0" font-size="10.5" fill="#52615a" text-anchor="middle">arrêtés</text>
+          <text x="16.0" y="286.0" font-size="11" fill="#1d302a" font-weight="700">Assistant, notifications</text>
+          <rect x="320.0" y="270.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="286.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">en marche</text>
+          <rect x="667.0" y="270.0" width="300.0" height="24.0" rx="12" fill="#eef0ec" stroke="#52615a" stroke-width="1.2"/>
+          <text x="817.0" y="286.0" font-size="10.5" fill="#52615a" text-anchor="middle">arrêtés</text>
+          <text x="16.0" y="318.0" font-size="11" fill="#1d302a" font-weight="700">API, écrans</text>
+          <rect x="320.0" y="302.0" width="300.0" height="24.0" rx="12" fill="#e6eee5" stroke="#195744" stroke-width="1.2"/>
+          <text x="470.0" y="318.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">lecture et écriture</text>
+          <rect x="667.0" y="302.0" width="300.0" height="24.0" rx="12" fill="#fbf0d6" stroke="#b07d12" stroke-width="1.2"/>
+          <text x="817.0" y="318.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">lecture seule, « secours »</text>
+          <rect x="16.0" y="338.0" width="968.0" height="34.0" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="30.0" y="360.0" font-size="11" fill="#1d302a" font-weight="700">La seule porte entre les deux : l'époque. Un verrou de fichier empêche deux instances sur une même machine.</text>
+  <text x="16" y="413" font-size="12" fill="#52615a" font-style="italic">Le code d'aujourd'hui n'a pas ce mode : toute instance lancée démarre ses pilotes et son moteur. C'est la première marche du plan (§ 15).</text>
+</svg>

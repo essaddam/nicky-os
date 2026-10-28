@@ -44,6 +44,7 @@ téléphones passent sans Access, avec leur propre jeton.
 |---|---|
 | installer Moli chez soi (Docker, code d'installation, premiers appareils) | [components/installation.md](components/installation.md) |
 | comprendre comment c'est construit, et les décisions prises | [ARCHITECTURE.md](ARCHITECTURE.md), puis la carte vivante `#/systeme` du dashboard |
+| préparer une migration progressive depuis Home Assistant, avec mémoire et retours arrière | [Guide HTML de migration](proposition/migration-home-assistant.html) : appareils, composants et workflows ; parcours cible et limites actuelles |
 | étudier la proposition de modes, transitions et profils d’équipements | [Markdown](proposition/modes.md) · [HTML](proposition/modes.html) (proposition, non livrée) |
 | comprendre les enums HA, leur conversion API → MQTT et leur coût mémoire | [Énumérations](proposition/enumerations-api-mqtt.md) (contrat compact implémenté ; raccords HA encore partiels) |
 | consulter le dossier V6 des ponts MQTT, de la mémoire, des tests et des virtuels | [Rapport HTML V6](proposition/analyse/v6/index.html) · [mesures](proposition/analyse/v6/mesures.json) · [preuves](proposition/analyse/v6/preuves.json) (constats, propositions et limites distincts) |
@@ -65,6 +66,7 @@ téléphones passent sans Access, avec leur propre jeton.
 | [dashboard.md](components/dashboard.md) | interface Maison et Atelier (Svelte 5), carte vivante |
 | [exploitation.md](components/exploitation.md) | image Docker, clé maître, sauvegarde, mise à jour, développement |
 | [historique-energie.md](components/historique-energie.md) | historique SQLite, SQL pour agents, énergie (kWh, €, Tempo), import HA |
+| [home-assistant.md](components/home-assistant.md) | pont MQTT HA↔Moli, canaux typés, garde native et registre de migration ; premier lot expérimental |
 | [installation.md](components/installation.md) | premier démarrage, code de la maison, clé maître, premiers appareils, accès hors de chez soi |
 | [medias.md](components/medias.md) | contrats purs de découverte média R1 : identités, validation et sélection, sans catalogue réel ni lancement raccordé |
 | [moli.md](components/moli.md) | l'assistant : conversation, outils, garde, création d'automatismes, filtres |

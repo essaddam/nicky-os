@@ -1,0 +1,20 @@
+{
+  "home_assistant.status.credentials": "MQTT credentials are unavailable in the encrypted vault.",
+  "home_assistant.status.unavailable": "The Home Assistant bridge is unavailable; no command was confirmed.",
+  "home_assistant.status.configuration": "The Home Assistant bridge configuration is invalid or incompatible.",
+  "home_assistant.status.unsupported": "This command or migration is not supported.",
+  "home_assistant.status.expired": "The Home Assistant command expired before it was sent.",
+  "home_assistant.status.uncertain": "The command outcome is uncertain; it will not be replayed.",
+  "home_assistant.status.rejected": "Home Assistant rejected the command or its state no longer matches.",
+  "home_assistant.status.unattached": "The Home Assistant driver was not given its prepared gateway.",
+  "home_assistant.api.human": "This migration operation requires a Moli human session.",
+  "home_assistant.api.unknown": "This Home Assistant instance is not configured.",
+  "home_assistant.api.body": "The request is invalid or exceeds the 8 KiB limit.",
+  "home_assistant.api.unavailable": "The Home Assistant migration registry is unavailable.",
+  "home_assistant.api.conflict": "Migration was refused because the revision, owner, or request fingerprint no longer matches. Reload the state.",
+  "home_assistant.api.invalid": "The migration plan or request is invalid.",
+  "home_assistant.api.unsupported": "This entity or transition is not supported.",
+  "home_assistant.api.busy": "A migration operation is already in progress.",
+  "home_assistant.api.reconcile": "A fresh proof is required before continuing.",
+  "home_assistant.api.demo": "Migration is disabled in demo mode."
+}

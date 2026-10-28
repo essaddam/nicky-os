@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 445" width="1000" height="445" role="img" aria-labelledby="stockages-t stockages-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="stockages-t">Plusieurs stockages : qui numérote, qui recopie</title>
+  <desc id="stockages-d">Le cœur de l'actif publie val/ et run/ ; la base de l'actif range et donne le rang seq ; elle publie hist/ vers la base du secours local, copie de reprise avec les mêmes rangs, et par NetBird vers la base du distant ; un trou de seq se redemande. Seul le porteur de l'époque exporte vers l'archive ; après une bascule, le secours exporte la suite avec les mêmes rangs. Une copie de lecture dérivée de val/ diverge et n'exporte jamais. Qui répond : la mémoire, la base de l'actif, l'archive, le distant quand la maison est éteinte.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="445" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="stockages-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="stockages-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="stockages-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="stockages-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="stockages-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="stockages-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="stockages-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="stockages-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="stockages-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="stockages-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="stockages-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="stockages-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="stockages-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="stockages-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="stockages-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="stockages-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="stockages-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="stockages-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="stockages-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="stockages-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="stockages-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="stockages-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="stockages-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="stockages-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="stockages-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="stockages-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="stockages-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="stockages-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="stockages-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="stockages-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="stockages-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="stockages-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="stockages-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="stockages-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="stockages-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="stockages-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="stockages-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <rect x="16" y="40" width="230" height="92" rx="12" fill="url(#stockages-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#stockages-o)"/>
+          <rect x="26" y="49" width="26" height="26" rx="8" fill="url(#stockages-h-vert)"/>
+          <g transform="translate(31.0 54.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z M10 10h4v4h-4z M9 4v3 M12 4v3 M15 4v3 M9 17v3 M12 17v3 M15 17v3 M4 9h3 M4 12h3 M4 15h3 M17 9h3 M17 12h3 M17 15h3"/></g>
+          <text x="60.0" y="67.0" font-size="12" fill="#195744" font-weight="700">Le cœur de l'actif</text>
+          <text x="30.0" y="89.0" font-size="10.2" fill="#52615a">publie val/ (les relevés)</text>
+          <text x="30.0" y="104.0" font-size="10.2" fill="#52615a">et run/ (le journal</text>
+          <text x="30.0" y="119.0" font-size="10.2" fill="#52615a">d'exécution), en direct</text>
+          <g filter="url(#stockages-o)"><path d="M320.0 57.0 V101.0 A50.0 13.0 0 0 0 420.0 101.0 V57.0 z" fill="url(#stockages-c-ardoise)"/></g>
+          <path d="M320.0 75.5 A50.0 13.0 0 0 0 420.0 75.5" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <path d="M320.0 87.8 A50.0 13.0 0 0 0 420.0 87.8" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <ellipse cx="370.0" cy="57.0" rx="50.0" ry="13.0" fill="url(#stockages-t-ardoise)" stroke="#3b5676" stroke-opacity=".35"/>
+          <text x="370.0" y="130.0" font-size="11.5" fill="#3b5676" font-weight="700" text-anchor="middle">Base de l'actif</text>
+          <text x="370.0" y="145.0" font-size="10" fill="#52615a" text-anchor="middle">range, donne seq (D13)</text>
+          <text x="370.0" y="160.0" font-size="10" fill="#52615a" text-anchor="middle">la seule qui numérote</text>
+          <path d="M246 86 L316 86" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#stockages-m-vert)"/>
+          <path class="hd-flux" d="M246 86 L316 86" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <g filter="url(#stockages-o)"><path d="M590.0 57.0 V101.0 A50.0 13.0 0 0 0 690.0 101.0 V57.0 z" fill="url(#stockages-c-ardoise)"/></g>
+          <path d="M590.0 75.5 A50.0 13.0 0 0 0 690.0 75.5" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <path d="M590.0 87.8 A50.0 13.0 0 0 0 690.0 87.8" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <ellipse cx="640.0" cy="57.0" rx="50.0" ry="13.0" fill="url(#stockages-t-ardoise)" stroke="#3b5676" stroke-opacity=".35"/>
+          <text x="640.0" y="130.0" font-size="11.5" fill="#3b5676" font-weight="700" text-anchor="middle">Base du secours local</text>
+          <text x="640.0" y="145.0" font-size="10" fill="#52615a" text-anchor="middle">copie de reprise</text>
+          <text x="640.0" y="160.0" font-size="10" fill="#52615a" text-anchor="middle">mêmes opérations, mêmes seq</text>
+          <g filter="url(#stockages-o)"><path d="M830.0 57.0 V101.0 A50.0 13.0 0 0 0 930.0 101.0 V57.0 z" fill="url(#stockages-c-violet)"/></g>
+          <path d="M830.0 75.5 A50.0 13.0 0 0 0 930.0 75.5" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <path d="M830.0 87.8 A50.0 13.0 0 0 0 930.0 87.8" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <ellipse cx="880.0" cy="57.0" rx="50.0" ry="13.0" fill="url(#stockages-t-violet)" stroke="#4b3d82" stroke-opacity=".35"/>
+          <text x="880.0" y="130.0" font-size="11.5" fill="#4b3d82" font-weight="700" text-anchor="middle">Base du distant</text>
+          <text x="880.0" y="145.0" font-size="10" fill="#52615a" text-anchor="middle">copie de reprise</text>
+          <text x="880.0" y="160.0" font-size="10" fill="#52615a" text-anchor="middle">ou de lecture, au choix</text>
+          <path d="M424 78 L586 78" fill="none" stroke="#3b5676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#stockages-m-ardoise)"/>
+          <path class="hd-flux" d="M424 78 L586 78" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="505.0" y="70.0" font-size="10" fill="#3b5676" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">hist/ (seq)</text>
+          <path d="M694 96 L826 96" fill="none" stroke="#3b5676" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#stockages-m-ardoise)"/>
+          <path class="hd-lent" d="M694 96 L826 96" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="760.0" y="88.0" font-size="9.5" fill="#3b5676" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">hist/ par NetBird</text>
+          <path d="M586 104 L424 104" fill="none" stroke="#3b5676" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" marker-end="url(#stockages-m-ardoise)"/>
+          <text x="505.0" y="122.0" font-size="9" fill="#3b5676" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">trou : hist/demande</text>
+          <g filter="url(#stockages-o)"><path d="M320.0 243.0 V277.0 A50.0 13.0 0 0 0 420.0 277.0 V243.0 z" fill="url(#stockages-c-gris)"/></g>
+          <path d="M320.0 257.3 A50.0 13.0 0 0 0 420.0 257.3" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <path d="M320.0 266.8 A50.0 13.0 0 0 0 420.0 266.8" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <ellipse cx="370.0" cy="243.0" rx="50.0" ry="13.0" fill="url(#stockages-t-gris)" stroke="#4f5d57" stroke-opacity=".35"/>
+          <text x="370.0" y="306.0" font-size="11.5" fill="#4f5d57" font-weight="700" text-anchor="middle">Archive (Parquet)</text>
+          <text x="370.0" y="321.0" font-size="10" fill="#52615a" text-anchor="middle">le long terme</text>
+          <text x="370.0" y="336.0" font-size="10" fill="#52615a" text-anchor="middle">seul le porteur de l'époque exporte</text>
+          <path d="M370 176 L370 226" fill="none" stroke="#4f5d57" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#stockages-m-gris)"/>
+          <text x="380.0" y="206.0" font-size="10" fill="#4f5d57" font-weight="700" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">export</text>
+          <path d="M640 176 C640 230 520 258 424 258" fill="none" stroke="#4f5d57" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" marker-end="url(#stockages-m-gris)"/>
+          <text x="560.0" y="236.0" font-size="9.5" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">après une bascule : la suite, mêmes rangs</text>
+          <rect x="600" y="300" width="384" height="96" rx="12" fill="url(#stockages-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#stockages-o)"/>
+          <rect x="610" y="309" width="26" height="26" rx="8" fill="url(#stockages-h-rouge)"/>
+          <g transform="translate(615.0 314.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="644.0" y="327.0" font-size="12" fill="#8b3b22" font-weight="700">Copie de lecture (la V7 : dérivée de val/)</text>
+          <text x="614.0" y="349.0" font-size="10.2" fill="#52615a">ses lots tombent ailleurs, ses heures closent à son</text>
+          <text x="614.0" y="363.0" font-size="10.2" fill="#52615a">horloge, un import fait sur l'actif lui manque : ses</text>
+          <text x="614.0" y="377.0" font-size="10.2" fill="#52615a">rangs divergent. Elle répond aux questions, elle</text>
+          <text x="614.0" y="391.0" font-size="10.2" fill="#52615a">n'exporte jamais.</text>
+          <rect x="16" y="300" width="230" height="96" rx="12" fill="url(#stockages-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#stockages-o)"/>
+          <rect x="26" y="309" width="26" height="26" rx="8" fill="url(#stockages-h-gris)"/>
+          <g transform="translate(31.0 314.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="60.0" y="327.0" font-size="12" fill="#4f5d57" font-weight="700">Qui répond aux questions</text>
+          <text x="30.0" y="349.0" font-size="10.2" fill="#52615a">l'état courant : la mémoire</text>
+          <text x="30.0" y="363.0" font-size="10.2" fill="#52615a">le récent : la base de l'actif</text>
+          <text x="30.0" y="377.0" font-size="10.2" fill="#52615a">le long terme : l'archive</text>
+          <text x="30.0" y="391.0" font-size="10.2" fill="#52615a">maison éteinte : le distant</text>
+  <text x="18" y="439" font-size="12" fill="#52615a" font-style="italic">Une seule base numérote l'historique ; les autres le reçoivent rangé, par MQTT. Elles peuvent alors reprendre l'export de D13 après une bascule.</text>
+</svg>

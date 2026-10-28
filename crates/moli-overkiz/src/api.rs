@@ -13,6 +13,7 @@ use anyhow::Context as _;
 use http::{Method, Request, StatusCode};
 use http_body_util::Full;
 use moli_net::{Body, PinnedHttps};
+use moli_runtime::SendPermit;
 use serde_json::Value as Json;
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering::SeqCst};
 
@@ -209,6 +210,56 @@ impl Api {
         identifier(&answer["execId"])
     }
 
+    /// The driver's live authorization survives OAuth, TCP and TLS waits.
+    /// Revocation before HTTP handoff is unsent; after it the answer is retained.
+    pub async fn apply_with_permit(
+        &self,
+        order: &Order,
+        permit: &SendPermit,
+    ) -> anyhow::Result<String> {
+        let wanted = || permit.wanted();
+        let begin_send = || permit.begin_send();
+        let guard = moli_net::WebGuard {
+            wanted: &wanted,
+            begin_send: &begin_send,
+        };
+        let deadline = permit.deadline();
+        let apply = async {
+            if !(guard.wanted)() {
+                return Err(NotSent.into());
+            }
+            let answer = match self {
+                Self::Local(local) => local.apply_guarded(order, deadline, &guard).await?,
+                Self::Cloud(cloud) => {
+                    cloud
+                        .call_guarded(
+                            Method::POST,
+                            "/exec/apply",
+                            Some(&order.body()),
+                            Some(deadline),
+                            Some(&guard),
+                        )
+                        .await?
+                }
+                #[cfg(test)]
+                Self::Fake(fake) => {
+                    fake.call_guarded("/exec/apply", Some(&order.body()), true, Some(&guard))
+                        .await?
+                }
+            };
+            identifier(&answer["execId"])
+        };
+        tokio::time::timeout_at(deadline.into(), apply)
+            .await
+            .unwrap_or_else(|_| {
+                Err(if permit.emitted() {
+                    crate::NoAnswer.into()
+                } else {
+                    NotSent.into()
+                })
+            })
+    }
+
     /// Cloud sessions refused in a row (0 for a local box).
     #[must_use]
     pub fn refused_sessions(&self) -> u32 {
@@ -245,6 +296,11 @@ fn build(
     let builder = builder.header("accept", "application/json");
     match body {
         Some(body) => moli_net::json_body(builder, body),
+        // The box answers 411 to a bodiless POST without a length
+        // (`/events/register`, `/events/{id}/fetch`, seen on 2026.4.5-7).
+        None if builder.method_ref() == Some(&Method::POST) => {
+            moli_net::empty(builder.header("content-length", "0"))
+        }
         None => moli_net::empty(builder),
     }
 }
@@ -284,6 +340,26 @@ impl Local {
         let probe = PinnedHttps::new(host, port, None)?;
         probe.handshake().await.context("first contact")?;
         probe.pinned_fingerprint().context("no certificate seen")
+    }
+
+    async fn apply_guarded(
+        &self,
+        order: &Order,
+        deadline: std::time::Instant,
+        guard: &moli_net::WebGuard<'_>,
+    ) -> anyhow::Result<Json> {
+        let request = build(
+            self.writes
+                .request(Method::POST, &format!("{LOCAL_ROOT}/exec/apply"))
+                .header("authorization", format!("Bearer {}", self.token)),
+            Some(&order.body()),
+        )?;
+        let (status, body) = self
+            .writes
+            .send_once_guarded(request, deadline, || (guard.begin_send)())
+            .await
+            .map_err(guarded_error)?;
+        answer(status, &body)
     }
 
     async fn call(
@@ -449,6 +525,36 @@ impl Cloud {
         moli_net::web(CLOUD_HOST, 443, true, request, CLOUD_LIMIT, MAX_ANSWER).await
     }
 
+    async fn exchange_guarded(
+        &self,
+        request: Request<Full<Body>>,
+        deadline: std::time::Instant,
+        guard: &moli_net::WebGuard<'_>,
+    ) -> anyhow::Result<(StatusCode, Body)> {
+        #[cfg(test)]
+        if let Some(exchange) = &self.exchange {
+            if !(guard.begin_send)() {
+                return Err(NotSent.into());
+            }
+            return exchange(request).await;
+        }
+        let remaining = deadline
+            .saturating_duration_since(std::time::Instant::now())
+            .min(CLOUD_LIMIT);
+        let (status, _, body) = moli_net::web_once_guarded(
+            CLOUD_HOST,
+            443,
+            true,
+            request,
+            remaining,
+            MAX_ANSWER,
+            || (guard.begin_send)(),
+        )
+        .await
+        .map_err(guarded_error)?;
+        Ok((status, body))
+    }
+
     async fn call(
         &self,
         method: Method,
@@ -456,15 +562,41 @@ impl Cloud {
         body: Option<&Json>,
         deadline: Option<std::time::Instant>,
     ) -> anyhow::Result<Json> {
+        self.call_guarded(method, path, body, deadline, None).await
+    }
+
+    async fn call_guarded(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<&Json>,
+        deadline: Option<std::time::Instant>,
+        guard: Option<&moli_net::WebGuard<'_>>,
+    ) -> anyhow::Result<Json> {
+        if guard.is_some_and(|guard| !(guard.wanted)()) {
+            return Err(NotSent.into());
+        }
         let (access, generation) = self.access().await?;
         // Logging in may have taken a while: an order out of time stays home.
         in_time(deadline)?;
+        if guard.is_some_and(|guard| !(guard.wanted)()) {
+            return Err(NotSent.into());
+        }
         let builder = Request::builder()
             .method(method)
             .uri(format!("{CLOUD_ROOT}{path}"))
             .header("authorization", format!("Bearer {access}"));
         let request = build(builder, body)?;
-        let (status, body) = self.exchange(request).await?;
+        let (status, body) = if let Some(guard) = guard {
+            self.exchange_guarded(
+                request,
+                deadline.context("guarded order needs an absolute deadline")?,
+                guard,
+            )
+            .await?
+        } else {
+            self.exchange(request).await?
+        };
         let result = answer(status, &body);
         match &result {
             Err(e) if refused(e) == Some(Refusal::Session) => self.settle(generation, true),
@@ -472,6 +604,13 @@ impl Cloud {
             Err(_) => {}
         }
         result
+    }
+}
+
+fn guarded_error(error: moli_net::OnceError) -> anyhow::Error {
+    match error {
+        moli_net::OnceError::BeforeSend => NotSent.into(),
+        moli_net::OnceError::AfterSend => crate::NoAnswer.into(),
     }
 }
 
@@ -517,6 +656,14 @@ fn session(status: StatusCode, body: &[u8]) -> anyhow::Result<Session> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_bodiless_post_says_its_length() {
+        let post = build(Request::builder().method(Method::POST).uri("/x"), None).unwrap();
+        assert_eq!(post.headers()["content-length"], "0");
+        let get = build(Request::builder().method(Method::GET).uri("/x"), None).unwrap();
+        assert!(get.headers().get("content-length").is_none());
+    }
 
     #[test]
     fn forms_are_encoded() {
@@ -624,6 +771,84 @@ mod tests {
         })
         .await
         .expect("in time");
+    }
+
+    #[tokio::test]
+    async fn revocation_while_waiting_for_oauth_never_hands_off_apply() {
+        use std::sync::atomic::AtomicBool;
+        let (cloud, _response, exchanged) = held(|_| (StatusCode::OK, br#"{"execId":"exec-1"}"#));
+        cloud.forget();
+        let cloud = Arc::new(cloud);
+        let renewing = cloud.session.renewal.lock().await;
+        let allowed = Arc::new(AtomicBool::new(true));
+        let waiting = Arc::new(tokio::sync::Notify::new());
+        let (client, live, started) = (cloud.clone(), allowed.clone(), waiting.clone());
+        let applying = tokio::spawn(async move {
+            let wanted = || {
+                started.notify_one();
+                live.load(SeqCst)
+            };
+            let begin_send = || live.load(SeqCst);
+            let guard = moli_net::WebGuard {
+                wanted: &wanted,
+                begin_send: &begin_send,
+            };
+            client
+                .call_guarded(
+                    Method::POST,
+                    "/exec/apply",
+                    Some(&serde_json::json!({})),
+                    Some(std::time::Instant::now() + Duration::from_secs(2)),
+                    Some(&guard),
+                )
+                .await
+        });
+        waiting.notified().await;
+        allowed.store(false, SeqCst);
+        installed(&cloud, 2);
+        drop(renewing);
+        let error = tokio::time::timeout(Duration::from_secs(1), applying)
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap_err();
+        assert!(error.is::<NotSent>());
+        assert_eq!(exchanged.load(SeqCst), 0, "no /exec/apply after OAuth wait");
+    }
+
+    #[tokio::test]
+    async fn a_guarded_cloud_answer_is_kept_after_post_emission_revocation() {
+        use std::sync::atomic::AtomicBool;
+        let (cloud, response, exchanged) = held(|_| (StatusCode::OK, br#"{"execId":"exec-1"}"#));
+        let allowed = Arc::new(AtomicBool::new(true));
+        let emitted = Arc::new(AtomicBool::new(false));
+        let (live, sent) = (allowed.clone(), emitted.clone());
+        let applying = tokio::spawn(async move {
+            let wanted = || live.load(SeqCst);
+            let begin_send = || {
+                sent.store(true, SeqCst);
+                live.load(SeqCst)
+            };
+            let guard = moli_net::WebGuard {
+                wanted: &wanted,
+                begin_send: &begin_send,
+            };
+            cloud
+                .call_guarded(
+                    Method::POST,
+                    "/exec/apply",
+                    Some(&serde_json::json!({})),
+                    Some(std::time::Instant::now() + Duration::from_secs(2)),
+                    Some(&guard),
+                )
+                .await
+        });
+        until(|| exchanged.load(SeqCst) == 1).await;
+        assert!(emitted.load(SeqCst));
+        allowed.store(false, SeqCst);
+        response.add_permits(1);
+        assert_eq!(applying.await.unwrap().unwrap()["execId"], "exec-1");
+        assert_eq!(exchanged.load(SeqCst), 1, "no retry");
     }
 
     /// Two requests leave with session 1 (through the real `call`); the

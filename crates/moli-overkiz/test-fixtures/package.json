@@ -1,0 +1,8 @@
+{
+  "name": "moli-overkiz-mqtt-test-fixture",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "aedes": "1.2.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "validated_utc": "2026-10-25T16:06:27Z",
+  "status": "pass",
+  "checks": [
+    "current Rust source hashes and recorded build environment match",
+    "18 layouts, sizes, alignments, and all offsets match the expected ABI",
+    "saved 13-test proof includes alternative field/reference conservation",
+    "demo aliases 200/201→100 and 202→101 resolve with slot/generation checks",
+    "manifest dataset SHA-256 values match all side inputs",
+    "legacy measured payloads are unchanged; prior validator/evidence files are present (not rerun)",
+    "12 scenarios: count formulas, all zone totals, variant fairness and savings formula pass",
+    "23 bounded index probes exceed key/value payload bytes; deallocation and same-image method are evidenced",
+    "demo Vec used/capacity bytes are consistent; HashMap total allocation is not claimed",
+    "HTML anchors unique",
+    "local report sources and fragments resolve",
+    "calculated versus probed labels and RSS scope present",
+    "privacy scan found no workstation/home absolute paths (13 text artifacts scanned)"
+  ],
+  "structures": 18,
+  "budget_scenarios": 12,
+  "variants_per_scenario": 3,
+  "index_probes": 23,
+  "max_probe_request": 1613600,
+  "dataset_inputs_verified": 6,
+  "text_artifacts_scanned": 13,
+  "report": "docs/proposition/analyse/catalogue-memoire-v6.html"
+}

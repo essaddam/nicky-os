@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 480" width="1000" height="480" role="img" aria-labelledby="demenagement-t demenagement-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="demenagement-t">Le déménagement : resserrer les colonnes</title>
+  <desc id="demenagement-d">En haut, une rangée de places après un lot : des trous dispersés, et au bout les derniers appareils venus. Chaque fiche glisse vers le bas, dans l'ordre : les lignes la suivent jusqu'à sa nouvelle place, sans jamais se croiser ; celles qui ne bougent pas restent droites. En bas, la rangée serrée, et la queue rendue à la mémoire. Ce qui suit chaque point déménagé : exécutions, attentes, minuteries, baux, la file des exécutions finies ; le programme se recompile, la vérité des conditions composées se reconstruit. La preuve : l'empreinte par les noms est identique, une exécution en cours commande le bon appareil, une attente en cours part à l'heure. Mesuré : 1 971 mouvements à ×1 en 113 µs, 193 125 à ×100 en 9,0 ms.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="480" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="demenagement-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="demenagement-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="demenagement-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="demenagement-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="demenagement-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="demenagement-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="demenagement-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="demenagement-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="demenagement-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="demenagement-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="demenagement-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="demenagement-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="demenagement-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="demenagement-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="demenagement-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="demenagement-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="demenagement-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="demenagement-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="demenagement-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="demenagement-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="demenagement-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="demenagement-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="demenagement-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LES FICHES GLISSENT VERS LE BAS, DANS L'ORDRE ; LA QUEUE SE REND</text>
+          <text x="16.0" y="66.0" font-size="11" fill="#1d302a" font-weight="700">avant</text>
+          <text x="16.0" y="82.0" font-size="9.5" fill="#52615a">après le lot</text>
+          <text x="16.0" y="246.0" font-size="11" fill="#1d302a" font-weight="700">après</text>
+          <text x="16.0" y="262.0" font-size="9.5" fill="#52615a">le déménagement</text>
+          <line x1="123.0" y1="88" x2="123.0" y2="226" stroke="#3d9a75" stroke-opacity=".35" stroke-width="1.2"/>
+          <line x1="154.0" y1="88" x2="154.0" y2="226" stroke="#3d9a75" stroke-opacity=".35" stroke-width="1.2"/>
+          <line x1="185.0" y1="88" x2="185.0" y2="226" stroke="#3d9a75" stroke-opacity=".35" stroke-width="1.2"/>
+          <path d="M247.0 90 C247.0 160 216.0 156 216.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M278.0 90 C278.0 160 247.0 156 247.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M371.0 90 C371.0 160 278.0 156 278.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M433.0 90 C433.0 160 309.0 156 309.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M464.0 90 C464.0 160 340.0 156 340.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M495.0 90 C495.0 160 371.0 156 371.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M588.0 90 C588.0 160 402.0 156 402.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M619.0 90 C619.0 160 433.0 156 433.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M681.0 90 C681.0 160 464.0 156 464.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M712.0 90 C712.0 160 495.0 156 495.0 224" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-vert)" opacity=".85"/>
+          <path d="M743.0 90 C743.0 160 526.0 156 526.0 224" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-bleu)" opacity=".85"/>
+          <path d="M774.0 90 C774.0 160 557.0 156 557.0 224" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-bleu)" opacity=".85"/>
+          <path d="M805.0 90 C805.0 160 588.0 156 588.0 224" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-bleu)" opacity=".85"/>
+          <path d="M836.0 90 C836.0 160 619.0 156 619.0 224" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-bleu)" opacity=".85"/>
+          <path d="M867.0 90 C867.0 160 650.0 156 650.0 224" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-bleu)" opacity=".85"/>
+          <path d="M898.0 90 C898.0 160 681.0 156 681.0 224" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-bleu)" opacity=".85"/>
+          <path d="M929.0 90 C929.0 160 712.0 156 712.0 224" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-bleu)" opacity=".85"/>
+          <path d="M960.0 90 C960.0 160 743.0 156 743.0 224" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#demenagement-m-bleu)" opacity=".85"/>
+          <rect x="110.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="141.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="172.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="203.0" y="56.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="234.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="265.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="296.0" y="56.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="327.0" y="56.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="358.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="389.0" y="56.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="420.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="451.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="482.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="513.0" y="56.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="544.0" y="56.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="575.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="606.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="637.0" y="56.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="668.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="699.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="730.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="761.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="792.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="823.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="854.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="885.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="916.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="947.0" y="56.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="110.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="141.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="172.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="203.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="234.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="265.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="296.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="327.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="358.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="389.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="420.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="451.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="482.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-vert)"/>
+          <rect x="513.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="544.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="575.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="606.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="637.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="668.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="699.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="730.0" y="228.0" width="26" height="30" rx="5" fill="url(#demenagement-h-bleu)"/>
+          <rect x="761.0" y="228.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="792.0" y="228.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="823.0" y="228.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="854.0" y="228.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="885.0" y="228.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="916.0" y="228.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <rect x="947.0" y="228.0" width="26" height="30" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <text x="866.5" y="276.0" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">rendu à la mémoire</text>
+          <rect x="16" y="296" width="476" height="92" rx="12" fill="url(#demenagement-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#demenagement-o)"/>
+          <rect x="26" y="305" width="26" height="26" rx="8" fill="url(#demenagement-h-bleu)"/>
+          <g transform="translate(31.0 310.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 14.5-3.5 M19 3v4h-4 M20 14a8 8 0 0 1-14.5 3.5 M5 21v-4h4"/></g>
+          <text x="60.0" y="323.0" font-size="12" fill="#1b5873" font-weight="700">Ce qui suit chaque point déménagé</text>
+          <text x="30.0" y="345.0" font-size="10.2" fill="#52615a">exécutions : cause et cible ; attentes ; minuteries, baux ;</text>
+          <text x="30.0" y="360.0" font-size="10.2" fill="#52615a">la file des exécutions finies ; le programme se recompile ;</text>
+          <text x="30.0" y="375.0" font-size="10.2" fill="#52615a">la vérité des conditions composées se reconstruit</text>
+          <rect x="508" y="296" width="476" height="92" rx="12" fill="url(#demenagement-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#demenagement-o)"/>
+          <rect x="518" y="305" width="26" height="26" rx="8" fill="url(#demenagement-h-vert)"/>
+          <g transform="translate(523.0 310.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="552.0" y="323.0" font-size="12" fill="#195744" font-weight="700">La preuve</text>
+          <text x="522.0" y="345.0" font-size="10.2" fill="#52615a">l'empreinte par les noms, identique avant et après ;</text>
+          <text x="522.0" y="360.0" font-size="10.2" fill="#52615a">une exécution en cours commande le bon appareil ;</text>
+          <text x="522.0" y="375.0" font-size="10.2" fill="#52615a">une attente en cours part à l'heure</text>
+          <rect x="16.0" y="400.0" width="320.5" height="19.0" rx="9.5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity="0.7"/>
+          <text x="24.0" y="413.1" font-size="10" fill="#1b5873" font-weight="700">1 971 mouvements à ×1 en 113 µs ; 193 125 à ×100 en 9,0 ms</text>
+  <text x="18" y="457" font-size="12" fill="#52615a" font-style="italic">Chaque point déménagé prend la génération de sa nouvelle place, et la place quittée passe à la suivante : aucun numéro entier n'est redonné. Les</text>
+  <text x="18" y="474" font-size="12" fill="#52615a" font-style="italic">points d'un appareil restent ensemble.</text>
+</svg>

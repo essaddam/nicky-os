@@ -1,0 +1,90 @@
+{
+  "controles": [
+    {
+      "critere": "Conservation des sources initiales",
+      "resultat": "PASS",
+      "preuve": {
+        "fichiers": 163,
+        "differences": []
+      }
+    },
+    {
+      "critere": "Couverture de chaque Markdown",
+      "resultat": "PASS",
+      "preuve": {
+        "relus": 81,
+        "manquants": []
+      }
+    },
+    {
+      "critere": "Contenu initial intégralement conservé",
+      "resultat": "PASS",
+      "preuve": {
+        "idees": 220,
+        "donnees_modifiees": []
+      }
+    },
+    {
+      "critere": "Onglets et sous-thèmes exhaustifs",
+      "resultat": "PASS",
+      "preuve": {
+        "onglets": 11,
+        "sous_themes": 31
+      }
+    },
+    {
+      "critere": "Sources et lignes citées",
+      "resultat": "PASS",
+      "preuve": {
+        "references_distinctes": 2399,
+        "erreurs": []
+      }
+    },
+    {
+      "critere": "Identifiants HTML uniques",
+      "resultat": "PASS",
+      "preuve": {
+        "identifiants": 348,
+        "doublons": []
+      }
+    },
+    {
+      "critere": "Liens internes et originaux locaux",
+      "resultat": "PASS",
+      "preuve": {
+        "liens": 368,
+        "invalides": []
+      }
+    },
+    {
+      "critere": "Références embarquées lisibles",
+      "resultat": "PASS",
+      "preuve": {
+        "references": 2399,
+        "invalides": []
+      }
+    },
+    {
+      "critere": "Figures autonomes valides et légendées",
+      "resultat": "PASS",
+      "preuve": {
+        "images": 100,
+        "invalides": []
+      }
+    },
+    {
+      "critere": "Aucune dépendance réseau de rendu",
+      "resultat": "PASS",
+      "preuve": {
+        "ressources_externes": []
+      }
+    },
+    {
+      "critere": "Syntaxe des scripts Python",
+      "resultat": "PASS",
+      "preuve": "Analyse AST sans produire de bytecode ni modifier les sources."
+    }
+  ],
+  "succes": true,
+  "echecs": []
+}

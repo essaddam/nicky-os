@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 345" width="1000" height="345" role="img" aria-labelledby="cloture-t cloture-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="cloture-t">L'époque sur chaque ordre</title>
+  <desc id="cloture-d">Diagramme de séquence. H1, époque N, renouvelle son bail puis gèle. H2 demande l'époque N + 1, que le témoin accorde à l'expiration du bail. H2 envoie un ordre d'époque N + 1 au module. H1 se réveille et envoie un ordre d'époque N : le module le refuse. H1 apprend qu'il a perdu le bail et redevient secours.</desc>
+  <rect width="1000" height="345" fill="#fffdf8"/>
+          <defs>
+            <marker id="cloture-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="cloture-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="cloture-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="cloture-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="22.0" font-size="11.5" fill="#52615a" font-weight="700">UN ORDRE D'UNE ÉPOQUE ANCIENNE EST REFUSÉ PAR LE MODULE LUI-MÊME</text>
+          <rect x="40.0" y="36.0" width="160.0" height="26.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="120.0" y="53.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">H1 (époque N)</text>
+          <line x1="120.0" y1="62.0" x2="120.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="300.0" y="36.0" width="160.0" height="26.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="380.0" y="53.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Témoin</text>
+          <line x1="380.0" y1="62.0" x2="380.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="560.0" y="36.0" width="160.0" height="26.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="640.0" y="53.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">H2</text>
+          <line x1="640.0" y1="62.0" x2="640.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="810.0" y="36.0" width="160.0" height="26.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="890.0" y="53.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Module</text>
+          <line x1="890.0" y1="62.0" x2="890.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="120.0" y1="86.0" x2="376.0" y2="86.0" stroke="#52615a" stroke-width="1.6" marker-end="url(#cloture-g)"/>
+          <text x="250.0" y="80.0" font-size="10" fill="#52615a" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">renouveler le bail (N)</text>
+          <rect x="113.0" y="100.0" width="14.0" height="112.0" rx="3" fill="#fbe9e2" stroke="#8b3b22" stroke-width="1"/>
+          <text x="132.0" y="160.0" font-size="10" fill="#8b3b22" font-weight="700">gelé</text>
+          <line x1="640.0" y1="126.0" x2="384.0" y2="126.0" stroke="#b07d12" stroke-width="1.6" marker-end="url(#cloture-a)"/>
+          <text x="510.0" y="120.0" font-size="10" fill="#b07d12" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">demander N + 1</text>
+          <line x1="380.0" y1="148.0" x2="636.0" y2="148.0" stroke="#195744" stroke-width="1.6" marker-end="url(#cloture-v)"/>
+          <text x="510.0" y="142.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">accordée : le bail N a expiré</text>
+          <line x1="640.0" y1="178.0" x2="886.0" y2="178.0" stroke="#195744" stroke-width="1.6" marker-end="url(#cloture-v)"/>
+          <text x="765.0" y="172.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">ordre, époque N + 1</text>
+          <text x="882.0" y="200.0" font-size="9.5" fill="#52615a" text-anchor="end">plus grande époque vue : N + 1</text>
+          <line x1="120.0" y1="232.0" x2="886.0" y2="232.0" stroke="#52615a" stroke-width="1.6" marker-end="url(#cloture-g)"/>
+          <text x="505.0" y="226.0" font-size="10" fill="#52615a" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">ordre, époque N (réveillé)</text>
+          <line x1="890.0" y1="254.0" x2="124.0" y2="254.0" stroke="#8b3b22" stroke-width="1.6" marker-end="url(#cloture-r)"/>
+          <text x="505.0" y="248.0" font-size="10" fill="#8b3b22" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">refusé : époque ancienne</text>
+          <line x1="120.0" y1="282.0" x2="376.0" y2="282.0" stroke="#52615a" stroke-width="1.6" marker-end="url(#cloture-g)"/>
+          <text x="250.0" y="276.0" font-size="10" fill="#52615a" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">renouveler (N) → refusé : H1 redevient secours</text>
+  <text x="16" y="341" font-size="12" fill="#52615a" font-style="italic">Le jeton de clôture des systèmes distribués : un module garde la plus grande époque vue et refuse tout ordre plus ancien.</text>
+</svg>

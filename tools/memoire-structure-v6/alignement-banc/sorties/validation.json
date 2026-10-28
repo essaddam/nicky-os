@@ -1,0 +1,9 @@
+{
+  "status": "pass",
+  "groups": 336,
+  "samples": 3024,
+  "memory_captures": 144,
+  "checksum_parity_groups": 540,
+  "source_files": 5,
+  "scope": "recorded layout kernels and atomic sharing probe; no whole-engine performance claim"
+}

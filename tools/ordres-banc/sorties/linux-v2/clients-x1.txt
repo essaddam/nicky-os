@@ -1,0 +1,12 @@
+RESULTAT|clients|1|aujourdhui_api_snapshot_json_o|593342.000|o
+RESULTAT|clients|1|aujourdhui_api_snapshot_us|690.218|µs
+RESULTAT|clients|1|propose_meme_contenu_json_o|140281.000|o
+RESULTAT|clients|1|mqtt_etat_client_complet_o|112567.000|o
+RESULTAT|clients|1|mqtt_etat_client_morceaux_4kio|28.000|
+RESULTAT|clients|1|mqtt_etat_client_deux_pieces_o|20518.000|o
+RESULTAT|clients|1|mqtt_etat_client_complet_us|85.001|µs
+RESULTAT|clients|1|mqtt_etat_client_deux_pieces_us|20.500|µs
+RESULTAT|clients|1|rss_fin|856.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

@@ -1,0 +1,25 @@
+[package]
+name = "moli-home-assistant"
+description = "Moli OS: typed Home Assistant MQTT bridge."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+moli-core = { path = "../moli-core" }
+moli-runtime = { path = "../moli-runtime" }
+moli-migration = { path = "../moli-migration" }
+moli-i18n = { path = "../moli-i18n" }
+ring.workspace = true
+rumqttc = { workspace = true, features = ["use-rustls-no-provider"] }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

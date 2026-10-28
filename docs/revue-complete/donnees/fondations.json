@@ -1,0 +1,2858 @@
+{
+  "sections": [
+    {
+      "id": "fondations-securite",
+      "title": "Sécurité : une autorité explicite à chaque frontière",
+      "intro": "Cible retenue : identité vérifiée, droits limités puis garde déterministe avant chaque effet. Les compléments proposés ici sont des recommandations de conception, distinctes des décisions personnelles du propriétaire et du code déjà livré.",
+      "ideas": [
+        {
+          "id": "fondations-garde",
+          "title": "Une commande reste autorisée jusqu’à son émission",
+          "status": "integre",
+          "decision": "D0 resserrée le 12 octobre ; permis vivant des commandes récents.",
+          "summary": "Le serveur décide de l’origine : un en-tête libre ne prouve jamais une autorité humaine. La garde examine pièces natives, étiquettes, membres et opérations sensibles avant routage. Un permis serveur révoqué arrête aussi un ordre déjà pris par le pilote mais non émis.",
+          "details": [
+            "La valeur est validée avant la garde. Ui, System et Automation portent une intention reconnue ; machines et ouvertures demandent une approbation aux autres origines, Household compris.",
+            "Une demande retenue expire après dix minutes, fige le point et l’identité affichée, et exige une décision humaine sur ce point exact. HTTP 202 ne confirme aucun effet.",
+            "CommandRequest::abandoned combine échéance, présence de l’appelant et permis vivant. Une délégation composite est limitée aux membres déclarés ; aucun permis n’annule rétroactivement un envoi déjà engagé."
+          ],
+          "evolution": "Conserver ces invariants dans tous les futurs transports et scénarios.",
+          "sources": [
+            {
+              "path": "docs/components/coeur.md",
+              "line": 73,
+              "note": "Garde et origines."
+            },
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 995,
+              "note": "Permis vivant."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 1095,
+              "note": "Verdict et opérations sensibles."
+            },
+            {
+              "path": "crates/moli-runtime/src/driver.rs",
+              "line": 157,
+              "note": "Conditions effectives d’émission."
+            }
+          ],
+          "risks": [
+            "Un acquittement de transport ne prouve pas l’effet physique."
+          ]
+        },
+        {
+          "id": "fondations-identites",
+          "title": "Remplacer « sans compte » par la matrice d’accès effective",
+          "status": "partiel",
+          "decision": "caller.rs actuel ; complément de cible recommandé par la revue.",
+          "summary": "Les comptes existent : l’appel vient du LAN, de la boucle locale, d’Access, d’une session personnelle ou d’un téléphone limité à ses rapports. La cible conserve ces distinctions et ajoute des jetons individuels de clients agents, à capacités explicites. La lecture LAN ouverte reste une compatibilité actuelle, pas une identité individuelle.",
+          "details": [
+            "identify établit l’appelant une fois. Une assertion Access n’est reconnue que depuis le tunnel local ; les en-têtes de proxy n’accordent pas de privilège local.",
+            "L’inconnu atteint seulement connexion, session, rachat d’invitation et retour public Netatmo. Un compte personnel peut reconnaître un membre hors LAN ; l’invité reste filtré côté serveur.",
+            "Cible complète : principal, capacités de route, périmètre de pièces puis garde d’effet. Les jetons d’agent sont révocables, hachés côté serveur, limités dans le temps et journalisés sous une identité établie."
+          ],
+          "evolution": "Documenter l’existant ; livrer ces jetons et la protection des lectures sensibles avant une exposition étendue.",
+          "sources": [
+            {
+              "path": "docs/components/api.md",
+              "line": 48,
+              "note": "Ancienne lecture ouverte."
+            },
+            {
+              "path": "docs/ARCHITECTURE.md",
+              "line": 420,
+              "note": "Ancien paragraphe sans compte."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/caller.rs",
+              "line": 29,
+              "note": "Via inclut Person et Phone."
+            },
+            {
+              "path": "crates/moli-api/src/caller.rs",
+              "line": 298,
+              "note": "Rattachement aux personnes."
+            }
+          ],
+          "risks": [
+            "Aucun jeton individuel MCP n’est prouvé par le code consulté ; cette partie reste une cible."
+          ]
+        },
+        {
+          "id": "fondations-sessions",
+          "title": "Le PIN humain et le mot de passe personnel sont deux preuves",
+          "status": "integre",
+          "decision": "Sessions et invitations datées intégrées ; D0 actuelle.",
+          "summary": "Le PIN autorise validation, libération d’ordre et intervention dans une pièce protégée. Le mot de passe personnel établit une identité et des droits ; il ne vaut pas automatiquement PIN. La cible conserve cette distinction dans l’interface et les contrats.",
+          "details": [
+            "La session PIN est liée à Caller::key et à l’empreinte du code, dure trente jours et tombe lorsque le PIN change. Les budgets d’échec par appelant et par foyer limitent les essais distribués.",
+            "L’invité est actif dans [starts, expires), éventuellement sous une réservation fraîche. Ces droits sont revérifiés par requête, pendant SSE et avant l’émission d’un ordre déjà pris.",
+            "Le rachat d’invitation est réservé durablement avant mutation du mot de passe. Deux requêtes concurrentes ne consomment pas deux fois le même code ; un échec après admission impose son renouvellement."
+          ],
+          "evolution": "Garder comptes pour l’identité et PIN pour les actes engageants ; restaurer leurs dépendances ensemble.",
+          "sources": [
+            {
+              "path": "docs/components/api.md",
+              "line": 130,
+              "note": "Sessions PIN."
+            },
+            {
+              "path": "docs/components/api.md",
+              "line": 973,
+              "note": "Invitations et dates."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/caller.rs",
+              "line": 64,
+              "note": "Liste serveur des routes invitées."
+            },
+            {
+              "path": "crates/moli-api/src/caller.rs",
+              "line": 315,
+              "note": "Sessions personnelles reconnues."
+            }
+          ],
+          "risks": [
+            "Les secrets de session et le registre people.json ne sont pas encore sauvegardés ensemble."
+          ]
+        },
+        {
+          "id": "fondations-coffre",
+          "title": "Un coffre durable et une clé maître irremplaçable",
+          "status": "integre",
+          "decision": "Règle du dépôt et SecretStore ; synchronisation fichier puis répertoire.",
+          "summary": "Les secrets sont chiffrés dans secrets.enc et rangés par instance ; aucune surface ne doit servir leur valeur. La clé maître existante est conservée séparément de la sauvegarde générale et jamais régénérée pour réparer une erreur. L’activation mémoire suit uniquement une écriture durable réussie.",
+          "details": [
+            "ChaCha20-Poly1305 protège le coffre. La CLI reçoit la valeur par entrée standard ; TOML ne contient qu’un nom ou une référence de secret.",
+            "Chaque mutation recharge le contenu courant du disque, chiffre, synchronise le temporaire, renomme puis synchronise le répertoire. Un échec de cette dernière étape peut laisser le nouveau fichier sur disque sans l’activer en mémoire.",
+            "L’amorçage d’une maison neuve peut créer master.key privé. La cible d’exploitation fournit ensuite cette même clé par gestionnaire de secrets et fichier mémoire monté en lecture seule ; pins et jeux OAuth suivent le coffre."
+          ],
+          "evolution": "Conserver le coffre séparé des mesures et rattacher toutes ses dépendances au registre de restauration.",
+          "sources": [
+            {
+              "path": "docs/components/coeur.md",
+              "line": 125,
+              "note": "Coffre."
+            },
+            {
+              "path": "docs/components/exploitation.md",
+              "line": 45,
+              "note": "Clé maître."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/secrets.rs",
+              "line": 142,
+              "note": "Mutation depuis le contenu courant."
+            },
+            {
+              "path": "crates/moli-runtime/src/labels.rs",
+              "line": 26,
+              "note": "Durabilité avant activation."
+            }
+          ],
+          "risks": [
+            "Une copie du coffre sans la clé est inutilisable.",
+            "Une primitive atomique ne fournit pas un verrou interprocessus."
+          ]
+        },
+        {
+          "id": "fondations-confidentialite",
+          "title": "Codes et données sensibles restent hors des flux généraux",
+          "status": "partiel",
+          "decision": "Contrat privé Z2M et PRIVACY ; classification cible recommandée.",
+          "summary": "Les codes de clavier empruntent un canal privé interne et ne deviennent ni points, ni historique, ni SSE. Position précise et Wi-Fi sont filtrés pour l’assistant. La cible généralise ces règles par une classification et des droits de lecture, distincts de la garde d’écriture.",
+          "details": [
+            "Le canal clavier contient seize entrées au plus, n’accepte pas un retained comme saisie et masque le code dans son type et son audit. Les anciens fichiers actifs sont nettoyés avant les surfaces ; un nettoyage impossible ferme le démarrage.",
+            "Les images protégées exigent une session humaine et sont refusées en MCP. Le filtrage d’un assistant ne suffit pas à protéger une lecture LAN directe : les deux frontières doivent être décrites.",
+            "Position mobile, transcription choisie et notifications Expo/Apple sont des flux consentis séparément. Retirer l’application ne prouve pas la purge des anciennes données côté serveur, historique et sauvegardes."
+          ],
+          "evolution": "Publier la matrice donnée → lecteurs → durée → sauvegarde → effacement, en gardant les exclusions techniques actuelles.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 892,
+              "note": "Canal privé et nettoyage."
+            },
+            {
+              "path": "docs/PRIVACY.md",
+              "line": 11,
+              "note": "Flux mobiles."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/driver.rs",
+              "line": 558,
+              "note": "Soumission privée des claviers."
+            },
+            {
+              "path": "crates/moli-assistant/src/lib.rs",
+              "line": 1392,
+              "note": "Historique privé refusé à l’assistant."
+            }
+          ],
+          "risks": [
+            "Le nettoyage des fichiers actifs ne répare pas les anciennes sauvegardes ni les services extérieurs."
+          ]
+        },
+        {
+          "id": "fondations-transports",
+          "title": "Épingler avant d’authentifier et borner chaque échange",
+          "status": "integre",
+          "decision": "D2/D5 et briques moli-net ; contrat réseau commun.",
+          "summary": "Le TLS public valide une autorité publique ; le TLS local épingle le certificat de l’appareil après un premier contact assumé. L’empreinte est durable avant tout secret, puis un changement est refusé. Chaque échange possède taille et délai ; ses erreurs distinguent avant et après envoi.",
+          "details": [
+            "PinnedHttps peut réutiliser les connexions pour les lectures rejouables. Les effets utilisent send_once, plain_if ou un transport suivi : une réponse perdue après émission reste un résultat incertain.",
+            "Les nouveaux clients réseau ont des destinations fixes fournies par l’humain, sans redirection suivie, URL de réponse, JavaScript évalué ni entité XML externe. HTTP authentifié exige allow_plain_auth explicite.",
+            "Les plafonds généraux de moli-net ne remplacent pas les limites plus petites des protocoles : cookies, jetons, corps complets, nombre de requêtes, rétablissement de session, backoff et arrêt annulable."
+          ],
+          "evolution": "Réutiliser ces transports et nommer chaque exception avec sa conséquence sur l’identité.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 113,
+              "note": "Briques partagées."
+            },
+            {
+              "path": "docs/components/reseau.md",
+              "line": 64,
+              "note": "Contrat natif commun."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-net/src/lib.rs",
+              "line": 45,
+              "note": "Délais et corps."
+            },
+            {
+              "path": "crates/moli-net/src/lib.rs",
+              "line": 539,
+              "note": "Envoi unique."
+            }
+          ],
+          "risks": [
+            "TOFU ne prouve pas l’authenticité du premier interlocuteur."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fondations-surfaces",
+      "title": "Surfaces : mêmes contrats pour famille, scripts et agents",
+      "intro": "La façade conserve identité serveur, garde et résultats honnêtes sur REST, SSE, MCP et CLI pendant l’évolution du runtime. Le Hub actuel utilise encore un broadcast local ; la cible globale de bus est traitée dans la section architecture.",
+      "ideas": [
+        {
+          "id": "fondations-rest",
+          "title": "REST : schémas versionnés et méthodes sans ambiguïté",
+          "status": "partiel",
+          "decision": "Routeur actuel et cinq schémas OpenAPI spécialisés.",
+          "summary": "Un routeur sert dashboard, REST, SSE et MCP sur le même port, sous gardes communes. La cible est une référence consolidée qui décrit pour chaque route accès, corps, version attendue et niveau d’acquittement. Les schémas spécialisés actuels précisent déjà les primitives sans inventer de nouvelles surfaces.",
+          "details": [
+            "POST /api/command garde la même enveloppe pour compteur, minuteur et temporel. Un request_id conservé évite une seconde intention pour compteur/minuteur ; le temporel incertain exige redémarrage et relecture avant nouvelle affectation.",
+            "Dépendances : GET lit, PUT prépare le brouillon avec expected ; GET /preview fige versions/consommateurs, POST /approve publie cet aperçu exact avec PIN. Corps ordinaires 256 Kio, confirmation 512 Kio.",
+            "Scènes : GET preview puis POST run rend 202 d’admission, GET résultat rend les cibles et POST cancel révoque ce qui n’est pas émis. Publier une définition, admettre une exécution et confirmer l’effet sont trois opérations différentes."
+          ],
+          "evolution": "Garder ces méthodes du code comme contrat unique et mutualiser types/erreurs entre les schémas.",
+          "sources": [
+            {
+              "path": "docs/api/counter-command.openapi.yaml",
+              "line": 7,
+              "note": "Commande compteur."
+            },
+            {
+              "path": "docs/api/timer-command.openapi.yaml",
+              "line": 7,
+              "note": "Commande minuteur."
+            },
+            {
+              "path": "docs/api/temporal-command.openapi.yaml",
+              "line": 7,
+              "note": "Commande temporelle."
+            },
+            {
+              "path": "docs/api/dependencies.openapi.yaml",
+              "line": 35,
+              "note": "CAS et validation."
+            },
+            {
+              "path": "docs/api/scenes.openapi.yaml",
+              "line": 25,
+              "note": "Admission de scène."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/dependencies.rs",
+              "line": 17,
+              "note": "Méthodes GET/PUT/GET preview/POST approve effectives."
+            },
+            {
+              "path": "crates/moli-api/src/scenes.rs",
+              "line": 13,
+              "note": "Méthodes de scène effectives."
+            }
+          ],
+          "risks": [
+            "L’ancien tableau d’erreurs cite encore un plafond 2 Mo « à vérifier », incompatible avec l’introduction et le routeur."
+          ]
+        },
+        {
+          "id": "fondations-sse",
+          "title": "État rattrapable et occurrence perdue sont différents",
+          "status": "partiel",
+          "decision": "SSE actuel ; contrat de lacune explicite recommandé.",
+          "summary": "Le flux principal s’abonne avant l’instantané puis renvoie une photo si son consommateur prend du retard. Il filtre les invités et réévalue leurs droits. La cible garde ce rattrapage pour les états et signale explicitement les lacunes d’occurrences ou d’exécutions que la photo ne peut reconstituer.",
+          "details": [
+            "Le broadcast borné n’est pas un journal durable de livraison. Une occurrence n’appartient pas à state.json et n’est pas restaurée par un snapshot.",
+            "Une photo fraîche rétablit la valeur actuelle, jamais le nombre d’appuis ou les transitions manquées. Les reçus métier et horizons de consommation sont des contrats distincts.",
+            "automations/live perd historiquement les messages retardés sans resynchronisation documentée. La cible impose signal de lacune/version, relecture des définitions/exécutions et reconnexion propre, avec les quotas de flux existants."
+          ],
+          "evolution": "Unifier reconnexion et lacunes ; garder la page Home Assistant comme pédagogie, jamais comme preuve Moli.",
+          "sources": [
+            {
+              "path": "docs/components/api.md",
+              "line": 628,
+              "note": "SSE actuel."
+            },
+            {
+              "path": "docs/show-me-home-assistant.html",
+              "line": 415,
+              "note": "Durées explicitement pédagogiques."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/sse.rs",
+              "line": 101,
+              "note": "Réévaluation des droits."
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 591,
+              "note": "Broadcast courant."
+            }
+          ],
+          "risks": [
+            "Un instantané ne remplace pas un journal d’occurrences."
+          ]
+        },
+        {
+          "id": "fondations-mcp-cli",
+          "title": "MCP et CLI : clients sans pouvoir d’approbation",
+          "status": "partiel",
+          "decision": "API d’agent actuelle, enrichie par dépendances et scènes.",
+          "summary": "MCP lit, prépare des brouillons et commande sous garde ; les scènes permises passent aussi par leurs contrats. La CLI moderne joint le serveur propriétaire au lieu de créer une deuxième autorité métier. La cible ajoute des capacités individuelles sans donner d’approbation humaine aux outils d’agent.",
+          "details": [
+            "Une commande gardée renvoie awaiting_human_approval, pas un succès physique ; l’agent relaie la demande sans réessai automatique. Les erreurs métier restent isError et les résultats JSON textuels.",
+            "Le chiffre historique de quatorze outils n’est plus l’inventaire courant : dépendances, durées et scènes ont des outils dans mcp.rs. Les signatures du code et les schémas spécialisés priment.",
+            "Le SQL libre SQLite actuel reste borné ; la cible de stockage le remplace par lecture structurée. Une origine CLI de boucle locale ne doit jamais être assimilée au PIN, et un principal agent ne publie pas un courant validé."
+          ],
+          "evolution": "Générer l’inventaire effectif et ses permissions ; introduire les jetons individuels avant l’accès distant étendu.",
+          "sources": [
+            {
+              "path": "docs/components/api.md",
+              "line": 694,
+              "note": "MCP historique."
+            },
+            {
+              "path": "docs/components/api.md",
+              "line": 1034,
+              "note": "Outils récents."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/mcp.rs",
+              "line": 198,
+              "note": "Dépendances présentes."
+            },
+            {
+              "path": "crates/moli-api/src/mcp.rs",
+              "line": 279,
+              "note": "Exécution de scène distincte de publication."
+            }
+          ],
+          "risks": [
+            "Aucun jeton individuel MCP n’est démontré dans le code lu."
+          ]
+        },
+        {
+          "id": "fondations-contrat-pilote",
+          "title": "Le pilote déclare identité, fraîcheur, ordre et arrêt",
+          "status": "partiel",
+          "decision": "Trait Driver et discipline actuelle des commandes.",
+          "summary": "Le pilote publie dans sa seule instance et passe par le hub pour l’autorité des commandes. Le superviseur vide les files et marque hors ligne avant relance. La cible exige un contrat explicite de capacités, identité, fraîcheur, résultats, arrêt et qualification pour chaque famille.",
+          "details": [
+            "Le superviseur courant relance retours et panic avec backoff 1–60 s. Il ne faut pas lui attribuer une isolation future par thread ou processus qui n’est pas encore intégrée.",
+            "Une instance absente/désactivée ne crée ni tâche périodique ni passerelle. Après chaque attente réseau, le transport recontrôle abandon, échéance et permis ; un effet émis garde son résultat même après départ du client.",
+            "Dernier rapport, dernier changement, disponibilité et capacité absente sont distincts. Une valeur inchangée peut être fraîche sans nouvelle ligne d’historique ; HTTP 200 peut contenir une mesure périmée. Les bornes globales de mémoire restent au processus, pas multipliées par module."
+          ],
+          "evolution": "Conserver le trait et uniformiser les résultats typés sans prétendre la migration runtime réalisée.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 9,
+              "note": "Trait et superviseur."
+            },
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 49,
+              "note": "Ordres et résultats."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/supervisor.rs",
+              "line": 16,
+              "note": "Bornes de relance."
+            },
+            {
+              "path": "crates/moli-runtime/src/driver.rs",
+              "line": 585,
+              "note": "Prise et rejet des commandes abandonnées."
+            }
+          ],
+          "risks": [
+            "La file hub de 64 ne remplace pas la file plus petite de chaque pilote."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fondations-exploitation",
+      "title": "Installer, exploiter et restaurer une maison cohérente",
+      "intro": "La cible conserve binaire autonome et services extérieurs inventoriés. Une sauvegarde devient un contrat de cohérence par propriétaire, avec preuves de restauration ; l’ancienne formule « tout sauvegarder » ne suffit pas.",
+      "ideas": [
+        {
+          "id": "fondations-installation",
+          "title": "Un premier démarrage sûr et reproductible",
+          "status": "integre",
+          "decision": "Installation Docker actuelle ; D10 garde ARM comme cible à qualifier.",
+          "summary": "Une maison neuve crée configuration vide, clé maître privée et code temporaire dans ses journaux. Le propriétaire choisit le PIN et met la même clé à l’abri. La cible conserve ce parcours et sépare plateformes compilées et plateformes réellement qualifiées.",
+          "details": [
+            "Le binaire statique embarque le dashboard dans une image scratch sous uid 1000. Données et fichiers secrets montés doivent être accessibles à cet utilisateur.",
+            "Le code initial dure une heure et ne réouvre pas une maison ayant déjà eu son code. La récupération locale est une procédure délibérée, pas un repli automatique après panne.",
+            "Le réseau hôte sert les protocoles qui l’exigent. Hors domicile : VPN routeur de sous-réseau ou Access vérifié ; aucun port brut public ni proxy local créant une fausse identité de boucle locale."
+          ],
+          "evolution": "Décrire architecture, secrets, réseau, volumes et récupération dans un manifeste opérateur.",
+          "sources": [
+            {
+              "path": "docs/components/installation.md",
+              "line": 16,
+              "note": "Amorçage."
+            },
+            {
+              "path": "docs/components/installation.md",
+              "line": 56,
+              "note": "Accès distant."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/caller.rs",
+              "line": 177,
+              "note": "Traitement des proxies."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1219,
+              "note": "Construction des pilotes configurés."
+            }
+          ],
+          "risks": [
+            "Le guide historique ne qualifie pas un cœur ARM complet sur matériel cible."
+          ]
+        },
+        {
+          "id": "fondations-sauvegarde",
+          "title": "La sauvegarde actuelle reste partielle et vérifie des tailles",
+          "status": "partiel",
+          "decision": "backup.rs actuel ; cible cohérente recommandée.",
+          "summary": "backup.rs copie deux SQLite par VACUUM INTO, vingt-trois noms de fichiers et les images de plan admises. Son manifeste vérifie les tailles, sans empreinte de contenu. La cible est une capture cohérente pilotée par chaque processus propriétaire, avec manifeste versionné et SHA-256.",
+          "details": [
+            "Les fichiers sont copiés successivement pendant l’exécution : leur réunion ne prouve pas un instant logique commun. restore valide noms/tailles avant de copier, retire les anciens WAL/SHM et demande Moli arrêté.",
+            "people.json, settings.json, assistant.json, alarm-profiles.json et alarm.json sont absents de la liste actuelle. Le coffre peut être sauvegardé sans le registre des personnes dont ses sessions dépendent.",
+            "La cible capture par barrière cohérente, vérifie schémas et dépendances, puis publie le manifeste en dernier. La restauration prépare un dossier neuf vérifié avant bascule ; sessions et effets anciens sont invalidés selon contrat, clé maître conservée séparément."
+          ],
+          "evolution": "Remplacer la liste manuelle par le registre exhaustif et exiger une restauration à blanc.",
+          "sources": [
+            {
+              "path": "docs/components/exploitation.md",
+              "line": 149,
+              "note": "Promesse historique."
+            },
+            {
+              "path": "docs/components/exploitation.md",
+              "line": 302,
+              "note": "Ajouts métier récents."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/backup.rs",
+              "line": 20,
+              "note": "Liste réelle."
+            },
+            {
+              "path": "crates/moli-os/src/backup.rs",
+              "line": 127,
+              "note": "Contrôle de tailles."
+            }
+          ],
+          "risks": [
+            "Une corruption à taille identique passe ce manifeste.",
+            "La copie de restauration ne constitue pas une transaction de dossier entier."
+          ]
+        },
+        {
+          "id": "fondations-registre-persistance",
+          "title": "Registre exhaustif des autorités persistantes",
+          "status": "proposition",
+          "decision": "Inventaire de persistance et nouveaux domaines ; contrat cible de cette revue.",
+          "summary": "Chaque artefact durable déclare propriétaire, format, confidentialité et récupération. Ce registre devient la source unique des sauvegardes, migrations et réplications. Toute donnée durable hors registre bloque la livraison de son domaine ; une exclusion de cache exige reconstruction et bornes.",
+          "details": [
+            "Inclure configuration réellement utilisée, étiquettes, organisation/plan/images, personnes/zones/invitations, téléphones, langue/assistant et coffre ; puis graphes validés/brouillons, dépendances, occurrences/reçus, compteurs, minuteurs, temporels, durées et profils/états/verrous d’alarme.",
+            "Inclure journal/rotations, historique/énergie, artefacts de migration, outbox/export/accusés, archives/manifeste/reçus/pins, conversations et audio temporaire. Préférences navigateur, SecureStore mobile et agent PC sont des périmètres séparés explicitement couverts ou exclus.",
+            "Chaque entrée fixe schéma/version, groupe cohérent, capture, inclusion, permissions/chiffrement, durée, reconstruction, époque et preuve de restauration. WAL, staging, temporaires et verrous ne sont pas des autorités à recopier aveuglément."
+          ],
+          "evolution": "Implémenter ce registre par module avant la prochaine promesse de restauration complète.",
+          "sources": [
+            {
+              "path": "docs/reports/inventaire-persistance-2026-10-20T060728Z.md",
+              "line": 230,
+              "note": "Classification proposée."
+            },
+            {
+              "path": "docs/components/exploitation.md",
+              "line": 264,
+              "note": "Artefacts d’archive."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/people.rs",
+              "line": 40,
+              "note": "Registre personnes."
+            },
+            {
+              "path": "crates/moli-alarm-access/src/state.rs",
+              "line": 8,
+              "note": "Autorités d’alarme."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 611,
+              "note": "Préférences assistant séparées."
+            }
+          ],
+          "risks": [
+            "Ce registre est une cible, pas une implémentation constatée."
+          ]
+        },
+        {
+          "id": "fondations-livraison",
+          "title": "Une livraison conserve données, version et portée des preuves",
+          "status": "partiel",
+          "decision": "Guide d’exploitation et décisions natives des plans récents.",
+          "summary": "La mise à jour garde l’image précédente et une capture des données avant redémarrage. Une santé HTTP correcte prouve que le processus répond, pas que les usages sont repris. La cible lie code, formats, migration, retour arrière et résultats de validation.",
+          "details": [
+            "Une ancienne image ne suffit pas après changement de schéma : le dossier de livraison fixe les données compatibles et le mécanisme de retour.",
+            "Les anciens plans demandaient Docker et octrois ; les plans récents consignent Rust natif 1.99.1, deux jobs et contrôle complet au tour de fusion. Garder les preuves attachées à leur base et à leurs exclusions.",
+            "Tests de contrat, catalogue, fuites, traductions et budget logiciel précèdent la qualification humaine. Les clients réseau et Twinkly attendent H1 même pour leur authentification réelle ; la présence du code n’attribue pas la propriété d’un usage."
+          ],
+          "evolution": "Référencer une procédure actuelle unique ; conserver les instructions historiques comme telles.",
+          "sources": [
+            {
+              "path": "docs/components/exploitation.md",
+              "line": 190,
+              "note": "Mise à jour."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-19-androidtv.md",
+              "line": 32,
+              "note": "Décisions natives."
+            },
+            {
+              "path": "docs/components/reseau-qualification.md",
+              "line": 81,
+              "note": "Porte H1."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1363,
+              "note": "Portée de health."
+            }
+          ],
+          "risks": [
+            "Cette revue n’exécute aucun test, banc, serveur ou accès matériel."
+          ]
+        },
+        {
+          "id": "fondations-traductions",
+          "title": "La langue se sauvegarde, les identifiants restent stables",
+          "status": "integre",
+          "decision": "Contrat de traduction et settings.json actuel.",
+          "summary": "Serveur et dashboard utilisent les mêmes catalogues fr/en et la langue de la maison. Les valeurs de protocole, identifiants et noms familiaux restent stables. La cible classe la langue comme choix durable sauvegardable, distinct de l’affichage.",
+          "details": [
+            "Les textes visibles passent par t/tr!, paramètres identiques et pluriels. Les profils choisissent explicitement name_key/label_key ; un préfixe littéral ne change pas leur sens.",
+            "La traduction est calculée à l’usage, pas une fois au chargement : la langue arrive après le premier rendu. Dates et nombres utilisent la locale active.",
+            "Chaque intégration livre ses erreurs sûres et son onboarding dans les deux langues. Le contrôle des clés ne prouve ni la justesse du protocole ni la clarté du résultat ; les deux relectures restent nécessaires."
+          ],
+          "evolution": "Inclure settings.json dans la capture cohérente et centraliser le vocabulaire des résultats d’action.",
+          "sources": [
+            {
+              "path": "docs/components/traduction.md",
+              "line": 3,
+              "note": "Langue de la maison."
+            },
+            {
+              "path": "docs/components/profils.md",
+              "line": 204,
+              "note": "Clés explicites."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/settings.rs",
+              "line": 11,
+              "note": "Préférence persistée."
+            }
+          ],
+          "risks": [
+            "settings.json est omis par la sauvegarde actuelle."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fondations-integrations",
+      "title": "Catalogue natif et interne : une entrée par famille",
+      "intro": "37 kinds sont enregistrés dans le binaire, dont profile décrit dans la section suivante. Les 36 autres kinds et le pilote interne lumieres sont détaillés ici. Présence du code, preuve de contrat simulé, qualification matérielle et reprise d’usage sont quatre états distincts ; aucun test n’est rejoué pour cette revue.",
+      "ideas": [
+        {
+          "id": "fondations-integration-alexa",
+          "title": "Amazon Echo et groupes Alexa",
+          "status": "partiel",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "API non officielle de l’application Alexa, sans mot de passe Amazon reçu par Moli. Une connexion humaine livre un jeton gardé au coffre ; lecture/pause, musique recherchée, volume, phrase, annonce et commande sont proposés.",
+          "details": [
+            "Les groupes doivent publier leur portée complète pour la garde. Observation toutes les trente secondes. Le code publie encore sign_in comme point texte : la cible déplace ce retour sensible dans une passerelle humaine privée avec génération et audit expurgé.",
+            "Qualification : Aucun modèle Echo matériel qualifié n’est établi par le README ; l’API peut changer sans préavis."
+          ],
+          "evolution": "Conserver le connecteur, isoler son autorisation sensible et qualifier groupe/lecteur/opération.",
+          "sources": [
+            {
+              "path": "integrations/alexa/README.md",
+              "line": 3,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-alexa/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1233,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Aucun modèle Echo matériel qualifié n’est établi par le README ; l’API peut changer sans préavis."
+          ]
+        },
+        {
+          "id": "fondations-integration-androidtv",
+          "title": "Android TV et Google TV",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Pilote autonome avec identité <instance>:tv et appairage Polo humain, utilisant la bibliothèque commune à Philips. Remote fournit le pilotage observé et Cast les métadonnées ; une coupure donne inconnu, jamais veille supposée.",
+          "details": [
+            "Le PIN ouvre une tentative de 120 s ; identité RSA et empreinte Remote sont enregistrées ensemble. FIFO quatre, un ordre en vol, volume par touche puis observation. play_media consomme une cible explicite, sans recherche réseau ni repli accueil masquant un refus.",
+            "Qualification : Appairage et services réels restent à qualifier après H1 ; lien transmis, application ouverte et programme lu ne sont pas équivalents."
+          ],
+          "evolution": "Conserver le pilote générique et qualifier séparément chaque niveau de résultat.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 944,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-androidtv/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1236,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Appairage et services réels restent à qualifier après H1 ; lien transmis, application ouverte et programme lu ne sont pas équivalents."
+          ]
+        },
+        {
+          "id": "fondations-integration-ariston",
+          "title": "Chauffe-eau Ariston NET",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Cloud Ariston NET pour Velis/Andris medPlantData, au plus quatre appareils. Température, consigne, mode, chauffe, eau disponible et anti-légionelle conservent leur sens métier.",
+          "details": [
+            "Fournisseur fixe, secrets au coffre. Lectures trois minutes, accélérées pendant confirmation. Chaque ordre part une seule fois dans la file commune ; l’acceptation cloud est suivie d’une relecture sous trois minutes, sinon notice. Le plafond réglé sur l’appareil reste respecté.",
+            "Qualification : Fixtures reconstruites et cloud simulé ; aucun chauffe-eau réellement qualifié dans cette documentation."
+          ],
+          "evolution": "Qualifier chaque opération, en particulier plafond et protection anti-légionelle.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 419,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-ariston/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1239,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Fixtures reconstruites et cloud simulé ; aucun chauffe-eau réellement qualifié dans cette documentation."
+          ]
+        },
+        {
+          "id": "fondations-integration-asuswrt",
+          "title": "Diagnostic ASUSWRT",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Lecture JSON native de santé et clients explicitement choisis, sans administration, scan ni présence. L’inventaire réseau ne représente pas automatiquement des personnes.",
+          "details": [
+            "login.cgi et hooks appGet.cgi sont fixes, JSON strict sans JavaScript évalué ; pin durable avant secrets. Sélection vide par défaut, trente-deux clients et 139 points au plus. Les capacités restaurées demeurent définies mais Null avant mesure fraîche ; cycles, cookies et rétablissements sont bornés.",
+            "Le contrat JSON actuel ne publie pas de température : les routes amont concernées renvoient du JavaScript. CPU dérivé de ticks compatibles, mémoire KiB convertie en octets et débit B/s calculé sur delta monotone ; aucune association n’est déduite de isOnline/isWL.",
+            "Qualification : Contrats synthétiques seulement ; aucun firmware matériel qualifié avant H1."
+          ],
+          "evolution": "Conserver le diagnostic RO et qualifier unités, identité et association sans reprendre la présence.",
+          "sources": [
+            {
+              "path": "docs/components/reseau.md",
+              "line": 118,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-asuswrt-lecture.md",
+              "line": 15,
+              "note": "Plan relu : contrat précis, limites et preuves distinctes du matériel."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-asuswrt/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1242,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Contrats synthétiques seulement ; aucun firmware matériel qualifié avant H1."
+          ]
+        },
+        {
+          "id": "fondations-integration-bambu",
+          "title": "Imprimantes Bambu et AMS",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Le pilote fusionne les deltas MQTT TLS des A1/P1/X1 ; AMS et bobine externe deviennent des appareils par série/emplacement. Un delta incomplet n’efface pas un filament encore connu.",
+          "details": [
+            "Pin avant code d’accès, secrets au coffre et rapport complet périodique. Lumière commandable ; pause/reprise/arrêt sont Control et gardés pour l’agent. La cible conserve l’absence de lancement autonome d’impression et distingue fraîcheur des sous-systèmes et état cache.",
+            "Qualification : AMS et rapports sont documentés mais non vus réellement dans le dossier de cette famille."
+          ],
+          "evolution": "Qualifier imprimante et AMS séparément, avec autorité humaine des opérations de machine.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 449,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-bambu/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1245,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "AMS et rapports sont documentés mais non vus réellement dans le dossier de cette famille."
+          ]
+        },
+        {
+          "id": "fondations-integration-cast",
+          "title": "Récepteurs vidéo Google Cast",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Activation explicite de chaque récepteur, sans publication automatique à la découverte. La propriété exclusive exclut les TV et propriétaires externes déclarés, sans arbitrage automatique.",
+          "details": [
+            "mDNS privé borné trois secondes, sélection d’une génération exacte, activation et pin durables au coffre. FIFO quatre et générations activation/connexion capturées dès admission. Média exige session observée ; volume utilise le receiver avec réponse corrélée. Révoquer ferme les ordres non émis et retire l’appareil.",
+            "Qualification : Contrats synthétiques uniquement ; zéro appareil réel qualifié. La réservation externe Music Assistant ne prouve pas sa présence dans main."
+          ],
+          "evolution": "Conserver l’exclusivité et DELETE 200 avec vue confirmée, corrigé après revue.",
+          "sources": [
+            {
+              "path": "docs/superpowers/specs/2026-10-21-cast-design.md",
+              "line": 3,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-cast/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1248,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            },
+            {
+              "path": "crates/moli-cast/src/driver.rs",
+              "line": 121,
+              "note": "FIFO et générations."
+            },
+            {
+              "path": "crates/moli-cast/src/ownership.rs",
+              "line": 31,
+              "note": "Propriété explicite."
+            }
+          ],
+          "risks": [
+            "Contrats synthétiques uniquement ; zéro appareil réel qualifié. La réservation externe Music Assistant ne prouve pas sa présence dans main."
+          ]
+        },
+        {
+          "id": "fondations-integration-demo",
+          "title": "Maison de démonstration sans réseau",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Le démonstrateur publie appareils et points fictifs avec les mêmes contrats que les pilotes imités. Il simule ordres, groupes, énergie, climats et travaux sans aucun accès matériel.",
+          "details": [
+            "L’interface consomme les surfaces ordinaires ; chaque fixture indique son pilote imité. demo=true admet des visiteurs mais refuse les pilotes réels et les changements durables affectant les visiteurs suivants. La cible conserve données, jetons et stockage distincts d’une vraie installation.",
+            "Qualification : Une simulation ne prouve ni protocole, ni consommation, ni sûreté d’une maison réelle."
+          ],
+          "evolution": "Garder un démonstrateur pédagogique reproductible et clairement identifié.",
+          "sources": [
+            {
+              "path": "integrations/demo/README.md",
+              "line": 3,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-demo/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1251,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Une simulation ne prouve ni protocole, ni consommation, ni sûreté d’une maison réelle."
+          ]
+        },
+        {
+          "id": "fondations-integration-esphome",
+          "title": "Satellites vocaux ESPHome",
+          "status": "partiel",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Le client actuel vise les satellites vocaux par API native TCP 6053 chiffrée Noise. Volume, sourdine et phase de voix sont observés ; ce n’est pas encore une intégration universelle ESPHome.",
+          "details": [
+            "Connexion permanente, pings, silence borné et reconnexion progressive ; clé API au coffre. Les messages audio ne couvrent pas les annonces Bluetooth Xiaomi. La cible réutilise seulement les primitives adaptées puis ajoute un adaptateur d’annonces distinct, sans déguiser les capteurs en satellites vocaux.",
+            "Qualification : Le README décrit un répondeur utilisant les mêmes primitives ; cette preuve ne qualifie pas toute version matérielle ESPHome."
+          ],
+          "evolution": "Conserver l’audio et développer BLE sous contrat chiffré séparé.",
+          "sources": [
+            {
+              "path": "integrations/esphome/README.md",
+              "line": 3,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-esphome/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1254,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Le README décrit un répondeur utilisant les mêmes primitives ; cette preuve ne qualifie pas toute version matérielle ESPHome."
+          ]
+        },
+        {
+          "id": "fondations-integration-frigate",
+          "title": "Frigate : événements, réglages et images",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Frigate publie mouvement, objets, réglages et santé du serveur sur MQTT ; les images sont fournies par HTTP à la demande. Le commentaire de module « No HTTP » est incomplet face au code.",
+          "details": [
+            "Les changements detection/recording/snapshots passent sous garde et sont refusés sans broker. Le nom de caméra Frigate est l’identité : le renommer demande une correspondance explicite. La cible garde JPEG hors abonnement MQTT, destination d’images configurée et authentification broker dès que l’installation l’exige.",
+            "Qualification : Frigate historiquement vu ; l’absence d’option d’authentification MQTT limite les déploiements."
+          ],
+          "evolution": "Aligner commentaire et contrat sur les images effectivement accessibles.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 395,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-frigate/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1257,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            },
+            {
+              "path": "crates/moli-frigate/src/lib.rs",
+              "line": 62,
+              "note": "Source d’image HTTP effective."
+            }
+          ],
+          "risks": [
+            "Frigate historiquement vu ; l’absence d’option d’authentification MQTT limite les déploiements."
+          ]
+        },
+        {
+          "id": "fondations-integration-helpers",
+          "title": "Aides et pilotes métier internes",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Les aides typées réutilisent garde et journal. Valeur cache, bouton événementiel, compteur, minuteur et valeur temporelle sont des contrats différents, pas des booléens interchangeables.",
+          "details": [
+            "Bouton sans état restauré ; compteur/minuteur avec génération et reçus durables avant acquittement ; temporel distingue civil et instant avec fuseau. Le registre doit aussi couvrir les propriétaires internes énergie/personnes sans les compter comme nouveaux kinds configurables. Une projection state.json ne remplace pas l’autorité métier.",
+            "Qualification : Une preuve de primitive logicielle ne confirme pas les effets physiques du graphe déclenché."
+          ],
+          "evolution": "Conserver reçus, définitions et groupes cohérents de restauration.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 737,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-helpers/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1260,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Une preuve de primitive logicielle ne confirme pas les effets physiques du graphe déclenché."
+          ]
+        },
+        {
+          "id": "fondations-integration-host",
+          "title": "Hôte Linux et ordinateurs de la maison",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "La santé hôte vient de /proc et /sys, sans socket Docker. Les autres ordinateurs sont suivis/réveillés et l’agent Windows sortant transmet des rapports puis reçoit des ordres.",
+          "details": [
+            "Puissance/redémarrage/veille sont Control ; l’accès distant demande le code humain à chaque activation. Le jeton reste au PC et son hash côté maison. infra.json provient d’un script opérateur non fourni : le catalogue ne promet pas son installation. Rapports périmés et ordres non rejoués doivent être explicites.",
+            "Qualification : Hôte Linux et PC Windows documentés comme vus ; autres OS et états de veille restent à qualifier."
+          ],
+          "evolution": "Documenter installation et récupération du PC séparément de la sauvegarde du cœur.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 713,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-host/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1263,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Hôte Linux et PC Windows documentés comme vus ; autres OS et états de veille restent à qualifier."
+          ]
+        },
+        {
+          "id": "fondations-integration-huawei-lte",
+          "title": "Huawei LTE HiLink",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Client XML de diagnostic, signaux radio, trafic et connexion, sans SMS ni identifiants mobiles publiés. SIM absente ou connexion non prouvée n’émet pas de trafic frais.",
+          "details": [
+            "Routes et login type4 choisis explicitement, sans essais de toutes les variantes. TLS épinglé avant secrets ; cookies/jetons et rétablissement bornés. Onze points au plus. Les grands compteurs ne sont pas convertis en faux entiers exacts ; baisse ou reconnexion réinitialise la référence de débit.",
+            "Qualification : Fixtures synthétiques ; schéma et firmware matériel attendent H1."
+          ],
+          "evolution": "Conserver diagnostic RO, unités observées et absence de déduction de présence.",
+          "sources": [
+            {
+              "path": "docs/components/reseau.md",
+              "line": 140,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-huawei-lte-lecture.md",
+              "line": 16,
+              "note": "Plan relu : contrat précis, limites et preuves distinctes du matériel."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-huawei-lte/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1266,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Fixtures synthétiques ; schéma et firmware matériel attendent H1."
+          ]
+        },
+        {
+          "id": "fondations-integration-hue",
+          "title": "Philips Hue et groupes de pièces",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "CLIP v2 local charge les ressources puis suit SSE. Appairage par bouton physique, clé et pin au coffre ; une empreinte différente refuse la liaison.",
+          "details": [
+            "UUID stable, lumières/capteurs/boutons/batteries ; membres publiés pour la garde des groupes. Pièces écrivables et zones RO selon le contrat courant. Les effets suivent les capacités annoncées. Flux muet/excessif provoque rechargement ; lampe coupée au mur n’est jamais un éclairage confirmé.",
+            "Qualification : Pont CLIP v2 et fixtures réelles documentés ; tous les effets et générations d’ampoules ne sont pas qualifiés."
+          ],
+          "evolution": "Conserver le groupement Hue et présenter les luminaires composites comme une autre couche.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 191,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-hue/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1269,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Pont CLIP v2 et fixtures réelles documentés ; tous les effets et générations d’ampoules ne sont pas qualifiés."
+          ]
+        },
+        {
+          "id": "fondations-integration-igd",
+          "title": "Passerelles internet UPnP IGD",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Le pilote RO donne connexion, adresse publique, durée et débit de ligne. Aucun débit instantané n’est fabriqué depuis des compteurs de box jugés non fiables.",
+          "details": [
+            "Adresse apprise, description humaine, recherche et annonces SSDP servent la découverte. Série prioritaire sur UDN variable ; déplacement journalisé sans réécriture de configuration. La cible garde source SSDP/identité vérifiées et un remplacement explicite, sans ajouter NAT ou ouverture de port à cette lecture.",
+            "Qualification : Livebox réellement documentée ; les autres marques restent à établir."
+          ],
+          "evolution": "Préserver l’identité et traiter la migration d’étiquette/historique de l’ancien UDN.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 681,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-igd/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1272,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Livebox réellement documentée ; les autres marques restent à établir."
+          ]
+        },
+        {
+          "id": "fondations-integration-ipp",
+          "title": "Imprimantes réseau IPP",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "IPP décrit état, cartouches et travaux ; le dashboard envoie images/pages rendues dans une file RAM bornée. Un worker transmet, car l’impression peut prendre plusieurs minutes.",
+          "details": [
+            "Pages plafonnées, file trente-deux Mio et arrêt par époque ; identify/cancel portent Control. La cible distingue mis en file, envoyé et imprimé, conserve papier/bourrage fidèles et ne rejoue pas une ancienne file après redémarrage. Un niveau d’encre zéro n’est pas corrigé par supposition.",
+            "Qualification : Canon MG3600 et réponses réelles documentées ; IPP Everywhere ne qualifie pas toutes les particularités."
+          ],
+          "evolution": "Conserver bornes RAM et niveaux de résultat distincts.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 702,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-ipp/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1275,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Canon MG3600 et réponses réelles documentées ; IPP Everywhere ne qualifie pas toutes les particularités."
+          ]
+        },
+        {
+          "id": "fondations-integration-landroid",
+          "title": "Worx Landroid filaires",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Cloud Worx OAuth puis MQTT websocket pour les filaires protocole 0, pas les Vision protocole 1. Numéro de série stable et huit tondeuses maximum.",
+          "details": [
+            "Brokers/sujets validés, identifiants refusés et quotas imposent attente sans bloquer le compte. FIFO quatre, un ordre en vol, publication unique QoS1. PUBACK confirme le broker ; l’état doit suivre sous une minute. Départ et planning sont Control ; délai de pluie garde son contrat.",
+            "Qualification : Fixtures et broker simulés ; aucun modèle matériel qualifié par le tableau courant."
+          ],
+          "evolution": "Qualifier départ, retour base et effets du planning séparément.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 472,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-landroid/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1278,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Fixtures et broker simulés ; aucun modèle matériel qualifié par le tableau courant."
+          ]
+        },
+        {
+          "id": "fondations-integration-moonraker",
+          "title": "Klipper natif : état riche et commandes limitées",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Le pilote natif lit forme Klipper, outils, plateau, enceinte, filaments, travail et vignette. Le profil RO reste une option de lecture simple.",
+          "details": [
+            "Requête groupée et cadence adaptée à impression/repos ; métadonnées/totaux à leur rythme utile. Hostname identifie la machine et doit rester stable. Lumière commandable ; pause/reprise/annulation sont Control. Lancement d’impression exclu car le plateau doit être vérifié ; vignette n’est pas une caméra.",
+            "Qualification : Snapmaker U1 et fixtures réelles documentés ; autres variantes à qualifier."
+          ],
+          "evolution": "Choisir natif riche ou profil RO, sans deux propriétaires du même usage.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 521,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-moonraker/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1281,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Snapmaker U1 et fixtures réelles documentés ; autres variantes à qualifier."
+          ]
+        },
+        {
+          "id": "fondations-integration-netatmo",
+          "title": "Météo Netatmo et OAuth durable",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Station, extérieur et pluie sont lus par pilote natif ; HTTP 200 ne rafraîchit pas une ancienne date source. L’autorisation read_station appartient à une session PIN exacte.",
+          "details": [
+            "State à usage unique, origine configurée et retour GET statique puis POST same-origin conservent les protections de cookie. Jeu de jetons durable en une entrée avant usage ; rotation ambiguë après envoi exige reconnexion humaine. Périmés/absents deviennent Null/hors ligne même pendant lecture lente/backoff.",
+            "Qualification : Contrats synthétiques ; aucun module réellement qualifié avant H1."
+          ],
+          "evolution": "Conserver les mesures physiques sans substitution par prévisions et qualifier OAuth/dates/modèles.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 531,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-netatmo/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1295,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            },
+            {
+              "path": "crates/moli-netatmo/src/observed.rs",
+              "line": 40,
+              "note": "Fraîcheur source et expiration."
+            }
+          ],
+          "risks": [
+            "Contrats synthétiques ; aucun module réellement qualifié avant H1."
+          ]
+        },
+        {
+          "id": "fondations-integration-netgear",
+          "title": "Diagnostic Netgear SOAP",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "SOAP fixe et authentification explicitement choisie, sans scan ni activation de Traffic Meter. Identité par série au coffre et clients sélectionnés, jamais déduits en personnes.",
+          "details": [
+            "Trente-deux clients, inventaire 512, sous-ensemble 101 points ; bornes du registre conservées après sélection. Une méthode facultative absente est mémorisée par session. Un compteur sans unité vérifiée reste inconnu ; une liste attachée ne prouve pas l’association actuelle. Les autres erreurs invalident le cycle.",
+            "Qualification : Transports scriptés et serveurs synthétiques uniquement ; aucun firmware réel qualifié."
+          ],
+          "evolution": "Qualifier unité, identité et inventaire à H1 sans reprendre la présence.",
+          "sources": [
+            {
+              "path": "docs/components/netgear.md",
+              "line": 7,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-20-netgear-lecture.md",
+              "line": 14,
+              "note": "Plan relu : contrat précis, limites et preuves distinctes du matériel."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-netgear/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1296,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Transports scriptés et serveurs synthétiques uniquement ; aucun firmware réel qualifié."
+          ]
+        },
+        {
+          "id": "fondations-integration-nuki",
+          "title": "Serrures Nuki derrière pont matériel",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Pont HTTP local avec jeton haché et lecture du cache pour préserver la pile. Le numéro Nuki est stable ; observed garde l’heure du dernier contact du pont avec la serrure.",
+          "details": [
+            "Verrouillage et ouverture sont séparés : déverrouiller/tirer le pêne reste sensible dans toutes les pièces. Une requête en vol, abandon vérifié avant émission avec plain_if, aucun rejeu de réponse perdue. Opener est ignoré ; un état relu ne rajeunit pas sa source.",
+            "Qualification : Fixture reconstruite, pas de pont/serrure qualifié ; le jeton haché est documenté déprécié."
+          ],
+          "evolution": "Conserver l’ouverture gardée et traiter un transport chiffré dans un lot qualifié distinct.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 565,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-nuki/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1299,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Fixture reconstruite, pas de pont/serrure qualifié ; le jeton haché est documenté déprécié."
+          ]
+        },
+        {
+          "id": "fondations-integration-overkiz",
+          "title": "Somfy TaHoma et Connectivity Kit",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Classes RTS/OGP explicitement couvertes, route locale épinglée ou cloud Somfy. Connectivity Kit n’est pas supposé posséder une API locale ; RTS sans retour ne publie aucune position inventée.",
+          "details": [
+            "deviceURL stable ; apply envoyé une fois, FIFO huit et seize attentes au plus. COMPLETED confirme l’exécution, sinon accepté puis suivi/notice. Les lectures consommantes et sessions ne rejouent jamais l’ordre. Perte après envoi devient incertaine ; quotas mettent lectures et ordres en pause.",
+            "Qualification : Box simulées et fixtures de spécification ; routes matérielles non qualifiées."
+          ],
+          "evolution": "Conserver le suivi d’exécution et valider un propriétaire par usage avant transfert.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 577,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-overkiz/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1302,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Box simulées et fixtures de spécification ; routes matérielles non qualifiées."
+          ]
+        },
+        {
+          "id": "fondations-integration-philips",
+          "title": "Téléviseurs Philips et Android historique",
+          "status": "partiel",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "JointSpace conserve alimentation/audio/Ambilight ; Remote et Cast couvrent applications et médias. Le générique Android ne casse pas les signatures ni ne double la propriété de cette télé.",
+          "details": [
+            "Identifiants JointSpace et identité Android importée restent distincts des nouveaux Polo. Le code identifie encore la télé par host ; changer DHCP peut créer un nouvel appareil. Cible : identité native persistante qualifiée et migration des références avant suivi d’adresse, sans adopter une autre télé silencieusement.",
+            "Qualification : Philips Google TV documentée en lecture ; toutes les commandes/réveils/apps ne sont pas qualifiés."
+          ],
+          "evolution": "Préserver le constructeur et corriger son identité par migration explicite.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 372,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-philips/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1305,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Philips Google TV documentée en lecture ; toutes les commandes/réveils/apps ne sont pas qualifiés."
+          ]
+        },
+        {
+          "id": "fondations-integration-phones",
+          "title": "Téléphones : rapports et notifications",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Le téléphone rapporte batterie, charge, Wi-Fi, position et présence vers sa maison. Son jeton est au trousseau ; seul son hash reste serveur et sa route de rapports est limitée.",
+          "details": [
+            "Enregistrement depuis session autorisée et maison apprise d’une position précise sur Wi-Fi déclaré. Expo/Apple sont des fournisseurs de notification explicites. La cible sépare révocation serveur, arrêt du suivi/géofences, effacement SecureStore et purge des anciennes données ; désinstaller l’app ne garantit pas tout cela côté maison.",
+            "Qualification : iPhone documenté utilisé ; Android et modes arrière-plan de chaque OS restent à qualifier."
+          ],
+          "evolution": "Conserver la portée du jeton et classifier toutes les sorties assistant.",
+          "sources": [
+            {
+              "path": "integrations/phones/README.md",
+              "line": 3,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-phones/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1308,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "iPhone documenté utilisé ; Android et modes arrière-plan de chaque OS restent à qualifier."
+          ]
+        },
+        {
+          "id": "fondations-integration-presence",
+          "title": "Présence Wi-Fi par voisinage",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "UDP et ARP de l’hôte repèrent des téléphones choisis puis appliquent une temporisation d’absence. Cette source historique est distincte des nouveaux inventaires réseau RO.",
+          "details": [
+            "Réseau /24–/30 et MAC donnés dans configuration privée. Pas d’absence au démarrage avant temporisation ; machines par IP ont un contrat différent. La cible conserve cette estimation sans lui attribuer l’autorité d’ouverture ou désarmement ; sommeil Wi-Fi, MAC privées, VLAN et répéteurs restent des limites visibles.",
+            "Qualification : Téléphones Wi-Fi documentés vus, sans garantie universelle de détection."
+          ],
+          "evolution": "Conserver jusqu’à une fusion de présence définie et qualifiée.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 793,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-presence/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1315,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Téléphones Wi-Fi documentés vus, sans garantie universelle de détection."
+          ]
+        },
+        {
+          "id": "fondations-integration-reolink",
+          "title": "Reolink : images, détections et parole",
+          "status": "partiel",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "HTTPS épinglé avant identifiants fournit détections et images. Le code dépasse le vieux libellé RO : say existe sur les canaux avec haut-parleur et des chemins talk/listen/door réagissent aux visites.",
+          "details": [
+            "UID privilégié, canaux endormis conservés, panne station rend détections inconnues. Images à la demande sans verrou réseau. La cible classe parole et réponse de porte comme effets distincts, avec origine, garde, délai et non-rejeu ; elle ne masque pas ces routines sous une intégration annoncée seulement lectrice.",
+            "Qualification : Home Hub/caméras/sonnette vus historiquement ; leur preuve ne qualifie pas automatiquement say et interphone."
+          ],
+          "evolution": "Réconcilier catalogue/code et qualifier détection, image, parole et dialogue séparément.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 248,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-reolink/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1322,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            },
+            {
+              "path": "crates/moli-reolink/src/lib.rs",
+              "line": 313,
+              "note": "Point say conditionnel effectif."
+            }
+          ],
+          "risks": [
+            "Home Hub/caméras/sonnette vus historiquement ; leur preuve ne qualifie pas automatiquement say et interphone."
+          ]
+        },
+        {
+          "id": "fondations-integration-reservations",
+          "title": "Calendriers ICS en lecture",
+          "status": "partiel",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "URL HTTPS au coffre fournie par l’humain, cinq fenêtres planifiées et occurrences sans rejeu au démarrage. Aucun accès direct à une serrure.",
+          "details": [
+            "Lien personne/réservation édité humainement. La fraîcheur reste vérifiée jusqu’à émission ; annulation/hors-ligne/expiration retire les droits même à un cookie ou ordre déjà pris. Limites du compte et de réservation sont indépendantes ; une ouverture attend toujours l’autorité PIN habituelle.",
+            "Qualification : Présence du connecteur ne qualifie pas chaque fournisseur ICS ni ses calendriers particuliers."
+          ],
+          "evolution": "Garder fenêtres éphémères et sauvegarder ensemble leurs liens de personnes.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 981,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-reservations/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1325,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Présence du connecteur ne qualifie pas chaque fournisseur ICS ni ses calendriers particuliers."
+          ]
+        },
+        {
+          "id": "fondations-integration-roborock",
+          "title": "Aspirateurs Roborock dans Mi Home",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "miIO UDP local avec jeton humain, hello pour identité/horloge puis miIO.info confirmant un aspirateur. Les appareils de l’app Roborock moderne ne sont pas implicitement compatibles.",
+          "details": [
+            "Un autre did à la même adresse bloque ; paquets vérifiés avant déchiffrement. Quatre ordres, un échange en vol, abandon avant envoi et émission unique. Silence après émission signifie peut-être parti/non confirmé, jamais retry physique. start/pause/stop/home sont Control ; les lectures accélèrent pendant le travail.",
+            "Qualification : Aspirateur UDP simulé et fixtures reconstruites ; pas de S6 matériel qualifié."
+          ],
+          "evolution": "Conserver Mi Home et qualifier identité et commandes sur cible neutre.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 269,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-roborock/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1328,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Aspirateur UDP simulé et fixtures reconstruites ; pas de S6 matériel qualifié."
+          ]
+        },
+        {
+          "id": "fondations-integration-samsung",
+          "title": "Téléviseurs Samsung Tizen",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "WebSocket TLS pour touches/applications et SOAP local pour audio absolu. WoL allume, une touche explicite éteint ; silence n’est pas une veille présumée.",
+          "details": [
+            "Pin durable avant jeton, device.id au coffre indépendant du nom/IP. Aucune URL issue de réponse ne choisit une destination. FIFO quatre, un ordre en vol, vérification après connexion et aucun rejeu. État vient des observations ; pas de texte libre/URL/touche maintenance ni application courante inventée.",
+            "Qualification : Contrats TLS/SOAP synthétiques ; aucun modèle réel qualifié."
+          ],
+          "evolution": "Qualifier modèle, firmware, audio UPnP et réveil séparément.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 314,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-samsung/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1331,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Contrats TLS/SOAP synthétiques ; aucun modèle réel qualifié."
+          ]
+        },
+        {
+          "id": "fondations-integration-sonos",
+          "title": "Sonos et annonces locales",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Lecteur par UPnP/SOAP local ; annonces Piper diffusées en clip audio TLS avec WAV temporaire imprévisible. Une annonce demeure une commande gardée, texte borné et certificat épinglé.",
+          "details": [
+            "Le code ajoute quiet : les annonces sont suspendues quel que soit l’appelant jusqu’à arrêt/expiration. L’acquittement rapide ne confirme pas la parole finale ; un échec ultérieur reste signalé. La cible conserve cette priorité locale, sépare musique multi-pièces et lecteur simple, et ne suppose pas les groupes Sonos déjà gérés.",
+            "Qualification : Sonos Beam documentée vue ; toutes variantes de clip/modèle restent à qualifier."
+          ],
+          "evolution": "Conserver lecture/annonces et éviter une double propriété avec le système musical.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 342,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-sonos/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1335,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Sonos Beam documentée vue ; toutes variantes de clip/modèle restent à qualifier."
+          ]
+        },
+        {
+          "id": "fondations-integration-tapo",
+          "title": "Ampoules et prises Tapo KLAP",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "KLAP v2 local utilise un auth_hash du compte au coffre, sans mot de passe brut. Les capacités lumière viennent du modèle et ne sont pas déduites du nom commercial.",
+          "details": [
+            "La poignée prouve connaissance de clé. Relocalisation combine MAC et même device_id : une autre ampoule du compte ne suffit pas. Couleur/température et coupure murale restent distinguées ; la cible conserve capacités observées, reconnexion bornée et remplacement explicite à adresse identique.",
+            "Qualification : Comparaison KLAP à python-kasa documentée, mais L530 reste non qualifiée réellement."
+          ],
+          "evolution": "Qualifier modèle et effets sans adopter silencieusement une autre ampoule.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 648,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-tapo/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1338,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Comparaison KLAP à python-kasa documentée, mais L530 reste non qualifiée réellement."
+          ]
+        },
+        {
+          "id": "fondations-integration-telegram",
+          "title": "Notifications Telegram sortantes",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "notify envoie aux chats configurés par API Bot, sans relais. Le canal d’automatisme reste une commande gardée/journalisée ; la réception n’est pas faite.",
+          "details": [
+            "Le jeton vient de token_file tmpfs monté RO et non du coffre : la cible ne prétend donc pas une centralisation déjà totale. Destinataires explicitement autorisés et consentement d’envoi externe sont conservés. Toute migration de secret garde l’ancien jeton sans affichage ; une conversation entrante demanderait identité et contrat séparés.",
+            "Qualification : Bot et destinataire documentés vérifiés ; pas de preuve de dialogue entrant."
+          ],
+          "evolution": "Maintenir le canal sortant et documenter token_file comme secret opérateur.",
+          "sources": [
+            {
+              "path": "integrations/telegram/README.md",
+              "line": 3,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-telegram/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1341,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Bot et destinataire documentés vérifiés ; pas de preuve de dialogue entrant."
+          ]
+        },
+        {
+          "id": "fondations-integration-tuya",
+          "title": "Tuya local d’abord et cloud RO",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Versions locales 3.3/3.4/3.5 après import des clés/DP ; appareils pile sans LAN restent lus par cloud configuré. Écritures cloud refusées, protocole 3.1 exclu.",
+          "details": [
+            "L’import sépare coffre et tuya.json sans clé. DP typés autorisent seulement booléens/nombres/enums. UDP ne rétrograde pas une version prouvée ; recherche par clé vérifie l’appareil. Commande avant ConnAck refusée. La cible garde une fraîcheur propre au cloud sans l’assimiler à une preuve locale et n’expose aucun texte libre arbitraire.",
+            "Qualification : Prises locales avec écriture et capteurs cloud documentés vus ; chaque DP/modèle reste à qualifier."
+          ],
+          "evolution": "Conserver import secret et compatibilité par version explicite.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 215,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-tuya/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1344,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Prises locales avec écriture et capteurs cloud documentés vus ; chaque DP/modèle reste à qualifier."
+          ]
+        },
+        {
+          "id": "fondations-integration-twinkly",
+          "title": "Lumières Twinkly locales v1",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Marche, luminosité et RGB statique direct sur variantes compatibles, sans film de secours ni effets/playlists implicites. IPv4 et MAC sont validées par l’humain.",
+          "details": [
+            "Challenge/login/verify produisent un jeton RAM ; huit ordres et un échange en vol respectent échéance/abandon. Seule relecture publie l’effet. Allumer reprend un mode compatible observé/choisi sinon refuse. Verify pouvant affecter une autre session, le propriétaire unique doit être désigné avant même le login réel.",
+            "Qualification : Contrats synthétiques ; authentification matérielle également soumise à H1."
+          ],
+          "evolution": "Conserver le périmètre statique et qualifier firmware avant tout nouvel effet.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 811,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-twinkly/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1347,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Contrats synthétiques ; authentification matérielle également soumise à H1."
+          ]
+        },
+        {
+          "id": "fondations-integration-voltalis",
+          "title": "Chauffage fil pilote Voltalis",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Radiateurs VX_WIRE et programmes sont commandés par cloud ; VX_RELAY chauffe-eau reste RO, faute de protocole d’écriture établi. Fournisseur fixe et compte au coffre.",
+          "details": [
+            "Lectures et joignabilité ont leurs cadences. Réglage manuel complet envoyé une fois, dans l’ordre et avant échéance ; réponse cloud suivie d’une relecture sous deux minutes, sinon notice. Mode/preset/consigne/programme portent Control. Renouveler une session ne rejoue pas un effet, quotas mettent en pause.",
+            "Qualification : Cloud simulé et fixtures reconstruites ; pas de radiateurs matériels qualifiés."
+          ],
+          "evolution": "Conserver l’autorité humaine et qualifier modes/programmes/plages sur appareils.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 660,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-voltalis/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1350,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Cloud simulé et fixtures reconstruites ; pas de radiateurs matériels qualifiés."
+          ]
+        },
+        {
+          "id": "fondations-integration-wyoming",
+          "title": "Supervision Wyoming sans appropriation de la voix",
+          "status": "qualification",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Piper, Whisper et openWakeWord sont supervisés par describe/info, sans audio. Le codec partagé reste utilisé par les fonctions vocales existantes ; aucun transfert de propriété de la chaîne voix n’est implicite.",
+          "details": [
+            "Instance/service stable, hôte/port humains. Une sonde ouvre/demande/vérifie/ferme sous délai global ; header et JSON bornés, binaire refusé avant allocation. Métadonnées triées/dédupliquées/effacées après panne ; prochaine sonde après période entière, pas de rafale.",
+            "Qualification : 735 tests historiques sur base 835d9b8 sont consignés, sans qualifier services installés ni main actuel."
+          ],
+          "evolution": "Conserver supervision RO et qualifier chaque service réel séparément sans audio.",
+          "sources": [
+            {
+              "path": "docs/components/wyoming.md",
+              "line": 5,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-wyoming/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1353,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "735 tests historiques sur base 835d9b8 sont consignés, sans qualifier services installés ni main actuel."
+          ]
+        },
+        {
+          "id": "fondations-integration-z2m",
+          "title": "Zigbee via Zigbee2MQTT",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Exposes Z2M déterminent les points ; identité IEEE indépendante du friendly_name. Zigbee2MQTT reste propriétaire radio et Moli consomme/commande son contrat MQTT.",
+          "details": [
+            "Composites/unités/catégories définissent accès ; secteur relu progressivement, capteurs endormis sous cache ancien. Set/get propres ignorés, commande avant broker refusée. Codes/claviers vont au privé ; appuis et états restent distincts. Cible runtime spéciale : 512 messages et 4 Mio cumulés par entrée Z2M, un bridge/devices jusqu’à 4 Mio, disponibilité 4 Kio ; le petit canon MQTT 4 Kio ne tronque pas cet inventaire.",
+            "Qualification : Fixtures Z2M réelles et appareils variés ; pas de qualification universelle des exposes."
+          ],
+          "evolution": "Conserver ce pont et son exception de volume, puis qualifier chaque famille.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 155,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-z2m/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 1356,
+              "note": "Raccordement actuel du pilote dans le binaire."
+            }
+          ],
+          "risks": [
+            "Fixtures Z2M réelles et appareils variés ; pas de qualification universelle des exposes."
+          ]
+        },
+        {
+          "id": "fondations-integration-lumieres",
+          "title": "Luminaires composites : un objet familial",
+          "status": "integre",
+          "decision": "Contrat de famille dans le dépôt ; présence logicielle confirmée par la fabrique actuelle.",
+          "summary": "Plusieurs ampoules et leur relais deviennent une lampe ; la garde évalue tous les membres. Éteindre la pièce ne coupe jamais télévision ou enceinte.",
+          "details": [
+            "Extinction des ampoules joignables d’abord, relais seulement si aucune ne répond. Allumer rétablit relais puis ampoules sous continuation quinze secondes. La cible conserve résultat par membre et permis vivant : réponse du relais ne confirme pas encore toutes les ampoules. powered et disponibilité restent honnêtes ; membres visibles atelier mais masqués dans l’agrégat familial.",
+            "Qualification : Ampoules Hue derrière relais documentées vues ; mélanges intermarques à qualifier."
+          ],
+          "evolution": "Conserver l’agrégation sémantique, distincte d’un groupe réseau.",
+          "sources": [
+            {
+              "path": "docs/components/pilotes.md",
+              "line": 773,
+              "note": "Périmètre, fonctionnement et limites documentés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-lights/src/lib.rs",
+              "line": 1,
+              "note": "Implémentation actuelle consultée ; aucun test rejoué."
+            }
+          ],
+          "risks": [
+            "Ampoules Hue derrière relais documentées vues ; mélanges intermarques à qualifier."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fondations-profils",
+      "title": "Huit profils et un moteur déclaratif contrôlé",
+      "intro": "BUILTIN contient huit profils. Le moteur courant traite HTTP/HTTPS et GET Meross signé ; MQTT, BLE et OAuth renouvelable ne sont pas des transports déclaratifs déjà disponibles. Un profil externe est approuvé sur son texte exact.",
+      "ideas": [
+        {
+          "id": "fondations-moteur-profils",
+          "title": "Les lectures ne cachent pas d’écriture",
+          "status": "integre",
+          "decision": "D2 et moteur actuel, enrichi pour SMLIGHT.",
+          "summary": "Le profil compile requêtes, points, identités et writes avant échange. Un fichier externe exige un SHA-256 approuvé ; le moindre changement demande un nouveau consentement. Une intégration embarquée correspond à une ligne explicitement relue dans BUILTIN.",
+          "details": [
+            "Query interdite en lecture hors liste sûre ; en-têtes de changement de méthode refusés. Chaque write vise un point connu, encode la valeur et relit ses dépendances avant le réglage entier.",
+            "Un secret substitué exige HTTPS et destination liée ; Meross signe sans transporter la clé. fixed_target désactive le suivi d’adresse ; missing=null invalide les champs absents et le cache froid. L’intervalle minimal conserve son effet à la reprise."
+          ],
+          "evolution": "Garder le moteur simple ; choisir natif lorsqu’une session, un protocole ou sa fraîcheur dépasse ce contrat.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 15,
+              "note": "Writes et lectures."
+            },
+            {
+              "path": "docs/components/profils.md",
+              "line": 297,
+              "note": "Approbation exacte."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 440,
+              "note": "Compilation des writes."
+            },
+            {
+              "path": "crates/moli-profile/src/lib.rs",
+              "line": 914,
+              "note": "Approbation/secret avant exécution."
+            }
+          ],
+          "risks": [
+            "profile trust prouve le consentement au texte, pas une compatibilité matérielle."
+          ]
+        },
+        {
+          "id": "fondations-profil-daikin-brp069",
+          "title": "Daikin BRP069",
+          "status": "partiel",
+          "decision": "Profil réellement inscrit dans BUILTIN et son paquet.",
+          "summary": "HTTP local, MAC stable et lectures basic/sensor/control. Quatre writes reconstructent tout le réglage depuis une relecture, pour ne pas écraser un changement fait à la télécommande.",
+          "details": [
+            "Changer de mode reprend ses paramètres mémorisés sans allumer. ret=OK est requis car HTTP 200 peut refuser ; une direction manquante interdit l’ordre partiel. La cible garde les bornes de consigne et ne confond pas observation de température et acquittement de réglage.",
+            "Le moteur commun maintient destination contrôlée, bornes HTTP, absence de writes non déclarés et distinction entre cache et observation. Qualification : Lecture réelle documentée ; écritures non essayées sur une unité."
+          ],
+          "evolution": "Conserver le profil et qualifier séparément les quatre écritures.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 455,
+              "note": "Contrat propre au profil."
+            }
+          ],
+          "verification": [
+            {
+              "path": "integrations/daikin-brp069/profile.toml",
+              "line": 1,
+              "note": "Texte embarqué actuel."
+            },
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Liste effective des huit profils."
+            }
+          ],
+          "risks": [
+            "Lecture réelle documentée ; écritures non essayées sur une unité."
+          ]
+        },
+        {
+          "id": "fondations-profil-iopool",
+          "title": "Sonde de piscine iopool",
+          "status": "partiel",
+          "decision": "Profil réellement inscrit dans BUILTIN et son paquet.",
+          "summary": "HTTPS fournisseur et clé API pour le premier bassin du compte ; température, pH, ORP, date, alertes et conseils, sans commande de filtration.",
+          "details": [
+            "Identité bassin plutôt que titre. La cible garde l’âge propre de la mesure : polling réussi ne prouve pas eau nouvellement mesurée. Le caractère premier bassin reste visible ; un deuxième bassin n’est pas agrégé ou ignoré silencieusement dans une interface qui promettrait tout le compte.",
+            "Le moteur commun maintient destination contrôlée, bornes HTTP, absence de writes non déclarés et distinction entre cache et observation. Qualification : Usage réel annoncé mais aucune fixture intégrée."
+          ],
+          "evolution": "Conserver le périmètre et définir fraîcheur avant automatisme critique.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 513,
+              "note": "Contrat propre au profil."
+            }
+          ],
+          "verification": [
+            {
+              "path": "integrations/iopool/profile.toml",
+              "line": 1,
+              "note": "Texte embarqué actuel."
+            },
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Liste effective des huit profils."
+            }
+          ],
+          "risks": [
+            "Usage réel annoncé mais aucune fixture intégrée."
+          ]
+        },
+        {
+          "id": "fondations-profil-meross-em06",
+          "title": "Meross EM06/EM06P",
+          "status": "partiel",
+          "decision": "Profil réellement inscrit dans BUILTIN et son paquet.",
+          "summary": "Messages GET Meross signés, identité UUID, six circuits et unités W/A/V/Wh explicitement converties. La clé ne voyage pas et ne figure pas dans la configuration.",
+          "details": [
+            "Canal choisi par numéro dans le contenu, jamais ordre du tableau. Absence n’est pas zéro ; les nouvelles variantes doivent choisir missing=null pour invalider les mesures disparues. Puissance et énergie cumulative restent deux grandeurs différentes avec leurs dates et unités.",
+            "Le moteur commun maintient destination contrôlée, bornes HTTP, absence de writes non déclarés et distinction entre cache et observation. Qualification : EM06P vu ; les fixtures historiques ne couvrent pas tous les circuits 3–6."
+          ],
+          "evolution": "Conserver le profil et qualifier les six voies réellement installées.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 478,
+              "note": "Contrat propre au profil."
+            }
+          ],
+          "verification": [
+            {
+              "path": "integrations/meross-em06/profile.toml",
+              "line": 1,
+              "note": "Texte embarqué actuel."
+            },
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Liste effective des huit profils."
+            }
+          ],
+          "risks": [
+            "EM06P vu ; les fixtures historiques ne couvrent pas tous les circuits 3–6."
+          ]
+        },
+        {
+          "id": "fondations-profil-moonraker",
+          "title": "Moonraker déclaratif RO",
+          "status": "partiel",
+          "decision": "Profil réellement inscrit dans BUILTIN et son paquet.",
+          "summary": "Lecteur simple de Klipper : travail, progression, durée, températures, sans write. Il reste disponible face au pilote natif riche sans devenir un deuxième propriétaire du même usage.",
+          "details": [
+            "Hostname doit rester stable ; préciser le port nécessaire. objects/query est autorisé parce qu’il nomme seulement des objets à lire ; ni impression ni macro arbitraire n’entrent dans les lectures. La cible conserve cette option minimale quand elle suffit et indique les capacités volontairement absentes.",
+            "Le moteur commun maintient destination contrôlée, bornes HTTP, absence de writes non déclarés et distinction entre cache et observation. Qualification : Snapmaker U1 vue et fixture réelle ; autres variantes à qualifier."
+          ],
+          "evolution": "Choisir profil RO ou natif selon l’usage, sans double commande.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 489,
+              "note": "Contrat propre au profil."
+            }
+          ],
+          "verification": [
+            {
+              "path": "integrations/moonraker/profile.toml",
+              "line": 1,
+              "note": "Texte embarqué actuel."
+            },
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Liste effective des huit profils."
+            }
+          ],
+          "risks": [
+            "Snapmaker U1 vue et fixture réelle ; autres variantes à qualifier."
+          ]
+        },
+        {
+          "id": "fondations-profil-open-meteo",
+          "title": "Météo et prévisions Open-Meteo",
+          "status": "partiel",
+          "decision": "Profil réellement inscrit dans BUILTIN et son paquet.",
+          "summary": "API HTTPS publique à lat/lon privés, météo courante et du jour. Ces valeurs proviennent d’un service de prévision et ne deviennent pas des mesures physiques de la maison.",
+          "details": [
+            "Identité actuelle par hôte API/port, pas identité d’un capteur. La cible garde emplacement météo, date de publication/horizon et âge ; aucune présence ou température intérieure n’en est déduite. La précision géographique doit correspondre au besoin et les champs absents ne conserveront pas indéfiniment une ancienne valeur.",
+            "Le moteur commun maintient destination contrôlée, bornes HTTP, absence de writes non déclarés et distinction entre cache et observation. Qualification : Service utilisé selon le tableau, sans fixture intégrée."
+          ],
+          "evolution": "Conserver comme prévision avec provenance/date, sans remplacer Netatmo ou BLE.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 497,
+              "note": "Contrat propre au profil."
+            }
+          ],
+          "verification": [
+            {
+              "path": "integrations/open-meteo/profile.toml",
+              "line": 1,
+              "note": "Texte embarqué actuel."
+            },
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Liste effective des huit profils."
+            }
+          ],
+          "risks": [
+            "Service utilisé selon le tableau, sans fixture intégrée."
+          ]
+        },
+        {
+          "id": "fondations-profil-open-meteo-air",
+          "title": "Qualité de l’air Open-Meteo",
+          "status": "partiel",
+          "decision": "Profil réellement inscrit dans BUILTIN et son paquet.",
+          "summary": "API HTTPS des modèles CAMS : indice européen, particules, NO₂, ozone et UV. Même principe de destination contrôlée et variables privées, aucun secret ni write.",
+          "details": [
+            "Unités et définition de l’indice restent visibles ; une sortie modélisée ne mesure pas une pièce. La cible distingue source, horizon et âge puis rend inconnu un polluant absent. Une future ventilation automatique devra employer la couverture réelle plutôt que présenter ces chiffres comme capteurs locaux.",
+            "Le moteur commun maintient destination contrôlée, bornes HTTP, absence de writes non déclarés et distinction entre cache et observation. Qualification : Usage annoncé sans fixture ; aucun capteur matériel concerné."
+          ],
+          "evolution": "Conserver l’information extérieure modélisée et fixer le contrat de fraîcheur.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 504,
+              "note": "Contrat propre au profil."
+            }
+          ],
+          "verification": [
+            {
+              "path": "integrations/open-meteo-air/profile.toml",
+              "line": 1,
+              "note": "Texte embarqué actuel."
+            },
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Liste effective des huit profils."
+            }
+          ],
+          "risks": [
+            "Usage annoncé sans fixture ; aucun capteur matériel concerné."
+          ]
+        },
+        {
+          "id": "fondations-profil-smlight",
+          "title": "Supervision publique SMLIGHT",
+          "status": "qualification",
+          "decision": "Profil réellement inscrit dans BUILTIN et son paquet.",
+          "summary": "Deux GET publics fixed_target, /ha_info et /ha_sensors. La radio appartient à Zigbee2MQTT ; pas de secret, socket radio, API de repli ou write.",
+          "details": [
+            "MAC obligatoire validée, sept liaisons Diagnostic fixes, départs espacés d’une seconde y compris au démarrage/reprise. Une identité différente bloque ; panne rend Null/hors ligne. Mémoire brute sans unité inventée, tableaux multichip ignorés, champs absents inconnus et définitions conservées.",
+            "Le moteur commun maintient destination contrôlée, bornes HTTP, absence de writes non déclarés et distinction entre cache et observation. Qualification : Contrats synthétiques seulement ; le vieux tableau « vérifié en vrai » est erroné au regard du contrat récent."
+          ],
+          "evolution": "Conserver le public strict et qualifier firmware/unités/disponibilité après H1.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 603,
+              "note": "Contrat propre au profil."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-smlight.md",
+              "line": 23,
+              "note": "Plan relu : contrat précis, limites et preuves distinctes du matériel."
+            }
+          ],
+          "verification": [
+            {
+              "path": "integrations/smlight/profile.toml",
+              "line": 1,
+              "note": "Texte embarqué actuel."
+            },
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Liste effective des huit profils."
+            }
+          ],
+          "risks": [
+            "Contrats synthétiques seulement ; le vieux tableau « vérifié en vrai » est erroné au regard du contrat récent."
+          ]
+        },
+        {
+          "id": "fondations-profil-tempo",
+          "title": "Couleurs EDF Tempo",
+          "status": "partiel",
+          "decision": "Profil réellement inscrit dans BUILTIN et son paquet.",
+          "summary": "API publique du jour et lendemain en énumération fermée. Inconnu reste une valeur explicite et ne devient jamais une couleur favorable inventée.",
+          "details": [
+            "La couleur du lendemain peut être publiée plus tard ; HTTP réussi ne prouve pas la décision nouvelle. La cible exige date de validité et source avant calcul tarifaire, distingue officiel/estimation/absence et interdit qu’une couleur reçue pour un autre jour contamine l’énergie. La conservation des anciennes couleurs suit le propriétaire métier, pas une supposition du profil.",
+            "Le moteur commun maintient destination contrôlée, bornes HTTP, absence de writes non déclarés et distinction entre cache et observation. Qualification : Usage public documenté, aucune fixture intégrée."
+          ],
+          "evolution": "Conserver le profil et qualifier date/fraîcheur du consommateur énergie.",
+          "sources": [
+            {
+              "path": "docs/components/profils.md",
+              "line": 508,
+              "note": "Contrat propre au profil."
+            }
+          ],
+          "verification": [
+            {
+              "path": "integrations/tempo/profile.toml",
+              "line": 1,
+              "note": "Texte embarqué actuel."
+            },
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Liste effective des huit profils."
+            }
+          ],
+          "risks": [
+            "Usage public documenté, aucune fixture intégrée."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fondations-integrations-a-completer",
+      "title": "Intégrations complémentaires : une cible, des preuves manquantes",
+      "intro": "Ces familles sont conservées dans le concept sans devenir des pilotes prétendument livrés. La voie technique est fixée ; adresses, secrets et transferts d’usage restent des choix d’installation humaine.",
+      "ideas": [
+        {
+          "id": "fondations-enocean",
+          "title": "EnOcean conserve le pont MQTT et ses EEP",
+          "status": "proposition",
+          "decision": "Cadrage capteurs du 18 octobre ; voie maintenue.",
+          "summary": "La cible utilise le pont radio MQTT existant sans réassociation ni prise de port série. Un adaptateur natif borné traduit uniquement les EEP/canaux contractuellement connus. Le moteur de profils n’a pas ce transport aujourd’hui.",
+          "details": [
+            "Le propriétaire fournit hors dépôt version, identités radio, sujets, EEP, canaux, QoS/retain, échelles et signal de vie. Sans schéma, rester en étude ; aucun sujet d’écriture n’est deviné.",
+            "PUBACK confirme la publication, pas le mouvement. Commandes non retained et jamais rejouées après reconnexion ; un interrupteur sans télégramme périodique ne devient pas en panne faute d’appui. Les retained sans date fiable ne prouvent aucune fraîcheur."
+          ],
+          "evolution": "Implémenter l’adaptateur natif après contrat de pont, puis qualifier chaque famille avec l’humain.",
+          "sources": [
+            {
+              "path": "docs/components/capteurs-lumieres.md",
+              "line": 122,
+              "note": "Contrat EEP/MQTT."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-profile/src/profile.rs",
+              "line": 1266,
+              "note": "Pas de profil EnOcean."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 994,
+              "note": "Pas de kind EnOcean."
+            }
+          ],
+          "risks": [
+            "Crate et paquet absents du catalogue courant."
+          ]
+        },
+        {
+          "id": "fondations-xiaomi-ble",
+          "title": "Xiaomi BLE par proxy d’annonces chiffré",
+          "status": "proposition",
+          "decision": "Voie proposée au cadrage du 18 octobre, sélection maintenue par la synthèse.",
+          "summary": "La cible choisit un proxy ESPHome recevant les annonces et un décodeur Xiaomi pur dans Moli. Elle évite l’ajout implicite de BlueZ/D-Bus et privilèges radio hôte. Proxy, version et couverture doivent être autorisés ; aucun achat ou flash n’est déduit.",
+          "details": [
+            "Le client d’annonces est distinct du client audio existant ; clé proxy et clés Xiaomi au coffre, sans extracteur cloud. UUID, version, identité, longueur et objets sont vérifiés avant publication.",
+            "Déduplication inter-proxy et rebouclages ne suppriment pas les vraies mesures. Batterie/RSSI récent ne rafraîchit pas la température ; proxy en ligne ne signifie pas tous capteurs disponibles. Une tension dérivée d’un pourcentage reste une estimation."
+          ],
+          "evolution": "Développer sous fixtures puis qualifier radio et modèles sur cible neutre autorisée.",
+          "sources": [
+            {
+              "path": "docs/components/capteurs-lumieres.md",
+              "line": 34,
+              "note": "Choix et contrats."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-esphome/src/lib.rs",
+              "line": 5,
+              "note": "Client courant orienté voix."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 994,
+              "note": "Pas de kind Xiaomi BLE."
+            }
+          ],
+          "risks": [
+            "Aucun client d’annonces BLE ni modèle réel qualifié dans la famille."
+          ]
+        },
+        {
+          "id": "fondations-music-assistant",
+          "title": "Music Assistant reste propriétaire cible des files musicales",
+          "status": "partiel",
+          "decision": "Conception Cast du 21 octobre ; travail signalé sur une autre branche, absent du binaire lu.",
+          "summary": "La cible conserve Music Assistant pour files, flux et synchronisation, Moli restant client de commandes gardées. Le code Cast réserve les propriétaires externes mais KINDS ne contient pas music-assistant ; aucune crate ou paquet correspondant n’existe dans cet arbre. Une mémoire de branche ne prouve pas une intégration.",
+          "details": [
+            "Contrat à conserver : websocket authentifié, un ordre en vol, réponses corrélées et portée complète des groupes ; membre inconnu refuse l’ordre car la garde ne connaît pas sa pièce.",
+            "Recherche ou identifiant contrôlé, jamais URL libre/imbriquée ; recherche puis lancement restent sous la même échéance sans rejeu. L’intégration réintroduite livre paquet, fabrique, unités, autorisation et exclusivité. Apple TV AirPlay de MA n’est pas télécommande Apple TV native."
+          ],
+          "evolution": "Conserver le contrat musical cible et constater l’écart documentaire de livraison ; réintégration seulement par paquet, fabrique et preuves dans ce dépôt, sans accès requis à une branche extérieure.",
+          "sources": [
+            {
+              "path": "docs/superpowers/specs/2026-10-21-cast-design.md",
+              "line": 9,
+              "note": "Propriétaire des enceintes."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-cast/src/ownership.rs",
+              "line": 31,
+              "note": "Réservations externes."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 994,
+              "note": "Kind absent du registre lu."
+            }
+          ],
+          "risks": [
+            "La mémoire décrit un travail non présent dans l’arbre ; seule une livraison versionnée et relue dans ce dépôt pourra établir l’intégration."
+          ]
+        },
+        {
+          "id": "fondations-matter",
+          "title": "Matter reste hors du socle retenu, avec un contrat d’entrée défini",
+          "status": "proposition",
+          "decision": "ADR D9 historique ; synthèse finale : hors du socle actuel, contrat natif fixé pour une intégration ultérieure.",
+          "summary": "La cible conserve les pilotes et ponts actuels comme socle ; Matter est un adaptateur natif extérieur à ce chantier, sans achat ni migration implicite. Son futur ajout suit un contrat d’entrée déjà défini plutôt qu’un changement d’architecture ou une commande générique de clusters.",
+          "details": [
+            "Une crate pilote et un paquet de catalogue possèdent un commissionnement humain explicite, identité/fabric stable, clés au coffre, liste fermée des clusters pris en charge et mapping typé des points. Un cluster inconnu ne publie aucun ordre libre ; le hub reste l’autorité unique.",
+            "Abonnements et fraîcheur, tailles/délais, échéance et abandon avant émission, non-rejeu et état observé sont obligatoires. Budget mémoire/CPU/image du cœur intégré, provenance/version de pile, tests de protocole et qualification modèle/firmware forment les portes de livraison. Aucun support matériel actuel n’est revendiqué."
+          ],
+          "evolution": "Conserver Matter hors socle ; toute première livraison applique ce contrat natif et ses portes, sans rouvrir le choix du hub ni remplacer les ponts utiles.",
+          "sources": [
+            {
+              "path": "docs/ARCHITECTURE.md",
+              "line": 164,
+              "note": "ADR D9 : transport standard à évaluer après MVP."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 994,
+              "note": "Aucun kind Matter."
+            }
+          ],
+          "risks": [
+            "Aucune implémentation actuelle prouvée."
+          ]
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "family": "Sécurité réseau",
+      "from": "Documentation sans compte, famille reconnue réseau/Access.",
+      "to": "Principaux humains et clients identifiés puis capacités, périmètre et garde.",
+      "kept": "PIN, Access signé et compatibilité LAN contrôlée.",
+      "replaced": "Formule sans compte prise comme état complet et en-tête ui pris comme preuve.",
+      "reason": "Comptes/invités existent ; jeton individuel agent reste à livrer.",
+      "sources": [
+        {
+          "path": "crates/moli-api/src/caller.rs",
+          "line": 298,
+          "note": "Identification effective."
+        },
+        {
+          "path": "docs/components/api.md",
+          "line": 708,
+          "note": "Description MCP historique."
+        }
+      ]
+    },
+    {
+      "family": "Sauvegarde",
+      "from": "Deux SQLite, liste manuelle et tailles.",
+      "to": "Registre exhaustif, cliché cohérent et manifeste de hashes.",
+      "kept": "Coffre chiffré et clé séparée.",
+      "replaced": "Promesse globale fondée sur quelques noms copiés.",
+      "reason": "Personnes/réglages manquent et capture transversale non garantie.",
+      "sources": [
+        {
+          "path": "crates/moli-os/src/backup.rs",
+          "line": 20,
+          "note": "Collecte actuelle."
+        },
+        {
+          "path": "crates/moli-api/src/people.rs",
+          "line": 40,
+          "note": "Autorité omise."
+        }
+      ]
+    },
+    {
+      "family": "Catalogue",
+      "from": "18 paquets et 28 intégrations historiques.",
+      "to": "37 kinds et huit profils, internes/candidats séparés.",
+      "kept": "Paquet, onboarding, fixtures et confiance par texte.",
+      "replaced": "Nombre historique utilisé comme inventaire courant.",
+      "reason": "Fabrique et BUILTIN sont plus récents.",
+      "sources": [
+        {
+          "path": "crates/moli-os/src/main.rs",
+          "line": 994,
+          "note": "Registre courant."
+        },
+        {
+          "path": "crates/moli-profile/src/profile.rs",
+          "line": 1266,
+          "note": "Huit profils."
+        }
+      ]
+    },
+    {
+      "family": "Réseau et capteurs",
+      "from": "Préambules à implémenter.",
+      "to": "Natifs et SMLIGHT présents ; qualification réelle ouverte.",
+      "kept": "Diagnostic RO, aucune administration et H1.",
+      "replaced": "Cadrage initial utilisé comme état de chaque sous-lot.",
+      "reason": "ASUSWRT/Huawei/Netgear/Netatmo/Twinkly/Wyoming sont construits.",
+      "sources": [
+        {
+          "path": "docs/components/reseau.md",
+          "line": 3,
+          "note": "Préambule."
+        },
+        {
+          "path": "docs/components/capteurs-lumieres.md",
+          "line": 3,
+          "note": "Préambule."
+        },
+        {
+          "path": "crates/moli-os/src/main.rs",
+          "line": 1242,
+          "note": "Fabrique présente."
+        }
+      ]
+    },
+    {
+      "family": "Télévisions",
+      "from": "Android porté historiquement par Philips.",
+      "to": "Pilote générique avec Polo autonome et bibliothèque commune.",
+      "kept": "JointSpace, Ambilight et signatures Philips.",
+      "replaced": "Dépendance du générique aux identités importées de HA.",
+      "reason": "Le pilote autonome est effectivement enregistré.",
+      "sources": [
+        {
+          "path": "docs/components/pilotes.md",
+          "line": 944,
+          "note": "Contrat actuel."
+        },
+        {
+          "path": "crates/moli-os/src/main.rs",
+          "line": 1236,
+          "note": "Fabrique."
+        }
+      ]
+    },
+    {
+      "family": "Cast",
+      "from": "Découverte pouvant être confondue avec activation.",
+      "to": "Validation humaine exacte et propriété exclusive.",
+      "kept": "Métadonnées observées et protocole commun.",
+      "replaced": "Publication/arbitrage automatique.",
+      "reason": "Décision propriétaire explicite du 21 octobre.",
+      "sources": [
+        {
+          "path": "docs/superpowers/specs/2026-10-21-cast-design.md",
+          "line": 3,
+          "note": "Décision."
+        },
+        {
+          "path": "crates/moli-cast/src/ownership.rs",
+          "line": 31,
+          "note": "Exclusivité."
+        }
+      ]
+    },
+    {
+      "family": "Reolink",
+      "from": "Lecture seule et images.",
+      "to": "Lecture conservée, parole/interphone classés comme effets séparés.",
+      "kept": "Images protégées et pin avant secrets.",
+      "replaced": "Libellé RO global masquant say et réponse de porte.",
+      "reason": "Code de parole présent, preuve matérielle distincte.",
+      "sources": [
+        {
+          "path": "docs/components/pilotes.md",
+          "line": 250,
+          "note": "RO ancien."
+        },
+        {
+          "path": "crates/moli-reolink/src/lib.rs",
+          "line": 313,
+          "note": "Say actuel."
+        }
+      ]
+    },
+    {
+      "family": "Qualification",
+      "from": "Vérifié amalgamant logiciel et matériel.",
+      "to": "Présence, preuve de contrat datée, modèle qualifié, usage repris.",
+      "kept": "Historique et H1.",
+      "replaced": "Extrapolation fixture→matériel ou ancien commit→main.",
+      "reason": "Les preuves ont bases et exclusions propres.",
+      "sources": [
+        {
+          "path": "docs/components/pilotes.md",
+          "line": 855,
+          "note": "Définition historique."
+        },
+        {
+          "path": "docs/components/wyoming.md",
+          "line": 63,
+          "note": "Portée des preuves."
+        }
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "fondations-conflit-pin",
+      "title": "Le PIN n’est ni toujours requis ni jamais requis",
+      "problem": "README dit jamais pour commander, installation évoque heures calmes ; le code protège pièces et opérations sensibles mais exempte Household des heures calmes.",
+      "recommendation": "Employer une matrice origine × portée × opération.",
+      "resolution": "Retenir Ui/System/Automation autorisés. Household sans PIN est gardé pour pièces protégées, sans pièce selon politique, machines et ouvertures ; API/MCP/CLI/Assistant suivent aussi les heures calmes. Le PIN libère l’acte engageant, jamais le seul en-tête.",
+      "sources": [
+        {
+          "path": "docs/README.md",
+          "line": 81,
+          "note": "Règle trop absolue."
+        },
+        {
+          "path": "crates/moli-runtime/src/guard.rs",
+          "line": 131,
+          "note": "Garde réelle."
+        },
+        {
+          "path": "crates/moli-runtime/src/hub.rs",
+          "line": 1095,
+          "note": "Opérations sensibles."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-auth",
+      "title": "Comptes et lecture LAN ouverte sont deux faits distincts",
+      "problem": "Ancien sans compte contredit les personnes/invitations de caller ; lecture LAN ne prouve pas un jeton MCP individuel.",
+      "recommendation": "Décrire identité et capacité pour chaque surface.",
+      "resolution": "Cible unique : sessions personnelles/PIN/Access conservées, lectures sensibles sous capacité/périmètre et jetons agents révocables sans approbation. Lecture LAN documentée comme compatibilité actuelle ; ne pas prétendre les jetons livrés.",
+      "sources": [
+        {
+          "path": "docs/ARCHITECTURE.md",
+          "line": 420,
+          "note": "Ancien sans compte."
+        },
+        {
+          "path": "docs/components/api.md",
+          "line": 48,
+          "note": "Lecture historique."
+        },
+        {
+          "path": "crates/moli-api/src/caller.rs",
+          "line": 315,
+          "note": "Compte effectif."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-backup",
+      "title": "Tout sauvegarder contredit la collecte réelle",
+      "problem": "La liste omet plusieurs autorités, les hashes et la cohérence entre fichiers.",
+      "recommendation": "Registre par module et orchestration du cliché.",
+      "resolution": "Chaque propriétaire déclare groupe cohérent et capture ; inclure personnes/coffre/états/réglages, binaires référencés et métadonnées, vérifier SHA-256/schémas, publier manifeste en dernier. Restaurer dossier neuf vérifié, basculer après dépendances et invalider sessions/effets anciens selon contrat ; clé maître séparée.",
+      "sources": [
+        {
+          "path": "docs/components/exploitation.md",
+          "line": 151,
+          "note": "Promesse globale."
+        },
+        {
+          "path": "crates/moli-os/src/backup.rs",
+          "line": 22,
+          "note": "Liste réelle."
+        },
+        {
+          "path": "crates/moli-os/src/backup.rs",
+          "line": 128,
+          "note": "Tailles seulement."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-qualification",
+      "title": "SMLIGHT n’est pas matériellement qualifié par l’ancien tableau",
+      "problem": "Le tableau dit vérifié en vrai mais le contrat récent dit synthétique/H1 ; chiffres de catalogue divergent.",
+      "recommendation": "Fabrique pour présence, dossier pour matériel.",
+      "resolution": "SMLIGHT et clients récents gardent statut logiciel présent et qualification réelle ouverte. Les modèles historiques conservent seulement l’opération effectivement documentée. Générer les comptes depuis KINDS/BUILTIN et ne pas attribuer une preuve à un firmware voisin.",
+      "sources": [
+        {
+          "path": "docs/components/pilotes.md",
+          "line": 880,
+          "note": "Ancien tableau SMLIGHT."
+        },
+        {
+          "path": "docs/components/profils.md",
+          "line": 603,
+          "note": "Contrat récent."
+        },
+        {
+          "path": "crates/moli-os/src/main.rs",
+          "line": 994,
+          "note": "Présence logicielle."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-reolink",
+      "title": "Une caméra annoncée RO peut déjà parler",
+      "problem": "say et routines de porte existent derrière une doc lecture seule.",
+      "recommendation": "Séparer capacité, autorité et preuve par opération.",
+      "resolution": "Conserver détection/image comme lectures protégées ; parole et réponse de porte deviennent effets soumis à origine/garde/consentement du scénario. Ne pas leur attribuer la preuve historique des snapshots ; qualification propre et revue des ordres avant reprise.",
+      "sources": [
+        {
+          "path": "docs/components/pilotes.md",
+          "line": 250,
+          "note": "RO ancien."
+        },
+        {
+          "path": "crates/moli-reolink/src/lib.rs",
+          "line": 313,
+          "note": "Say."
+        },
+        {
+          "path": "crates/moli-reolink/src/lib.rs",
+          "line": 655,
+          "note": "Réponse de porte."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-music-assistant",
+      "title": "La cible musicale ne prouve pas sa livraison dans main",
+      "problem": "Cast réserve les enceintes à MA, mais le registre et les fichiers du connecteur sont absents de cet arbre.",
+      "recommendation": "Conserver le propriétaire cible en marquant l’écart d’intégration.",
+      "resolution": "MA reste la cible des files/synchronisations et les exclusions Cast explicites restent actives. Le prochain livrable doit fournir dans ce dépôt paquet, fabrique, authentification et contrats, puis qualification ; aucune branche extérieure n’est nécessaire à cette revue. En attendant, aucun transfert automatique de l’usage vers un autre pilote et aucune annonce de MA comme intégré.",
+      "sources": [
+        {
+          "path": "docs/superpowers/specs/2026-10-21-cast-design.md",
+          "line": 9,
+          "note": "Propriétaire cible."
+        },
+        {
+          "path": "crates/moli-os/src/main.rs",
+          "line": 994,
+          "note": "Registre sans MA."
+        },
+        {
+          "path": "crates/moli-cast/src/ownership.rs",
+          "line": 31,
+          "note": "Exclusion externe."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-cast-delete",
+      "title": "La révocation Cast répond avec une vue confirmée",
+      "problem": "Le contrat initial 204 a été corrigé pour la carte et OpenAPI qui attendent une View.",
+      "recommendation": "Retenir le delta le plus récent.",
+      "resolution": "DELETE réussi rend 200 avec View idle, candidats vidés et génération nouvelle ; ancienne génération refusée et nouvelle découverte possible. Le test HTTP corrigé est sa preuve ; aucun nouveau parcours navigateur du delta n’est revendiqué.",
+      "sources": [
+        {
+          "path": "docs/superpowers/plans/2026-10-21-cast.md",
+          "line": 81,
+          "note": "Correction récente."
+        },
+        {
+          "path": "integrations/cast/openapi.json",
+          "line": 1,
+          "note": "Contrat versionné."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-bus",
+      "title": "La cible de bus n’est pas le runtime actuel",
+      "problem": "Les propositions peuvent être lues comme déjà intégrées, tandis que Hub utilise broadcast.",
+      "recommendation": "Séparer présent et cible, conserver l’autorité unique.",
+      "resolution": "Présent explicitement Hub+broadcast ; cible globale exposée dans la section architecture de la revue. Futur MQTT ne contourne ni validation, identité, garde, permis vivant ni résultat observé ; aucun simple sujet externe ne devient une commande humaine. Migration et preuves précèdent changement de statut.",
+      "sources": [
+        {
+          "path": "docs/components/coeur.md",
+          "line": 30,
+          "note": "Hub actuel."
+        },
+        {
+          "path": "crates/moli-runtime/src/hub.rs",
+          "line": 591,
+          "note": "Broadcast créé."
+        },
+        {
+          "path": "crates/moli-runtime/src/driver.rs",
+          "line": 157,
+          "note": "Permis indépendant du transport."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-mobile",
+      "title": "Effacer l’app ne signifie pas purger le serveur",
+      "problem": "PRIVACY rapproche retrait de téléphone et désinstallation sans établir l’effacement distant complet.",
+      "recommendation": "Procédure par propriétaire de donnée.",
+      "resolution": "Retrait serveur révoque appairage/rapports ; mobile arrête suivi/géofences et efface SecureStore. Exposer ensuite données conservées, durées et suppressions possibles d’historique/échanges/sauvegardes sous politique humaine ; aucune purge distante automatique promise par une désinstallation.",
+      "sources": [
+        {
+          "path": "docs/PRIVACY.md",
+          "line": 30,
+          "note": "Formulation actuelle."
+        },
+        {
+          "path": "integrations/phones/README.md",
+          "line": 3,
+          "note": "Données et jeton."
+        }
+      ]
+    },
+    {
+      "id": "fondations-conflit-api-methodes",
+      "title": "Une publication de définition n’est pas un lancement de scène",
+      "problem": "Le récit global peut mélanger aperçu, validation et exécution ; les cinq schémas possèdent des méthodes précises.",
+      "recommendation": "Retenir les méthodes du routeur et leurs acquittements.",
+      "resolution": "Dépendance : GET lit, PUT brouillon avec CAS, GET preview, POST approve PIN sur aperçu exact et durable. Scène : GET preview du courant, POST run 202 admission, GET run, POST cancel sans rollback physique. Commandes primitives conservent POST /api/command et leur propre durabilité/reçu ; jamais GET pour un effet ni PUT pour une approbation.",
+      "sources": [
+        {
+          "path": "docs/api/dependencies.openapi.yaml",
+          "line": 35,
+          "note": "Définition versionnée."
+        },
+        {
+          "path": "docs/api/scenes.openapi.yaml",
+          "line": 25,
+          "note": "Admission."
+        },
+        {
+          "path": "crates/moli-api/src/dependencies.rs",
+          "line": 17,
+          "note": "Méthodes effectives."
+        },
+        {
+          "path": "crates/moli-api/src/scenes.rs",
+          "line": 13,
+          "note": "Méthodes effectives."
+        }
+      ]
+    }
+  ],
+  "coverage": [
+    "AGENTS.md",
+    "docs/README.md",
+    "docs/ARCHITECTURE.md",
+    "docs/components/coeur.md",
+    "docs/components/api.md",
+    "docs/components/exploitation.md",
+    "docs/components/installation.md",
+    "docs/components/pilotes.md",
+    "docs/components/profils.md",
+    "docs/components/reseau.md",
+    "docs/components/reseau-qualification.md",
+    "docs/components/netgear.md",
+    "docs/components/wyoming.md",
+    "docs/components/capteurs-lumieres.md",
+    "docs/components/traduction.md",
+    "docs/PRIVACY.md",
+    "docs/show-me-home-assistant.html",
+    "docs/superpowers/plans/2026-10-18-reseau-diagnostic.md",
+    "docs/superpowers/plans/2026-10-18-wyoming-supervision.md",
+    "docs/superpowers/plans/2026-10-18-netatmo-meteo.md",
+    "docs/superpowers/plans/2026-10-19-androidtv.md",
+    "docs/superpowers/specs/2026-10-19-androidtv-design.md",
+    "docs/superpowers/plans/2026-10-21-cast.md",
+    "docs/superpowers/specs/2026-10-21-cast-design.md",
+    "docs/api/counter-command.openapi.yaml",
+    "docs/api/timer-command.openapi.yaml",
+    "docs/api/temporal-command.openapi.yaml",
+    "docs/api/dependencies.openapi.yaml",
+    "docs/api/scenes.openapi.yaml",
+    "integrations/alexa/README.md",
+    "integrations/esphome/README.md",
+    "integrations/demo/README.md",
+    "integrations/phones/README.md",
+    "integrations/telegram/README.md",
+    "docs/superpowers/plans/2026-10-20-netgear-lecture.md",
+    "docs/superpowers/plans/2026-10-21-asuswrt-lecture.md",
+    "docs/superpowers/plans/2026-10-21-huawei-lte-lecture.md",
+    "docs/superpowers/plans/2026-10-21-smlight.md"
+  ],
+  "missing": [
+    "Maquette/ absent : aucune preuve visuelle de cette source.",
+    "Music Assistant absent du registre et de l’arbre consulté ; sa déclaration documentaire ne vaut pas livraison et est explicitement séparée de la cible contractuelle.",
+    "EnOcean, Xiaomi BLE et Matter absents des kinds/paquets courants : contrats cibles uniquement.",
+    "Stockage, mémoire, architecture MQTT/runtime, haute disponibilité et usages détaillés sont traités dans les autres contributions ; ici seulement leurs contrats d’autorité, transport et exploitation.",
+    "Lecture statique et preuves déjà consignées : aucun test, banc, serveur, API fournisseur ou appareil physique exécuté.",
+    "Compatibilité matérielle limitée au modèle/opération documentés ; les fixtures synthétiques ne la remplacent pas.",
+    "Le rapport de persistance garde un ancien nombre de fichiers ; le code actuel en énumère 23 sans les omissions listées.",
+    "Fichiers partagés susceptibles d’évoluer durant la revue ; existence et lignes des références contrôlées au dépôt de cette contribution."
+  ]
+}

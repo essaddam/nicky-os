@@ -1,0 +1,186 @@
+{
+  "1": {
+    "entries_requested": 1,
+    "capacity": 3,
+    "requested_bytes": 76,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "14": {
+    "entries_requested": 14,
+    "capacity": 14,
+    "requested_bytes": 280,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "1398": {
+    "entries_requested": 1398,
+    "capacity": 1792,
+    "requested_bytes": 34824,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "1567": {
+    "entries_requested": 1567,
+    "capacity": 1792,
+    "requested_bytes": 34824,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "1858": {
+    "entries_requested": 1858,
+    "capacity": 3584,
+    "requested_bytes": 69640,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "3244": {
+    "entries_requested": 3244,
+    "capacity": 3584,
+    "requested_bytes": 69640,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "3256": {
+    "entries_requested": 3256,
+    "capacity": 3584,
+    "requested_bytes": 69640,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "4399": {
+    "entries_requested": 4399,
+    "capacity": 7168,
+    "requested_bytes": 139272,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "5305": {
+    "entries_requested": 5305,
+    "capacity": 7168,
+    "requested_bytes": 139272,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "6516": {
+    "entries_requested": 6516,
+    "capacity": 7168,
+    "requested_bytes": 139272,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "7151": {
+    "entries_requested": 7151,
+    "capacity": 7168,
+    "requested_bytes": 139272,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "7571": {
+    "entries_requested": 7571,
+    "capacity": 14336,
+    "requested_bytes": 278536,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "9057": {
+    "entries_requested": 9057,
+    "capacity": 14336,
+    "requested_bytes": 278536,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "11821": {
+    "entries_requested": 11821,
+    "capacity": 14336,
+    "requested_bytes": 278536,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "16136": {
+    "entries_requested": 16136,
+    "capacity": 28672,
+    "requested_bytes": 557064,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "32560": {
+    "entries_requested": 32560,
+    "capacity": 57344,
+    "requested_bytes": 1114120,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "75710": {
+    "entries_requested": 75710,
+    "capacity": 114688,
+    "requested_bytes": 2228232,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "118210": {
+    "entries_requested": 118210,
+    "capacity": 229376,
+    "requested_bytes": 4456456,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "161360": {
+    "entries_requested": 161360,
+    "capacity": 229376,
+    "requested_bytes": 4456456,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "325600": {
+    "entries_requested": 325600,
+    "capacity": 458752,
+    "requested_bytes": 8912904,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "757100": {
+    "entries_requested": 757100,
+    "capacity": 917504,
+    "requested_bytes": 17825800,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "1182100": {
+    "entries_requested": 1182100,
+    "capacity": 1835008,
+    "requested_bytes": 35651592,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  },
+  "1613600": {
+    "entries_requested": 1613600,
+    "capacity": 1835008,
+    "requested_bytes": 35651592,
+    "header_bytes": 48,
+    "entry_layout_bytes": 16,
+    "scope": "reserved HashMap allocation; no RSS claim"
+  }
+}

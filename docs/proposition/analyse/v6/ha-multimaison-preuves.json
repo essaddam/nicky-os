@@ -1,0 +1,247 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-27T19:39:09.657871+00:00",
+  "base_commit": "077aebb6ca558897e954555a0ad4cf05912a4b23",
+  "scope": "optional per-house active/passive process POC; local processes and MQTT; no deployment to HA hosts",
+  "tests": {
+    "ha_rust": {
+      "passed": 48,
+      "failed": 0,
+      "includes_reused_broker_tests": true
+    },
+    "gateway_and_probe_rust": {
+      "enum_audit": 13,
+      "main": 128,
+      "gateway": 34,
+      "failed": 0,
+      "ignored": 1,
+      "allocation_test_previously_qualified_in_isolation": true
+    },
+    "ha_ui_node": 7,
+    "poc_web_contracts_node": 41,
+    "process_cases": {
+      "cross_initial": "PASS",
+      "coordinator_compute_pause": "PASS",
+      "wan_partition_independent_houses": "PASS",
+      "wan_recovery_and_stale_candidate_refused": "PASS",
+      "node_a_failure_cloud_only_takeover_and_fencing": "PASS",
+      "node_b_failure_house_a_continues": "PASS",
+      "none": "PASS",
+      "local": "PASS",
+      "cloud": "PASS",
+      "local-cloud": "PASS"
+    },
+    "fmt": "PASS",
+    "clippy": "PASS -D warnings",
+    "i18n": "PASS; 3872 keys FR/EN",
+    "leak_check": "PASS generic patterns; private denylist unavailable"
+  },
+  "browser": {
+    "tool": "Chrome through AgentsRoom extension",
+    "widths": [
+      1440,
+      390
+    ],
+    "mobile_document_width": 390,
+    "filter_a_only": true,
+    "filter_b_only": true,
+    "main_has_house_selector": "home-selector",
+    "main_continuity_iframe": "/ha/",
+    "iframe_exposes_both_houses": true,
+    "unauthorized_mutation_http_status": 401,
+    "actions_verified": [
+      "isolate A while both local leases remain valid",
+      "heal and replicas current",
+      "stop A while B remains active for B",
+      "promote A to B with cloud-only scope and B still active for B",
+      "restart A and rehydrate both copies",
+      "restore cross preset"
+    ],
+    "viewport_reset": true
+  },
+  "mqtt_websocket": {
+    "authenticated": true,
+    "errors": 0,
+    "houses": [
+      {
+        "name": "Maison A",
+        "rooms": 17,
+        "channels": 1791,
+        "received_channel_states": 1789
+      },
+      {
+        "name": "Maison B",
+        "rooms": 17,
+        "channels": 1500,
+        "received_channel_states": 1500
+      }
+    ],
+    "ha_config": true,
+    "ha_state": true,
+    "ha_online": true,
+    "physical_publications": 0
+  },
+  "module_availability_observed": [
+    true,
+    false,
+    true
+  ],
+  "module_clean_shutdown": {
+    "owned_ha_processes_gone": true,
+    "observed_wait_seconds": 0.668,
+    "scope": "poll after native stop; not a production RTO"
+  },
+  "final_live_projection": {
+    "ready": true,
+    "sources": [
+      {
+        "index": 0,
+        "registry": true,
+        "projection": {
+          "active_channel_struct_bytes": 272,
+          "channels": 1791,
+          "devices": 291,
+          "enum_catalogue": {
+            "active_choices": 111,
+            "catalogue_capacity": 25,
+            "catalogue_struct_bytes": 64,
+            "catalogues": 25,
+            "codes": 111,
+            "entry_bytes": 1110,
+            "entry_capacity_bytes": 1110,
+            "entry_struct_bytes": 10,
+            "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+            "overhead_bytes": 2942,
+            "owned_capacity_bytes": 3938,
+            "packed_bytes": 996,
+            "packed_capacity_bytes": 996,
+            "shared_tables": 0,
+            "snapshot_bytes": 8188
+          },
+          "enum_channels": 116,
+          "enum_code_bytes": 39,
+          "enum_json_storage_bytes": 3712,
+          "hot_label_bytes": 0,
+          "light_command_contracts": 25,
+          "metadata_bytes": 1603606,
+          "nodes": 21,
+          "observed_channels": 1242,
+          "pending_native_bytes": 0,
+          "rejected": 21,
+          "standalone_entities": 104,
+          "switch_command_contracts": 43,
+          "text_values_utf8_bytes": 2123,
+          "unmatched_messages": 111
+        }
+      },
+      {
+        "index": 1,
+        "registry": true,
+        "projection": {
+          "active_channel_struct_bytes": 272,
+          "channels": 1500,
+          "devices": 201,
+          "enum_catalogue": {
+            "active_choices": 100,
+            "catalogue_capacity": 15,
+            "catalogue_struct_bytes": 64,
+            "catalogues": 15,
+            "codes": 100,
+            "entry_bytes": 1000,
+            "entry_capacity_bytes": 1000,
+            "entry_struct_bytes": 10,
+            "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+            "overhead_bytes": 2112,
+            "owned_capacity_bytes": 3005,
+            "packed_bytes": 893,
+            "packed_capacity_bytes": 893,
+            "shared_tables": 0,
+            "snapshot_bytes": 7162
+          },
+          "enum_channels": 45,
+          "enum_code_bytes": 30,
+          "enum_json_storage_bytes": 1440,
+          "hot_label_bytes": 0,
+          "light_command_contracts": 0,
+          "metadata_bytes": 1352013,
+          "nodes": 23,
+          "observed_channels": 1216,
+          "pending_native_bytes": 0,
+          "rejected": 0,
+          "standalone_entities": 28,
+          "switch_command_contracts": 8,
+          "text_values_utf8_bytes": 1102,
+          "unmatched_messages": 59
+        }
+      }
+    ],
+    "overkiz_running": true,
+    "overkiz_devices": 5
+  },
+  "regressions_and_limits": {
+    "single_thread_compute_pause": "Reproduced failure after 3500 ms; coordinator now has two runtime worker threads; 10-case campaign passes. Nodes retain one runtime thread.",
+    "long_json_replay": "Chrome evaluation timed out after 30 s on a long catchup; replay now bounded to16 deltas, otherwise atomic snapshot; longer24-tick partition campaign passes.",
+    "shutdown": "Original launcher timed out after10s; background cancellation and separate child session corrected; owned process exit verified.",
+    "mqtt_scope": "HA read-only diagnostic filter added; source and bench-control roots still denied to browser role.",
+    "mqtt_subprotocol": "Standard mqtt WebSocket subprotocol negotiation added and authenticated stream observed.",
+    "source_b": "Registry was missing; fresh metadata published only under virtual namespace and relayed. Both source registries now active.",
+    "remote_exports": "core.config read denied, HTTP return to Mac timed out, SCP channel closed; restricted files were not read and no firewall or app tooling was modified. Existing MQTT metadata path used.",
+    "physical_commands": 0,
+    "production_consensus_or_remote_site_failover_qualified": false
+  },
+  "final_bootstrap": {
+    "overkiz_running": true,
+    "overkiz_devices": 5,
+    "transport_private_key": "RAM only in the final helper",
+    "token": "encrypted over SSH result, decrypted in RAM and piped to private gateway socket; never logged or written by final helper",
+    "master_key_environment_not_changed": true
+  },
+  "binaries": {
+    "ha": "5aebbf5b5a51f5b9e26695c20483c99b31b1c2fa78ddefa723e01383c25368bf",
+    "gateway": "8d13d917f79bbcaeb8e42273cacd0c55d4e06f7154931641045e4ce2138b5ba5"
+  },
+  "source_sha256": {
+    "docs/proposition/analyse/poc-ha-multimaison.html": "5336a6b94bb859de1a74009a46d01a875a5fb72ef395cb1bd5d6b60618fe5b13",
+    "docs/proposition/analyse/poc-interface-mqtt.html": "7d13d538f71a6e8b92e7e07ff9dcbecf5a7fd67bc6d8e5b36cceeed35a79c4fe",
+    "docs/proposition/analyse/v6/ha-multimaison-live.json": "082fb49fbace5ac1a40ea6f256702a807e7057329ffeaa458747212608ae7a84",
+    "docs/proposition/analyse/v6/ha-multimaison-projection.json": "89b6c8c248b30ac55bd93789a521b6715c8e6f552f1147636a79649b1239ef70",
+    "docs/proposition/analyse/v6/ha-multimaison-resultats.json": "e89b02557d12e27b05677afb14f952a6f941b6856b6c23676a2338dddca1d0fe",
+    "docs/proposition/analyse/v6/ha-multimaison-websocket.json": "8d80e88702a5efe34a45eb88762ccfa05f32a1be6a0768fd8a70ac5b8518ef26",
+    "docs/superpowers/plans/2026-10-27-ha-multihome-poc.md": "3658019a45f1911500883520ef3404f3b38aa08c56eeab182a0b550342023c62",
+    "locales/en/ha-poc.json": "95afbee6dea350a44842272d3f2e5ab7d2658157572424d8739ae94056d40bc5",
+    "locales/en/mqtt-poc.json": "c5d4f05ef01022afa9dfb48cd91d935b792f6c479d2282e862721bb95cc433a7",
+    "locales/fr/ha-poc.json": "a4d36093960bea26e77b221c3ec85db6f9eaa0791391c21e53195b306543f5a5",
+    "locales/fr/mqtt-poc.json": "d94b4ef63e189f650f1b3130cba06a2da2445f879b343682d05709d4d949170b",
+    "tools/ha-multihome-poc/.gitignore": "337613937fda3acd2ba7834aa3e1b1eacfe04c9cafb336dfd6dfb7b6827d8f3e",
+    "tools/ha-multihome-poc/Cargo.lock": "82d08ede78cd3117b78462c111c2d93435486bedf1eda5f149c0fc9f3907c2dc",
+    "tools/ha-multihome-poc/Cargo.toml": "53b442ca9852bcf2f332d4b58a92479be7d297ae89b754e1f6f5a237dd49a4b1",
+    "tools/ha-multihome-poc/README.md": "3833b2f908a5380e17dd14243f2f1774ff7e0d2f704a6b26baaf67cc73084821",
+    "tools/ha-multihome-poc/render-report.py": "55f50a17c01208038cfb42c8b96ea5ba6f516ba18b4318c65ae9f23f212e60bd",
+    "tools/ha-multihome-poc/run-poc.py": "c6c68b5a17c5e9ccdfa7df44490ba926cea420ecb8450d8b0edc940e4ebb357d",
+    "tools/ha-multihome-poc/src/authority.rs": "def1029e944f2c540576d6a50e0ebdee1a4cb65287731ba3ae9518a0f3a59b21",
+    "tools/ha-multihome-poc/src/config.rs": "cd33d06988c63747ab33b99585fcd7d7e321260887d8d26f517cdcee7f32619f",
+    "tools/ha-multihome-poc/src/engine.rs": "12bb301d8bbb649ed95c2f64834955993784b5ee12522d79b27cc7265e85ec76",
+    "tools/ha-multihome-poc/src/main.rs": "1015f537578a13b60d0726c25165fd216613b689f6bdc0e69bf1779e322265e9",
+    "tools/ha-multihome-poc/src/server.rs": "16be95c98ad727195483e067f90e82c800f620aa059e7db4efe4853245b7a2da",
+    "tools/ha-multihome-poc/src/transport.rs": "5718a691bfba69981bb26e898e944263bb89dca48b85b1939e55f14fdcfdbe7d",
+    "tools/ha-multihome-poc/ui.test.mjs": "10bb6f95e5c80aae4f7e9e5aa6e0a7e83bb0d5d7384063cc90fb19f710a64f47",
+    "tools/mqtt-live-probe/Cargo.lock": "d5f76c24d9e5d8e60ad289998c0ea02fb7b37203b7c783caff599b6afe3a2e96",
+    "tools/mqtt-live-probe/Cargo.toml": "4318edc9e9f687aea084e88e892cb688911c3f6e32d2d9f929c11796f7eeee91",
+    "tools/mqtt-live-probe/overkiz-bootstrap-memory.mjs": "38e50726ac4db12e482278a13633ddd91c105ab8895af83033ae509fb44d8a0f",
+    "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": "15a14147d6f164957463170075980436f7404e6c972ec373c8eafe0afc440e3e",
+    "tools/mqtt-live-probe/src/gateway_runtime/ha_proxy.rs": "e37309b8675fba1d54a4a7f7eb84f9d3e0b1b81d26d2e19a4921ef8ac9c6912d",
+    "tools/mqtt-live-probe/src/gateway_runtime/mod.rs": "3ea935a7a5b4f6da510d99be6308b15476cd56affa74d176f85a48ec6b88ebb3",
+    "tools/mqtt-live-probe/src/gateway_runtime/overkiz.rs": "c8452c8b62e86c5ced948ff0ba5736f23d2b0245a9caf0b119edf39b3ff490b7",
+    "tools/mqtt-live-probe/src/ha_seed.rs": "35d687e544e9f3dd8f01fcec3403ecdfcff637c3bfbc35e46f1cbf4bd6562081",
+    "tools/mqtt-live-probe/src/house.rs": "1e95c9ce23a6a2130377d286eadc4709e6b3b620e320c199fe20db48e4e90177",
+    "tools/mqtt-live-probe/src/load_fixture.rs": "2115fa63fa9bc8e9a3953d01005baf04d327ee16e865ffab83b1d6ff3fc99f44",
+    "tools/mqtt-live-probe/src/main.rs": "ada718f1ee6e795694d67fbe667b842eed603c11a16e521c3ce4c7ec1d5202fd",
+    "tools/mqtt-live-probe/web-runtime/poc-controls.test.mjs": "1f4c2c60ecea7b722444eb47acb105418c629d30aa78a99f32e221c30fa0bbe8",
+    "crates/moli-overkiz/src/api.rs": "22a91463122689ac940b97a1afd9a66950ae28e26609ac13f084c7fad8c35050",
+    "crates/moli-overkiz/src/lib.rs": "7a4b8ebe7238c7e09095e3639395ef20343ab564cba88f94a9034fe8912e31db",
+    "crates/moli-overkiz/src/model.rs": "fbd0e24c1ec04405ba616efd76c9872149180996a9da90f01961be47f670870b",
+    "crates/moli-overkiz/src/tests.rs": "78fbb3c0a9a973c40ace64de8f1f74e7e55888da7230a465cf4bbef7e707bda3",
+    "tools/moteur-integre-banc/src/memory.rs": "3f7062ab7277089a4787c4a0b12d65983170689b935a2c21a1d241fe432d1607",
+    "docs/proposition/analyse/v6/ha-multimaison.html": "cfaf4b1fb44e17dcd0e789530ab4e8bc74b243f830304cf6551af7754377c353"
+  }
+}

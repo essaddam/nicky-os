@@ -1,0 +1,60 @@
+{
+  "archive_sha256": "c534488b5974cdfbe0992d75f9e426c3b51a3d580867657a9032ec69e3cb3d15",
+  "conversations": [
+    {
+      "code": "C01",
+      "title": "Optimiser la mémoire Rust",
+      "filename": "01_Optimiser_la_memoire_Rust.md",
+      "lines": 477,
+      "messages": 10,
+      "user_messages": 5,
+      "assistant_messages": 5,
+      "sha256": "a120a37a6cc83695ea2dfe430b8d4290f3d1e5390a30941e289b0b98d3d8105e"
+    },
+    {
+      "code": "C02",
+      "title": "Comparer MQTT WebSocket et HTTP",
+      "filename": "02_Comparer_MQTT_WebSocket_et_HTTP.md",
+      "lines": 1528,
+      "messages": 11,
+      "user_messages": 7,
+      "assistant_messages": 4,
+      "sha256": "2a64b62f420490ef809777834c759d24c315ec8a05099ed58f27a0648ed97c15"
+    },
+    {
+      "code": "C03",
+      "title": "Comparer Zigbee et Thread",
+      "filename": "03_Comparer_Zigbee_et_Thread.md",
+      "lines": 206,
+      "messages": 10,
+      "user_messages": 5,
+      "assistant_messages": 5,
+      "sha256": "dc5897e2447402874163a0ab723fe8aebc7d70dad19d53a05033158ddcb8b830"
+    },
+    {
+      "code": "C04",
+      "title": "WebSocket domotique expliqué",
+      "filename": "04_WebSocket_domotique_explique.md",
+      "lines": 500,
+      "messages": 10,
+      "user_messages": 5,
+      "assistant_messages": 5,
+      "sha256": "33c3d9c931e6d4941a04e18cc5a0c6bc4c2ad037b7266aebad63cd4c8ea215f4"
+    },
+    {
+      "code": "C05",
+      "title": "Envoyer projet à Codex",
+      "filename": "05_Envoyer_projet_a_Codex.md",
+      "lines": 82,
+      "messages": 2,
+      "user_messages": 1,
+      "assistant_messages": 1,
+      "sha256": "011025a8630964d1cd4087c8ed12f0a745ef2d81cbb3897f2275e4f9f587f377"
+    }
+  ],
+  "total_messages": 43,
+  "total_user_messages": 23,
+  "coverage": "5 conversations fournies ; une sixième annoncée triviale et exclue ; début de C04 annoncé manquant",
+  "index_is_not_an_extra_conversation": true,
+  "raw_transcripts_copied": false
+}

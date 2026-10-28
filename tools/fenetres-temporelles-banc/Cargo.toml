@@ -1,0 +1,28 @@
+[package]
+name = "fenetres-temporelles-banc"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[[bin]]
+name = "structures"
+path = "main.rs"
+
+[[bin]]
+name = "production"
+path = "production.rs"
+
+[dependencies]
+moli-core = { path = "../../crates/moli-core" }
+moli-rollup = { path = "../../crates/moli-rollup" }
+moli-history = { path = "../../crates/moli-history" }
+jiff = { version = "0.2", default-features = false, features = ["std", "tzdb-bundle-always"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+strip = "debuginfo"

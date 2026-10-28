@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 347" width="1000" height="347" role="img" aria-labelledby="cloture-t cloture-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="cloture-t">L'époque sur chaque ordre</title>
+  <desc id="cloture-d">Diagramme de séquence. H1, époque N, renouvelle son bail puis gèle. H2 demande l'époque N + 1, que le témoin accorde à l'expiration du bail. H2 envoie un ordre d'époque N + 1 au module. H1 se réveille et envoie un ordre d'époque N : le module le refuse. H1 apprend qu'il a perdu le bail et redevient secours.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="347" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="cloture-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="cloture-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="cloture-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="cloture-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="cloture-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="cloture-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="cloture-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="cloture-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="cloture-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="cloture-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="cloture-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="cloture-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="cloture-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="cloture-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="cloture-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="cloture-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="cloture-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="cloture-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="cloture-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="cloture-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="cloture-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="cloture-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="cloture-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="cloture-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="cloture-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="cloture-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="cloture-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="cloture-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="cloture-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="cloture-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="cloture-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="cloture-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="cloture-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="cloture-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="cloture-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="cloture-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="cloture-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="cloture-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="cloture-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="cloture-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="cloture-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="cloture-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="cloture-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="cloture-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="22.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">UN ORDRE D'UNE ÉPOQUE ANCIENNE EST REFUSÉ PAR LE MODULE LUI-MÊME</text>
+          <rect x="79.3" y="36.0" width="81.3" height="19.5" rx="9.8" fill="url(#cloture-h-vert)" stroke="#3d9a75" stroke-opacity="0"/>
+          <text x="87.3" y="49.5" font-size="10.5" fill="#ffffff" font-weight="700">H1 (époque N)</text>
+          <line x1="120" y1="56" x2="120" y2="300" stroke="#d4ddd4" stroke-dasharray="3 3"/>
+          <rect x="354.5" y="36.0" width="51.0" height="19.5" rx="9.8" fill="url(#cloture-h-gris)" stroke="#97a39d" stroke-opacity="0"/>
+          <text x="362.5" y="49.5" font-size="10.5" fill="#ffffff" font-weight="700">Témoin</text>
+          <line x1="380" y1="56" x2="380" y2="300" stroke="#d4ddd4" stroke-dasharray="3 3"/>
+          <rect x="625.3" y="36.0" width="29.4" height="19.5" rx="9.8" fill="url(#cloture-h-bleu)" stroke="#3b8db4" stroke-opacity="0"/>
+          <text x="633.3" y="49.5" font-size="10.5" fill="#ffffff" font-weight="700">H2</text>
+          <line x1="640" y1="56" x2="640" y2="300" stroke="#d4ddd4" stroke-dasharray="3 3"/>
+          <rect x="865.1" y="36.0" width="49.8" height="19.5" rx="9.8" fill="url(#cloture-h-ardoise)" stroke="#7494bb" stroke-opacity="0"/>
+          <text x="873.1" y="49.5" font-size="10.5" fill="#ffffff" font-weight="700">Module</text>
+          <line x1="890" y1="56" x2="890" y2="300" stroke="#d4ddd4" stroke-dasharray="3 3"/>
+          <path d="M120 86 L375 86" fill="none" stroke="#4f5d57" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cloture-m-gris)"/>
+          <text x="250.0" y="80.0" font-size="10" fill="#4f5d57" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">renouveler le bail (N)</text>
+          <rect x="112" y="100" width="16" height="112" rx="6" fill="#fae7dd" stroke="#d06a46"/>
+          <text x="134.0" y="160.0" font-size="10" fill="#8b3b22" font-weight="700">gelé</text>
+          <path d="M640 126 L385 126" fill="none" stroke="#94660a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cloture-m-ambre)"/>
+          <text x="510.0" y="120.0" font-size="10" fill="#94660a" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">demander N + 1</text>
+          <path d="M380 148 L635 148" fill="none" stroke="#195744" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cloture-m-vert)"/>
+          <text x="510.0" y="142.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">accordée : le bail N a expiré</text>
+          <path d="M640 178 L885 178" fill="none" stroke="#195744" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cloture-m-vert)"/>
+          <text x="765.0" y="172.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">ordre, époque N + 1</text>
+          <text x="882.0" y="200.0" font-size="9.5" fill="#52615a" text-anchor="end">plus grande époque vue : N + 1</text>
+          <path d="M120 232 L885 232" fill="none" stroke="#4f5d57" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cloture-m-gris)"/>
+          <text x="505.0" y="226.0" font-size="10" fill="#4f5d57" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">ordre, époque N (réveillé)</text>
+          <path d="M890 254 L125 254" fill="none" stroke="#8b3b22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cloture-m-rouge)"/>
+          <text x="505.0" y="248.0" font-size="10" fill="#8b3b22" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">refusé : époque ancienne</text>
+          <path d="M120 282 L375 282" fill="none" stroke="#4f5d57" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cloture-m-gris)"/>
+          <text x="250.0" y="276.0" font-size="10" fill="#4f5d57" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">renouveler (N) → refusé : H1 redevient secours</text>
+  <text x="18" y="341" font-size="12" fill="#52615a" font-style="italic">Le jeton de clôture des systèmes distribués : un module garde la plus grande époque vue et refuse tout ordre plus ancien.</text>
+</svg>

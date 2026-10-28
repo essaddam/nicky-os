@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 374" width="1000" height="374" role="img" aria-labelledby="mosquitto-t mosquitto-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="mosquitto-t">Le pont de Mosquitto, et le pont maison</title>
+  <desc id="mosquitto-d">À gauche, un pont MQTT ordinaire : pendant une coupure, le courtier de l'actif garde les messages dans la file de session du pont, en mémoire, 1 000 au plus par défaut ; au-delà il les jette en le notant dans son journal, sans que l'abonné le sache ; un redémarrage du courtier efface la file. À droite, les messages perdus pour une coupure de 10 secondes à 200 messages par seconde : 960 avec la file par défaut, 0 avec une file de 100 000, 2 000 quand le courtier redémarre pendant la coupure. Le pont maison : 0 sous des coupures de 5 et 10 secondes, 0 sous une coupure de 60 secondes.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="374" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="mosquitto-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="mosquitto-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <radialGradient id="mosquitto-sol"><stop offset="0" stop-color="#1d302a" stop-opacity=".22"/><stop offset="1" stop-color="#1d302a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="mosquitto-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="mosquitto-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="mosquitto-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="mosquitto-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="mosquitto-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="mosquitto-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="mosquitto-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="mosquitto-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="mosquitto-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="mosquitto-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="mosquitto-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="mosquitto-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="mosquitto-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="mosquitto-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="mosquitto-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="mosquitto-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="mosquitto-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="mosquitto-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="mosquitto-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="mosquitto-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="mosquitto-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">UN PONT MQTT ORDINAIRE : LA FILE EST AU COURTIER</text>
+          <ellipse cx="153.0" cy="253.0" rx="129.0" ry="11" fill="url(#mosquitto-sol)"/>
+          <polygon points="36,56 52,47.2 276,47.2 260,56" fill="url(#mosquitto-t-gris)"/>
+          <polygon points="260,56 276,47.2 276,231.2 260,246" fill="url(#mosquitto-s-gris)"/>
+          <rect x="30" y="56" width="230" height="190" rx="8" fill="url(#mosquitto-f-gris)" stroke="#97a39d" stroke-opacity=".5"/>
+          <path d="M30 90 V64 a8 8 0 0 1 8 -8 H252 a8 8 0 0 1 8 8 V90 z" fill="url(#mosquitto-h-gris)"/>
+          <g transform="translate(42.0 64.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></g>
+          <text x="68.0" y="78.5" font-size="13" fill="#ffffff" font-weight="700">Courtier de l'actif</text>
+          <text x="248.0" y="78.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">Mosquitto</text>
+          <rect x="54" y="104" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.95"/>
+          <rect x="54" y="118" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.90"/>
+          <rect x="54" y="132" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.85"/>
+          <rect x="54" y="146" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.80"/>
+          <rect x="54" y="160" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.75"/>
+          <rect x="54" y="174" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.70"/>
+          <rect x="54" y="188" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.65"/>
+          <rect x="54" y="202" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.60"/>
+          <rect x="54" y="216" width="120" height="10" rx="3" fill="url(#mosquitto-h-ardoise)" opacity="0.55"/>
+          <text x="186.0" y="118.0" font-size="9.5" fill="#52615a">file de la</text>
+          <text x="186.0" y="131.0" font-size="9.5" fill="#52615a">session du</text>
+          <text x="186.0" y="144.0" font-size="9.5" fill="#52615a">pont, en</text>
+          <text x="186.0" y="157.0" font-size="9.5" fill="#52615a">mémoire</text>
+          <text x="54.0" y="238.0" font-size="9.5" fill="#4f5d57" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">max_queued_messages = 1 000</text>
+          <path d="M114 104 C114 80 300 76 330 112" fill="none" stroke="#8b3b22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 3" marker-end="url(#mosquitto-m-rouge)"/>
+          <rect x="300" y="116" width="170" height="70" rx="12" fill="url(#mosquitto-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#mosquitto-o)"/>
+          <rect x="310" y="125" width="26" height="26" rx="8" fill="url(#mosquitto-h-rouge)"/>
+          <g transform="translate(315.0 130.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="344.0" y="143.0" font-size="12" fill="#8b3b22" font-weight="700">Au-delà : jetés</text>
+          <text x="314.0" y="165.0" font-size="9.5" fill="#52615a">une ligne au journal du</text>
+          <text x="314.0" y="180.0" font-size="9.5" fill="#52615a">courtier ; l'abonné, rien</text>
+          <rect x="300" y="202" width="170" height="70" rx="12" fill="url(#mosquitto-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#mosquitto-o)"/>
+          <rect x="310" y="211" width="26" height="26" rx="8" fill="url(#mosquitto-h-rouge)"/>
+          <g transform="translate(315.0 216.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="344.0" y="229.0" font-size="12" fill="#8b3b22" font-weight="700">Redémarrage</text>
+          <text x="314.0" y="251.0" font-size="9.5" fill="#52615a">persistence false : la</text>
+          <text x="314.0" y="266.0" font-size="9.5" fill="#52615a">file disparaît</text>
+          <text x="30.0" y="300.0" font-size="10.5" fill="#8b3b22" font-weight="700">Le secours n'a aucun rang pour voir ce qui manque : le trou passe en silence.</text>
+          <text x="520.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">MESSAGES PERDUS, COUPURE DE 10 S À 200 /S</text>
+          <text x="520.0" y="58.0" font-size="10.5" fill="#1d302a" font-weight="700">Mosquitto, file de 1 000 (défaut)</text>
+          <rect x="520" y="66" width="330" height="16" rx="6" fill="#eef0ec"/>
+          <rect x="520.0" y="66.0" width="144.0" height="16" rx="6" fill="url(#mosquitto-b-rouge)"/>
+          <rect x="522.0" y="68.0" width="140.0" height="6.1" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="672.0" y="79.0" font-size="10.5" fill="#8b3b22" font-weight="700">960 sur 6 000</text>
+          <text x="520.0" y="110.0" font-size="10.5" fill="#1d302a" font-weight="700">Mosquitto, file de 100 000</text>
+          <rect x="520" y="118" width="330" height="16" rx="6" fill="#eef0ec"/>
+          <g transform="translate(526.0 119.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="546.0" y="131.0" font-size="10.5" fill="#195744" font-weight="700">0 sur 6 000</text>
+          <text x="520.0" y="162.0" font-size="10.5" fill="#1d302a" font-weight="700">Mosquitto, 100 000, courtier redémarré</text>
+          <rect x="520" y="170" width="330" height="16" rx="6" fill="#eef0ec"/>
+          <rect x="520.0" y="170.0" width="300.0" height="16" rx="6" fill="url(#mosquitto-b-rouge)"/>
+          <rect x="522.0" y="172.0" width="296.0" height="6.1" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="828.0" y="183.0" font-size="10.5" fill="#8b3b22" font-weight="700">2 000 sur 6 000</text>
+          <text x="520.0" y="226.0" font-size="10.5" fill="#1d302a" font-weight="700">Pont maison, coupures de 5 et 10 s</text>
+          <rect x="520" y="234" width="330" height="16" rx="6" fill="#eef0ec"/>
+          <g transform="translate(526.0 235.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="546.0" y="247.0" font-size="10.5" fill="#195744" font-weight="700">0 sur 8 000</text>
+          <text x="520.0" y="278.0" font-size="10.5" fill="#1d302a" font-weight="700">Pont maison, coupure de 60 s</text>
+          <rect x="520" y="286" width="330" height="16" rx="6" fill="#eef0ec"/>
+          <g transform="translate(526.0 287.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="546.0" y="299.0" font-size="10.5" fill="#195744" font-weight="700">0 sur 16 000</text>
+          <line x1="520" y1="204" x2="984" y2="204" stroke="#d4ddd4"/>
+  <text x="18" y="351" font-size="12" fill="#52615a" font-style="italic">Mosquitto 2 en conteneurs (QoS 1, session persistante, persistance coupée), essai unique ; le pont maison : banc rumqttd, médiane de trois essais. Une</text>
+  <text x="18" y="368" font-size="12" fill="#52615a" font-style="italic">grande file ne suffit pas : un redémarrage la vide, et rien ne dit au secours ce qu'il a manqué.</text>
+</svg>

@@ -1,0 +1,44 @@
+code d'origine : tous les tests passent
+
+détectée        une issue tardive touche la demande qui occupe la case (génération ignorée)
+                → 2 test(s) en échec : une_case_reutilisee_change_de_generation, chaque_issue_tombe_sur_sa_demande
+détectée        le hub ne valide plus les arguments contre la forme
+                → 1 test(s) en échec : une_valeur_hors_de_sa_forme_n_atteint_aucun_module
+détectée        la voie fusionne aussi les appuis
+                → 1 test(s) en échec : les_consignes_se_fusionnent_les_appuis_jamais
+détectée        la voie fusionne une consigne par-dessus un autre ordre
+                → 1 test(s) en échec : les_consignes_se_fusionnent_les_appuis_jamais
+détectée        une décision tombe sur une autre carte que celle montrée
+                → 1 test(s) en échec : une_retenue_n_approuve_que_ce_qu_elle_montre
+détectée        une retenue approuvée n'est pas revalidée contre la forme d'aujourd'hui
+                → 1 test(s) en échec : une_retenue_n_approuve_que_ce_qu_elle_montre
+détectée        la bascule renvoie ce qui était remis à un module
+                → 1 test(s) en échec : aucun_ordre_n_est_rejoue
+détectée        un module mort rend « non envoyé » au lieu d'« incertain »
+                → 1 test(s) en échec : aucun_ordre_n_est_rejoue
+détectée        la copie ne tient pas la dernière commande des ordres
+                → 3 test(s) en échec : la_copie_et_l_etat_complet_finissent_identiques, la_derniere_commande_se_lit_partout_pareil, chacun_connait_l_appareil_l_ordre_et_sa_structure
+détectée        la copie ne tient pas les reçus des appuis
+                → 2 test(s) en échec : la_copie_et_l_etat_complet_finissent_identiques, chacun_connait_l_appareil_l_ordre_et_sa_structure
+détectée        la copie garde l'échéance monotone de l'actif
+                → 2 test(s) en échec : aucun_ordre_n_est_rejoue, une_retenue_n_approuve_que_ce_qu_elle_montre
+détectée        le lot ne remet pas à zéro la fiche d'un ordre libéré
+                → 1 test(s) en échec : un_appareil_retire_n_est_plus_commande_et_sa_place_ne_garde_rien
+détectée        un client à vieux cache commande le nouvel occupant de la place
+                → 1 test(s) en échec : un_appareil_retire_n_est_plus_commande_et_sa_place_ne_garde_rien
+détectée        la garde ne lit que la pièce de l'appareil virtuel, pas celles de ses membres
+                → 1 test(s) en échec : une_retenue_n_approuve_que_ce_qu_elle_montre
+détectée        un ordre de groupe se dit confirmé dès qu'une cible a obéi
+                → 1 test(s) en échec : un_appareil_virtuel_compose_sans_posseder
+détectée        le hub ne suit plus les demandes héritées d'une bascule ou d'un arrêt
+                → 1 test(s) en échec : aucun_ordre_n_est_rejoue
+détectée        une valeur en mouvement confirme en passant par la cible
+                → 1 test(s) en échec : aucun_ordre_n_est_rejoue
+détectée        un bail échu pendant un arrêt n'est plus rétabli
+                → 1 test(s) en échec : un_bail_se_retablit_apres_la_bascule_et_le_redemarrage
+détectée        une valeur rallumée à l'interrupteur passe pour l'œuvre de l'ordre
+                → 1 test(s) en échec : les_workflows_interrogent_les_ordres
+détectée        un écran garde l'ancienne structure d'un ordre redéclaré
+                → 1 test(s) en échec : une_structure_qui_change_met_l_automatisme_a_revoir
+
+20 mutations détectées sur 20 ; code restauré

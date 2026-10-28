@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 460" width="1000" height="460" role="img" aria-labelledby="clients-t clients-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="clients-t">Les clients se chargent par MQTT</title>
+  <desc id="clients-d">Trois façons de servir un écran. Aujourd'hui : toute la maison en JSON par /api/snapshot, puis un flux SSE, l'ordre par REST ; un trou fait tout recharger. La V7 : un module WebSocket qui envoie l'état filtré par blocs et traduit MQTT en trames. L'analyse : l'écran parle MQTT directement ; il demande son état sur etat/, filtré par ses droits, puis suit meta/, ord/ et val/ au rang s ; il publie ses demandes sur req/ avec son compte et reçoit ses issues sur res/. Ce qu'un écran charge pour démarrer, maison ×1 : 631 Ko de JSON aujourd'hui, 118 Ko par MQTT, 21 Ko pour un écran de deux pièces.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="460" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="clients-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="clients-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <radialGradient id="clients-sol"><stop offset="0" stop-color="#1d302a" stop-opacity=".22"/><stop offset="1" stop-color="#1d302a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="clients-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="clients-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="clients-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="clients-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="clients-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="clients-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="clients-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="clients-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="clients-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="clients-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="clients-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="clients-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="clients-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="clients-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="clients-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="clients-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="clients-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="clients-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="clients-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="clients-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="clients-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="clients-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="clients-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="clients-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="clients-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="clients-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="clients-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="clients-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LES CLIENTS SE CHARGENT PAR MQTT, COMME UN SECOURS</text>
+          <ellipse cx="182.0" cy="111.0" rx="170.0" ry="11" fill="url(#clients-sol)"/>
+          <polygon points="24,54 40,45.2 346,45.2 330,54" fill="url(#clients-t-gris)"/>
+          <polygon points="330,54 346,45.2 346,89.2 330,104" fill="url(#clients-s-gris)"/>
+          <rect x="18" y="54" width="312" height="50" rx="8" fill="url(#clients-f-gris)" stroke="#97a39d" stroke-opacity=".5"/>
+          <path d="M18 88 V62 a8 8 0 0 1 8 -8 H322 a8 8 0 0 1 8 8 V88 z" fill="url(#clients-h-gris)"/>
+          <g transform="translate(30.0 62.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="56.0" y="76.5" font-size="13" fill="#ffffff" font-weight="700">Aujourd'hui</text>
+          <text x="318.0" y="76.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">SSE + REST</text>
+          <rect x="18" y="118" width="312" height="98" rx="12" fill="url(#clients-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#clients-o)"/>
+          <circle cx="33" cy="137" r="4.5" fill="url(#clients-h-gris)"/>
+          <text x="45.0" y="141.0" font-size="11.5" fill="#4f5d57" font-weight="700">Comment</text>
+          <text x="32.0" y="159.0" font-size="10.2" fill="#52615a">GET /api/snapshot : toute la maison en JSON</text>
+          <text x="32.0" y="174.0" font-size="10.2" fill="#52615a">puis un flux SSE ; l'ordre par REST</text>
+          <text x="32.0" y="189.0" font-size="10.2" fill="#52615a">un trou : tout recharger</text>
+          <ellipse cx="508.0" cy="111.0" rx="170.0" ry="11" fill="url(#clients-sol)"/>
+          <polygon points="350,54 366,45.2 672,45.2 656,54" fill="url(#clients-t-ardoise)"/>
+          <polygon points="656,54 672,45.2 672,89.2 656,104" fill="url(#clients-s-ardoise)"/>
+          <rect x="344" y="54" width="312" height="50" rx="8" fill="url(#clients-f-ardoise)" stroke="#7494bb" stroke-opacity=".5"/>
+          <path d="M344 88 V62 a8 8 0 0 1 8 -8 H648 a8 8 0 0 1 8 8 V88 z" fill="url(#clients-h-ardoise)"/>
+          <g transform="translate(356.0 62.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="382.0" y="76.5" font-size="13" fill="#ffffff" font-weight="700">La V7</text>
+          <text x="644.0" y="76.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">un module WebSocket</text>
+          <rect x="344" y="118" width="312" height="98" rx="12" fill="url(#clients-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#clients-o)"/>
+          <circle cx="359" cy="137" r="4.5" fill="url(#clients-h-ardoise)"/>
+          <text x="371.0" y="141.0" font-size="11.5" fill="#3b5676" font-weight="700">Comment</text>
+          <text x="358.0" y="159.0" font-size="10.2" fill="#52615a">l'état filtré, par blocs de 64 Kio</text>
+          <text x="358.0" y="174.0" font-size="10.2" fill="#52615a">un module traduit MQTT en trames</text>
+          <text x="358.0" y="189.0" font-size="10.2" fill="#52615a">ordres et issues sur la connexion</text>
+          <ellipse cx="834.0" cy="111.0" rx="170.0" ry="11" fill="url(#clients-sol)"/>
+          <polygon points="676,54 692,45.2 998,45.2 982,54" fill="url(#clients-t-vert)"/>
+          <polygon points="982,54 998,45.2 998,89.2 982,104" fill="url(#clients-s-vert)"/>
+          <rect x="670" y="54" width="312" height="50" rx="8" fill="url(#clients-f-vert)" stroke="#3d9a75" stroke-opacity=".5"/>
+          <path d="M670 88 V62 a8 8 0 0 1 8 -8 H974 a8 8 0 0 1 8 8 V88 z" fill="url(#clients-h-vert)"/>
+          <g transform="translate(682.0 62.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="708.0" y="76.5" font-size="13" fill="#ffffff" font-weight="700">L'analyse</text>
+          <text x="970.0" y="76.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">MQTT, directement</text>
+          <rect x="670" y="118" width="312" height="98" rx="12" fill="url(#clients-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#clients-o)"/>
+          <circle cx="685" cy="137" r="4.5" fill="url(#clients-h-vert)"/>
+          <text x="697.0" y="141.0" font-size="11.5" fill="#195744" font-weight="700">Comment</text>
+          <text x="684.0" y="159.0" font-size="10.2" fill="#52615a">etat/demande → l'état du client, filtré</text>
+          <text x="684.0" y="174.0" font-size="10.2" fill="#52615a">meta/, ord/, val/ : le flux, au rang s</text>
+          <text x="684.0" y="189.0" font-size="10.2" fill="#52615a">req/ du compte, res/&lt;client&gt;</text>
+          <text x="18.0" y="246.0" font-size="11" fill="#1d302a" font-weight="700">Ce qu'un écran charge pour démarrer, maison ×1</text>
+          <text x="18.0" y="274.0" font-size="10.5" fill="#1d302a">Aujourd'hui : /api/snapshot, JSON</text>
+          <rect x="330.0" y="262.0" width="600.0" height="16" rx="6" fill="url(#clients-b-gris)"/>
+          <rect x="332.0" y="264.0" width="596.0" height="6.1" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="936.0" y="275.0" font-size="10.5" fill="#4f5d57" font-weight="700">631 Ko</text>
+          <text x="18.0" y="304.0" font-size="10.5" fill="#1d302a">MQTT : l'état complet d'un écran</text>
+          <rect x="330.0" y="292.0" width="111.7" height="16" rx="6" fill="url(#clients-b-vert)"/>
+          <rect x="332.0" y="294.0" width="107.7" height="6.1" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="447.7" y="305.0" font-size="10.5" fill="#195744" font-weight="700">118 Ko</text>
+          <text x="18.0" y="334.0" font-size="10.5" fill="#1d302a">MQTT : un écran de deux pièces, un invité</text>
+          <rect x="330.0" y="322.0" width="19.7" height="16" rx="6" fill="url(#clients-b-bleu)"/>
+          <rect x="332.0" y="324.0" width="15.7" height="6.1" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="355.7" y="335.0" font-size="10.5" fill="#1b5873" font-weight="700">21 Ko</text>
+          <rect x="16" y="360" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 368.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="382.0" font-size="11" fill="#1d302a" font-weight="700">Un écran devient une copie partielle : le même état complet, le même rang s, la même règle du numéro inconnu que le secours ; l'historique et les médias restent en HTTP.</text>
+  <text x="18" y="437" font-size="12" fill="#52615a" font-style="italic">Ta remarque : puisque tout est en mémoire, l'appareil, ses ordres et ses valeurs, un client peut se recharger par MQTT, sans module dédié. Ce qu'il en</text>
+  <text x="18" y="454" font-size="12" fill="#52615a" font-style="italic">coûte par connexion est au § 14.4.</text>
+</svg>

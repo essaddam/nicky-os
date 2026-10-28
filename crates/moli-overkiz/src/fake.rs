@@ -24,6 +24,9 @@ pub struct Fake {
     pub news: Mutex<Vec<Json>>,
     /// Before each order reaches the box (a slow connection), in turn.
     pub delays: Mutex<VecDeque<Duration>>,
+    /// Test-only connection gate, before the HTTP order is handed off.
+    pub before_send: Option<std::sync::Arc<tokio::sync::Semaphore>>,
+    pub checked_before_send: AtomicUsize,
     /// The orders as they reached the box: command, when.
     pub arrivals: Mutex<Vec<(String, Instant)>>,
     pub applied: AtomicUsize,
@@ -34,6 +37,16 @@ pub struct Fake {
 
 impl Fake {
     pub async fn call(&self, path: &str, body: Option<&Json>, once: bool) -> anyhow::Result<Json> {
+        self.call_guarded(path, body, once, None).await
+    }
+
+    pub async fn call_guarded(
+        &self,
+        path: &str,
+        body: Option<&Json>,
+        once: bool,
+        guard: Option<&moli_net::WebGuard<'_>>,
+    ) -> anyhow::Result<Json> {
         if path != "/setup/devices" && !once {
             self.replayable.fetch_add(1, SeqCst);
         }
@@ -45,6 +58,13 @@ impl Fake {
                 let delay = self.delays.lock().unwrap().pop_front();
                 if let Some(delay) = delay {
                     tokio::time::sleep(delay).await;
+                }
+                if let Some(gate) = &self.before_send {
+                    gate.acquire().await?.forget();
+                }
+                self.checked_before_send.fetch_add(1, SeqCst);
+                if guard.is_some_and(|guard| !(guard.begin_send)()) {
+                    return Err(crate::api::NotSent.into());
                 }
                 let command = body.map_or_else(String::new, |b| {
                     b["actions"][0]["commands"][0]["name"]

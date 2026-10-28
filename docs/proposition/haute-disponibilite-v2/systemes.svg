@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 644" width="1000" height="644" role="img" aria-labelledby="systemes-t systemes-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="systemes-t">Les deux systèmes, en détail : le cœur, les courtiers, les clients</title>
+  <desc id="systemes-d">Deux machines côte à côte. H1, l'actif : le séquenceur donne le rang s à chaque sortie critique ; le hub, le moteur des workflows et la mémoire ; la file en mémoire des 10 000 dernières sorties ; la base d'historique, abonnée, qui range et numérote ; l'API et les écrans ; les pilotes et les radios ; le courtier MQTT embarqué ; sur disque, l'instantané seulement. H2, le secours : le bout secours du pont maison, qui remet l'ordre et comble les trous ; le même hub, moteur et mémoire, qui appliquent sans agir ; sa propre file pour ses abonnés ; une base d'historique en copie de reprise ; l'API en lecture seule ; pilotes et radios arrêtés. Entre les deux, le flux critique, l'historique, les tronçons et l'état complet ; en retour, le battement et les demandes. Les clients parlent à l'adresse virtuelle de l'actif ; le témoin vote le bail des deux ; les caméras écrivent sur le NAS.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="644" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="systemes-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="systemes-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <radialGradient id="systemes-sol"><stop offset="0" stop-color="#1d302a" stop-opacity=".22"/><stop offset="1" stop-color="#1d302a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="systemes-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="systemes-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="systemes-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="systemes-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="systemes-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="systemes-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="systemes-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="systemes-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="systemes-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="systemes-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="systemes-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="systemes-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="systemes-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="systemes-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="systemes-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="systemes-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="systemes-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="systemes-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="systemes-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="systemes-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="systemes-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="systemes-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="systemes-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="systemes-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="systemes-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="systemes-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="systemes-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="systemes-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="systemes-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="systemes-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="systemes-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="systemes-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="systemes-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="systemes-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="systemes-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <ellipse cx="229.0" cy="471.0" rx="219.0" ry="11" fill="url(#systemes-sol)"/>
+          <polygon points="22,40 38,31.2 442,31.2 426,40" fill="url(#systemes-t-vert)"/>
+          <polygon points="426,40 442,31.2 442,449.2 426,464" fill="url(#systemes-s-vert)"/>
+          <rect x="16" y="40" width="410" height="424" rx="8" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".5"/>
+          <path d="M16 74 V48 a8 8 0 0 1 8 -8 H418 a8 8 0 0 1 8 8 V74 z" fill="url(#systemes-h-vert)"/>
+          <g transform="translate(28.0 48.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="54.0" y="62.5" font-size="13" fill="#ffffff" font-weight="700">H1 · actif</text>
+          <text x="414.0" y="62.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">porte l'époque</text>
+          <rect x="30" y="86" width="382" height="60" rx="12" fill="url(#systemes-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="40" y="95" width="26" height="26" rx="8" fill="url(#systemes-h-ambre)"/>
+          <g transform="translate(45.0 100.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="74.0" y="113.0" font-size="12" fill="#94660a" font-weight="700">Séquenceur · rang s</text>
+          <text x="44.0" y="135.0" font-size="10" fill="#52615a">chaque sortie critique reçoit s + 1, sans trou</text>
+          <rect x="30" y="156" width="122" height="76" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="40" y="165" width="26" height="26" rx="8" fill="url(#systemes-h-vert)"/>
+          <g transform="translate(45.0 170.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z M10 10h4v4h-4z M9 4v3 M12 4v3 M15 4v3 M9 17v3 M12 17v3 M15 17v3 M4 9h3 M4 12h3 M4 15h3 M17 9h3 M17 12h3 M17 15h3"/></g>
+          <text x="74.0" y="183.0" font-size="11.5" fill="#195744" font-weight="700">Hub</text>
+          <text x="44.0" y="205.0" font-size="10" fill="#52615a">vérité, garde,</text>
+          <text x="44.0" y="220.0" font-size="10" fill="#52615a">publie val/ vu/</text>
+          <rect x="160" y="156" width="122" height="76" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="170" y="165" width="26" height="26" rx="8" fill="url(#systemes-h-vert)"/>
+          <g transform="translate(175.0 170.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="204.0" y="183.0" font-size="11.5" fill="#195744" font-weight="700">Moteur</text>
+          <text x="174.0" y="205.0" font-size="10" fill="#52615a">workflows ;</text>
+          <text x="174.0" y="220.0" font-size="10" fill="#52615a">publie wf/ run/</text>
+          <rect x="290" y="156" width="122" height="76" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="300" y="165" width="26" height="26" rx="8" fill="url(#systemes-h-vert)"/>
+          <g transform="translate(305.0 170.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="334.0" y="183.0" font-size="11.5" fill="#195744" font-weight="700">Mémoire</text>
+          <text x="304.0" y="205.0" font-size="10" fill="#52615a">valeurs, santé,</text>
+          <text x="304.0" y="220.0" font-size="10" fill="#52615a">exécutions</text>
+          <rect x="30" y="244" width="188" height="74" rx="12" fill="url(#systemes-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="40" y="253" width="26" height="26" rx="8" fill="url(#systemes-h-ambre)"/>
+          <g transform="translate(45.0 258.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1-9 9 M3 12l-1.5-2.5 M3 12l2.5-1.5"/></g>
+          <text x="74.0" y="271.0" font-size="11.5" fill="#94660a" font-weight="700">File en mémoire</text>
+          <text x="44.0" y="293.0" font-size="10" fill="#52615a">10 000 sorties ;</text>
+          <text x="44.0" y="308.0" font-size="10" fill="#52615a">tronçons, état complet</text>
+          <rect x="224" y="244" width="188" height="74" rx="12" fill="url(#systemes-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="234" y="253" width="26" height="26" rx="8" fill="url(#systemes-h-ardoise)"/>
+          <g transform="translate(239.0 258.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3v12c0 1.7-3.1 3-7 3s-7-1.3-7-3z M5 6c0 1.7 3.1 3 7 3s7-1.3 7-3 M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></g>
+          <text x="268.0" y="271.0" font-size="11.5" fill="#3b5676" font-weight="700">Base d'historique</text>
+          <text x="238.0" y="293.0" font-size="10" fill="#52615a">abonnée : range, donne seq,</text>
+          <text x="238.0" y="308.0" font-size="10" fill="#52615a">publie hist/</text>
+          <rect x="30" y="330" width="188" height="60" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="40" y="339" width="26" height="26" rx="8" fill="url(#systemes-h-vert)"/>
+          <g transform="translate(45.0 344.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="74.0" y="357.0" font-size="11.5" fill="#195744" font-weight="700">API · WebSocket</text>
+          <text x="44.0" y="379.0" font-size="10" fill="#52615a">écrans, appli, Sarah</text>
+          <rect x="224" y="330" width="188" height="60" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="234" y="339" width="26" height="26" rx="8" fill="url(#systemes-h-vert)"/>
+          <g transform="translate(239.0 344.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="268.0" y="357.0" font-size="11.5" fill="#195744" font-weight="700">Pilotes, radios</text>
+          <text x="238.0" y="379.0" font-size="10" fill="#52615a">Zigbee2MQTT, Matter, clouds</text>
+          <rect x="30" y="404" width="382" height="44" rx="10" fill="url(#systemes-h-vert)"/>
+          <g transform="translate(42.0 416.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></g>
+          <text x="68.0" y="424.0" font-size="11.5" fill="#ffffff" font-weight="700">Courtier MQTT embarqué (rumqttd)</text>
+          <text x="68.0" y="439.0" font-size="9.5" fill="#ffffff" opacity=".9">liens en mémoire pour le cœur ; 1883, 8883 pour les clients</text>
+          <ellipse cx="773.0" cy="471.0" rx="219.0" ry="11" fill="url(#systemes-sol)"/>
+          <polygon points="566,40 582,31.2 986,31.2 970,40" fill="url(#systemes-t-bleu)"/>
+          <polygon points="970,40 986,31.2 986,449.2 970,464" fill="url(#systemes-s-bleu)"/>
+          <rect x="560" y="40" width="410" height="424" rx="8" fill="url(#systemes-f-bleu)" stroke="#3b8db4" stroke-opacity=".5"/>
+          <path d="M560 74 V48 a8 8 0 0 1 8 -8 H962 a8 8 0 0 1 8 8 V74 z" fill="url(#systemes-h-bleu)"/>
+          <g transform="translate(572.0 48.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="598.0" y="62.5" font-size="13" fill="#ffffff" font-weight="700">H2 · secours local</text>
+          <text x="958.0" y="62.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">passif, prêt</text>
+          <rect x="574" y="86" width="382" height="60" rx="12" fill="url(#systemes-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="584" y="95" width="26" height="26" rx="8" fill="url(#systemes-h-ambre)"/>
+          <g transform="translate(589.0 100.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 14.5-3.5 M19 3v4h-4 M20 14a8 8 0 0 1-14.5 3.5 M5 21v-4h4"/></g>
+          <text x="618.0" y="113.0" font-size="12" fill="#94660a" font-weight="700">Pont maison · bout secours</text>
+          <text x="588.0" y="135.0" font-size="10" fill="#52615a">remet l'ordre de s, comble les trous, réassemble l'état</text>
+          <rect x="574" y="156" width="122" height="76" rx="12" fill="url(#systemes-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="584" y="165" width="26" height="26" rx="8" fill="url(#systemes-h-bleu)"/>
+          <g transform="translate(589.0 170.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z M10 10h4v4h-4z M9 4v3 M12 4v3 M15 4v3 M9 17v3 M12 17v3 M15 17v3 M4 9h3 M4 12h3 M4 15h3 M17 9h3 M17 12h3 M17 15h3"/></g>
+          <text x="618.0" y="183.0" font-size="11.5" fill="#1b5873" font-weight="700">Hub</text>
+          <text x="588.0" y="205.0" font-size="10" fill="#52615a">applique les sorties</text>
+          <text x="588.0" y="220.0" font-size="10" fill="#52615a">dans l'ordre de s</text>
+          <rect x="704" y="156" width="122" height="76" rx="12" fill="url(#systemes-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="714" y="165" width="26" height="26" rx="8" fill="url(#systemes-h-bleu)"/>
+          <g transform="translate(719.0 170.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="748.0" y="183.0" font-size="11.5" fill="#1b5873" font-weight="700">Moteur</text>
+          <text x="718.0" y="205.0" font-size="10" fill="#52615a">applique wf/,</text>
+          <text x="718.0" y="220.0" font-size="10" fill="#52615a">ne réveille rien</text>
+          <rect x="834" y="156" width="122" height="76" rx="12" fill="url(#systemes-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="844" y="165" width="26" height="26" rx="8" fill="url(#systemes-h-bleu)"/>
+          <g transform="translate(849.0 170.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="878.0" y="183.0" font-size="11.5" fill="#1b5873" font-weight="700">Mémoire</text>
+          <text x="848.0" y="205.0" font-size="10" fill="#52615a">la même, au</text>
+          <text x="848.0" y="220.0" font-size="10" fill="#52615a">même rang s</text>
+          <rect x="574" y="244" width="188" height="74" rx="12" fill="url(#systemes-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="584" y="253" width="26" height="26" rx="8" fill="url(#systemes-h-ambre)"/>
+          <g transform="translate(589.0 258.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1-9 9 M3 12l-1.5-2.5 M3 12l2.5-1.5"/></g>
+          <text x="618.0" y="271.0" font-size="11.5" fill="#94660a" font-weight="700">File du secours</text>
+          <text x="588.0" y="293.0" font-size="10" fill="#52615a">ses abonnés locaux</text>
+          <text x="588.0" y="308.0" font-size="10" fill="#52615a">y comblent leurs trous</text>
+          <rect x="768" y="244" width="188" height="74" rx="12" fill="url(#systemes-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="778" y="253" width="26" height="26" rx="8" fill="url(#systemes-h-ardoise)"/>
+          <g transform="translate(783.0 258.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3v12c0 1.7-3.1 3-7 3s-7-1.3-7-3z M5 6c0 1.7 3.1 3 7 3s7-1.3 7-3 M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></g>
+          <text x="812.0" y="271.0" font-size="11.5" fill="#3b5676" font-weight="700">Base d'historique</text>
+          <text x="782.0" y="293.0" font-size="10" fill="#52615a">copie de reprise :</text>
+          <text x="782.0" y="308.0" font-size="10" fill="#52615a">applique hist/ par seq</text>
+          <rect x="574" y="330" width="188" height="60" rx="12" fill="url(#systemes-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="584" y="339" width="26" height="26" rx="8" fill="url(#systemes-h-bleu)"/>
+          <g transform="translate(589.0 344.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="618.0" y="357.0" font-size="11.5" fill="#1b5873" font-weight="700">API · WebSocket</text>
+          <text x="588.0" y="379.0" font-size="10" fill="#52615a">lecture seule, « secours »</text>
+          <g opacity=".62">
+          <rect x="768" y="330" width="188" height="60" rx="12" fill="#eef0ec" stroke="#97a39d" stroke-width="1.2" stroke-dasharray="5 4"/>
+          <rect x="778" y="339" width="26" height="26" rx="8" fill="#97a39d"/>
+          <g transform="translate(783.0 344.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="812.0" y="357.0" font-size="11.5" fill="#52615a" font-weight="700">Pilotes, radios</text>
+          <text x="782.0" y="379.0" font-size="10" fill="#52615a">démarrent à la promotion</text>
+          <rect x="896.6" y="342.0" width="49.4" height="18.0" rx="9.0" fill="#eef0ec" stroke="#97a39d" stroke-opacity="0.7"/>
+          <text x="904.6" y="354.2" font-size="9" fill="#4f5d57" font-weight="700">arrêtés</text>
+          </g>
+          <rect x="574" y="404" width="382" height="44" rx="10" fill="url(#systemes-h-bleu)"/>
+          <g transform="translate(586.0 416.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></g>
+          <text x="612.0" y="424.0" font-size="11.5" fill="#ffffff" font-weight="700">Courtier du secours : seul le pont y publie</text>
+          <text x="612.0" y="439.0" font-size="9.5" fill="#ffffff" opacity=".9">les abonnés locaux y lisent, comme sur l'actif</text>
+          <path d="M446 126 L556 126" fill="none" stroke="#94660a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#systemes-m-ambre)"/>
+          <path class="hd-flux" d="M446 126 L556 126" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.4"/>
+          <text x="501.0" y="118.0" font-size="9.5" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">critique · rang s</text>
+          <path d="M446 168 L556 168" fill="none" stroke="#3b5676" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#systemes-m-ardoise)"/>
+          <path class="hd-lent" d="M446 168 L556 168" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="501.0" y="160.0" font-size="9.5" fill="#3b5676" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">historique · seq</text>
+          <path d="M446 210 L556 210" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" marker-end="url(#systemes-m-ambre)"/>
+          <text x="501.0" y="202.0" font-size="9.5" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">tronçons, état complet</text>
+          <path d="M556 266 L448 266" fill="none" stroke="#4f5d57" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" marker-end="url(#systemes-m-gris)"/>
+          <text x="501.0" y="258.0" font-size="9.5" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">battement, demandes</text>
+          <text x="501.0" y="290.0" font-size="9" fill="#4f5d57" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">réseau local</text>
+          <text x="501.0" y="303.0" font-size="9" fill="#4f5d57" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">ou NetBird</text>
+          <rect x="16" y="526" width="98" height="58" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <circle cx="31" cy="545" r="4.5" fill="url(#systemes-h-vert)"/>
+          <text x="43.0" y="549.0" font-size="10.5" fill="#195744" font-weight="700">Écrans</text>
+          <text x="30.0" y="567.0" font-size="9" fill="#52615a">navigateur, appli</text>
+          <path d="M65 526 L65 512" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="120" y="526" width="98" height="58" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <circle cx="135" cy="545" r="4.5" fill="url(#systemes-h-vert)"/>
+          <text x="147.0" y="549.0" font-size="10.5" fill="#195744" font-weight="700">Téléphones</text>
+          <text x="134.0" y="567.0" font-size="9" fill="#52615a">notifications</text>
+          <path d="M169 526 L169 512" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="224" y="526" width="98" height="58" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <circle cx="239" cy="545" r="4.5" fill="url(#systemes-h-vert)"/>
+          <text x="251.0" y="549.0" font-size="10.5" fill="#195744" font-weight="700">Appareils</text>
+          <text x="238.0" y="567.0" font-size="9" fill="#52615a">MQTT du réseau</text>
+          <path d="M273 526 L273 512" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="328" y="526" width="98" height="58" rx="12" fill="url(#systemes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <circle cx="343" cy="545" r="4.5" fill="url(#systemes-h-vert)"/>
+          <text x="355.0" y="549.0" font-size="10.5" fill="#195744" font-weight="700">Zigbee</text>
+          <text x="342.0" y="567.0" font-size="9" fill="#52615a">Zigbee2MQTT</text>
+          <path d="M377 526 L377 512" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M65 512 L377 512" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M220 512 L220 478" fill="none" stroke="#195744" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#systemes-m-vert)"/>
+          <path class="hd-lent" d="M220 512 L220 478" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <rect x="232.0" y="494.0" width="129.3" height="18.0" rx="9.0" fill="url(#systemes-h-vert)" stroke="#3d9a75" stroke-opacity="0"/>
+          <text x="240.0" y="506.2" font-size="9" fill="#ffffff" font-weight="700">adresse virtuelle de l'actif</text>
+          <rect x="436" y="526" width="148" height="58" rx="12" fill="url(#systemes-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="446" y="535" width="26" height="26" rx="8" fill="url(#systemes-h-gris)"/>
+          <g transform="translate(451.0 540.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z M12 9a3 3 0 1 1 0 6a3 3 0 1 1 0-6z"/></g>
+          <text x="480.0" y="553.0" font-size="11" fill="#4f5d57" font-weight="700">Témoin</text>
+          <text x="450.0" y="575.0" font-size="9.5" fill="#52615a">vote le bail des deux</text>
+          <path d="M470 526 L320 464" fill="none" stroke="#4f5d57" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3"/>
+          <path d="M550 526 L690 464" fill="none" stroke="#4f5d57" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3"/>
+          <g opacity=".62">
+          <rect x="610" y="526" width="178" height="58" rx="12" fill="#eef0ec" stroke="#97a39d" stroke-width="1.2" stroke-dasharray="5 4"/>
+          <rect x="620" y="535" width="26" height="26" rx="8" fill="#97a39d"/>
+          <g transform="translate(625.0 540.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="654.0" y="553.0" font-size="11" fill="#52615a" font-weight="700">Écrans en lecture</text>
+          <text x="624.0" y="575.0" font-size="9.5" fill="#52615a">sur le secours, s'il le faut</text>
+          </g>
+          <rect x="800" y="526" width="184" height="58" rx="12" fill="url(#systemes-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#systemes-o)"/>
+          <rect x="810" y="535" width="26" height="26" rx="8" fill="url(#systemes-h-gris)"/>
+          <g transform="translate(815.0 540.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h12v10H3z M15 10l6-3v10l-6-3z"/></g>
+          <text x="844.0" y="553.0" font-size="11" fill="#4f5d57" font-weight="700">Caméras → NAS</text>
+          <text x="814.0" y="575.0" font-size="9.5" fill="#52615a">vidéo : hors MQTT</text>
+  <text x="18" y="621" font-size="12" fill="#52615a" font-style="italic">Une même application sur les deux machines ; seul le mode change. Le secours n'a qu'un éditeur, le pont maison, et rien ne part de lui vers un</text>
+  <text x="18" y="638" font-size="12" fill="#52615a" font-style="italic">appareil. Sur disque, de chaque côté : l'instantané seulement.</text>
+</svg>

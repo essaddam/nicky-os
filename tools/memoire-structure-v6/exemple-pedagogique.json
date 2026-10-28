@@ -1,0 +1,393 @@
+{
+  "schema": 2,
+  "scope": "Simulation documentaire synthétique ; pas de moteur connecté ni de protocole virtuel livré.",
+  "canonical": [
+    {
+      "id": "1000",
+      "kind": "family",
+      "parent": "0",
+      "label": "Famille exemple",
+      "slot": 0,
+      "row_index": 0
+    },
+    {
+      "id": "1001",
+      "kind": "house",
+      "parent": "1000",
+      "label": "Maison exemple",
+      "slot": 1,
+      "row_index": 1
+    },
+    {
+      "id": "1002",
+      "kind": "floor",
+      "parent": "1001",
+      "label": "Étage exemple",
+      "slot": 2,
+      "row_index": 2
+    },
+    {
+      "id": "1003",
+      "kind": "room",
+      "parent": "1002",
+      "label": "Pièce exemple",
+      "slot": 3,
+      "row_index": 3
+    },
+    {
+      "id": "1004",
+      "kind": "zone",
+      "parent": "1001",
+      "label": "Zone confort",
+      "slot": 4,
+      "row_index": 4
+    },
+    {
+      "id": "10",
+      "kind": "physical",
+      "parent": "1003",
+      "label": "Capteur A",
+      "slot": 5,
+      "row_index": 5
+    },
+    {
+      "id": "20",
+      "kind": "physical",
+      "parent": "1003",
+      "label": "Capteur B",
+      "slot": 6,
+      "row_index": 6
+    },
+    {
+      "id": "30",
+      "kind": "physical",
+      "parent": "1003",
+      "label": "Lampe",
+      "slot": 7,
+      "row_index": 7
+    },
+    {
+      "id": "900",
+      "kind": "virtual",
+      "parent": "1003",
+      "label": "Vue pièce",
+      "slot": 8,
+      "row_index": 8
+    },
+    {
+      "id": "910",
+      "kind": "virtual",
+      "parent": "1001",
+      "label": "Vue étage",
+      "slot": 9,
+      "row_index": 9
+    },
+    {
+      "id": "101",
+      "kind": "value",
+      "parent": "10",
+      "label": "Température A",
+      "slot": 10,
+      "row_index": 10
+    },
+    {
+      "id": "201",
+      "kind": "value",
+      "parent": "20",
+      "label": "Température B",
+      "slot": 11,
+      "row_index": 11
+    },
+    {
+      "id": "301",
+      "kind": "value",
+      "parent": "30",
+      "label": "Luminosité",
+      "slot": 12,
+      "row_index": 12
+    },
+    {
+      "id": "904",
+      "kind": "calculated",
+      "parent": "900",
+      "label": "Moyenne A et B",
+      "slot": 13,
+      "row_index": 13
+    },
+    {
+      "id": "8001",
+      "kind": "action_contract",
+      "parent": "1001",
+      "label": "Contrat Identifier",
+      "slot": 14,
+      "row_index": 14
+    },
+    {
+      "id": "906",
+      "kind": "action_binding",
+      "parent": "30",
+      "label": "Identifier la lampe",
+      "slot": 15,
+      "row_index": 15
+    }
+  ],
+  "aliases": [
+    {
+      "id": "901",
+      "owner": "900",
+      "source_id": "101",
+      "label": "Température A dans Vue pièce",
+      "slot": 16,
+      "alias_index": 0
+    },
+    {
+      "id": "902",
+      "owner": "900",
+      "source_id": "201",
+      "label": "Température B dans Vue pièce",
+      "slot": 17,
+      "alias_index": 1
+    },
+    {
+      "id": "903",
+      "owner": "900",
+      "source_id": "301",
+      "label": "Luminosité dans Vue pièce",
+      "slot": 18,
+      "alias_index": 2
+    },
+    {
+      "id": "911",
+      "owner": "910",
+      "source_id": "101",
+      "label": "Température A dans Vue étage",
+      "slot": 19,
+      "alias_index": 3
+    }
+  ],
+  "initial_values": {
+    "101": 21.0,
+    "201": 23.0,
+    "301": 50.0,
+    "904": 22.0
+  },
+  "units": {
+    "101": "°C",
+    "201": "°C",
+    "301": "%",
+    "904": "°C"
+  },
+  "source_owners": {
+    "101": "10",
+    "201": "20",
+    "301": "30",
+    "904": "900"
+  },
+  "writable": {
+    "101": false,
+    "201": false,
+    "301": true,
+    "904": false
+  },
+  "reverse_aliases": {
+    "101": [
+      "901",
+      "911"
+    ],
+    "201": [
+      "902"
+    ],
+    "301": [
+      "903"
+    ]
+  },
+  "dependencies": {
+    "101": [
+      "904"
+    ],
+    "201": [
+      "904"
+    ]
+  },
+  "calculation": {
+    "id": "904",
+    "operation": "mean",
+    "sources": [
+      "101",
+      "201"
+    ]
+  },
+  "samples": {
+    "changed_native": 215,
+    "unchanged_native": 210,
+    "key": "temperature_deci_c",
+    "field": "101",
+    "unit": "déci-°C"
+  },
+  "transforms": {
+    "temperature_read": {
+      "mul": 0.1,
+      "add": 0
+    },
+    "brightness_read": {
+      "mul": 0.3937007874015748,
+      "add": 0
+    },
+    "brightness_write": {
+      "mul": 2.54,
+      "add": 0,
+      "rounding": "nearest_native_integer"
+    },
+    "identify_write": {
+      "opcode": "fixed_fixture_payload"
+    }
+  },
+  "command": {
+    "canonical_value": 80,
+    "alias": "903",
+    "target": "301",
+    "physical_owner": "30",
+    "path": "/api/command",
+    "body": {
+      "point": "demo:virtual-room/brightness",
+      "value": 80
+    },
+    "native_topic": "zigbee2mqtt/fixture-light/set",
+    "native_payload": {
+      "brightness": 203
+    },
+    "observed_native": 203,
+    "correlation_id": "doc-brightness-001",
+    "ack_semantics": "Accepté par try_publish dans la file locale du pilote ; pas de confirmation du broker MQTT ni d’effet physique."
+  },
+  "sensor_input": {
+    "mqtt_topic": "fixtures/temp-a/state",
+    "api_path": "GET /devices/fixture-temp-a/status",
+    "body": {
+      "temperature_deci_c": 215
+    }
+  },
+  "action": {
+    "binding": "906",
+    "contract": "8001",
+    "owner": "30",
+    "virtual_owner": "900",
+    "relation": "command_target",
+    "native_payload": {
+      "identify": true
+    },
+    "capability_status": "Contrat fictif, pas une capacité matérielle qualifiée.",
+    "request_ids": [
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:1",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:2"
+    ],
+    "request_identity_semantics": "Identité d’occurrence de bouton : espace client de 32 hexadécimaux et séquence u64 positive. Une nouvelle intention incrémente la séquence ; un réessai conserve identité et point pour corrélation et anti-doublon."
+  },
+  "notification": {
+    "prefix": "moli/v1/example/points",
+    "status": "Topics et pont MQTT virtuel proposés, non livrés.",
+    "modes": [
+      "source_unique",
+      "alias_topics"
+    ],
+    "state_retention": "possible selon contrat",
+    "command_retention": false,
+    "event_retention": false
+  },
+  "extras": {
+    "schemas": 3,
+    "transforms": 4,
+    "calculations": 1,
+    "routes": 4
+  },
+  "case_ids": [
+    "mqtt",
+    "api",
+    "command",
+    "blocked",
+    "same",
+    "action"
+  ],
+  "expected": {
+    "canonical": 16,
+    "aliases": 4,
+    "slots": 20,
+    "common_object_bytes": 2624,
+    "selected_extra_bytes": 624,
+    "common_plus_selected": 3248,
+    "sample_after": 21.5,
+    "mean_after": 22.25,
+    "command_native": 203,
+    "brightness_observed": 79.92125984251969,
+    "temperature_notifications_alias_mode": 4,
+    "temperature_notifications_source_mode": 2,
+    "sample_previous": 21.0,
+    "mean_previous": 22.0,
+    "brightness_previous": 50.0
+  },
+  "boundaries": [
+    "Le catalogue Z2M actuel conserve la luminosité native0..254. La normalisation% est expérimentale.",
+    "Le décodage des déci-degrés est configuré pour cet émetteur fictif ; il ne faut pas diviser automatiquement toute température MQTT par10.",
+    "Les Alias32 V6 sont des liens de valeurs ; une action sans état utilise un binding et un lien de présentation, pas un faux état/alias de valeur.",
+    "Les notifications SSE du moteur existent ; le pont MQTT générique vers ces vues reste proposé.",
+    "Les opérations comptées sont logiques, pas des timings CPU, des allocations réelles ou une mesure RSS.",
+    "request_id est réservé à une occurrence de bouton, au format 32 hexadécimaux:séquence positive ; aucun request_id dans la commande scalaire REST brightness.",
+    "Un ACK200 Zigbee2MQTT correspond au succès try_publish dans la file locale ; il ne confirme ni livraison au broker ni effet physique.",
+    "Z1 contient des fiches canoniques : toutes ne possèdent pas un état observé."
+  ],
+  "edges": [
+    {
+      "from": "1004",
+      "to": "1003",
+      "relation": "zone_member"
+    },
+    {
+      "from": "1004",
+      "to": "10",
+      "relation": "zone_member"
+    },
+    {
+      "from": "1004",
+      "to": "20",
+      "relation": "zone_member"
+    },
+    {
+      "from": "1004",
+      "to": "30",
+      "relation": "zone_member"
+    },
+    {
+      "from": "900",
+      "to": "906",
+      "relation": "command_target"
+    },
+    {
+      "from": "906",
+      "to": "8001",
+      "relation": "action_contract"
+    },
+    {
+      "from": "904",
+      "to": "101",
+      "relation": "calculation_source"
+    },
+    {
+      "from": "904",
+      "to": "201",
+      "relation": "calculation_source"
+    }
+  ],
+  "edge_scope": "Les parents sont stockés séparément dans canonical[].parent et les sources d’alias dans aliases[].source_id. dependencies et reverse_aliases sont des index inverses proposés. Les arêtes ci-dessus et tous leurs index sont exclus des 2624 octets de base et des 624 octets d’extras fixes ; aucun double comptage implicite.",
+  "memory_contract": {
+    "row_bytes": 96,
+    "timestamps": [
+      "received_ms",
+      "changed_ms"
+    ],
+    "replaced_field": "observed_ms",
+    "replacement_field": "previous_payload",
+    "previous_semantics": "Dernière observation distincte, absente avant premier changement ; conservée sur réception identique. Type précédent dans flags et présence explicite.",
+    "previous_timestamp_in_row": false,
+    "previous_variable_content": "Handle de pool ; contenu variable et gestion de durée de vie comptés séparément."
+  }
+}

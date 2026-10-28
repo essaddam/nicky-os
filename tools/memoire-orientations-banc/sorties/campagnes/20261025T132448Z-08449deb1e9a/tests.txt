@@ -1,0 +1,23 @@
+
+running 18 tests
+test tests::ambiguous_containment_is_rejected_instead_of_selecting_parent ... ok
+test tests::coalescing_state_loses_an_alert_occurrence ... ok
+test tests::containment_cycle_is_rejected_without_repair ... ok
+test tests::csr_formula_counts_terminal_offset_and_checks_overflow ... ok
+test tests::dangling_parent_and_membership_are_rejected ... ok
+test tests::duplicate_identity_is_rejected ... ok
+test tests::expiry_changes_mean_without_new_value ... ok
+test tests::geographic_zone_does_not_implicitly_accept_logical_members ... ok
+test tests::hierarchy_keeps_floor_and_allows_rooms_without_floor ... ok
+test tests::measured_layouts_include_padding ... ok
+test tests::naive_floating_accumulator_loses_exact_integer_total ... ok
+test tests::null_nan_infinity_and_empty_mean_are_not_zero ... ok
+test tests::numeric_representation_does_not_prove_unit_compatibility ... ok
+test tests::overlapping_zones_do_not_change_containment ... ok
+test tests::same_value_refresh_extends_freshness_without_transition ... ok
+test tests::stable_alias_source_survives_device_placement_change ... ok
+test tests::wrong_parent_kind_is_rejected ... ok
+test tests::zone_cannot_cross_houses ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

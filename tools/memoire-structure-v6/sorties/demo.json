@@ -1,0 +1,367 @@
+{
+  "scope": "synthetic single-writer structural prototype, no runtime benchmark",
+  "epoch": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "slot": 0,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 10,
+      "resolved_id": 1,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 10,
+      "slot": 1,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 9,
+      "resolved_id": 10,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 20,
+      "slot": 2,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 8,
+      "resolved_id": 20,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 30,
+      "slot": 3,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 7,
+      "resolved_id": 30,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 40,
+      "slot": 4,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 6,
+      "resolved_id": 40,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 41,
+      "slot": 5,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 5,
+      "resolved_id": 41,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 50,
+      "slot": 6,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 4,
+      "resolved_id": 50,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 60,
+      "slot": 7,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 3,
+      "resolved_id": 60,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 70,
+      "slot": 10,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 0,
+      "resolved_id": 70,
+      "payload": 0,
+      "value_kind": 0,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 0,
+      "changed_ms": 0
+    },
+    {
+      "id": 100,
+      "slot": 8,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 2,
+      "resolved_id": 100,
+      "payload": 21,
+      "value_kind": 1,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 1030,
+      "changed_ms": 1000
+    },
+    {
+      "id": 101,
+      "slot": 9,
+      "generation": 1,
+      "arena": 1,
+      "physical_index": 1,
+      "resolved_id": 101,
+      "payload": 42,
+      "value_kind": 1,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 1031,
+      "changed_ms": 1000
+    },
+    {
+      "id": 200,
+      "slot": 11,
+      "generation": 1,
+      "arena": 2,
+      "physical_index": 0,
+      "resolved_id": 100,
+      "payload": 21,
+      "value_kind": 1,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 1030,
+      "changed_ms": 1000
+    },
+    {
+      "id": 201,
+      "slot": 12,
+      "generation": 1,
+      "arena": 2,
+      "physical_index": 1,
+      "resolved_id": 100,
+      "payload": 21,
+      "value_kind": 1,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 1030,
+      "changed_ms": 1000
+    },
+    {
+      "id": 202,
+      "slot": 13,
+      "generation": 1,
+      "arena": 2,
+      "physical_index": 2,
+      "resolved_id": 101,
+      "payload": 42,
+      "value_kind": 1,
+      "previous_payload": null,
+      "previous_kind": null,
+      "received_ms": 1031,
+      "changed_ms": 1000
+    }
+  ],
+  "edges": [
+    {
+      "from": 1,
+      "to": 10,
+      "relation": 1
+    },
+    {
+      "from": 10,
+      "to": 20,
+      "relation": 1
+    },
+    {
+      "from": 20,
+      "to": 30,
+      "relation": 1
+    },
+    {
+      "from": 10,
+      "to": 40,
+      "relation": 1
+    },
+    {
+      "from": 10,
+      "to": 41,
+      "relation": 1
+    },
+    {
+      "from": 30,
+      "to": 50,
+      "relation": 1
+    },
+    {
+      "from": 30,
+      "to": 60,
+      "relation": 1
+    },
+    {
+      "from": 50,
+      "to": 100,
+      "relation": 1
+    },
+    {
+      "from": 60,
+      "to": 101,
+      "relation": 1
+    },
+    {
+      "from": 10,
+      "to": 70,
+      "relation": 1
+    },
+    {
+      "from": 60,
+      "to": 200,
+      "relation": 1
+    },
+    {
+      "from": 60,
+      "to": 201,
+      "relation": 1
+    },
+    {
+      "from": 60,
+      "to": 202,
+      "relation": 1
+    },
+    {
+      "from": 40,
+      "to": 30,
+      "relation": 2
+    },
+    {
+      "from": 41,
+      "to": 30,
+      "relation": 2
+    }
+  ],
+  "memory": {
+    "scope": "Vec element storage only; allocator overhead, HashMap buckets/control bytes, stacks and temporary builders excluded",
+    "vectors": {
+      "rows": {
+        "len": 11,
+        "capacity": 11,
+        "element_bytes": 96,
+        "used_bytes": 1056,
+        "capacity_bytes": 1056
+      },
+      "aliases": {
+        "len": 3,
+        "capacity": 3,
+        "element_bytes": 32,
+        "used_bytes": 96,
+        "capacity_bytes": 96
+      },
+      "global_slots": {
+        "len": 14,
+        "capacity": 16,
+        "element_bytes": 16,
+        "used_bytes": 224,
+        "capacity_bytes": 256
+      },
+      "metadata": {
+        "len": 14,
+        "capacity": 16,
+        "element_bytes": 32,
+        "used_bytes": 448,
+        "capacity_bytes": 512
+      },
+      "durable_edges": {
+        "len": 15,
+        "capacity": 16,
+        "element_bytes": 24,
+        "used_bytes": 360,
+        "capacity_bytes": 384
+      },
+      "forward_offsets": {
+        "len": 15,
+        "capacity": 15,
+        "element_bytes": 4,
+        "used_bytes": 60,
+        "capacity_bytes": 60
+      },
+      "forward_targets": {
+        "len": 15,
+        "capacity": 15,
+        "element_bytes": 12,
+        "used_bytes": 180,
+        "capacity_bytes": 180
+      },
+      "reverse_offsets": {
+        "len": 15,
+        "capacity": 15,
+        "element_bytes": 4,
+        "used_bytes": 60,
+        "capacity_bytes": 60
+      },
+      "reverse_edge_indices": {
+        "len": 15,
+        "capacity": 15,
+        "element_bytes": 4,
+        "used_bytes": 60,
+        "capacity_bytes": 60
+      },
+      "pool_entries": {
+        "len": 0,
+        "capacity": 0,
+        "element_bytes": 16,
+        "used_bytes": 0,
+        "capacity_bytes": 0
+      },
+      "pool_bytes": {
+        "len": 0,
+        "capacity": 0,
+        "element_bytes": 1,
+        "used_bytes": 0,
+        "capacity_bytes": 0
+      }
+    },
+    "index": {
+      "len": 14,
+      "capacity": 14,
+      "key_value_payload_bytes": 224,
+      "allocation_bytes": null
+    }
+  }
+}

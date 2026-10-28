@@ -1,0 +1,22 @@
+{
+  "authenticated": true,
+  "errors": 0,
+  "houses": [
+    {
+      "name": "Maison A",
+      "rooms": 17,
+      "channels": 1791,
+      "received_channel_states": 1789
+    },
+    {
+      "name": "Maison B",
+      "rooms": 17,
+      "channels": 1500,
+      "received_channel_states": 1500
+    }
+  ],
+  "ha_config": true,
+  "ha_state": true,
+  "ha_online": true,
+  "physical_publications": 0
+}

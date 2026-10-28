@@ -1,0 +1,5575 @@
+{
+  "version": 1,
+  "commit": "a83589366f67d6b8273a10ad41658d688e498fda",
+  "scope": "code et profils du dépôt ; aucune instance réelle interrogée",
+  "kinds": [
+    "Timer",
+    "TimerCommand",
+    "Temporal",
+    "Computed",
+    "Schedule",
+    "Counter",
+    "CounterCommand",
+    "Button",
+    "Binary",
+    "Numeric",
+    "Enum",
+    "Text"
+  ],
+  "semantics": [
+    "OnOff",
+    "Brightness",
+    "ColorTemp",
+    "Color",
+    "Power",
+    "ApparentPower",
+    "Energy",
+    "Voltage",
+    "Current",
+    "Temperature",
+    "Humidity",
+    "Pressure",
+    "Illuminance",
+    "Battery",
+    "BatteryLow",
+    "SignalStrength",
+    "Contact",
+    "Occupancy",
+    "WaterLeak",
+    "Smoke",
+    "Tamper",
+    "Config",
+    "Control",
+    "Lock",
+    "Diagnostic",
+    "Other"
+  ],
+  "values": [
+    "Null",
+    "Bool",
+    "Int",
+    "Float",
+    "Text"
+  ],
+  "automation_steps": [
+    "WhenOccurrence",
+    "WhenState",
+    "WhenThreshold",
+    "AtTime",
+    "AtSun",
+    "Every",
+    "OnStart",
+    "Manual",
+    "If",
+    "Set",
+    "Toggle",
+    "Scene",
+    "Wait",
+    "WaitFor",
+    "Notify",
+    "Write"
+  ],
+  "integrations": [
+    {
+      "id": "alexa",
+      "name": "Enceintes Amazon Echo (Alexa)",
+      "driver": "alexa",
+      "crate": "moli-alexa",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Config"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/alexa/integration.toml"
+    },
+    {
+      "id": "androidtv",
+      "name": "Android TV et Google TV",
+      "driver": "androidtv",
+      "crate": "moli-androidtv-driver",
+      "transport": "tcp",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "OnOff"
+      ],
+      "units": [
+        "Second"
+      ],
+      "profile_points": 0,
+      "source": "integrations/androidtv/integration.toml"
+    },
+    {
+      "id": "ariston",
+      "name": "Ariston (chauffe-eau Velis, cloud Ariston NET)",
+      "driver": "ariston",
+      "crate": "moli-ariston",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric"
+      ],
+      "semantics": [],
+      "units": [
+        "Celsius",
+        "Minute"
+      ],
+      "profile_points": 0,
+      "source": "integrations/ariston/integration.toml"
+    },
+    {
+      "id": "asuswrt",
+      "name": "ASUSWRT",
+      "driver": "asuswrt",
+      "crate": "moli-asuswrt",
+      "transport": "http",
+      "kinds": [
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Diagnostic",
+        "SignalStrength"
+      ],
+      "units": [
+        "Other",
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/asuswrt/integration.toml"
+    },
+    {
+      "id": "bambu",
+      "name": "Imprimante 3D Bambu Lab",
+      "driver": "bambu",
+      "crate": "moli-bambu",
+      "transport": "mqtt",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Control",
+        "Other"
+      ],
+      "units": [
+        "Celsius",
+        "Minute",
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/bambu/integration.toml"
+    },
+    {
+      "id": "cast",
+      "name": "Google Cast : récepteurs vidéo",
+      "driver": "cast",
+      "crate": "moli-cast",
+      "transport": "tcp",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [],
+      "units": [
+        "Percent",
+        "Second"
+      ],
+      "profile_points": 0,
+      "source": "integrations/cast/integration.toml"
+    },
+    {
+      "id": "daikin-brp069",
+      "name": "Daikin (adaptateur Wi-Fi BRP069)",
+      "driver": "profile",
+      "crate": "",
+      "transport": "http",
+      "kinds": [],
+      "semantics": [],
+      "units": [],
+      "profile_points": 8,
+      "source": "integrations/daikin-brp069/integration.toml"
+    },
+    {
+      "id": "demo",
+      "name": "Maison de démonstration (appareils simulés)",
+      "driver": "demo",
+      "crate": "moli-demo",
+      "transport": "native",
+      "kinds": [
+        "Binary",
+        "Numeric"
+      ],
+      "semantics": [
+        "ApparentPower",
+        "Current",
+        "Energy",
+        "Humidity",
+        "Illuminance",
+        "Occupancy",
+        "Power",
+        "SignalStrength",
+        "Temperature",
+        "Voltage"
+      ],
+      "units": [
+        "KiloWattHour",
+        "Volt"
+      ],
+      "profile_points": 0,
+      "source": "integrations/demo/integration.toml"
+    },
+    {
+      "id": "esphome",
+      "name": "Appareil ESPHome (satellite vocal)",
+      "driver": "esphome",
+      "crate": "moli-esphome",
+      "transport": "tcp",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/esphome/integration.toml"
+    },
+    {
+      "id": "frigate",
+      "name": "Frigate (enregistreur vidéo)",
+      "driver": "frigate",
+      "crate": "moli-frigate",
+      "transport": "mqtt",
+      "kinds": [
+        "Binary",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Other"
+      ],
+      "units": [
+        "Hour",
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/frigate/integration.toml"
+    },
+    {
+      "id": "helpers",
+      "name": "Aides de la maison (mode, alarme, budget…)",
+      "driver": "helpers",
+      "crate": "moli-helpers",
+      "transport": "native",
+      "kinds": [
+        "Binary",
+        "Button",
+        "Computed",
+        "Counter",
+        "CounterCommand",
+        "Enum",
+        "Numeric",
+        "Schedule",
+        "Temporal",
+        "Text",
+        "Timer",
+        "TimerCommand"
+      ],
+      "semantics": [
+        "OnOff",
+        "Other"
+      ],
+      "units": [
+        "Second"
+      ],
+      "profile_points": 0,
+      "source": "integrations/helpers/integration.toml"
+    },
+    {
+      "id": "host",
+      "name": "La machine de Moli (processeur, mémoire, températures, réseau)",
+      "driver": "host",
+      "crate": "moli-host",
+      "transport": "native",
+      "kinds": [
+        "Binary",
+        "Numeric"
+      ],
+      "semantics": [
+        "Control",
+        "Other"
+      ],
+      "units": [
+        "Celsius",
+        "Percent",
+        "Second"
+      ],
+      "profile_points": 0,
+      "source": "integrations/host/integration.toml"
+    },
+    {
+      "id": "huawei-lte",
+      "name": "Huawei LTE",
+      "driver": "huawei-lte",
+      "crate": "moli-huawei-lte",
+      "transport": "http",
+      "kinds": [
+        "Binary",
+        "Numeric"
+      ],
+      "semantics": [
+        "Diagnostic",
+        "SignalStrength"
+      ],
+      "units": [
+        "Decibel",
+        "Other",
+        "Second"
+      ],
+      "profile_points": 0,
+      "source": "integrations/huawei-lte/integration.toml"
+    },
+    {
+      "id": "hue",
+      "name": "Philips Hue (pont, API CLIP v2)",
+      "driver": "hue",
+      "crate": "moli-hue",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Battery",
+        "Brightness",
+        "Color",
+        "ColorTemp",
+        "Contact",
+        "Illuminance",
+        "Occupancy",
+        "OnOff",
+        "Other",
+        "Temperature"
+      ],
+      "units": [
+        "Celsius",
+        "Lux",
+        "Other",
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/hue/integration.toml"
+    },
+    {
+      "id": "igd",
+      "name": "Box internet (UPnP IGD)",
+      "driver": "igd",
+      "crate": "moli-igd",
+      "transport": "upnp",
+      "kinds": [
+        "Binary",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [],
+      "units": [
+        "Second"
+      ],
+      "profile_points": 0,
+      "source": "integrations/igd/integration.toml"
+    },
+    {
+      "id": "iopool",
+      "name": "Piscine (iopool)",
+      "driver": "profile",
+      "crate": "",
+      "transport": "https",
+      "kinds": [],
+      "semantics": [],
+      "units": [],
+      "profile_points": 7,
+      "source": "integrations/iopool/integration.toml"
+    },
+    {
+      "id": "ipp",
+      "name": "Imprimante réseau (IPP Everywhere, AirPrint)",
+      "driver": "ipp",
+      "crate": "moli-ipp",
+      "transport": "http",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Control",
+        "Other"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/ipp/integration.toml"
+    },
+    {
+      "id": "klipper",
+      "name": "Imprimante 3D Klipper (Moonraker), pilote complet",
+      "driver": "moonraker",
+      "crate": "moli-moonraker",
+      "transport": "http",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Config",
+        "Control",
+        "Other",
+        "Temperature"
+      ],
+      "units": [
+        "Celsius",
+        "Hour",
+        "Minute",
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/klipper/integration.toml"
+    },
+    {
+      "id": "landroid",
+      "name": "Tondeuse Worx Landroid (cloud Worx)",
+      "driver": "landroid",
+      "crate": "moli-landroid",
+      "transport": "mqtt",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Battery",
+        "Config",
+        "Control",
+        "Other",
+        "SignalStrength",
+        "Temperature"
+      ],
+      "units": [
+        "Celsius",
+        "Hour",
+        "Minute",
+        "Other",
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/landroid/integration.toml"
+    },
+    {
+      "id": "meross-em06",
+      "name": "Compteur d'énergie Meross EM06",
+      "driver": "profile",
+      "crate": "",
+      "transport": "http",
+      "kinds": [],
+      "semantics": [],
+      "units": [],
+      "profile_points": 36,
+      "source": "integrations/meross-em06/integration.toml"
+    },
+    {
+      "id": "moonraker",
+      "name": "Imprimante 3D (Klipper / Moonraker)",
+      "driver": "profile",
+      "crate": "",
+      "transport": "http",
+      "kinds": [],
+      "semantics": [],
+      "units": [],
+      "profile_points": 8,
+      "source": "integrations/moonraker/integration.toml"
+    },
+    {
+      "id": "netatmo",
+      "name": "Station météo Netatmo",
+      "driver": "netatmo",
+      "crate": "moli-netatmo",
+      "transport": "https",
+      "kinds": [
+        "Exchange",
+        "Numeric",
+        "Refresh",
+        "Weather"
+      ],
+      "semantics": [
+        "Battery",
+        "Humidity",
+        "Other",
+        "Pressure",
+        "Temperature"
+      ],
+      "units": [],
+      "profile_points": 0,
+      "source": "integrations/netatmo/integration.toml"
+    },
+    {
+      "id": "netgear",
+      "name": "Netgear SOAP (lecture)",
+      "driver": "netgear",
+      "crate": "moli-netgear",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Diagnostic",
+        "SignalStrength"
+      ],
+      "units": [
+        "Other",
+        "Percent",
+        "Second"
+      ],
+      "profile_points": 0,
+      "source": "integrations/netgear/integration.toml"
+    },
+    {
+      "id": "nuki",
+      "name": "Serrure Nuki (pont Nuki, API HTTP locale)",
+      "driver": "nuki",
+      "crate": "moli-nuki",
+      "transport": "http",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Battery",
+        "BatteryLow",
+        "Contact",
+        "Lock",
+        "Other"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/nuki/integration.toml"
+    },
+    {
+      "id": "open-meteo",
+      "name": "Météo",
+      "driver": "profile",
+      "crate": "",
+      "transport": "https",
+      "kinds": [],
+      "semantics": [],
+      "units": [],
+      "profile_points": 15,
+      "source": "integrations/open-meteo/integration.toml"
+    },
+    {
+      "id": "open-meteo-air",
+      "name": "Qualité de l'air",
+      "driver": "profile",
+      "crate": "",
+      "transport": "https",
+      "kinds": [],
+      "semantics": [],
+      "units": [],
+      "profile_points": 6,
+      "source": "integrations/open-meteo-air/integration.toml"
+    },
+    {
+      "id": "overkiz",
+      "name": "Somfy TaHoma et Connectivity Kit (API Overkiz)",
+      "driver": "overkiz",
+      "crate": "moli-overkiz",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric"
+      ],
+      "semantics": [
+        "Brightness",
+        "OnOff",
+        "Other"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/overkiz/integration.toml"
+    },
+    {
+      "id": "philips",
+      "name": "Télé Philips (Android, JointSpace)",
+      "driver": "philips",
+      "crate": "moli-philips",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "OnOff",
+        "Other"
+      ],
+      "units": [
+        "Second"
+      ],
+      "profile_points": 0,
+      "source": "integrations/philips/integration.toml"
+    },
+    {
+      "id": "phones",
+      "name": "Téléphones de la famille (appli Moli)",
+      "driver": "phones",
+      "crate": "moli-phones",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Occupancy",
+        "Other"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/phones/integration.toml"
+    },
+    {
+      "id": "presence",
+      "name": "Présence (téléphones sur le Wi-Fi de la maison)",
+      "driver": "presence",
+      "crate": "moli-presence",
+      "transport": "native",
+      "kinds": [
+        "Binary"
+      ],
+      "semantics": [
+        "Occupancy",
+        "Other"
+      ],
+      "units": [],
+      "profile_points": 0,
+      "source": "integrations/presence/integration.toml"
+    },
+    {
+      "id": "reolink",
+      "name": "Caméras Reolink (Home Hub)",
+      "driver": "reolink",
+      "crate": "moli-reolink",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Text"
+      ],
+      "semantics": [
+        "Other"
+      ],
+      "units": [],
+      "profile_points": 0,
+      "source": "integrations/reolink/integration.toml"
+    },
+    {
+      "id": "reservations",
+      "name": "Réservations ICS et fenêtres invitées",
+      "driver": "reservations",
+      "crate": "moli-reservations",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Other"
+      ],
+      "units": [],
+      "profile_points": 0,
+      "source": "integrations/reservations/integration.toml"
+    },
+    {
+      "id": "roborock",
+      "name": "Aspirateur Roborock (Mi Home, miIO local)",
+      "driver": "roborock",
+      "crate": "moli-roborock",
+      "transport": "udp",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric"
+      ],
+      "semantics": [
+        "Battery",
+        "Control",
+        "Other"
+      ],
+      "units": [
+        "Minute",
+        "Other",
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/roborock/integration.toml"
+    },
+    {
+      "id": "samsung",
+      "name": "Télé Samsung Tizen",
+      "driver": "samsung",
+      "crate": "moli-samsung",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "OnOff",
+        "Other"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/samsung/integration.toml"
+    },
+    {
+      "id": "smlight",
+      "name": "SMLIGHT",
+      "driver": "profile",
+      "crate": "",
+      "transport": "http",
+      "kinds": [],
+      "semantics": [],
+      "units": [],
+      "profile_points": 7,
+      "source": "integrations/smlight/integration.toml"
+    },
+    {
+      "id": "sonos",
+      "name": "Enceintes Sonos",
+      "driver": "sonos",
+      "crate": "moli-sonos",
+      "transport": "upnp",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "OnOff",
+        "Other"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/sonos/integration.toml"
+    },
+    {
+      "id": "tapo",
+      "name": "TP-Link Tapo (ampoules, prises)",
+      "driver": "tapo",
+      "crate": "moli-tapo",
+      "transport": "http",
+      "kinds": [
+        "Binary",
+        "Numeric"
+      ],
+      "semantics": [
+        "Brightness",
+        "OnOff"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/tapo/integration.toml"
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram (messages à la maison)",
+      "driver": "telegram",
+      "crate": "moli-telegram",
+      "transport": "https",
+      "kinds": [
+        "Text"
+      ],
+      "semantics": [
+        "Other"
+      ],
+      "units": [],
+      "profile_points": 0,
+      "source": "integrations/telegram/integration.toml"
+    },
+    {
+      "id": "tempo",
+      "name": "Couleur Tempo",
+      "driver": "profile",
+      "crate": "",
+      "transport": "https",
+      "kinds": [],
+      "semantics": [],
+      "units": [],
+      "profile_points": 2,
+      "source": "integrations/tempo/integration.toml"
+    },
+    {
+      "id": "tuya",
+      "name": "Tuya Wi-Fi en local",
+      "driver": "tuya",
+      "crate": "moli-tuya",
+      "transport": "tcp",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Battery",
+        "Humidity",
+        "OnOff",
+        "Other",
+        "Power",
+        "Temperature"
+      ],
+      "units": [
+        "Ampere",
+        "Celsius",
+        "KiloWattHour",
+        "Watt"
+      ],
+      "profile_points": 0,
+      "source": "integrations/tuya/integration.toml"
+    },
+    {
+      "id": "twinkly",
+      "name": "Twinkly locale (marche, luminosité, RGB statique)",
+      "driver": "twinkly",
+      "crate": "moli-twinkly",
+      "transport": "http",
+      "kinds": [
+        "Binary",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Brightness",
+        "Color",
+        "OnOff"
+      ],
+      "units": [
+        "Percent"
+      ],
+      "profile_points": 0,
+      "source": "integrations/twinkly/integration.toml"
+    },
+    {
+      "id": "voltalis",
+      "name": "Voltalis (radiateurs fil pilote et relais de chauffe-eau)",
+      "driver": "voltalis",
+      "crate": "moli-voltalis",
+      "transport": "https",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Config",
+        "Control",
+        "Other"
+      ],
+      "units": [
+        "Celsius"
+      ],
+      "profile_points": 0,
+      "source": "integrations/voltalis/integration.toml"
+    },
+    {
+      "id": "wyoming",
+      "name": "Wyoming",
+      "driver": "wyoming",
+      "crate": "moli-wyoming",
+      "transport": "tcp",
+      "kinds": [
+        "Binary",
+        "Text"
+      ],
+      "semantics": [
+        "Diagnostic",
+        "OnOff"
+      ],
+      "units": [],
+      "profile_points": 0,
+      "source": "integrations/wyoming/integration.toml"
+    },
+    {
+      "id": "z2m",
+      "name": "Zigbee (via Zigbee2MQTT)",
+      "driver": "z2m",
+      "crate": "moli-z2m",
+      "transport": "mqtt",
+      "kinds": [
+        "Binary",
+        "Enum",
+        "Numeric",
+        "Text"
+      ],
+      "semantics": [
+        "Config",
+        "OnOff",
+        "Power",
+        "Temperature"
+      ],
+      "units": [
+        "Minute",
+        "Watt"
+      ],
+      "profile_points": 0,
+      "source": "integrations/z2m/integration.toml"
+    }
+  ],
+  "profile_points": [
+    {
+      "integration": "daikin-brp069",
+      "key": "on",
+      "kind": "binary",
+      "unit": "—",
+      "semantic": "on_off",
+      "writable": true,
+      "from_path": "control.pow",
+      "source": "integrations/daikin-brp069/profile.toml"
+    },
+    {
+      "integration": "daikin-brp069",
+      "key": "mode",
+      "kind": "enum",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": true,
+      "from_path": "control.mode",
+      "source": "integrations/daikin-brp069/profile.toml"
+    },
+    {
+      "integration": "daikin-brp069",
+      "key": "target_temperature",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "config",
+      "writable": true,
+      "from_path": "control.stemp",
+      "source": "integrations/daikin-brp069/profile.toml"
+    },
+    {
+      "integration": "daikin-brp069",
+      "key": "temperature",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "temperature",
+      "writable": false,
+      "from_path": "sensor.htemp",
+      "source": "integrations/daikin-brp069/profile.toml"
+    },
+    {
+      "integration": "daikin-brp069",
+      "key": "outdoor_temperature",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "temperature",
+      "writable": false,
+      "from_path": "sensor.otemp",
+      "source": "integrations/daikin-brp069/profile.toml"
+    },
+    {
+      "integration": "daikin-brp069",
+      "key": "humidity",
+      "kind": "numeric",
+      "unit": "%",
+      "semantic": "humidity",
+      "writable": false,
+      "from_path": "sensor.hhum",
+      "source": "integrations/daikin-brp069/profile.toml"
+    },
+    {
+      "integration": "daikin-brp069",
+      "key": "fan",
+      "kind": "enum",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": true,
+      "from_path": "control.f_rate",
+      "source": "integrations/daikin-brp069/profile.toml"
+    },
+    {
+      "integration": "daikin-brp069",
+      "key": "error",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "other",
+      "writable": false,
+      "from_path": "control.err",
+      "source": "integrations/daikin-brp069/profile.toml"
+    },
+    {
+      "integration": "iopool",
+      "key": "temperature",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "pools.0.latestMeasure.temperature",
+      "source": "integrations/iopool/profile.toml"
+    },
+    {
+      "integration": "iopool",
+      "key": "ph",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "pools.0.latestMeasure.ph",
+      "source": "integrations/iopool/profile.toml"
+    },
+    {
+      "integration": "iopool",
+      "key": "orp",
+      "kind": "numeric",
+      "unit": "mV",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "pools.0.latestMeasure.orp",
+      "source": "integrations/iopool/profile.toml"
+    },
+    {
+      "integration": "iopool",
+      "key": "measured_at",
+      "kind": "text",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "pools.0.latestMeasure.measuredAt",
+      "source": "integrations/iopool/profile.toml"
+    },
+    {
+      "integration": "iopool",
+      "key": "action_required",
+      "kind": "binary",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "pools.0.hasAnActionRequired",
+      "source": "integrations/iopool/profile.toml"
+    },
+    {
+      "integration": "iopool",
+      "key": "filtration",
+      "kind": "numeric",
+      "unit": "h",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "pools.0.advice.filtrationDuration",
+      "source": "integrations/iopool/profile.toml"
+    },
+    {
+      "integration": "iopool",
+      "key": "mode",
+      "kind": "text",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "pools.0.mode",
+      "source": "integrations/iopool/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_1",
+      "kind": "numeric",
+      "unit": "W",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=1].power",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "current_1",
+      "kind": "numeric",
+      "unit": "A",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=1].current",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "voltage_1",
+      "kind": "numeric",
+      "unit": "V",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=1].voltage",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_factor_1",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "other",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=1].factor",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_today_1",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=1].today",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_month_1",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=1].mConsume",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_2",
+      "kind": "numeric",
+      "unit": "W",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=2].power",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "current_2",
+      "kind": "numeric",
+      "unit": "A",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=2].current",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "voltage_2",
+      "kind": "numeric",
+      "unit": "V",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=2].voltage",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_factor_2",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "other",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=2].factor",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_today_2",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=2].today",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_month_2",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=2].mConsume",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_3",
+      "kind": "numeric",
+      "unit": "W",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=3].power",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "current_3",
+      "kind": "numeric",
+      "unit": "A",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=3].current",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "voltage_3",
+      "kind": "numeric",
+      "unit": "V",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=3].voltage",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_factor_3",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "other",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=3].factor",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_today_3",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=3].today",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_month_3",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=3].mConsume",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_4",
+      "kind": "numeric",
+      "unit": "W",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=4].power",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "current_4",
+      "kind": "numeric",
+      "unit": "A",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=4].current",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "voltage_4",
+      "kind": "numeric",
+      "unit": "V",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=4].voltage",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_factor_4",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "other",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=4].factor",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_today_4",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=4].today",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_month_4",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=4].mConsume",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_5",
+      "kind": "numeric",
+      "unit": "W",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=5].power",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "current_5",
+      "kind": "numeric",
+      "unit": "A",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=5].current",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "voltage_5",
+      "kind": "numeric",
+      "unit": "V",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=5].voltage",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_factor_5",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "other",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=5].factor",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_today_5",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=5].today",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_month_5",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=5].mConsume",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_6",
+      "kind": "numeric",
+      "unit": "W",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=6].power",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "current_6",
+      "kind": "numeric",
+      "unit": "A",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=6].current",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "voltage_6",
+      "kind": "numeric",
+      "unit": "V",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=6].voltage",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "power_factor_6",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "other",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=6].factor",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_today_6",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=6].today",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "meross-em06",
+      "key": "energy_month_6",
+      "kind": "numeric",
+      "unit": "Wh",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "e.payload.electricity.[channel=6].mConsume",
+      "source": "integrations/meross-em06/profile.toml"
+    },
+    {
+      "integration": "moonraker",
+      "key": "state",
+      "kind": "enum",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "q.result.status.print_stats.state",
+      "source": "integrations/moonraker/profile.toml"
+    },
+    {
+      "integration": "moonraker",
+      "key": "progress",
+      "kind": "numeric",
+      "unit": "%",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "q.result.status.display_status.progress",
+      "source": "integrations/moonraker/profile.toml"
+    },
+    {
+      "integration": "moonraker",
+      "key": "file",
+      "kind": "text",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "q.result.status.print_stats.filename",
+      "source": "integrations/moonraker/profile.toml"
+    },
+    {
+      "integration": "moonraker",
+      "key": "print_duration",
+      "kind": "numeric",
+      "unit": "min",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "q.result.status.print_stats.print_duration",
+      "source": "integrations/moonraker/profile.toml"
+    },
+    {
+      "integration": "moonraker",
+      "key": "nozzle_temperature",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "temperature",
+      "writable": false,
+      "from_path": "q.result.status.extruder.temperature",
+      "source": "integrations/moonraker/profile.toml"
+    },
+    {
+      "integration": "moonraker",
+      "key": "nozzle_target",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "config",
+      "writable": false,
+      "from_path": "q.result.status.extruder.target",
+      "source": "integrations/moonraker/profile.toml"
+    },
+    {
+      "integration": "moonraker",
+      "key": "bed_temperature",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "temperature",
+      "writable": false,
+      "from_path": "q.result.status.heater_bed.temperature",
+      "source": "integrations/moonraker/profile.toml"
+    },
+    {
+      "integration": "moonraker",
+      "key": "bed_target",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "config",
+      "writable": false,
+      "from_path": "q.result.status.heater_bed.target",
+      "source": "integrations/moonraker/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "temperature",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.temperature_2m",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "feels_like",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.apparent_temperature",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "humidity",
+      "kind": "numeric",
+      "unit": "%",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.relative_humidity_2m",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "precipitation",
+      "kind": "numeric",
+      "unit": "mm",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.precipitation",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "cloud_cover",
+      "kind": "numeric",
+      "unit": "%",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.cloud_cover",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "wind_speed",
+      "kind": "numeric",
+      "unit": "km/h",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.wind_speed_10m",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "wind_gusts",
+      "kind": "numeric",
+      "unit": "km/h",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.wind_gusts_10m",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "weather_code",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.weather_code",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "daylight",
+      "kind": "binary",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.current.is_day",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "today_max",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.daily.temperature_2m_max.0",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "today_min",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.daily.temperature_2m_min.0",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "today_rain",
+      "kind": "numeric",
+      "unit": "mm",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.daily.precipitation_sum.0",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "today_rain_chance",
+      "kind": "numeric",
+      "unit": "%",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.daily.precipitation_probability_max.0",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "sunrise",
+      "kind": "text",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.daily.sunrise.0",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo",
+      "key": "sunset",
+      "kind": "text",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "w.daily.sunset.0",
+      "source": "integrations/open-meteo/profile.toml"
+    },
+    {
+      "integration": "open-meteo-air",
+      "key": "aqi",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "a.current.european_aqi",
+      "source": "integrations/open-meteo-air/profile.toml"
+    },
+    {
+      "integration": "open-meteo-air",
+      "key": "pm2_5",
+      "kind": "numeric",
+      "unit": "µg/m³",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "a.current.pm2_5",
+      "source": "integrations/open-meteo-air/profile.toml"
+    },
+    {
+      "integration": "open-meteo-air",
+      "key": "pm10",
+      "kind": "numeric",
+      "unit": "µg/m³",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "a.current.pm10",
+      "source": "integrations/open-meteo-air/profile.toml"
+    },
+    {
+      "integration": "open-meteo-air",
+      "key": "no2",
+      "kind": "numeric",
+      "unit": "µg/m³",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "a.current.nitrogen_dioxide",
+      "source": "integrations/open-meteo-air/profile.toml"
+    },
+    {
+      "integration": "open-meteo-air",
+      "key": "ozone",
+      "kind": "numeric",
+      "unit": "µg/m³",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "a.current.ozone",
+      "source": "integrations/open-meteo-air/profile.toml"
+    },
+    {
+      "integration": "open-meteo-air",
+      "key": "uv_index",
+      "kind": "numeric",
+      "unit": "UV",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "a.current.uv_index",
+      "source": "integrations/open-meteo-air/profile.toml"
+    },
+    {
+      "integration": "smlight",
+      "key": "firmware",
+      "kind": "text",
+      "unit": "—",
+      "semantic": "diagnostic",
+      "writable": false,
+      "from_path": "info.Info.sw_version",
+      "source": "integrations/smlight/profile.toml"
+    },
+    {
+      "integration": "smlight",
+      "key": "esp32_temp",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "diagnostic",
+      "writable": false,
+      "from_path": "sensors.Sensors.esp32_temp",
+      "source": "integrations/smlight/profile.toml"
+    },
+    {
+      "integration": "smlight",
+      "key": "zb_temp",
+      "kind": "numeric",
+      "unit": "°C",
+      "semantic": "diagnostic",
+      "writable": false,
+      "from_path": "sensors.Sensors.zb_temp",
+      "source": "integrations/smlight/profile.toml"
+    },
+    {
+      "integration": "smlight",
+      "key": "uptime",
+      "kind": "numeric",
+      "unit": "s",
+      "semantic": "diagnostic",
+      "writable": false,
+      "from_path": "sensors.Sensors.uptime",
+      "source": "integrations/smlight/profile.toml"
+    },
+    {
+      "integration": "smlight",
+      "key": "ram_usage",
+      "kind": "numeric",
+      "unit": "—",
+      "semantic": "diagnostic",
+      "writable": false,
+      "from_path": "sensors.Sensors.ram_usage",
+      "source": "integrations/smlight/profile.toml"
+    },
+    {
+      "integration": "smlight",
+      "key": "ethernet",
+      "kind": "binary",
+      "unit": "—",
+      "semantic": "diagnostic",
+      "writable": false,
+      "from_path": "sensors.Sensors.ethernet",
+      "source": "integrations/smlight/profile.toml"
+    },
+    {
+      "integration": "smlight",
+      "key": "wifi_connected",
+      "kind": "binary",
+      "unit": "—",
+      "semantic": "diagnostic",
+      "writable": false,
+      "from_path": "sensors.Sensors.wifi_connected",
+      "source": "integrations/smlight/profile.toml"
+    },
+    {
+      "integration": "tempo",
+      "key": "today",
+      "kind": "enum",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "today.codeJour",
+      "source": "integrations/tempo/profile.toml"
+    },
+    {
+      "integration": "tempo",
+      "key": "tomorrow",
+      "kind": "enum",
+      "unit": "—",
+      "semantic": "inférée",
+      "writable": false,
+      "from_path": "tomorrow.codeJour",
+      "source": "integrations/tempo/profile.toml"
+    }
+  ],
+  "evidence": [
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-alexa/src/lib.rs",
+      "line": 97
+    },
+    {
+      "integration": "alexa",
+      "category": "Semantic",
+      "variant": "Config",
+      "path": "crates/moli-alexa/src/lib.rs",
+      "line": 100
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 92
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 99
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 106
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 113
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 120
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 127
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 134
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 141
+    },
+    {
+      "integration": "alexa",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 153
+    },
+    {
+      "integration": "alexa",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-alexa/src/echo.rs",
+      "line": 159
+    },
+    {
+      "integration": "androidtv",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 103
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 115
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 122
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 133
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 140
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 147
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 154
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 163
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 175
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 191
+    },
+    {
+      "integration": "androidtv",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 200
+    },
+    {
+      "integration": "androidtv",
+      "category": "Unit",
+      "variant": "Second",
+      "path": "crates/moli-androidtv-driver/src/model.rs",
+      "line": 208
+    },
+    {
+      "integration": "ariston",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-ariston/src/model.rs",
+      "line": 218
+    },
+    {
+      "integration": "ariston",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-ariston/src/model.rs",
+      "line": 224
+    },
+    {
+      "integration": "ariston",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-ariston/src/model.rs",
+      "line": 226
+    },
+    {
+      "integration": "ariston",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-ariston/src/model.rs",
+      "line": 231
+    },
+    {
+      "integration": "ariston",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-ariston/src/model.rs",
+      "line": 233
+    },
+    {
+      "integration": "ariston",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-ariston/src/model.rs",
+      "line": 238
+    },
+    {
+      "integration": "ariston",
+      "category": "Unit",
+      "variant": "Minute",
+      "path": "crates/moli-ariston/src/model.rs",
+      "line": 240
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-asuswrt/src/runtime_tests.rs",
+      "line": 130
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Semantic",
+      "variant": "SignalStrength",
+      "path": "crates/moli-asuswrt/src/runtime_tests.rs",
+      "line": 130
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 48
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 51
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 55
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 59
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 63
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 67
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 71
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 75
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 79
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 86
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 90
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 99
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 101
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Semantic",
+      "variant": "SignalStrength",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 112
+    },
+    {
+      "integration": "asuswrt",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-asuswrt/src/publication.rs",
+      "line": 114
+    },
+    {
+      "integration": "bambu",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 148
+    },
+    {
+      "integration": "bambu",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 165
+    },
+    {
+      "integration": "bambu",
+      "category": "Unit",
+      "variant": "Minute",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 166
+    },
+    {
+      "integration": "bambu",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 167
+    },
+    {
+      "integration": "bambu",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 175
+    },
+    {
+      "integration": "bambu",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 184
+    },
+    {
+      "integration": "bambu",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 191
+    },
+    {
+      "integration": "bambu",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 198
+    },
+    {
+      "integration": "bambu",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-bambu/src/lib.rs",
+      "line": 204
+    },
+    {
+      "integration": "bambu",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-bambu/src/ams.rs",
+      "line": 74
+    },
+    {
+      "integration": "bambu",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-bambu/src/ams.rs",
+      "line": 80
+    },
+    {
+      "integration": "bambu",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-bambu/src/ams.rs",
+      "line": 88
+    },
+    {
+      "integration": "bambu",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-bambu/src/ams.rs",
+      "line": 94
+    },
+    {
+      "integration": "bambu",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-bambu/src/ams.rs",
+      "line": 102
+    },
+    {
+      "integration": "bambu",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-bambu/src/ams.rs",
+      "line": 164
+    },
+    {
+      "integration": "cast",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-cast/src/model.rs",
+      "line": 60
+    },
+    {
+      "integration": "cast",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-cast/src/model.rs",
+      "line": 70
+    },
+    {
+      "integration": "cast",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-cast/src/model.rs",
+      "line": 76
+    },
+    {
+      "integration": "cast",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-cast/src/model.rs",
+      "line": 85
+    },
+    {
+      "integration": "cast",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-cast/src/model.rs",
+      "line": 93
+    },
+    {
+      "integration": "cast",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-cast/src/model.rs",
+      "line": 102
+    },
+    {
+      "integration": "cast",
+      "category": "Unit",
+      "variant": "Second",
+      "path": "crates/moli-cast/src/model.rs",
+      "line": 109
+    },
+    {
+      "integration": "demo",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 165
+    },
+    {
+      "integration": "demo",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 186
+    },
+    {
+      "integration": "demo",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 193
+    },
+    {
+      "integration": "demo",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 203
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Occupancy",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 209
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Power",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 233
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "ApparentPower",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 237
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Energy",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 241
+    },
+    {
+      "integration": "demo",
+      "category": "Unit",
+      "variant": "KiloWattHour",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 241
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Energy",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 242
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Current",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 243
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Voltage",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 244
+    },
+    {
+      "integration": "demo",
+      "category": "Unit",
+      "variant": "Volt",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 244
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 249
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Humidity",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 262
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Illuminance",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 267
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "SignalStrength",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 268
+    },
+    {
+      "integration": "demo",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 297
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Power",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 299
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "SignalStrength",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 300
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Illuminance",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 301
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Energy",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 302
+    },
+    {
+      "integration": "demo",
+      "category": "Semantic",
+      "variant": "Current",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 303
+    },
+    {
+      "integration": "demo",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-demo/src/sim.rs",
+      "line": 308
+    },
+    {
+      "integration": "esphome",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-esphome/src/lib.rs",
+      "line": 165
+    },
+    {
+      "integration": "esphome",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-esphome/src/lib.rs",
+      "line": 174
+    },
+    {
+      "integration": "esphome",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-esphome/src/lib.rs",
+      "line": 180
+    },
+    {
+      "integration": "esphome",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-esphome/src/lib.rs",
+      "line": 185
+    },
+    {
+      "integration": "esphome",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-esphome/src/lib.rs",
+      "line": 192
+    },
+    {
+      "integration": "esphome",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-esphome/src/lib.rs",
+      "line": 199
+    },
+    {
+      "integration": "frigate",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 133
+    },
+    {
+      "integration": "frigate",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 139
+    },
+    {
+      "integration": "frigate",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 147
+    },
+    {
+      "integration": "frigate",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 158
+    },
+    {
+      "integration": "frigate",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 191
+    },
+    {
+      "integration": "frigate",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 193
+    },
+    {
+      "integration": "frigate",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 198
+    },
+    {
+      "integration": "frigate",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 212
+    },
+    {
+      "integration": "frigate",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 218
+    },
+    {
+      "integration": "frigate",
+      "category": "Unit",
+      "variant": "Hour",
+      "path": "crates/moli-frigate/src/lib.rs",
+      "line": 225
+    },
+    {
+      "integration": "helpers",
+      "category": "Unit",
+      "variant": "Second",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 141
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Timer",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 167
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 173
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "TimerCommand",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 191
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 200
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "CounterCommand",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 265
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 271
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Timer",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 282
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 285
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Temporal",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 289
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 292
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Schedule",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 294
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 294
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Computed",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 295
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 295
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Button",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 296
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 296
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Counter",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 299
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 302
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 306
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 309
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 311
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 311
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 314
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 319
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 321
+    },
+    {
+      "integration": "helpers",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 321
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "TimerCommand",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 643
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Temporal",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 651
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "CounterCommand",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 659
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Button",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 667
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Schedule",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 786
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Computed",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 812
+    },
+    {
+      "integration": "helpers",
+      "category": "Kind",
+      "variant": "Computed",
+      "path": "crates/moli-helpers/src/lib.rs",
+      "line": 838
+    },
+    {
+      "integration": "host",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 222
+    },
+    {
+      "integration": "host",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 223
+    },
+    {
+      "integration": "host",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 252
+    },
+    {
+      "integration": "host",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 259
+    },
+    {
+      "integration": "host",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 277
+    },
+    {
+      "integration": "host",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 283
+    },
+    {
+      "integration": "host",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 289
+    },
+    {
+      "integration": "host",
+      "category": "Unit",
+      "variant": "Second",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 307
+    },
+    {
+      "integration": "host",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 411
+    },
+    {
+      "integration": "host",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 416
+    },
+    {
+      "integration": "host",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 421
+    },
+    {
+      "integration": "host",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 443
+    },
+    {
+      "integration": "host",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 453
+    },
+    {
+      "integration": "host",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-host/src/lib.rs",
+      "line": 463
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 39
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 43
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Decibel",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 47
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Decibel",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 51
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 55
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 59
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 63
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 67
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Unit",
+      "variant": "Second",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 71
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 79
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 81
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Semantic",
+      "variant": "SignalStrength",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 93
+    },
+    {
+      "integration": "huawei-lte",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-huawei-lte/src/publication.rs",
+      "line": 95
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 110
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 234
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 237
+    },
+    {
+      "integration": "hue",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 255
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Brightness",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 256
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 378
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 381
+    },
+    {
+      "integration": "hue",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 392
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Battery",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 393
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 402
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Occupancy",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 404
+    },
+    {
+      "integration": "hue",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 414
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 415
+    },
+    {
+      "integration": "hue",
+      "category": "Unit",
+      "variant": "Lux",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 425
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Illuminance",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 426
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 434
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Contact",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 436
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 467
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 470
+    },
+    {
+      "integration": "hue",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 485
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Brightness",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 486
+    },
+    {
+      "integration": "hue",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 504
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "ColorTemp",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 505
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 518
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Color",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 521
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Color",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 535
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 556
+    },
+    {
+      "integration": "hue",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 559
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 794
+    },
+    {
+      "integration": "hue",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-hue/src/model.rs",
+      "line": 806
+    },
+    {
+      "integration": "igd",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-igd/src/lib.rs",
+      "line": 157
+    },
+    {
+      "integration": "igd",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-igd/src/lib.rs",
+      "line": 179
+    },
+    {
+      "integration": "igd",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-igd/src/lib.rs",
+      "line": 185
+    },
+    {
+      "integration": "igd",
+      "category": "Unit",
+      "variant": "Second",
+      "path": "crates/moli-igd/src/lib.rs",
+      "line": 192
+    },
+    {
+      "integration": "igd",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-igd/src/lib.rs",
+      "line": 197
+    },
+    {
+      "integration": "ipp",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 318
+    },
+    {
+      "integration": "ipp",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 327
+    },
+    {
+      "integration": "ipp",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 331
+    },
+    {
+      "integration": "ipp",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 337
+    },
+    {
+      "integration": "ipp",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 339
+    },
+    {
+      "integration": "ipp",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 345
+    },
+    {
+      "integration": "ipp",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 347
+    },
+    {
+      "integration": "ipp",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 353
+    },
+    {
+      "integration": "ipp",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 359
+    },
+    {
+      "integration": "ipp",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 365
+    },
+    {
+      "integration": "ipp",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 367
+    },
+    {
+      "integration": "ipp",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 373
+    },
+    {
+      "integration": "ipp",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 375
+    },
+    {
+      "integration": "ipp",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 382
+    },
+    {
+      "integration": "ipp",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 384
+    },
+    {
+      "integration": "ipp",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 394
+    },
+    {
+      "integration": "ipp",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-ipp/src/lib.rs",
+      "line": 395
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 110
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Config",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 117
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 126
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 132
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 134
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 140
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 142
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 150
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 157
+    },
+    {
+      "integration": "klipper",
+      "category": "Unit",
+      "variant": "Hour",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 163
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 164
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 171
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 184
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Config",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 191
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 201
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 211
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Config",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 218
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 224
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 226
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 231
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 233
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 250
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 255
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 257
+    },
+    {
+      "integration": "klipper",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 263
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 264
+    },
+    {
+      "integration": "klipper",
+      "category": "Unit",
+      "variant": "Minute",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 270
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 271
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 276
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 278
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 285
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 292
+    },
+    {
+      "integration": "klipper",
+      "category": "Unit",
+      "variant": "Minute",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 298
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 299
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 306
+    },
+    {
+      "integration": "klipper",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 313
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 318
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 345
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 351
+    },
+    {
+      "integration": "klipper",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 359
+    },
+    {
+      "integration": "klipper",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-moonraker/src/model.rs",
+      "line": 695
+    },
+    {
+      "integration": "landroid",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 222
+    },
+    {
+      "integration": "landroid",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 237
+    },
+    {
+      "integration": "landroid",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 251
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 259
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 267
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 275
+    },
+    {
+      "integration": "landroid",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 282
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Battery",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 283
+    },
+    {
+      "integration": "landroid",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 288
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 291
+    },
+    {
+      "integration": "landroid",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 298
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 299
+    },
+    {
+      "integration": "landroid",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 305
+    },
+    {
+      "integration": "landroid",
+      "category": "Unit",
+      "variant": "Minute",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 315
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Config",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 316
+    },
+    {
+      "integration": "landroid",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 321
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 324
+    },
+    {
+      "integration": "landroid",
+      "category": "Unit",
+      "variant": "Minute",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 331
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 332
+    },
+    {
+      "integration": "landroid",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 339
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 347
+    },
+    {
+      "integration": "landroid",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 352
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 355
+    },
+    {
+      "integration": "landroid",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 362
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "SignalStrength",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 363
+    },
+    {
+      "integration": "landroid",
+      "category": "Unit",
+      "variant": "Hour",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 370
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 371
+    },
+    {
+      "integration": "landroid",
+      "category": "Unit",
+      "variant": "Hour",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 378
+    },
+    {
+      "integration": "landroid",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-landroid/src/model.rs",
+      "line": 379
+    },
+    {
+      "integration": "netatmo",
+      "category": "Kind",
+      "variant": "Refresh",
+      "path": "crates/moli-netatmo/src/actor.rs",
+      "line": 182
+    },
+    {
+      "integration": "netatmo",
+      "category": "Kind",
+      "variant": "Weather",
+      "path": "crates/moli-netatmo/src/actor.rs",
+      "line": 184
+    },
+    {
+      "integration": "netatmo",
+      "category": "Kind",
+      "variant": "Refresh",
+      "path": "crates/moli-netatmo/src/actor.rs",
+      "line": 267
+    },
+    {
+      "integration": "netatmo",
+      "category": "Kind",
+      "variant": "Refresh",
+      "path": "crates/moli-netatmo/src/actor.rs",
+      "line": 272
+    },
+    {
+      "integration": "netatmo",
+      "category": "Kind",
+      "variant": "Exchange",
+      "path": "crates/moli-netatmo/src/actor.rs",
+      "line": 345
+    },
+    {
+      "integration": "netatmo",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 176
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 202
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Humidity",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 210
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Battery",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 218
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 229
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Pressure",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 237
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 245
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 256
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 264
+    },
+    {
+      "integration": "netatmo",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-netatmo/src/model.rs",
+      "line": 272
+    },
+    {
+      "integration": "netgear",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 46
+    },
+    {
+      "integration": "netgear",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 49
+    },
+    {
+      "integration": "netgear",
+      "category": "Unit",
+      "variant": "Second",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 55
+    },
+    {
+      "integration": "netgear",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 61
+    },
+    {
+      "integration": "netgear",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 66
+    },
+    {
+      "integration": "netgear",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 67
+    },
+    {
+      "integration": "netgear",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 68
+    },
+    {
+      "integration": "netgear",
+      "category": "Semantic",
+      "variant": "SignalStrength",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 84
+    },
+    {
+      "integration": "netgear",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-netgear/src/publication.rs",
+      "line": 86
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 163
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "Lock",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 168
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 173
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 177
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 183
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "Lock",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 188
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 193
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "BatteryLow",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 195
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 201
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 203
+    },
+    {
+      "integration": "nuki",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 209
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 213
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "Battery",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 219
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 227
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 229
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 237
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "Contact",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 239
+    },
+    {
+      "integration": "nuki",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 246
+    },
+    {
+      "integration": "nuki",
+      "category": "Semantic",
+      "variant": "BatteryLow",
+      "path": "crates/moli-nuki/src/model.rs",
+      "line": 248
+    },
+    {
+      "integration": "overkiz",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 156
+    },
+    {
+      "integration": "overkiz",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 159
+    },
+    {
+      "integration": "overkiz",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 166
+    },
+    {
+      "integration": "overkiz",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 171
+    },
+    {
+      "integration": "overkiz",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 180
+    },
+    {
+      "integration": "overkiz",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 183
+    },
+    {
+      "integration": "overkiz",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 190
+    },
+    {
+      "integration": "overkiz",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 196
+    },
+    {
+      "integration": "overkiz",
+      "category": "Semantic",
+      "variant": "Brightness",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 197
+    },
+    {
+      "integration": "overkiz",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 581
+    },
+    {
+      "integration": "overkiz",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-overkiz/src/model.rs",
+      "line": 652
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 294
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 296
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 301
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 312
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 320
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 322
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 327
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 329
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 335
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 341
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 346
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 355
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 360
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 362
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 369
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 374
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 376
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 381
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 383
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 388
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 390
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 406
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 413
+    },
+    {
+      "integration": "philips",
+      "category": "Unit",
+      "variant": "Second",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 420
+    },
+    {
+      "integration": "philips",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 424
+    },
+    {
+      "integration": "philips",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-philips/src/lib.rs",
+      "line": 430
+    },
+    {
+      "integration": "phones",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 545
+    },
+    {
+      "integration": "phones",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 581
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 583
+    },
+    {
+      "integration": "phones",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 588
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Occupancy",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 590
+    },
+    {
+      "integration": "phones",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 596
+    },
+    {
+      "integration": "phones",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 597
+    },
+    {
+      "integration": "phones",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 602
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 604
+    },
+    {
+      "integration": "phones",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 609
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 611
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 618
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 625
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 632
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 639
+    },
+    {
+      "integration": "phones",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 644
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 646
+    },
+    {
+      "integration": "phones",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 651
+    },
+    {
+      "integration": "phones",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-phones/src/lib.rs",
+      "line": 657
+    },
+    {
+      "integration": "presence",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-presence/src/lib.rs",
+      "line": 213
+    },
+    {
+      "integration": "presence",
+      "category": "Semantic",
+      "variant": "Occupancy",
+      "path": "crates/moli-presence/src/lib.rs",
+      "line": 219
+    },
+    {
+      "integration": "presence",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-presence/src/lib.rs",
+      "line": 305
+    },
+    {
+      "integration": "presence",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-presence/src/lib.rs",
+      "line": 311
+    },
+    {
+      "integration": "reolink",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-reolink/src/lib.rs",
+      "line": 281
+    },
+    {
+      "integration": "reolink",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-reolink/src/lib.rs",
+      "line": 314
+    },
+    {
+      "integration": "reolink",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-reolink/src/lib.rs",
+      "line": 319
+    },
+    {
+      "integration": "reservations",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-reservations/src/publisher.rs",
+      "line": 16
+    },
+    {
+      "integration": "reservations",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-reservations/src/publisher.rs",
+      "line": 20
+    },
+    {
+      "integration": "reservations",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-reservations/src/publisher.rs",
+      "line": 57
+    },
+    {
+      "integration": "reservations",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-reservations/src/publisher.rs",
+      "line": 77
+    },
+    {
+      "integration": "reservations",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-reservations/src/publisher.rs",
+      "line": 82
+    },
+    {
+      "integration": "reservations",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-reservations/src/publisher.rs",
+      "line": 99
+    },
+    {
+      "integration": "reservations",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-reservations/src/publisher.rs",
+      "line": 110
+    },
+    {
+      "integration": "roborock",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 139
+    },
+    {
+      "integration": "roborock",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 143
+    },
+    {
+      "integration": "roborock",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 159
+    },
+    {
+      "integration": "roborock",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 167
+    },
+    {
+      "integration": "roborock",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 175
+    },
+    {
+      "integration": "roborock",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 183
+    },
+    {
+      "integration": "roborock",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 190
+    },
+    {
+      "integration": "roborock",
+      "category": "Semantic",
+      "variant": "Battery",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 191
+    },
+    {
+      "integration": "roborock",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 196
+    },
+    {
+      "integration": "roborock",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 199
+    },
+    {
+      "integration": "roborock",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 207
+    },
+    {
+      "integration": "roborock",
+      "category": "Unit",
+      "variant": "Minute",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 214
+    },
+    {
+      "integration": "roborock",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 215
+    },
+    {
+      "integration": "roborock",
+      "category": "Unit",
+      "variant": "Other",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 222
+    },
+    {
+      "integration": "roborock",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-roborock/src/model.rs",
+      "line": 223
+    },
+    {
+      "integration": "samsung",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 10
+    },
+    {
+      "integration": "samsung",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 12
+    },
+    {
+      "integration": "samsung",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 17
+    },
+    {
+      "integration": "samsung",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 28
+    },
+    {
+      "integration": "samsung",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 35
+    },
+    {
+      "integration": "samsung",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 37
+    },
+    {
+      "integration": "samsung",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 42
+    },
+    {
+      "integration": "samsung",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 49
+    },
+    {
+      "integration": "samsung",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-samsung/src/device.rs",
+      "line": 52
+    },
+    {
+      "integration": "samsung",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-samsung/src/model.rs",
+      "line": 140
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 107
+    },
+    {
+      "integration": "sonos",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 110
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 115
+    },
+    {
+      "integration": "sonos",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 121
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 127
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 135
+    },
+    {
+      "integration": "sonos",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 138
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 143
+    },
+    {
+      "integration": "sonos",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 146
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 151
+    },
+    {
+      "integration": "sonos",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 154
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 159
+    },
+    {
+      "integration": "sonos",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 164
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 172
+    },
+    {
+      "integration": "sonos",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 178
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 183
+    },
+    {
+      "integration": "sonos",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 193
+    },
+    {
+      "integration": "sonos",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 198
+    },
+    {
+      "integration": "sonos",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-sonos/src/lib.rs",
+      "line": 205
+    },
+    {
+      "integration": "tapo",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-tapo/src/lib.rs",
+      "line": 297
+    },
+    {
+      "integration": "tapo",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-tapo/src/lib.rs",
+      "line": 313
+    },
+    {
+      "integration": "tapo",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-tapo/src/lib.rs",
+      "line": 315
+    },
+    {
+      "integration": "tapo",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-tapo/src/lib.rs",
+      "line": 322
+    },
+    {
+      "integration": "tapo",
+      "category": "Semantic",
+      "variant": "Brightness",
+      "path": "crates/moli-tapo/src/lib.rs",
+      "line": 323
+    },
+    {
+      "integration": "tapo",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-tapo/src/lib.rs",
+      "line": 347
+    },
+    {
+      "integration": "telegram",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-telegram/src/lib.rs",
+      "line": 169
+    },
+    {
+      "integration": "telegram",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-telegram/src/lib.rs",
+      "line": 175
+    },
+    {
+      "integration": "tuya",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 92
+    },
+    {
+      "integration": "tuya",
+      "category": "Unit",
+      "variant": "KiloWattHour",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 93
+    },
+    {
+      "integration": "tuya",
+      "category": "Unit",
+      "variant": "Ampere",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 94
+    },
+    {
+      "integration": "tuya",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 107
+    },
+    {
+      "integration": "tuya",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 110
+    },
+    {
+      "integration": "tuya",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 116
+    },
+    {
+      "integration": "tuya",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 119
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Battery",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 187
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Humidity",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 188
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 189
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 192
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 197
+    },
+    {
+      "integration": "tuya",
+      "category": "Unit",
+      "variant": "Watt",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 339
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Power",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 340
+    },
+    {
+      "integration": "tuya",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 342
+    },
+    {
+      "integration": "tuya",
+      "category": "Unit",
+      "variant": "Ampere",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 350
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 370
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Battery",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 376
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Humidity",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 380
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 382
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 383
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 386
+    },
+    {
+      "integration": "tuya",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-tuya/src/model.rs",
+      "line": 389
+    },
+    {
+      "integration": "twinkly",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-twinkly/src/model.rs",
+      "line": 248
+    },
+    {
+      "integration": "twinkly",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-twinkly/src/model.rs",
+      "line": 254
+    },
+    {
+      "integration": "twinkly",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-twinkly/src/model.rs",
+      "line": 260
+    },
+    {
+      "integration": "twinkly",
+      "category": "Unit",
+      "variant": "Percent",
+      "path": "crates/moli-twinkly/src/model.rs",
+      "line": 269
+    },
+    {
+      "integration": "twinkly",
+      "category": "Semantic",
+      "variant": "Brightness",
+      "path": "crates/moli-twinkly/src/model.rs",
+      "line": 270
+    },
+    {
+      "integration": "twinkly",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-twinkly/src/model.rs",
+      "line": 277
+    },
+    {
+      "integration": "twinkly",
+      "category": "Semantic",
+      "variant": "Color",
+      "path": "crates/moli-twinkly/src/model.rs",
+      "line": 283
+    },
+    {
+      "integration": "voltalis",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 237
+    },
+    {
+      "integration": "voltalis",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 244
+    },
+    {
+      "integration": "voltalis",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 249
+    },
+    {
+      "integration": "voltalis",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 254
+    },
+    {
+      "integration": "voltalis",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 384
+    },
+    {
+      "integration": "voltalis",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 387
+    },
+    {
+      "integration": "voltalis",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 424
+    },
+    {
+      "integration": "voltalis",
+      "category": "Unit",
+      "variant": "Celsius",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 431
+    },
+    {
+      "integration": "voltalis",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 433
+    },
+    {
+      "integration": "voltalis",
+      "category": "Semantic",
+      "variant": "Config",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 435
+    },
+    {
+      "integration": "voltalis",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 444
+    },
+    {
+      "integration": "voltalis",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 447
+    },
+    {
+      "integration": "voltalis",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 455
+    },
+    {
+      "integration": "voltalis",
+      "category": "Semantic",
+      "variant": "Other",
+      "path": "crates/moli-voltalis/src/model.rs",
+      "line": 458
+    },
+    {
+      "integration": "voltalis",
+      "category": "Semantic",
+      "variant": "Control",
+      "path": "crates/moli-voltalis/src/tests/p1/guard.rs",
+      "line": 75
+    },
+    {
+      "integration": "wyoming",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 87
+    },
+    {
+      "integration": "wyoming",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 88
+    },
+    {
+      "integration": "wyoming",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 93
+    },
+    {
+      "integration": "wyoming",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 94
+    },
+    {
+      "integration": "wyoming",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 99
+    },
+    {
+      "integration": "wyoming",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 100
+    },
+    {
+      "integration": "wyoming",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 105
+    },
+    {
+      "integration": "wyoming",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 106
+    },
+    {
+      "integration": "wyoming",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 111
+    },
+    {
+      "integration": "wyoming",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 112
+    },
+    {
+      "integration": "wyoming",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 117
+    },
+    {
+      "integration": "wyoming",
+      "category": "Semantic",
+      "variant": "Diagnostic",
+      "path": "crates/moli-wyoming/src/runtime.rs",
+      "line": 118
+    },
+    {
+      "integration": "wyoming",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-wyoming/src/runtime_tests.rs",
+      "line": 181
+    },
+    {
+      "integration": "z2m",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 249
+    },
+    {
+      "integration": "z2m",
+      "category": "Kind",
+      "variant": "Numeric",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 256
+    },
+    {
+      "integration": "z2m",
+      "category": "Kind",
+      "variant": "Enum",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 264
+    },
+    {
+      "integration": "z2m",
+      "category": "Kind",
+      "variant": "Text",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 273
+    },
+    {
+      "integration": "z2m",
+      "category": "Semantic",
+      "variant": "Config",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 284
+    },
+    {
+      "integration": "z2m",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 406
+    },
+    {
+      "integration": "z2m",
+      "category": "Semantic",
+      "variant": "OnOff",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 408
+    },
+    {
+      "integration": "z2m",
+      "category": "Unit",
+      "variant": "Watt",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 411
+    },
+    {
+      "integration": "z2m",
+      "category": "Semantic",
+      "variant": "Power",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 412
+    },
+    {
+      "integration": "z2m",
+      "category": "Kind",
+      "variant": "Binary",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 416
+    },
+    {
+      "integration": "z2m",
+      "category": "Unit",
+      "variant": "Minute",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 480
+    },
+    {
+      "integration": "z2m",
+      "category": "Semantic",
+      "variant": "Config",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 499
+    },
+    {
+      "integration": "z2m",
+      "category": "Semantic",
+      "variant": "Temperature",
+      "path": "crates/moli-z2m/src/catalog.rs",
+      "line": 500
+    }
+  ]
+}

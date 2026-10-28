@@ -1,0 +1,1794 @@
+<!doctype html>
+<html lang="fr" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Redémarrer le moteur de Sarah Home sans rien perdre : un gardien qui garde les portes, la mémoire du cœur dans un memfd scellé et les modules isolés ; la reprise prévue à la façon d'Envoy, le plantage rattrapé par la file du pont, les versions et le retour arrière, sous Docker et sous systemd.">
+  <meta name="source-markdown" content="redemarrage-a-chaud.md">
+  <meta name="source-sha256" content="7e6128cefc4d4771955fb2fadfd3c5f8845bbbf5559fd52e9e20c77b8f75ad18">
+  <title>Sarah Home · Redémarrage à chaud</title>
+  <style>
+    :root {
+      --paper: #fffdf8; --page: #f0f1ec; --ink: #1d302a; --muted: #52615a;
+      --line: #d4ddd4; --soft: #f4f6f1; --green: #195744; --green-soft: #e6eee5;
+      --warm: #8b3b22; --warm-soft: #fae9df; --amber: #835c00; --amber-soft: #fbf0d6;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 90px; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 var(--sans); }
+    a { color: var(--green); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    button { font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--warm); outline-offset: 4px; }
+    .skip { position: fixed; top: 8px; left: 8px; z-index: 20; padding: 10px 16px; background: var(--paper); transform: translateY(-160%); }
+    .skip:focus { transform: none; }
+    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: var(--paper); }
+    .topbar-inner { max-width: 1440px; min-height: 68px; padding: 12px 36px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 750; }
+    .brand-mark { display: block; width: 34px; height: 34px; border-radius: 8px; }
+    .logo { background: url(data:image/png;base64,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) center / cover no-repeat; }
+    .cover-logo { display: block; width: 76px; height: 76px; border-radius: 18px; margin: 0 0 18px; box-shadow: 0 6px 18px rgba(16, 30, 60, .18); }
+    .brand-sub { border-left: 1px solid var(--line); padding-left: 15px; margin-left: 4px; font-size: 12px; font-weight: 500; color: var(--muted); }
+    .actions { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+    .print { border: 1px solid var(--line); padding: 8px 13px; border-radius: 5px; color: var(--ink); background: var(--soft); min-height: 42px; }
+    .print:hover { background: var(--green-soft); border-color: var(--green); }
+    .frame { max-width: 1440px; margin: auto; padding: 34px 36px 60px; display: grid; grid-template-columns: 238px minmax(0, 1fr); align-items: start; gap: 38px; }
+    aside { position: sticky; top: 95px; max-height: calc(100dvh - 115px); overflow-y: auto; padding-right: 12px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 750; }
+    aside .eyebrow { color: var(--muted); margin: 8px 0 17px 9px; }
+    aside ul, .mobile-toc ul { list-style: none; padding: 0; margin: 0; }
+    aside li { margin: 0 0 3px; }
+    aside a { display: block; padding: 8px 9px; color: var(--muted); font-size: 12px; line-height: 1.5; text-decoration: none; border-left: 2px solid transparent; }
+    aside a:hover, aside a[aria-current="location"] { background: var(--green-soft); color: var(--green); border-left-color: var(--green); }
+    .sidebar-note { margin: 23px 9px 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 12px; color: var(--muted); }
+    main { min-width: 0; }
+    .cover { padding: 8px 0 30px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 24px; color: var(--muted); font-size: 12px; }
+    .status { padding: 3px 9px; border: 1px solid #e0bdaa; color: var(--warm); border-radius: 3px; background: var(--warm-soft); font-weight: 650; }
+    h1 { font: 500 clamp(40px, 4.9vw, 72px)/1.06 var(--serif); letter-spacing: -.035em; margin: 0 0 23px; }
+    h1 span { display: block; color: var(--green); }
+    .lead { max-width: 760px; font-size: 18px; line-height: 1.65; margin: 0; color: var(--muted); }
+    .verdict { border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .verdict-head { padding: 15px 21px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line); }
+    .verdict-head span { font-size: 12px; color: var(--muted); }
+    .verdict-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: 20px 18px 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-top: 4px solid var(--line); }
+    .card:nth-child(4n) { border-right: 0; }
+    .card:nth-last-child(-n+4) { border-bottom: 0; }
+    .card.ok { border-top-color: var(--green); }
+    .card.high { border-top-color: var(--warm); }
+    .card.mid { border-top-color: #c79a2e; }
+    .card .number { font: 11px var(--mono); color: var(--muted); margin-bottom: 10px; display: block; }
+    .card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .card p { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+    .figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .figure-item { padding: 16px 18px; border-right: 1px solid var(--line); }
+    .figure-item:last-child { border-right: 0; }
+    .figure-item strong { display: block; font: 24px/1.3 var(--mono); color: var(--green); }
+    .figure-item span { font-size: 12px; color: var(--muted); line-height: 1.45; display: block; }
+    figure.diagram { margin: 0 0 22px; padding: 18px; background: var(--paper); border: 1px solid var(--line); }
+    figure.diagram svg { display: block; width: 100%; height: auto; }
+    figure.diagram figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    article figure.diagram { margin: 26px 0; }
+    figure.tech { margin: 0 0 24px; border: 1px solid var(--line); border-left: 4px solid var(--green); background: var(--soft); }
+    figure.tech figcaption { padding: 10px 16px; font-size: 13px; font-weight: 650; border-bottom: 1px solid var(--line); background: var(--paper); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+    figure.tech .tech-tag { font: 10.5px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--green); border: 1px solid #b9cdbd; background: var(--green-soft); padding: 1px 7px; border-radius: 3px; }
+    figure.tech pre { margin: 0; background: transparent; white-space: pre; overflow-x: auto; }
+    .sev { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 750; letter-spacing: .02em; white-space: nowrap; vertical-align: 2px; }
+    .sev-high { background: var(--warm-soft); color: var(--warm); border: 1px solid #e0bdaa; }
+    .sev-crit { background: var(--warm); color: white; border: 1px solid var(--warm); }
+    .sev-mid { background: var(--amber-soft); color: var(--amber); border: 1px solid #e8d29b; }
+    .sev-low { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+    .sev-ok { background: var(--green-soft); color: var(--green); border: 1px solid #b9cdbd; }
+    h3 .sev { margin-left: 8px; font-size: 12px; }
+    .mobile-toc { display: none; }
+    article { padding: 32px 38px 36px; background: var(--paper); border: 1px solid var(--line); overflow-wrap: break-word; }
+    article > p { color: var(--muted); font-size: 13.5px; }
+    article p { margin: 0 0 1.15em; }
+    article h2 { font-size: clamp(23px, 2.2vw, 29px); font-weight: 650; line-height: 1.3; letter-spacing: -.025em; margin: 40px 0 21px; padding-top: 30px; border-top: 1px solid var(--line); text-wrap: balance; }
+    article h3 { margin: 30px 0 15px; font-size: 19px; font-weight: 650; line-height: 1.4; }
+    article ul, article ol { padding-left: 24px; margin: 0 0 22px; }
+    article li { padding-left: 3px; margin-bottom: 9px; }
+    code { background: var(--soft); padding: 2px 5px; font: .86em var(--mono); overflow-wrap: anywhere; }
+    pre { background: var(--soft); padding: 18px; white-space: pre-wrap; line-height: 1.6; overflow-wrap: anywhere; }
+    pre code { padding: 0; background: transparent; font-size: 12px; }
+    details.code { border: 1px solid var(--line); margin: 0 0 22px; }
+    details.code > summary { padding: 13px 18px; cursor: pointer; font-weight: 650; font-size: 14px; min-height: 48px; }
+    details.code[open] > summary { border-bottom: 1px solid var(--line); }
+    details.code pre { margin: 0; max-height: 640px; overflow: auto; white-space: pre; }
+    .table-wrap { max-width: 100%; overflow-x: auto; margin: 22px 0; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 12.5px; line-height: 1.6; }
+    th, td { padding: 11px 12px; vertical-align: top; text-align: left; border-bottom: 1px solid var(--line); }
+    th { background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 750; }
+    td:first-child { font-weight: 600; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr > * + * { border-left: 1px solid #e5eae1; }
+    footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 21px; color: var(--muted); font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1100px) {
+      .frame { grid-template-columns: 205px minmax(0, 1fr); gap: 24px; padding-inline: 24px; }
+      .topbar-inner { padding-inline: 24px; }
+      article { padding: 25px; }
+      .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card:nth-child(4n) { border-right: 1px solid var(--line); }
+      .card:nth-child(2n) { border-right: 0; }
+      .card:nth-last-child(-n+4) { border-bottom: 1px solid var(--line); }
+      .card:nth-last-child(-n+2) { border-bottom: 0; }
+      .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .figure-item:nth-child(2) { border-right: 0; }
+      .figure-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    }
+    @media (max-width: 780px) {
+      .frame { display: block; padding: 24px 16px 40px; }
+      .topbar-inner { padding-inline: 16px; }
+      aside, .brand-sub { display: none; }
+      .actions { gap: 12px; font-size: 12px; }
+      .cover { padding-top: 0; }
+      h1 { font-size: clamp(38px, 9vw, 58px); }
+      .lead { font-size: 16px; }
+      article { padding: 18px; }
+      .verdict-grid { grid-template-columns: 1fr; }
+      .card, .card:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .card:last-child { border-bottom: 0; }
+      .figures { grid-template-columns: 1fr; }
+      .figure-item, .figure-item:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .figure-item:last-child { border-bottom: 0; }
+      figure.diagram { padding: 12px; overflow-x: auto; }
+      figure.diagram svg { min-width: 760px; }
+      .mobile-toc { display: block; padding: 0 17px; margin: 0 0 22px; background: var(--paper); border: 1px solid var(--line); }
+      .mobile-toc summary { padding: 13px 0; min-height: 50px; cursor: pointer; font-size: 14px; font-weight: 650; }
+      .mobile-toc a { display: block; padding: 8px 0; font-size: 13px; }
+      .mobile-toc ul { padding-bottom: 13px; }
+    }
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      body { background: white; font-size: 10pt; color: black; }
+      .topbar, aside, .mobile-toc, .skip { display: none; }
+      .frame { display: block; max-width: none; padding: 0; }
+      h1 { font-size: 34pt; }
+      .lead { font-size: 12pt; }
+      article { border: 0; padding: 0; }
+      article h2 { break-after: avoid; font-size: 16pt; }
+      article h3 { break-after: avoid; font-size: 12pt; }
+      .verdict, .figures, figure.diagram, figure.tech, pre, tr { break-inside: avoid; }
+      figure.tech pre { white-space: pre-wrap; }
+      details.code pre { max-height: none; white-space: pre-wrap; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; font-size: 9pt; }
+      th, td { padding: 6px 7px; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#document">Aller au document</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark logo" aria-hidden="true"></span>Sarah Home<span class="brand-sub">Propositions techniques</span></a>
+      <div class="actions"><a href="redemarrage-a-chaud.md">Source Markdown</a><button class="print" id="print-document" type="button" hidden>Imprimer / PDF</button></div>
+    </div>
+  </header>
+  <div class="frame">
+    <aside>
+      <p class="eyebrow">Dans ce document</p>
+      <nav aria-label="Sommaire du document"><ul>
+<li><a href="#1-le-verdict-en-bref">1. Le verdict en bref</a></li>
+<li><a href="#2-ce-que-fait-un-redémarrage-aujourdhui">2. Ce que fait un redémarrage aujourd'hui</a></li>
+<li><a href="#3-premiers-principes--quest-ce-qui-doit-survivre-">3. Premiers principes : qu'est-ce qui doit survivre ?</a></li>
+<li><a href="#4-ce-quon-fait-ailleurs">4. Ce qu'on fait ailleurs</a></li>
+<li><a href="#5-pré-mortem--le-redémarrage-a-mal-tourné-qua-t-on-perdu-">5. Pré-mortem : le redémarrage a mal tourné, qu'a-t-on perdu ?</a></li>
+<li><a href="#6-les-choix-à-critères-visibles">6. Les choix, à critères visibles</a></li>
+<li><a href="#7-la-conception">7. La conception</a></li>
+<li><a href="#8-ce-quun-redémarrage-coûte-à-un-module-du-cœur">8. Ce qu'un redémarrage coûte à un module du cœur</a></li>
+<li><a href="#9-ce-que-ça-coûte">9. Ce que ça coûte</a></li>
+<li><a href="#10-les-tests">10. Les tests</a></li>
+<li><a href="#11-le-plan">11. Le plan</a></li>
+<li><a href="#12-décidé-ici-et-à-trancher">12. Décidé ici, et à trancher</a></li>
+<li><a href="#13-ce-que-cela-changerait-dans-les-autres-études">13. Ce que cela changerait dans les autres études</a></li>
+<li><a href="#annexe-a--sources">Annexe A — Sources</a></li>
+<li><a href="#annexe-b--preuves-dans-le-code">Annexe B — Preuves dans le code</a></li>
+      </ul></nav>
+      <p class="sidebar-note">On garde le contenu, pas la mémoire.<br>Les portes restent ouvertes.<br>Les modules isolés ne meurent pas.</p>
+    </aside>
+    <main>
+      <div class="cover">
+        <span class="cover-logo logo" role="img" aria-label="Logo de Sarah Home"></span>
+        <div class="meta"><span class="status">Redémarrage à chaud · proposition, aucune modification du code</span><span>23 octobre 2026</span><span>né du monitoring · s'appuie sur l'étude de haute disponibilité v2, la V7 et la mémoire v2 · commit a835893 · rustix 1.1.5 lu dans ses sources · huit systèmes comparés · vingt causes de perte, vingt parades · quatorze tests</span></div>
+        <h1>Le cœur redémarre, la maison continue.<span>Un gardien garde les portes, la mémoire et les modules isolés.</span></h1>
+        <p class="lead">Redémarrer le moteur de Sarah Home sans rien perdre, pour une mise à jour, un plantage ou un réglage. On ne garde pas la mémoire du processus, impossible d'un binaire à l'autre, mais son contenu&nbsp;: l'état complet de l'étude de haute disponibilité, confié à un petit gardien qui garde aussi les portes ouvertes et les modules isolés en vie. La reprise prévue ne perd rien&nbsp;; un plantage ne perd plus que le dernier lot de 10&nbsp;ms.</p>
+      </div>
+
+      <section class="verdict" aria-label="Ce que la proposition établit">
+        <div class="verdict-head"><strong class="eyebrow">Ce que la proposition établit</strong><span>Rien de ce qui compte ne vit seulement dans le processus du cœur.</span></div>
+        <div class="verdict-grid">
+          <div class="card high"><span class="number">01 / AUJOURD'HUI</span><h2>Un redémarrage à froid</h2><p>Exécutions, attentes et demandes retenues par la garde sont perdues&nbsp;; les portes se ferment&nbsp;; une mise à jour recrée le conteneur.</p><span class="sev sev-high">Écart</span></div>
+          <div class="card ok"><span class="number">02 / LE PRINCIPE</span><h2>Le contenu, pas la mémoire</h2><p>Adresses, dispositions, octets de remplissage&nbsp;: un binaire neuf ne relit pas l'ancien tas. L'état complet se fige en 132&nbsp;µs et se relit en 272&nbsp;µs.</p><span class="sev sev-ok">Mesuré</span></div>
+          <div class="card ok"><span class="number">03 / LE GARDIEN</span><h2>Un seul mécanisme, deux hôtes</h2><p>Le même binaire, <code>moli-os gardien</code>&nbsp;: il garde les portes, le relais et les modules isolés, et ne parle jamais MQTT.</p><span class="sev sev-ok">Proposé</span></div>
+          <div class="card ok"><span class="number">04 / TA REMARQUE</span><h2>Isoler pour durer</h2><p>Un module isolé ne voit pas le redémarrage&nbsp;: il garde ses connexions, tamponne, et se reconnecte à une porte qui n'a jamais fermé.</p><span class="sev sev-ok">Retenu</span></div>
+          <div class="card ok"><span class="number">05 / LA REPRISE PRÉVUE</span><h2>Le nouveau s'initialise avant</h2><p>Comme Envoy&nbsp;: le nouveau cœur prépare tout en reprise, l'ancien se fige au rang N et passe la main. Coupure visée&nbsp;: 1&nbsp;s, 2&nbsp;s sur un Pi.</p><span class="sev sev-ok">Proposé</span></div>
+          <div class="card ok"><span class="number">06 / LE PLANTAGE</span><h2>Le dernier lot de 10 ms</h2><p>Le relais, puis la file du pont dans un <code>memfd</code> que garde le gardien&nbsp;; les modules isolés renvoient tout ce qui n'a pas d'accusé.</p><span class="sev sev-ok">Proposé</span></div>
+          <div class="card mid"><span class="number">07 / CE QUI ENGAGE</span><h2>Écrit avant, hors du cœur</h2><p>Un message, un rendez-vous&nbsp;: d'abord dans la file du gardien, puis chez le pair. Le disque ne garde que l'instantané.</p><span class="sev sev-mid">À trancher</span></div>
+          <div class="card ok"><span class="number">08 / LES VERSIONS</span><h2>Lire les anciennes, revenir en arrière</h2><p>Sections versionnées&nbsp;; un relais illisible est refusé, jamais de reprise à vide&nbsp;; un binaire qui n'est pas sain en 30&nbsp;s cède à l'ancien.</p><span class="sev sev-ok">Proposé</span></div>
+        </div>
+      </section>
+
+      <div class="figures" aria-label="Chiffres clés">
+        <div class="figure-item"><strong>≤&nbsp;1&nbsp;ms</strong><span>pour passer la mémoire du cœur à ×1&nbsp;: 132&nbsp;µs pour la figer, 272&nbsp;µs pour la relire (banc de l'étude HA v2)</span></div>
+        <div class="figure-item"><strong>0</strong><span>écriture de plus sur la carte SD&nbsp;: le relais et la file vivent en mémoire, hors du cœur</span></div>
+        <div class="figure-item"><strong>≤&nbsp;10&nbsp;ms</strong><span>de sorties perdues au plantage du cœur, au lieu de 15&nbsp;min à 1&nbsp;h avec l'instantané seul</span></div>
+        <div class="figure-item"><strong>1&nbsp;s / 2&nbsp;s</strong><span>de coupure visée, sur la machine de production et sur un Pi Zero 2&nbsp;W&nbsp;: sous le délai du bail</span></div>
+      </div>
+
+<details class="mobile-toc"><summary>Sommaire</summary><ul>
+<li><a href="#1-le-verdict-en-bref">1. Le verdict en bref</a></li>
+<li><a href="#2-ce-que-fait-un-redémarrage-aujourdhui">2. Ce que fait un redémarrage aujourd'hui</a></li>
+<li><a href="#3-premiers-principes--quest-ce-qui-doit-survivre-">3. Premiers principes : qu'est-ce qui doit survivre ?</a></li>
+<li><a href="#4-ce-quon-fait-ailleurs">4. Ce qu'on fait ailleurs</a></li>
+<li><a href="#5-pré-mortem--le-redémarrage-a-mal-tourné-qua-t-on-perdu-">5. Pré-mortem : le redémarrage a mal tourné, qu'a-t-on perdu ?</a></li>
+<li><a href="#6-les-choix-à-critères-visibles">6. Les choix, à critères visibles</a></li>
+<li><a href="#7-la-conception">7. La conception</a></li>
+<li><a href="#8-ce-quun-redémarrage-coûte-à-un-module-du-cœur">8. Ce qu'un redémarrage coûte à un module du cœur</a></li>
+<li><a href="#9-ce-que-ça-coûte">9. Ce que ça coûte</a></li>
+<li><a href="#10-les-tests">10. Les tests</a></li>
+<li><a href="#11-le-plan">11. Le plan</a></li>
+<li><a href="#12-décidé-ici-et-à-trancher">12. Décidé ici, et à trancher</a></li>
+<li><a href="#13-ce-que-cela-changerait-dans-les-autres-études">13. Ce que cela changerait dans les autres études</a></li>
+<li><a href="#annexe-a--sources">Annexe A — Sources</a></li>
+<li><a href="#annexe-b--preuves-dans-le-code">Annexe B — Preuves dans le code</a></li>
+      </ul></details>
+
+      <article id="document">
+<p>Date : 23 octobre 2026. Statut : <strong>proposition, aucune modification du code</strong>. Base analysée : <code>main</code> au commit <code>a835893</code>, et les sources de <code>rustix</code> 1.1.5 pour ce qui se fait sans <code>unsafe</code>.</p>
+<p>Proposition à part, née du <a href="monitoring.md">monitoring</a>. Elle s'appuie sur l'<a href="haute-disponibilite-v2.md">étude de haute disponibilité v2</a> (l'état complet, l'arrêt figé, les modes, le pont maison), l'<a href="isolation-reactivite-runtime-v7.md">analyse V7</a> (les modules isolés, le courtier, le bail), l'<a href="memoire-v2.md">étude mémoire v2</a> (les deux horloges) et la <a href="critique-workflow.md">critique des workflows</a> (les clés des engagements).</p>
+<p>Ta demande : <strong>« si on démarre un module en mode isolé, il faut arriver à redémarrer le moteur sans ne rien perdre ; à chaud, tout en conservant la mémoire. »</strong></p>
+<p>Ce que j'entends par <strong>le moteur</strong> : le processus du cœur de Sarah Home (<code>moli-os serve</code>), c'est-à-dire le hub, le courtier, le moteur des workflows, l'API, et les modules qui tournent dans le cœur. Le moteur des workflows seul n'a pas besoin de redémarrer quand un automatisme change : il recharge déjà ses définitions (<code>refresh_live</code>, <code>moli-automation/src/lib.rs:782-790</code>). Ce qui impose un redémarrage du cœur :</p>
+<ul>
+<li>une nouvelle version ;</li>
+<li>un plantage, par exemple une panique du routeur du courtier (V7 § 9.4.3) ;</li>
+<li>un réglage qui ne se recharge pas : aujourd'hui, ranger un secret au coffre se termine par « puis redémarrer » (exploitation.md) ;</li>
+<li>passer au binaire de mesure du <a href="monitoring.md">monitoring</a> (§ 6).</li>
+</ul>
+<p>Les questions, reformulées (« comment pourrait-on… ») :</p>
+<table>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Comment pourrait-on…</th>
+<th>§</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>redémarrer le cœur <strong>sans qu'un module isolé ne perde ses connexions</strong>, ses appareils, ni ce qu'il voit pendant la coupure ?</td>
+<td>7.4</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>faire passer <strong>la mémoire du cœur</strong> (valeurs, exécutions, zone de travail, demandes en attente, courbes) à l'instance suivante, <strong>sans repasser par la carte SD</strong> ?</td>
+<td>7.2</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>qu'<strong>aucun client ne voie une porte fermée</strong> pendant la coupure : ni un écran, ni un module, ni la machine de secours ?</td>
+<td>7.3, 7.6</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><strong>ne rien perdre même quand le cœur plante</strong>, sans écrire de journal sur le disque ?</td>
+<td>7.7, 7.8</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>faire la même chose quand <strong>le nouveau binaire est une autre version</strong>, et revenir en arrière ?</td>
+<td>7.9</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><strong>prouver</strong>, après coup, que rien n'a été perdu ?</td>
+<td>7.6, 10</td>
+</tr>
+</tbody>
+</table>
+<p>Méthode, et techniques employées, nommées au fil du texte :</p>
+<ul>
+<li><strong>lecture du code</strong> : ce que fait un redémarrage aujourd'hui (§ 2, annexe B) ;</li>
+<li><strong>premiers principes</strong> : qu'est-ce qui doit survivre, au juste ? (§ 3) ;</li>
+<li><strong>analogies</strong> : nginx, HAProxy, Envoy, le dépôt de descripteurs de systemd, Erlang, <code>shellflip</code> de Cloudflare, Home Assistant, CRIU (§ 4) ;</li>
+<li><strong>pré-mortem</strong> : « le redémarrage a mal tourné : qu'a-t-on perdu, et pourquoi ? » ; vingt réponses, vingt parades (§ 5) ;</li>
+<li><strong>analyse morphologique</strong> : où garder la mémoire, qui garde les portes, qui lance les modules, options côte à côte (§ 6) ;</li>
+<li><strong>convergence à critères visibles</strong> (§ 6, § 12).</li>
+</ul>
+<p>Vocabulaire :</p>
+<ul>
+<li>un <strong>redémarrage à froid</strong> est ce qui se passe aujourd'hui : tout s'arrête, on repart des fichiers ;</li>
+<li>un <strong>redémarrage à chaud</strong> : le cœur s'arrête et repart ; ce qui doit survivre ne passe ni par le disque, ni par l'arrêt des modules isolés ;</li>
+<li>le <strong>gardien</strong> est un petit processus, le même binaire (<code>moli-os gardien</code>). Il lance le cœur et les modules isolés, garde les portes et le relais, et ne fait rien d'autre ;</li>
+<li>les <strong>portes</strong> sont les sockets d'écoute : l'API et les écrans (8790), les écouteurs du courtier ;</li>
+<li>le <strong>relais</strong> est la mémoire du cœur, écrite en octets, confiée au gardien dans un <code>memfd</code> scellé. Son format est l'<strong>état complet</strong> de l'étude HA v2 (§ 16.2) : ce qui voyage par MQTT s'appelle l'état complet, ce qui s'écrit sur le disque s'appelle l'<strong>instantané</strong>, ce que garde le gardien s'appelle le relais ;</li>
+<li>la <strong>file</strong> est celle du pont maison (HA v2 § 6.4) : les 10 000 dernières sorties critiques, chacune avec son rang <code>s</code> ;</li>
+<li>un <strong>accusé</strong> dit à un module isolé que tout ce qu'il a donné jusqu'à son numéro <code>k</code> est rangé dans le relais ou dans la file : il peut l'oublier ;</li>
+<li>l'<strong>époque</strong> <code>E</code> et le <strong>bail</strong> sont ceux de la V7 (§ 18.1.7) : la seule machine autorisée à agir, et le droit qu'elle renouvelle auprès du témoin.</li>
+</ul>
+
+<section id="1-le-verdict-en-bref" class="level2">
+<h2>1. Le verdict en bref</h2>
+<ul>
+<li><p><strong>Oui, à une condition : qu'un petit processus reste quand le cœur s'arrête.</strong> C'est le gardien. Il garde trois choses pendant le redémarrage :</p>
+<ul>
+<li><strong>les portes</strong> : un client qui se connecte attend dans la file du noyau, il n'est pas refusé ;</li>
+<li><strong>la mémoire du cœur</strong> : le relais, dans un <code>memfd</code> scellé ;</li>
+<li><strong>les modules isolés</strong> : ce sont ses enfants, pas ceux du cœur.</li>
+</ul>
+<p>Sous systemd, sur le Pi (D10), le dépôt de descripteurs de systemd peut en plus garder ceux du gardien lui-même.</p></li>
+<li><p><strong>On conserve le contenu de la mémoire, pas la mémoire.</strong> Un nouveau binaire ne peut pas reprendre l'ancien tas :</p>
+<ul>
+<li>les adresses changent à chaque lancement ;</li>
+<li>Rust ne promet pas la disposition d'une structure d'une compilation à l'autre ;</li>
+<li>chaque <code>Vec</code> ou <code>HashMap</code> pointe dans l'ancien processus.</li>
+</ul>
+<p>Ce qui passe, c'est l'état complet de l'étude HA v2 : 233 Kio à ×1. Il se construit en 132 µs et se relit en 272 µs (banc HA v2). Le passage de la mémoire coûte donc moins d'une milliseconde à ×1, et quelques millisecondes à ×10.</p></li>
+<li><p><strong>Le gain n'est pas la vitesse : le disque ne coûte que 3 ms</strong> (l'instantané avec <code>fsync</code>, HA v2). Le gain est ailleurs :</p>
+<ul>
+<li><strong>ce que le disque n'a jamais pu garder</strong> : les portes ouvertes et les modules vivants ;</li>
+<li><strong>le plantage</strong> : un relais rafraîchi et la file du pont tenue par le gardien font qu'un plantage du cœur ne perd plus que le dernier lot de 10 ms. Avec l'instantané seul, il perdrait jusqu'à sa période, de 15 min à 1 h ;</li>
+<li><strong>la carte SD</strong> : aucune écriture de plus.</li>
+</ul></li>
+<li><p><strong>Les modules isolés ne redémarrent pas.</strong></p>
+<ul>
+<li>Ils gardent leurs connexions aux appareils et aux clouds ; seul leur lien avec le courtier se coupe.</li>
+<li>Ce qu'ils publient attend dans leur tampon jusqu'à l'accusé.</li>
+<li>Ils se reconnectent à une porte qui n'a jamais fermé.</li>
+<li>C'est ta remarque, et elle donne une troisième raison d'isoler, après « contenir » et « mesurer » : <strong>isoler pour durer</strong>.</li>
+</ul></li>
+<li><p><strong>Les modules du cœur redémarrent avec lui.</strong> Ce que cela leur coûte dépend de leur façon de parler à l'appareil (§ 8) :</p>
+<ul>
+<li>rien, pour un sondage ;</li>
+<li>les événements de la coupure, pour un flux comme celui de Hue ;</li>
+<li>une connexion de plus au cloud du fabricant, pour Landroid.</li>
+</ul></li>
+<li><p><strong>Un redémarrage prévu ne perd rien, par construction.</strong></p>
+<ul>
+<li>Le nouveau cœur s'initialise <strong>avant</strong> que l'ancien s'arrête, comme Envoy, dans le mode « reprise » de l'étude HA v2.</li>
+<li>L'ancien se fige au rang <code>N</code> et confie son état. Le nouveau le relit, compare l'empreinte et reprend au rang <code>N</code>.</li>
+<li>Coupure visée : une seconde au plus sur la machine de production, deux sur un Pi Zero 2 W. C'est sous les 2 s au bout desquelles l'actif se rétrograde (V7 § 18.1.7) : la secours ne bascule pas.</li>
+</ul></li>
+<li><p><strong>Un plantage ne perd presque rien.</strong></p>
+<ul>
+<li>Les modules isolés renvoient tout ce qui n'a pas d'accusé.</li>
+<li>Le nouveau cœur reprend le dernier relais, puis rejoue la file jusqu'au dernier lot.</li>
+<li>Ce qui avait été fait est refait <strong>sous les mêmes clés</strong> (critique § 3.11) : un module ou un service qui reconnaît la clé ne le refait pas.</li>
+<li>Un doublon reste possible pour un ordre non idempotent d'un module du cœur, s'il n'a pas été écrit avant au relais. D'où la règle : <strong>un engagement s'écrit avant, au moins au relais</strong>.</li>
+</ul></li>
+<li><p><strong>Trois étages de durée de vie</strong> :</p>
+<ul>
+<li>la mémoire du cœur meurt avec le processus ;</li>
+<li>le relais et la file survivent au redémarrage et au plantage du cœur, pas à une coupure de courant ;</li>
+<li>le disque et les pairs survivent à une coupure de courant (HA v2).</li>
+</ul>
+<p>Chaque donnée choisit son étage.</p></li>
+<li><p><strong>Le temps continue.</strong> Sur le même allumage (<code>boot_id</code>), l'horloge monotone ne repart pas : les échéances restent monotones et aucune grâce n'est nécessaire. Sur un autre allumage, c'est la règle de la mémoire v2 : l'heure murale, puis la grâce.</p></li>
+<li><p><strong>Une autre version.</strong></p>
+<ul>
+<li>Les sections du relais sont typées et versionnées. Une version lit les anciennes, jamais l'inverse, et un relais illisible est refusé. On repart alors des pairs, puis de l'instantané, <strong>jamais à vide</strong> (HA v2 § 11.3).</li>
+<li>Si le nouveau binaire n'est pas sain en 30 s, le gardien relance l'ancien avec le même relais, comme le vieux maître de nginx.</li>
+</ul></li>
+<li><p><strong>Docker et systemd</strong> :</p>
+<ul>
+<li>sous systemd (le Pi, D10), tout est à chaud, mise à jour du binaire comprise ;</li>
+<li>sous Docker, tout est à chaud sauf une nouvelle image. Celle-ci recrée le conteneur : la mise à jour est alors <strong>à froid, mais sans perte</strong>, par l'arrêt figé de l'étude HA v2.</li>
+</ul></li>
+</ul>
+</section>
+<section id="2-ce-que-fait-un-redémarrage-aujourdhui" class="level2">
+<h2>2. Ce que fait un redémarrage aujourd'hui</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Ce qui est en jeu</th>
+<th>Aujourd'hui</th>
+<th>Preuve</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Le signal</td>
+<td>SIGTERM ou Ctrl-C : <code>wait_for_signal</code>, puis l'annulation de toutes les tâches</td>
+<td><code>moli-os/src/main.rs:488-491</code>, <code>:1640-1652</code></td>
+</tr>
+<tr class="even">
+<td>Les pilotes</td>
+<td>annulés d'un coup ; au départ suivant, chacun refait sa connexion depuis zéro</td>
+<td><code>main.rs:494-496</code></td>
+</tr>
+<tr class="odd">
+<td>L'historique, l'énergie</td>
+<td>leur dernier lot est écrit</td>
+<td><code>main.rs:499-504</code></td>
+</tr>
+<tr class="even">
+<td>Les dernières valeurs</td>
+<td><code>state.json</code> réécrit à l'arrêt, et chaque minute si une valeur a changé, avec <code>fsync</code></td>
+<td><code>main.rs:505</code>, <code>:710-712</code>, <code>:950-955</code></td>
+</tr>
+<tr class="odd">
+<td>Les automatismes en cours</td>
+<td>annulés : ils ne reprennent jamais</td>
+<td>HA v2 § 2.4 (<code>moli-automation/src/engine.rs:99-113</code>)</td>
+</tr>
+<tr class="even">
+<td>Les demandes retenues par la garde, en attente d'un humain</td>
+<td><strong>en mémoire seulement</strong> (50 au plus, 10 min chacune) : perdues</td>
+<td><code>moli-runtime/src/hub.rs:173</code>, <code>:176</code>, <code>:245</code></td>
+</tr>
+<tr class="odd">
+<td>Les écrans</td>
+<td>leur flux se coupe ; ils se reconnectent et reçoivent un instantané</td>
+<td><code>moli-api/src/sse.rs</code></td>
+</tr>
+<tr class="even">
+<td>Les portes</td>
+<td>fermées pendant tout l'arrêt ; rouvertes par <code>TcpListener::bind</code> au départ suivant</td>
+<td><code>main.rs:448</code></td>
+</tr>
+<tr class="odd">
+<td>La mise à jour</td>
+<td>reconstruire l'image, puis <code>docker compose up -d --force-recreate</code> ; Docker attend 10 s (<code>stop_grace_period</code>) avant de tuer</td>
+<td>exploitation.md</td>
+</tr>
+<tr class="even">
+<td>Le processus principal du conteneur</td>
+<td>le binaire lui-même : <code>ENTRYPOINT ["/moli-os"]</code>, <code>CMD ["serve"]</code></td>
+<td><code>Dockerfile</code></td>
+</tr>
+<tr class="odd">
+<td>Le démarrage</td>
+<td>budget : 2 s jusqu'à « sain »</td>
+<td>PERFORMANCE.md</td>
+</tr>
+</tbody>
+</table></div>
+<p>Aujourd'hui, un redémarrage perd :</p>
+<ul>
+<li>les exécutions et leurs attentes ;</li>
+<li>les demandes retenues par la garde ;</li>
+<li>les courbes du monitoring, quand elles existeront ;</li>
+<li>ce que les appareils ont dit pendant la coupure.</li>
+</ul>
+<p>Les portes se ferment, et les appareils passent par « hors ligne ». L'étude HA v2 corrige déjà la mémoire par l'arrêt figé (§ 16). Ce document y ajoute ce qu'un disque ne garde pas.</p>
+</section>
+<section id="3-premiers-principes--quest-ce-qui-doit-survivre-" class="level2">
+<h2>3. Premiers principes : qu'est-ce qui doit survivre ?</h2>
+<p>Cinq choses, et pas une de plus :</p>
+<ol type="1">
+<li><p><strong>Le contenu de la mémoire</strong>, pas la mémoire elle-même. Quatre raisons empêchent de reprendre le tas de l'ancien processus :</p>
+<ul>
+<li><strong>les dispositions</strong> : Rust ne promet pas la disposition d'une structure ordinaire (<code>repr(Rust)</code>) d'une compilation à l'autre ; un champ ajouté, un compilateur plus récent, et les octets ne veulent plus dire la même chose ;</li>
+<li><strong>les adresses</strong> changent à chaque lancement (ASLR) ; chaque <code>Vec</code>, <code>String</code>, <code>HashMap</code> ou <code>Arc</code> pointe dans l'ancien processus ;</li>
+<li><strong>les octets de remplissage</strong> : même une structure <code>#[repr(C)]</code> a des trous dont le contenu n'est pas défini ; les copier tels quels n'a pas de sens ;</li>
+<li><strong>le code</strong> : Rust ne charge pas du code neuf dans un processus qui tourne sans une ABI stable (<code>abi_stable</code>) ou sans WASM, que D2 a écarté. Erlang le fait (§ 4) ; Rust remplace le processus.</li>
+</ul>
+<p>Donc : le contenu, <strong>encodé champ par champ</strong>, comme l'instantané de l'étude HA v2.</p></li>
+<li><p><strong>Les portes.</strong> Une socket d'écoute qui reste ouverte garde les connexions entrantes dans la file du noyau. Le client attend au lieu d'être refusé.</p></li>
+<li><p><strong>Les processus qui n'ont pas à mourir</strong> : les modules isolés, avec leurs connexions.</p></li>
+<li><p><strong>Le temps</strong> : l'horloge monotone de la machine continue tant que la machine ne redémarre pas.</p></li>
+<li><p><strong>La parole donnée</strong> :</p>
+<ul>
+<li>l'époque et le bail ;</li>
+<li>les échéances des ordres ;</li>
+<li>les clés des engagements ;</li>
+<li>les issues attendues.</li>
+</ul></li>
+</ol>
+<p>Ce qui ne peut pas survivre, et ne doit pas faire semblant :</p>
+<ul>
+<li>les connexions TCP que tient le cœur : les flux des écrans, les liens MQTT des modules ;</li>
+<li>les requêtes HTTP en vol des modules du cœur vers un cloud ;</li>
+<li>les sessions TLS.</li>
+</ul>
+<p>On les ferme proprement, on les rouvre. Rien d'important ne repose sur elles seules : un écran reçoit un instantané, un module renvoie ce qui n'a pas d'accusé.</p>
+</section>
+<section id="4-ce-quon-fait-ailleurs" class="level2">
+<h2>4. Ce qu'on fait ailleurs</h2>
+<p><strong>Analogies</strong>, vérifiées dans la documentation de chacun (annexe A) :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Système</th>
+<th>Ce qui survit</th>
+<th>Comment</th>
+<th>Ce qu'on en garde</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>nginx</strong></td>
+<td>les sockets d'écoute</td>
+<td><code>USR2</code> : l'ancien maître lance le nouveau binaire ; <code>WINCH</code> puis <code>QUIT</code> à l'ancien ; pour revenir en arrière, <code>HUP</code> à l'ancien maître, qui « ne ferme pas ses sockets d'écoute »</td>
+<td>garder l'ancien prêt à repartir tant que le nouveau n'a pas fait ses preuves</td>
+</tr>
+<tr class="even">
+<td><strong>HAProxy</strong></td>
+<td>les sockets d'écoute</td>
+<td><code>expose-fd listeners</code> sur la socket d'administration, puis <code>-x</code> au rechargement ; en maître-ouvrier, le maître passe les sockets par sa paire de sockets interne</td>
+<td>passer les descripteurs par une socket Unix</td>
+</tr>
+<tr class="odd">
+<td><strong>Envoy</strong></td>
+<td>les sockets, les compteurs</td>
+<td>le nouveau processus s'initialise entièrement, puis demande des copies des sockets d'écoute à l'ancien, puis lui dit de vider ; les compteurs passent par la socket Unix ; « les connexions existantes ne sont pas transférées »</td>
+<td><strong>s'initialiser avant de prendre la main</strong> ; les compteurs passent, les connexions non</td>
+</tr>
+<tr class="even">
+<td><strong>systemd</strong>, le dépôt de descripteurs</td>
+<td>des descripteurs, dont un <code>memfd</code></td>
+<td><code>FDSTORE=1</code> et <code>FDNAME=</code> par <code>sd_notify</code> ; rendus au redémarrage par <code>LISTEN_FDS</code> et <code>LISTEN_FDNAMES</code> ; <code>FileDescriptorStoreMax=</code> vaut 0 par défaut (éteint) ; un redémarrage garde le dépôt, un arrêt puis un départ séparés « probablement pas » ; un <code>memfd</code> « peut servir à y sérialiser l'état du service »</td>
+<td><strong>le modèle du relais</strong> ; et ce dépôt est « généralement recommandé » plutôt que de garder l'ancien processus en vie</td>
+</tr>
+<tr class="odd">
+<td><strong>Erlang</strong></td>
+<td>le code et l'état</td>
+<td>deux versions d'un module à la fois, <code>current</code> et <code>old</code> ; en charger une troisième purge la plus ancienne et tue les processus restés dedans ; un processus passe au nouveau code par un appel qualifié ; <code>code_change</code> transforme l'état</td>
+<td><strong>versionner l'état, et le transformer à la reprise</strong></td>
+</tr>
+<tr class="even">
+<td><strong><code>shellflip</code></strong> de Cloudflare (Rust), et <code>ecdysis</code></td>
+<td>les sockets et un petit état</td>
+<td>un <code>fork</code>, un peu d'état passé de l'ancien au nouveau, une grâce pour s'initialiser ; « crashing during initialisation is OK »</td>
+<td>l'ancien garde la main si le nouveau échoue</td>
+</tr>
+<tr class="odd">
+<td><strong>Home Assistant</strong></td>
+<td>les dernières valeurs</td>
+<td><code>core.restore_state</code>, écrit toutes les 15 min (<code>STATE_DUMP_INTERVAL</code>) et à l'arrêt</td>
+<td>ce que fait déjà <code>state.json</code> : un redémarrage à froid</td>
+</tr>
+<tr class="even">
+<td><strong>CRIU</strong></td>
+<td>tout le processus</td>
+<td>figé, puis repris</td>
+<td>écarté par l'étude HA v2 (§ 16.2) : connexions mortes, droits <code>root</code>, image liée au binaire exact</td>
+</tr>
+</tbody>
+</table></div>
+<p>Deux leçons en sortent :</p>
+<ul>
+<li><strong>Envoy et nginx</strong> gardent les portes ouvertes et ne lâchent l'ancien qu'une fois le nouveau prêt.</li>
+<li><strong>systemd et Erlang</strong> passent un état versionné, et non un processus.</li>
+</ul>
+<p>Aucun ne transfère les connexions vivantes. Personne ne sait le faire proprement, et Sarah Home n'en a pas besoin.</p>
+</section>
+<section id="5-pré-mortem--le-redémarrage-a-mal-tourné-qua-t-on-perdu-" class="level2">
+<h2>5. Pré-mortem : le redémarrage a mal tourné, qu'a-t-on perdu ?</h2>
+<p><strong>Inversion</strong> : on suppose l'échec, et l'on cherche ce qui l'a causé. Chaque cause devient une parade.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Ce qu'on a perdu</th>
+<th>Comment</th>
+<th>La parade</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>P1</td>
+<td>un appui sur un bouton pendant la coupure</td>
+<td>le module était dans le cœur, et il est mort avec lui</td>
+<td>les modules d'appuis et de capteurs importants sont isolés, ou leurs appareils redisent leur état (§ 8) ; un module isolé garde ses occurrences, dans l'ordre, jusqu'à l'accusé (§ 7.4)</td>
+</tr>
+<tr class="even">
+<td>P2</td>
+<td>l'issue d'un ordre</td>
+<td>l'ancien cœur l'a donné, le module l'a exécuté, l'issue arrive au nouveau cœur qui ne connaît pas l'ordre</td>
+<td>la table des ordres en vol (point, clé, échéance) voyage dans le relais</td>
+</tr>
+<tr class="odd">
+<td>P3</td>
+<td>rien, mais l'ordre a été exécuté deux fois</td>
+<td>le nouveau cœur a refait une étape déjà faite</td>
+<td>la clé de l'engagement (critique § 3.11) : le module reconnaît une clé déjà vue et rend la même issue ; jamais d'envoi après l'échéance</td>
+</tr>
+<tr class="even">
+<td>P4</td>
+<td>une attente</td>
+<td>son échéance est tombée pendant la coupure</td>
+<td>l'horloge monotone continue (§ 7.5) : l'échéance part au redémarrage, avec le retard de la coupure, et la règle des 2 min de la mémoire v2 ne joue pas</td>
+</tr>
+<tr class="odd">
+<td>P5</td>
+<td>tout : deux cœurs ont tourné ensemble</td>
+<td>le nouveau a démarré avant que l'ancien ne lâche</td>
+<td>le nouveau reste en reprise, sans pilote ni porte ni base en écriture, jusqu'à ce que l'ancien sorte ; le verrou d'instance (<code>flock</code>, HA v2 § 5) ; Turso refuse de toute façon un second écrivain (D13)</td>
+</tr>
+<tr class="even">
+<td>P6</td>
+<td>l'époque : la secours a pris la main pendant le redémarrage</td>
+<td>la coupure a dépassé le bail</td>
+<td>une coupure sous 2 s, ou annoncée par <code>sys/arret</code> avec son retour attendu (§ 7.6) ; le gardien ne renouvelle jamais le bail à la place du cœur : ce serait mentir</td>
+</tr>
+<tr class="odd">
+<td>P7</td>
+<td>un clic sur un écran</td>
+<td>la porte était fermée</td>
+<td>la porte reste ouverte : la connexion attend dans la file du noyau, et le nouveau cœur la sert ; au-delà de la patience du client, le clic échoue visiblement, jamais en silence</td>
+</tr>
+<tr class="even">
+<td>P8</td>
+<td>la mémoire : le nouveau binaire ne sait pas lire le relais</td>
+<td>un format d'une version future</td>
+<td>refusé ; on repart des pairs, puis de l'instantané ; jamais à vide (HA v2 § 11.3)</td>
+</tr>
+<tr class="odd">
+<td>P9</td>
+<td>la maison : le nouveau binaire plante au démarrage</td>
+<td>un défaut de la version</td>
+<td>le gardien relance le binaire précédent avec le même relais, qu'il sait lire (§ 7.9)</td>
+</tr>
+<tr class="even">
+<td>P10</td>
+<td>le relais</td>
+<td>le gardien est mort, ou le conteneur a été recréé</td>
+<td>l'instantané sur disque, que l'arrêt figé écrit avant une nouvelle version (HA v2 § 16) ; le redémarrage est alors à froid, sans perte</td>
+</tr>
+<tr class="odd">
+<td>P11</td>
+<td>une réponse de Sarah</td>
+<td>elle arrivait pendant la coupure</td>
+<td>Sarah isolée garde sa réponse jusqu'à l'accusé (critique § 3.11) ; dans le cœur, l'appel est refait : c'est une lecture, sans effet, qui coûte des jetons</td>
+</tr>
+<tr class="even">
+<td>P12</td>
+<td>les courbes du monitoring</td>
+<td>elles vivaient en mémoire</td>
+<td>une section « mesures » du relais</td>
+</tr>
+<tr class="odd">
+<td>P13</td>
+<td>une demande retenue par la garde</td>
+<td>elle n'existe qu'en mémoire (<code>hub.rs:245</code>)</td>
+<td>une section « garde » du relais ; l'instantané devrait la porter aussi</td>
+</tr>
+<tr class="even">
+<td>P14</td>
+<td>un lot d'historique</td>
+<td>il était en vol</td>
+<td>le dernier lot est écrit à l'arrêt (<code>main.rs:499-501</code>), en 100 ms au plus (D13)</td>
+</tr>
+<tr class="odd">
+<td>P15</td>
+<td>des déclencheurs, dans la rafale du retour</td>
+<td>les modules et Zigbee2MQTT renvoient tout d'un coup</td>
+<td>le tampon d'entrée du hub (V7 § 20.5) : 0 perdu sur une rafale de 5 000 (V7 § 17.1.1)</td>
+</tr>
+<tr class="even">
+<td>P16</td>
+<td>des occurrences, au-delà du tampon d'un module</td>
+<td>la coupure a duré trop longtemps</td>
+<td>des tampons bornés (§ 7.4) ; leur débordement est <strong>signalé</strong>, jamais muet</td>
+</tr>
+<tr class="odd">
+<td>P17</td>
+<td>tout ce qui était en mémoire</td>
+<td>le gardien lui-même est mort</td>
+<td>tout repart à froid, par Docker ou systemd, et l'on suit l'étude HA v2 ; le gardien est petit et sans logique métier, et sous systemd le dépôt de descripteurs garde ses portes et son relais</td>
+</tr>
+<tr class="even">
+<td>P18</td>
+<td>l'instantané</td>
+<td>la carte est pleine</td>
+<td>le relais ne passe pas par la carte ; une alerte (monitoring § 10)</td>
+</tr>
+<tr class="odd">
+<td>P19</td>
+<td>des échéances</td>
+<td>l'heure murale a sauté pendant le redémarrage (NTP)</td>
+<td>les échéances sont monotones ; l'heure murale ne sert qu'à afficher (mémoire v2 § 6.5)</td>
+</tr>
+<tr class="even">
+<td>P20</td>
+<td>un ordre d'un cœur qui n'avait plus le droit</td>
+<td>un ancien cœur, revenu, a parlé à un module</td>
+<td>l'époque dans chaque ordre ; un module refuse un ordre d'une époque ancienne (HA v2, test 46)</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="6-les-choix-à-critères-visibles" class="level2">
+<h2>6. Les choix, à critères visibles</h2>
+<p><strong>Analyse morphologique</strong>, trois axes.</p>
+<p><strong>Où garder la mémoire pendant le redémarrage :</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Survit au redémarrage</th>
+<th>au plantage du cœur</th>
+<th>à une coupure de courant</th>
+<th>Écritures sur la carte</th>
+<th>Retenue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rien, sauf <code>state.json</code> (aujourd'hui)</td>
+<td>les valeurs seules</td>
+<td>les valeurs seules</td>
+<td>les valeurs seules</td>
+<td>2 880 <code>fsync</code> et 236 Mo par jour (HA v2 § 10)</td>
+<td>non</td>
+</tr>
+<tr class="even">
+<td>L'instantané sur disque (HA v2)</td>
+<td>oui</td>
+<td>jusqu'au dernier instantané (15 min à 1 h)</td>
+<td>oui</td>
+<td>3 ms et 233 Kio par instantané</td>
+<td><strong>oui, à l'heure, à l'arrêt, avant une nouvelle version</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>Le relais et la file, gardés par le gardien</strong></td>
+<td>oui</td>
+<td><strong>oui, au dernier lot de 10 ms près</strong></td>
+<td>non</td>
+<td>0</td>
+<td><strong>oui</strong></td>
+</tr>
+<tr class="even">
+<td>Le dépôt de descripteurs de systemd</td>
+<td>oui</td>
+<td>oui, un redémarrage demandé par systemd garde le dépôt</td>
+<td>non</td>
+<td>0</td>
+<td><strong>en plus, sous systemd</strong> : il garde aussi ceux du gardien</td>
+</tr>
+<tr class="odd">
+<td>Un fichier sur un tmpfs de l'hôte, monté dans le conteneur</td>
+<td>oui, même un conteneur recréé</td>
+<td>oui</td>
+<td>non</td>
+<td>0</td>
+<td><strong>pour une nouvelle image Docker</strong></td>
+</tr>
+<tr class="even">
+<td>La mémoire d'un pair : le secours (HA v2 § 11.2)</td>
+<td>oui</td>
+<td>oui</td>
+<td>oui, s'il vit</td>
+<td>0</td>
+<td><strong>oui, quand il existe</strong></td>
+</tr>
+<tr class="odd">
+<td>CRIU</td>
+<td>oui</td>
+<td>non</td>
+<td>non</td>
+<td>le processus entier</td>
+<td>non</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Qui garde les portes :</strong></p>
+<ul>
+<li>personne (aujourd'hui) ;</li>
+<li>les unités de sockets de systemd ;</li>
+<li><strong>le gardien</strong> ;</li>
+<li>deux cœurs qui écoutent ensemble (<code>SO_REUSEPORT</code>).</li>
+</ul>
+<p>Retenu : le gardien, partout. Sous systemd, il peut recevoir les siennes d'une unité de sockets. Deux cœurs ensemble seraient deux écrivains : non.</p>
+<p><strong>Qui lance les modules isolés :</strong></p>
+<ul>
+<li>le cœur : non, ils mourraient avec lui ;</li>
+<li>une unité systemd par module : sur le Pi seulement, et il faudrait piloter systemd depuis le cœur ;</li>
+<li><strong>le gardien</strong>.</li>
+</ul>
+<p>Retenu : le gardien, sous Docker comme sous systemd. Sous systemd, il reçoit un sous-arbre de cgroups (<code>Delegate=yes</code>) pour donner à chaque module isolé sa limite.</p>
+<p><strong>Un seul mécanisme, deux hôtes.</strong> Le gardien fait la même chose sous Docker et sous systemd. systemd n'y ajoute qu'une chose : garder les descripteurs du gardien lui-même.</p>
+</section>
+<section id="7-la-conception" class="level2">
+<h2>7. La conception</h2>
+<section id="71-le-gardien" class="level3">
+<h3>7.1 Le gardien</h3>
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 394" role="img" aria-labelledby="gardien-t gardien-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="gardien-t">Ce qui reste, ce qui redémarre</title>
+          <desc id="gardien-d">À gauche, le gardien garde les portes, le relais et la file, et les modules isolés. À droite, l'ancien cœur confie son état au relais et sort ; le nouveau, prêt en reprise, reprend l'état, les portes, puis voit les modules se reconnecter.</desc>
+          <defs>
+            <marker id="gardien-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="gardien-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="gardien-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="gardien-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <rect x="16.0" y="36.0" width="452.0" height="300.0" rx="12" fill="#ffffff" stroke="#b07d12" stroke-width="2.2"/>
+          <text x="30.0" y="60.0" font-size="14" fill="#1d302a" font-weight="700">Ce qui reste : le gardien</text>
+          <text x="456.0" y="60.0" font-size="9.5" fill="#52615a" text-anchor="end" font-family="SFMono-Regular, Consolas, monospace">moli-os gardien</text>
+          <rect x="32.0" y="76.0" width="420.0" height="60.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="44.0" y="96.0" font-size="11.5" fill="#195744" font-weight="700">Les portes</text>
+          <text x="44.0" y="113.0" font-size="10" fill="#1d302a">8790 : l'API et les écrans · 1883 : le courtier</text>
+          <text x="44.0" y="128.0" font-size="9.5" fill="#52615a">un client qui se connecte attend dans la file du noyau</text>
+          <rect x="32.0" y="146.0" width="420.0" height="72.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="44.0" y="166.0" font-size="11.5" fill="#195744" font-weight="700">Le relais et la file</text>
+          <text x="44.0" y="183.0" font-size="10" fill="#1d302a">l'état complet du cœur, dans un memfd scellé : 233 Kio à ×1</text>
+          <text x="44.0" y="199.0" font-size="10" fill="#1d302a">la file du pont : 10 000 sorties, 0,45 Mio</text>
+          <text x="44.0" y="212.0" font-size="9.5" fill="#52615a">aucun secret : le nouveau cœur relit le coffre</text>
+          <rect x="32.0" y="228.0" width="420.0" height="94.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="44.0" y="248.0" font-size="11.5" fill="#195744" font-weight="700">Les modules isolés : ses enfants</text>
+          <rect x="44.0" y="258.0" width="86.0" height="24.0" rx="12" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="87.0" y="274.0" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle">Sarah</text>
+          <rect x="140.0" y="258.0" width="86.0" height="24.0" rx="12" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="183.0" y="274.0" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle">cloud-x</text>
+          <rect x="236.0" y="258.0" width="86.0" height="24.0" rx="12" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="279.0" y="274.0" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle">tuya</text>
+          <text x="44.0" y="300.0" font-size="9.8" fill="#52615a">ils gardent leurs connexions et leurs tampons, et se</text>
+          <text x="44.0" y="314.0" font-size="9.8" fill="#52615a">reconnectent à une porte qui n'a jamais fermé</text>
+          <rect x="532.0" y="36.0" width="452.0" height="300.0" rx="12" fill="#ffffff" stroke="#1d302a" stroke-width="2.2"/>
+          <text x="546.0" y="60.0" font-size="14" fill="#1d302a" font-weight="700">Ce qui redémarre : le cœur</text>
+          <text x="972.0" y="60.0" font-size="9.5" fill="#52615a" text-anchor="end" font-family="SFMono-Regular, Consolas, monospace">moli-os serve</text>
+          <rect x="548.0" y="76.0" width="420.0" height="116.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="560.0" y="96.0" font-size="11.5" fill="#52615a" font-weight="700">L'ancien cœur</text>
+          <rect x="560.0" y="108.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="605.0" y="124.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle">hub</text>
+          <rect x="660.0" y="108.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="705.0" y="124.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle">courtier</text>
+          <rect x="760.0" y="108.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="805.0" y="124.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle">moteur</text>
+          <rect x="860.0" y="108.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="905.0" y="124.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle">API</text>
+          <rect x="560.0" y="140.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="605.0" y="156.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle">Hue</text>
+          <rect x="660.0" y="140.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="705.0" y="156.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle">Sonos</text>
+          <text x="560.0" y="184.0" font-size="9.6" fill="#52615a">se fige au rang N, confie son état, rend la base, sort</text>
+          <rect x="548.0" y="206.0" width="420.0" height="116.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="560.0" y="226.0" font-size="11.5" fill="#195744" font-weight="700">Le nouveau cœur</text>
+          <rect x="560.0" y="238.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="605.0" y="254.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">hub</text>
+          <rect x="660.0" y="238.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="705.0" y="254.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">courtier</text>
+          <rect x="760.0" y="238.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="805.0" y="254.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">moteur</text>
+          <rect x="860.0" y="238.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="905.0" y="254.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">API</text>
+          <rect x="560.0" y="270.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="605.0" y="286.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">Hue</text>
+          <rect x="660.0" y="270.0" width="90.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="705.0" y="286.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">Sonos</text>
+          <text x="560.0" y="314.0" font-size="9.6" fill="#52615a">prêt en reprise avant la coupure ; relit, reprend au rang N</text>
+          <line x1="546.0" y1="150.0" x2="456.0" y2="176.0" stroke="#b07d12" stroke-width="1.8" marker-end="url(#gardien-a)"/>
+          <text x="500.0" y="150.0" font-size="9.6" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">confier</text>
+          <line x1="456.0" y1="198.0" x2="544.0" y2="262.0" stroke="#195744" stroke-width="1.8" marker-end="url(#gardien-v)"/>
+          <text x="510.0" y="216.0" font-size="9.6" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">reprendre</text>
+          <path d="M 454,100 C 500,100 506,226 544,226" fill="none" stroke="#195744" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#gardien-v)"/>
+          <text x="500.0" y="92.0" font-size="9.6" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">les portes</text>
+          <line x1="454.0" y1="290.0" x2="544.0" y2="296.0" stroke="#52615a" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#gardien-g)"/>
+          <text x="500.0" y="284.0" font-size="9.2" fill="#52615a" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">reconnexion</text>
+          <text x="16.0" y="364.0" font-size="10.5" fill="#52615a">Le gardien ne parle jamais MQTT, ne tient aucun secret, ne décide rien pour la maison, et ne renouvelle jamais le bail à la place du cœur.</text>
+          <text x="16.0" y="381.0" font-size="10.5" fill="#52615a">Sous systemd, le dépôt de descripteurs garde aussi ses propres portes et son relais ; sous Docker, il est le processus principal du conteneur.</text>
+        </svg>
+        <figcaption>Le contenu de la mémoire passe, pas la mémoire&nbsp;: l'état complet de l'étude HA&nbsp;v2, encodé champ par champ, se fige en 132&nbsp;µs et se relit en 272&nbsp;µs à ×1.</figcaption>
+      </figure>
+
+
+<p>Le gardien est le même binaire, lancé par <code>moli-os gardien</code>. L'image ne grossit pas. Ce qu'il fait :</p>
+<ol type="1">
+<li><strong>ouvrir les portes, une fois</strong>, à son démarrage : l'API et les écrans (8790), les écouteurs du courtier (local 1883 ; réseau 8883, quand il est activé) ;</li>
+<li><strong>lancer le cœur</strong>, lui passer les portes et le dernier relais, et le relancer s'il sort ;</li>
+<li><strong>lancer les modules isolés</strong>, à la demande du cœur (monitoring § 11.5), avec leur jeton de lancement par un tube hérité, et les relancer, de 1 s à 60 s ;</li>
+<li><strong>garder le relais et la file</strong> que le cœur lui confie ;</li>
+<li><strong>relayer les signaux</strong> : SIGTERM vers l'arrêt figé du cœur et vers les modules. Dans le conteneur, en processus principal, il récolte aussi les processus terminés ;</li>
+<li><strong>garder le dernier souffle</strong> : les 64 dernières lignes de la sortie d'erreur du cœur, et le signal qui l'a arrêté (monitoring § 11.2) ;</li>
+<li><strong>garder le binaire précédent</strong> et y revenir si le nouveau n'est pas sain en 30 s (§ 7.9).</li>
+</ol>
+<p>Ce qu'il ne fait jamais :</p>
+<ul>
+<li>parler MQTT ;</li>
+<li>tenir un secret : le relais n'en contient aucun, comme l'instantané de l'étude HA v2 ;</li>
+<li>décider quoi que ce soit pour la maison ;</li>
+<li>renouveler le bail à la place du cœur.</li>
+</ul>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>ce que tient le gardien (esquisse)</figcaption><pre class="rust"><code>/// `moli-os gardien` : le même binaire. Ce qu&#39;il tient, et rien d&#39;autre.
+struct Gardien {
+    portes: Vec&lt;(&amp;&#39;static str, OwnedFd)&gt;,  // (&quot;http&quot;, 8790), (&quot;mqtt-local&quot;, 1883)… ouvertes une fois
+    relais: Option&lt;OwnedFd&gt;,               // le dernier état complet confié par le cœur : un memfd scellé
+    file: Option&lt;OwnedFd&gt;,                 // la file du pont maison, que le cœur écrit au fil de l&#39;eau
+    coeur: Option&lt;Child&gt;,                  // le cœur qui tourne
+    precedent: PathBuf,                    // le binaire d&#39;avant, pour revenir en arrière
+    modules: Vec&lt;(String, Child)&gt;,         // les modules isolés : ses enfants, pas ceux du cœur
+    souffle: VecDeque&lt;String&gt;,             // les 64 dernières lignes d&#39;erreur du cœur
+}</code></pre></figure>
+</section>
+<section id="72-le-relais--la-mémoire-du-cœur-en-octets" class="level3">
+<h3>7.2 Le relais : la mémoire du cœur, en octets</h3>
+<p><strong>Le format est celui de l'étude HA v2</strong> (§ 16.2) : un en-tête (<code>SHI1</code>, version, raison, rang, époque, instant mural, version du programme, empreinte de l'annuaire, CRC), puis des sections. Les sections de l'étude HA v2 sont l'annuaire, les valeurs, la santé, les échéances, les exécutions, les attentes, les horaires, les minuteries, les agendas et les aides. Le redémarrage à chaud en ajoute :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Section</th>
+<th>Ce qu'elle porte</th>
+<th>Pourquoi à chaud</th>
+<th>Taille</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ordres en vol</td>
+<td>point, clé, échéance, origine de chaque ordre donné et sans issue</td>
+<td>une issue qui arrive au nouveau cœur retrouve son ordre (P2)</td>
+<td>quelques dizaines d'octets par ordre</td>
+</tr>
+<tr class="even">
+<td>Garde</td>
+<td>les demandes retenues, en attente d'un humain</td>
+<td>aujourd'hui perdues à chaque redémarrage (P13)</td>
+<td>50 au plus (<code>hub.rs:176</code>)</td>
+</tr>
+<tr class="odd">
+<td>Zone de travail</td>
+<td>les dossiers des démarches en cours (critique § 3.8)</td>
+<td>ce que Sarah ou un service a déjà rapporté</td>
+<td>bornée par le plafond de la zone</td>
+</tr>
+<tr class="even">
+<td>Temps</td>
+<td>l'origine de l'horloge monotone du cœur, et le <code>boot_id</code></td>
+<td>§ 7.5</td>
+<td>24 o</td>
+</tr>
+<tr class="odd">
+<td>Accusés</td>
+<td>pour chaque module isolé, le dernier numéro <code>k</code> rangé</td>
+<td>§ 7.4</td>
+<td>8 o par module</td>
+</tr>
+<tr class="even">
+<td>Mesures</td>
+<td>les courbes et les compteurs du monitoring</td>
+<td>P12 ; les compteurs continuent au lieu de repartir de zéro, comme chez Envoy</td>
+<td>≈ 342 Kio (monitoring § 8)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le relais est <strong>écrit dans un <code>memfd</code>, puis scellé</strong> (<code>F_SEAL_SHRINK</code>, <code>F_SEAL_GROW</code>, <code>F_SEAL_WRITE</code>) : une fois confié, personne ne peut plus le modifier, le gardien compris. <strong>Aucun secret</strong> n'y entre : le nouveau cœur relit le coffre, avec la clé maître que lui donne l'environnement, comme aujourd'hui.</p>
+<p><strong>Où comptent ses pages.</strong> Les pages d'un <code>memfd</code> sont de la mémoire partagée (<code>shmem</code>) dans le cgroup, pas de la mémoire anonyme. Elles ne prennent rien au budget de 32 Mio de PERFORMANCE.md, mais elles comptent dans le plafond de 128 Mio du conteneur.</p>
+<p><strong>Quand il s'écrit :</strong></p>
+<ul>
+<li><strong>à l'arrêt prévu</strong>, une fois, au rang <code>N</code> du gel ;</li>
+<li><strong>en marche</strong>, quand la moitié de la file a été écrite depuis le dernier relais, ou toutes les 15 min, et <strong>seulement si quelque chose a changé</strong>. Au rythme moyen des maisons (1,9 changement par seconde), cela fait un relais toutes les 45 min environ ; à la pointe de 200 par seconde, toutes les 25 s. Le coût est de 132 µs à ×1 et 1,2 ms à ×10 par relais (banc HA v2), et nul au repos.</li>
+</ul>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>l'en-tête du relais (proposé ; encodé champ par champ, petit-boutiste, jamais une copie de la RAM)</figcaption><pre class="rust"><code>/// L&#39;en-tête de l&#39;instantané de l&#39;étude HA v2 (`SHI1`), plus ce qu&#39;un redémarrage à chaud ajoute.
+struct EnTeteRelais {
+    magie: [u8; 4],          // b&quot;SHI1&quot;
+    version: u16,            // du format ; une version plus récente lit les anciennes, jamais l&#39;inverse
+    raison: u8,              // arrêt prévu, rafraîchissement, avant un engagement
+    rang: u64,               // s : la mémoire est figée à ce rang
+    epoque: u64,             // E
+    mur_ms: u64,             // l&#39;heure murale du gel
+    mono_origine_ns: u64,    // l&#39;origine de l&#39;horloge monotone de ce cœur (CLOCK_MONOTONIC)
+    boot_id: [u8; 16],       // /proc/sys/kernel/random/boot_id : même allumage, même horloge monotone
+    programme: [u8; 32],     // l&#39;empreinte du binaire qui l&#39;a écrit
+    empreinte: [u8; 32],     // l&#39;empreinte de la mémoire critique, comparée à la reprise
+    crc: u32,
+}
+// Puis les sections : (type, version, obligatoire ou non, longueur, CRC) et leurs octets.</code></pre></figure>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>le cœur confie son relais au gardien, sans <code>unsafe</code> (<code>rustix</code> 1.1.5, fonctions <code>fs</code> et <code>net</code>)</figcaption><pre class="rust"><code>fn confier(etat: &amp;[u8], gardien: &amp;UnixStream) -&gt; std::io::Result&lt;()&gt; {
+    let fd = memfd_create(&quot;sarah-relais&quot;, MemfdFlags::CLOEXEC | MemfdFlags::ALLOW_SEALING)?;
+    let mut f = std::fs::File::from(fd);
+    f.write_all(etat)?;                                  // en-tête, sections, CRC
+    fcntl_add_seals(&amp;f, SealFlags::SHRINK | SealFlags::GROW | SealFlags::WRITE)?;
+    let fds = [f.as_fd()];
+    let mut place = [MaybeUninit::uninit(); rustix::cmsg_space!(ScmRights(1))];
+    let mut annexe = SendAncillaryBuffer::new(&amp;mut place);
+    annexe.push(SendAncillaryMessage::ScmRights(&amp;fds));  // le descripteur voyage avec le message
+    sendmsg(gardien, &amp;[IoSlice::new(b&quot;relais&quot;)], &amp;mut annexe, SendFlags::empty())?;
+    Ok(())
+}</code></pre></figure>
+<p><code>memfd_create</code>, <code>fcntl_add_seals</code>, <code>sendmsg</code> et <code>recvmsg</code> sont des fonctions sûres de <code>rustix</code> 1.1.5 (<code>fs/memfd_create.rs:20</code>, <code>fs/fcntl.rs:73</code>, <code>net/send_recv/msg.rs:712</code>, <code>:789</code>). Le dépôt n'active aujourd'hui que les fonctions <code>fs</code> et <code>std</code> de <code>rustix</code> (<code>Cargo.toml:86</code>) : il faut y ajouter <code>net</code>. La règle <code>unsafe_code = "forbid"</code> tient.</p>
+</section>
+<section id="73-les-portes" class="level3">
+<h3>7.3 Les portes</h3>
+<ul>
+<li><strong>Le gardien ouvre les portes et les passe à chaque cœur</strong> qu'il lance, en suivant le protocole de systemd (<code>LISTEN_FDS</code>, <code>LISTEN_FDNAMES</code>). Le cœur les lit de la même façon, qu'il soit lancé par systemd ou par le gardien ; la crate <code>listenfd</code> (1.0.2, <code>take_tcp_listener</code>) le fait déjà.</li>
+<li><strong>Ce que cela change dans le code</strong> :
+<ul>
+<li><code>TcpListener::bind</code> (<code>main.rs:448</code>) devient « prendre la porte héritée, sinon l'ouvrir », et <code>axum</code> la sert telle quelle ;</li>
+<li>le courtier doit accepter un écouteur déjà ouvert. <code>rumqttd</code> 0.20 ouvre lui-même le sien (<code>TcpListener::bind(&amp;self.config.listen)</code>, <code>server/broker.rs:383</code>) : un changement de plus dans <code>moli-courtier</code>.</li>
+</ul></li>
+<li><strong>Pendant la coupure, personne n'appelle <code>accept</code>.</strong> Un client qui se connecte attend dans la file du noyau, à concurrence de sa taille, et le nouveau cœur le sert.</li>
+<li><strong>Les connexions longues des écrans</strong> (le flux SSE, demain le WebSocket) sont fermées par l'ancien cœur avec un avis « redémarrage ». Les écrans se reconnectent et reçoivent un instantané, ce que <code>sse.rs</code> fait déjà pour un abonné en retard (V7 § 4.2).</li>
+</ul>
+</section>
+<section id="74-les-modules-isolés" class="level3">
+<h3>7.4 Les modules isolés</h3>
+<ul>
+<li><strong>Ce sont les enfants du gardien</strong>, pas ceux du cœur (monitoring § 11.5).</li>
+<li><strong>Pendant la coupure</strong>, ils gardent leurs connexions aux appareils et aux clouds ; seul leur lien avec le courtier se coupe. Le kit garde :
+<ul>
+<li><strong>la dernière valeur de chaque point</strong>, la dernière gagnant, comme le tampon d'entrée du hub : un tampon borné par le nombre de points du module ;</li>
+<li><strong>les occurrences</strong> (appuis, sonnette, passages), dans l'ordre, jamais fusionnées, 1 024 au plus ; au-delà, une perte <strong>signalée</strong> ;</li>
+<li><strong>les issues des ordres</strong>, jusqu'à ce que le hub les accuse.</li>
+</ul></li>
+<li><strong>Chaque publication d'un module porte son numéro <code>k</code></strong>, propre au module et croissant.
+<ul>
+<li>Le hub garde, pour chaque module, le dernier <code>k</code> qu'il a rangé dans le relais ou dans la file ; cette table voyage dans le relais.</li>
+<li>Le hub publie <code>sys/accuse/&lt;module&gt; {k}</code> : le module oublie tout ce qui est en deçà.</li>
+<li>C'est la règle du pont de la critique des workflows : celui qui envoie garde jusqu'à l'accusé, celui qui reçoit reconnaît ce qu'il a déjà vu.</li>
+</ul></li>
+<li><strong>Au retour</strong>, le module se reconnecte à la même porte, qui n'a jamais fermé, lit son dernier accusé, renvoie ce qui le dépasse, et republie <code>$vu</code>. Le hub écarte un doublon par son numéro.</li>
+<li><strong>La rafale du retour</strong> est absorbée par le tampon d'entrée du hub (V7 § 20.5).</li>
+<li><strong>Un ordre en cours d'exécution</strong> dans un module isolé quand le cœur s'arrête va à son terme. Son issue attend dans le tampon du module. Le nouveau cœur la rattache à son ordre par la table des ordres en vol.</li>
+</ul>
+</section>
+<section id="75-le-temps" class="level3">
+<h3>7.5 Le temps</h3>
+<ul>
+<li><strong><code>CLOCK_MONOTONIC</code> compte depuis l'allumage de la machine</strong>, pas depuis le lancement du processus. Le même allumage se reconnaît à <code>/proc/sys/kernel/random/boot_id</code>, un identifiant tiré à chaque allumage. On le lit dans un conteneur ordinaire : vérifié.</li>
+<li><strong>Le relais porte l'origine monotone de l'ancien cœur et son <code>boot_id</code>.</strong> Sur le même allumage, le nouveau cœur garde la même origine. La mémoire v2 compte en secondes depuis le démarrage, dans un entier de 32 bits : ce compteur continue, au lieu de repartir de zéro. Les échéances restent monotones : rien n'est converti, et aucune grâce n'est nécessaire, car rien n'a cessé d'écouter les modules isolés.</li>
+<li><strong>Sur un autre allumage, ou sur une autre machine</strong> (la secours), c'est la règle de la mémoire v2 (§ 6.5) : l'heure murale dans l'instantané, la conversion, puis la grâce.</li>
+<li><code>std::time::Instant</code> ne se sérialise pas. <code>rustix::time::clock_gettime(ClockId::Monotonic)</code> donne l'instant brut, sans <code>unsafe</code>.</li>
+</ul>
+</section>
+<section id="76-pas-à-pas--un-redémarrage-prévu" class="level3">
+<h3>7.6 Pas à pas : un redémarrage prévu</h3>
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 412" role="img" aria-labelledby="redemarrage-t redemarrage-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="redemarrage-t">Un redémarrage prévu, pas à pas</title>
+          <desc id="redemarrage-d">Cinq lignes, de gauche à droite : l'ancien cœur sert puis se fige ; le nouveau s'initialise avant la coupure puis reprend ; le gardien lance et passe la main ; le module isolé tamponne pendant la coupure ; l'écran attend puis est servi.</desc>
+          <text x="280.0" y="36.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">avant la coupure</text>
+          <line x1="130.0" y1="46.0" x2="130.0" y2="340.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 4"/>
+          <text x="515.0" y="36.0" font-size="11.5" fill="#8b3b22" font-weight="700" text-anchor="middle">la coupure</text>
+          <line x1="430.0" y1="46.0" x2="430.0" y2="340.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 4"/>
+          <text x="792.0" y="36.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">après</text>
+          <line x1="600.0" y1="46.0" x2="600.0" y2="340.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 4"/>
+          <rect x="430.0" y="46.0" width="170.0" height="294.0" rx="0" fill="#faf1ec" stroke="#faf1ec" stroke-width="1"/>
+          <text x="16.0" y="80.0" font-size="11" fill="#52615a" font-weight="700">Ancien cœur</text>
+          <text x="16.0" y="140.0" font-size="11" fill="#52615a" font-weight="700">Nouveau cœur</text>
+          <text x="16.0" y="200.0" font-size="11" fill="#52615a" font-weight="700">Gardien</text>
+          <text x="16.0" y="260.0" font-size="11" fill="#52615a" font-weight="700">Module isolé</text>
+          <text x="16.0" y="320.0" font-size="11" fill="#52615a" font-weight="700">Écran</text>
+          <rect x="132.0" y="62.0" width="296.0" height="28.0" rx="6" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="280.0" y="81.0" font-size="9.8" fill="#ffffff" font-weight="700" text-anchor="middle">sert la maison</text>
+          <rect x="432.0" y="62.0" width="126.0" height="28.0" rx="6" fill="#e3c77f" stroke="#b07d12" stroke-width="1"/>
+          <text x="495.0" y="81.0" font-size="9.4" fill="#1d302a" font-weight="700" text-anchor="middle">fige au rang N, confie</text>
+          <text x="564.0" y="81.0" font-size="9.4" fill="#52615a" font-weight="700">sort</text>
+          <rect x="200.0" y="122.0" width="228.0" height="28.0" rx="6" fill="#f1f4ee" stroke="#52615a" stroke-width="1"/>
+          <text x="314.0" y="141.0" font-size="9.6" fill="#52615a" font-weight="700" text-anchor="middle">s'initialise en reprise</text>
+          <rect x="432.0" y="122.0" width="136.0" height="28.0" rx="6" fill="#ffffff" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="500.0" y="141.0" font-size="9.4" fill="#52615a" text-anchor="middle">attend la main</text>
+          <rect x="572.0" y="122.0" width="410.0" height="28.0" rx="6" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="777.0" y="141.0" font-size="9.6" fill="#ffffff" font-weight="700" text-anchor="middle">reprend au rang N, ouvre les portes, la maison continue</text>
+          <line x1="132.0" y1="196.0" x2="982.0" y2="196.0" stroke="#b07d12" stroke-width="2"/>
+          <circle cx="200" cy="196" r="5" fill="#b07d12"/>
+          <text x="200.0" y="186.0" font-size="9.4" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">lance le nouveau</text>
+          <circle cx="560" cy="196" r="5" fill="#b07d12"/>
+          <text x="560.0" y="186.0" font-size="9.4" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">passe relais et portes</text>
+          <rect x="132.0" y="242.0" width="296.0" height="28.0" rx="6" fill="#7fa892" stroke="#195744" stroke-width="1"/>
+          <text x="280.0" y="261.0" font-size="9.6" fill="#1d302a" font-weight="700" text-anchor="middle">garde ses connexions aux appareils</text>
+          <rect x="432.0" y="242.0" width="166.0" height="28.0" rx="6" fill="#e3c77f" stroke="#b07d12" stroke-width="1"/>
+          <text x="515.0" y="261.0" font-size="9.6" fill="#1d302a" font-weight="700" text-anchor="middle">tamponne</text>
+          <rect x="602.0" y="242.0" width="380.0" height="28.0" rx="6" fill="#7fa892" stroke="#195744" stroke-width="1"/>
+          <text x="792.0" y="261.0" font-size="9.6" fill="#1d302a" font-weight="700" text-anchor="middle">se reconnecte, renvoie ce qui dépasse son accusé</text>
+          <rect x="132.0" y="302.0" width="296.0" height="28.0" rx="6" fill="#7fa892" stroke="#195744" stroke-width="1"/>
+          <text x="280.0" y="321.0" font-size="9.6" fill="#1d302a" font-weight="700" text-anchor="middle">connecté</text>
+          <rect x="432.0" y="302.0" width="166.0" height="28.0" rx="6" fill="#e3c77f" stroke="#b07d12" stroke-width="1"/>
+          <text x="515.0" y="321.0" font-size="9.6" fill="#1d302a" font-weight="700" text-anchor="middle">attend dans la file</text>
+          <rect x="602.0" y="302.0" width="380.0" height="28.0" rx="6" fill="#7fa892" stroke="#195744" stroke-width="1"/>
+          <text x="792.0" y="321.0" font-size="9.6" fill="#1d302a" font-weight="700" text-anchor="middle">servi, reçoit un instantané</text>
+          <text x="16.0" y="366.0" font-size="10.3" fill="#52615a">Mesuré (banc de l'étude HA v2) : figer l'état 132 µs, le relire 272 µs à ×1. Borné : le dernier lot d'historique, 100 ms (D13) ; les ordres d'un module du cœur, 1 s.</text>
+          <text x="16.0" y="383.0" font-size="10.3" fill="#52615a">Visé : une coupure de 1 s au plus sur la machine de production, 2 s sur un Pi Zero 2 W, sous le délai du bail : la secours ne bascule pas.</text>
+          <text x="16.0" y="400.0" font-size="10.3" fill="#52615a">Preuve : la même empreinte au gel et à la reprise, et une ligne au journal avec le rang et la durée de la coupure.</text>
+        </svg>
+        <figcaption>La leçon d'Envoy&nbsp;: le nouveau s'initialise avant que l'ancien ne lâche. La coupure ne contient plus que le passage de la main&nbsp;: figer, confier, rendre la base, reprendre.</figcaption>
+      </figure>
+
+
+<p><strong>La leçon d'Envoy : le nouveau s'initialise avant que l'ancien ne lâche.</strong> Le nouveau cœur démarre dans le mode « reprise » de l'étude HA v2 (§ 4) : pilotes arrêtés, moteur chargé sans rien faire partir, API fermée. Il fait tout ce qui ne demande rien d'exclusif :</p>
+<ul>
+<li>lire la configuration ;</li>
+<li>compiler les automatismes ;</li>
+<li>charger le catalogue.</li>
+</ul>
+<p>La coupure ne contient plus que le passage de la main.</p>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>un redémarrage prévu, pas à pas (proposé)</figcaption><pre class="text"><code>avant la coupure : l&#39;ancien cœur sert toujours
+ 0. le nouveau binaire est en place et vérifié (check-config, empreinte) ; le gardien le lit une fois,
+    pour que ses pages soient en cache : sur un Pi, un binaire neuf se lit sinon sur la carte au départ
+ 1. le gardien lance le nouveau cœur en reprise : configuration, automatismes compilés, catalogue ;
+    ni pilote, ni porte, ni base en écriture
+ 2. le nouveau cœur dit « prêt » ; l&#39;ancien publie sys/arret {raison: redemarrage, retour_attendu_ms}
+la coupure
+ 3. l&#39;ancien cesse d&#39;accepter : les nouvelles connexions attendent dans la file du noyau
+ 4. ordres en vol : ceux des modules isolés continuent, leur issue ira au nouveau cœur ;
+    ceux des modules du cœur ont 1 s, sinon leur issue est « incertaine » (V7 § 20.7)
+ 5. les modules du cœur s&#39;arrêtent, dans l&#39;ordre inverse du démarrage (HA v2 § 16.1)
+ 6. le hub vide in/ ; la mémoire se fige au rang N ; l&#39;état complet est construit et confié au gardien
+ 7. le dernier lot de l&#39;historique est écrit ; la base, le verrou d&#39;instance et les portes sont rendus
+ 8. l&#39;ancien sort ; le gardien passe le relais et les portes au nouveau
+ 9. le nouveau prend le verrou et la base, lit le relais, compare l&#39;empreinte, reprend au rang N à
+    l&#39;époque E : le bail court encore, il n&#39;attend pas ses pairs ; il ouvre les portes
+après la coupure
+10. les clients en attente sont servis ; les modules isolés se reconnectent et renvoient ce qui dépasse
+    leur dernier accusé ; les modules du cœur repartent et retrouvent leurs appareils
+11. sys/etat : le secours continue au rang N + 1, sans état complet à recopier
+12. le journal reçoit une ligne : « redémarrage à chaud, rang N, empreinte …, coupure de … ms »</code></pre></figure>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Étape</th>
+<th>Durée</th>
+<th>Nature</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Construire l'état complet (6)</td>
+<td>132 µs à ×1, 1,2 ms à ×10</td>
+<td>mesuré (banc HA v2)</td>
+</tr>
+<tr class="even">
+<td>Relire, vérifier, reprendre (9)</td>
+<td>272 µs à ×1, 2,5 ms à ×10</td>
+<td>mesuré (banc HA v2)</td>
+</tr>
+<tr class="odd">
+<td>Écrire le relais dans un <code>memfd</code> (6)</td>
+<td>une copie en mémoire de 233 Kio à 2,3 Mio</td>
+<td>estimé : sous la milliseconde</td>
+</tr>
+<tr class="even">
+<td>Le dernier lot de l'historique (7)</td>
+<td>100 ms au plus</td>
+<td>la borne de D13</td>
+</tr>
+<tr class="odd">
+<td>Les ordres en vol d'un module du cœur (4)</td>
+<td>1 s au plus</td>
+<td>la borne de HA v2 § 16.1</td>
+</tr>
+<tr class="even">
+<td>Rendre et reprendre la base, sortir, passer la main (7 à 9)</td>
+<td>à mesurer</td>
+<td>exp. R1</td>
+</tr>
+<tr class="odd">
+<td><strong>La coupure, de l'étape 3 à l'étape 9</strong></td>
+<td><strong>visée : 1 s au plus sur la machine de production, 2 s sur un Pi Zero 2 W</strong></td>
+<td>à mesurer (R1)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>La secours ne bascule pas.</strong> L'actif renouvelle son bail toutes les secondes et se rétrograde au bout de 2 s sans réponse ; le bail dure 3 s (V7 § 18.1.7). Une coupure sous 2 s passe sans rien changer. Si elle doit durer plus, l'annonce <code>sys/arret</code> porte son retour attendu, et la secours attend ce délai avant de demander l'époque suivante. Si le cœur ne revient pas dans ce délai, la bascule normale reprend.</p>
+<p><strong>La preuve.</strong> L'empreinte de la mémoire critique, calculée au gel puis à la reprise, doit être la même. Une ligne au journal la garde, avec le rang et la durée de la coupure.</p>
+</section>
+<section id="77-le-plantage-du-cœur" class="level3">
+<h3>7.7 Le plantage du cœur</h3>
+<p>Pas de gel, pas d'adieu. Ce que fait le nouveau cœur :</p>
+<ol type="1">
+<li>il prend <strong>le dernier relais</strong> que le gardien a reçu, au rang <code>N0</code> ;</li>
+<li>il <strong>rejoue la file</strong>, de <code>N0 + 1</code> jusqu'au dernier lot écrit (§ 7.8). La file du pont maison est justement faite pour cela : la secours applique les sorties dans l'ordre de <code>s</code>, et sa mémoire finit identique à celle de l'actif, « exécutions comprises » (HA v2 § 1) ;</li>
+<li>les <strong>modules isolés</strong> renvoient ce qui dépasse leur dernier accusé : rien de ce qu'ils ont vu n'est perdu ;</li>
+<li><strong>ce qui avait été fait depuis le dernier lot</strong> (au plus 10 ms) est refait, sous les mêmes clés. Un module isolé, ou un service qui garde la clé (l'identifiant d'un rendez-vous), reconnaît un engagement déjà fait et rend la même issue ;</li>
+<li><strong>une alerte</strong> part à l'astreinte, avec le dernier souffle (monitoring § 11.2).</li>
+</ol>
+<p>Ce qui peut encore se perdre :</p>
+<ul>
+<li>ce qu'un module du cœur avait reçu de son appareil sans l'avoir encore remis au hub ;</li>
+<li>un ordre non idempotent (un appui, un message) envoyé par un module du cœur dans le dernier lot, s'il n'a pas été écrit avant (§ 7.8).</li>
+</ul>
+<p><strong>Avant la file dans un <code>memfd</code></strong> (marche 7 du plan, qui attend le séquenceur de l'étude HA v2), le nouveau cœur n'a que le dernier relais. Un plantage perd alors ce qui a changé depuis ce relais, soit au plus 15 min. C'est déjà la période que l'étude HA v2 recommande pour l'instantané sans secours, mais sans écriture sur la carte. Les modules isolés, eux, ne perdent rien dès la marche 4.</p>
+</section>
+<section id="78-trois-étages-de-durée-et-ce-qui-doit-sécrire-avant" class="level3">
+<h3>7.8 Trois étages de durée, et ce qui doit s'écrire avant</h3>
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 310" role="img" aria-labelledby="durees-t durees-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="durees-t">Trois étages de durée, et ce qui survit à quoi</title>
+          <desc id="durees-d">Quatre lignes, quatre pannes. La mémoire du cœur ne survit à rien ; le relais et la file survivent au redémarrage et au plantage du cœur ; l'instantané survit aussi à une coupure de courant ; la mémoire d'un pair survit même à la perte de la machine.</desc>
+          <text x="330.0" y="40.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">un redémarrage prévu</text>
+          <text x="496.0" y="40.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">un plantage du cœur</text>
+          <text x="662.0" y="40.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">une coupure de courant</text>
+          <text x="828.0" y="40.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">la perte de la machine</text>
+          <rect x="16.0" y="66.0" width="968.0" height="40.0" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="28.0" y="91.0" font-size="11" fill="#1d302a" font-weight="700">La mémoire du cœur</text>
+          <rect x="255.0" y="74.0" width="150.0" height="24.0" rx="12" fill="#f6e3da" stroke="#8b3b22" stroke-width="1"/>
+          <text x="330.0" y="91.0" font-size="9.4" fill="#8b3b22" font-weight="700" text-anchor="middle">✗ perdu</text>
+          <rect x="421.0" y="74.0" width="150.0" height="24.0" rx="12" fill="#f6e3da" stroke="#8b3b22" stroke-width="1"/>
+          <text x="496.0" y="91.0" font-size="9.4" fill="#8b3b22" font-weight="700" text-anchor="middle">✗ perdu</text>
+          <rect x="587.0" y="74.0" width="150.0" height="24.0" rx="12" fill="#f6e3da" stroke="#8b3b22" stroke-width="1"/>
+          <text x="662.0" y="91.0" font-size="9.4" fill="#8b3b22" font-weight="700" text-anchor="middle">✗ perdu</text>
+          <rect x="753.0" y="74.0" width="150.0" height="24.0" rx="12" fill="#f6e3da" stroke="#8b3b22" stroke-width="1"/>
+          <text x="828.0" y="91.0" font-size="9.4" fill="#8b3b22" font-weight="700" text-anchor="middle">✗ perdu</text>
+          <rect x="16.0" y="114.0" width="968.0" height="40.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="28.0" y="139.0" font-size="11" fill="#1d302a" font-weight="700">Le relais et la file (le gardien)</text>
+          <rect x="255.0" y="122.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="330.0" y="139.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ survit</text>
+          <rect x="421.0" y="122.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="496.0" y="139.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ au dernier lot de 10 ms</text>
+          <rect x="587.0" y="122.0" width="150.0" height="24.0" rx="12" fill="#f6e3da" stroke="#8b3b22" stroke-width="1"/>
+          <text x="662.0" y="139.0" font-size="9.4" fill="#8b3b22" font-weight="700" text-anchor="middle">✗ perdu</text>
+          <rect x="753.0" y="122.0" width="150.0" height="24.0" rx="12" fill="#f6e3da" stroke="#8b3b22" stroke-width="1"/>
+          <text x="828.0" y="139.0" font-size="9.4" fill="#8b3b22" font-weight="700" text-anchor="middle">✗ perdu</text>
+          <rect x="16.0" y="162.0" width="968.0" height="40.0" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="28.0" y="187.0" font-size="11" fill="#1d302a" font-weight="700">L'instantané sur le disque</text>
+          <rect x="255.0" y="170.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="330.0" y="187.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ survit</text>
+          <rect x="421.0" y="170.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="496.0" y="187.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ au dernier instantané</text>
+          <rect x="587.0" y="170.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="662.0" y="187.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ au dernier instantané</text>
+          <rect x="753.0" y="170.0" width="150.0" height="24.0" rx="12" fill="#f6e3da" stroke="#8b3b22" stroke-width="1"/>
+          <text x="828.0" y="187.0" font-size="9.4" fill="#8b3b22" font-weight="700" text-anchor="middle">✗ perdu</text>
+          <rect x="16.0" y="210.0" width="968.0" height="40.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="28.0" y="235.0" font-size="11" fill="#1d302a" font-weight="700">La mémoire d'un pair (le secours)</text>
+          <rect x="255.0" y="218.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="330.0" y="235.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ survit</text>
+          <rect x="421.0" y="218.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="496.0" y="235.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ survit</text>
+          <rect x="587.0" y="218.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="662.0" y="235.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ s'il vit</text>
+          <rect x="753.0" y="218.0" width="150.0" height="24.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="828.0" y="235.0" font-size="9.4" fill="#ffffff" font-weight="700" text-anchor="middle">✓ au délai du pont</text>
+          <text x="16.0" y="280.0" font-size="10.5" fill="#52615a">Chaque donnée choisit son étage. Un engagement (un message, un rendez-vous) s'écrit avant, au moins dans la file du gardien, puis chez le pair.</text>
+          <text x="16.0" y="297.0" font-size="10.5" fill="#52615a">Coût d'une écriture : rien (mémoire) · un pwrite par lot de 10 ms (file) · 3 ms avec fsync (instantané) · 36 ms au 99e centile (pair, banc HA v2).</text>
+        </svg>
+        <figcaption>Le relais comble le trou entre la mémoire, qui meurt avec le processus, et le disque, que l'étude HA&nbsp;v2 réserve à l'instantané&nbsp;: un plantage ne coûte plus qu'un lot de 10&nbsp;ms, sans écrire sur la carte.</figcaption>
+      </figure>
+
+
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Étage</th>
+<th>Survit à</th>
+<th>Ne survit pas à</th>
+<th>Coût d'une écriture</th>
+<th>Ce qu'on y met</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>La mémoire du cœur</strong></td>
+<td>rien</td>
+<td>à son arrêt</td>
+<td>aucun</td>
+<td>tout, d'abord</td>
+</tr>
+<tr class="even">
+<td><strong>Le relais et la file</strong>, gardés par le gardien</td>
+<td>un redémarrage, un plantage du cœur</td>
+<td>une coupure de courant, la mort du gardien, un conteneur recréé</td>
+<td>un <code>pwrite</code> par lot de 10 ms pour la file ; 132 µs à ×1 pour un relais</td>
+<td>chaque sortie critique, par lots de 10 ms ; le relais quand la file s'est à moitié remplie</td>
+</tr>
+<tr class="odd">
+<td><strong>Le disque et les pairs</strong></td>
+<td>une coupure de courant (le disque) ; la perte de la machine (le pair)</td>
+<td>une panne de tout, sans onduleur ni pair distant (HA v2 § 11.1)</td>
+<td>3 ms avec <code>fsync</code> pour l'instantané ; le délai du pont, 36 ms au 99e centile, pour le pair (HA v2)</td>
+<td>l'instantané à l'heure, à l'arrêt et avant une nouvelle version ; la copie en direct vers les secours</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>La file dans un <code>memfd</code>.</strong> Le pont maison garde déjà la file des 10 000 dernières sorties critiques, à 46 o chacune, soit 0,45 Mio (HA v2 § 6.5). Si cette mémoire est un <code>memfd</code> dont le gardien garde un double, elle survit au cœur. Le cœur y écrit avec un <code>pwrite</code> par lot de 10 ms qui contient des sorties. Il n'y a pas de projection en mémoire, qui demanderait <code>unsafe</code> : c'est un appel système par lot. Au repos, rien. Il faut pour cela le séquenceur de l'étude HA v2, qui donne le rang <code>s</code> à chaque sortie : c'est l'étape 4 de son plan.</p>
+<p><strong>Ce qui doit s'écrire avant.</strong> La critique des workflows demandait d'écrire sur le disque avant chaque engagement (un message, un rendez-vous, une question). L'étude HA v2, plus récente, retire tout journal sur le disque, et la durabilité vient des autres machines. Les deux se réconcilient ainsi :</p>
+<ul>
+<li><strong>un engagement s'écrit avant, au moins dans la file du gardien.</strong> C'est un <code>pwrite</code> immédiat, de l'ordre de la microseconde, au lieu d'attendre la fin du lot. Il survit à un plantage du cœur ;</li>
+<li><strong>et chez le pair, quand il existe</strong> (HA v2), pour survivre à la perte de la machine ;</li>
+<li><strong>le disque ne sert qu'à l'instantané.</strong></li>
+</ul>
+</section>
+<section id="79-une-autre-version" class="level3">
+<h3>7.9 Une autre version</h3>
+<ul>
+<li><strong>Les sections sont typées et versionnées</strong> ; chacune dit si elle est obligatoire. Un lecteur saute une section facultative qu'il ne connaît pas, et refuse une section obligatoire inconnue. C'est la règle de l'étude HA v2 : une version plus récente lit les anciennes, jamais l'inverse ; un relais abîmé ou tronqué est refusé (CRC).</li>
+<li><strong>Un changement additif</strong> passe dans les deux sens : une section facultative de plus, ou un champ ajouté à la fin d'un enregistrement qui porte sa longueur. Une version plus ancienne l'ignore, et le retour arrière reste possible.</li>
+<li><strong>Un changement qui casse</strong> passe par une conversion à la reprise, comme <code>code_change</code> en Erlang. Pour le retour arrière, la nouvelle version écrit aussi l'ancienne forme de la section, le temps d'une version, ou bien elle se déclare <strong>sans retour</strong>. Dans ce cas, revenir en arrière est un redémarrage à froid, depuis l'instantané écrit avant la mise à jour (HA v2 § 16).</li>
+<li><strong>Le retour arrière est automatique.</strong> Le gardien garde le binaire précédent. Si le nouveau cœur n'est pas « sain » en 30 s, ou s'il meurt au démarrage, le gardien relance le précédent, avec le relais de l'ancienne version, qu'il sait lire. C'est ce que fait le vieux maître de nginx, qui garde ses sockets et repart sur <code>HUP</code>, et ce que <code>shellflip</code> appelle « crashing during initialisation is OK ».</li>
+<li><strong>Un module isolé peut avoir une autre version que le cœur</strong>, tant que le contrat <code>moli/v1/</code> tient : le numéro de version est dans les sujets. On essaie ainsi la version neuve d'un module, isolée, avant de mettre à jour le cœur (monitoring § 11.3).</li>
+</ul>
+</section>
+<section id="710-sous-docker-sous-systemd" class="level3">
+<h3>7.10 Sous Docker, sous systemd</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th></th>
+<th>Sous systemd (le Pi, D10 : le binaire seul)</th>
+<th>Sous Docker (aujourd'hui)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Le gardien</td>
+<td><code>moli-os gardien</code>, un service, avec <code>Delegate=yes</code> pour les cgroups des modules isolés</td>
+<td><code>moli-os gardien</code> en processus principal du conteneur (<code>CMD ["gardien"]</code> au lieu de <code>["serve"]</code>) : il relaie SIGTERM et récolte les processus terminés</td>
+</tr>
+<tr class="even">
+<td>Redémarrer le cœur sans changer de binaire (plantage, réglage, geste)</td>
+<td>à chaud</td>
+<td>à chaud</td>
+</tr>
+<tr class="odd">
+<td>Mettre à jour le binaire</td>
+<td>remplacer le fichier (un renommage atomique), puis « passe la main » : <strong>à chaud</strong></td>
+<td>une nouvelle image recrée le conteneur, et le gardien meurt avec lui : <strong>à froid, sans perte</strong>. L'arrêt figé écrit l'instantané (HA v2 § 16), sur le disque ou sur un tmpfs de l'hôte monté dans le conteneur (<code>/dev/shm/moli-os/</code>, comme la clé maître) ; les modules isolés repartent ; les portes se ferment le temps du départ</td>
+</tr>
+<tr class="even">
+<td>Le gardien lui-même peut redémarrer</td>
+<td>oui : le dépôt de descripteurs de systemd garde ses portes et son relais (<code>FileDescriptorStoreMax=</code>)</td>
+<td>non : sa mort recrée tout, à froid</td>
+</tr>
+<tr class="odd">
+<td>Limites et comptes par module isolé</td>
+<td>un cgroup par module, délégué</td>
+<td><code>setrlimit</code> et <code>/proc</code> : les cgroups sont en lecture seule dans le conteneur (vérifié, monitoring § 4.2)</td>
+</tr>
+<tr class="even">
+<td>Mettre le binaire dans le volume de données, pour mettre à jour sans recréer</td>
+<td>—</td>
+<td><strong>écarté</strong> : l'image ne serait plus ce qui tourne</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Recommandation.</strong> Sur le Pi (D10), systemd et le gardien : tout est à chaud. Sous Docker, le gardien donne le redémarrage à chaud sans nouvelle image, et la mise à jour d'image devient un redémarrage à froid sans perte.</p>
+</section>
+</section>
+<section id="8-ce-quun-redémarrage-coûte-à-un-module-du-cœur" class="level2">
+<h2>8. Ce qu'un redémarrage coûte à un module du cœur</h2>
+<p><strong>Isoler pour durer.</strong> Un module isolé ne voit pas le redémarrage du cœur. Un module du cœur redémarre avec lui, et ce que cela lui coûte dépend de sa façon de parler à l'appareil. Ce sont des exemples lus dans le code ; le crible pilote par pilote reste à faire (exp. R13).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Façon de parler</th>
+<th>Exemples dans le code</th>
+<th>Dans le cœur, un redémarrage lui coûte…</th>
+<th>Isolé</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Un sondage</td>
+<td>Sonos, toutes les 2 s (<code>moli-sonos/src/lib.rs:19</code>) ; Roborock, 30 s au repos et 5 s en activité (<code>moli-roborock/src/lib.rs:33-34</code>) ; <code>moli-host</code>, 15 s</td>
+<td>un sondage décalé ; rien de perdu, sauf un changement bref entre deux sondages</td>
+<td>rien</td>
+</tr>
+<tr class="even">
+<td>Un flux d'événements</td>
+<td>Hue : <code>GET /eventstream/clip/v2</code>, en <code>text/event-stream</code> (<code>moli-hue/src/bridge.rs:85-86</code>)</td>
+<td>les événements de la coupure ; l'état se relit au retour, mais un appui bref sur un interrupteur Hue peut manquer</td>
+<td>rien</td>
+</tr>
+<tr class="odd">
+<td>Un écouteur enregistré chez la box</td>
+<td>TaHoma : <code>/events/register</code>, puis <code>/events/{listener}/fetch</code> (<code>moli-overkiz/src/lib.rs:399</code>, <code>:405</code>) ; un écouteur qui expire se réenregistre (<code>:452</code>)</td>
+<td>un nouvel écouteur : ce que la box gardait pour l'ancien est perdu. Si l'identifiant de l'écouteur passe dans l'état du module (monitoring § 11.4), la reprise relit ce que la box a gardé, tant qu'il n'a pas expiré</td>
+<td>rien</td>
+</tr>
+<tr class="even">
+<td>Le MQTT d'un cloud</td>
+<td>Landroid : MQTT 3.1.1 vers le courtier du fabricant (<code>moli-landroid/src/mqtt.rs:1-3</code>)</td>
+<td>une connexion de plus au cloud à chaque redémarrage ; un fabricant peut limiter leur nombre (monitoring § 4.4)</td>
+<td>rien</td>
+</tr>
+<tr class="odd">
+<td>Un client extérieur de notre courtier</td>
+<td>Zigbee2MQTT (<code>moli-z2m</code>)</td>
+<td>il se reconnecte de lui-même ; ce qu'il publie pendant la coupure dépend de son client MQTT : à mesurer (R6)</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Un envoi seul</td>
+<td>Telegram (<code>moli-telegram</code>) : la Bot API, en envoi</td>
+<td>un message en cours d'envoi peut partir deux fois ou pas du tout : « non confirmé » (critique § 3.11)</td>
+<td>sa réponse reste au module jusqu'à l'accusé</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="9-ce-que-ça-coûte" class="level2">
+<h2>9. Ce que ça coûte</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Poste</th>
+<th>Coût</th>
+<th>Nature</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Le gardien</td>
+<td>un processus minimal : 577 Kio sous Linux musl (V3) ; il ne fait rien au repos, il attend</td>
+<td>le processus minimal est mesuré ; le gardien est à mesurer (R7)</td>
+</tr>
+<tr class="even">
+<td>Le relais</td>
+<td>l'état complet : 233 Kio à ×1, 2,3 Mio à ×10 (HA v2), plus les mesures (≈ 342 Kio)</td>
+<td>pages <code>shmem</code> : hors du budget anonyme de 32 Mio, dans le plafond de 128 Mio</td>
+</tr>
+<tr class="odd">
+<td>La file</td>
+<td>0,45 Mio, déjà comptés par le pont maison (HA v2 § 6.5)</td>
+<td>elle change de place, pas de taille</td>
+</tr>
+<tr class="even">
+<td>Pendant un redémarrage prévu</td>
+<td>deux cœurs, le temps que le nouveau s'initialise</td>
+<td>à mesurer (R1) ; il ne tient ni pilote ni état vif</td>
+</tr>
+<tr class="odd">
+<td>Rafraîchir le relais</td>
+<td>132 µs à ×1, 1,2 ms à ×10 (HA v2), quand la moitié de la file a été écrite, ou toutes les 15 min, si quelque chose a changé</td>
+<td>0 au repos</td>
+</tr>
+<tr class="even">
+<td>Écrire la file</td>
+<td>un <code>pwrite</code> par lot de 10 ms qui contient des sorties</td>
+<td>0 au repos</td>
+</tr>
+<tr class="odd">
+<td>La carte SD</td>
+<td>rien de plus : l'instantané de l'étude HA v2 reste à l'heure, à l'arrêt et avant une nouvelle version</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="10-les-tests" class="level2">
+<h2>10. Les tests</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Scénario</th>
+<th>Réussi si</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>R1</td>
+<td>Redémarrage prévu sous la charge des maisons, avec rafales, sur la machine de production et sur un Pi Zero 2 W</td>
+<td>coupure mesurée sous le budget (1 s, 2 s) ; aucune valeur, occurrence ni issue perdue ; aucun ordre rejoué ; même empreinte au gel et à la reprise</td>
+</tr>
+<tr class="even">
+<td>R2</td>
+<td>100 redémarrages prévus à la suite, sous charge</td>
+<td>aucune perte, aucun doublon, aucune fuite (la mémoire du gardien ne monte pas)</td>
+</tr>
+<tr class="odd">
+<td>R3</td>
+<td><code>kill -9</code> du cœur pendant une rafale</td>
+<td>toutes les occurrences des modules isolés arrivent ; la mémoire reprise (relais, puis file) égale celle d'un jumeau qui n'a pas planté, au dernier lot près</td>
+</tr>
+<tr class="even">
+<td>R4</td>
+<td>Un ordre non idempotent d'un module du cœur, juste avant un <code>kill -9</code></td>
+<td>écrit avant : jamais refait ; sans l'écriture avant : refait (le test sait échouer)</td>
+</tr>
+<tr class="odd">
+<td>R5</td>
+<td>Un écran qui se connecte pendant la coupure</td>
+<td>servi par le nouveau cœur, aucune connexion refusée</td>
+</tr>
+<tr class="even">
+<td>R6</td>
+<td>Zigbee2MQTT publie pendant un redémarrage</td>
+<td>compter ce qui arrive après la reconnexion, et décider s'il faut isoler davantage</td>
+</tr>
+<tr class="odd">
+<td>R7</td>
+<td>Le gardien au repos, une journée</td>
+<td>sa mémoire et son CPU mesurés ; zéro réveil inutile</td>
+</tr>
+<tr class="even">
+<td>R8</td>
+<td>Un relais d'une version future, ou abîmé</td>
+<td>refusé ; reprise par les pairs, sinon par l'instantané ; jamais actif à vide</td>
+</tr>
+<tr class="odd">
+<td>R9</td>
+<td>Un nouveau binaire qui plante au démarrage</td>
+<td>le gardien relance le précédent avec le même relais ; rien de perdu</td>
+</tr>
+<tr class="even">
+<td>R10</td>
+<td>La secours présente : un redémarrage de 1,5 s ; un de 5 s annoncé ; un qui ne revient pas</td>
+<td>pas de bascule ; pas de bascule ; bascule après le bail</td>
+</tr>
+<tr class="odd">
+<td>R11</td>
+<td>Un redémarrage à travers un redémarrage de la machine</td>
+<td>autre <code>boot_id</code> : conversion par l'heure murale et grâce (mémoire v2) ; même <code>boot_id</code> : échéances inchangées</td>
+</tr>
+<tr class="even">
+<td>R12</td>
+<td>Une nouvelle image Docker</td>
+<td>mise à jour à froid, sans perte ; durée mesurée ; modules isolés relancés</td>
+</tr>
+<tr class="odd">
+<td>R13</td>
+<td>Le crible : chaque pilote, redémarré dans le cœur</td>
+<td>pour chacun, ce qu'il perd (§ 8), et la place recommandée</td>
+</tr>
+<tr class="even">
+<td>R14</td>
+<td>Un module isolé, coupé du courtier une minute pendant une rafale</td>
+<td>sa dernière valeur par point arrive ; ses occurrences arrivent dans l'ordre ; au-delà de 1 024, une perte signalée</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="11-le-plan" class="level2">
+<h2>11. Le plan</h2>
+<p>Chaque marche est utile seule, dans l'ordre :</p>
+<ol type="1">
+<li><strong>L'arrêt figé dans un relais</strong> : l'instantané de l'étude HA v2 (étape 2 de son plan), écrit aussi dans un <code>memfd</code> et confié au gardien, avec ses sections « ordres en vol » et « garde ».</li>
+<li><strong>Le gardien</strong> : <code>moli-os gardien</code> en processus principal de l'image ; il ouvre les portes, lance et relance le cœur, garde le relais et le binaire précédent.</li>
+<li><strong>Les portes héritées</strong> : <code>axum</code> d'abord, puis le courtier dans <code>moli-courtier</code>.</li>
+<li><strong>Les modules isolés, lancés par le gardien</strong>, avec leurs tampons, leurs numéros <code>k</code> et les accusés (monitoring § 11).</li>
+<li><strong>Le temps</strong> : le <code>boot_id</code> et l'origine monotone dans le relais.</li>
+<li><strong>La reprise prévue à la façon d'Envoy</strong> : le nouveau cœur s'initialise en reprise, puis prend la main.</li>
+<li><strong>Le plantage</strong> : la file du pont dans un <code>memfd</code>, après le séquenceur de l'étude HA v2 ; l'écriture avant de chaque engagement.</li>
+<li><strong>Les versions</strong> : les règles des sections, le retour arrière automatique.</li>
+<li><strong>Le Pi sous systemd</strong> : le service du gardien, <code>Delegate=yes</code>, le dépôt de descripteurs.</li>
+</ol>
+</section>
+<section id="12-décidé-ici-et-à-trancher" class="level2">
+<h2>12. Décidé ici, et à trancher</h2>
+<p>Décidé ici, parce que ta demande, le code ou une étude antérieure le tranche :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Sujet</th>
+<th>Décision</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ce qui survit</td>
+<td>le contenu de la mémoire, les portes, les modules isolés, le temps, la parole donnée</td>
+<td>§ 3</td>
+</tr>
+<tr class="even">
+<td>La mémoire</td>
+<td>l'état complet de l'étude HA v2, encodé champ par champ ; jamais une copie de la RAM</td>
+<td>§ 3, § 7.2</td>
+</tr>
+<tr class="odd">
+<td>Le mécanisme</td>
+<td>un seul gardien, sous Docker et sous systemd</td>
+<td>§ 6</td>
+</tr>
+<tr class="even">
+<td>Deux cœurs</td>
+<td>jamais actifs ensemble : le nouveau attend en reprise</td>
+<td>P5</td>
+</tr>
+<tr class="odd">
+<td>Le relais</td>
+<td>un <code>memfd</code> scellé, sans secret, sans <code>unsafe</code></td>
+<td>§ 7.2</td>
+</tr>
+<tr class="even">
+<td>Le temps</td>
+<td>même allumage : l'origine monotone passe ; sinon, la règle de la mémoire v2</td>
+<td>§ 7.5</td>
+</tr>
+<tr class="odd">
+<td>Le retour arrière</td>
+<td>automatique, après 30 s sans « sain »</td>
+<td>§ 7.9</td>
+</tr>
+</tbody>
+</table></div>
+<p>À trancher :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Ma recommandation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Le gardien en processus principal de l'image Docker (<code>CMD ["gardien"]</code>) ?</td>
+<td>oui : c'est la condition de tout le reste sous Docker</td>
+</tr>
+<tr class="even">
+<td>Sur le Pi : systemd et le gardien, <code>Delegate=yes</code>, le dépôt de descripteurs ?</td>
+<td>oui, comme le prévoit D10 (le binaire seul)</td>
+</tr>
+<tr class="odd">
+<td>Le budget de coupure</td>
+<td>1 s sur la machine de production, 2 s sur un Pi Zero 2 W ; à confirmer par R1</td>
+</tr>
+<tr class="even">
+<td>La file du pont dans un <code>memfd</code>, pour ne rien perdre au plantage</td>
+<td>oui, dès que le séquenceur de l'étude HA v2 existe</td>
+</tr>
+<tr class="odd">
+<td>Écrire avant, dans la file, chaque engagement</td>
+<td>oui : cela remplace « sur le disque » de la critique des workflows</td>
+</tr>
+<tr class="even">
+<td>Sous Docker, un tmpfs de l'hôte pour l'instantané d'une mise à jour d'image</td>
+<td>oui : <code>/dev/shm/moli-os/</code>, déjà monté pour les secrets</td>
+</tr>
+<tr class="odd">
+<td>Les modules à isoler d'abord, pour durer</td>
+<td>Sarah, et les modules d'appuis et de flux (Hue) que R13 désignera</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="13-ce-que-cela-changerait-dans-les-autres-études" class="level2">
+<h2>13. Ce que cela changerait dans les autres études</h2>
+<p>Si elle est retenue ; rien n'est modifié dans ces documents aujourd'hui.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Document, section</th>
+<th>Changement</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>HA v2 § 16 (l'arrêt figé)</td>
+<td>l'étape 5 écrit l'état complet dans le relais du gardien ; sur le disque, à l'heure, avant une nouvelle version, et au signal de l'onduleur</td>
+</tr>
+<tr class="even">
+<td>HA v2 § 11.2 (redémarrer)</td>
+<td>une étape 0 : le relais du gardien, s'il porte le même <code>boot_id</code> et l'époque courante</td>
+</tr>
+<tr class="odd">
+<td>HA v2 § 6.4 (le pont maison)</td>
+<td>la file dans un <code>memfd</code> dont le gardien garde un double</td>
+</tr>
+<tr class="even">
+<td>HA v2 § 4 (les modes)</td>
+<td>le mode « reprise » sert aussi au nouveau cœur d'un redémarrage prévu</td>
+</tr>
+<tr class="odd">
+<td>V7 § 9.4.3 (si le courtier plante)</td>
+<td>une panique du routeur ne redémarre plus Sarah Home à froid : le gardien relance le cœur à chaud</td>
+</tr>
+<tr class="even">
+<td>V7 § 9.4.2 (les modules à part)</td>
+<td>les modules isolés sont lancés par le gardien</td>
+</tr>
+<tr class="odd">
+<td>Mémoire v2 § 6.5 et § 11</td>
+<td>sur le même allumage, l'origine monotone passe ; sinon, la règle actuelle</td>
+</tr>
+<tr class="even">
+<td>Critique des workflows § 3.8 et § 3.11</td>
+<td>« ce qui engage s'écrit avant » : dans la file du gardien (plantage) et chez le pair (machine)</td>
+</tr>
+<tr class="odd">
+<td>Monitoring § 8</td>
+<td>les courbes et les compteurs passent par le relais</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="annexe-a--sources" class="level2">
+<h2>Annexe A — Sources</h2>
+<ul>
+<li>systemd, le dépôt de descripteurs : <a href="https://systemd.io/FILE_DESCRIPTOR_STORE/">https://systemd.io/FILE_DESCRIPTOR_STORE/</a> (« Storing file descriptors in the manager makes it easier to restart services without dropping connections or losing state » ; un <code>memfd</code> « may conveniently be used to serialize service state into » ; <code>FileDescriptorStoreMax=</code> « defaults to zero » ; <code>FileDescriptorStorePreserve=</code> ; <code>FDSTORE=1</code>, <code>FDNAME=</code>, <code>FDSTOREREMOVE=1</code> ; <code>LISTEN_FDS</code>, <code>LISTEN_FDNAMES</code>)</li>
+<li>Envoy, le redémarrage à chaud : <a href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/operations/hot_restart">https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/operations/hot_restart</a> (le nouveau processus s'initialise avant de demander les sockets ; les compteurs passent par la socket Unix ; « does not transfer existing connections »)</li>
+<li>nginx, changer d'exécutable à la volée : <a href="https://nginx.org/en/docs/control.html">https://nginx.org/en/docs/control.html</a></li>
+<li>HAProxy, les rechargements sans coupure : <a href="https://www.haproxy.com/blog/hitless-reloads-with-haproxy-howto">https://www.haproxy.com/blog/hitless-reloads-with-haproxy-howto</a>, et le passage par la paire de sockets du maître : <a href="https://git01.mediatek.com/plugins/gitiles/haproxy/+/2be557f7cb566e4fa8e3ea5a332e69698adc36c4%5E%21">https://git01.mediatek.com/plugins/gitiles/haproxy/+/2be557f7cb566e4fa8e3ea5a332e69698adc36c4%5E%21</a></li>
+<li>Erlang, le remplacement du code : <a href="https://www.erlang.org/doc/system/code_loading.html">https://www.erlang.org/doc/system/code_loading.html</a></li>
+<li><code>shellflip</code> (Cloudflare) : <a href="https://docs.rs/crate/shellflip/latest">https://docs.rs/crate/shellflip/latest</a> ; <code>ecdysis</code> : <a href="https://docs.rs/ecdysis">https://docs.rs/ecdysis</a></li>
+<li>Home Assistant, <code>restore_state.py</code> (<code>STATE_DUMP_INTERVAL = timedelta(minutes=15)</code>) : <a href="https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/restore_state.py">https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/restore_state.py</a></li>
+<li><code>listenfd</code> 1.0.2 : <a href="https://docs.rs/listenfd/latest/listenfd/struct.ListenFd.html">https://docs.rs/listenfd/latest/listenfd/struct.ListenFd.html</a></li>
+<li><code>sd-notify</code> 0.5.0 (le protocole de notification ; le dépôt de descripteurs n'y figure pas dans la documentation publiée : un datagramme sur <code>$NOTIFY_SOCKET</code> avec <code>sendmsg</code> suffit) : <a href="https://docs.rs/sd-notify/latest/sd_notify/">https://docs.rs/sd-notify/latest/sd_notify/</a></li>
+</ul>
+</section>
+<section id="annexe-b--preuves-dans-le-code" class="level2">
+<h2>Annexe B — Preuves dans le code</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Fait</th>
+<th>Où</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Le moteur recharge ses définitions sans redémarrage</td>
+<td><code>crates/moli-automation/src/lib.rs:782-790</code></td>
+</tr>
+<tr class="even">
+<td>L'arrêt : signal, annulation, tâches attendues, lots écrits, <code>state.json</code></td>
+<td><code>crates/moli-os/src/main.rs:488-507</code>, <code>:1640-1652</code></td>
+</tr>
+<tr class="odd">
+<td><code>rumqttd</code> 0.20.0 ouvre lui-même son écouteur</td>
+<td><code>src/server/broker.rs:383</code></td>
+</tr>
+<tr class="even">
+<td><code>state.json</code> toutes les minutes si une valeur a changé</td>
+<td><code>crates/moli-os/src/main.rs:710-712</code>, <code>:950-955</code></td>
+</tr>
+<tr class="odd">
+<td>Les portes ouvertes par <code>bind</code> au départ</td>
+<td><code>crates/moli-os/src/main.rs:448</code></td>
+</tr>
+<tr class="even">
+<td>Les demandes retenues par la garde : en mémoire, 10 min, 50 au plus</td>
+<td><code>crates/moli-runtime/src/hub.rs:173</code>, <code>:176</code>, <code>:245</code></td>
+</tr>
+<tr class="odd">
+<td>Un pilote relancé : file vidée, appareils hors ligne</td>
+<td><code>crates/moli-runtime/src/supervisor.rs:50-51</code></td>
+</tr>
+<tr class="even">
+<td>L'image : le binaire en processus principal</td>
+<td><code>Dockerfile</code> (<code>ENTRYPOINT ["/moli-os"]</code>, <code>CMD ["serve"]</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>rustix</code> : fonctions <code>fs</code> et <code>std</code> seulement aujourd'hui</td>
+<td><code>Cargo.toml:86</code></td>
+</tr>
+<tr class="even">
+<td><code>unsafe</code> interdit dans l'espace de travail</td>
+<td><code>Cargo.toml:110</code></td>
+</tr>
+<tr class="odd">
+<td>Sonos interrogé toutes les 2 s</td>
+<td><code>crates/moli-sonos/src/lib.rs:19</code></td>
+</tr>
+<tr class="even">
+<td>Roborock : 30 s au repos, 5 s en activité</td>
+<td><code>crates/moli-roborock/src/lib.rs:33-34</code></td>
+</tr>
+<tr class="odd">
+<td>Hue : le flux d'événements du pont</td>
+<td><code>crates/moli-hue/src/bridge.rs:85-86</code></td>
+</tr>
+<tr class="even">
+<td>TaHoma : l'écouteur, sa lecture, son expiration</td>
+<td><code>crates/moli-overkiz/src/lib.rs:399</code>, <code>:405</code>, <code>:452</code></td>
+</tr>
+<tr class="odd">
+<td>Landroid : MQTT 3.1.1 vers le courtier du fabricant</td>
+<td><code>crates/moli-landroid/src/mqtt.rs:1-3</code></td>
+</tr>
+<tr class="even">
+<td><code>rustix</code> 1.1.5 : <code>memfd_create</code>, <code>fcntl_add_seals</code>, <code>sendmsg</code>, <code>recvmsg</code>, sans <code>unsafe</code></td>
+<td><code>src/fs/memfd_create.rs:20</code>, <code>src/fs/fcntl.rs:73</code>, <code>src/net/send_recv/msg.rs:712</code>, <code>:789</code></td>
+</tr>
+</tbody>
+</table></div>
+</section>
+
+        <footer><span>Sarah Home · redémarrage à chaud : le cœur redémarre, la maison continue · 23 octobre 2026</span><a href="#top">Haut de page ↑</a></footer>
+      </article>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const printButton = document.getElementById('print-document');
+      printButton.hidden = false;
+      printButton.addEventListener('click', () => window.print());
+      const sections = Array.from(document.querySelectorAll('article > section[id]'));
+      const links = Array.from(document.querySelectorAll('aside nav a'));
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting);
+          if (!visible.length) return;
+          const section = visible[0].target;
+          for (const link of links) {
+            if (decodeURIComponent(link.hash.slice(1)) === section.id) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          }
+        }, { rootMargin: '-10% 0px -75% 0px' });
+        sections.forEach(section => observer.observe(section));
+      }
+    })();
+  </script>
+</body>
+</html>

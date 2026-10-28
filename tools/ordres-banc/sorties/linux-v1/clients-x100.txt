@@ -1,0 +1,9 @@
+RESULTAT|clients|100|mqtt_etat_client_complet_o|11839735.000|o
+RESULTAT|clients|100|mqtt_etat_client_morceaux_4kio|2891.000|
+RESULTAT|clients|100|mqtt_etat_client_deux_pieces_o|1977077.000|o
+RESULTAT|clients|100|mqtt_etat_client_complet_us|6734.140|µs
+RESULTAT|clients|100|mqtt_etat_client_deux_pieces_us|1408.419|µs
+RESULTAT|clients|100|rss_fin|2068.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

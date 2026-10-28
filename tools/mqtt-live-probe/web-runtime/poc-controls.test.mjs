@@ -278,3 +278,78 @@ test('app_id codé affiche Application et devient prioritaire sans changer le na
   assert.ok(tile.indexOf('Synthetic application') < tile.indexOf('Synthetic playback'));
   assert.doesNotMatch(tile, /synthetic\.application\.id/);
 });
+
+function homesHarness() {
+  const h = harness();
+  Object.assign(h.state, { house: 'all', view: 'pieces', room: null, lighting: null, nodes: new Map(), systems: new Map(), query: '' });
+  h.context.document.querySelectorAll = () => [];
+  h.context.updateConnectionStatus = () => {};
+  h.context.bind = () => {};
+  h.context.icon = () => '';
+  h.context.countLabel = (count, unit) => `${count} ${unit}`;
+  h.context.generic = g => `<span>${g.id}:${g.valeur}</span>`;
+  for (const pont of ['synthetic/a', 'synthetic/b']) {
+    const suffix = pont.at(-1);
+    for (const node of [
+      { id: 'home', genre: 'maison', nom: 'Synthetic home', generiques: [{id:'temperature', valeur:suffix==='a'?21:24}] },
+      { id: 'floor', parent: 'home', genre: 'etage', nom: 'Same floor' },
+      { id: 'room', parent: 'floor', genre: 'piece', nom: 'Same room', appareils: ['device'], generiques: [] },
+    ]) h.state.nodes.set(`${pont}|${node.id}`, {...node,pont});
+    h.state.devices.set(`${pont}|device`, {id:'device',pont,genre:'physique',nom:`Device ${suffix}`,canaux:[{id:'main',nom:'main',valeur:suffix}]});
+  }
+  for (const id of ['detail','lighting-dialog']) h.$(id).close = function(){this.open=false;};
+  const renderHelpers = html.slice(html.indexOf('function availableHomes('), html.indexOf('function bind('));
+  const devicesFor = html.slice(html.indexOf('function devicesFor('), html.indexOf('function roomCard('));
+  h.context.roomCard = n => `<article data-bridge="${n.pont}">${n.nom}:${h.run(`devicesFor(state.nodes.get('${n.pont}|${n.id}'))`).map(d=>d.nom).join(',')}</article>`;
+  h.context.deviceTile = d => `<button>${d.pont}:${d.nom}</button>`;
+  vm.runInContext(devicesFor, h.context); vm.runInContext(renderHelpers, h.context);
+  return h;
+}
+test('deux maisons homonymes restent séparées par pont dans les pièces, appareils et synthèses', () => {
+ const h=homesHarness();h.run('render()');
+ assert.match(h.$('content').innerHTML,/data-house="synthetic\/a"/);assert.match(h.$('content').innerHTML,/data-house="synthetic\/b"/);
+ assert.match(h.$('summary').innerHTML,/temperature:21/);assert.match(h.$('summary').innerHTML,/temperature:24/);
+ assert.equal(h.run('availableHomes().length'),2);
+ h.run("selectHome('synthetic/a')");
+ assert.match(h.$('content').innerHTML,/Device a/);assert.doesNotMatch(h.$('content').innerHTML,/Device b/);
+ assert.match(h.$('summary').innerHTML,/temperature:21/);assert.doesNotMatch(h.$('summary').innerHTML,/temperature:24/);
+ h.run("state.view='appareils';render()");
+ assert.match(h.$('content').innerHTML,/Device a/);assert.doesNotMatch(h.$('content').innerHTML,/Device b/);
+ assert.equal(h.state.nodes.size,6);assert.equal(h.state.devices.size,2);
+});
+test('changer de maison ferme les détails et groupes tout en conservant les brouillons',()=>{
+ const h=homesHarness();const draft={raw:'#ffaa00'};h.state.colorDrafts.set('synthetic/a|main',draft);h.state.commandDrafts.set('synthetic/a|state',{raw:'OFF'});
+ h.state.room='synthetic/a|room';h.state.detail='synthetic/a|device';h.state.lighting={type:'group',id:'synthetic/a|room'};
+ h.run("selectHome('synthetic/b')");
+ assert.equal(h.state.room,null);assert.equal(h.state.detail,null);assert.equal(h.state.lighting,null);
+ assert.equal(h.$('detail').open,false);assert.equal(h.$('lighting-dialog').open,false);
+ assert.equal(h.state.colorDrafts.get('synthetic/a|main'),draft);assert.equal(h.state.commandDrafts.size,1);assert.equal(h.publications.length,0);
+});
+test('une projection unique ne fabrique pas de seconde maison et Continuité garde son iframe',()=>{
+ const h=homesHarness();for(const [id,n]of h.state.nodes)if(n.pont==='synthetic/b')h.state.nodes.delete(id);
+ h.run('render()');assert.equal(h.run('availableHomes().length'),1);assert.doesNotMatch(h.$('home-selector').innerHTML,/synthetic\/b/);
+ h.run("state.view='ha';render()");assert.match(h.$('content').innerHTML,/<iframe[^>]+src="\/ha\/"/);assert.match(h.$('content').innerHTML,/title="haFrameTitle"/);
+ const frame=h.$('content').innerHTML;h.run('render()');assert.equal(h.$('content').innerHTML,frame);
+});
+
+test('un volet n’offre que les gestes déclarés et publie un ordre par appui', () => {
+  const h = harness();
+  const cover = { id: 'volet', nom: 'Volet', domaine: 'cover', semantique: 'volet', valeur: null, qualite: 'ecriture_seule',
+    commande: { schema: 'virtual', topic: 'synthetic/canal/volet/set', parametres: { control: { type: 'enum', valeurs: ['close', 'stop', 'open'] } } } };
+  mount(h, { id: 'fixture', pont: 'synthetic', nom: 'Volet', canaux: [cover] });
+  assert.deepEqual(JSON.parse(h.run("JSON.stringify(coverMoves(d).map(m=>m.move))")), ['open', 'stop', 'close'], 'ordre fixe, pas de My non déclaré');
+  assert.equal(h.run("commandFields(d).length"), 0, 'pas de doublon dans l’éditeur générique');
+  assert.equal(h.run("publishCover('synthetic|fixture','volet','my')"), false);
+  assert.equal(h.run("publishCover('synthetic|fixture','volet','stop')"), true);
+  assert.deepEqual(h.publications.map(p => [p.topic, p.body, p.options.qos, p.options.retain]), [['synthetic/canal/volet/set', '{"control":"stop"}', 0, false]]);
+  h.context.navigator = { onLine: false };
+  assert.equal(h.run("publishCover('synthetic|fixture','volet','open')"), false);
+  assert.equal(h.publications.length, 1, 'hors connexion, rien ne part');
+});
+
+test('une pièce homonyme d’un autre pont ne récupère aucun canal du groupe',()=>{
+ const h=homesHarness();vm.runInContext(html.slice(html.indexOf('function scopeChannels('),html.indexOf('function deviceTile(')),h.context);
+ const device=h.state.devices.get('synthetic/b|device');device.canaux[0].piece='room';h.context.otherDevice=device;
+ assert.equal(h.run("scopeChannels(otherDevice,'synthetic/a|room').length"),0);
+ assert.equal(h.run("scopeChannels(otherDevice,'synthetic/b|room').length"),1);
+});

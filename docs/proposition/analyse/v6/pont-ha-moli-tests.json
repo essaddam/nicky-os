@@ -1,0 +1,222 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-28T01:34:58.691775+00:00",
+  "scope": "synthetic bridge qualification; local MQTT and local HA framework; no real house",
+  "physical_commands": 0,
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "toolchain",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 0.167
+    },
+    {
+      "name": "fmt",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 0.95
+    },
+    {
+      "name": "clippy",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 5.226
+    },
+    {
+      "name": "moli-runtime",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 24.903
+    },
+    {
+      "name": "moli-net",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 5.567
+    },
+    {
+      "name": "moli-overkiz",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 19.738
+    },
+    {
+      "name": "moli-migration",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 8.188
+    },
+    {
+      "name": "moli-home-assistant",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 4.604
+    },
+    {
+      "name": "moli-api",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 48.086
+    },
+    {
+      "name": "moli-os",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 50.139
+    },
+    {
+      "name": "catalogue",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 7.101
+    },
+    {
+      "name": "python_protocol",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 0.079
+    },
+    {
+      "name": "ha_version",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 0.073
+    },
+    {
+      "name": "python_framework",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 0.887
+    },
+    {
+      "name": "i18n",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 0.162
+    },
+    {
+      "name": "leak_check",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 8.225
+    },
+    {
+      "name": "diff_check",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 0.04
+    }
+  ],
+  "rust_packages": {
+    "moli-runtime": {
+      "passed": 193,
+      "failed": 0,
+      "ignored": 0,
+      "test_targets": 4
+    },
+    "moli-net": {
+      "passed": 48,
+      "failed": 0,
+      "ignored": 0,
+      "test_targets": 2
+    },
+    "moli-overkiz": {
+      "passed": 53,
+      "failed": 0,
+      "ignored": 0,
+      "test_targets": 2
+    },
+    "moli-migration": {
+      "passed": 12,
+      "failed": 0,
+      "ignored": 0,
+      "test_targets": 2
+    },
+    "moli-home-assistant": {
+      "passed": 14,
+      "failed": 0,
+      "ignored": 0,
+      "test_targets": 2
+    },
+    "moli-api": {
+      "passed": 132,
+      "failed": 0,
+      "ignored": 0,
+      "test_targets": 5
+    },
+    "moli-os": {
+      "passed": 35,
+      "failed": 0,
+      "ignored": 0,
+      "test_targets": 1
+    }
+  },
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "home_assistant_version": "2026.10.4",
+  "finished_utc": "2026-10-28T01:38:02.829428+00:00",
+  "source_sha256": {
+    "Cargo.lock": "4af40608816d784e27dcd82c0ec27db9772b93918cbad467d4c735b6b1c7e341",
+    "Cargo.toml": "b7e37676e6cce909c5f9613e82a0302bfd18d923e68443023d3ebd330cc8f2bd",
+    "crates/moli-api/Cargo.toml": "c5d8fa61834c8f20e19bf7f1070bb59b3910ac986a9c9d11c3fadda2dde4aa8c",
+    "crates/moli-api/src/home_assistant.rs": "a3292eac2e4cc478291571bbd89a306b76476086c61282ec46b852fe57256252",
+    "crates/moli-api/src/lib.rs": "36116f9527addc8408ce31072f2a46d4804a66a274ef337c61260876ee6ee59e",
+    "crates/moli-home-assistant/Cargo.toml": "138ec789adeca6c0de4533eb58873a2ea172e455a2de95b98470d73361047b43",
+    "crates/moli-home-assistant/src/config.rs": "dbdf612fd6733414c14f4bea11df9c05012cb16bc66eeaa7c9ad2fa413d62520",
+    "crates/moli-home-assistant/src/driver.rs": "5be62bb3d869ec222a69ce12f18313ff0d3cc0d41c840555a15ec7a0bd756412",
+    "crates/moli-home-assistant/src/driver_import.rs": "eb932a84765938d3165c73defa9b20e088ee3e6275575d3fe15c0b30d604a05e",
+    "crates/moli-home-assistant/src/gateway.rs": "bc84fec0ce9e7e08c456a1aec2d5971ca32e377c168749f609a976258cb6a783",
+    "crates/moli-home-assistant/src/inventory.rs": "3c1e93c5b71acd0f90e5636c4130f01c993415b6df092e255ae48ff60abf7346",
+    "crates/moli-home-assistant/src/lib.rs": "a3f40da57c023b95123513fc5bcedf8b87364a3ab7d9f30ad8348eab6a9eda72",
+    "crates/moli-home-assistant/src/protocol.rs": "1994b63bc9659265e784d6f907bb2dcacb8b8f80c3577fa8e372d147a4bc9109",
+    "crates/moli-home-assistant/src/transport.rs": "40213c1c729790e7e38ea998deb84898fa322519713acee39452990a0ed4f02b",
+    "crates/moli-migration/Cargo.toml": "ead26fd0b0eed182d2a74a8b119ef5dea5429e617bd1c884b51dd08fff2fed90",
+    "crates/moli-migration/src/lib.rs": "827db352f9542ca6335e6f9eb735c85fe4121ad4cbf815ff555721c57bfb29d8",
+    "crates/moli-migration/src/model.rs": "c58f0abd32d94001ab48248e01854ca9f402874f613144a09f25571ee5251a5f",
+    "crates/moli-migration/src/registry.rs": "72e52830a4933af9e757388078729cbf785fcf9b22aa150514bce0c84e11b4d1",
+    "crates/moli-migration/src/storage.rs": "0c88644b9c7bcaecb8273f1c803d82f20c8a85e990acfbe6d303c63b84838b46",
+    "crates/moli-migration/src/tests.rs": "19f79ae8d512d6f45385985171aa95fb5e93e6d3ecdabd9bbd45d3a6ca468cfa",
+    "crates/moli-net/src/lib.rs": "da719c10ed41b662bb5189b92fc2192f0ab7634c9c928cedb92853df2574fa39",
+    "crates/moli-os/Cargo.toml": "49854d5559fa7ec9185372b6729c1a08d66aa522512f0ca7ae13c32be3a45a05",
+    "crates/moli-os/src/backup.rs": "ef236cfeada663d74600cf5faa34adaa9dd9aa4db5930ccb9da718804b8a1270",
+    "crates/moli-os/src/main.rs": "e1f678b6a5bf13c29018dd9cf85628056be4135d8deae85a191a505424759f79",
+    "crates/moli-overkiz/Cargo.toml": "e255e407225fe36ebdb0bcc3baf246942081661cc6f39fa3b2584d54049f010b",
+    "crates/moli-overkiz/src/api.rs": "da558d58e78d610773dce5037f7438b88dcae4a75ea2f39d1224755c1453582a",
+    "crates/moli-overkiz/src/bridge_tests.rs": "b5c0b0038e420843e53ad92664f5e4b4fe0817110d8cc40bd5f61fdc55438a71",
+    "crates/moli-overkiz/src/fake.rs": "2c22d1536c0edf8992d8f924175324107db761317eb76b0dbe66ea2c256e561d",
+    "crates/moli-overkiz/src/lib.rs": "f07a09349489ec4d0f31dbc0713432f2d0b54dd95f20678b97f1f70c451e3d39",
+    "crates/moli-overkiz/src/tests.rs": "b2cc291653757718a4de2f7f6ba65374bb9095f8562403891e71baf394f4bbee",
+    "crates/moli-overkiz/test-fixtures/broker.cjs": "f870b3d284f8fd92113832fe91443dc3fdfec66e1c2f8686ed3c521a70b25119",
+    "crates/moli-overkiz/test-fixtures/package-lock.json": "9b49f065330731df4e09b3ddd63a5b1212f5a5f79e76db61a1b1be64aa82fb1b",
+    "crates/moli-overkiz/test-fixtures/package.json": "ae03a4cab0d167ddbcc0960bb61eed75939f1f69ae09ec731921d1ec15e187e4",
+    "crates/moli-runtime/src/hub.rs": "132d9d01ab17a3c888bde3dfc9dcbca9b657b92338d2ea2753ea8e936e6c936c",
+    "crates/moli-runtime/src/lib.rs": "de0ba97e93e349e87da021bdb7942905490a45108049361163f721e640185740",
+    "crates/moli-runtime/src/supervisor.rs": "9394631226694cb5d73da7842775bf5d14aed86626665134a895ecbfe265662b",
+    "crates/moli-runtime/src/write_authority.rs": "eb10a6d5324cfcf3c1c2eb3deb673a2fa8076b31c44210a7d1c6194c6d83aca8",
+    "docker/dev.Dockerfile": "3ed63d8b881bc6b96a205db28dc2bd57a3a1b47445061d160123c9a84d7b7753",
+    "integrations/home-assistant/README.md": "138be32866c3bd266e5ed849eec3c9f088fa3039174a459e3e16d867be25b558",
+    "integrations/home-assistant/fixtures/v1.json": "13659c4c6a48d280c5acfa61b99ee068eb2da13ac9022ab931daf2233d6f152c",
+    "integrations/home-assistant/integration.toml": "4a21a3f73b497a9682c819fa9c6afb165efb92b574c99e8b7bcfab3a28757e36",
+    "integrations/home-assistant/onboarding.md": "443e8e06f80101f2c6fba8f82ccf41fce779f3cec733771ca5a3e0e55a9acb0d",
+    "locales/en/home_assistant.json": "bf8ae1cfeed81f3f0fea97c33a9c6e8bb0a333d58f14903ac4966d6fb7a81bbb",
+    "locales/fr/home_assistant.json": "b2e0f1f4b2bdc3c6a825f1aba1d1c47e7dfdeba9f2c751892903f8c378fc43f6",
+    "tools/home-assistant/check-moli-bridge.py": "44a0d4eb38531f0c344d811da9d6a85f07c26bbcecb9808e477e567621527551",
+    "tools/home-assistant/custom_components/moli/__init__.py": "4eeabc2fd2b5b66cb5adbc828ba9873ed3da1007c69dc77850b2e49d861a4464",
+    "tools/home-assistant/custom_components/moli/bridge.py": "fcff50f954bddb4b4396ba4287a49044d2481eacc915609810d83b270e195b0c",
+    "tools/home-assistant/custom_components/moli/button.py": "bf5dde6886eae89c22984dbf2f41b4dc4992303fb842527a8ebdfdb6fe28c50c",
+    "tools/home-assistant/custom_components/moli/command_gate.py": "270eaea27a65e336cb70eb57f964eb916c7520d24307ee7ac0d4438ff25a4c62",
+    "tools/home-assistant/custom_components/moli/config_flow.py": "c9883bc4f558e110576e90a48753d6745e3dad21a75d66460f4e89f1779421c9",
+    "tools/home-assistant/custom_components/moli/const.py": "e5ce875f2b6ba8410e297834c154570453c23264863d4dff77928a825991e420",
+    "tools/home-assistant/custom_components/moli/cover.py": "d4ebcb5d27e751e90747a50494f0141f2c84ea6b092916f634a94b64849276f9",
+    "tools/home-assistant/custom_components/moli/inventory.py": "751a04a270e07e9ab1a96904d221ab86ff62a40512ce2044f8624df3a052e451",
+    "tools/home-assistant/custom_components/moli/manifest.json": "84549cf14f7f18f03bccced8db950438d69f1b2919c8aead3121a3e0671f25ba",
+    "tools/home-assistant/custom_components/moli/migration.py": "a748c71acaed3bd9657c02383b7340f366efaa317cec04cbb0474db0a25f7608",
+    "tools/home-assistant/custom_components/moli/protocol.py": "31e2901884721f5240f23af43f80bc016452e94fc42f837e6dcf6071b51b3dfd",
+    "tools/home-assistant/custom_components/moli/strings.json": "b9d0bc878fe0d3295fed6b5c8e2808f9c1909f4c7ddfee641eb4d8c676484e64",
+    "tools/home-assistant/custom_components/moli/translations/en.json": "b9d0bc878fe0d3295fed6b5c8e2808f9c1909f4c7ddfee641eb4d8c676484e64",
+    "tools/home-assistant/custom_components/moli/translations/fr.json": "0bc2b482402c427d0f0d9745ea0decb1eb3f4a1c1932417bfec6d12658955e41",
+    "tools/home-assistant/tests_moli_companion/fixtures/v1.json": "13659c4c6a48d280c5acfa61b99ee068eb2da13ac9022ab931daf2233d6f152c",
+    "tools/home-assistant/tests_moli_companion/test_framework.py": "5424d0439b4b7ffef13bba43c9c2547c2958d5d7ac262efa5637c76fd1f63233",
+    "tools/home-assistant/tests_moli_companion/test_protocol.py": "5def58f7ce37e9c901ba4a4c90e89fa4c8d0f518337a366e29960dedfcbeb6ad"
+  }
+}

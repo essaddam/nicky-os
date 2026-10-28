@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 318" width="1000" height="318" role="img" aria-labelledby="mesures-t mesures-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="mesures-t">Le pont maison, mesuré</title>
+  <desc id="mesures-d">Trois graphiques. Le délai de la copie : sur le réseau local à 200 messages par seconde, médiane 2,0 ms et 99e centile 36 ms ; sur le lien distant qui bat, 55 ms et 69 ms. Le rattrapage après une coupure : 110 ms après 5 secondes, 207 ms après 10 secondes, 404 ms après 60 secondes par l'état complet, 358 ms au plus sur le lien distant. Les messages perdus : 3 011 sur 8 000 pour le pont de rumqttd, aucun pour le pont maison.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="318" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="mesures-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="mesures-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="mesures-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="mesures-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="mesures-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="mesures-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="mesures-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="mesures-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="mesures-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="mesures-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="mesures-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="mesures-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="mesures-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="mesures-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="mesures-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="mesures-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="mesures-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="mesures-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="mesures-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="mesures-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="mesures-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="mesures-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="mesures-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="mesures-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="mesures-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="mesures-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="mesures-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="mesures-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="mesures-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="mesures-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">DÉLAI DE LA COPIE</text>
+          <text x="16.0" y="56.0" font-size="11" fill="#1d302a" font-weight="700">local, 200 /s</text>
+          <rect x="16.0" y="64.0" width="120.5" height="14" rx="6" fill="url(#mesures-b-vert)" opacity=".35"/>
+          <rect x="18.0" y="66.0" width="116.5" height="5.3" rx="5" fill="#ffffff" opacity=".2"/>
+          <rect x="16.0" y="64.0" width="6.6" height="14" rx="6" fill="url(#mesures-b-vert)"/>
+          <text x="16.0" y="94.0" font-size="10" fill="#195744">médiane 2,0 ms · 99e centile 36 ms</text>
+          <text x="16.0" y="122.0" font-size="11" fill="#1d302a" font-weight="700">distant, lien qui bat</text>
+          <rect x="16.0" y="130.0" width="232.0" height="14" rx="6" fill="url(#mesures-b-violet)" opacity=".35"/>
+          <rect x="18.0" y="132.0" width="228.0" height="5.3" rx="5" fill="#ffffff" opacity=".2"/>
+          <rect x="16.0" y="130.0" width="183.8" height="14" rx="6" fill="url(#mesures-b-violet)"/>
+          <rect x="18.0" y="132.0" width="179.8" height="5.3" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="16.0" y="160.0" font-size="10" fill="#4b3d82">médiane 55 ms · 99e centile 69 ms</text>
+          <text x="350.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">RATTRAPAGE APRÈS UNE COUPURE</text>
+          <text x="350.0" y="56.0" font-size="10.5" fill="#1d302a" font-weight="700">5 s, par la file</text>
+          <rect x="350.0" y="62.0" width="48.0" height="14" rx="6" fill="url(#mesures-b-vert)"/>
+          <rect x="352.0" y="64.0" width="44.0" height="5.3" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="406.0" y="74.0" font-size="10.5" fill="#195744" font-weight="700">110 ms</text>
+          <text x="350.0" y="96.0" font-size="10.5" fill="#1d302a" font-weight="700">10 s, par la file</text>
+          <rect x="350.0" y="102.0" width="90.5" height="14" rx="6" fill="url(#mesures-b-vert)"/>
+          <rect x="352.0" y="104.0" width="86.5" height="5.3" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="448.5" y="114.0" font-size="10.5" fill="#195744" font-weight="700">207 ms</text>
+          <text x="350.0" y="136.0" font-size="10.5" fill="#1d302a" font-weight="700">60 s, par l'état complet</text>
+          <rect x="350.0" y="142.0" width="176.9" height="14" rx="6" fill="url(#mesures-b-ambre)"/>
+          <rect x="352.0" y="144.0" width="172.9" height="5.3" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="534.9" y="154.0" font-size="10.5" fill="#94660a" font-weight="700">404 ms</text>
+          <text x="350.0" y="176.0" font-size="10.5" fill="#1d302a" font-weight="700">3 s, lien distant qui bat</text>
+          <rect x="350.0" y="182.0" width="157.0" height="14" rx="6" fill="url(#mesures-b-violet)"/>
+          <rect x="352.0" y="184.0" width="153.0" height="5.3" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="515.0" y="194.0" font-size="10.5" fill="#4b3d82" font-weight="700">358 ms</text>
+          <text x="680.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">MESSAGES PERDUS</text>
+          <text x="680.0" y="56.0" font-size="10.5" fill="#1d302a" font-weight="700">pont de rumqttd, 2 coupures</text>
+          <rect x="680" y="62" width="200" height="14" rx="6" fill="#eef0ec"/>
+          <rect x="680.0" y="62.0" width="75.3" height="14" rx="6" fill="url(#mesures-b-rouge)"/>
+          <rect x="682.0" y="64.0" width="71.3" height="5.3" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="888.0" y="74.0" font-size="10.5" fill="#8b3b22" font-weight="700">3 011 sur 8 000</text>
+          <text x="680.0" y="96.0" font-size="10.5" fill="#1d302a" font-weight="700">pont maison, 2 coupures</text>
+          <rect x="680" y="102" width="200" height="14" rx="6" fill="#eef0ec"/>
+          <text x="888.0" y="114.0" font-size="10.5" fill="#195744" font-weight="700">0 sur 8 000</text>
+          <text x="680.0" y="136.0" font-size="10.5" fill="#1d302a" font-weight="700">pont maison, 60 s coupé</text>
+          <rect x="680" y="142" width="200" height="14" rx="6" fill="#eef0ec"/>
+          <text x="888.0" y="154.0" font-size="10.5" fill="#195744" font-weight="700">0 sur 16 000</text>
+          <text x="680.0" y="176.0" font-size="10.5" fill="#1d302a" font-weight="700">pont maison, lien qui bat</text>
+          <rect x="680" y="182" width="200" height="14" rx="6" fill="#eef0ec"/>
+          <text x="888.0" y="194.0" font-size="10.5" fill="#195744" font-weight="700">0 sur 1 500</text>
+          <rect x="16" y="214" width="968" height="40" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 224.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.88" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="238.0" font-size="11" fill="#1d302a" font-weight="700">Dans tous les cas du pont maison, la mémoire du secours finit identique à celle de l'actif, exécutions comprises (582 sur 8 000 sorties).</text>
+  <text x="18" y="295" font-size="12" fill="#52615a" font-style="italic">Deux courtiers rumqttd 0.20 et un relais qui imite le lien, en Linux musl (2 CPU, 128 Mio), médiane de trois essais ; le 99e centile mesure surtout la</text>
+  <text x="18" y="312" font-size="12" fill="#52615a" font-style="italic">cohabitation des deux courtiers sur 2 CPU.</text>
+</svg>

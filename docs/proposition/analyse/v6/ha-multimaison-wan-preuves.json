@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-27T21:06:48.661126+00:00",
+  "qualification": "BLOCKED_NOT_PROVEN",
+  "physical_commands": 0,
+  "preflight": "ha-multimaison-wan.json",
+  "checks": {
+    "rust_passed": 67,
+    "rust_failed": 0,
+    "fmt": "PASS",
+    "clippy": "PASS -D warnings",
+    "scope": "local macOS unit tests, debug build and one loopback site; no remote site or Linux build"
+  },
+  "local_site_smoke": {
+    "status": "PASS",
+    "date_utc": "2026-10-27T21:05:52.375764+00:00",
+    "scope": "one local macOS loopback fixture; synthetic tiny document; no remote site",
+    "before_sequence": 0,
+    "after_sequence": 2,
+    "effects": 2,
+    "lease_valid_during_fault_and_freeze": true,
+    "remote_connected": false,
+    "physical_commands": 0,
+    "clean_shutdown": true,
+    "wan_outage_qualified": false
+  },
+  "native_build_receipt": {
+    "date_utc": "2026-10-27T21:05:09.465434+00:00",
+    "checks": [
+      "fmt",
+      "clippy -D warnings",
+      "Rust unit tests",
+      "native debug build"
+    ],
+    "source_sha256": {
+      "tools/ha-multihome-poc/src/authority.rs": "def1029e944f2c540576d6a50e0ebdee1a4cb65287731ba3ae9518a0f3a59b21",
+      "tools/ha-multihome-poc/src/config.rs": "cd33d06988c63747ab33b99585fcd7d7e321260887d8d26f517cdcee7f32619f",
+      "tools/ha-multihome-poc/src/engine.rs": "12bb301d8bbb649ed95c2f64834955993784b5ee12522d79b27cc7265e85ec76",
+      "tools/ha-multihome-poc/src/link_fault.rs": "62f43f4dd395956cd54f1253cbb6063da8d437f960aa6e1cd03cd1fe56451589",
+      "tools/ha-multihome-poc/src/main.rs": "17ea6d40cc2df53e791d3757b6f90dfd229cc4ab0112a69ab7ca70ec3db566bf",
+      "tools/ha-multihome-poc/src/server.rs": "16be95c98ad727195483e067f90e82c800f620aa059e7db4efe4853245b7a2da",
+      "tools/ha-multihome-poc/src/site.rs": "f5340ccfc7e7341e5ae1767229b16fa71803a3d89aa873b725ba972b7bf4a1cd",
+      "tools/ha-multihome-poc/src/site_transport.rs": "54d47d6a8545177a7e01fddf5f60648045f65f7f4f404cd05ce1635f59ee5472",
+      "tools/ha-multihome-poc/src/tcp_loss.rs": "1ba9126f44f50fb81425dee4bc17296ce5571591f1a47ee11fbf3257b1e08ec3",
+      "tools/ha-multihome-poc/src/transport.rs": "d14e7923d2c569c0c13f855fa23fbe8dee46d69ec339af927928ddaa975e1139",
+      "tools/ha-multihome-poc/Cargo.toml": "53b442ca9852bcf2f332d4b58a92479be7d297ae89b754e1f6f5a237dd49a4b1",
+      "tools/ha-multihome-poc/Cargo.lock": "82d08ede78cd3117b78462c111c2d93435486bedf1eda5f149c0fc9f3907c2dc",
+      "tools/moteur-integre-banc/src/memory.rs": "3f7062ab7277089a4787c4a0b12d65983170689b935a2c21a1d241fe432d1607",
+      "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": "15a14147d6f164957463170075980436f7404e6c972ec373c8eafe0afc440e3e"
+    },
+    "binary_sha256": "16af92ef6efb6406a30d894ff06be99e31fc5629e3a7ae7f5bc934d7304a596a",
+    "archive_sha256": "72f58413839dd66e564979ebfb9bf01736c8479f7d4ef54e5f913420f57f09e7",
+    "scope": "local checks only; no WAN outage is claimed by this receipt"
+  },
+  "remote_runtime": "NOT_STARTED",
+  "linux_build": "NOT_RUN",
+  "fault_injection_campaign": "NOT_RUN because a direct peer baseline could not be established and file transfer failed",
+  "review": "site runtime reviewed independently of its implementer; no material defect reported; not a substitute for execution",
+  "cleanup": {
+    "remote_echo_listeners": "STOPPED_NORMALLY",
+    "temporary_build_container": "REMOVED",
+    "temporary_rust_image": "REMOVED",
+    "local_artifact_server": "STOPPED",
+    "live_1414_1416": "NOT_RESTARTED"
+  },
+  "historical_local_tcp_campaign": {
+    "receipt": "ha-multimaison-tcp-preuves.json",
+    "archived_html": "ha-multimaison-avant-test-wan.html",
+    "old_results_not_relabelled": true
+  },
+  "live_simulation_observation": {
+    "date_utc": "2026-10-27T21:03:05.943513+00:00",
+    "http_proxy": 200,
+    "local_leases_valid": true,
+    "sequences_observed": {
+      "house-a": 1607,
+      "house-b": 1607
+    },
+    "fake_effect_error": "house receipt capacity exhausted",
+    "receipt_capacity_per_house": 256,
+    "interpretation": "bounded refusal after receipt saturation; continuous fake-effect operation beyond this capacity is not qualified",
+    "reset_performed": false
+  },
+  "verification": {
+    "json_and_67_test_source_bindings": "PASS",
+    "html_links_and_counts": "PASS",
+    "diff_check": "PASS",
+    "leak_check": "PASS generic patterns; private denylist unavailable"
+  },
+  "source_sha256": {
+    "docs/proposition/analyse/v6/README.md": "3eca16c6cef70ebb382bca1178ce53e479662b87b20e5b513da393c803b0301a",
+    "docs/proposition/analyse/v6/ha-multimaison-avant-test-wan.html": "13028bba321512778437faa74d77c47cbcfd061ef2988c012c55d005f5f7d844",
+    "docs/proposition/analyse/v6/ha-multimaison-tcp-preuves.json": "d52df17cad91f43922fad1c136656677565dc66b14d960ce284b0298f447122e",
+    "docs/proposition/analyse/v6/ha-multimaison-tcp.json": "c1e6a83f3652bbe35d19230c7ff634bbb51ad60b12719849c8462b56a33194e2",
+    "docs/proposition/analyse/v6/ha-multimaison-wan.html": "06d1e3b394d4d1c3aad6e150a9763248ea917d789f1835543cfb9f507ad3cdde",
+    "docs/proposition/analyse/v6/ha-multimaison-wan.json": "27dc08c0c4c7050bb076b6e1b89a1a84c41622b1c19d7fe63db7ec16040fd651",
+    "docs/proposition/analyse/v6/ha-multimaison.html": "157a2735b33ed72de116a87a7b016a6a95afa0270517b68313730a59f92f462c",
+    "tools/ha-multihome-poc/Cargo.lock": "82d08ede78cd3117b78462c111c2d93435486bedf1eda5f149c0fc9f3907c2dc",
+    "tools/ha-multihome-poc/Cargo.toml": "53b442ca9852bcf2f332d4b58a92479be7d297ae89b754e1f6f5a237dd49a4b1",
+    "tools/ha-multihome-poc/README.md": "21fb0fc6be88c31a804295c43ac4ce03c479ac3084c08169b0aaba0a16a8d85b",
+    "tools/ha-multihome-poc/check-sites.py": "f11f791552473391d64ffc369ee7fbdda5842ffbd0ffa7b352f36d15ef49d728",
+    "tools/ha-multihome-poc/render-report.py": "7e273d9a2429f9adce4d973c688173f8a7385c69d0f1295dc8c6cb52acde4ddf",
+    "tools/ha-multihome-poc/smoke-site.py": "75784962cf1098c9cf54c0155c7ab9c0efbb4974ff3b8a61c8990fba8eb5a429",
+    "tools/ha-multihome-poc/src/authority.rs": "def1029e944f2c540576d6a50e0ebdee1a4cb65287731ba3ae9518a0f3a59b21",
+    "tools/ha-multihome-poc/src/config.rs": "cd33d06988c63747ab33b99585fcd7d7e321260887d8d26f517cdcee7f32619f",
+    "tools/ha-multihome-poc/src/engine.rs": "12bb301d8bbb649ed95c2f64834955993784b5ee12522d79b27cc7265e85ec76",
+    "tools/ha-multihome-poc/src/link_fault.rs": "62f43f4dd395956cd54f1253cbb6063da8d437f960aa6e1cd03cd1fe56451589",
+    "tools/ha-multihome-poc/src/main.rs": "17ea6d40cc2df53e791d3757b6f90dfd229cc4ab0112a69ab7ca70ec3db566bf",
+    "tools/ha-multihome-poc/src/server.rs": "16be95c98ad727195483e067f90e82c800f620aa059e7db4efe4853245b7a2da",
+    "tools/ha-multihome-poc/src/site.rs": "f5340ccfc7e7341e5ae1767229b16fa71803a3d89aa873b725ba972b7bf4a1cd",
+    "tools/ha-multihome-poc/src/site_transport.rs": "54d47d6a8545177a7e01fddf5f60648045f65f7f4f404cd05ce1635f59ee5472",
+    "tools/ha-multihome-poc/src/tcp_loss.rs": "1ba9126f44f50fb81425dee4bc17296ce5571591f1a47ee11fbf3257b1e08ec3",
+    "tools/ha-multihome-poc/src/transport.rs": "d14e7923d2c569c0c13f855fa23fbe8dee46d69ec339af927928ddaa975e1139",
+    "tools/ha-multihome-poc/wan-artifacts.py": "d8212c9d37efd14b84eb47d976e40ce3998e57e9d47943aef452f024c5887d11",
+    "tools/moteur-integre-banc/src/memory.rs": "3f7062ab7277089a4787c4a0b12d65983170689b935a2c21a1d241fe432d1607",
+    "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": "15a14147d6f164957463170075980436f7404e6c972ec373c8eafe0afc440e3e"
+  }
+}

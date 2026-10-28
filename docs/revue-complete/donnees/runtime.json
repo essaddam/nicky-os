@@ -1,0 +1,1977 @@
+{
+  "sections": [
+    {
+      "id": "runtime-existant",
+      "title": "Ce que le runtime protège déjà, et ce qui reste exposé",
+      "intro": "Aujourd’hui, un hub en mémoire reçoit les valeurs des pilotes et distribue leurs événements sur un bus borné. Il valide les commandes et applique la garde avant de les remettre au pilote. La supervision contient les paniques ordinaires, mais les propositions demandent des cloisons supplémentaires pour les blocages, les pannes des briques et les fautes de processus.",
+      "ideas": [
+        {
+          "id": "runtime-panic",
+          "title": "Une panique de pilote est capturée et relancée",
+          "status": "integre",
+          "decision": "Contrat existant D1, vérifié dans le superviseur actuel.",
+          "summary": "Un pilote qui retourne une erreur, s’arrête sans raison ou panique ne fait pas sortir la boucle de supervision. Le superviseur vide ses commandes en attente, marque ses appareils hors ligne, publie le motif puis relance avec une attente croissante.",
+          "details": [
+            "Le pilote est enregistré une seule fois ; le même contexte de commandes survit aux essais suivants. Cela évite de changer de file à chaque reprise.",
+            "L’attente commence à 1 s, double jusqu’à 60 s et revient à 1 s après 60 s de fonctionnement. Une annulation arrête la boucle et publie stopped.",
+            "Cette protection utilise catch_unwind : elle intercepte une panique qui déroule la pile, pas un abort ou un blocage sans suspension."
+          ],
+          "evolution": "V1 établit cette protection par E1 ; V2 à V7 la conservent comme socle du futur isolement.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime.md",
+              "line": 57,
+              "note": "Protection initiale et expérience E1."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/supervisor.rs",
+              "line": 16,
+              "note": "Bornes 1–60 s et seuil de bonne santé."
+            },
+            {
+              "path": "crates/moli-runtime/src/supervisor.rs",
+              "line": 31,
+              "note": "Tâche Tokio, capture, drain, hors ligne et publication du backoff."
+            }
+          ],
+          "risks": [
+            "Les délais et le taux de réussite E1 sont ceux du banc, pas une mesure récente de production."
+          ]
+        },
+        {
+          "id": "runtime-runtime-partage",
+          "title": "Deux tâches bloquantes peuvent encore retenir le cœur",
+          "status": "partiel",
+          "decision": "Panique isolée livrée ; isolement par thread recommandé, non livré.",
+          "summary": "Les pilotes sont lancés par tokio::spawn sur le runtime de service partagé. Un timeout ne peut pas interrompre un calcul qui ne rend jamais la main : les bancs V1 puis V4 montrent pourquoi deux workers occupés suffisent à retarder toute la maison.",
+          "details": [
+            "Au départ, le service construit un runtime multithread ; la configuration propose deux workers par défaut. La supervision n’ajoute aucun thread dédié.",
+            "Le banc Linux V4 injecte deux pilotes bloquants : médiane des ordres 202 ms, et minuterie de 10 ms retardée jusqu’à 405 ms. Six pilotes sur des threads distincts laissent le cœur répondre bien plus vite.",
+            "La proposition garde le superviseur mais déplace chaque run sur un runtime current_thread propre au pilote ; les calculs lourds et décodeurs hostiles restent à borner."
+          ],
+          "evolution": "V1 recommandait notamment spawn_blocking et un détecteur ; V2 choisit les threads, V4 confirme leur intérêt en Linux musl, V7 reprend cette couche.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v4.md",
+              "line": 77,
+              "note": "Comparaison Linux/Mac et blocages partagés."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1449,
+              "note": "Rôle du thread dédié et maintien des tâches du hub sur le cœur."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/supervisor.rs",
+              "line": 31,
+              "note": "Lancement partagé toujours présent."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 355,
+              "note": "Construction du runtime de service."
+            },
+            {
+              "path": "crates/moli-os/src/config.rs",
+              "line": 179,
+              "note": "Deux workers par défaut."
+            }
+          ],
+          "risks": [
+            "Le conteneur du banc tourne sur un Mac arm64 ; aucune durée physique sur Pi Zero 2 W n’est démontrée."
+          ]
+        },
+        {
+          "id": "runtime-admission",
+          "title": "La file bornée et le permis d’émission existent déjà",
+          "status": "integre",
+          "decision": "Garanties du cœur livrées ; leur application complète reste à vérifier pilote par pilote.",
+          "summary": "Le hub refuse immédiatement une file pleine et porte une échéance de cinq secondes dans chaque commande. Le pilote dispose d’un permis qui revérifie la présence de l’appelant, l’autorisation vivante et le délai juste avant de transmettre au transport.",
+          "details": [
+            "Après validation et garde, le hub crée une réponse oneshot et utilise try_send vers la file du pilote, limitée à 64. Une saturation rend Busy ; une file fermée rend DriverUnavailable.",
+            "La prise de l’ordre et son abandon sont arbitrés atomiquement. Un appelant qui part après la prise marque l’ordre LEFT ; le contrôle de wanted doit alors empêcher une émission encore évitable.",
+            "begin_send doit être adjacent à la remise au transport, sans await entre les deux. Cette frontière donne un sens à « non envoyé » ; elle ne peut pas annuler un effet déjà émis."
+          ],
+          "evolution": "V1 identifie neuf usages incomplets ; le crible V7 en rapporte dix-sept parmi vingt-sept pilotes qui émettent. Le mécanisme commun existe, sa généralisation est proposée.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 3766,
+              "note": "Corrections de portage, dont revérification avant émission."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 64,
+              "note": "File de 64 commandes."
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 1813,
+              "note": "Échéance, try_send et refus explicites."
+            },
+            {
+              "path": "crates/moli-runtime/src/driver.rs",
+              "line": 121,
+              "note": "wanted et begin_send."
+            },
+            {
+              "path": "crates/moli-runtime/src/driver.rs",
+              "line": 157,
+              "note": "Contrôles de délai, appelant et permis."
+            }
+          ],
+          "risks": [
+            "Un helper disponible ne prouve pas que chaque pilote le consulte au bon moment."
+          ]
+        },
+        {
+          "id": "runtime-bus-sse",
+          "title": "Un consommateur lent ne bloque pas les autres",
+          "status": "integre",
+          "decision": "Diffusion bornée et reprise SSE actuelles vérifiées.",
+          "summary": "Le hub utilise toujours un broadcast dont la capacité par défaut est de 1 024 événements. Le flux SSE commence par un instantané et, s’il prend du retard, renvoie un nouvel instantané plutôt que ralentir les producteurs.",
+          "details": [
+            "Le pilote met à jour le modèle en mémoire ; seuls les changements ordinaires créent un événement State. Les occurrences suivent un chemin distinct pour préserver les appuis répétés.",
+            "Chaque écran possède son récepteur. En cas de Lagged, le serveur filtre puis ressert l’état autorisé : une vue invitée reste limitée à ses pièces.",
+            "Ce comportement restaure l’état visible ; il ne reconstitue pas toutes les transitions intermédiaires d’un moteur d’automatismes."
+          ],
+          "evolution": "V1 E5 mesure l’absence de blocage des abonnés rapides ; V5 compare SSE et WebSocket ; V7 propose une migration progressive, sans prétendre que SSE interroge périodiquement.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime.md",
+              "line": 326,
+              "note": "Chemin actuel et expérience de consommateur lent."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 2397,
+              "note": "SSE et REST actuels comparés au module WebSocket proposé."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 121,
+              "note": "Capacité par défaut du broadcast."
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2443,
+              "note": "Émission State seulement si changement."
+            },
+            {
+              "path": "crates/moli-api/src/sse.rs",
+              "line": 103,
+              "note": "Instantané initial et filtrage."
+            },
+            {
+              "path": "crates/moli-api/src/sse.rs",
+              "line": 128,
+              "note": "Instantané de reprise sur Lagged."
+            }
+          ],
+          "risks": []
+        },
+        {
+          "id": "runtime-briques",
+          "title": "Les tâches métier demandent une surveillance propre",
+          "status": "proposition",
+          "decision": "Cible arrêtée : surveillance active de toutes les tâches métier ; relance des seules briques reconstructibles, verrou d’activation sinon.",
+          "summary": "La cible surveille activement les tâches métier, au-delà de la protection actuelle des pilotes. Toute sortie inattendue devient un défaut visible ; seules les briques capables de reconstruire un état cohérent sont relancées, les autres verrouillent les activations qui dépendent d’elles.",
+          "details": [
+            "Une sentinelle consomme les fins des tâches pendant le service. À chaque sortie inattendue, elle inscrit un événement d’audit, publie la cause et dégrade la santé avant toute tentative de reprise.",
+            "Une brique déclarée reconstructible repart avec un backoff de 1 s doublé jusqu’à 60 s : réabonnement, restauration cohérente puis rattrapage précèdent sa remise en service. Une brique non reconstructible ferme l’admission de ses fonctions dépendantes jusqu’à une réparation authentifiée ; elle ne redémarre jamais aveuglément.",
+            "Les fonctions indépendantes continuent. Une incohérence de sécurité, droits, coffre ou identité active interdit toute activation physique et limite le service au diagnostic authentifié. Les handles actuellement attendus à l’arrêt restent un constat d’existant, distinct de cette surveillance cible."
+          ],
+          "evolution": "La sentinelle de V1 reste une protection transversale dans V3 et V7 ; le monitoring lui donne une visibilité mais ne remplace pas cette supervision.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime.md",
+              "line": 242,
+              "note": "Briques hors superviseur, options sentinelle et relance."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1493,
+              "note": "Surveillance transversale ajoutée aux sept couches."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 488,
+              "note": "Annulation puis attente des tâches au terme du service."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 928,
+              "note": "Entretien lancé par tokio::spawn."
+            }
+          ],
+          "risks": [
+            "Ne pas étendre à toutes les sous-tâches les garanties du seul catch_unwind des pilotes."
+          ]
+        },
+        {
+          "id": "runtime-demarrage",
+          "title": "Une donnée corrompue peut empêcher le démarrage global",
+          "status": "arbitrage",
+          "decision": "Cible arrêtée : diagnostic authentifié sans activation si sécurité incohérente ; dégradation locale pour historique, énergie et module indisponibles.",
+          "summary": "Le démarrage cible classe les défauts avant toute activation. Une incohérence de sécurité, droits, coffre ou identité active ferme toutes les commandes ; une indisponibilité d’historique, d’énergie ou de module laisse fonctionner les fonctions indépendantes avec une couverture explicitement inconnue.",
+          "details": [
+            "Le démarrage vérifie identité active, garde, droits et coffre avant de lancer les pilotes. Un défaut dans ces domaines ouvre uniquement le diagnostic authentifié, sans activation, sans restauration de commande et sans mode permissif de secours.",
+            "Un module indisponible est inscrit en attente avec sa cause ; ses appareils et fonctions dépendantes sont indisponibles. Les autres modules démarrent si leurs propres prérequis et droits sont cohérents.",
+            "L’historique ou l’énergie indisponibles interrompent leur continuité : couverture inconnue, intervalles manquants et lectures indisponibles sont visibles. Les fonctions indépendantes continuent, mais un automatisme exigeant cette donnée ne reçoit ni zéro fictif ni fausse preuve de continuité.",
+            "Le code actuel propage encore les erreurs d’ouverture avant le bind HTTP. Cette observation détermine le portage à réaliser ; elle ne modifie pas le contrat cible de diagnostic et de dégradation locale."
+          ],
+          "evolution": "V1 sépare cette question du confinement des paniques ; elle reste un préalable à un démarrage et un retour arrière réellement opérables.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime.md",
+              "line": 301,
+              "note": "Démarrage couplé et distinction configuration/données."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 424,
+              "note": "Ouverture de l’historique avant les pilotes."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 436,
+              "note": "Propagation de la construction des pilotes."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 448,
+              "note": "Écouteur ouvert après ces constructions."
+            }
+          ],
+          "risks": []
+        }
+      ]
+    },
+    {
+      "id": "runtime-cloisons",
+      "title": "Le fonctionnement prévu quand un appareil ou un bus répond mal",
+      "intro": "La cible sépare le temps d’un appareil du temps des autres : thread par pilote, voies paresseuses, passerelle commune et disjoncteurs. La maison décide sur son état vif ; les files partagent un plafond global de 2 Mio, et chaque refus explique ce qui n’a pas pu partir. Les tentatives ne franchissent jamais une frontière d’émission ambiguë.",
+      "ideas": [
+        {
+          "id": "runtime-thread",
+          "title": "Un thread par module, avec les horloges du hub sur le cœur",
+          "status": "proposition",
+          "decision": "Couche recommandée depuis V2, avec contrat esquissé en V7.",
+          "summary": "Le pilote garde sa propre boucle, mais l’exécute sur un thread et un runtime dédiés. Les tâches communes du hub doivent être lancées sur un Handle du cœur explicitement retenu, sinon elles suivraient par erreur le runtime du pilote appelant.",
+          "details": [
+            "Le superviseur crée le thread, construit le runtime local puis y exécute le pilote ; les pannes ordinaires gardent les mêmes statuts et le même backoff.",
+            "Lorsqu’un pilote active un calcul ou une durée, le hub envoie son horloge sur son propre runtime. Un blocage du pilote des aides ne doit pas figer les aides de toute la maison.",
+            "Le thread protège les autres du calcul long ; il ne rend pas rapide le module bloqué et ne le tue pas de manière préemptive."
+          ],
+          "evolution": "V2 K1 découvre le risque des horloges lancées par l’appelant ; V3 le rend constitutif du pattern et V7 le conserve.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v2.md",
+              "line": 204,
+              "note": "Deux précautions : Handle du cœur et protection des inondations."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 3433,
+              "note": "Contrat spawn_driver_isole."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 426,
+              "note": "Un observateur peut encore être lancé sur le runtime courant."
+            }
+          ],
+          "risks": [
+            "19 Kio est une mesure de thread minimal sous Linux musl, pas le coût de chaque pilote complet."
+          ]
+        },
+        {
+          "id": "runtime-voies",
+          "title": "Une voie naît quand un appareil reçoit un ordre",
+          "status": "proposition",
+          "decision": "Prototype V4 mesuré hors dépôt ; kit commun à implémenter.",
+          "summary": "Une voie ne réserve pas une tâche permanente pour chaque appareil. Un répartiteur crée sa petite file quand un ordre attend, n’autorise qu’un envoi en vol et détruit la file vide, ce qui évite qu’un appareil muet monopolise tout son pilote.",
+          "details": [
+            "L’ordre arrive dans la voie choisie par le module : appareil, compte cloud, box ou station selon la contrainte réelle du transport.",
+            "Avant chaque émission, la voie revérifie l’appelant et le délai. Deux consignes consécutives du même point peuvent fusionner ; un appui reste ordonné et ne peut être écrasé.",
+            "La voie remplacée ou pleine rend une issue explicite. Le banc V4 obtient 237 succès sur 237 pour les appareils sains, avec moins de 0,6 Mio de pic pour le processus du harnais."
+          ],
+          "evolution": "V2 prouve l’isolation avec tâches permanentes ; V3 chiffre le gaspillage de 7,3 Kio par appareil ; V4 écrit les voies paresseuses ; le crible V7 ajoute la distinction consigne/appui et la clé libre.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 3457,
+              "note": "Contrat de voie et garde-fous."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v4.md",
+              "line": 267,
+              "note": "Voies paresseuses et résultats sous charge."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Le résultat de prototype ne garantit pas le comportement de tous les ponts et comptes cloud réels."
+          ]
+        },
+        {
+          "id": "runtime-passerelle",
+          "title": "Une API partagée distribue ses places entre appareils",
+          "status": "proposition",
+          "decision": "Passerelle commune recommandée, avec priorité et débit bornés.",
+          "summary": "Une tâche par ordre ne suffit pas si toutes les requêtes arrivent sur les quatre mêmes places d’une API de pont. La passerelle combine plafond de concurrence, équité entre appareils et priorité des commandes sur les lectures périodiques.",
+          "details": [
+            "Chaque voie ne présente qu’un ordre actif ; la passerelle distribue les places disponibles au lieu de les laisser toutes prendre par un appareil lent.",
+            "Un budget de requêtes et les reculs imposés par le fournisseur évitent qu’une reprise de connexion devienne une rafale contre le cloud.",
+            "Si le pont est globalement indisponible, le disjoncteur de bus s’ouvre pour toutes les voies. Un appareil muet seul ne doit pas condamner ses voisins."
+          ],
+          "evolution": "V2 C3 passe d’environ 1,43 s à 32 ms pour les ordres sains sous API à quatre places ; V7 conserve la passerelle et laisse la clé de voie au module.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v2.md",
+              "line": 244,
+              "note": "Comparaison tâche par ordre et voies avec API à quatre places."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 3503,
+              "note": "Contrat Passerelle."
+            }
+          ],
+          "verification": [],
+          "risks": []
+        },
+        {
+          "id": "runtime-disjoncteur",
+          "title": "Refuser vite un bus mort, stabiliser un bus intermittent",
+          "status": "proposition",
+          "decision": "Cible arrêtée : hystérésis, admission prédictive et sondes de lecture ; aucune réémission après émission possible.",
+          "summary": "Un bus lent peut coûter plus d’attente qu’un bus franchement mort. La V4 propose de suivre les échecs consécutifs et la latence récente, puis de refuser immédiatement un ordre dont la file dépasserait déjà l’échéance.",
+          "details": [
+            "Trois échecs consécutifs ou une déconnexion du transport ouvrent le bus. L’ouverture dure 5 s ; les sondes de lecture sont espacées de 1, 2, 4, 8, 16 puis 30 s au plafond. Trois succès consécutifs ferment le défaut ; un ConnAck clôt le défaut de liaison, sans prétendre confirmer les appareils.",
+            "Au-delà d’une médiane de 1,5 s, l’admission estime le temps de file ; un ordre voué à expirer rend non_envoye plutôt que consommer plusieurs secondes.",
+            "Les simulations Q1–Q3 comparent bus lent, intermittent et partiel ; le signal ConnAck peut fermer une panne du transport sans multiplier les tentatives physiques.",
+            "Résolution de synthèse : les tentatives adaptatives s’arrêtent à toute émission potentielle ; si la livraison est ambiguë, lire le statut et rendre incertain plutôt que renvoyer, même pour une consigne."
+          ],
+          "evolution": "Le disjoncteur simple de V3 basculait trop souvent ; V4 ajoute hystérésis, prévision et délai adaptatif, repris dans V7.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v4.md",
+              "line": 143,
+              "note": "Les quatre protections comparées sur bus capricieux."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 3519,
+              "note": "Contrat avec hystérésis et latence."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Les seuils retenus proviennent des simulations V4 ; le portage doit vérifier qu’ils limitent l’attente et les appels sur le matériel et les services réels."
+          ]
+        },
+        {
+          "id": "runtime-coalescence",
+          "title": "Fusionner les mesures remplaçables, conserver les transitions significatives",
+          "status": "arbitrage",
+          "decision": "Cible arrêtée : fusion des seules mesures remplaçables ; transitions critiques conservées sous plafonds en comptes et octets, saturation visible.",
+          "summary": "La cible de synthèse fusionne seulement les mesures déclarées remplaçables et les projections continues. Les changements d’état significatifs, occurrences et issues conservent leur ordre et leur identité ; une saturation devient une perte visible, jamais une garantie fictive de continuité.",
+          "details": [
+            "L’ingestion classe les mesures remplaçables, les projections continues, les transitions d’état significatives et les occurrences. Seules les deux premières catégories peuvent remplacer une entrée du même point ; les autres reçoivent une identité et gardent leur place.",
+            "Au vidage, les dernières mesures sont validées et publiées en lot ; les transitions critiques restent séquencées. Le banc historique P2 rapporte zéro déclencheur de sonde perdu avec une rafale de 5 000, pour 6 à 15 ms sous Linux ; il ne prouve pas le nouveau classement complet.",
+            "Un aller-retour ouvert puis fermé dans la fenêtre doit rester deux transitions. Le simple tampon final de l’étude est donc insuffisant pour cette classe ; la synthèse le remplace par le flux critique conservé et borné.",
+            "Résolution de synthèse : une transition de porte n’est pas une mesure coalescible. Les plafonds coappliqués sont 2 Mio pour toutes les files transitoires de publications et de rattrapage, tous modules réunis, 4 096 changements critiques par instance et 1 024 occurrences par module. Ce sont des plafonds simultanés, jamais des réservations : le premier atteint bloque l’admission concernée. Chaque entrée est comptée à son coût réel, charge et métadonnées comprises ; les octets priment sur le nombre. Une saturation marque la perte, dégrade les consommateurs dépendants et exige leur réconciliation sans inventer un événement ni rejouer un effet supposé."
+          ],
+          "evolution": "V2 introduit le budget d’entrée ; V3 P2 en mesure le principe ; V4 rejoue sous Linux ; V7 le place sur in/.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1469,
+              "note": "Tampon d’entrée et exemption des occurrences."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 3531,
+              "note": "Contrat du tampon d’entrée."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v4.md",
+              "line": 117,
+              "note": "Mesure des inondations et limite des rafales."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Les microbancs antérieurs ne qualifient pas encore le coût de ce classement ni les limites globales ; le portage doit mesurer les tailles variables et la saturation."
+          ]
+        },
+        {
+          "id": "runtime-rattrapage",
+          "title": "Rattraper un retard demande plus qu’un nouvel instantané",
+          "status": "partiel",
+          "decision": "Correctif F1 prouvé sur copie, non reporté dans le moteur actuel observé.",
+          "summary": "Aujourd’hui, le moteur relit le présent après un Lagged et remplace sa mémoire précédente. Le correctif V4 compare d’abord le présent à cette mémoire pour rejouer une transition nette ; V7 veut aller plus loin avec un flux numéroté et une queue de changements.",
+          "details": [
+            "Le correctif conserve ce que le moteur savait, calcule les points dont la valeur finale diffère et passe chaque différence dans le chemin normal on_state. Les événements déjà rattrapés deviennent égaux et ne déclenchent pas deux fois.",
+            "F1 rapporte zéro sonde perdue sur sa copie modifiée ; l’action après rafale reste retardée d’environ 109 ms : la correction ne supprime pas la charge.",
+            "Pour reconstituer toutes les transitions, y compris aller-retour, le consommateur doit relire le tronçon numéroté tant qu’il existe. Un instantané final ne suffit jamais à retrouver un passage bref."
+          ],
+          "evolution": "V1 découvre le défaut ; V2 le quantifie ; V4 prouve un correctif minimal sur copie ; V7 généralise le rang s et le rattrapage.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 2852,
+              "note": "Correctif prouvé hors dépôt."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1626,
+              "note": "Rattrapage selon le consommateur et queue récente."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 84,
+              "note": "Lagged appelle encore refresh_live puis remember_all, sans replay des différences."
+            }
+          ],
+          "risks": [
+            "Même V7 revient à un instantané au-delà de la queue récente ; l’exhaustivité historique demande un autre stockage disponible."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runtime-mqtt",
+      "title": "Ce que change le courtier central proposé en V6 et consolidé en V7",
+      "intro": "V5 conservait MQTT aux bords et SSE/REST vers les écrans. V6 propose un courtier Rust embarqué ; V7 rassemble cette cible avec les cloisons et les preuves antérieures. L’intérêt annoncé est un contrat commun permettant des modules dans le binaire ou en processus distinct, avec un hub toujours seul responsable de la vérité et de la garde.",
+      "ideas": [
+        {
+          "id": "runtime-centre",
+          "title": "Le courtier diffuse, le hub décide",
+          "status": "proposition",
+          "decision": "Orientation attribuée à la discussion du 22 octobre ; intégration non constatée.",
+          "summary": "Les modules publieraient leurs observations sur in/, le hub validerait puis publierait val/. Une surface publierait une demande sur req/ ; le hub appliquerait la garde, émettrait cmd/ puis rendrait res/ à son origine.",
+          "details": [
+            "Lecture : appareil → module → canon et classement → in/ → hub → état vif à rédacteur unique → sortie critique séquencée dans la file du gardien et vers les pairs → val/ → consommateurs. Les écritures d’audit et l’export D13 restent des flux durables distincts ; aucun journal disque des dossiers ou exécutions n’est ajouté.",
+            "Action : écran ou automate → demande canonique et identité d’origine → req/ → garde → cmd/ → voie du module → appareil → issue sur res/.",
+            "Le courtier ne devient pas propriétaire de l’état ; le hub conserve spécifications, qualité, horodatage et autorité de commande avec un seul rédacteur. Les consommateurs gardent seulement leurs copies compactes nécessaires ; les propriétaires du hub évitent un détour cmd/ pour écrire leur propre état."
+          ],
+          "evolution": "V6 remplace l’architecture de transport de V5, pas les invariants de garde. V7 est la consolidation à lire pour la cible complète.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v6.md",
+              "line": 6,
+              "note": "Changement explicite de centre par rapport à V5."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 127,
+              "note": "Vue des sept composants et sujets."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1585,
+              "note": "Responsabilités du hub."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 443,
+              "note": "Le cœur actuel possède un broadcast interne."
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 816,
+              "note": "Les commandes restent des appels directs du hub."
+            }
+          ],
+          "risks": [
+            "Les schémas MQTT ne sont pas du code livré ; rumqttd n’est pas une crate du workspace observé."
+          ]
+        },
+        {
+          "id": "runtime-courtier",
+          "title": "Reprendre rumqttd implique une maintenance centrale",
+          "status": "proposition",
+          "decision": "Choix de reprise consigné par V6/V7 ; correctifs et qualification à réaliser.",
+          "summary": "Le courtier envisagé est rumqttd 0.20.0, avec liens locaux en mémoire pour les modules internes et écouteurs pour les processus ou clients extérieurs. La conception dépend de corrections sur les autorisations, les caches par sujet, les pertes silencieuses et une panique de connexion.",
+          "details": [
+            "Le routeur et les codecs seraient repris ; les ACL doivent contrôler publications et abonnements des clients extérieurs à chaque message.",
+            "Les sujets de demandes restent stables, avec l’identifiant dans la charge, afin de ne pas alimenter indéfiniment un cache par sujet. Les compteurs doivent être bornés eux aussi.",
+            "Un abonné trop lent doit recevoir un signal chiffré de perte. Une sentinelle du routeur doit rendre sa mort visible et provoquer une reprise contrôlée du cœur."
+          ],
+          "evolution": "V5 ferme la porte de service du courtier externe ; V6 déplace cette responsabilité au centre ; V7 consolide les défauts mesurés et leur coût.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1018,
+              "note": "Ce qui est gardé et ce qui doit être ajouté à rumqttd."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1566,
+              "note": "Le routeur devient un composant critique."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Le code tiers a été lu et mesuré dans l’étude, pas éprouvé en longue durée ni sous clients hostiles ; sources tierces non reconsultées ici."
+          ]
+        },
+        {
+          "id": "runtime-confiance",
+          "title": "Isoler un module ne constitue pas son bac à sable",
+          "status": "arbitrage",
+          "decision": "Cible arrêtée : compte et services limités par instance pendant l’essai ; kit de confiance après revue et promotion authentifiée.",
+          "summary": "V7 dispense les modules du produit, même isolés, d’ACL par message et confie au kit la formation des sujets. Les ponts extérieurs et appareils MQTT reçoivent au contraire comptes, ACL, taille, débit et file bornés.",
+          "details": [
+            "Les liens en mémoire constituent le chemin rapide des modules revus et promus. Tout module en essai utilise un compte authentifié limité à son instance et une socket de services limitée à ses capacités.",
+            "Un appareil extérieur ne peut écrire que son arbre et jamais cmd/ ni val/. Un secours est en lecture seule.",
+            "Un module nouveau ou une nouvelle version passe d’abord en processus isolé après autorisation humaine d’essai. Son compte ne publie ni cmd/ ni val/ et ne lit pas les secrets des autres instances ; l’isolement de crash ne remplace jamais ces droits.",
+            "La promotion exige catalogue, revue, sept jours sans incident dans les budgets puis PIN. Les modules avec FFI ou unsafe restent isolés ; aucune promotion automatique ne contourne ce critère."
+          ],
+          "evolution": "V7 distingue robustesse et loyauté ; monitoring ajoute une période d’observation avant entrée dans le cœur, ce qui demande d’expliciter la confiance pendant cette période.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1046,
+              "note": "Table des niveaux de confiance et contrôles par message."
+            },
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 565,
+              "note": "Règle de placement des modules nouveaux et validés."
+            },
+            {
+              "path": "docs/ARCHITECTURE.md",
+              "line": 34,
+              "note": "Règle 9 : le binaire fait respecter les bornes de l’intégration."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "La qualification doit vérifier le refus de publication, l’accès aux services privés et l’impossibilité de forger une origine, dans les deux modes."
+          ]
+        },
+        {
+          "id": "runtime-retenus",
+          "title": "Le démarrage lit un état du hub, avec une exception Zigbee",
+          "status": "arbitrage",
+          "decision": "Cible arrêtée : aucun retenu sur moli/v1, état complet fourni par le hub ; exception Zigbee extérieure strictement bornée.",
+          "summary": "Tout nouvel abonné lit un état du hub figé à un rang puis suit le flux correspondant. Le courtier repart vide ; seul l’arbre extérieur Zigbee2MQTT conserve les retenus indispensables au catalogue et à la disponibilité, sous plafonds explicites.",
+          "details": [
+            "Dans le binaire, l’état est lu par appel en mémoire. À l’extérieur, la réponse est découpée en blocs de 4 Kio portant le même rang s.",
+            "Le client doit raccorder cet état au flux sans trou ni doublon. Le compteur in/ par module sert également à détecter les observations manquantes avant le hub.",
+            "L’exception Zigbee2MQTT est plafonnée à 512 messages et 4 Mio au total, avec 4 Mio maximum pour bridge/devices et 4 Kio pour un message de disponibilité ; le premier plafond atteint refuse la nouvelle rétention et publie une erreur. Aucun code de clavier, ordre, demande, issue ou image n’est retenu. Cette exception du courtier ne réserve pas d’avance sa capacité.",
+            "Le client s’abonne d’abord au flux et le met en attente sous les plafonds globaux, lit l’état au rang N, ignore les rangs ≤ N puis applique les suivants. Si le rattrapage dépasse une borne, il relit un état ; les consommateurs critiques restent dégradés tant que leurs transitions perdues ne sont pas réconciliées."
+          ],
+          "evolution": "Les mesures V6/V7 trouvent un coût proche de 1 Kio par retenu et une livraison initiale tronquée à 200. V7 en tire l’absence de retenus, mais §9.4.3 et un commentaire de §10.2 gardent des termes anciens.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1062,
+              "note": "Table de conservation et exception Zigbee2MQTT."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1656,
+              "note": "État courant servi par le hub."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1568,
+              "note": "Passage hérité qui parle encore de republier des retenus."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Un état complet ne restitue pas une occurrence perdue avant son enregistrement.",
+            "Les plafonds Zigbee sont des choix de synthèse à qualifier sur le catalogue réel ; les anciens bancs ne mesurent pas ce réglage exact."
+          ]
+        },
+        {
+          "id": "runtime-services",
+          "title": "Les services privés restent hors MQTT",
+          "status": "proposition",
+          "decision": "Extension G4/G7 du contrat, déjà incorporée au texte consolidé.",
+          "summary": "Les valeurs courtes ne couvrent pas le coffre, l’appairage, les images, la voix et les fenêtres d’accès. V7 ajoute un canal de services direct dans le binaire et une socket locale authentifiée pour un module isolé.",
+          "details": [
+            "Le module demande un secret dans son espace, attend l’acquittement durable de son renouvellement puis l’utilise ; la valeur secrète n’entre dans aucun sujet ni journal.",
+            "Un code de clavier rejoint uniquement son consommateur privé. Si Zigbee2MQTT rejoint le courtier embarqué, un crochet doit enlever le code avant tout journal de routeur ; avant cela, son courtier externe reste nécessaire.",
+            "Les modules qui montent une passerelle HTTP partagée avec l’API restent dans le processus du hub. Le simple contrat MQTT n’est donc pas une promesse de déplacement universel sans adaptation."
+          ],
+          "evolution": "Le crible brut identifiait ce trou structurel ; V7 §5.1 et annexe D le corrigent. Le rapport brut doit être lu comme trace de l’état antérieur, pas comme preuve que V7 l’ignore encore.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 365,
+              "note": "Canal de services et limites du déplacement."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 397,
+              "note": "Crochet de confidentialité pour clavier avant journal."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 11441,
+              "note": "Annexe D : corrections intégrées et références du crible anciennes."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2397,
+              "note": "Filtrage de propriétés et valeurs privées déjà présent dans le hub actuel."
+            }
+          ],
+          "risks": [
+            "Déplacer le filtrage après le courtier constituerait une régression de confidentialité."
+          ]
+        },
+        {
+          "id": "runtime-migration",
+          "title": "Migrer en miroir avant de remplacer les chemins",
+          "status": "proposition",
+          "decision": "Plan livrable proposé, sans autorisation d’implémentation déduite de cette revue.",
+          "summary": "Le plan V7 commence par un courtier qui reçoit un miroir des publications pendant que les surfaces existantes fonctionnent. Les consommateurs puis les producteurs changent de chemin un par un, chacun avec sa preuve d’acceptation.",
+          "details": [
+            "Les premières protections sont indépendantes du courtier : rattrapage, bridge/state, sécurité, Handle du cœur, voies et threads peuvent être traités séparément.",
+            "Ensuite viennent l’historique abonné, le WebSocket avec coexistence SSE, la façade du kit, les demandes/ordres/issues puis le moteur de workflow.",
+            "Zigbee2MQTT ne change de courtier qu’après les ACL et le crochet privé ; l’isolement des modules et la haute disponibilité viennent après les contrats de base."
+          ],
+          "evolution": "V1 à V4 fournissent les lots de protection ; V5 ajoute transports, radios et sécurité ; V6 change le centre ; V7 rassemble les deux plans.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 3707,
+              "note": "Lots indépendants de MQTT et état des preuves."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 3740,
+              "note": "Migration additive en douze étapes."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Un jalon marqué « prouvé » dans ce tableau signifie souvent mesuré hors dépôt, pas livré."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runtime-sens",
+      "title": "Dire ce qui a été observé et ce qui a réellement été fait",
+      "intro": "Le contrat proposé corrige une ambiguïté du résultat actuel : un ordre accepté dans une file ne prouve pas un effet physique. Les modules déclareraient ce qu’ils peuvent confirmer, tout en séparant observation, fraîcheur, disponibilité et confidentialité. Le crible a déjà enrichi ces règles ; la qualification des appareils reste distincte.",
+      "ideas": [
+        {
+          "id": "runtime-issues",
+          "title": "Neuf issues pour éviter un succès trompeur",
+          "status": "proposition",
+          "decision": "Contrat enrichi en V7 ; les réponses actuelles restent plus simples.",
+          "summary": "La cible distingue confirmé, exécuté par un pont, accepté, envoyé non confirmé, peut-être parti, non envoyé, échec, refusé et retenue. Une issue ne peut jamais promettre davantage que le retour déclaré par l’appareil.",
+          "details": [
+            "Avant l’envoi, la méta annonce le plafond de preuve : état réel, accusé du pont, accusé de prise en charge ou aucun retour.",
+            "Le module rend une issue avant l’échéance ; une disparition après émission produit incertain. La garde peut produire refuse ou retenue avant tout envoi.",
+            "L’audit durable et l’écran montrent la même connaissance : « exécuté par la box » pour RTS, jamais une position inventée ; une réponse MQTT PUBACK reste une preuve du courtier seulement."
+          ],
+          "evolution": "V5 proposait trois issues ; V7 passe à neuf après confrontation aux intégrations, puis corrige les plafonds par pilote grâce au crible.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 641,
+              "note": "Neuf issues et règles de vérité."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-z2m/src/lib.rs",
+              "line": 246,
+              "note": "Succès actuel après try_publish local, sans retour d’état."
+            },
+            {
+              "path": "crates/moli-runtime/src/driver.rs",
+              "line": 224,
+              "note": "Réponse actuelle de pilote Result<(), String>."
+            }
+          ],
+          "risks": []
+        },
+        {
+          "id": "runtime-suivi",
+          "title": "La confirmation tardive est une suite liée à l’ordre",
+          "status": "proposition",
+          "decision": "Fenêtre de suivi du contrat V7 ; coût et sémantique physique à qualifier.",
+          "summary": "Un appareil peut accepter en cinq secondes puis finir plus tard. Le module suit alors l’ordre dans une fenêtre déclarée, conclut une fois par événement corrélé et laisse le hub conclure lui-même si la fenêtre expire sans retour.",
+          "details": [
+            "Le retour est déclaré par code de commande : point de confirmation, ensemble de valeurs admises, tolérance, éventuel arrêt du mouvement. Un start de robot peut se confirmer sur state plutôt que control.",
+            "La lecture brute est comparée avant déduplication : un appareil déjà à la consigne peut confirmer même s’il ne produit aucun nouveau State.",
+            "Une suite tardive reçoit l’identifiant de la demande et une seconde trace d’audit durable. Une panne vingt minutes après le démarrage d’un robot reste un nouvel état, pas l’échec rétroactif de son start."
+          ],
+          "evolution": "G1 et G3 du crible imposent cette suite ; V7 les intègre dans le kit et dans le retour par code.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 315,
+              "note": "Retour par code et suivi_s."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 682,
+              "note": "Conclusion unique, comparaison brute et suite tardive."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 862,
+              "note": "Cas robot : lancement contre attente du retour à la base."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "La fenêtre générique de 180 s et les différences de confirmation doivent être éprouvées pour chaque intégration."
+          ]
+        },
+        {
+          "id": "runtime-canon",
+          "title": "Le canon conserve le sens quand les libellés changent",
+          "status": "proposition",
+          "decision": "Format cible V7, partiellement précédé par les valeurs typées actuelles.",
+          "summary": "Le module convertirait une fois l’unité, l’échelle et les énumérations au bord. Les codes sont stables et distincts des libellés traduits ; null signifie inconnu, et une valeur inférée reste explicitement incertaine.",
+          "details": [
+            "Le décodeur traite l’entrée comme hostile puis refuse une valeur hors validité. Les bornes d’une commande restent séparées, pour ne pas éliminer une observation légitime.",
+            "La méta publie type, unité, échelle, codes, sémantique et membres nécessaires à la garde ; un changement de catalogue redéclare ces faits.",
+            "Une valeur composée reste un objet court validé par schéma, ou se découpe en points ; un code inconnu a un repli sans réattribuer un ancien code."
+          ],
+          "evolution": "V2/V3 préparent le noyau vif ; G5/G11/G12/G24 du crible étendent V7 aux valeurs inconnues, vocabulaires ouverts et profils déclaratifs.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 310,
+              "note": "Méta canonique et codes stables."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 333,
+              "note": "Chaîne lecture et valeur inconnue."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 576,
+              "note": "Évolution des profils déclaratifs."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Le portage doit garder des codes natifs distincts même lorsque deux états ont le même libellé."
+          ]
+        },
+        {
+          "id": "runtime-fraicheur",
+          "title": "Une réponse identique n’est pas toujours une nouvelle mesure",
+          "status": "arbitrage",
+          "decision": "Règle affinée par G6 ; paragraphe simplifié §5.2 à harmoniser. La résolution détaillée fixe la cible unique ; sa livraison reste à prouver.",
+          "summary": "La cible distingue l’instant observé par la source, le dernier rapport reçu et le dernier changement. Le module déduplique les valeurs, mais signale une nouvelle observation par $vu seulement si la source a réellement avancé.",
+          "details": [
+            "Une publication identique peut prouver que le transport répond, sans prouver que la température source est récente. Le hub ne doit pas confondre contact de l’appareil et fraîcheur du point.",
+            "Quand les points ont plusieurs rythmes, $vu doit identifier ceux qu’il rafraîchit et porter l’horodatage source ; il ne rajeunit pas tout l’appareil arbitrairement.",
+            "Une pause imposée par un cloud suspend l’attente de nouvelles plutôt que fabriquer un défaut de silence ; une mauvaise lecture ne rafraîchit aucune mesure.",
+            "Résolution de synthèse : retenir exclusivement la portée source/points corrigée ; le battement d’un appareil avance le contact, jamais de lui-même la fraîcheur de tous ses points."
+          ],
+          "evolution": "Le modèle général à trois instants vient du stockage ; le crible corrige les sources qui retournent des caches. V7 §5.2 garde néanmoins une formulation « tous les points » plus large que §5.1 et §10.5.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 416,
+              "note": "Présentation simplifiée de la déduplication et du vu."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 342,
+              "note": "Règle corrigée : liste de points et source qui avance."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1699,
+              "note": "Santé affinée et pauses fournisseur."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Le résumé simplifié ne doit pas conduire à rafraîchir les données anciennes de sources cloud."
+          ]
+        },
+        {
+          "id": "runtime-sante",
+          "title": "Le silence est interprété selon le type d’appareil",
+          "status": "proposition",
+          "decision": "Santé générique prévue ; disponibilités particulières déjà présentes dans les pilotes.",
+          "summary": "Le hub proposé calcule un silence maximal à partir du rythme et des pertes tolérées. Il doit distinguer une panne, une veille attendue, un capteur calme et une mesure devenue mauvaise, sans assimiler une sonde illisible à une absence.",
+          "details": [
+            "Le module déclare rythme, pertes et veille ; le délai devient rythme × (pertes + 1). À l’échéance, disponibilité et qualité se dégradent avec une raison visible.",
+            "Une règle lit une valeur mauvaise comme inconnue et ne déclenche pas dessus. Une fraîcheur exigée par point peut être plus courte que la santé globale de l’appareil.",
+            "Au retour d’une vraie nouvelle, le hub remet en ligne et reprogramme l’échéance. Un appareil dont le silence constitue le signal, comme une présence, ne reçoit pas un rythme appris arbitraire."
+          ],
+          "evolution": "V1 dénonce les running trompeurs ; V6 propose la santé ; le crible V7 ajoute veille, pauses et fraîcheur par source.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1671,
+              "note": "Contact, changement, rythme et délai maximal."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1707,
+              "note": "Conséquences de l’expiration et retour des nouvelles."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-z2m/src/lib.rs",
+              "line": 156,
+              "note": "Les messages bridge/state et bridge/health tombent encore dans le filtre général bridge/."
+            }
+          ],
+          "risks": [
+            "Le statut du module ne suffit pas à prouver la fraîcheur de tous ses points."
+          ]
+        },
+        {
+          "id": "runtime-crible",
+          "title": "La couverture documentaire ne vaut pas qualification physique",
+          "status": "qualification",
+          "decision": "Crible statique intégré à V7 ; H1 et comportements physiques encore distincts.",
+          "summary": "Le rapport brut examine 58 lignes d’intégrations et briques, avec 26 écarts transversaux. La V7 publiée a déjà intégré ses corrections de contrat : les reproches à une ancienne V7 ne doivent pas être reproduits comme défauts encore inchangés.",
+          "details": [
+            "Le crible sépare couvert, réservé, mal couvert et hors modèle ; les propriétaires du hub, les canaux privés et les bibliothèques ne deviennent pas des modules ordinaires par simple renommage.",
+            "Pour TaHoma, RTS n’a aucun état de position ; io exige encore des changements de code et la preuve du sens physique de COMPLETED. Pour Roborock, les cartes restent hors du code examiné et le retour au socle appartient à une attente de workflow.",
+            "Les anomalies de code à porter sont séparées des trous de contrat : états optimistes, émission sans revérification, boîte de commandes ancienne, réponse IPP trop optimiste. Cette revue ne les transforme pas toutes en vulnérabilités confirmées."
+          ],
+          "evolution": "Le crible cite l’état V7 lu avant intégration avec des numéros l.NNN périmés ; annexe D précise cette filiation, et §5.10 donne les règles corrigées.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7-crible.md",
+              "line": 18,
+              "note": "Verdict et couverture du crible historique."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 985,
+              "note": "Les 26 règles incorporées."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 11441,
+              "note": "Historique du crible et corrections intégrées."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 853,
+              "note": "COMPLETED io non vérifié sur box réelle."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Les citations non revérifiées par l’auteur du crible demeurent à confirmer ; aucun appareil n’a été commandé dans cette revue."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runtime-cout",
+      "title": "La réactivité, la mémoire et les budgets qui encadrent la cible",
+      "intro": "Les études chiffrent plusieurs périmètres différents : un algorithme, un état vif, un courtier ou un scénario de reprise. Le budget de livraison s’applique au cœur complet en conditions réelles. Les gains de représentation sont prometteurs, mais leur lecture exige de conserver la charge, l’allocateur et les postes exclus de chaque banc.",
+      "ideas": [
+        {
+          "id": "runtime-budgets",
+          "title": "Le budget porte sur la mémoire anonyme et le repos réel",
+          "status": "integre",
+          "decision": "Règle de projet explicite ; pas une certification du dernier binaire.",
+          "summary": "Le budget est de 32 Mio de mémoire anonyme, 0,5 % de CPU au repos, 40 Mo d’image, 25 ms au p95 des listes et 5 ms pour la santé. La définition du repos exclut les écrans connectés, et le plafond du conteneur reste 128 Mio.",
+          "details": [
+            "La comparaison de livraison utilise la même mémoire anonyme du cgroup pour Moli et son étalon ; RSS et cache de fichiers sont distingués.",
+            "Un relevé CPU couvre 30 s ; les mesures en usage restent annotées sans être jugées contre le repos. Une dégradation de plus de 20 % doit être expliquée ou corrigée.",
+            "Les historiques de début octobre illustrent des erreurs de mesure réelles : caméra restée ouverte, hôte chargé ou cache de fichiers variable. Ils ne décrivent pas automatiquement l’état de fin octobre."
+          ],
+          "evolution": "Le budget d’image passe de 25 à 40 Mo le 17 octobre pour D13 ; le budget mémoire reste 32 Mio.",
+          "sources": [
+            {
+              "path": "docs/PERFORMANCE.md",
+              "line": 3,
+              "note": "Mesure par script hôte externe et alerte de régression."
+            },
+            {
+              "path": "docs/PERFORMANCE.md",
+              "line": 14,
+              "note": "Budgets et définition de chaque grandeur."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/system.rs",
+              "line": 94,
+              "note": "Le système expose stats et historique perf ; il ne réalise pas cette comparaison lui-même."
+            }
+          ],
+          "risks": [
+            "Le script hôte et les mesures récentes d’une installation ne sont pas dans le dépôt."
+          ]
+        },
+        {
+          "id": "runtime-perimetre-memoire",
+          "title": "11,8 Mio décrit un prototype optimisé, pas le produit complet",
+          "status": "qualification",
+          "decision": "Résultat de banc V6/V7 ; intégration et marge à mesurer.",
+          "summary": "Le prototype V7 optimisé prend 6,5 Mio à ×1, 11,8 Mio à ×3 et 27 Mio à ×10 pour son périmètre. Le tableau exclut pilotes, bases, connexions d’écrans et historique en mémoire : ces chiffres ne suffisent donc pas à conclure que le cœur livré tient son budget.",
+          "details": [
+            "La charge de base représente 496 appareils, 2 264 valeurs et 400 automatismes ; le nombre d’automatismes est une hypothèse de banc, pas le compte réel actif des deux installations agrégées.",
+            "La représentation naïve atteint 46,7 Mio à ×3, et les sujets uniques de demande font croître les caches. Les gains dépendent donc du format compact, des sujets stables et de l’absence de retenus.",
+            "Le total final doit ajouter les modules, HTTP, bases, courbes et tampons, puis être mesuré dans le cgroup réel. ×10 peut tenir dans 128 Mio sans tenir dans 32 Mio."
+          ],
+          "evolution": "V4 estimait 6,3 Mio pour l’état vif avec des tâches permanentes ; V5 corrige à 3,7 Mio avec voies paresseuses ; V6/V7 ajoutent le courtier et détaillent un autre périmètre.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1768,
+              "note": "Charge de référence, hypothèses et nombres."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1878,
+              "note": "Périmètre exact et mesure du prototype."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1918,
+              "note": "Postes exclus à ajouter."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Ne pas additionner directement des sous-totaux de versions qui comptent des objets différents."
+          ]
+        },
+        {
+          "id": "runtime-colonnes",
+          "title": "Compacter les identités et les valeurs diminue les copies",
+          "status": "proposition",
+          "decision": "Représentation prototypée ; portage du hub restant à faire.",
+          "summary": "Le modèle cible interne une fois les noms et remplace les clés répétées par des indices. Une valeur vive garde valeur, précédente, trois instants, genre et qualité dans 40 octets ; la définition et la santé sont partagées à leur niveau propre.",
+          "details": [
+            "Le module convertit au canon entier mis à l’échelle ; le hub range les colonnes par point. La lecture d’une condition prend un index au lieu de construire et hacher des chaînes.",
+            "Le hub reste le seul rédacteur de l’état vivant. Le moteur maintient une copie compacte des seuls points qu’il observe ; cette copie n’a aucune autorité d’écriture. Le WebSocket ne garde aucun miroir supplémentaire et lit l’état filtré du hub pour chaque nouvel écran.",
+            "La queue récente devient un anneau de petites entrées ; les plans compilés restent uniques et les graphes d’édition vivent sur disque. La précision des instants n’est pas sacrifiée pour économiser seulement 18 Kio."
+          ],
+          "evolution": "V2 mesure les allocations ; V3 chiffre les étages ; V6/V7 prototypent le format et détaillent les gains poste par poste.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1790,
+              "note": "Format vif de 40 o et santé de 20 o."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1928,
+              "note": "Optimisations ordonnées par gain et effort."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2443,
+              "note": "Modèle courant encore rangé dans les maps d’états et Sample."
+            }
+          ],
+          "risks": [
+            "Les sous-nanosecondes sont un microbanc d’accès par index, pas une latence bout en bout de commande."
+          ]
+        },
+        {
+          "id": "runtime-cout-mqtt",
+          "title": "MQTT ajoute du travail ; il ne résout pas la réactivité à lui seul",
+          "status": "qualification",
+          "decision": "Mesures disponibles, justification architecturale distincte de la performance.",
+          "summary": "Le passage local par le courtier coûte environ 26 µs de médiane dans le banc, contre environ 10 µs pour le bus actuel. Le choix central répond surtout à l’unification des modules et à leur déplacement en processus, en acceptant sérialisation et sauts supplémentaires.",
+          "details": [
+            "Une observation passe au moins par in/ puis val/ ; une demande traverse req/, cmd/ et res/. Il faut compter aussi les livraisons aux abonnés, pas seulement les publications.",
+            "Le banc mesure 3,3 µs de CPU du routeur par message à forte charge, et des ACL de quelques dizaines à une centaine de nanosecondes. Le coût au faible débit ne se déduit pas exactement du coût à 50 000/s.",
+            "Le trafic moyen de la maison reste faible ; le modèle Pi à la pointe est une estimation. La validation doit chercher les pics et la contention, même si la moyenne paraît invisible."
+          ],
+          "evolution": "V5 juge MQTT inutile pour gagner de la réactivité ; V6/V7 l’adoptent pour d’autres bénéfices en gardant ce constat.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 149,
+              "note": "Bénéfices et prix du centre MQTT."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1997,
+              "note": "Mesures CPU, latence et extrapolation Pi."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Les coûts de TLS, du réseau réel et du matériel Pi ne sont pas mesurés dans ces chiffres."
+          ]
+        },
+        {
+          "id": "runtime-ecrans",
+          "title": "WebSocket est choisi pour unifier les échanges",
+          "status": "proposition",
+          "decision": "Module et protocole esquissés ; SSE actuel conservé pendant migration.",
+          "summary": "La cible donne à chaque écran une connexion WebSocket pour l’état, le direct, les issues d’ordres et les courbes. Le choix unifie les échanges et l’annulation des demandes ; il ne suppose pas une économie indispensable par rapport au SSE actuel.",
+          "details": [
+            "Un abonné global au courtier filtre selon chaque écran, garde les plafonds 8 par appelant et 64 au total, puis envoie l’état initial en blocs.",
+            "Chaque file d’écran est bornée ; en retard, l’écran reçoit une resynchronisation. Le direct passe avant les blocs d’historique et un seul bloc de 64 Kio peut être en vol.",
+            "Le réglage des tampons compte davantage que l’étiquette du protocole : le banc passe d’environ 138 Kio par WebSocket par défaut à 11 Kio réglée ; une grande trame peut laisser un tampon gonflé."
+          ],
+          "evolution": "V5 mesure SSE/REST et WebSocket ; V6 décide le module ; V7 reprend les chiffres et les droits des invités.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 2395,
+              "note": "Rôle, droits et protocole du module WebSocket."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 2450,
+              "note": "Bornes de trames et mémoire des tampons."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 2542,
+              "note": "Coût des connexions mesuré."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-api/src/sse.rs",
+              "line": 103,
+              "note": "Le flux SSE actuel sert encore instantané puis événements filtrés."
+            }
+          ],
+          "risks": [
+            "Banc serveur sans TLS ni parcours réel vers téléphone ; le palier de 1 000 WebSocket par défaut a atteint l’OOM du cgroup du banc."
+          ]
+        },
+        {
+          "id": "runtime-stockage",
+          "title": "La RAM sert les décisions ; les courbes restent bornées hors MQTT",
+          "status": "arbitrage",
+          "decision": "Cible arrêtée : état vif unique, copie compacte des points observés, récent et archive durables ; reprise des exécutions par file/relais/pairs sans journal disque.",
+          "summary": "Le noyau vif fournit les conditions et les agrégats, avec une copie compacte des seuls points lus par le moteur. Les courbes restent dans le stockage récent et l’archive, servies en 2 000 points maximum par API ou blocs WebSocket ; aucun historique intégral permanent en RAM ni série géante sur MQTT n’est requis.",
+          "details": [
+            "Le hub possède l’état vif et son unique rédacteur ; le moteur conserve seulement les valeurs nécessaires à ses règles. Les anciens profils 24 h, sept jours et trente jours en RAM restent des comparaisons historiques de coût, pas trois architectures concurrentes de la cible.",
+            "La durabilité de l’historique et de l’énergie suit leur propriétaire et l’export D13 ; le journal d’audit reste distinct et durable. La reprise des dossiers et exécutions passe par file/relais du gardien et copie vers les pairs, sans journal disque de ces dossiers ou exécutions.",
+            "L’instantané complet est écrit toutes les heures avec un pair à jour ; sans pair à jour, toutes les quinze minutes. L’arrêt prévu et l’avant-mise-à-jour imposent aussi un instantané. Seul le contenu nécessaire à la reprise entre dans le relais ; aucune mémoire de courbes intégrales n’est réintroduite comme prérequis.",
+            "Les rapports présents comparent environ 3,10 Go/j pour le chemin D13 simulé à 0,22–0,26 Go/j pour les opérations compactes. SQLite remplace Turso dans ce banc et synchronous=OFF exclut une preuve fsync : ces résultats ne modifient pas le contrat durable sans qualification du chemin réellement porté."
+          ],
+          "evolution": "V3 structure les étages ; V5 les recoupe avec les transports ; V7 les conserve ; la proposition restart plus récente retire ensuite le journal local de reprise en faveur des pairs et d’un relais.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 2098,
+              "note": "Étages et journal de reprise proposés."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 2207,
+              "note": "Historique borné et gros messages."
+            },
+            {
+              "path": "docs/reports/mesure-ecritures-2026-10-21T114647Z.md",
+              "line": 33,
+              "note": "Méthode SQLite et mesure des octets."
+            },
+            {
+              "path": "docs/reports/formes-parquet-2026-10-21T200551Z.md",
+              "line": 22,
+              "note": "Valeurs synthétiques et formes comparées."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Les tailles Parquet et gains d’écriture restent des preuves de leurs bancs et de leurs valeurs synthétiques ; les mesures du stockage intégré, du support réel et du budget global restent à produire."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runtime-monitoring",
+      "title": "Mesurer la maison, le processus et le module sans les perturber",
+      "intro": "La proposition de monitoring distingue trois questions : la machine est-elle saturée, quel processus consomme, et quelle part revient à un module ? Le dépôt expose déjà des statistiques et des sondes d’équipement, mais pas l’observatoire ni les mesures par module imaginés ici. Les estimations et les mesures exactes doivent rester reconnaissables à l’écran.",
+      "ideas": [
+        {
+          "id": "runtime-observatoire",
+          "title": "Le monitoring proposé part des compteurs du noyau",
+          "status": "proposition",
+          "decision": "Proposition du 23 octobre, explicitement sans modification de code.",
+          "summary": "La machine serait lue dans /proc et /sys, le processus dans /proc/<pid>, et le module selon sa place. L’observatoire calculerait CPU, débits et tendances par différence de compteurs monotones, sans demander au module de se mesurer lui-même.",
+          "details": [
+            "L’équipement fournit CPU, mémoire disponible, températures, réseau, puis pression, écritures et bridage si disponibles. Le processus fournit mémoire anonyme, pages partagées, descripteurs, disque et sorties.",
+            "Le relevé serait chaque minute, accéléré à 10 s seulement quand la page Système est regardée. Une lecture smaps_rollup plus coûteuse n’aurait lieu que toutes les cinq minutes.",
+            "Le dépôt lit aujourd’hui VmRSS, qui comprend des pages de fichier ; il ne faut pas appeler ce chiffre le respect du budget anonyme du cgroup."
+          ],
+          "evolution": "D8 prévoyait TaskMonitor ; monitoring propose un observatoire plus large, sans confondre son rôle avec celui du superviseur.",
+          "sources": [
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 146,
+              "note": "Inventaire de l’existant et mesures absentes."
+            },
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 265,
+              "note": "Mesure des processus et restrictions cgroups."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/stats.rs",
+              "line": 14,
+              "note": "rss_bytes lit VmRSS."
+            },
+            {
+              "path": "crates/moli-api/src/system.rs",
+              "line": 92,
+              "note": "Réponse actuelle : stats, drivers, bricks et perf."
+            }
+          ],
+          "risks": [
+            "Les accès /proc ont été vérifiés par l’auteur dans un conteneur, pas sur le Pi de destination."
+          ]
+        },
+        {
+          "id": "runtime-cpu-module",
+          "title": "Le CPU propre du module exige une identité d’exécution",
+          "status": "proposition",
+          "decision": "Dépend du thread dédié ; TaskMonitor serait une approximation intermédiaire.",
+          "summary": "Avec un runtime partagé, le noyau mesure ses workers et ne sait pas attribuer le CPU à chaque pilote. Un thread dédié permettrait de lire son temps noyau et les réveils du runtime, tout en séparant le coût induit dans le hub ou le courtier.",
+          "details": [
+            "Le kit note le tid du thread puis l’observatoire lit schedstat sans réveiller le pilote. Les compteurs du runtime permettent de vérifier l’objectif zéro réveil quand il n’a rien à faire.",
+            "Avant cette séparation, les temps de poll peuvent être instrumentés mais comptent aussi une attente bloquante ou une déscheduling système ; ils ne sont pas du CPU exact.",
+            "Un module bavard fait travailler d’autres composants. L’écran doit présenter messages × coût unitaire comme estimation induite, séparée du CPU réellement passé sur son propre thread."
+          ],
+          "evolution": "D8 n’a pas été livré selon l’étude et la recherche de dépendances ; monitoring prend appui sur le futur thread de V7.",
+          "sources": [
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 311,
+              "note": "CPU par thread, métriques Tokio et coût induit."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/supervisor.rs",
+              "line": 31,
+              "note": "Les pilotes utilisent encore le runtime partagé."
+            }
+          ],
+          "risks": [
+            "Le coût CPU d’éventuelles tâches auxiliaires hors thread ne devient pas automatiquement attribuable au module."
+          ]
+        },
+        {
+          "id": "runtime-memoire-module",
+          "title": "La mémoire partagée n’a pas un propriétaire mesurable par simple soustraction",
+          "status": "arbitrage",
+          "decision": "Cible arrêtée : mémoire connue du kit et part non attribuée en production ; étiquette seulement dans un binaire de mesure séparé.",
+          "summary": "Une allocation créée par un module peut être gardée puis libérée par le courtier. Un compteur par thread se trompe alors sur la mémoire vivante ; la proposition distingue mémoire tenue par le kit, mémoire étiquetée et mesure de processus isolé.",
+          "details": [
+            "Toujours : additionner files, voies et caches connus, annoncer « estimée », puis montrer la part totale qui n’est pas expliquée. Une hausse persistante guide une investigation sans accuser arbitrairement un module.",
+            "Le binaire de mesure est construit avec une étiquette d’allocation ; celle-ci n’est jamais activée en marche sur des blocs antérieurs. Sa crate isolée et auditée porte l’exception unsafe ; le binaire de production garde unsafe_code=forbid sans exception. Les comptes suivent le groupe d’allocation, quel que soit le thread de libération.",
+            "À la demande : relancer isolé et lire Pss_Anon ; ce chiffre mesure alors son processus, y compris sa structure propre, pas exactement ce qu’il coûterait dans le cœur partagé."
+          ],
+          "evolution": "V7 garde mallocng ; monitoring écarte l’allocateur alternatif et propose l’étiquette en binaire de mesure, avec exception dédiée ou dépendance.",
+          "sources": [
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 346,
+              "note": "Options de mémoire partagée et limites de propriété."
+            },
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 382,
+              "note": "Exception unsafe et esquisse de l’étiquette."
+            },
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 735,
+              "note": "Arbitrages encore ouverts."
+            }
+          ],
+          "verification": [
+            {
+              "path": "Cargo.toml",
+              "line": 110,
+              "note": "unsafe_code=forbid dans le workspace actuel."
+            }
+          ],
+          "risks": [
+            "La somme des étiquettes suit les allocations ; elle ne couvre pas automatiquement piles, fragmentation, runtime et toutes les pages anonymes."
+          ]
+        },
+        {
+          "id": "runtime-messages-alertes",
+          "title": "Compter les rafales et grouper les alertes techniques",
+          "status": "proposition",
+          "decision": "Courbes, alertes et budgets par module proposés ; seuils fixés dans la synthèse.",
+          "summary": "Le courtier compterait les connexions isolées et le kit compterait les modules internes qui partagent un lien. En plus du débit, l’observatoire garderait la plus forte rafale sur 100 ms, car une pointe instantanée peut remplir le bus malgré une moyenne faible.",
+          "details": [
+            "Les totaux de messages, octets, erreurs, connexions et issues ne font que monter ; les courbes dérivent des différences. Toute perte chiffrée déclenche une alerte dès la première.",
+            "Le fin reste en mémoire 24 h et les agrégats de 15 min rejoignent diagnostic sept jours, sans archive : environ 342 Kio de courbes pour 40 modules et 23 040 lignes par jour selon le calcul proposé.",
+            "Les incidents sont groupés pour l’astreinte propriétaire par notice ; Telegram n’est utilisé qu’après activation explicite de ce canal par le propriétaire. Pendant les heures calmes, les alertes ordinaires attendent ; perte de messages critique, alarme, serrure ou détecteur de fumée restent immédiats pour l’astreinte, sans diffusion aux invités ni à la famille entière.",
+            "Seuils de synthèse : trois relances en dix minutes, CPU ou mémoire au-dessus du budget pendant quinze minutes, mémoire à deux fois le budget pour retrait du cœur, pression avg60 supérieure à 20 % pendant cinq minutes, mémoire disponible sous 15 %, toute perte de flux critique et toute saturation de file. Les budgets par module sont déclarés dans le paquet, puis ajustés par acceptation humaine des mesures après sept jours."
+          ],
+          "evolution": "V4 établit la profondeur de rafale ; V7 demande des compteurs et signaux fiables ; monitoring leur donne courbes et règles opérationnelles.",
+          "sources": [
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 404,
+              "note": "Comptage courtier/kit et rafale sur 100 ms."
+            },
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 465,
+              "note": "Budget des relevés et courbes."
+            },
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 522,
+              "note": "Alertes techniques et seuils de départ."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "L’estimation de coût 0,015 % CPU sur Pi n’est pas une mesure ; M1–M6 doivent la qualifier."
+          ]
+        },
+        {
+          "id": "runtime-placement",
+          "title": "Changer la place d’un module : arrêt puis départ, jamais deux écrivains",
+          "status": "arbitrage",
+          "decision": "Cible de synthèse : autorisation d’essai puis sept jours isolé et promotion humaine ; retour isolé sur incident, livraison non démontrée.",
+          "summary": "La cible exécute une nouvelle version dans un processus limité après autorisation humaine d’essai ; elle peut rejoindre le cœur après sept jours sans incident et respect du budget, avec un PIN. Le changement de place retient les ordres, termine l’instance ancienne puis démarre la nouvelle, sans double écrivain.",
+          "details": [
+            "Le hub marque « en bascule », conserve les échéances des commandes et suspend le défaut de silence pendant au plus 10 s. L’ancien finit l’ordre en vol en une seconde, sinon son résultat devient incertain.",
+            "Après vidage de ses sorties, l’instance rend au plus 4 Kio sans secret, s’arrête complètement puis la nouvelle démarre et relit son coffre. Le hub libère seulement les commandes encore valables.",
+            "La nouvelle instance doit être prête avant trente secondes, sinon le gardien l’arrête complètement et relance la précédente dans son ancienne place. Le changement attend la vidange de la rafale d’entrée ; aucune instance nouvelle ne prend le droit d’agir avant l’arrêt confirmé de l’ancienne. Entrer dans le cœur exige un PIN ; les conditions de retrait automatique sont fixées ci-dessous.",
+            "Paramètres retenus dans la synthèse : sept jours isolé sans incident, passage dans le cœur uniquement sur PIN, nouvelle version remise en observation ; retour isolé après trois relances en dix minutes ou dépassement de deux fois le budget. L’indisponibilité est déclarée si la bascule dépasse dix secondes, et le retour automatique est tenté à trente secondes sans instance prête."
+          ],
+          "evolution": "V7 fournit thread/processus ; monitoring ajoute sept jours d’observation, budgets, changement à chaud et gardien comme parent des processus.",
+          "sources": [
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 565,
+              "note": "Règle de placement et exclusions des passerelles partagées."
+            },
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 609,
+              "note": "Protocole Retenir, Finir, Passer, Lancer, Reprendre."
+            },
+            {
+              "path": "docs/proposition/monitoring.md",
+              "line": 686,
+              "note": "Repli en 30 s et absence de chevauchement."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Sept jours sans incident ne démontrent pas une absence de faute mémoire ; l’essai de bascule doit vérifier droits, échéances, arrêt de l’ancienne instance et retour automatique."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runtime-redemarrage",
+      "title": "Redémarrer le cœur tout en gardant un relais et des modules vivants",
+      "intro": "Un gardien conserve écouteurs, relais versionné et modules isolés pendant le remplacement du cœur. Dossiers et exécutions se reprennent par file/relais et pairs, sans journal disque ; l’instantané est horaire avec un pair à jour, toutes les quinze minutes sinon. La reprise conserve la distinction entre arrêt prévu, crash du cœur, mort du gardien et remplacement d’image Docker ; ce mécanisme reste à porter et qualifier.",
+      "ideas": [
+        {
+          "id": "runtime-froid",
+          "title": "Le redémarrage actuel reconstruit depuis les fichiers",
+          "status": "partiel",
+          "decision": "Cache d’état et vidage de fin livrés ; reprise complète des exécutions absente.",
+          "summary": "Le service annule les tâches, attend l’historique et l’énergie puis écrit son cache d’état final. Les connexions et les exécutions sont interrompues ; les demandes d’approbation du hub restent uniquement en mémoire.",
+          "details": [
+            "SIGTERM ou Ctrl-C déclenchent l’annulation globale ; les pilotes sont attendus, puis les derniers lots métier et le cache sont traités.",
+            "Au départ suivant, l’API refait un bind et les pilotes reconnectent leurs appareils. Les écrans ouvrent un nouveau flux et reçoivent un instantané.",
+            "La garde conserve au plus 50 demandes pendant dix minutes, sans section de persistance observée ; conserver les dernières valeurs ne signifie donc pas conserver la mémoire complète d’exécution."
+          ],
+          "evolution": "V2 prépare instantané et secours ; V7 garde les baux comme cible ; le document restart inventorie précisément les pertes du comportement actuel.",
+          "sources": [
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 172,
+              "note": "Inventaire du redémarrage actuel."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 488,
+              "note": "Séquence arrêt et persist_state final."
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 173,
+              "note": "Durée des demandes et plafond."
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 243,
+              "note": "Demandes retenues dans une map en mémoire."
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 104,
+              "note": "Annulation des exécutions à l’arrêt."
+            }
+          ],
+          "risks": []
+        },
+        {
+          "id": "runtime-gardien",
+          "title": "Un gardien garde les portes et un état encodé, pas l’ancien tas",
+          "status": "proposition",
+          "decision": "Architecture proposée le 23 octobre ; commande gardien non livrée.",
+          "summary": "Un nouveau processus Rust ne peut pas reprendre les pointeurs du tas précédent. Le cœur encoderait donc ses données champ par champ dans un relais versionné et scellé, gardé par un processus minimal qui possède aussi les écouteurs et les modules isolés.",
+          "details": [
+            "Le gardien ouvre les portes une fois, lance le cœur et lui transmet les descripteurs. Pendant la coupure, le noyau peut garder les nouvelles connexions en attente ; les anciennes connexions TCP et TLS sont fermées.",
+            "Le relais memfd contient rang, époque, horloges, valeurs, exécutions, ordres en vol, demandes de garde et courbes. La zone de produits est bornée à 1 Mio, 64 dossiers et 16 Kio par dossier, plafonds coappliqués avec contenu et métadonnées compris. Aucun secret n’entre dans le relais ; le nouveau cœur relit le coffre.",
+            "Les pages du relais sont shmem : elles restent dans le plafond total du conteneur même si elles ne sont pas comptées dans anon. Le gardien ne doit ni choisir pour la maison ni renouveler son bail à sa place."
+          ],
+          "evolution": "V7 faisait lancer les processus par le cœur ; monitoring puis restart les confient au gardien pour qu’ils survivent à sa mort.",
+          "sources": [
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 208,
+              "note": "Pourquoi sérialiser le contenu plutôt que copier la RAM."
+            },
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 316,
+              "note": "Gardien minimal et responsabilités."
+            },
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 362,
+              "note": "Sections du relais, scellement et comptabilité shmem."
+            }
+          ],
+          "verification": [
+            {
+              "path": "Dockerfile",
+              "line": 28,
+              "note": "L’image actuelle lance directement moli-os serve."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 448,
+              "note": "Bind direct actuel, sans écouteur hérité."
+            }
+          ],
+          "risks": [
+            "L’écouteur conservé ne préserve ni les connexions établies ni une file d’attente infinie."
+          ]
+        },
+        {
+          "id": "runtime-publications-survivantes",
+          "title": "Le module isolé garde jusqu’à l’accusé, puis rejoue sans doublon",
+          "status": "proposition",
+          "decision": "Protocole k/accusé et tampons bornés à implémenter.",
+          "summary": "Les modules enfants du gardien conserveraient leur connexion à l’appareil pendant le redémarrage du cœur. Ils garderaient les publications non accusées, puis les renverraient avec leur numéro propre pour que le hub reconnaisse les doublons.",
+          "details": [
+            "Le tampon garde les dernières mesures remplaçables par point et les transitions/occurrences dans l’ordre ; les issues restent jusqu’à leur accusé. Les plafonds coappliqués sont 2 Mio pour toutes les files transitoires de publications et de rattrapage, tous modules réunis, 4 096 changements critiques par instance et 1 024 occurrences par module. Ce sont des plafonds simultanés, jamais des réservations : le premier atteint bloque l’admission concernée. Chaque entrée est comptée à son coût réel, charge et métadonnées comprises ; les octets priment sur le nombre.",
+            "Le hub accuse un numéro k seulement après l’avoir rangé dans le relais ou dans la file survivante. Au retour, le module renvoie ce qui dépasse cet accusé et republie sa disponibilité.",
+            "Une commande déjà émise par le module va à son terme ; son issue retrouve l’ordre dans la table transmise au nouveau cœur. Une reconnexion au courtier ne doit jamais autoriser une commande au-delà de son échéance.",
+            "Les compteurs contigus sont distincts pour mesures remplaçables, transitions/occurrences et issues : une mesure fusionnée ne crée pas un faux trou critique. L’accusé de catégorie avance seulement après conservation dans le relais ou la file survivante. En saturation, aucun accusé ne couvre une entrée critique absente ; le module émet un intervalle perdu explicite et les consommateurs concernés deviennent inconnus."
+          ],
+          "evolution": "V7 fournit les rangs in/ et val/ ; restart ajoute l’accusé de conservation durable au crash du cœur.",
+          "sources": [
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 420,
+              "note": "Tampons des modules et protocole de reprise avec accusé."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Les numéros k et accusés décrits par la proposition doivent être précisés par catégorie ; le contrôle final du code doit rejouer pertes, doublons et débordements."
+          ]
+        },
+        {
+          "id": "runtime-passage-main",
+          "title": "Un arrêt prévu passe par un point de gel vérifiable",
+          "status": "proposition",
+          "decision": "Objectifs de coupure proposés, non résultats mesurés sur le cœur.",
+          "summary": "Le nouveau cœur se préparerait sans pilote ni accès exclusif pendant que l’ancien sert encore. Puis l’ancien se figerait au rang N, confierait le relais et céderait verrou, base et portes ; le nouveau comparerait l’empreinte avant de reprendre.",
+          "details": [
+            "Le gardien précharge le nouveau binaire ; le mode reprise charge configuration, catalogue et plans sans agir. Après « prêt », l’ancien annonce son arrêt et cesse d’accepter.",
+            "Les ordres isolés continuent ; ceux des modules du cœur ont une seconde pour finir. Le hub vide son entrée, fige la mémoire, écrit le dernier lot et sort ; alors seulement le nouveau devient actif.",
+            "Le même boot_id permet de conserver l’origine monotone et les échéances. Le gardien garde le binaire précédent pour revenir en arrière après trente secondes sans santé ; formats incompatibles exigent conversion ou repli à froid explicite."
+          ],
+          "evolution": "La reconstruction partielle V4 n’était pas ce protocole complet ; restart ajoute état complet HA v2, portes héritées, versions et horloge commune.",
+          "sources": [
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 463,
+              "note": "Pas à pas du redémarrage prévu et critères de preuve."
+            },
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 448,
+              "note": "Horloge monotone et boot_id."
+            },
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 571,
+              "note": "Compatibilité des sections et retour arrière."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Les 132/272 µs viennent du banc d’état complet HA v2, pas du gardien entier ; 1 s en production et 2 s sur Pi sont des objectifs R1."
+          ]
+        },
+        {
+          "id": "runtime-crash-et-support",
+          "title": "Le relais survit au cœur, pas à la perte de toute la machine",
+          "status": "arbitrage",
+          "decision": "Cible arrêtée : file/relais gardien et pairs pour les exécutions, instantané 1 h avec pair à jour ou 15 min sinon ; tiers et irréversibles automatiques suspendus sans pair.",
+          "summary": "Après crash, le cœur lirait le dernier relais puis la file de sorties critiques gardée en memfd. Cette protection demeure volatile : sans pair ni disque récent, une coupure de courant peut perdre ce qui n’a jamais atteint un support survivant.",
+          "details": [
+            "La file du gardien conserve jusqu’à 10 000 sorties, sous le plafond commun de 2 Mio de toutes les files transitoires, sans réservation de 0,45 Mio : charges et métadonnées variables sont comptées avant admission. Les changements ordinaires sont groupés par lots de 10 ms ; un engagement externe doit être inscrit avant émission et accusé par un pair à jour avant tout effet automatique irréversible ou vers un tiers.",
+            "Les dossiers et exécutions n’ont aucun journal disque. Avec pair à jour, l’instantané complet est horaire ; sans pair à jour, il est pris toutes les quinze minutes, ainsi qu’à l’arrêt et avant mise à jour. Sans pair, les engagements automatiques irréversibles ou vers des tiers sont suspendus ; une action humaine explicite reste possible avec avertissement de l’incertitude, sans promesse exactement une fois.",
+            "Une clé reconnue renvoie le reçu antérieur sans refaire l’effet ; elle ne prouve pas l’idempotence d’un service externe. Après émission ambiguë, aucun rejeu automatique : lire le statut s’il existe, sinon conserver incertain. Audit et export D13 restent des flux durables distincts du mécanisme de reprise.",
+            "Sous systemd, le gardien et ses descripteurs subsistent pendant le remplacement du cœur. Une nouvelle image Docker remplace aussi le gardien : arrêt figé, instantané puis reprise à froid avec modules reconnectés. Les événements externes manqués pendant cette coupure constituent un intervalle inconnu, jamais une continuité supposée.",
+            "La perte électrique ou la mort du gardien sans pair survivant ramène au dernier instantané. La reprise annonce son âge et les intervalles inconnus ; elle ne réactive pas les engagements dont l’issue ne peut être établie. Si le contrôle de sécurité, droits, coffre ou identité active échoue, seul le diagnostic authentifié démarre."
+          ],
+          "evolution": "V7 conserve journal local et instantanés ; la proposition HA v2 citée puis restart remplacent ce journal de reprise par relais/file et pairs, sans livraison démontrée ni modification des documents antérieurs.",
+          "sources": [
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 527,
+              "note": "Crash, replay et limites avant la file memfd."
+            },
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 548,
+              "note": "Étages de durée et écriture avant engagement."
+            },
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 591,
+              "note": "Différences Docker/systemd."
+            },
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 674,
+              "note": "Décisions à trancher et modifications conditionnelles des autres études."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Crash du gardien, renouvellement du bail, accusés perdus, évolution des formats et panne totale demandent les scénarios R1–R14 ; aucun n’est rejoué ici."
+          ]
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "family": "Isolation et réactivité",
+      "to": "V2",
+      "kept": "Garde, échéances, capture de panique et sobriété du cœur.",
+      "replaced": "Une simple liste de durcissements devient une combinaison thread, voie et passerelle.",
+      "reason": "V2 démontre que les files seules ne libèrent pas un worker bloqué et chiffre les pertes de déclencheurs.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime.md",
+          "line": 551,
+          "note": "Plan initial."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v2.md",
+          "line": 177,
+          "note": "Tampons contre cloisons."
+        }
+      ],
+      "from": "V1"
+    },
+    {
+      "family": "Isolation et réactivité",
+      "to": "V3",
+      "kept": "Données agrégées et cloisons par appareil.",
+      "replaced": "Les options dispersées deviennent sept couches ; les tâches permanentes par appareil cèdent la place à des voies paresseuses.",
+      "reason": "Le coût mémoire caché des files permanentes impose un répartiteur à la demande.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v3.md",
+          "line": 23,
+          "note": "Pattern consolidé."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v3.md",
+          "line": 196,
+          "note": "Coût caché des voies permanentes."
+        }
+      ],
+      "from": "V2"
+    },
+    {
+      "family": "Isolation et réactivité",
+      "to": "V4",
+      "kept": "Noyau vif, journal et frontière par bus.",
+      "replaced": "Les extrapolations Mac et promesses de voies deviennent des bancs Linux, voies exécutées et correctif sur copie ; disjoncteur simple affiné.",
+      "reason": "V4 traite les limites que V3 laissait ouvertes, sans livrer ces prototypes au dépôt.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v4.md",
+          "line": 8,
+          "note": "Table des limites reprises et protocole hors dépôt."
+        }
+      ],
+      "from": "V3"
+    },
+    {
+      "family": "Architecture mesurée",
+      "to": "V5",
+      "kept": "Cloisons, correctif, production simulée et bascule de hub.",
+      "replaced": "Le facteur général ×2,7 de mémoire est corrigé par un périmètre avec voies paresseuses ; transports, sécurité et radios s’ajoutent.",
+      "reason": "V5 sépare octets, confirmations et domaines de panne au-delà du seul hub.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v5.md",
+          "line": 46,
+          "note": "Table du nouvel apport."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 2013,
+          "note": "Correction du facteur attribué à musl."
+        }
+      ],
+      "from": "V4"
+    },
+    {
+      "family": "Transport central",
+      "to": "V6",
+      "kept": "Hub propriétaire, garde et cloisons.",
+      "replaced": "MQTT au bord et SSE/REST comme seuls chemins écran deviennent un courtier Rust embarqué et un module WebSocket.",
+      "reason": "Unifier le contrat et permettre les processus est le motif annoncé ; aucune amélioration de réactivité intrinsèque n’est invoquée.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v6.md",
+          "line": 6,
+          "note": "Changement de centre explicite."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 149,
+          "note": "Coût et justification."
+        }
+      ],
+      "from": "V5"
+    },
+    {
+      "family": "Consolidation et crible",
+      "to": "V7 publiée",
+      "kept": "Toutes les mesures antérieures restent traçables ; les règles de garde demeurent.",
+      "replaced": "Les renvois morcelés et le contrat incomplet sont remplacés par un document complet, neuf issues et vingt-six règles intégrées.",
+      "reason": "Le crible brut vise la V7 avant son intégration ; le considérer comme une critique non traitée effacerait cette évolution.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 6,
+          "note": "Consolidation V5/V6."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 985,
+          "note": "Règles G1 à G26."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 11441,
+          "note": "Statut historique du crible."
+        }
+      ],
+      "from": "V5 + V6 + crible préalable"
+    },
+    {
+      "family": "Opérations des modules",
+      "to": "Monitoring puis redémarrage à chaud",
+      "kept": "Contrat MQTT, un seul rédacteur du hub avec copies compactes nécessaires, isolement et droits par instance.",
+      "replaced": "Les processus lancés par le cœur deviennent enfants d’un gardien ; la mesure par module et le relais survivant sont ajoutés.",
+      "reason": "Une isolation utile doit aussi permettre mesure, déplacement et survie au remplacement du cœur.",
+      "sources": [
+        {
+          "path": "docs/proposition/monitoring.md",
+          "line": 609,
+          "note": "Bascule de place."
+        },
+        {
+          "path": "docs/proposition/monitoring.md",
+          "line": 675,
+          "note": "Qui lance un processus isolé."
+        },
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 700,
+          "note": "Modifications conditionnelles aux études antérieures."
+        }
+      ],
+      "from": "V7"
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "runtime-contrat-reessais",
+      "title": "Envoi unique ou réessais idempotents ?",
+      "problem": "V7 §5.1 demande une seule émission par ordre, tandis que §9.2, §20.4 et le plan gardent les réessais adaptatifs de V4. Deux implémentations conformes à des paragraphes différents produiraient des comportements physiques différents.",
+      "options": [
+        {
+          "label": "Envoi unique après début d’émission",
+          "benefit": "Conserve une frontière claire et minimise les doubles effets.",
+          "cost": "Abandonne les gains de disponibilité mesurés par les réessais V4."
+        },
+        {
+          "label": "Réessais explicitement autorisés pour une consigne",
+          "benefit": "Peut récupérer un bus intermittent avant l’échéance.",
+          "cost": "Exige une idempotence réelle démontrée, un budget et une distinction avant/après émission ambiguë."
+        }
+      ],
+      "recommendation": "Retenir exclusivement le contrat décrit dans la résolution ; les formulations antérieures restent des sources historiques.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 357,
+          "note": "Règle une seule fois par ordre."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1461,
+          "note": "Réessais idempotents dans les couches héritées."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v4.md",
+          "line": 154,
+          "note": "Comparaison adaptatif et réessais."
+        }
+      ],
+      "resolution": "Contrat retenu : chaque demande porte une identité stable et une échéance absolue. Une nouvelle tentative est permise seulement si le transport prouve que l’émission précédente n’a pas eu lieu ; après begin_send, une liaison perdue produit incertain et déclenche une lecture de statut, jamais une retransmission automatique. Un récepteur qui reconnaît une identité déjà traitée rend son reçu sans refaire l’effet. Une nouvelle consigne après constat réel constitue une nouvelle demande décidée par le workflow ou l’humain, avec sa propre échéance ; les appuis ne sont jamais fusionnés."
+    },
+    {
+      "id": "runtime-contrat-retenus",
+      "title": "Le courtier repart-il vide ou le hub republie-t-il des retenus ?",
+      "problem": "V7 §6.3 et §10.4 excluent les retenus sur moli/v1. Pourtant §9.4.3 dit « le hub republie ses retenus » et le commentaire de §10.2 décrit encore val/ comme retenu.",
+      "options": [
+        {
+          "label": "État exclusivement servi par le hub",
+          "benefit": "Évite copie, troncature initiale et persistance du courtier.",
+          "cost": "Exige le raccord état/flux par rang et la resynchronisation."
+        },
+        {
+          "label": "Retenus sur le canon",
+          "benefit": "Simplifie la lecture d’un client MQTT générique.",
+          "cost": "Réintroduit la mémoire mesurée et nécessite corriger puis qualifier la livraison complète."
+        }
+      ],
+      "recommendation": "Retenir exclusivement le contrat décrit dans la résolution ; les formulations antérieures restent des sources historiques.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1062,
+          "note": "Politique de conservation."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1568,
+          "note": "Ancienne reprise avec retenus."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1597,
+          "note": "Commentaire ingestion."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1656,
+          "note": "État servi sans retenus."
+        }
+      ],
+      "resolution": "Contrat retenu : aucun retenu sur moli/v1, aucune session persistante de commande ; état figé servi par le hub. Le client s’abonne, met le flux en attente sous les plafonds communs, applique l’état N puis les rangs supérieurs dans l’ordre ; dépassement : nouvel état et dégradation critique si des transitions sont perdues. Courtier vide au démarrage. Exception extérieure Zigbee2MQTT : 512 messages retenus, 4 Mio au total, 4 Mio maximum pour bridge/devices, 4 Kio pour une disponibilité ; refus de nouvelle rétention et erreur visible au premier plafond. Jamais clavier, ordre, demande, issue ou image retenus."
+    },
+    {
+      "id": "runtime-contrat-vu",
+      "title": "Un $vu rafraîchit-il tout l’appareil ?",
+      "problem": "V7 §5.2 présente un $vu qui rafraîchit tous les points ; §5.1 et §10.5 imposent liste de points, source qui avance et pauses imposées. Une copie mécanique du paragraphe court rendrait fraîches des mesures anciennes.",
+      "options": [
+        {
+          "label": "Rafraîchissement explicite par source et points",
+          "benefit": "Préserve la fraîcheur des données à rythmes différents.",
+          "cost": "Méta et kit un peu plus complexes."
+        },
+        {
+          "label": "Battement global de l’appareil",
+          "benefit": "Très simple à produire et à stocker.",
+          "cost": "Prouve le contact, pas la nouveauté des mesures ni leur qualité."
+        }
+      ],
+      "recommendation": "Retenir exclusivement le contrat décrit dans la résolution ; les formulations antérieures restent des sources historiques.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 342,
+          "note": "Règle corrigée de lecture."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 416,
+          "note": "Simplification globale du vu."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1699,
+          "note": "Source, pauses et plusieurs rythmes."
+        }
+      ],
+      "resolution": "Contrat retenu : le contact de l’appareil et la fraîcheur d’une mesure sont deux compteurs distincts. Tout échange réussi peut avancer le contact ; un $vu contient une source, les points concernés et l’instant source qui doit avancer pour renouveler leur fraîcheur. Une valeur égale peut être fraîche ; une réponse en cache ne l’est pas par sa seule réception. Une pause fournisseur suspend l’attente du transport sans rajeunir les valeurs. Une condition exigeant une mesure fraîche devient inconnue si sa fraîcheur expire."
+    },
+    {
+      "id": "runtime-contrat-transitions",
+      "title": "Une dernière valeur suffit-elle à promettre zéro transition perdue ?",
+      "problem": "Le tampon de V7 fusionne états et mesures par point ; le correctif V4 ne compare que la valeur finale. Un aller-retour complet peut donc disparaître, malgré des formulations plus fortes d’absence de transition perdue.",
+      "options": [
+        {
+          "label": "Conserver les transitions des états significatifs",
+          "benefit": "Garde ouvert→fermé et ses causes pour les automatismes.",
+          "cost": "File plus coûteuse, à borner avec perte explicitement signalée."
+        },
+        {
+          "label": "Ne garder que le dernier état",
+          "benefit": "Borne fortement mémoire et charge après reconnexion.",
+          "cost": "La promesse doit se limiter à l’état final et aux occurrences séparées."
+        }
+      ],
+      "recommendation": "Retenir exclusivement le contrat décrit dans la résolution ; les formulations antérieures restent des sources historiques.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1469,
+          "note": "Fusion des états et exemption des occurrences."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v4.md",
+          "line": 244,
+          "note": "Rattrapage par comparaison finale."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1626,
+          "note": "Queue de changements puis repli instantané."
+        }
+      ],
+      "resolution": "Contrat retenu : fusionner seulement mesures remplaçables et projections continues ; conserver états significatifs, occurrences et issues en ordre avec identité. Les plafonds coappliqués sont 2 Mio pour toutes les files transitoires de publications et de rattrapage, tous modules réunis, 4 096 changements critiques par instance et 1 024 occurrences par module. Ce sont des plafonds simultanés, jamais des réservations : le premier atteint bloque l’admission concernée. Chaque entrée est comptée à son coût réel, charge et métadonnées comprises ; les octets priment sur le nombre. Une saturation signale l’intervalle perdu et met les consommateurs dépendants en état inconnu ; le replay traite seulement les transitions conservées. Un instantané rétablit le présent et ne fabrique aucun passage intermédiaire."
+    },
+    {
+      "id": "runtime-contrat-validation",
+      "title": "Module nouveau isolé, mais sans ACL ?",
+      "problem": "Monitoring isole les modules nouveaux ou écrits par un agent avant validation ; V7 traite les modules isolés comme code loyal, sans contrôle par message. Le confinement de crash ne résout pas l’autorisation à agir ni la lecture des services privés.",
+      "options": [
+        {
+          "label": "Contrat validé avant toute exécution et accès minimaux",
+          "benefit": "Reste cohérent avec la règle 9 et le kit de confiance.",
+          "cost": "L’observation isolée vient après une première validation formelle."
+        },
+        {
+          "label": "Mode d’essai non fiable avec droits réduits",
+          "benefit": "Permet d’observer une version sans lui donner la maison entière.",
+          "cost": "Exige ACL par instance, services restreints et procédure de promotion explicite."
+        }
+      ],
+      "recommendation": "Retenir exclusivement le contrat décrit dans la résolution ; les formulations antérieures restent des sources historiques.",
+      "sources": [
+        {
+          "path": "docs/ARCHITECTURE.md",
+          "line": 34,
+          "note": "Règle 9."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1046,
+          "note": "Confiance des modules isolés."
+        },
+        {
+          "path": "docs/proposition/monitoring.md",
+          "line": 565,
+          "note": "Placement des nouvelles versions avant validation."
+        }
+      ],
+      "resolution": "Contrat retenu : toute première exécution exige une validation d’essai humaine du paquet et de ses droits ; le processus isolé n’est pas une dispense de revue. Pendant l’essai, un compte limité à son instance et une socket de services limitée à ses capacités empêchent de publier cmd/ ou val/, d’accéder aux secrets des voisins et de forger une origine de confiance. Promotion dans le cœur après catalogue, revue, sept jours isolé sans incident et budget respecté, toujours par PIN. Toute nouvelle version repasse en essai ; FFI ou unsafe demeurent isolés."
+    },
+    {
+      "id": "runtime-contrat-journal",
+      "title": "Journal de reprise sur disque ou durabilité par pairs ?",
+      "problem": "V7 garde un journal compact local par changement. Le document restart s’appuie sur HA v2 qui retire ce journal et écrit avant engagement dans une file memfd et chez le pair. Le coût et la perte possible hors pair diffèrent.",
+      "options": [
+        {
+          "label": "Journal local avant acquittement",
+          "benefit": "Survit à une panne de courant selon fsync et stockage.",
+          "cost": "Écritures et latence du disque à budgéter."
+        },
+        {
+          "label": "File volatile et copie chez un pair",
+          "benefit": "Limite les écritures SD et survit au crash du cœur.",
+          "cost": "Sans pair survivant, la perte suit l’âge du dernier instantané ; le gardien ne survit pas à toute panne."
+        }
+      ],
+      "recommendation": "Retenir exclusivement le contrat décrit dans la résolution ; les formulations antérieures restent des sources historiques.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1484,
+          "note": "Durabilité par journal et instantané."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 2114,
+          "note": "Journal de reprise local."
+        },
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 548,
+          "note": "Trois étages et remplacement du journal disque pour les engagements."
+        },
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 674,
+          "note": "Choix encore à trancher."
+        }
+      ],
+      "resolution": "Contrat retenu : aucun journal disque des dossiers et exécutions ; état vif, file critique et relais versionné du gardien, copiés vers les pairs. Instantané complet toutes les heures avec pair à jour, toutes les quinze minutes sinon, et toujours à l’arrêt prévu et avant mise à jour. Audit et export D13 restent durables et distincts. Avant effet automatique irréversible ou vers un tiers : engagement inscrit dans la file puis accusé par un pair à jour ; sans ce pair, suspendre l’automatisme. Une action humaine explicite reste possible en annonçant l’incertitude. Une panne totale sans pair repart du dernier instantané avec couverture inconnue ; ne jamais rejouer un effet ambigu."
+    },
+    {
+      "id": "runtime-contrat-sans-perte",
+      "title": "« Sans perte » à chaud demande une portée vérifiable",
+      "problem": "Le document restart promet un arrêt prévu sans perte mais décrit aussi connexions fermées, débordement possible des 1 024 occurrences, dernier lot de 10 ms et recréation Docker à froid. Les numéros k et les valeurs fusionnées demandent également une règle d’acquittement précise.",
+      "options": [
+        {
+          "label": "Garantie par donnée et scénario",
+          "benefit": "Permet de tester valeurs finales, occurrences, issues et effets séparément.",
+          "cost": "Plus de critères à exposer que le seul libellé sans perte."
+        },
+        {
+          "label": "Promesse générale avec reprise et déduplication",
+          "benefit": "Message plus court et rassurant.",
+          "cost": "Masque les limites de tampons, de courant et des services sans reçu idempotent."
+        }
+      ],
+      "recommendation": "Retenir exclusivement le contrat décrit dans la résolution ; les formulations antérieures restent des sources historiques.",
+      "sources": [
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 420,
+          "note": "Tampons, accusés et débordement."
+        },
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 527,
+          "note": "Pertes restantes après crash."
+        },
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 591,
+          "note": "Nouvelle image Docker à froid."
+        },
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 637,
+          "note": "Scénarios de preuve R1–R14."
+        }
+      ],
+      "resolution": "Contrat retenu : compteurs et accusés séparés pour mesures remplaçables, transitions/occurrences et issues/reçus, sans faux trou créé par fusion. Un accusé critique exige l’entrée conservée dans file/relais survivant ; Les plafonds coappliqués sont 2 Mio pour toutes les files transitoires de publications et de rattrapage, tous modules réunis, 4 096 changements critiques par instance et 1 024 occurrences par module. Ce sont des plafonds simultanés, jamais des réservations : le premier atteint bloque l’admission concernée. Chaque entrée est comptée à son coût réel, charge et métadonnées comprises ; les octets priment sur le nombre. Les dossiers de produits sont plafonnés à 1 Mio au total, 64 dossiers et 16 Kio chacun, contenu et métadonnées compris. Même boot_id : échéances monotones inchangées ; autre boot_id : conversion puis grâce. Docker image neuve : arrêt figé et reprise à froid avec intervalle externe inconnu si des messages ont manqué. Aucun exactement une fois ni sans perte universel."
+    },
+    {
+      "id": "runtime-contrat-memoire-exacte",
+      "title": "Une mémoire étiquetée ne couvre pas toute la mémoire anonyme",
+      "problem": "Monitoring distingue bien estimation et mesure mais son scénario M3 demande que la somme des étiquettes égale la mémoire anonyme à 5 % près. Les étiquettes comptent des allocations ; piles, réserves d’allocateur et runtime nécessitent un rapprochement séparé.",
+      "options": [
+        {
+          "label": "Ventilation avec part fixe et non expliquée",
+          "benefit": "Rend la différence entre allocations et pages honnête et exploitable.",
+          "cost": "Nécessite expliquer le coût fixe et la fragmentation."
+        },
+        {
+          "label": "Faire correspondre directement les deux totaux",
+          "benefit": "Critère simple à afficher et à tester.",
+          "cost": "Peut rejeter un suivi correct ou attribuer à tort des pages à un module."
+        }
+      ],
+      "recommendation": "Retenir exclusivement le contrat décrit dans la résolution ; les formulations antérieures restent des sources historiques.",
+      "sources": [
+        {
+          "path": "docs/proposition/monitoring.md",
+          "line": 346,
+          "note": "Attribution par allocation et part non expliquée."
+        },
+        {
+          "path": "docs/proposition/monitoring.md",
+          "line": 730,
+          "note": "M3 : somme des étiquettes à 5 %."
+        },
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 2013,
+          "note": "Effet de périmètre, socle et allocateur."
+        }
+      ],
+      "resolution": "Contrat retenu : nommer séparément octets alloués étiquetés, mémoire connue du kit, mémoire anonyme du processus, Pss_Anon des processus isolés et mémoire totale du cgroup. Le contrôle de l’étiquette vérifie allocations moins libérations par groupe, y compris changements de thread ; le rapprochement avec anon conserve un socle fixe et une part non attribuée (piles, fragmentation, runtime). Abandonner le critère d’égalité directe à 5 %. Étiquette uniquement dans un binaire de mesure construit ainsi ; production sans exception unsafe. Le diagnostic isolé mesure ce mode précis et ne prétend pas reproduire exactement le coût partagé."
+    }
+  ],
+  "coverage": [
+    "docs/proposition/isolation-reactivite-runtime-v2.md",
+    "docs/proposition/isolation-reactivite-runtime-v3.md",
+    "docs/proposition/isolation-reactivite-runtime-v4.md",
+    "docs/proposition/isolation-reactivite-runtime-v5.md",
+    "docs/proposition/isolation-reactivite-runtime-v6.md",
+    "docs/proposition/isolation-reactivite-runtime-v7-crible.md",
+    "docs/proposition/isolation-reactivite-runtime-v7.md",
+    "docs/proposition/isolation-reactivite-runtime.md",
+    "docs/proposition/monitoring.md",
+    "docs/proposition/redemarrage-a-chaud.md",
+    "docs/PERFORMANCE.md"
+  ],
+  "missing": [
+    "Les bancs runtime E1–E8, W/I/C/M/R, B/P, L/Q/F/V/S/T sont majoritairement des crates jetables hors dépôt ; les sources et sorties incluses en annexes sont des preuves documentaires, pas une exécution ni un paquet autonome vérifié ici.",
+    "Aucune mesure sur Pi Zero 2 W ni sur sa carte SD ; l’estimation d’un facteur de lenteur ne constitue pas un résultat matériel.",
+    "Le gardien, le relais memfd, l’observatoire, le protocole k/accusé, le kit central, le WebSocket et le courtier moli-courtier restent des conceptions, sans livraison démontrée dans le code courant lu.",
+    "Le fichier maquette-regles-sarah-v3.html cité par V7 n’a pas été trouvé dans les fichiers du dépôt ; sa description dans V7 est accessible, pas la maquette originale.",
+    "Les sources exactes rumqttd/Tokio/rustix et les liens externes cités par les études n’ont pas été consultés pendant cette revue ; leurs constats restent attribués aux documents datés.",
+    "Les rapports d’écritures et de formes Parquet sont présents ; leurs entrées privées dashboard-workload-shape.json et production-load.json sont hors dépôt. Elles ne sont ni importées ni reproduites.",
+    "Le script de comparaison hôte et les mesures récentes d’installation ne sont pas dans le dépôt ; les anciens relevés de PERFORMANCE.md ne certifient pas le binaire actuel.",
+    "Le sens physique de COMPLETED io, les états Roborock après stop, quotas cloud, délais réels, conformité hostile et longue durée du courtier demandent une qualification distincte, jamais simulée comme livraison.",
+    "Les contrats de la synthèse sont fermés : restent le portage, les mesures intégrées et les preuves matérielles M1–M10 et R1–R14. Les paramètres choisis, dont les plafonds globaux, ne sont pas des mesures déduites des anciens bancs ; aucune exécution nouvelle n’est faite ici."
+  ]
+}

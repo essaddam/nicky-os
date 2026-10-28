@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 351" width="1000" height="351" role="img" aria-labelledby="distant-t distant-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="distant-t">Le secours distant, par NetBird</title>
+  <desc id="distant-d">À gauche, la maison : l'actif, le secours local, le témoin et les boîtiers radio. Le pont part vers le secours distant par NetBird, pair à pair ou par un relais, en QUIC ou en WebSocket sur le port 443 ; un battement HTTPS direct sert de seconde veille. À droite, le secours distant : copie, alerte, cloud sur geste humain, archive.</desc>
+  <rect width="1000" height="351" fill="#fffdf8"/>
+          <defs>
+            <marker id="distant-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="distant-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="distant-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="distant-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">LA MAISON</text>
+          <text x="700.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">HORS DE LA MAISON</text>
+          <rect x="16.0" y="36.0" width="380.0" height="250.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="30.0" y="48.0" width="170.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="42.0" y="67.0" font-size="11.5" fill="#1d302a" font-weight="700">H1 · actif</text>
+          <text x="42.0" y="84.0" font-size="10" fill="#52615a">époques maison et cloud</text>
+          <rect x="214.0" y="48.0" width="170.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="226.0" y="67.0" font-size="11.5" fill="#1d302a" font-weight="700">H2 · secours local</text>
+          <text x="226.0" y="84.0" font-size="10" fill="#52615a">peut tout reprendre</text>
+          <rect x="30.0" y="116.0" width="170.0" height="46.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="42.0" y="135.0" font-size="11.5" fill="#1d302a" font-weight="700">Témoin</text>
+          <text x="42.0" y="152.0" font-size="10" fill="#52615a">NAS, routeur ou Pi</text>
+          <rect x="214.0" y="116.0" width="170.0" height="46.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="226.0" y="135.0" font-size="11.5" fill="#1d302a" font-weight="700">Boîtiers radio A et B</text>
+          <text x="226.0" y="152.0" font-size="10" fill="#52615a">Zigbee, Thread</text>
+          <line x1="200.0" y1="74.0" x2="212.0" y2="74.0" stroke="#195744" stroke-width="2" marker-end="url(#distant-v)"/>
+          <text x="30.0" y="190.0" font-size="10.5" fill="#52615a">Le pont local : le même que vers le distant.</text>
+          <text x="30.0" y="208.0" font-size="10.5" fill="#52615a">Le témoin départage H1 et H2 ; il n'arbitre pas</text>
+          <text x="30.0" y="224.0" font-size="10.5" fill="#52615a">le distant : sans Internet, la maison doit vivre.</text>
+          <line x1="396.0" y1="70.0" x2="694.0" y2="70.0" stroke="#195744" stroke-width="2.2" marker-end="url(#distant-v)"/>
+          <text x="545.0" y="62.0" font-size="11" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">le pont, par NetBird</text>
+          <line x1="396.0" y1="104.0" x2="694.0" y2="104.0" stroke="#b07d12" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#distant-a)"/>
+          <text x="545.0" y="96.0" font-size="10" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">battement direct en HTTPS : la seconde veille</text>
+          <rect x="410.0" y="124.0" width="270.0" height="122.0" rx="8" fill="#ffffff" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="5 4"/>
+          <text x="545.0" y="146.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">NetBird (WireGuard maillé)</text>
+          <text x="545.0" y="166.0" font-size="10.5" fill="#52615a" text-anchor="middle">pair à pair : ICE, STUN</text>
+          <text x="545.0" y="184.0" font-size="10.5" fill="#52615a" text-anchor="middle">sinon un relais : QUIC, ou WebSocket</text>
+          <text x="545.0" y="200.0" font-size="10.5" fill="#52615a" text-anchor="middle">sur le port 443 si l'UDP est bloqué</text>
+          <text x="545.0" y="220.0" font-size="10.5" fill="#52615a" text-anchor="middle">chiffré de bout en bout</text>
+          <rect x="700.0" y="48.0" width="284.0" height="112.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="712.0" y="67.0" font-size="11.5" fill="#1d302a" font-weight="700">Secours distant</text>
+          <text x="712.0" y="84.0" font-size="10" fill="#52615a">copie : mémoire, journal, historique</text>
+          <text x="712.0" y="99.0" font-size="10" fill="#52615a">alerte : par son propre chemin</text>
+          <text x="712.0" y="114.0" font-size="10" fill="#52615a">cloud : sur geste humain (époque cloud)</text>
+          <text x="712.0" y="129.0" font-size="10" fill="#52615a">peut héberger l'archive (D13)</text>
+          <text x="712.0" y="144.0" font-size="10" fill="#52615a">jamais les radios ni le réseau local</text>
+          <rect x="700.0" y="190.0" width="284.0" height="58.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="712.0" y="209.0" font-size="11.5" fill="#1d302a" font-weight="700">Clouds : Netatmo, Voltalis, Ariston…</text>
+          <text x="712.0" y="226.0" font-size="10" fill="#52615a">un seul porteur de l'époque cloud les appelle</text>
+          <line x1="842.0" y1="160.0" x2="842.0" y2="188.0" stroke="#b07d12" stroke-width="1.6" marker-end="url(#distant-a)"/>
+          <text x="16.0" y="306.0" font-size="10.5" fill="#52615a">Secrets : le distant ne reçoit que ceux du domaine cloud, scellés avec sa clé ; la clé maître de la maison ne sort jamais.</text>
+  <text x="16" y="347" font-size="12" fill="#52615a" font-style="italic">Le même pont qu'en local, sur l'adresse NetBird de l'actif. Le WebSocket, NetBird le fait déjà, en dessous, quand l'UDP est bloqué.</text>
+</svg>

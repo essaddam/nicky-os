@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 534" width="1000" height="534" role="img" aria-labelledby="qui-t qui-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="qui-t">Qui garde un numéro, et ce que chacun en fait</title>
+  <desc id="qui-d">Quatre zones. Recompilé, jamais périmé : le programme, les conditions composées, les fiches horaires portées par une valeur. Vérifie la génération : les exécutions (cause et cible), les attentes à durée revérifiées à l'échéance, les minuteries, baux et l'écran des exécutions finies, pour qui une référence périmée est inerte. Suit le rang s : la file des 10 000 sorties, l'état complet et l'instantané (annuaire, générations, places libres), les abonnés internes, qui redemandent meta/ pour un numéro inconnu. Ne garde que des noms : la base et l'archive, le journal d'exécution et l'audit, les clients extérieurs.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="534" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="qui-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="qui-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="qui-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="qui-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="qui-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="qui-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="qui-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="qui-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="qui-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="qui-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="qui-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="qui-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="qui-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="qui-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="qui-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="qui-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="qui-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="qui-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="qui-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="qui-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="qui-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="qui-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="qui-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="qui-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="qui-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="qui-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="qui-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="qui-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="qui-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="qui-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="qui-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="qui-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="qui-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="qui-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="qui-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="qui-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="qui-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">TOUT CE QUI GARDE UN NUMÉRO, ET POURQUOI AUCUN NE SE TROMPE</text>
+          <rect x="16" y="44" width="476" height="206" rx="20" fill="#e3f1e9" fill-opacity=".45" stroke="#3d9a75" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(32.0 55.0) scale(0.6667)" fill="none" stroke="#195744" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="54.0" y="68.0" font-size="11" fill="#195744" font-weight="700" letter-spacing=".07em">RECOMPILÉ : JAMAIS PÉRIMÉ</text>
+          <rect x="32" y="84" width="444" height="46" rx="12" fill="url(#qui-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="47" cy="103" r="4.5" fill="url(#qui-h-vert)"/>
+          <text x="59.0" y="107.0" font-size="11.5" fill="#195744" font-weight="700">Le programme</text>
+          <text x="468.0" y="112.0" font-size="10" fill="#52615a" text-anchor="end">règles, nœuds, index par point</text>
+          <rect x="32" y="138" width="444" height="46" rx="12" fill="url(#qui-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="47" cy="157" r="4.5" fill="url(#qui-h-vert)"/>
+          <text x="59.0" y="161.0" font-size="11.5" fill="#195744" font-weight="700">Les conditions composées</text>
+          <text x="468.0" y="166.0" font-size="10" fill="#52615a" text-anchor="end">feuilles, vérité reconstruite</text>
+          <rect x="32" y="192" width="444" height="46" rx="12" fill="url(#qui-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="47" cy="211" r="4.5" fill="url(#qui-h-vert)"/>
+          <text x="59.0" y="215.0" font-size="11.5" fill="#195744" font-weight="700">Les fiches horaires</text>
+          <text x="468.0" y="220.0" font-size="10" fill="#52615a" text-anchor="end">« à l'heure portée par une valeur »</text>
+          <rect x="508" y="44" width="476" height="206" rx="20" fill="#fbefd3" fill-opacity=".45" stroke="#e0a12a" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(524.0 55.0) scale(0.6667)" fill="none" stroke="#94660a" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6z"/></g>
+          <text x="546.0" y="68.0" font-size="11" fill="#94660a" font-weight="700" letter-spacing=".07em">VÉRIFIE LA GÉNÉRATION</text>
+          <rect x="524" y="84" width="444" height="46" rx="12" fill="url(#qui-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="539" cy="103" r="4.5" fill="url(#qui-h-ambre)"/>
+          <text x="551.0" y="107.0" font-size="11.5" fill="#94660a" font-weight="700">Les exécutions</text>
+          <text x="960.0" y="112.0" font-size="10" fill="#52615a" text-anchor="end">leur cause, leur cible</text>
+          <rect x="524" y="138" width="444" height="46" rx="12" fill="url(#qui-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="539" cy="157" r="4.5" fill="url(#qui-h-ambre)"/>
+          <text x="551.0" y="161.0" font-size="11.5" fill="#94660a" font-weight="700">Les attentes à durée</text>
+          <text x="960.0" y="166.0" font-size="10" fill="#52615a" text-anchor="end">revérifiées à l'échéance</text>
+          <rect x="524" y="192" width="444" height="46" rx="12" fill="url(#qui-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="539" cy="211" r="4.5" fill="url(#qui-h-ambre)"/>
+          <text x="551.0" y="215.0" font-size="11.5" fill="#94660a" font-weight="700">Minuteries, baux, l'écran</text>
+          <text x="960.0" y="220.0" font-size="10" fill="#52615a" text-anchor="end">une référence périmée est inerte</text>
+          <rect x="16" y="262" width="476" height="206" rx="20" fill="#e1eef6" fill-opacity=".45" stroke="#3b8db4" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(32.0 273.0) scale(0.6667)" fill="none" stroke="#1b5873" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="54.0" y="286.0" font-size="11" fill="#1b5873" font-weight="700" letter-spacing=".07em">SUIT LE RANG S</text>
+          <rect x="32" y="302" width="444" height="46" rx="12" fill="url(#qui-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="47" cy="321" r="4.5" fill="url(#qui-h-bleu)"/>
+          <text x="59.0" y="325.0" font-size="11.5" fill="#1b5873" font-weight="700">La file des 10 000 sorties</text>
+          <text x="468.0" y="330.0" font-size="10" fill="#52615a" text-anchor="end">chaque sortie, la numérotation de son rang</text>
+          <rect x="32" y="356" width="444" height="46" rx="12" fill="url(#qui-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="47" cy="375" r="4.5" fill="url(#qui-h-bleu)"/>
+          <text x="59.0" y="379.0" font-size="11.5" fill="#1b5873" font-weight="700">État complet, instantané</text>
+          <text x="468.0" y="384.0" font-size="10" fill="#52615a" text-anchor="end">annuaire, générations, places libres</text>
+          <rect x="32" y="410" width="444" height="46" rx="12" fill="url(#qui-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="47" cy="429" r="4.5" fill="url(#qui-h-bleu)"/>
+          <text x="59.0" y="433.0" font-size="11.5" fill="#1b5873" font-weight="700">Abonnés internes</text>
+          <text x="468.0" y="438.0" font-size="10" fill="#52615a" text-anchor="end">numéro inconnu → meta/</text>
+          <rect x="508" y="262" width="476" height="206" rx="20" fill="#e6ecf5" fill-opacity=".45" stroke="#7494bb" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(524.0 273.0) scale(0.6667)" fill="none" stroke="#3b5676" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6 M9 16h6"/></g>
+          <text x="546.0" y="286.0" font-size="11" fill="#3b5676" font-weight="700" letter-spacing=".07em">NE GARDE QUE DES NOMS</text>
+          <rect x="524" y="302" width="444" height="46" rx="12" fill="url(#qui-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="539" cy="321" r="4.5" fill="url(#qui-h-ardoise)"/>
+          <text x="551.0" y="325.0" font-size="11.5" fill="#3b5676" font-weight="700">La base, l'archive</text>
+          <text x="960.0" y="330.0" font-size="10" fill="#52615a" text-anchor="end">le catalogue par le nom</text>
+          <rect x="524" y="356" width="444" height="46" rx="12" fill="url(#qui-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="539" cy="375" r="4.5" fill="url(#qui-h-ardoise)"/>
+          <text x="551.0" y="379.0" font-size="11.5" fill="#3b5676" font-weight="700">Le journal d'exécution</text>
+          <text x="960.0" y="384.0" font-size="10" fill="#52615a" text-anchor="end">run/, hist/ops, l'audit</text>
+          <rect x="524" y="410" width="444" height="46" rx="12" fill="url(#qui-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#qui-o)"/>
+          <circle cx="539" cy="429" r="4.5" fill="url(#qui-h-ardoise)"/>
+          <text x="551.0" y="433.0" font-size="11.5" fill="#3b5676" font-weight="700">Les clients extérieurs</text>
+          <text x="960.0" y="438.0" font-size="10" fill="#52615a" text-anchor="end">les sujets, jamais « i »</text>
+          <rect x="391.4" y="244.0" width="217.3" height="22.0" rx="11.0" fill="url(#qui-h-violet)"/>
+          <g transform="translate(401.4 248.5) scale(0.5417)" fill="none" stroke="#ffffff" stroke-width="3.69" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z M10 10h4v4h-4z M9 4v3 M12 4v3 M15 4v3 M9 17v3 M12 17v3 M15 17v3 M4 9h3 M4 12h3 M4 15h3 M17 9h3 M17 12h3 M17 15h3"/></g>
+          <text x="422.4" y="259.0" font-size="11" fill="#ffffff" font-weight="700">le numéro : place + génération</text>
+  <text x="18" y="511" font-size="12" fill="#52615a" font-style="italic">Chaque endroit a sa façon de ne jamais confondre deux occupants d'une même place : se recompiler, comparer la génération, suivre l'ordre des sorties,</text>
+  <text x="18" y="528" font-size="12" fill="#52615a" font-style="italic">ou ne parler que par les noms.</text>
+</svg>

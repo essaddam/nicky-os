@@ -26,6 +26,7 @@ mod caller;
 mod cast;
 mod dependencies;
 mod guard;
+mod home_assistant;
 mod integrations;
 mod limit;
 mod machines;
@@ -108,6 +109,8 @@ pub struct Options {
     /// Pairing controls for enabled Android TV instances only.
     pub androidtv:
         std::collections::BTreeMap<String, moli_androidtv_driver::pairing::PairingGateway>,
+    /// Migration registry gateways for configured Home Assistant bridges.
+    pub home_assistant: std::collections::BTreeMap<String, moli_home_assistant::Gateway>,
     /// PIN that opens a human session in the dashboard. `None`: nobody is
     /// recognized as human, so guarded orders can only wait (safe default).
     pub ui_pin: Option<UiPin>,
@@ -293,17 +296,27 @@ fn assistant_routes() -> Router<Hub> {
         .route("/api/assistant/key", put(assistant::set_key))
 }
 
+/// Native bridges share the same household router and human-session boundary.
+fn native_integration_routes(humans: &Arc<session::Sessions>, options: &Options) -> Router<Hub> {
+    Router::new()
+        .merge(cast::routes(options.cast.clone(), options.demo))
+        .merge(androidtv::routes(options.androidtv.clone(), options.demo))
+        .merge(home_assistant::routes(
+            options.home_assistant.clone(),
+            options.demo,
+        ))
+        .merge(netatmo::routes(humans, options))
+}
+
 pub fn router(hub: Hub, shutdown: CancellationToken, options: &Options) -> Router {
     let allowed = guard::AllowedHosts::new(&options.allowed_hosts);
     let (humans, gate, persons) = people(&hub, options);
     Router::new()
         .route("/api/health", get(rest::health))
         .merge(device_routes())
-        .merge(cast::routes(options.cast.clone(), options.demo))
         .merge(dependencies::routes())
         .merge(scenes::routes())
-        .merge(androidtv::routes(options.androidtv.clone(), options.demo))
-        .merge(netatmo::routes(&humans, options))
+        .merge(native_integration_routes(&humans, options))
         .route("/api/media/{name}", get(rest::media))
         .route("/api/command", post(rest::command))
         .route("/api/ambiances", get(rest::ambiances))

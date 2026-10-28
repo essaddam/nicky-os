@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 396" width="1000" height="396" role="img" aria-labelledby="trois-t trois-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="trois-t">L'appareil, l'ordre, la structure</title>
+  <desc id="trois-d">Trois colonnes reliées. L'appareil : une fiche de 16 octets, sa liste de valeurs et d'ordres, sa composition, sa pièce. L'ordre : une fiche de 40 octets, sa forme, sa dernière commande admise, ses demandes vivantes, sa preuve. La structure : la forme, 24 octets, partagée, plus 20 octets par paramètre et 4 par valeur attendue ; elle cite les valeurs par leur clé. Dans la maison ×1 du banc, 525 appareils dont 29 virtuels, 802 ordres et 16 formes ; à ×100, toujours 16 formes.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="396" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="trois-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="trois-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <radialGradient id="trois-sol"><stop offset="0" stop-color="#1d302a" stop-opacity=".22"/><stop offset="1" stop-color="#1d302a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="trois-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="trois-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="trois-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="trois-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="trois-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="trois-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="trois-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="trois-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="trois-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="trois-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="trois-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="trois-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="trois-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="trois-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="trois-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="trois-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="trois-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="trois-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="trois-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="trois-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="trois-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">CE QUE CHACUN DOIT CONNAÎTRE : L'APPAREIL, L'ORDRE, LA STRUCTURE DE L'ORDRE</text>
+          <ellipse cx="182.0" cy="111.0" rx="170.0" ry="11" fill="url(#trois-sol)"/>
+          <polygon points="24,54 40,45.2 346,45.2 330,54" fill="url(#trois-t-ambre)"/>
+          <polygon points="330,54 346,45.2 346,89.2 330,104" fill="url(#trois-s-ambre)"/>
+          <rect x="18" y="54" width="312" height="50" rx="8" fill="url(#trois-f-ambre)" stroke="#e0a12a" stroke-opacity=".5"/>
+          <path d="M18 88 V62 a8 8 0 0 1 8 -8 H322 a8 8 0 0 1 8 8 V88 z" fill="url(#trois-h-ambre)"/>
+          <g transform="translate(30.0 62.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="56.0" y="76.5" font-size="13" fill="#ffffff" font-weight="700">L'appareil</text>
+          <text x="318.0" y="76.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">App · 16 o</text>
+          <rect x="18" y="118" width="312" height="122" rx="12" fill="url(#trois-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#trois-o)"/>
+          <circle cx="33" cy="137" r="4.5" fill="url(#trois-h-ambre)"/>
+          <text x="45.0" y="141.0" font-size="11.5" fill="#94660a" font-weight="700">Ce qu'il porte</text>
+          <text x="32.0" y="159.0" font-size="10.4" fill="#52615a">sa liste : ses valeurs, puis ses ordres</text>
+          <text x="32.0" y="174.0" font-size="10.4" fill="#52615a">sa composition (8 o par membre)</text>
+          <text x="32.0" y="189.0" font-size="10.4" fill="#52615a">sa pièce</text>
+          <text x="32.0" y="204.0" font-size="10.4" fill="#52615a">physique ou virtuel</text>
+          <ellipse cx="508.0" cy="111.0" rx="170.0" ry="11" fill="url(#trois-sol)"/>
+          <polygon points="350,54 366,45.2 672,45.2 656,54" fill="url(#trois-t-bleu)"/>
+          <polygon points="656,54 672,45.2 672,89.2 656,104" fill="url(#trois-s-bleu)"/>
+          <rect x="344" y="54" width="312" height="50" rx="8" fill="url(#trois-f-bleu)" stroke="#3b8db4" stroke-opacity=".5"/>
+          <path d="M344 88 V62 a8 8 0 0 1 8 -8 H648 a8 8 0 0 1 8 8 V88 z" fill="url(#trois-h-bleu)"/>
+          <g transform="translate(356.0 62.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="382.0" y="76.5" font-size="13" fill="#ffffff" font-weight="700">L'ordre</text>
+          <text x="644.0" y="76.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">Fiche · 40 o</text>
+          <rect x="344" y="118" width="312" height="122" rx="12" fill="url(#trois-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#trois-o)"/>
+          <circle cx="359" cy="137" r="4.5" fill="url(#trois-h-bleu)"/>
+          <text x="371.0" y="141.0" font-size="11.5" fill="#1b5873" font-weight="700">Ce qu'il porte</text>
+          <text x="358.0" y="159.0" font-size="10.4" fill="#52615a">sa forme ; sa dernière commande admise</text>
+          <text x="358.0" y="174.0" font-size="10.4" fill="#52615a">valeur, instant, qui, origine, issue</text>
+          <text x="358.0" y="189.0" font-size="10.4" fill="#52615a">« en cours » : ses demandes vivantes</text>
+          <text x="358.0" y="204.0" font-size="10.4" fill="#52615a">sa preuve : la valeur suit-elle ?</text>
+          <ellipse cx="834.0" cy="111.0" rx="170.0" ry="11" fill="url(#trois-sol)"/>
+          <polygon points="676,54 692,45.2 998,45.2 982,54" fill="url(#trois-t-vert)"/>
+          <polygon points="982,54 998,45.2 998,89.2 982,104" fill="url(#trois-s-vert)"/>
+          <rect x="670" y="54" width="312" height="50" rx="8" fill="url(#trois-f-vert)" stroke="#3d9a75" stroke-opacity=".5"/>
+          <path d="M670 88 V62 a8 8 0 0 1 8 -8 H974 a8 8 0 0 1 8 8 V88 z" fill="url(#trois-h-vert)"/>
+          <g transform="translate(682.0 62.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="708.0" y="76.5" font-size="13" fill="#ffffff" font-weight="700">La structure</text>
+          <text x="970.0" y="76.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">Forme · 24 o</text>
+          <rect x="670" y="118" width="312" height="122" rx="12" fill="url(#trois-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#trois-o)"/>
+          <circle cx="685" cy="137" r="4.5" fill="url(#trois-h-vert)"/>
+          <text x="697.0" y="141.0" font-size="11.5" fill="#195744" font-weight="700">Ce qu'il porte</text>
+          <text x="684.0" y="159.0" font-size="10.4" fill="#52615a">effet : consigne ou appui</text>
+          <text x="684.0" y="174.0" font-size="10.4" fill="#52615a">retour : état, pont, accusé, aucun</text>
+          <text x="684.0" y="189.0" font-size="10.4" fill="#52615a">la valeur qui prouve : une clé</text>
+          <text x="684.0" y="204.0" font-size="10.4" fill="#52615a">20 o par paramètre, 4 o par attendu</text>
+          <path d="M332 80 L342 80" fill="none" stroke="#1b5873" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#trois-m-bleu)"/>
+          <path d="M658 80 L668 80" fill="none" stroke="#195744" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#trois-m-vert)"/>
+          <rect x="73.6" y="254.0" width="200.8" height="21.5" rx="10.8" fill="url(#trois-h-ambre)"/>
+          <text x="86.6" y="268.5" font-size="10.5" fill="#ffffff" font-weight="700">525 appareils, dont 29 virtuels</text>
+          <rect x="455.1" y="254.0" width="89.8" height="21.5" rx="10.8" fill="url(#trois-h-bleu)"/>
+          <text x="468.1" y="268.5" font-size="10.5" fill="#ffffff" font-weight="700">802 ordres</text>
+          <rect x="761.0" y="254.0" width="130.1" height="21.5" rx="10.8" fill="url(#trois-h-vert)"/>
+          <text x="774.0" y="268.5" font-size="10.5" fill="#ffffff" font-weight="700">16 formes en tout</text>
+          <rect x="16" y="296" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 304.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="318.0" font-size="11" fill="#1d302a" font-weight="700">Chaque taille est vérifiée à la compilation. 802 ordres partagent 16 structures ; à ×100, toujours 16.</text>
+  <text x="18" y="373" font-size="12" fill="#52615a" font-style="italic">Ta phrase, en trois fiches. La v1 annonçait 16, 32 et 24 octets, dont deux faux ; la v2 vérifie chaque taille par une assertion à la compilation</text>
+  <text x="18" y="390" font-size="12" fill="#52615a" font-style="italic">(revue I18).</text>
+</svg>

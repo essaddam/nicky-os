@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 494" width="1000" height="494" role="img" aria-labelledby="workflows-t workflows-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="workflows-t">Les workflows passent par MQTT</title>
+  <desc id="workflows-d">Une frise sur l'actif : à 21:42:03,120 la porte s'ouvre (val/, s 1041) ; une milliseconde plus tard l'exécution 87 démarre et arme une attente de 10 minutes (wf/, s 1042, et run/ départ) ; à 21:52:03,120 l'attente est revérifiée et le pas 2 allume la lampe (wf/, s 1873, et run/ pas 2) ; à 21:52:03,410 l'exécution finit (wf/, s 1874, et run/ fin). En bas : le moteur du secours reçoit wf/ dans le rang s et tient l'exécution au même nœud, avec la même échéance, sans rien réveiller ; la base de l'actif range run/, donne le rang seq et publie hist/ ; la base du secours applique hist/ par seq et peut reprendre l'export ; un trou de seq se redemande à la base de l'actif.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="494" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="workflows-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="workflows-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="workflows-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="workflows-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="workflows-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="workflows-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="workflows-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="workflows-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="workflows-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="workflows-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="workflows-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="workflows-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="workflows-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="workflows-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="workflows-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="workflows-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="workflows-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="workflows-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="workflows-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="workflows-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="workflows-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="workflows-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="workflows-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="workflows-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="workflows-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="workflows-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="workflows-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="workflows-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="workflows-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="workflows-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="workflows-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="workflows-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="workflows-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="workflows-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="workflows-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="workflows-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="workflows-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">UNE EXÉCUTION SUR L'ACTIF, ET CE QU'ELLE PUBLIE</text>
+          <text x="16.0" y="66.0" font-size="12" fill="#195744" font-weight="700">Actif</text>
+          <rect x="140" y="56" width="840" height="14" rx="7" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <text x="16.0" y="118.0" font-size="11" fill="#94660a" font-weight="700">Critique, rang s</text>
+          <text x="16.0" y="132.0" font-size="9.5" fill="#52615a">vers les secours</text>
+          <text x="16.0" y="168.0" font-size="11" fill="#3b5676" font-weight="700">Historique, run/</text>
+          <text x="16.0" y="182.0" font-size="9.5" fill="#52615a">vers les bases</text>
+          <path d="M150 128 L880 128" fill="none" stroke="#94660a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M370 178 L880 178" fill="none" stroke="#3b5676" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="150" cy="63" r="7" fill="url(#workflows-h-vert)" stroke="#ffffff" stroke-width="2"/>
+          <text x="150.0" y="46.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">21:42:03,120</text>
+          <text x="150.0" y="90.0" font-size="10" fill="#1d302a" text-anchor="middle">porte ouverte</text>
+          <path d="M150 96 L150 104" fill="none" stroke="#4f5d57" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 3"/>
+          <circle cx="370" cy="63" r="7" fill="url(#workflows-h-vert)" stroke="#ffffff" stroke-width="2"/>
+          <text x="370.0" y="46.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">21:42:03,121</text>
+          <text x="370.0" y="90.0" font-size="10" fill="#1d302a" text-anchor="middle">exécution 87 : départ, attente « 10 min »</text>
+          <path d="M370 96 L370 154" fill="none" stroke="#4f5d57" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 3"/>
+          <circle cx="640" cy="63" r="7" fill="url(#workflows-h-vert)" stroke="#ffffff" stroke-width="2"/>
+          <text x="640.0" y="46.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">21:52:03,120</text>
+          <text x="640.0" y="90.0" font-size="10" fill="#1d302a" text-anchor="middle">revérifiée : pas 2, la lampe</text>
+          <path d="M640 96 L640 154" fill="none" stroke="#4f5d57" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 3"/>
+          <circle cx="880" cy="63" r="7" fill="url(#workflows-h-vert)" stroke="#ffffff" stroke-width="2"/>
+          <text x="880.0" y="46.0" font-size="9.5" fill="#52615a" font-weight="700" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">21:52:03,410</text>
+          <text x="880.0" y="90.0" font-size="10" fill="#1d302a" text-anchor="middle">fin : réussie</text>
+          <path d="M880 96 L880 154" fill="none" stroke="#4f5d57" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 3"/>
+          <rect x="111.9" y="104.0" width="76.1" height="18.5" rx="9.2" fill="url(#workflows-h-ambre)" stroke="#e0a12a" stroke-opacity="0"/>
+          <text x="119.9" y="116.7" font-size="9.5" fill="#ffffff" font-weight="700">val/ · s 1041</text>
+          <rect x="331.9" y="104.0" width="76.2" height="18.5" rx="9.2" fill="url(#workflows-h-ambre)" stroke="#e0a12a" stroke-opacity="0"/>
+          <text x="339.9" y="116.7" font-size="9.5" fill="#ffffff" font-weight="700">wf/ · s 1042</text>
+          <rect x="331.6" y="154.0" width="76.7" height="18.5" rx="9.2" fill="url(#workflows-h-ardoise)" stroke="#7494bb" stroke-opacity="0"/>
+          <text x="339.6" y="166.7" font-size="9.5" fill="#ffffff" font-weight="700">run/ · départ</text>
+          <rect x="601.9" y="104.0" width="76.2" height="18.5" rx="9.2" fill="url(#workflows-h-ambre)" stroke="#e0a12a" stroke-opacity="0"/>
+          <text x="609.9" y="116.7" font-size="9.5" fill="#ffffff" font-weight="700">wf/ · s 1873</text>
+          <rect x="604.8" y="154.0" width="70.3" height="18.5" rx="9.2" fill="url(#workflows-h-ardoise)" stroke="#7494bb" stroke-opacity="0"/>
+          <text x="612.8" y="166.7" font-size="9.5" fill="#ffffff" font-weight="700">run/ · pas 2</text>
+          <rect x="841.9" y="104.0" width="76.2" height="18.5" rx="9.2" fill="url(#workflows-h-ambre)" stroke="#e0a12a" stroke-opacity="0"/>
+          <text x="849.9" y="116.7" font-size="9.5" fill="#ffffff" font-weight="700">wf/ · s 1874</text>
+          <rect x="850.4" y="154.0" width="59.2" height="18.5" rx="9.2" fill="url(#workflows-h-ardoise)" stroke="#7494bb" stroke-opacity="0"/>
+          <text x="858.4" y="166.7" font-size="9.5" fill="#ffffff" font-weight="700">run/ · fin</text>
+          <path d="M500 63 L620 63" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 5"/>
+          <text x="500.0" y="80.0" font-size="9" fill="#52615a" text-anchor="middle" font-style="italic">10 min d'attente</text>
+          <rect x="16" y="236" width="300" height="100" rx="12" fill="url(#workflows-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#workflows-o)"/>
+          <rect x="26" y="245" width="26" height="26" rx="8" fill="url(#workflows-h-bleu)"/>
+          <g transform="translate(31.0 250.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="60.0" y="263.0" font-size="12" fill="#1b5873" font-weight="700">Moteur du secours</text>
+          <text x="30.0" y="285.0" font-size="10.2" fill="#52615a">reçoit wf/ dans le rang s : il tient l'exécution 87</text>
+          <text x="30.0" y="299.0" font-size="10.2" fill="#52615a">au même nœud, avec la même échéance (heure</text>
+          <text x="30.0" y="313.0" font-size="10.2" fill="#52615a">murale) ; il ne réveille rien. À la bascule, il</text>
+          <text x="30.0" y="327.0" font-size="10.2" fill="#52615a">reprend là où l'actif en était.</text>
+          <g filter="url(#workflows-o)"><path d="M392.0 234.5 V267.5 A48.0 12.5 0 0 0 488.0 267.5 V234.5 z" fill="url(#workflows-c-ardoise)"/></g>
+          <path d="M392.0 248.4 A48.0 12.5 0 0 0 488.0 248.4" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <path d="M392.0 257.6 A48.0 12.5 0 0 0 488.0 257.6" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <ellipse cx="440.0" cy="234.5" rx="48.0" ry="12.5" fill="url(#workflows-t-ardoise)" stroke="#3b5676" stroke-opacity=".35"/>
+          <text x="440.0" y="296.0" font-size="11.5" fill="#3b5676" font-weight="700" text-anchor="middle">Base de l'actif</text>
+          <text x="440.0" y="311.0" font-size="10" fill="#52615a" text-anchor="middle">range run/, donne seq</text>
+          <text x="440.0" y="326.0" font-size="10" fill="#52615a" text-anchor="middle">publie hist/ (après validation)</text>
+          <g filter="url(#workflows-o)"><path d="M752.0 234.5 V267.5 A48.0 12.5 0 0 0 848.0 267.5 V234.5 z" fill="url(#workflows-c-ardoise)"/></g>
+          <path d="M752.0 248.4 A48.0 12.5 0 0 0 848.0 248.4" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <path d="M752.0 257.6 A48.0 12.5 0 0 0 848.0 257.6" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <ellipse cx="800.0" cy="234.5" rx="48.0" ry="12.5" fill="url(#workflows-t-ardoise)" stroke="#3b5676" stroke-opacity=".35"/>
+          <text x="800.0" y="296.0" font-size="11.5" fill="#3b5676" font-weight="700" text-anchor="middle">Base du secours</text>
+          <text x="800.0" y="311.0" font-size="10" fill="#52615a" text-anchor="middle">applique hist/ par seq</text>
+          <text x="800.0" y="326.0" font-size="10" fill="#52615a" text-anchor="middle">mêmes rangs : elle peut</text>
+          <text x="800.0" y="340.0" font-size="10" fill="#52615a" text-anchor="middle">reprendre l'export (D13)</text>
+          <path d="M150 128 L150 232" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#workflows-m-ambre)"/>
+          <path class="hd-flux" d="M150 128 L150 232" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="158.0" y="214.0" font-size="10" fill="#94660a" font-weight="700" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">wf/ (et val/)</text>
+          <path d="M440 178 L440 218" fill="none" stroke="#3b5676" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#workflows-m-ardoise)"/>
+          <path class="hd-lent" d="M440 178 L440 218" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M492 250 L748 250" fill="none" stroke="#3b5676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#workflows-m-ardoise)"/>
+          <path class="hd-flux" d="M492 250 L748 250" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="620.0" y="242.0" font-size="10" fill="#3b5676" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">hist/ : opérations, rang seq</text>
+          <path d="M748 272 L494 272" fill="none" stroke="#3b5676" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" marker-end="url(#workflows-m-ardoise)"/>
+          <text x="620.0" y="288.0" font-size="9.5" fill="#3b5676" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">un trou de seq : hist/demande, servi par la base</text>
+          <rect x="16" y="372" width="968" height="58" rx="12" fill="#fbefd3" stroke="#e0a12a" stroke-opacity=".55"/>
+          <g transform="translate(28.0 384.0) scale(0.8333)" fill="none" stroke="#94660a" stroke-width="2.28" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="58.0" y="394.0" font-size="11" fill="#1d302a" font-weight="700">Un seul rang pour les valeurs et les workflows : la v1 avait un journal à part (rang j) et une dépendance à gérer ;</text>
+          <text x="58.0" y="412.0" font-size="11" fill="#1d302a">ici, « attente armée » (s 1042) ne peut pas arriver avant « porte ouverte » (s 1041) : le secours applique dans l'ordre de s.</text>
+  <text x="18" y="471" font-size="12" fill="#52615a" font-style="italic">L'état d'un workflow est critique (wf/, rang s) ; son journal d'exécution est de l'historique (run/, puis hist/ avec le rang seq de la base de</text>
+  <text x="18" y="488" font-size="12" fill="#52615a" font-style="italic">l'actif).</text>
+</svg>

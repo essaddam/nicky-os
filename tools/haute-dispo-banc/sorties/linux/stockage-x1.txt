@@ -1,0 +1,10 @@
+RESULTAT|stockage|1|ops_actif|3827.000|opérations
+RESULTAT|stockage|1|ops_secours_derivees|3777.000|opérations
+RESULTAT|stockage|1|premier_rang_different|1974.000|rang
+RESULTAT|stockage|1|rangs_differents|1854.000|rangs
+RESULTAT|stockage|1|reprise_export_si_derivee|0.000|booléen
+RESULTAT|stockage|1|reprise_export_si_expediee|1.000|booléen
+RESULTAT|stockage|1|rss_fin|1352.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

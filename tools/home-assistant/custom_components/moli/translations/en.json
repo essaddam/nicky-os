@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Moli OS",
+        "description": "Connect this Home Assistant instance to a configured Moli MQTT prefix.",
+        "data": {
+          "prefix": "MQTT prefix",
+          "installation": "Stable installation ID"
+        }
+      }
+    },
+    "error": {
+      "invalid_prefix": "The prefix must contain literal MQTT topic segments only.",
+      "invalid_installation": "The installation ID has an unsupported format."
+    },
+    "abort": {
+      "already_configured": "This installation is already configured."
+  },
+  "entity": {
+    "button": {
+      "favorite": {
+        "name": "Favorite"
+      }
+    }
+    }
+  }
+}

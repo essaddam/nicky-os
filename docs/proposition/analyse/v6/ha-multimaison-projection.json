@@ -1,0 +1,87 @@
+{
+  "ready": true,
+  "sources": [
+    {
+      "index": 0,
+      "registry": true,
+      "projection": {
+        "active_channel_struct_bytes": 272,
+        "channels": 1791,
+        "devices": 291,
+        "enum_catalogue": {
+          "active_choices": 111,
+          "catalogue_capacity": 25,
+          "catalogue_struct_bytes": 64,
+          "catalogues": 25,
+          "codes": 111,
+          "entry_bytes": 1110,
+          "entry_capacity_bytes": 1110,
+          "entry_struct_bytes": 10,
+          "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+          "overhead_bytes": 2942,
+          "owned_capacity_bytes": 3938,
+          "packed_bytes": 996,
+          "packed_capacity_bytes": 996,
+          "shared_tables": 0,
+          "snapshot_bytes": 8188
+        },
+        "enum_channels": 116,
+        "enum_code_bytes": 39,
+        "enum_json_storage_bytes": 3712,
+        "hot_label_bytes": 0,
+        "light_command_contracts": 25,
+        "metadata_bytes": 1603606,
+        "nodes": 21,
+        "observed_channels": 1242,
+        "pending_native_bytes": 0,
+        "rejected": 21,
+        "standalone_entities": 104,
+        "switch_command_contracts": 43,
+        "text_values_utf8_bytes": 2123,
+        "unmatched_messages": 111
+      }
+    },
+    {
+      "index": 1,
+      "registry": true,
+      "projection": {
+        "active_channel_struct_bytes": 272,
+        "channels": 1500,
+        "devices": 201,
+        "enum_catalogue": {
+          "active_choices": 100,
+          "catalogue_capacity": 15,
+          "catalogue_struct_bytes": 64,
+          "catalogues": 15,
+          "codes": 100,
+          "entry_bytes": 1000,
+          "entry_capacity_bytes": 1000,
+          "entry_struct_bytes": 10,
+          "measurement": "logical_table_bytes_and_vec_capacities_excludes_allocator_and_arc_headers_or_rss",
+          "overhead_bytes": 2112,
+          "owned_capacity_bytes": 3005,
+          "packed_bytes": 893,
+          "packed_capacity_bytes": 893,
+          "shared_tables": 0,
+          "snapshot_bytes": 7162
+        },
+        "enum_channels": 45,
+        "enum_code_bytes": 30,
+        "enum_json_storage_bytes": 1440,
+        "hot_label_bytes": 0,
+        "light_command_contracts": 0,
+        "metadata_bytes": 1352013,
+        "nodes": 23,
+        "observed_channels": 1216,
+        "pending_native_bytes": 0,
+        "rejected": 0,
+        "standalone_entities": 28,
+        "switch_command_contracts": 8,
+        "text_values_utf8_bytes": 1102,
+        "unmatched_messages": 59
+      }
+    }
+  ],
+  "overkiz_running": true,
+  "overkiz_devices": 5
+}

@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Moli OS",
+        "description": "Reliez cette instance Home Assistant au préfixe MQTT configuré dans Moli.",
+        "data": {
+          "prefix": "Préfixe MQTT",
+          "installation": "Identifiant stable de l'installation"
+        }
+      }
+    },
+    "error": {
+      "invalid_prefix": "Le préfixe doit contenir uniquement des segments MQTT littéraux.",
+      "invalid_installation": "Le format de l'identifiant d'installation n'est pas pris en charge."
+    },
+    "abort": {
+      "already_configured": "Cette installation est déjà configurée."
+  },
+  "entity": {
+    "button": {
+      "favorite": {
+        "name": "Favori"
+      }
+    }
+    }
+  }
+}

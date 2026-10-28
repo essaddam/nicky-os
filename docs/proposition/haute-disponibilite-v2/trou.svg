@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 472" width="1000" height="472" role="img" aria-labelledby="trou-t trou-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="trou-t">Un trou : la file, ou l'état complet</title>
+  <desc id="trou-d">Trois bandes de rangs. Une coupure courte : les sorties perdues sont encore dans la file de l'actif ; le pont les redemande en tronçons et rattrape en 110 ms puis 207 ms. Une coupure longue de 60 secondes : une partie des sorties perdues est sortie de la file ; le pont reçoit « hors file », demande l'état complet (98 Kio), puis la suite, et rattrape en 404 ms. La dernière sortie perdue : rien ne suit pour la révéler ; le battement annonce le bout toutes les 500 ms, et elle est redemandée après la grâce de 200 ms.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="472" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="trou-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="trou-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="trou-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="trou-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="trou-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="trou-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="trou-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="trou-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="trou-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="trou-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="trou-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="trou-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="trou-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="trou-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="trou-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="trou-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="trou-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="trou-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="trou-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="trou-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="trou-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="trou-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="trou-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="trou-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="trou-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="trou-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="trou-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="trou-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="trou-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="trou-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">TROIS FAÇONS DE MANQUER DES SORTIES, TROIS RÉPONSES DU PONT</text>
+          <text x="16.0" y="83.0" font-size="12" fill="#1d302a" font-weight="700">Une coupure courte</text>
+          <text x="16.0" y="99.0" font-size="10" fill="#52615a">5 s, puis 10 s, à 200 /s</text>
+          <rect x="330" y="56" width="361" height="41" rx="9" fill="#fbefd3" stroke="#e0a12a" stroke-opacity=".7"/>
+          <text x="336.0" y="66.0" font-size="9" fill="#94660a" font-weight="700">la file de l'actif</text>
+          <rect x="215" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="232" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="249" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="266" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="283" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="300" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="317" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="334" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="351" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="368" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="385" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="402" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="419" y="71" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="436" y="71" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="453" y="71" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="470" y="71" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="487" y="71" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="504" y="71" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="521" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="538" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="555" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="572" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="589" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="606" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="623" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="640" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="657" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="674" y="71" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <text x="694.0" y="83.0" font-size="10" fill="#52615a" font-weight="700">s →</text>
+          <rect x="726" y="52" width="258" height="72" rx="12" fill="url(#trou-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <rect x="736" y="61" width="26" height="26" rx="8" fill="url(#trou-h-vert)"/>
+          <g transform="translate(741.0 66.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1-9 9 M3 12l-1.5-2.5 M3 12l2.5-1.5"/></g>
+          <text x="770.0" y="79.0" font-size="12" fill="#195744" font-weight="700">Des tronçons de la file</text>
+          <text x="740.0" y="101.0" font-size="10" fill="#52615a">rattrapé en 110 ms puis 207 ms</text>
+          <text x="740.0" y="116.0" font-size="10" fill="#52615a">aucune perte, mémoire identique</text>
+          <path d="M700 84 L722 84" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#trou-m-vert)"/>
+          <text x="16.0" y="199.0" font-size="12" fill="#1d302a" font-weight="700">Une coupure longue</text>
+          <text x="16.0" y="215.0" font-size="10" fill="#52615a">60 s : 12 000 sorties, plus que la file</text>
+          <rect x="466" y="172" width="225" height="41" rx="9" fill="#fbefd3" stroke="#e0a12a" stroke-opacity=".7"/>
+          <text x="472.0" y="182.0" font-size="9" fill="#94660a" font-weight="700">la file de l'actif</text>
+          <rect x="215" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="232" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="249" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="266" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="283" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="300" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="317" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="334" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="351" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="368" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="385" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="402" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="419" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="436" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="453" y="187" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <rect x="470" y="187" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="487" y="187" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="504" y="187" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="521" y="187" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="538" y="187" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <rect x="555" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="572" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="589" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="606" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="623" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="640" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="657" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="674" y="187" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <text x="694.0" y="199.0" font-size="10" fill="#52615a" font-weight="700">s →</text>
+          <rect x="726" y="168" width="258" height="72" rx="12" fill="url(#trou-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <rect x="736" y="177" width="26" height="26" rx="8" fill="url(#trou-h-ambre)"/>
+          <g transform="translate(741.0 182.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="770.0" y="195.0" font-size="12" fill="#94660a" font-weight="700">L'état complet, puis la suite</text>
+          <text x="740.0" y="217.0" font-size="10" fill="#52615a">98 Kio en morceaux de 4 Kio ;</text>
+          <text x="740.0" y="232.0" font-size="10" fill="#52615a">rattrapé en 404 ms, mémoire identique</text>
+          <path d="M700 200 L722 200" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#trou-m-ambre)"/>
+          <text x="16.0" y="315.0" font-size="12" fill="#1d302a" font-weight="700">La dernière sortie perdue</text>
+          <text x="16.0" y="331.0" font-size="10" fill="#52615a">plus rien ne suit pour la révéler</text>
+          <rect x="330" y="288" width="361" height="41" rx="9" fill="#fbefd3" stroke="#e0a12a" stroke-opacity=".7"/>
+          <text x="336.0" y="298.0" font-size="9" fill="#94660a" font-weight="700">la file de l'actif</text>
+          <rect x="215" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="232" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="249" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="266" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="283" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="300" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="317" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="334" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="351" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="368" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="385" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="402" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="419" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="436" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="453" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="470" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="487" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="504" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="521" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="538" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="555" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="572" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="589" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="606" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="623" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="640" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="657" y="303" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <rect x="674" y="303" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <text x="694.0" y="315.0" font-size="10" fill="#52615a" font-weight="700">s →</text>
+          <circle class="hd-pouls" cx="680" cy="280" r="5" fill="#4f5d57"/>
+          <text x="671.0" y="284.0" font-size="9.5" fill="#4f5d57" font-weight="700" text-anchor="end" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">battement : « bout = 28 »</text>
+          <rect x="726" y="284" width="258" height="72" rx="12" fill="url(#trou-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <rect x="736" y="293" width="26" height="26" rx="8" fill="url(#trou-h-gris)"/>
+          <g transform="translate(741.0 298.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h5l2-5 3 10 2-5h8"/></g>
+          <text x="770.0" y="311.0" font-size="12" fill="#4f5d57" font-weight="700">Le battement la révèle</text>
+          <text x="740.0" y="333.0" font-size="10" fill="#52615a">« bout = 28 » toutes les 500 ms ;</text>
+          <text x="740.0" y="348.0" font-size="10" fill="#52615a">demandée après la grâce de 200 ms</text>
+          <path d="M700 316 L722 316" fill="none" stroke="#4f5d57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#trou-m-gris)"/>
+          <rect x="214" y="392" width="14" height="14" rx="4" fill="url(#trou-h-vert)"/>
+          <text x="236.0" y="404.0" font-size="10" fill="#52615a">reçue</text>
+          <rect x="424" y="392" width="14" height="14" rx="4" fill="#ffffff" stroke="#d06a46" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <text x="446.0" y="404.0" font-size="10" fill="#52615a">perdue, encore dans la file</text>
+          <rect x="634" y="392" width="14" height="14" rx="4" fill="#fae7dd" stroke="#8b3b22" stroke-width="1.4"/>
+          <text x="656.0" y="404.0" font-size="10" fill="#52615a">perdue, sortie de la file</text>
+  <text x="18" y="449" font-size="12" fill="#52615a" font-style="italic">Mesuré sur le banc (réseau local, 200 sorties par seconde, médiane de trois essais) ; dans les trois cas, la mémoire du secours finit identique à</text>
+  <text x="18" y="466" font-size="12" fill="#52615a" font-style="italic">celle de l'actif.</text>
+</svg>

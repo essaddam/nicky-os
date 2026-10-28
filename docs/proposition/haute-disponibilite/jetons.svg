@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 340" width="1000" height="340" role="img" aria-labelledby="jetons-t jetons-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="jetons-t">Un jeton qui tourne, deux machines</title>
+  <desc id="jetons-d">À gauche, deux machines renouvellent chacune le même jeton : le fournisseur voit revenir un jeton déjà utilisé et révoque tout. À droite, l'actif seul renouvelle, range le nouveau jeton au coffre, le copie scellé au secours, qui le présente après la bascule.</desc>
+  <rect width="1000" height="340" fill="#fffdf8"/>
+          <defs>
+            <marker id="jetons-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="jetons-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="jetons-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="jetons-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#8b3b22" font-weight="700">DEUX RENOUVELEURS : RÉVOQUÉS</text>
+          <rect x="21.0" y="40.0" width="90.0" height="24.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="66.0" y="56.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Actif</text>
+          <line x1="66.0" y1="64.0" x2="66.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="191.0" y="40.0" width="90.0" height="24.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="236.0" y="56.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Fournisseur</text>
+          <line x1="236.0" y1="64.0" x2="236.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="361.0" y="40.0" width="90.0" height="24.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="406.0" y="56.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Secours</text>
+          <line x1="406.0" y1="64.0" x2="406.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="516.0" y="26.0" font-size="11.5" fill="#195744" font-weight="700">UN RENOUVELEUR, COPIE EN DIRECT</text>
+          <rect x="521.0" y="40.0" width="90.0" height="24.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="566.0" y="56.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Actif</text>
+          <line x1="566.0" y1="64.0" x2="566.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="691.0" y="40.0" width="90.0" height="24.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="736.0" y="56.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Fournisseur</text>
+          <line x1="736.0" y1="64.0" x2="736.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="861.0" y="40.0" width="90.0" height="24.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="906.0" y="56.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Secours</text>
+          <line x1="906.0" y1="64.0" x2="906.0" y2="300.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="66.0" y1="90.0" x2="232.0" y2="90.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#jetons-g)"/>
+          <text x="151.0" y="84.0" font-size="10" fill="#52615a" text-anchor="middle">renouveler (jeton 1)</text>
+          <line x1="236.0" y1="112.0" x2="70.0" y2="112.0" stroke="#195744" stroke-width="1.4" marker-end="url(#jetons-v)"/>
+          <text x="151.0" y="106.0" font-size="10" fill="#195744" text-anchor="middle">jeton 2 ; le 1 est invalidé</text>
+          <line x1="406.0" y1="150.0" x2="240.0" y2="150.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#jetons-g)"/>
+          <text x="321.0" y="144.0" font-size="10" fill="#52615a" text-anchor="middle">renouveler (jeton 1)</text>
+          <line x1="236.0" y1="172.0" x2="402.0" y2="172.0" stroke="#8b3b22" stroke-width="1.6" marker-end="url(#jetons-r)"/>
+          <text x="321.0" y="166.0" font-size="10" fill="#8b3b22" font-weight="700" text-anchor="middle">déjà utilisé : révocation</text>
+          <line x1="66.0" y1="210.0" x2="232.0" y2="210.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#jetons-g)"/>
+          <text x="151.0" y="204.0" font-size="10" fill="#52615a" text-anchor="middle">renouveler (jeton 2)</text>
+          <line x1="236.0" y1="232.0" x2="70.0" y2="232.0" stroke="#8b3b22" stroke-width="1.6" marker-end="url(#jetons-r)"/>
+          <text x="151.0" y="226.0" font-size="10" fill="#8b3b22" font-weight="700" text-anchor="middle">révoqué aussi</text>
+          <text x="16.0" y="272.0" font-size="11" fill="#8b3b22" font-weight="700">1 000 fois sur 1 000, en 6 h au plus.</text>
+          <line x1="566.0" y1="90.0" x2="732.0" y2="90.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#jetons-g)"/>
+          <text x="651.0" y="84.0" font-size="10" fill="#52615a" text-anchor="middle">renouveler (jeton 1)</text>
+          <line x1="736.0" y1="112.0" x2="570.0" y2="112.0" stroke="#195744" stroke-width="1.4" marker-end="url(#jetons-v)"/>
+          <text x="651.0" y="106.0" font-size="10" fill="#195744" text-anchor="middle">jeton 2</text>
+          <rect x="526.0" y="122.0" width="80.0" height="22.0" rx="4" fill="#e3c77f" stroke="#b07d12" stroke-width="1"/>
+          <text x="566.0" y="137.0" font-size="9.5" fill="#1d302a" font-weight="700" text-anchor="middle">coffre, fsync</text>
+          <path d="M 566 152 C 686 152 786 166 902 166" fill="none" stroke="#b07d12" stroke-width="1.6" marker-end="url(#jetons-a)"/>
+          <text x="736.0" y="152.0" font-size="10" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">copie scellée (jeton 2)</text>
+          <text x="906.0" y="196.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">bascule</text>
+          <line x1="906.0" y1="210.0" x2="740.0" y2="210.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#jetons-g)"/>
+          <text x="821.0" y="204.0" font-size="10" fill="#52615a" text-anchor="middle">renouveler (jeton 2)</text>
+          <line x1="736.0" y1="232.0" x2="902.0" y2="232.0" stroke="#195744" stroke-width="1.6" marker-end="url(#jetons-v)"/>
+          <text x="821.0" y="226.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle">jeton 3 : la maison continue</text>
+          <text x="516.0" y="272.0" font-size="11" fill="#195744" font-weight="700">0 échec sur 10 000 bascules (secours local).</text>
+  <text x="16" y="319" font-size="12" fill="#52615a" font-style="italic">RFC 9700 § 4.14.2 : un jeton déjà utilisé qui revient fait révoquer le jeton actif. Netatmo fait tourner ses jetons. Simulation sur 30 jours, un</text>
+  <text x="16" y="336" font-size="12" fill="#52615a" font-style="italic">renouvellement toutes les 3 h.</text>
+</svg>

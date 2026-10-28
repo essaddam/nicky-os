@@ -1,0 +1,3002 @@
+{
+  "sections": [
+    {
+      "id": "donnees-valeurs",
+      "title": "Valeurs, temps de mesure et équipements",
+      "intro": "La valeur passe une seule fois du langage du matériel au canon de la maison. Le hub garde le présent et sa qualité ; la nature du point détermine ensuite le stockage et le calcul. La V3 conserve expressément les mécanismes de la V1 sur les instants, la fraîcheur, les équipements et les familles particulières ; ils ne disparaissent pas avec le remplacement du document.",
+      "ideas": [
+        {
+          "id": "donnees-canon",
+          "title": "Une valeur canonique, plusieurs présentations",
+          "status": "partiel",
+          "decision": "Typage et unités déjà structurants ; normalisation complète et codes proposés, non livrés.",
+          "summary": "Le pilote traduit sens, unité et échelle avant publication. Le stockage conserve une valeur stable, tandis que le libellé traduit appartient à l’affichage.",
+          "details": [
+            "Réception → contrôle du Kind → inversion ou décalage déclaré → unité canonique → publication au hub ; une écriture applique la transformation inverse.",
+            "Un décimal prend la résolution réelle de sa source, jamais un arrondi arbitraire ; une nouvelle unité ou échelle ouvre une version de point.",
+            "Null représente l’inconnu ; ni zéro ni chaîne vide ne le remplacent. Les textes sont bornés à 4 000 caractères Unicode."
+          ],
+          "evolution": "V1 §4 conservé par V3 §13 ; le domaine actuel reste la base de la migration.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 169,
+              "note": "Types et traduction au bord"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 442,
+              "note": "Héritage explicite"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-core/src/model.rs",
+              "line": 55,
+              "note": "Sample actuel : valeur et un seul ts"
+            },
+            {
+              "path": "crates/moli-archive/src/protocol.rs",
+              "line": 1,
+              "note": "Validation des valeurs exportées existante"
+            }
+          ],
+          "risks": [
+            "La fiche canonique à échelle et dictionnaire ne doit pas être présentée comme le contrat courant de tous les pilotes."
+          ]
+        },
+        {
+          "id": "donnees-trois-instants",
+          "title": "Observé, reçu et changé restent distincts",
+          "status": "proposition",
+          "decision": "Trois instants retenus dans la conception, pas ajoutés au Sample de production.",
+          "summary": "Un rapport identique avance reçu sans devenir un changement. Après un redémarrage, une valeur restaurée reste incertaine et se réconcilie silencieusement.",
+          "details": [
+            "Observé situe la mesure selon la source ; reçu situe le rapport au hub ; changé situe la dernière transition réelle.",
+            "Chaque appareil conserve aussi son dernier contact, y compris pour un message sans valeur. DriverCtx pourrait recevoir un horodatage source facultatif.",
+            "Au démarrage, restaurer la fiche sans événement ; comparer ensuite au récent et garder l’information la plus récente sans déclencher un automatisme."
+          ],
+          "evolution": "V1 §5 hérité par V3 ; mémoire v2 transporte les trois instants dans ses fiches.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 225,
+              "note": "Règles des trois instants"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 817,
+              "note": "Réconciliation silencieuse"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-core/src/model.rs",
+              "line": 55,
+              "note": "Un seul ts dans Sample courant"
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2116,
+              "note": "Événements de valeurs restaurées encore construits puis émis"
+            }
+          ],
+          "risks": [
+            "Réémettre une restauration comme un changement ajouterait des relevés et des départs artificiels.",
+            "L’horodatage source ne doit pas prendre la place du contact mesuré localement."
+          ]
+        },
+        {
+          "id": "donnees-qualite",
+          "title": "Fraîcheur et santé : deux garanties différentes",
+          "status": "partiel",
+          "decision": "Disponibilité et supervision présentes ; qualité fine, rapport attendu et péremption unifiée proposés.",
+          "summary": "Un appareil vivant peut fournir une valeur trop ancienne pour une règle. La conception sépare santé par appareil et fraîcheur exigée par point, puis interdit de déclencher sur une valeur mauvaise.",
+          "details": [
+            "Un défaut de rythme vient du pilote ou profil et peut être surchargé par appareil ; le nombre de rapports perdus tolérés reste explicite.",
+            "Une panne d’intégration se propage aux appareils puis aux points et équipements, avec la cause portée une seule fois et une alerte regroupée.",
+            "Au retour d’un rapport, reçu et l’échéance avancent ; à la péremption du point, publier la mauvaise qualité pour invalider les conditions composées."
+          ],
+          "evolution": "V1 §8 conservé ; mémoire v2 corrige le simple calcul à la lecture pour la fraîcheur du point.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 351,
+              "note": "Rythmes, qualités et cascade"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 509,
+              "note": "Péremption publiée comme événement"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/valeurs.rs",
+              "line": 207,
+              "note": "État proposé et colonnes de santé"
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2209,
+              "note": "Disponibilité actuelle distincte des valeurs"
+            }
+          ],
+          "risks": [
+            "Les rythmes chiffrés des tableaux sont des exemples, pas une garantie vérifiée pour chaque matériel.",
+            "Le banc mémoire prouve un modèle, pas le raccordement de tous les pilotes."
+          ]
+        },
+        {
+          "id": "donnees-filtres",
+          "title": "Filtrer l’historique sans masquer les seuils",
+          "status": "proposition",
+          "decision": "Anti-rebond au bord seulement si prouvé ; bande au stockage recommandée, adoption encore à valider.",
+          "summary": "L’automatisme reçoit la valeur exacte. Seule la copie historique peut absorber du bruit, avec un résumé de ce qu’elle a absorbé.",
+          "details": [
+            "Un rebond démontré se traite dans le pilote ou profil, car un bref aller-retour de porte peut être un événement réel.",
+            "Mesure : la bande garde aire temporelle, min, max et nombre de rapports ; la ligne écrite ferme l’intervalle précédent.",
+            "État, occurrence et index ne partagent pas ce filtre : conserver les transitions ; garder le dernier index avant remise à zéro.",
+            "Précision de cible : un intervalle coupé à l’heure expose lo/hi réellement observés ; si une borne epsilon stricte est promise, la fermeture sur excursion prime sur intervalle_min."
+          ],
+          "evolution": "V1 séparait bande morte, intervalle minimal et accumulateur ; V2/V3 les remplacent par le relevé à bande.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 244,
+              "note": "Séparation bord/stockage"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 167,
+              "note": "Algorithme du relevé à bande"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/storage-writes/parquet_forms.py",
+              "line": 1,
+              "note": "Outil existant comparant les formes synthétiques"
+            },
+            {
+              "path": "crates/moli-history/src/lib.rs",
+              "line": 1,
+              "note": "Recorder actuel, sans portage du mécanisme V3 constaté"
+            }
+          ],
+          "risks": [
+            "Le gain de 4,6 sur les lignes est synthétique ; il dépend du bruit réel.",
+            "Une coupure perd le résumé de bande ouverte si celui-ci n’a pas été figé."
+          ]
+        },
+        {
+          "id": "donnees-roles",
+          "title": "Composer les équipements par liaisons",
+          "status": "proposition",
+          "decision": "Généralisation de D12 proposée ; [[equipment]] et son édition restent à décider.",
+          "summary": "Un équipement relie des rôles à des points physiques au lieu de recopier leurs valeurs. Sa qualité indique normal, dégradé ou indisponible selon les rôles encore utilisables.",
+          "details": [
+            "Définir commande, état, mesure et consigne comme liens avec inversion, codes ou échelle sans perte.",
+            "Une lecture suit la source et transforme sa valeur et sa courbe ; l’écran expose la provenance. Une commande suit hub → garde → pilote source.",
+            "Un portail avec commande saine mais contact perdu reste commandable avec retour d’état absent ; l’inverse devient lecture seule. Une valeur calculée apporte une information nouvelle et se stocke une seule fois."
+          ],
+          "evolution": "V1 §9 intégralement conservé dans V3 §13 ; D12 sert de précédent limité aux luminaires.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 386,
+              "note": "Rôles, liaisons et mode dégradé"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 446,
+              "note": "Héritage V1 §9"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-core/src/model.rs",
+              "line": 25,
+              "note": "Membres de Device et portée de garde existants"
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 1,
+              "note": "Hub actuel restant le chemin de commande"
+            }
+          ],
+          "risks": [
+            "Une liaison ne doit pas créer une seconde histoire indépendante du point source.",
+            "Un profil de scène vise des valeurs cibles ; ce concept reste distinct de la composition d’un équipement."
+          ]
+        },
+        {
+          "id": "donnees-natures",
+          "title": "Déclarer la nature, pas la déduire de l’unité",
+          "status": "proposition",
+          "decision": "Cible de revue : nature explicite, séparée de la famille ; interdire toute moyenne d’index et toute nouvelle agrégation non déclarée.",
+          "summary": "Une mesure, un index, une occurrence et un résumé de période ne se calculent pas de la même façon. La nature donne la forme et la fonction ; la famille D13 donne l’horizon.",
+          "details": [
+            "Mesure → moyenne pondérée, min, max et couverture ; état → transitions et durées ; occurrence → comptage.",
+            "Index monotone ou à remise → deltas ; résumé de période → non historisé et recalculable, jamais réadditionné.",
+            "La classification actuelle par sémantique puis unité reste utile pour la conservation, mais un kWh de bilan ne devient pas pour autant un compteur."
+          ],
+          "evolution": "V1 §7.5 précise le cumul ; V2/V3 généralisent « le type décide ».",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 315,
+              "note": "Nature déclarée et résumés de période"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 137,
+              "note": "Matrice nature/forme/filtre/paliers"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-history/src/policy.rs",
+              "line": 1,
+              "note": "Classement de conservation actuel"
+            },
+            {
+              "path": "crates/moli-energy/src/points.rs",
+              "line": 163,
+              "note": "Points énergie de synthèse distincts des compteurs"
+            }
+          ],
+          "risks": [
+            "L’archive interdit Sum sur un index mais accepte encore d’autres agrégations inadaptées ; la règle de nature est à renforcer."
+          ]
+        },
+        {
+          "id": "donnees-familles-personnelles",
+          "title": "Données scolaires et médias : modèles dédiés",
+          "status": "proposition",
+          "decision": "Idées héritées conservées ; notes scolaires encore hors périmètre annoncé, aucun élargissement décidé ici.",
+          "summary": "Une évaluation scolaire est un enregistrement métier et une lecture média une session. Ces données personnelles ne suivent pas automatiquement la rétention d’un capteur.",
+          "details": [
+            "Évaluation : élève, période scolaire, matière, date, note, barème, coefficient et exclusion ; garder la moyenne officielle comme information différente d’un recalcul.",
+            "Accès par personne, année scolaire et absence d’archive par défaut sont les limites proposées pour les données d’enfants ; le préalable de confidentialité reste requis.",
+            "Média : contenu référencé une fois et session début/fin ; ne pas historiser chaque position de lecture. Rétention courte et effacement du titre à un seul endroit."
+          ],
+          "evolution": "V1 §11 conservé par V3 §13 ; V3 étend le dictionnaire de contenus sans transformer les notes en mesures.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 443,
+              "note": "Familles particulières héritées"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 361,
+              "note": "Dictionnaire de contenus et sessions"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-core/src/model.rs",
+              "line": 55,
+              "note": "Sample n’est pas un modèle de dossier scolaire"
+            },
+            {
+              "path": "crates/moli-archive/src/parquet.rs",
+              "line": 27,
+              "note": "Archive générique actuelle, pas de sessions typées V3"
+            }
+          ],
+          "risks": [
+            "L’effacement d’un dictionnaire courant ne prouve pas l’effacement de titres dans sauvegardes ou anciennes révisions.",
+            "L’entrée des notes dans le périmètre nécessite encore une décision explicite."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "donnees-memoire",
+      "title": "Mémoire fixe et état des workflows",
+      "intro": "La proposition remplace les recherches par noms dans le chemin fréquent par des fiches numérotées. Les noms restent les identités durables ; programme, exécutions, valeurs et agendas ont chacun leur mémoire. Les gains cités appartiennent à un banc autonome : les structures de production et leur portage restent distincts.",
+      "ideas": [
+        {
+          "id": "donnees-adresse",
+          "title": "Le numéro calcule l’adresse de la fiche",
+          "status": "qualification",
+          "decision": "Principe proposé et mesuré, sans remplacement du hub courant.",
+          "summary": "Un numéro u32 ouvre directement une case d’un tableau de taille fixe. Le déplacement du tableau ne change pas le numéro et n’expose aucune adresse mémoire aux consommateurs.",
+          "details": [
+            "Le bord traduit le nom une fois dans un annuaire ; le cœur lit ensuite Vec[point] avec des types Point, Appareil et Noeud distincts.",
+            "Vif fait 40 octets, Def 16 et Sante 20 dans le banc ; les textes et objets bornés vivent dans un tiroir à part. Une valeur numérique s’écrit sans allocation.",
+            "Le banc v2 annonce environ 124 octets par point, annuaire compris, et 0,27 Mio à ×1 contre 0,68 Mio pour états et miroir actuels mesurés."
+          ],
+          "evolution": "Mémoire v1 → v2 conserve l’adresse calculée ; nettoyage propose ensuite un masque de place et une génération.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 198,
+              "note": "Adresse, numéro et cache"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 358,
+              "note": "Fiches, colonnes et tiroirs"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/valeurs.rs",
+              "line": 84,
+              "note": "Structures fixes du prototype"
+            },
+            {
+              "path": "crates/moli-core/src/model.rs",
+              "line": 55,
+              "note": "Sample de production reste différent"
+            }
+          ],
+          "risks": [
+            "Les nanosecondes du microbanc ne mesurent ni HTTP ni délai d’un ordre physique.",
+            "Les réserves de vecteurs et le tiroir doivent rester bornés."
+          ]
+        },
+        {
+          "id": "donnees-annuaire",
+          "title": "Un annuaire durable avant d’utiliser les numéros",
+          "status": "proposition",
+          "decision": "Numéro MQTT décidé ; cible de revue : registre place/génération, incarnation et invalidation de caches au retour sans pair.",
+          "summary": "Le numéro est un rang local, jamais l’identité d’un appareil. Le nom reste dans les sujets, imports, exports et données durables entre bases.",
+          "details": [
+            "La mémoire v2 attribue au bout et écrit l’annuaire avant usage pour éviter la réattribution après crash ; elle réserve le bit de poids fort aux causes horaires.",
+            "MQTT meta donne n et val porte i ; un abonné qui ne reconnaît pas i redemande meta au lieu de deviner.",
+            "Le nettoyage ajoute génération et places libres ; la HA sans journal et le retour sur un ancien instantané imposent de préciser la garantie de numéro jamais redonné lorsque des caches externes ont survécu.",
+            "Pour la cible finale, une nouvelle incarnation de registre précède toute activité après rollback sans pair ; les caches sont indexés par incarnation et numéro complet. L’incarnation ne coûte aucun bit dans le numéro32bits."
+          ],
+          "evolution": "Décision MQTT conservée ; cases condamnées de mémoire v2 remplacées par les générations de nettoyage.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 270,
+              "note": "Annuaire et numéros persistés"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 342,
+              "note": "Décision MQTT"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 652,
+              "note": "Retour sans pair sur vieil instantané"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/nettoyage-banc/src/numeros.rs",
+              "line": 19,
+              "note": "Numéro entier à génération"
+            },
+            {
+              "path": "tools/memoire-banc/src/valeurs.rs",
+              "line": 148,
+              "note": "Annuaire du banc mémoire"
+            }
+          ],
+          "risks": [
+            "Extension d’incarnation à implémenter et qualifier ; les numéros du hub et ids SQL restent indépendants."
+          ]
+        },
+        {
+          "id": "donnees-expiration",
+          "title": "Une colonne d’échéances, réveillée au plus proche",
+          "status": "qualification",
+          "decision": "Méthode R recommandée et mesurée ; aucune tâche d’expiration unifiée livrée démontrée.",
+          "summary": "Le numéro dit où lire une fiche, pas quelles fiches ont expiré. Une colonne contiguë de quatre octets permet de trouver les échéances avec un passage très court, seulement quand cela peut servir.",
+          "details": [
+            "À chaque rapport, écrire échéance = maintenant monotone + délai précalculé ; le prochain passage rend le minimum restant.",
+            "Un rapport dont l’échéance est plus proche avance le réveil. Les colonnes couvrent santé, fraîcheur, attentes, exécutions et minuteries.",
+            "Le banc compare calcul à chaque seconde, colonne à chaque seconde, colonne au plus proche et tas : mêmes muets, environ 26 passages/h à ×1 pour la méthode recommandée."
+          ],
+          "evolution": "V1 proposait un échéancier commun ; mémoire v2 mesure la colonne et écarte le tas plus coûteux à alimenter.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 416,
+              "note": "Quatre familles d’expiration"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 448,
+              "note": "Comparaison de méthodes"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/echeances.rs",
+              "line": 43,
+              "note": "Passage par blocs"
+            },
+            {
+              "path": "tools/memoire-banc/src/echeances.rs",
+              "line": 241,
+              "note": "Accord des méthodes contrôlé par le banc"
+            }
+          ],
+          "risks": [
+            "Le passage reste proportionnel au nombre de places, même si son coût est bas.",
+            "La mesure Apple M4 n’est pas une qualification Pi."
+          ]
+        },
+        {
+          "id": "donnees-proprietaire",
+          "title": "Un seul propriétaire, des copies compactes",
+          "status": "proposition",
+          "decision": "Recommandation de partage de mémoire, pas décision de remplacer tous les verrous.",
+          "summary": "Le hub possède ses colonnes et les modifie seul. Les écrans et API reçoivent une copie ; le moteur entretient un miroir compact par les sorties du hub.",
+          "details": [
+            "Éviter de retenir le rédacteur avec un lecteur lent : produire un instantané de lecture puis rendre le contrôle au hub.",
+            "Le banc mesure une copie de l’état vif et de la santé à environ 12 µs à ×1 ; il compare aussi verrou, snapshot partagé et lectures atomiques.",
+            "L’agenda suit la même responsabilité : table du hub, copie du moteur pour les rappels. Une perte de messages impose reconstruction du miroir."
+          ],
+          "evolution": "Mémoire v1 conservée par v2 ; la HA applique cette copie entre machines.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 552,
+              "note": "Comparaison des partages et recommandation"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/valeurs.rs",
+              "line": 207,
+              "note": "État compact du banc"
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 517,
+              "note": "Modèle actuel avec états restaurés"
+            }
+          ],
+          "risks": [
+            "Une copie a un rang et une date ; elle ne doit pas être présentée comme plus fraîche que sa source.",
+            "La mesure ne prouve pas l’absence de verrou dans le runtime courant."
+          ]
+        },
+        {
+          "id": "donnees-programme",
+          "title": "Compiler les graphes et indexer par point",
+          "status": "qualification",
+          "decision": "Forme proposée mesurée ; défauts actuels encore visibles dans le code consulté.",
+          "summary": "Un programme immuable contient plans, nœuds, liens, règles, textes et index par point. Un changement ne parcourt alors que les déclencheurs qui le lisent.",
+          "details": [
+            "Les plans de 12 o, nœuds de 32 o, liens de 8 o et règles de 16 o se rangent en tableaux ; debut[n]..debut[n+1] ouvre la liste des déclencheurs.",
+            "Recompiler le programme entier à chaque validation puis le remplacer d’un bloc : environ 0,45 ms à ×1 dans le banc v2.",
+            "Les exécutions utilisent (automatisme, rang du nœud), donc un autre automatisme recompilé ne déplace pas leur curseur ; une logique modifiée arrête ses propres exécutions et attend validation."
+          ],
+          "evolution": "V1/V2 conservent le même schéma ; mémoire v2 ajoute les fiches calendaires au programme.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 627,
+              "note": "Programme compilé et stabilité des curseurs"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/workflows.rs",
+              "line": 412,
+              "note": "Noeud fixe du banc"
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 351,
+              "note": "Balayage courant des déclencheurs"
+            }
+          ],
+          "risks": [
+            "×3 et ×10 dépassent le plafond courant de 400 automatismes ; ce sont des projections.",
+            "Le coût du banc ne comprend pas toutes les allocations et le texte du départ courant."
+          ]
+        },
+        {
+          "id": "donnees-execution",
+          "title": "Une exécution garde sa cause, mais relit le présent",
+          "status": "proposition",
+          "decision": "Lecture du présent, cause complète et flux en avant décidés par le propriétaire le 23/10 ; portage non démontré.",
+          "summary": "Après une attente, une condition lit la maison actuelle. La fiche d’exécution de 64 octets conserve séparément la transition qui a lancé le flux, accessible explicitement comme cause.",
+          "details": [
+            "La fiche contient automatisme, curseur, réveil, demande en vol, génération, état, version, cause point/déclencheur/instant/valeur/précédente et registre.",
+            "Une étape franchie ne se rejoue pas ; restart relance, single ignore le nouveau départ et queued garde une file bornée.",
+            "Une réponse tardive porte case et génération : elle ne peut pas achever l’exécution suivante occupant la même case. Les textes seuls vont dans un tiroir variable."
+          ],
+          "evolution": "La v1 avait déjà évolué de 32 à 64 o après décision ; v2 conserve cette cause et ajoute des marques horloge/agenda.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 682,
+              "note": "Fiche et génération"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 727,
+              "note": "Décision lecture actuelle/cause"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/moteur.rs",
+              "line": 1,
+              "note": "Moteur de référence et générations"
+            },
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 594,
+              "note": "holds relit actuellement le hub"
+            }
+          ],
+          "risks": [
+            "Le moteur courant garde surtout une phrase de cause ; la fiche complète reste proposée.",
+            "Une réponse d’ordre sans issue ne doit pas être renvoyée au redémarrage."
+          ]
+        },
+        {
+          "id": "donnees-attentes-composees",
+          "title": "Attentes de 24 octets et vérités composées",
+          "status": "proposition",
+          "decision": "Composées dès V7 décidées ; taille et fraîcheur corrigées en v2 ; contrôle de lisibilité ajouté par nettoyage.",
+          "summary": "Une durée se revérifie sur l’instant changé, sans une tâche par minuterie. Les déclencheurs composés gardent une vérité incrémentale, reconstruite depuis les valeurs quand il faut.",
+          "details": [
+            "Armement : échéance monotone, depuis, dernier depuis déjà parti et point de cause ; à l’échéance, comparer changé à depuis et vérifier qualité et lisibilité.",
+            "Un « si » calcule à la demande ; le réseau sert aux composées avec un octet par feuille et compteurs. Il ne part que sur faux → vrai, avec au plus un départ par vraie-depuis.",
+            "Appliquer ensemble toutes les valeurs d’un même message avant de lire les bascules. Une feuille de valeur mauvaise est fausse ; reconstruire après démarrage, recompilation ou perte de messages.",
+            "« Attendre que » ne suit que ses points ; cela remplace l’abonnement de chaque attente à tout le bus actuel."
+          ],
+          "evolution": "16 o annoncés en v1 mais 52 o réels ; 24 o en v2 sans copie de cause. Nettoyage ajoute « la valeur se lit encore ». ",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 746,
+              "note": "Attente corrigée"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 884,
+              "note": "Conditions composées"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 624,
+              "note": "Lisibilité en plus de changé"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 427,
+              "note": "Chaque attente s’abonne aujourd’hui au bus"
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 477,
+              "note": "Une tâche dort pour for_s"
+            },
+            {
+              "path": "tools/memoire-banc/README.md",
+              "line": 36,
+              "note": "17 mutations conservées, non rejouées ici"
+            }
+          ],
+          "risks": [
+            "Une valeur revenue à l’identique ne suffit pas : il faut comparer l’instant de transition.",
+            "Les 29 tests et 17 mutations publiés valident le moteur de référence, pas le moteur livré."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "donnees-temps",
+      "title": "Calendrier, agendas et reprise temporelle",
+      "intro": "Le temps écoulé et le calendrier répondent à deux horloges différentes. Un moteur commun range les règles en fiches et ne se réveille qu’à la prochaine échéance. Les décisions du 23 octobre précisent la seconde, les nuits, les rappels et leur rattrapage ; les défauts de l’ancien moteur restent à corriger dans le produit.",
+      "ideas": [
+        {
+          "id": "donnees-deux-horloges",
+          "title": "Deux horloges, un seul réveil",
+          "status": "proposition",
+          "decision": "Correction de conception v2 ; pas une propriété acquise de tout le runtime actuel.",
+          "summary": "Les durées suivent une horloge monotone et les rendez-vous suivent l’heure murale. Un changement NTP ne doit ni prolonger une attente ni déclarer un appareil muet.",
+          "details": [
+            "Les durées vives utilisent des secondes u32 ; observé, changé et calendrier utilisent des millisecondes murales u64.",
+            "L’instantané convertit les échéances monotones en heure murale ; la reprise recalcule maintenant_mono + (échéance_murale − maintenant_mural).",
+            "Au réveil, comparer l’avancée des deux horloges ; au-delà d’une seconde d’écart, recaler le calendrier. Donner une grâce complète aux appareils au démarrage."
+          ],
+          "evolution": "V1 l’annonçait sans le tenir dans son moteur ; v2 corrige le code du banc et ajoute des mutations.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 530,
+              "note": "Deux horloges et conversion de reprise"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 989,
+              "note": "Un seul réveil"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/minuteries.rs",
+              "line": 1,
+              "note": "Deux horloges dans les minuteries du banc"
+            },
+            {
+              "path": "tools/memoire-banc/src/moteur.rs",
+              "line": 1,
+              "note": "Moteur de référence mis à jour"
+            }
+          ],
+          "risks": [
+            "Une heure murale incertaine au redémarrage reste une limite distincte de la monotone."
+          ]
+        },
+        {
+          "id": "donnees-fiches-calendaires",
+          "title": "Le calendrier rangé dans des fiches fixes",
+          "status": "qualification",
+          "decision": "Fiches de 24 o plus 25 o d’état mesurées ; extension calendaire proposée.",
+          "summary": "Heures, soleil, périodes, dates portées par des valeurs et rappels partagent une fiche. Les niveaux comme nuit ou plage deviennent des points du hub partagés par tous.",
+          "details": [
+            "Le hub possède les niveaux ; le programme possède les déclencheurs. La dernière occurrence reprend par (automatisme, rang) après recompilation.",
+            "Une fiche porte genre, jours, bornes, décalage, cible et point ; prochaine/dernière occurrence, niveau et événements restent dans l’état mutable.",
+            "Une heure portée par une valeur ne réarme que les fiches qui lisent ce point. Mois et jour du mois sont une capacité envisagée, ni écrite ni testée."
+          ],
+          "evolution": "Mémoire v2 explicite ce que la v1 ne détaillait pas pour plages et soleil.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1008,
+              "note": "Fiche, genres et deux propriétaires"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 868,
+              "note": "Niveaux projetés en valeurs"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/calendrier.rs",
+              "line": 62,
+              "note": "Fiche du prototype"
+            },
+            {
+              "path": "tools/memoire-banc/src/calendrier.rs",
+              "line": 400,
+              "note": "Réarmement sur valeur changée"
+            }
+          ],
+          "risks": [
+            "Ne pas annoncer un cron général avec mois et jours du mois comme livré.",
+            "La déduplication des plages distinctes doit préserver leur fuseau et leur sémantique."
+          ]
+        },
+        {
+          "id": "donnees-heure-sure",
+          "title": "Attendre une heure sûre avant le calendrier",
+          "status": "proposition",
+          "decision": "Règle v2 proposée et éprouvée dans le banc ; raccordement au signal système non démontré.",
+          "summary": "Une machine sans horloge à pile peut démarrer à une date ancienne. Les durées peuvent courir, mais aucun départ calendaire ne s’arme tant que l’heure n’est pas sûre.",
+          "details": [
+            "Détecter la synchronisation de l’horloge de l’hôte ; ne pas confondre processus lancé et heure fiable.",
+            "Lorsqu’elle devient sûre, armer depuis maintenant : ne rien déclencher et ne compter aucune occurrence manquée pour la période non fiable.",
+            "Les réglages d’heure ultérieurs recalent seulement les règles calendaires ; les durées restent monotones."
+          ],
+          "evolution": "Ajout v2 absent du mécanisme horaire détaillé en v1.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1001,
+              "note": "Heure sûre et absence de rattrapage antérieur"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/moteur.rs",
+              "line": 1,
+              "note": "État d’heure sûre dans le modèle"
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 499,
+              "note": "on_clock courant lit l’heure locale directement"
+            }
+          ],
+          "risks": [
+            "La consultation réelle de l’état de synchronisation Linux/Pi n’est pas prouvée par une variable du banc."
+          ]
+        },
+        {
+          "id": "donnees-changements-heure",
+          "title": "Changements d’heure et nuits traversant minuit",
+          "status": "proposition",
+          "decision": "Nuit lundi→mardi décidée le 23/10 ; migration avec signalement des changements de sens.",
+          "summary": "Une heure absente part au saut et une heure répétée part une seule fois à la première. Une plage nocturne appartient au jour où elle commence.",
+          "details": [
+            "Au printemps, 02:30 absent devient 03:00 ; une plage entièrement avalée par le saut ne s’ouvre pas.",
+            "À l’automne, un niveau vaut sur les deux copies, mais l’occurrence fixe ne part qu’une fois ; une période compte le temps réel aligné UTC.",
+            "Les règles « lundi 22 h–6 h » passent de lundi 0–6 + 22–24 au lundi soir→mardi matin. La migration doit nommer chaque automatisme affecté."
+          ],
+          "evolution": "La v2 corrige les déclencheurs horaires et rejoint WeeklySchedule ; les plannings hebdomadaires ne sont pas rejoués par ce banc.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1056,
+              "note": "Règles des changements d’heure"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1112,
+              "note": "Décision de nuit et migration"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/calendrier.rs",
+              "line": 524,
+              "note": "Tests de répétition et saut existants"
+            },
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 651,
+              "note": "Filtre du jour séparé de la plage actuelle"
+            }
+          ],
+          "risks": [
+            "Un changement de sens sans avertissement modifierait les nuits d’action d’automatismes déjà approuvés."
+          ]
+        },
+        {
+          "id": "donnees-rattrapage",
+          "title": "Deux minutes, une alerte et aucun double départ",
+          "status": "proposition",
+          "decision": "Reprise à l’heure décidée par le propriétaire ; sémantique détaillée dans mémoire v2.",
+          "summary": "Une occurrence de moins de deux minutes de retard reste utile et part avec son retard dans la cause. Plus tard, elle devient manquée ; plusieurs occurrences manquées font une seule alerte comptée.",
+          "details": [
+            "Garder la dernière occurrence partie durablement ; un retour en arrière de l’horloge et un redémarrage ne doivent pas la rejouer.",
+            "Une panne et un saut en avant parcourent les mêmes occurrences échues ; la règle de retard décide.",
+            "Les exécutions en attente reprennent au même nœud si elles sont à l’heure, sinon s’interrompent. Les baux « pendant » rétablissent toujours leur valeur au terme, même tardif."
+          ],
+          "evolution": "V1 stockage proposait de reprendre sans rattraper ; décision mémoire du 23/10 remplace cette option.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1077,
+              "note": "Rattraper et ne jamais repartir deux fois"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1303,
+              "note": "Contrats de reprise"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/calendrier.rs",
+              "line": 618,
+              "note": "Test du seuil de deux minutes"
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 319,
+              "note": "Moteur actuel marque la minute au démarrage"
+            }
+          ],
+          "risks": [
+            "La fenêtre d’incertitude d’une bascule HA prime sur le simple rattrapage : ne pas renvoyer une action peut-être déjà partie."
+          ]
+        },
+        {
+          "id": "donnees-agendas",
+          "title": "Agenda séparé, sept jours et rappels utiles",
+          "status": "proposition",
+          "decision": "Horizon, absence de titres et rappel tardif décidés par le propriétaire le 23/10.",
+          "summary": "L’agenda garde des intervalles futurs dans une table propre, pas un point par rendez-vous. Le hub en projette seulement quelques valeurs utiles aux règles.",
+          "details": [
+            "Garder sept jours glissants plus les événements en cours ; l’horizon doit couvrir le plus grand décalage de rappel plus une période de lecture.",
+            "Un événement fait 24 o : début, fin, numéro d’agenda et numéro stable ; ni titre ni participant. Remplacer la table d’un bloc à chaque lecture.",
+            "Un déclencheur « dix minutes avant » est une seule fiche pour tout l’agenda ; départs ordonnés par (instant, numéro), même pour deux événements simultanés.",
+            "Un ajout tardif ou une panne permet le rappel tant que le rendez-vous n’a pas commencé ; après le début il est manqué. Table et dernière occurrence suivent l’instantané.",
+            "Cible retenue : table chargée transportée en fragments≤4Kio, remplacée atomiquement après réassemblage contrôlé."
+          ],
+          "evolution": "Ajout mémoire v2 ; les valeurs de calendrier existantes restent des projections, pas toute la table future.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1138,
+              "note": "Table, horizon, confidentialité et rappels"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1356,
+              "note": "Décisions après v2"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/calendrier.rs",
+              "line": 269,
+              "note": "Recherche de prochaine occurrence d’agenda"
+            },
+            {
+              "path": "tools/memoire-banc/src/calendrier.rs",
+              "line": 729,
+              "note": "Deux événements simultanés donnent deux rappels"
+            }
+          ],
+          "risks": [
+            "Le message de table proposé fait environ 5 Ko pour une semaine chargée et doit être découpé pour le plafond réseau de 4 Kio.",
+            "Ne pas publier l’identifiant privé de la source à la place du numéro d’événement local."
+          ]
+        },
+        {
+          "id": "donnees-precision-minuteries",
+          "title": "La seconde pour planifier, sans promesse temps réel",
+          "status": "qualification",
+          "decision": "Seconde décidée ; minuteries proposées dans la forme compacte, principe de reprise déjà existant.",
+          "summary": "La résolution des calculs ne garantit pas l’heure d’un réveil ni d’un appareil. Le banc recommande la seconde et conserve les millisecondes dans les calculs sans promettre de réveil à la milliseconde.",
+          "details": [
+            "Par réveil au plus proche, le coût suit les occurrences, pas une boucle à 1 000 Hz : environ 0,51 ms CPU/jour pour 400 règles dans la série citée.",
+            "Les pires retards publiés atteignent 27 ms, et un essai antérieur non conservé 0,27 s ; une impulsion courte appartient au pilote ou à l’appareil.",
+            "Une minuterie vit en monotone et se range en mural, 24 o ; si le reste calculé dépasse sa durée après recul d’horloge, elle passe « horloge invalide » au lieu de repartir seule."
+          ],
+          "evolution": "V2 corrige le coût des durées et ajoute des mesures de précision ; aucune garantie temps réel nouvelle.",
+          "sources": [
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1213,
+              "note": "Mesure et décision de précision"
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1122,
+              "note": "Minuteries et reprise impossible"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/memoire-banc/src/minuteries.rs",
+              "line": 147,
+              "note": "Reprise impossible explicitement testée"
+            },
+            {
+              "path": "tools/memoire-banc/src/precision.rs",
+              "line": 1,
+              "note": "Microbanc de réveil existant"
+            }
+          ],
+          "risks": [
+            "Conteneurs sur M4 partagé ; temps absolus à refaire sur Pi et charge réelle.",
+            "29 tests et 17 mutations publiés n’ont pas été rejoués pour cette revue."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "donnees-stockage",
+      "title": "Stockage local, écriture et sauvegarde",
+      "intro": "La cible conserve Turso pour le récent, maison.db pour les décisions et définitions métier et Parquet pour le long terme. Pour le présent, HA v2 prime : copies RAM et instantané complet remplacent state.json et le writer point_state proposé auparavant. Le produit consulté ouvre encore SQLite ; toute migration doit conserver garde B1, confidentialité et retour arrière.",
+      "ideas": [
+        {
+          "id": "donnees-quatre-etages",
+          "title": "Quatre étages et deux rédacteurs locaux",
+          "status": "proposition",
+          "decision": "Cible de revue : maison.db pour métier, moli.db pour récent, archive pour long terme ; présent repris par instantané HA v2.",
+          "summary": "La mémoire décide, maison.db conserve décisions et définitions métier, moli.db conserve le récent et l’archive le long terme. La cible la plus récente reprend le présent depuis les pairs et un instantané complet, sans un second writer périodique point_state.",
+          "details": [
+            "Un rédacteur par base et des lecteurs sur connexions séparées ; aucun accès disque dans la décision vive.",
+            "Entre fichiers, garder les noms PointId/DeviceId et aucune clé étrangère interne ; chaque base se restaure seule. Coffre chiffré et TOML d’amorçage restent séparés.",
+            "La V3 retire tout agrégat non énergétique local ; l’archive calcule heures/jours et la lecture locale agrège seulement en secours.",
+            "Synthèse retenue : point_state périodique et state.json sont des étapes historiques de migration ; ils ne restent pas deux autorités concurrentes de l’instantané HA v2."
+          ],
+          "evolution": "D13 décrit un seul moli.db ; V1/V3 proposent deux bases ; HA v2 propose ensuite l’instantané comme état courant.",
+          "sources": [
+            {
+              "path": "docs/ARCHITECTURE.md",
+              "line": 198,
+              "note": "Décision de moteur et fichier"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 637,
+              "note": "Deux bases et indépendance"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 105,
+              "note": "Quatre étages"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 430,
+              "note": "Ouverture énergie SQLite"
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 982,
+              "note": "Ouverture historique SQLite"
+            }
+          ],
+          "risks": [
+            "Ces frontières ne sont pas encore portées dans le démarrage courant ; livrer par migrations versionnées avec retour arrière."
+          ]
+        },
+        {
+          "id": "donnees-double-ecriture",
+          "title": "Une double écriture bornée et silencieusement réconciliée",
+          "status": "historique",
+          "decision": "Alternative V1/V3 mesurée et conservée pour traçabilité ; remplacée dans la cible de revue par l’instantané HA v2 pour le présent.",
+          "summary": "Le présent complet et les changements retenus répondent à deux usages différents. Leur recouvrement ne dépasse pas une dernière ligne par point et la mémoire reste leur seule vérité vive.",
+          "details": [
+            "Décisions métier et échéances durables s’écrivent tout de suite ; valeurs touchées, instants et disponibilité se regroupent chaque minute et à l’arrêt.",
+            "Un historique retenu s’écrit par lots de 2 s ; le présent peut donc perdre 60 s mais un point historisé récupère le dernier relevé validé. Un point non historisé reste limité par le lot de présent.",
+            "Au démarrage : charger maison.db, marquer incertain sans événement, démarrer ; ouvrir le récent en arrière-plan et comparer les dates sans déclenchement.",
+            "Aucune transaction commune entre les deux fichiers : les fenêtres de retard et la réconciliation remplacent cette atomicité.",
+            "Cible finale : garder la double responsabilité présent/historique, mais présent=RAM+instantané ; ne pas ajouter point_state60s en parallèle. Les pertes60s décrivent seulement l’alternative ancienne."
+          ],
+          "evolution": "V1 corrige sa propre ancienne règle « jamais dans les deux » ; V3 conserve le mécanisme.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 767,
+              "note": "Double écriture, pertes et trois conditions"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 399,
+              "note": "Mécanisme conservé"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 522,
+              "note": "state.json encore configuré"
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2176,
+              "note": "État courant et restauré réunis pour sauvegarde"
+            }
+          ],
+          "risks": [
+            "La réconciliation doit distinguer une valeur filtrée d’un relevé réellement perdu.",
+            "Les bases persistées sont des copies datées : ne pas les relire pour décider."
+          ]
+        },
+        {
+          "id": "donnees-journal-compact",
+          "title": "Écrire en ajout, ranger à l’heure close",
+          "status": "qualification",
+          "decision": "Optimisation mesurée sur proxy SQLite ; modification du journal D13 et du rythme encore à soumettre à revue.",
+          "summary": "Le coût d’une écriture suit les pages salies et les validations, pas les seuls octets utiles. Une opération compacte en ordre temporel réduit le coût avant son rangement par point.",
+          "details": [
+            "La proposition ops fige valeur, type, point et instant dans la transaction ; elle sert au journal d’heure et à l’export, puis se range par point avec déduplication.",
+            "À l’heure close, trier la plage de séquences et insérer dans samples ; une courbe lit une plage par point plus le journal de l’heure, sans balayer la journée.",
+            "Mesure du 21/10 : environ 258 Mo/j d’historique + 65 Mo/j de présent contre 3,1 Go/j pour le chemin D13 modélisé ; tous les scénarios retrouvent leurs relevés.",
+            "La séquence reste non réattribuée après purge ; le lot rendu pour le réseau doit rester immuable malgré changements de catalogue et de dictionnaire."
+          ],
+          "evolution": "V1 introduit le mécanisme ; V3 le conserve mais retire ses agrégats locaux.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 863,
+              "note": "Amplification par pages et journal compact"
+            },
+            {
+              "path": "docs/reports/mesure-ecritures-2026-10-21T114647Z.md",
+              "line": 34,
+              "note": "Méthode WAL et scénarios"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/storage-writes/measure.py",
+              "line": 1,
+              "note": "Mesure reproductible, non rejouée"
+            },
+            {
+              "path": "tools/storage-bench/src/journal.rs",
+              "line": 1,
+              "note": "Journal immuable D13 déjà modélisé séparément"
+            }
+          ],
+          "risks": [
+            "SQLite synchronous OFF sert à compter les octets, pas à prouver la durabilité Turso FULL.",
+            "À confirmer sur Turso puis sur microSD ; les valeurs sont fictives et la forme de charge privée."
+          ]
+        },
+        {
+          "id": "donnees-turso-contrat",
+          "title": "Migrer vers Turso avec ses limites prouvées",
+          "status": "qualification",
+          "decision": "D13 décidé et banc à Turso 0.8.3 ; bascule du cœur non constatée.",
+          "summary": "Le choix conserve un rédacteur, des lecteurs séparés et un schéma portable SQLite. Le banc montre aussi ce que Turso ne sait pas faire, ce qui borne migration, outils d’agents et exploitation.",
+          "details": [
+            "Ne jamais ouvrir les anciennes tables WITHOUT ROWID avec Turso : copier vers des tables rowid STRICT et clés calculées.",
+            "FULL protège les séquences déjà exportées ; next_seq se met à jour dans la transaction, car un rowid ordinaire peut être réutilisé. Éviter MVCC expérimental, vecteurs et plein texte dans le schéma de secours.",
+            "Importer et sauvegarder par le processus propriétaire : second écrivain refusé. Créer TURSO_TMPDIR sur le volume et temp_store=MEMORY ; le backend par défaut fonctionne sans io_uring.",
+            "Remplacer le SQL libre des agents par des requêtes structurées bornées : l’absence d’autorisateur et de limites suffit à invalider le maintien de history_sql tel quel."
+          ],
+          "evolution": "D13 reste le socle ; les propositions ultérieures changent disposition et frontières, pas les incompatibilités mesurées.",
+          "sources": [
+            {
+              "path": "docs/ARCHITECTURE.md",
+              "line": 202,
+              "note": "Compatibilité et règles de Turso"
+            },
+            {
+              "path": "docs/annexe-d13-stockage.md",
+              "line": 27,
+              "note": "18 essais et comparaison SQLite"
+            },
+            {
+              "path": "docs/annexe-d13-stockage.md",
+              "line": 54,
+              "note": "31 kill -9 documentés"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/storage-bench/src/compat.rs",
+              "line": 1,
+              "note": "Essais de compatibilité du banc"
+            },
+            {
+              "path": "tools/storage-bench/src/schema.rs",
+              "line": 1,
+              "note": "Schéma cible isolé du cœur"
+            },
+            {
+              "path": "crates/moli-history/src/store.rs",
+              "line": 13,
+              "note": "Moteur actuel rusqlite"
+            }
+          ],
+          "risks": [
+            "kill -9 ne simule pas une coupure électrique.",
+            "La réserve énergie 7 jours à 30–32 ms et le budget de 32 Mio anonymes restent à lever dans le cœur intégré."
+          ]
+        },
+        {
+          "id": "donnees-garde-retention",
+          "title": "La réduction de conservation reste une décision humaine",
+          "status": "integre",
+          "decision": "Garde B1 codée dans SQLite ; invariants à porter sans affaiblissement vers Turso et E1.",
+          "summary": "Une configuration plus courte ne supprime pas seule les données. L’interface compte un plan précis, le propriétaire le valide par PIN et chaque lot recontrôle la garde.",
+          "details": [
+            "Conserver une ancre avant la limite ; un trou ne doit pas effacer la dernière valeur stable. Écrire le plancher du nouveau point avec sa première mesure.",
+            "Une hausse relève immédiatement le plancher ; maximum admis, génération de consentement et position du bus empêchent un ancien événement d’annuler une réduction validée.",
+            "La baisse valide seulement la période et le nombre annoncés, avec contrôle de famille et de version ; plan périmé ou modifié refusé. Un agent n’a pas d’outil de validation.",
+            "Après arrêt brutal ou échec de hausse/écriture, suspendre durablement les purges ; reprise avec validation explicite, pas à la simple réouverture."
+          ],
+          "evolution": "B1 présent ; V3 exige la même validation pour raccourcir les paliers d’archive.",
+          "sources": [
+            {
+              "path": "docs/components/historique-energie.md",
+              "line": 89,
+              "note": "Purge par lots"
+            },
+            {
+              "path": "docs/components/historique-energie.md",
+              "line": 100,
+              "note": "Planchers et consentements"
+            },
+            {
+              "path": "docs/components/historique-energie.md",
+              "line": 158,
+              "note": "Suspension et reprise"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-history/src/store.rs",
+              "line": 491,
+              "note": "Recontrôles SQL de la garde par lot"
+            },
+            {
+              "path": "crates/moli-history/src/store.rs",
+              "line": 653,
+              "note": "Marqueur de run et suspension au redémarrage"
+            }
+          ],
+          "risks": [
+            "Un reçu durable d’archive n’est pas une publication et ne suffit pas à autoriser une purge locale.",
+            "Déplacer la purge à la nuit ne doit pas modifier les contrôles de consentement."
+          ]
+        },
+        {
+          "id": "donnees-nuit",
+          "title": "Des nuits courtes, reprenables et observables",
+          "status": "proposition",
+          "decision": "Fenêtre 03 h 30–06 h proposée ; déplacement du rythme B1 encore ouvert.",
+          "summary": "Les opérations qui peuvent attendre passent par tranches, avec progrès écrit dans la même transaction. L’énergie et la mémoire vive continuent au fil de l’eau.",
+          "details": [
+            "À l’heure close : ranger l’heure ; la nuit : purge, sauvegarde et checkpoint. La V3 confie heures/jours et paliers à l’archive, supprimant les agrégats généraux du cœur.",
+            "Chaque tranche visée ≤50 ms passe par le rédacteur unique et persiste son curseur ; à 06 h arrêter et reprendre la nuit suivante. Nuit manquée : rattraper après dix minutes, plus ancien d’abord.",
+            "Si B1 est suspendue, sauter la purge mais continuer les tâches non destructrices et afficher la raison. Les pages libérées sont réutilisées sans VACUUM quotidien du fichier vivant.",
+            "Les compteurs existants exposent échecs, saturation, volumes et query_ms à la demande ; une erreur de comptage reste indisponible et ne devient pas zéro."
+          ],
+          "evolution": "V1 §13.9 conservé avec retrait des agrégats du cœur en V3 ; l’observabilité du stockage existe déjà.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 938,
+              "note": "Nuit et reprise"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 411,
+              "note": "Répartition cœur/archive"
+            },
+            {
+              "path": "docs/components/historique-energie.md",
+              "line": 180,
+              "note": "Croissance visible"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-history/src/lib.rs",
+              "line": 1,
+              "note": "Recorder et suivi courant"
+            },
+            {
+              "path": "crates/moli-history/src/store.rs",
+              "line": 277,
+              "note": "Rédacteur et lecteurs actuels"
+            }
+          ],
+          "risks": [
+            "Durée de nuit ×2 sur Pi non mesurée.",
+            "Débit et latence doivent être mesurés pendant la maintenance, pas seulement sans concurrent."
+          ]
+        },
+        {
+          "id": "donnees-sauvegarde-contrats",
+          "title": "Sauvegarder des autorités, pas seulement une liste de fichiers",
+          "status": "partiel",
+          "decision": "Sauvegarde existante ; inventaire contractuel, empreintes et couverture complète recommandés dans le rapport, non constatés.",
+          "summary": "L’inventaire distingue autorité métier, cache, média personnel, secret et source de rejeu. Une même primitive ne donne pas à toutes ces données la même durabilité ni le même droit à l’effacement.",
+          "details": [
+            "Le code courant collecte 23 fichiers et deux bases via VACUUM INTO ; le rapport ancien en comptait 16. people.json, settings.json, assistant.json et fichiers alarm ne figurent toujours pas dans la liste consultée.",
+            "Le manifeste actuel contrôle la taille ; une modification à taille constante reste indétectable. Deux snapshots SQLite successifs ne prouvent pas un instantané global des identités et sessions.",
+            "Recommandation : inventaire d’artefacts avec propriétaire, schéma, sensibilité, groupe de cohérence, limites, récupération et sauvegarde ; distinguer absent, corrompu et indisponible.",
+            "Mutualiser seulement primitives de fichiers et journaux bornés ; conserver chiffrement, filtres privés, consentements et transactions chez leurs domaines. Mobile SecureStore, DPAPI Windows et cookies restent sur leurs surfaces propres."
+          ],
+          "evolution": "Rapport de persistance → V1 propose tables métier dans maison.db ; aucune migration universelle n’est décidée par le rapport.",
+          "sources": [
+            {
+              "path": "docs/reports/inventaire-persistance-2026-10-20T060728Z.md",
+              "line": 259,
+              "note": "Constats F01–F12"
+            },
+            {
+              "path": "docs/reports/inventaire-persistance-2026-10-20T060728Z.md",
+              "line": 290,
+              "note": "Contrats proposés"
+            },
+            {
+              "path": "docs/reports/inventaire-persistance-2026-10-20T060728Z.md",
+              "line": 224,
+              "note": "Destination des familles"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/backup.rs",
+              "line": 22,
+              "note": "23 fichiers actuels et omissions vérifiées"
+            },
+            {
+              "path": "crates/moli-os/src/backup.rs",
+              "line": 97,
+              "note": "Manifeste de tailles"
+            },
+            {
+              "path": "crates/moli-os/src/backup.rs",
+              "line": 127,
+              "note": "Vérification avant copie"
+            }
+          ],
+          "risks": [
+            "Ce constat est statique, sans restauration rejouée.",
+            "Le coffre reste chiffré ; la clé maître ne doit pas être régénérée ni incluse dans une sauvegarde générale."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "donnees-archive",
+      "title": "Archive, résumés et lectures du passé",
+      "intro": "Le service d’archive est présent et autonome, mais son existence ne prouve pas un client actif dans le cœur. Il distingue reçu durable et données publiées, avec lectures attachées à un manifeste. La V3 propose ensuite un format typé et des paliers : ces gains et ces horizons ne sont pas un vieillissement déjà livré.",
+      "ideas": [
+        {
+          "id": "donnees-archive-protocole",
+          "title": "Une archive indépendante avec deux accusés",
+          "status": "integre",
+          "decision": "Service C1 présent ; client C2 et fusion D1 explicitement distincts.",
+          "summary": "Le cœur et l’archive ne partagent aucun fichier. Un lot peut être durable sans être encore visible dans les lectures.",
+          "details": [
+            "Envoyer gzip NDJSON de séquences contiguës, ≤5 000 opérations, ≤1 Mio compressé et ≤8 Mio décompressé ; identité d’installation dédiée au service.",
+            "L’idempotence utilise installation, plage et SHA-256 des octets décompressés avec retours à la ligne ; trou, recouvrement ou contenu différent donne 409 et le statut.",
+            "Le journal reçu autorise durable_upto ; seules publication, synchronisation et vérification du manifeste autorisent published_upto. Après erreur réseau, lire le statut puis reprendre à durable_upto+1.",
+            "L’époque change lors d’une restauration explicite, pas d’un déplacement ou redémarrage ; les reçus publiés expirent au plus à sept jours ou plus tôt sous quota."
+          ],
+          "evolution": "D13 implémenté par C1 ; numérotation des tickets différente de l’introduction historique D13.",
+          "sources": [
+            {
+              "path": "docs/components/archive-protocol.md",
+              "line": 3,
+              "note": "Séparation cœur/archive"
+            },
+            {
+              "path": "docs/components/archive-protocol.md",
+              "line": 9,
+              "note": "Lots, accusés et idempotence"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-archive/src/protocol.rs",
+              "line": 8,
+              "note": "Bornes de protocole"
+            },
+            {
+              "path": "crates/moli-archive/src/receipt.rs",
+              "line": 1,
+              "note": "Journal et reçus"
+            },
+            {
+              "path": "crates/moli-archive/src/store.rs",
+              "line": 1,
+              "note": "Autorité de publication du service"
+            }
+          ],
+          "risks": [
+            "Un banc Turso sans HTTP ne prouve pas l’archive ; inversement, C1 ne prouve pas l’export branché du cœur."
+          ]
+        },
+        {
+          "id": "donnees-energie-deltas",
+          "title": "Énergie : quantités additives et corrections absolues",
+          "status": "partiel",
+          "decision": "Deltas robustes et versions archive présents ; élagage généralisé et index de fin V3 proposés.",
+          "summary": "Un index ne se moyenne jamais. Le moteur produit des quantités consommées et l’archive résout la dernière version d’une heure avant toute somme.",
+          "details": [
+            "Relevés rares : répartir le delta au prorata des heures, avec borne de long trou ; baisse suspecte, remise confirmée et resoclage après relevés cohérents, jamais de delta négatif.",
+            "Jour = somme des heures et mois = somme des jours ; ne pas faire fin−début si remise ou trou. Principal et sous-compteurs ne s’ajoutent pas deux fois ; puissance intégrée reste une estimation quand un index existe.",
+            "energy_hour exporte l’état complet kWh et coût ; la séquence maximale remplace la paire compteur/heure. Un coût absent reste inconnu.",
+            "V3 propose heures→jours→mois avec index de fin réel horodaté et conservé ; D13 prévoit déjà totaux journaliers et mensuels locaux."
+          ],
+          "evolution": "V1 §7.5 hérité et rendu explicite par l’élagage V2/V3 ; règles de meter.rs préservées.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 309,
+              "note": "Règles des index"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 207,
+              "note": "Élagage et index réel de fin"
+            },
+            {
+              "path": "docs/components/archive-protocol.md",
+              "line": 45,
+              "note": "Versions des heures"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-energy/src/meter.rs",
+              "line": 1,
+              "note": "Calcul de delta et reprise des compteurs"
+            },
+            {
+              "path": "crates/moli-archive/src/merge.rs",
+              "line": 1,
+              "note": "Résolution des versions avant lecture"
+            }
+          ],
+          "risks": [
+            "Les métadonnées physiques de plusieurs fichiers versionnés ne sont pas des totaux logiques à additionner.",
+            "Couverture d’une heure énergie non déduite du seul kWh."
+          ]
+        },
+        {
+          "id": "donnees-rollup",
+          "title": "Résumés avec couverture et ancrage",
+          "status": "integre",
+          "decision": "Calcul pur moli-rollup présent et utilisé dans l’archive ; pas assimilé aux courbes locales toutes migrées.",
+          "summary": "La moyenne respecte le temps tenu par chaque valeur et sa fraîcheur. Un intervalle inconnu reste une absence de couverture, jamais un zéro.",
+          "details": [
+            "Construire les heures UTC avec moyenne pondérée, min/max, changements, ancre, qualité et origine ; réunir jours et mois au calendrier local.",
+            "Null ou valeur périmée interrompt la couverture ; sans règle de catalogue, publier le brut en other avec résumé inconnu.",
+            "Un catalogue tardif ou une règle modifiée recalcule une révision cohérente sans modifier les opérations reçues ni leurs empreintes. Les jours de 23/25 h sont conservés."
+          ],
+          "evolution": "V1 proposait des agrégats locaux ; V3 conserve le calcul existant mais l’attribue à l’archive.",
+          "sources": [
+            {
+              "path": "docs/components/historique-energie.md",
+              "line": 286,
+              "note": "Calcul A3 et catalogue tardif"
+            },
+            {
+              "path": "docs/components/archive-protocol.md",
+              "line": 60,
+              "note": "Publication cohérente du catalogue"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-rollup/src/lib.rs",
+              "line": 148,
+              "note": "Calcul pur des résumés"
+            },
+            {
+              "path": "crates/moli-archive/src/summaries.rs",
+              "line": 1,
+              "note": "Consommateur archive des agrégations"
+            }
+          ],
+          "risks": [
+            "La lecture des intervalles à bande V3 n’est pas ajoutée au seul motif que le calcul pur existe.",
+            "Le support de fuseaux à minuit non aligné sur heure UTC reste limité dans le contrat actuel."
+          ]
+        },
+        {
+          "id": "donnees-parquet-type",
+          "title": "Passer du JSON par ligne au Parquet typé",
+          "status": "qualification",
+          "decision": "archive_v2 proposé et mesuré ; service actuel toujours archive_v1.",
+          "summary": "La forme du fichier pèse plus que la seule compression. Le rapport compare un payload JSON générique à des colonnes par nature avec dictionnaires et zstd.",
+          "details": [
+            "Par nature et mois UTC, trier par point et début ; colonnes numériques et codes remplacent entity/kind/payload répétés. Activer dictionnaire et statistiques sur point/instant, sans JSON par ligne.",
+            "Série formes : brut actuel 40,7 o/ligne contre 6,1 typé ; heures 59,3 contre 1,3. Les heures denses pèsent 17 Mo/an contre 12 creuses : V3 conserve le dense.",
+            "Migrer par compaction v1→v2 : écrire nouvelles parts, vérifier, publier manifeste, puis collecter les anciennes sans changer reçus ni journal de réception.",
+            "Le résumé de bande ajoute lo, hi, mean et n au protocole ; catalogue porte nature, scale et codes. Archive d’abord, producteur ensuite puisque les champs inconnus sont refusés."
+          ],
+          "evolution": "V2 estime ; V3 mesure puis abandonne heures creuses et coupure systématique de bande à chaque heure.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 289,
+              "note": "Format et migration"
+            },
+            {
+              "path": "docs/reports/formes-parquet-2026-10-21T200551Z.md",
+              "line": 20,
+              "note": "Valeurs synthétiques et tailles"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-archive/src/parquet.rs",
+              "line": 27,
+              "note": "Schéma archive_v1 actuel"
+            },
+            {
+              "path": "crates/moli-archive/src/parquet.rs",
+              "line": 191,
+              "note": "Snappy et dictionnaire désactivé"
+            }
+          ],
+          "risks": [
+            "Grands groupes de 65 536 lignes du banc Python ne prouvent pas le budget mémoire du service Rust actuel.",
+            "Les facteurs dépendent des valeurs synthétiques ; aucun nouveau banc lancé ici."
+          ]
+        },
+        {
+          "id": "donnees-codes-dictionnaires",
+          "title": "Codes stables et contrôle de cardinalité",
+          "status": "proposition",
+          "decision": "Cible de revue : codes de bout en bout avec dictionnaires en ajout seul dans catalogue ; variante texte seulement historique.",
+          "summary": "Un code d’énumération ne dépend pas du libellé traduit. La proposition transforme la limite de 64 états d’une période en alerte de dictionnaire, plutôt qu’en panne de publication.",
+          "details": [
+            "Dictionnaire en ajout seul : clé stable → code jamais réutilisé ni renuméroté ; option inconnue ajoutée et affichée brute en attendant traduction.",
+            "Catalogue révisionné transporte les clés ; l’opération transporte le code. Un code reçu avant le catalogue reste stockable et se décode plus tard.",
+            "Alternative minimale : clé texte dans le réseau et dictionnaire Parquet, avec mêmes gains d’octets mais maintien du plafond de cardinalité du calcul actuel.",
+            "Ne pas mélanger numéro du hub, id SQL, code d’état et référence de contenu : leurs propriétaires et durées de vie diffèrent.",
+            "La cible retient les codes ; leur bénéfice est sémantique et de cardinalité, au-delà du gain de compression. Déployer catalogue/lecteur avant émission des codes."
+          ],
+          "evolution": "Dictionnaires V1 → codes réseau V2 → catalogue révisionné plutôt qu’opération spéciale en V3.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage.md",
+              "line": 198,
+              "note": "Règle de dictionnaire"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 330,
+              "note": "Protocole minimal et variante"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 353,
+              "note": "Codes de bout en bout"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-rollup/src/lib.rs",
+              "line": 236,
+              "note": "Borne actuelle des états de durées"
+            },
+            {
+              "path": "crates/moli-archive/src/protocol.rs",
+              "line": 1,
+              "note": "Contrat export actuel strict"
+            }
+          ],
+          "risks": [
+            "Test d’énumération à plus de 64 valeurs sans blocage encore listé à faire.",
+            "Un code stable doit survivre aux migrations et sauvegardes de son dictionnaire."
+          ]
+        },
+        {
+          "id": "donnees-paliers",
+          "title": "Vieillir selon la nature et le consentement",
+          "status": "proposition",
+          "decision": "Horizon D13 décidé ; paliers supplémentaires et « toujours » encore proposés.",
+          "summary": "Les transitions d’état restent intactes dans leur fenêtre et les mesures deviennent progressivement des résumés. La V3 retire la conservation implicite éternelle des transitions de sûreté.",
+          "details": [
+            "Puissance : récent7j, détail archive30j, heures10ans ; climat14j/90j/5ans ; états31j/365j ; diagnostic7j sans archive ; autres7j/30j.",
+            "Énergie : heures locales deux mois civils, jours62j et mois13mois ; archive heures10ans. Jours/mois plus lointains et durées quotidiennes d’états sont des propositions supplémentaires.",
+            "E1 écrit le palier suivant, vérifie quantités/durées/nombres/min-max/couverture, publie la révision puis retire l’ancien : jamais supprimer d’abord.",
+            "Un état ne se lisse ni ne se rééchantillonne ; un cumul additionne ses deltas ; un segment de mesure fusionne ses statistiques pondérées. Une conservation éternelle exige un choix explicite."
+          ],
+          "evolution": "V2 conservait les transitions de sûreté pour toujours ; V3 se réaligne sur D13 et la vie privée.",
+          "sources": [
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 243,
+              "note": "Matrice des paliers"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 276,
+              "note": "Algorithme de vieillissement"
+            },
+            {
+              "path": "docs/ARCHITECTURE.md",
+              "line": 278,
+              "note": "Horizons D13"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-archive/src/parts.rs",
+              "line": 1,
+              "note": "Collecte des fichiers sans référence"
+            },
+            {
+              "path": "tools/haute-dispo-banc/README.md",
+              "line": 104,
+              "note": "Banc distinct du produit ; les scénarios d’élection, radios et arrêt complet restent des limites documentées, pas des fonctions livrées."
+            }
+          ],
+          "risks": [
+            "Collecter une ancienne génération n’est pas une purge temporelle E1.",
+            "Les segments à tolérance restent optionnels après mesure sur valeurs réelles."
+          ]
+        },
+        {
+          "id": "donnees-lecture-fusion",
+          "title": "Une lecture du passé attachée à un manifeste",
+          "status": "partiel",
+          "decision": "Lectures archive codées ; fusion D1 récente+archive proposée et non constatée.",
+          "summary": "Une requête d’archive voit une époque, une révision et un published_upto cohérents. D1 doit utiliser cette même frontière pour ajouter les opérations locales plus récentes et la dernière valeur vive.",
+          "details": [
+            "Épingler le manifeste avant lecture ; catalogue et parts restent fixes même pendant publication. Bornes alignées par résolution, intervalle demi-ouvert et refus d’un dépassement plutôt que troncature silencieuse.",
+            "Heure/jour/mois : archive jusqu’à sa frontière, puis bande locale résumée ; brut : local dans sa fenêtre, archive au-delà avec palier réellement disponible annoncé.",
+            "Archive injoignable : rendre la portion locale avec archive=unavailable ; ne pas fabriquer un passé vide. État en segments et énergie en deltas, pas courbe d’index moyennée.",
+            "Bornes actuelles :128 identifiants,5 000 valeurs et1 Mio JSON ; une mutation lourde et une lecture ont des permis séparés. Une seconde lecture simultanée peut être refusée sous saturation."
+          ],
+          "evolution": "D13 définissait le complément distant ; V3 donne son algorithme, C1 expose déjà la frontière par réponse.",
+          "sources": [
+            {
+              "path": "docs/components/archive-protocol.md",
+              "line": 67,
+              "note": "Requête bornée et manifeste"
+            },
+            {
+              "path": "docs/components/archive-protocol.md",
+              "line": 83,
+              "note": "published_upto du même manifeste"
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 421,
+              "note": "Algorithme D1"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-archive/src/manifest.rs",
+              "line": 163,
+              "note": "Lecture depuis un manifeste"
+            },
+            {
+              "path": "crates/moli-archive/src/manifest.rs",
+              "line": 217,
+              "note": "Frontière renvoyée par la lecture"
+            }
+          ],
+          "risks": [
+            "Le statut lu à un autre instant ne doit pas remplacer le published_upto du manifeste utilisé.",
+            "La performance de bout en bout avec HTTP et rendu n’est pas prouvée par le banc de stockage seul."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "donnees-replication",
+      "title": "Copie conforme et haute disponibilité",
+      "intro": "La cible retenue suit HA v2 : aucun journal de réplication sur disque, une file en mémoire et une reprise depuis les pairs ou l’état complet. Le rang critique s reste distinct de la séquence historique D13 seq. Les scènes de banc expliquent les mécanismes, tandis que promotion, radios, autorisations et reprise réelle restent à qualifier dans le produit.",
+      "ideas": [
+        {
+          "id": "donnees-classes",
+          "title": "Trois classes et deux flux indépendants",
+          "status": "proposition",
+          "decision": "HA v2 retenue pour la cible ; mécanisme encore proposé dans le dépôt.",
+          "summary": "L’état qui permet de décider est critique ; les courbes et l’audit sont historiques ; les gros octets ont un chemin propre. Un retard d’historique ne bloque pas la copie du présent.",
+          "details": [
+            "Critique : valeurs/instants/santé/annuaire/occurrences/workflows/métier/coffre/époque dans un rang s unique.",
+            "Historique : relevés, heures énergie, journal d’exécution et audit dans le seq de la base active ; au mieux en direct, comblé ensuite.",
+            "Vidéo/audio/fichiers/Parquet ne transitent pas comme gros corps MQTT : référence, taille et empreinte dans le message, octets par HTTP ou stockage adapté."
+          ],
+          "evolution": "HA v1 utilisait un journal et un rang j pour une partie du critique ; v2 les retire.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 172,
+              "note": "Trois classes, garanties et chemins"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/src/flux.rs",
+              "line": 1,
+              "note": "Flux critique du prototype"
+            },
+            {
+              "path": "tools/haute-dispo-banc/src/stockage.rs",
+              "line": 1,
+              "note": "Séquence historique séparée"
+            }
+          ],
+          "risks": [
+            "« Exacte à tout instant » signifie exacte au rang appliqué, avec retard réseau mesuré ; aucune réplication instantanée sans latence."
+          ]
+        },
+        {
+          "id": "donnees-sorties",
+          "title": "Copier les sorties, jamais retraiter les entrées",
+          "status": "qualification",
+          "decision": "Invariant retenu et mesuré ; pas de second hub actif traitant les entrées.",
+          "summary": "Le secours reprend les valeurs et instants tels que le hub actif les publie. Rejouer les entrées sur sa propre horloge changerait les dates changé et casserait les attentes.",
+          "details": [
+            "Le séquenceur actif donne s à chaque sortie critique, rapport identique compris via vu/.",
+            "Le secours applique sans recalculer observé/reçu/changé ; tout instant qui quitte une machine est mural, les échéances monotones se reconstruisent localement.",
+            "Le banc compare une heure : copie par sorties,86 attentes revérifiées sur86 ; copie par entrées,0 sur86 et1 480 fiches différentes."
+          ],
+          "evolution": "Invariant v1 conservé par v2 ; le numéro i voyage en plus du nom selon mémoire v2.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 269,
+              "note": "Contre-épreuve entrées/sorties"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 279,
+              "note": "Séquenceur critique unique"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/src/copie.rs",
+              "line": 1,
+              "note": "Comparaison des deux stratégies"
+            },
+            {
+              "path": "tools/haute-dispo-banc/src/flux.rs",
+              "line": 1,
+              "note": "Sorties et application par les répliques"
+            }
+          ],
+          "risks": [
+            "Une réplication d’entrées apparemment identiques ne prouve pas l’identité des causes et attentes."
+          ]
+        },
+        {
+          "id": "donnees-pont",
+          "title": "Pont maison : file puis état complet",
+          "status": "qualification",
+          "decision": "Pont fait maison et absence de journal décidés par le propriétaire ; file10 000 retenue comme valeur de cible.",
+          "summary": "Chaque machine porte le bout actif et le bout secours du pont. Les courtiers transportent et le pont répare les pertes par les séquences.",
+          "details": [
+            "Actif : conserver10 000 sorties binaires, répondre aux demandes de tronçons ou « hors file », construire l’état complet au rang s0.",
+            "Secours : remettre l’ordre après une grâce200ms ; trou court → fenêtres32×64 sorties ; trou long → état complet découpé≤4Kio, puis appliquer les sorties reçues après s0.",
+            "À la promotion, conserver la file reçue et continuer s sans rupture ; l’ancien actif revient en secours et se recopie depuis le nouveau.",
+            "Le banc présente zéro perte sur coupures5s/10s et sur60s dépassant la file ; il compare aussi l’abonné local du secours à l’actif."
+          ],
+          "evolution": "Remplace le journal disque7j et le rejeu intégral de HA v1.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 292,
+              "note": "Deux bouts et sujets"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 337,
+              "note": "File ou état complet"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 881,
+              "note": "Décisions du propriétaire"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/src/pont.rs",
+              "line": 1,
+              "note": "Deux courtiers et pont expérimental"
+            },
+            {
+              "path": "tools/haute-dispo-banc/README.md",
+              "line": 104,
+              "note": "Banc explicitement distinct du produit"
+            }
+          ],
+          "risks": [
+            "La file de0,45Mio ne remplace pas une sauvegarde durable.",
+            "L’état complet du banc ne couvre pas encore toutes les sections du vrai système."
+          ]
+        },
+        {
+          "id": "donnees-battement-ordre",
+          "title": "Battement, ordre global et contrôle d’empreinte",
+          "status": "proposition",
+          "decision": "Mécanismes retenus pour détecter trous et divergences ; temps de grâce et battement pris dans HA v2.",
+          "summary": "La perte de la dernière sortie reste invisible si aucune sortie ne suit. Le battement annonce donc le dernier rang même dans une maison calme, puis une empreinte vérifie le contenu au même rang.",
+          "details": [
+            "Toutes les500ms, repl/bout annonce s ; accusé de secours au même rythme. Si bout dépasse le rang local, demander après la grâce200ms.",
+            "Entre filtres MQTT, reconstituer l’ordre s plutôt que supposer l’ordre de réception ; répondre aux pauses Unschedule par wake et ne pas interrompre la boucle de reconnexion.",
+            "Chaque minute : CRC32 par bloc de256points, santé et exécutions ; comparer au même rang et recopier le bloc divergent. Exclure les échéances monotones propres à la machine."
+          ],
+          "evolution": "V1 avait l’empreinte et la remise en ordre ; v2 ajoute le battement après une perte finale trouvée au banc.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 357,
+              "note": "Perte finale et battement"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 421,
+              "note": "Leçons de courtier"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 435,
+              "note": "Empreinte par blocs"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/src/pont.rs",
+              "line": 1,
+              "note": "Battements et reprise des abonnés du banc"
+            },
+            {
+              "path": "tools/haute-dispo-banc/src/flux.rs",
+              "line": 1,
+              "note": "Empreintes des répliques"
+            }
+          ],
+          "risks": [
+            "Rang égal ne prouve pas mémoire égale ; CRC détecte une divergence sans être une preuve cryptographique d’authenticité.",
+            "Les tampons doivent avoir des limites en octets aussi pour les objets métier variables."
+          ]
+        },
+        {
+          "id": "donnees-modes",
+          "title": "Six modes, une seule porte vers l’actif",
+          "status": "proposition",
+          "decision": "Mode passif et verrou retenus comme première étape ; code courant démarre encore directement ses pilotes.",
+          "summary": "Une machine commence en reprise et devient à jour avant de prétendre agir. Seule l’époque autorise les effets ; isolé signifie conserver et alerter, sans promotion autonome.",
+          "details": [
+            "Reprise : pilotes arrêtés, API fermée, recherche des pairs ; rattrapage : appliquer ; à jour : lecture seule et aucun réveil qui agit.",
+            "Isolé après2s sans battement : mémoire figée et reconnexion. Actif : pilotes, moteur, écriture ; arrêt figé : refus de nouveaux ordres puis relève et instantané.",
+            "Un flock empêche deux instances locales ; les identifiants MQTT fixes ne constituent pas ce verrou et peuvent chasser l’autre connexion."
+          ],
+          "evolution": "HA v1 distinguait actif/passif ; v2 explicite les six modes et transitions.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 198,
+              "note": "Table des modes et transitions"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 242,
+              "note": "Composants du passif"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 440,
+              "note": "Pilotes lancés avant écoute API"
+            },
+            {
+              "path": "crates/moli-archive/src/receipt.rs",
+              "line": 1,
+              "note": "Verrou déjà utilisé pour le service d’archive, précédent limité"
+            }
+          ],
+          "risks": [
+            "Un second processus échouant à ouvrir le port peut déjà avoir lancé des pilotes ; le port seul ne protège pas la maison."
+          ]
+        },
+        {
+          "id": "donnees-hist-replique",
+          "title": "Copier les opérations historiques avec leur seq",
+          "status": "proposition",
+          "decision": "Copie de reprise retenue ; une copie dérivée reste seulement une copie de lecture.",
+          "summary": "Deux bases qui reconstruisent chacune leur historique depuis val ne créent pas forcément les mêmes opérations. Une seule base active numérote ; la copie apte à exporter applique exactement ses lots.",
+          "details": [
+            "run/ porte le journal d’exécution en direct pour les écrans ; la base active le range puis publie hist/ops après validation.",
+            "hist/ops conserve mêmes opérations et seq ; trou → hist/demande vers journal D13 de l’actif, à débit borné et sans bloquer s.",
+            "À la bascule, seule une copie qui a ce même journal et les mêmes octets peut continuer l’export. Une base dérivée de val ne doit jamais exporter.",
+            "Le banc montre3 827contre3 777opérations et une divergence dès1 974 pour une base dérivée ; le journal D13 reste donc nécessaire malgré l’abandon du journal critique disque.",
+            "Extension retenue pour les runs : opération execution_event versionnée, récepteur d’archive mis à jour avant producteur ; le protocole D13 actuel reste limité à ses deux types existants."
+          ],
+          "evolution": "Contre-exemple découvert en HA v1 ; v2 remplace son transport par MQTT, pas son invariant.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 467,
+              "note": "run puis hist"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 513,
+              "note": "Copie de reprise et piège de dérivation"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/src/stockage.rs",
+              "line": 1,
+              "note": "Modèle des rangs d’export"
+            },
+            {
+              "path": "crates/moli-archive/src/protocol.rs",
+              "line": 1,
+              "note": "Récepteur attend séquences contiguës"
+            }
+          ],
+          "risks": [
+            "Extension du journal D13 aux runs à formaliser : protocole actuel n’accepte que sample et energy_hour.",
+            "Reprise historique au-delà du plancher de rejeu ne peut être promise sans un autre contrat."
+          ]
+        },
+        {
+          "id": "donnees-reprise-pairs",
+          "title": "Reprendre d’abord la mémoire la plus avancée",
+          "status": "proposition",
+          "decision": "Règle de reprise HA v2 retenue ; refus d’état plus vieux à implémenter et qualifier.",
+          "summary": "Un ancien actif ne redémarre jamais vide en imposant son état aux copies. Il consulte les pairs et reprend le couple époque/rang le plus avancé avant toute demande d’époque.",
+          "details": [
+            "Lire instantané(E,s), chercher les pairs jusqu’à10s ; si un actif possède une époque vivante, devenir son secours et recevoir l’état complet.",
+            "Sinon comparer les états, choisir le plus avancé accessible, puis demander E+1 au témoin après expiration du bail. Un distant ne prend pas l’époque maison.",
+            "Avec pair à jour, la perte se limite au retard de transport ; sans aucun pair ni onduleur, le dernier instantané borne les attentes et exécutions perdues.",
+            "Retenir instantané1h avec secours à jour et15min sans secours ; créer une seule alerte explicite pour la période non récupérée."
+          ],
+          "evolution": "Remplace instantané+journal de v1 par pair puis instantané ; conserve la distinction d’époque de restauration de l’archive.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 567,
+              "note": "Pertes et reprise"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 890,
+              "note": "Périodes recommandées"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/src/instantane.rs",
+              "line": 187,
+              "note": "Relecture avec refus de format"
+            },
+            {
+              "path": "tools/haute-dispo-banc/README.md",
+              "line": 104,
+              "note": "Banc distinct du produit ; les scénarios d’élection, radios et arrêt complet restent des limites documentées, pas des fonctions livrées."
+            }
+          ],
+          "risks": [
+            "Les tests de promotion à froid, coupure des deux locaux et retour d’ancien actif sont marqués à écrire.",
+            "La mémoire distante peut être en retard ou inaccessible ; cela ne constitue pas un RPO nul."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "donnees-secrets-radios",
+      "title": "Époques, radios, secrets et arrêt",
+      "intro": "La réplication prépare le secours, mais elle ne lui donne pas le droit d’agir. La cible conserve un actif par intégration, des ordres clôturés par époque et un secours distant limité au cloud sur geste humain. L’arrêt fige des données métier versionnées ; il ne tente pas de restaurer des connexions réseau devenues invalides.",
+      "ideas": [
+        {
+          "id": "donnees-epoque",
+          "title": "Clôturer les anciens actifs et rendre l’incertain visible",
+          "status": "proposition",
+          "decision": "Époque et bail hérités de V7, retenus par HA v2 ; qualification matérielle encore distincte.",
+          "summary": "Le témoin donne une époque à un seul actif après expiration du bail. Chaque ordre porte cette époque pour qu’un module refuse les ordres anciens.",
+          "details": [
+            "Bail renouvelé chaque seconde ; actif se rétrograde à2s sans droit renouvelé ; secours reçoit l’époque suivante après3s.",
+            "Deux domaines : maison et cloud ; secours local prend les deux, distant uniquement cloud sur geste humain. Le témoin doit survivre hors des deux mêmes domaines de panne.",
+            "Ordre envoyé sans issue : incertain, jamais renvoyé. Heure/rappel entre dernière sortie reçue et fin du bail : « peut-être déjà parti », une alerte ; après bail, rattrapage normal."
+          ],
+          "evolution": "Règles v1 conservées par v2 ; abandon du journal ne retire ni clôture ni fenêtre d’incertitude.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 761,
+              "note": "Bascule et cas incertains"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 898,
+              "note": "Choix du témoin recommandé"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/README.md",
+              "line": 104,
+              "note": "Pont mesuré, produit distinct"
+            },
+            {
+              "path": "tools/haute-dispo-banc/README.md",
+              "line": 104,
+              "note": "Banc distinct du produit ; les scénarios d’élection, radios et arrêt complet restent des limites documentées, pas des fonctions livrées."
+            }
+          ],
+          "risks": [
+            "La copie conforme n’empêche pas le split-brain sans témoin et clôture effectivement raccordés.",
+            "Sélection du témoin doit être faite sur l’installation, sans publier d’identifiant de maison."
+          ]
+        },
+        {
+          "id": "donnees-radios",
+          "title": "Thread redondant, Zigbee et Matter à écrivain unique",
+          "status": "proposition",
+          "decision": "Règle radio héritée et retenue ; pas de bascule matérielle prouvée par ce banc.",
+          "summary": "Thread peut garder plusieurs routeurs de bordure actifs sur le même jeu de données. Le coordinateur Zigbee et le contrôleur Matter restent liés à l’époque et à la clôture de l’ancien actif.",
+          "details": [
+            "Préparer les boîtiers radio et données opérationnelles sans inventer deux coordinateurs écrivains pour un réseau Zigbee.",
+            "Au basculement, arrêter/clôturer l’ancien propriétaire avant d’autoriser le nouveau chemin de commande. Les radios ne deviennent jamais la responsabilité du distant.",
+            "Le secours conserve déjà les valeurs et instants pendant le redémarrage radio ou la relecture des appareils ; les appareils silencieux bénéficient de la grâce de démarrage."
+          ],
+          "evolution": "HA v1 corrige l’idée Thread actif/passif ; HA v2 conserve le fonctionnement redondant natif.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite.md",
+              "line": 507,
+              "note": "Rôles des radios"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 627,
+              "note": "Règles héritées"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/README.md",
+              "line": 104,
+              "note": "Banc distinct du produit ; les scénarios d’élection, radios et arrêt complet restent des limites documentées, pas des fonctions livrées."
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 440,
+              "note": "Démarrage courant sans sélection actif/passif"
+            }
+          ],
+          "risks": [
+            "Tests matériels de partition, clôture et reprise requis avant promotion automatique locale."
+          ]
+        },
+        {
+          "id": "donnees-familles-integrations",
+          "title": "Un seul client actif par intégration",
+          "status": "proposition",
+          "decision": "Invariant retenu ; classification du code à valider fournisseur par fournisseur pour les limites externes.",
+          "summary": "Le secours reçoit déjà les valeurs, il n’a donc pas à solliciter une seconde fois les appareils. Il prépare configuration, secrets et session sans appel avant l’époque.",
+          "details": [
+            "Jeton tournant : seul l’actif renouvelle ; session par identifiant : connexion après bascule ; clé/appairage/empreinte fixe : répliquer le coffre pour éviter réappairage et nouvel épinglage silencieux.",
+            "Identifiant MQTT fixe : aucun client passif connecté ; Telegram, notifications et Toggle : un seul émetteur pour éviter les effets doubles.",
+            "Adresses liées à la machine : adresse virtuelle de l’actif quand approprié, sinon réglage par machine ; services sans état restent inutiles en double.",
+            "Quand le fournisseur accepte une autorisation propre à chaque machine sans limite gênante, elle supprime la copie de refresh token ; ne pas en déduire automatiquement les règles de tous les fournisseurs."
+          ],
+          "evolution": "Sept familles détaillées dans v1, résumées et conservées en v2.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite.md",
+              "line": 516,
+              "note": "Familles et conséquences"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 643,
+              "note": "Table v2"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/secrets.rs",
+              "line": 134,
+              "note": "Lecture de secrets depuis mémoire"
+            },
+            {
+              "path": "crates/moli-os/src/main.rs",
+              "line": 440,
+              "note": "Pilotes actuellement démarrés sans passif"
+            }
+          ],
+          "risks": [
+            "Les comportements réels de révocation, quotas, sessions et autorisations nécessitent un compte fournisseur ; les modèles ne les prouvent pas."
+          ]
+        },
+        {
+          "id": "donnees-rotation",
+          "title": "Renouveler un jeton : coffre puis copie puis usage",
+          "status": "proposition",
+          "decision": "Coffre+copie directe décidés par le propriétaire ; renouveleur unique retenu.",
+          "summary": "Deux renouvellements concurrents du même refresh token peuvent invalider une session. La nouvelle version doit être durable localement puis transmise au secours avant d’être utilisée.",
+          "details": [
+            "Réponse fournisseur version n+1 → écriture chiffrée atomique avec sync → message scellé par destinataire dans rang s → usage par le pilote.",
+            "Le secours applique la version dans son coffre en mémoire puis sur disque ; modifier son seul fichier serait insuffisant car SecretStore charge une fois puis sert sa mémoire.",
+            "Modèle RFC9700 publié : deux renouveleurs échouent1 000/1 000 ; un seul et copie locale0/10 000 ; distant absent1h/j environ4,3% d’échecs, d’où retard visible et autorisation indépendante si possible."
+          ],
+          "evolution": "Ordre déjà appliqué localement par Netatmo selon l’étude ; HA v2 change le transport, pas l’ordre de sécurité.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 653,
+              "note": "Rotation et ordre des écritures"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/secrets.rs",
+              "line": 117,
+              "note": "Chargement unique du coffre"
+            },
+            {
+              "path": "tools/haute-dispo-banc/src/jetons.rs",
+              "line": 1,
+              "note": "Fournisseur simulé et scénarios"
+            }
+          ],
+          "risks": [
+            "Pas de garantie zéro échec fournisseur réel ; coupure pendant copie/rotation reste un scénario produit à écrire.",
+            "Ne pas journaliser le corps des secrets pour observer la réplication."
+          ]
+        },
+        {
+          "id": "donnees-coffre-destinataires",
+          "title": "Un coffre scellé selon le destinataire",
+          "status": "proposition",
+          "decision": "Décision propriétaire : coffre par défaut, mémoire seule au cas par cas ; clé maître locale conservée.",
+          "summary": "Le secours local reçoit ce dont il a besoin pour reprendre la maison. Le distant reçoit seulement les secrets cloud scellés avec sa propre clé.",
+          "details": [
+            "Chaque mutation du coffre produit un message de version pour les destinataires autorisés ; trous comblés par file ou état complet avec section coffre scellée pour le demandeur.",
+            "Clé maître de la maison installée au pairage local, jamais envoyée au distant ; ses propres clés restent séparées. Le PIN s’installe avec la politique d’identité.",
+            "Mémoire seule : secret copié directement, absent du disque et des instantanés ; survives bascule, perdu si toutes ses copies mémoire s’arrêtent.",
+            "Rapatrier les secrets aujourd’hui externes au coffre lorsqu’ils doivent suivre la reprise : jeton Telegram, clé Hue, mot de passe Zigbee2MQTT, cloud Tuya et archive ; préserver les frontières opérateur."
+          ],
+          "evolution": "Coffre scellé de v1 conservé ; repl/coffre dans s remplace le journal de réplication de v1.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 677,
+              "note": "Scellement et domaines"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite.md",
+              "line": 659,
+              "note": "Secrets externes au coffre"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/secrets.rs",
+              "line": 142,
+              "note": "set sérialisé et commit"
+            },
+            {
+              "path": "crates/moli-runtime/src/secrets.rs",
+              "line": 149,
+              "note": "Suppression de secret déjà disponible"
+            }
+          ],
+          "risks": [
+            "L’état complet réseau peut porter une section scellée ; l’instantané d’état écrit sur disque reste sans secrets, le coffre est son artefact séparé.",
+            "Suppression d’intégration doit traiter aussi copies, sauvegardes et secrets devenus inutiles."
+          ]
+        },
+        {
+          "id": "donnees-distant",
+          "title": "Le distant copie, alerte et reprend le cloud sur geste",
+          "status": "proposition",
+          "decision": "Périmètre et geste humain décidés par le propriétaire ; NetBird retenu dans la conception.",
+          "summary": "Le distant protège surtout la mémoire hors site et les intégrations cloud. Il ne prend ni radios ni commandes du réseau local.",
+          "details": [
+            "Même pont vers l’actif via lien NetBird, avec TLS applicatif ; file pour coupure courte et état complet pour absence longue. Le banc simule40±20ms,1Mbit/s et coupures régulières.",
+            "Deux veilles : silence du pont et battement HTTPS direct ; une seule panne de chemin ne vaut pas panne de maison. Promotion cloud exige les deux silences puis un geste humain.",
+            "Maison de retour : lire l’époque cloud distante avant de relancer ses intégrations ; rendre la main reste un geste. Le distant peut héberger l’archive avec son contrat propre.",
+            "Données historiques manquées se comblent ensuite ; resynchroniser le présent ne signifie pas avoir déjà récupéré toutes les courbes."
+          ],
+          "evolution": "Décision v1 conservée ; v2 accélère absence longue par état complet au lieu du rejeu.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 692,
+              "note": "Lien et responsabilités du distant"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 751,
+              "note": "Deux veilles et retour cloud"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/src/relais.rs",
+              "line": 1,
+              "note": "Lien simulé du banc"
+            },
+            {
+              "path": "tools/haute-dispo-banc/src/pont.rs",
+              "line": 1,
+              "note": "Scénarios distant et resynchronisation"
+            }
+          ],
+          "risks": [
+            "NetBird, relais443 et reprise fournisseur réelle n’ont pas été qualifiés par cette lecture.",
+            "Le compte distant peut manquer le dernier jeton malgré une mémoire récemment copiée."
+          ]
+        },
+        {
+          "id": "donnees-arret-fige",
+          "title": "Arrêt figé versionné, puis reprise des données",
+          "status": "proposition",
+          "decision": "Arrêt figé et instantané retenus ; objectif2s et SIGTERM complet encore à qualifier.",
+          "summary": "L’arrêt refuse les nouveaux ordres et fige un rang cohérent. L’instantané restaure la logique de la maison, jamais les connexions du processus.",
+          "details": [
+            "Publier arrêt → refuser nouveaux ordres → donner1s aux ordres en vol puis les marquer incertains → arrêter pilotes en ordre inverse → vider entrées → figer rang N.",
+            "Écrire voisin temporaire, sync fichier, renommage, sync dossier ; instantané versionné avec CRC et sections annuaire/valeurs/santé/échéances murales/exécutions/attentes/horaires/agendas/aides, sans secret en clair.",
+            "Si un secours confirme N et même empreinte, le témoin lui donne E+1 ; sinon fin et reprise ultérieure depuis pair ou instantané.",
+            "Le lecteur refuse corruption, troncature et version future ; version récente lit les anciennes. CRIU écarté car ses connexions et son binaire exact ne survivent pas comme contrat métier."
+          ],
+          "evolution": "Format v1 conservé ; HA v2 retire le marqueur de journal et utilise le même format pour état complet et instantané, avec politique coffre distincte.",
+          "sources": [
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 786,
+              "note": "Procédure et format"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 815,
+              "note": "Mesures d’instantané"
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 851,
+              "note": "SIGTERM complet encore à écrire"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/haute-dispo-banc/src/instantane.rs",
+              "line": 113,
+              "note": "Construction du format"
+            },
+            {
+              "path": "tools/haute-dispo-banc/src/instantane.rs",
+              "line": 258,
+              "note": "Écriture synchronisée du prototype"
+            }
+          ],
+          "risks": [
+            "132µs pour figer et3ms pour fsync au banc ne prouvent pas les2s de tous les pilotes ni la carte SD.",
+            "Les commentaires résiduels du prototype évoquent encore le journal v1 ; le contrat cible v2 prime."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "donnees-nettoyage",
+      "title": "Retrait, succession et réutilisation des places",
+      "intro": "La conception la plus récente distingue l’absence d’un matériel de sa suppression voulue. Le retrait humain reste réversible trente jours ; le lot libère les places avec génération suivante, puis un déménagement rare réduit les colonnes. La succession réécrit les références par noms sans falsifier l’histoire de l’ancien équipement.",
+      "ideas": [
+        {
+          "id": "donnees-absent-retire",
+          "title": "Absent et retiré sont deux états différents",
+          "status": "proposition",
+          "decision": "Décision propriétaire : pas de retrait automatique ; rappel après30j, grâce30j.",
+          "summary": "Un appareil temporairement absent conserve sa place et ses références. Retirer est un geste explicite qui interdit immédiatement lectures d’usage et commandes, puis prépare le nettoyage.",
+          "details": [
+            "En service → absent sur disparition de catalogue ou arrêt d’intégration ; qualité mauvaise et aucun départ sur cette valeur, mais retour automatique avec même numéro.",
+            "Après30j d’absence, proposer le retrait sans le faire ; le rapport d’impact présente automatismes, aides, plan, accueil, énergie, alarme future et historique.",
+            "Retrait humain → état retiré, échéances désarmées, sujets gardés effacés, compteurs arrêtés ; étiquettes et placement restent pendant la grâce30j pour annulation."
+          ],
+          "evolution": "Corrige remove_device qui retire actuellement le modèle sans gérer toute la sortie métier.",
+          "sources": [
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 399,
+              "note": "Cycle et différence absent/retiré"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 423,
+              "note": "Rapport d’impact"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 810,
+              "note": "Décisions propriétaire"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2201,
+              "note": "Suppression actuelle des états et du modèle"
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2221,
+              "note": "Événement DeviceRemoved"
+            }
+          ],
+          "risks": [
+            "La disparition d’une intégration configurée ne passe pas nécessairement par remove_device ; elle doit être traitée dans la cible."
+          ]
+        },
+        {
+          "id": "donnees-generation-place",
+          "title": "Place24bits, génération7bits, numéro jamais redonné",
+          "status": "qualification",
+          "decision": "Dernière proposition retenue ; les cases condamnées permanentes de mémoire v2 deviennent historique.",
+          "summary": "La place redevient réutilisable sans que son ancien numéro désigne le nouvel occupant. Le bit31 reste réservé aux causes horloge et agenda.",
+          "details": [
+            "Adresse = colonne + (numéro &0x00FFFFFF)×taille ; validité = génération[place] égale bits24..30.",
+            "À la libération, passer à la génération suivante ; après127, condamner cette place au lieu de boucler. Une référence périmée devient inerte.",
+            "Sur MQTT, i porte le numéro entier ; un cache inconnu redemande meta. Le programme recompilé ne vérifie pas chaque lecture, mais exécutions, attentes, minuteries, baux et caches durables contrôlent la génération."
+          ],
+          "evolution": "Remplace mémoire v2 §4.1 : ne jamais réutiliser une case ; conserve ne jamais redonner le numéro entier.",
+          "sources": [
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 349,
+              "note": "Encodage et vérifications"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 780,
+              "note": "Modifications des documents précédents"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/nettoyage-banc/src/numeros.rs",
+              "line": 19,
+              "note": "Numero et masques"
+            },
+            {
+              "path": "tools/nettoyage-banc/src/numeros.rs",
+              "line": 244,
+              "note": "Épuisement de génération et condamnation"
+            }
+          ],
+          "risks": [
+            "Les identifiants SQL D13 restent séparés ; l’incarnation de registre protège les références survivant au rollback global."
+          ]
+        },
+        {
+          "id": "donnees-sortie-effets",
+          "title": "Arrêter les effets fantômes et signaler les références cassées",
+          "status": "partiel",
+          "decision": "Défauts documentés et encore recoupés statiquement ; correctifs listés en tickets, livraison non déduite.",
+          "summary": "La sortie d’un appareil touche davantage que sa fiche du hub. Le moteur d’énergie et les définitions qui le citent doivent recevoir une conséquence explicite.",
+          "details": [
+            "Retrait : arrêter l’intégration de dernière puissance, terminer attentes/minuteries/baux/approbations et refuser tout ordre tardif vers l’ancien appareil.",
+            "Automatismes qui le citent sans successeur : « à revoir » et une notification ; conserver les définitions pour réparation et validation.",
+            "Sortir le retiré de la liste des appareils connus afin qu’un profil à cible unique accepte le remplaçant ; purger étiquettes et état restauré seulement au lot.",
+            "Une attente exige changé==depuis ET une valeur encore lisible : bonne génération, appareil ni absent ni muet, qualité utilisable."
+          ],
+          "evolution": "Nettoyage complète mémoire v2 et découvre trois défauts du produit indépendants de la future mémoire compacte.",
+          "sources": [
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 225,
+              "note": "Constats sur le code"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 438,
+              "note": "Retrait pas à pas"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 624,
+              "note": "Lisibilité des attentes"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-energy/src/lib.rs",
+              "line": 586,
+              "note": "DeviceRemoved tombe encore dans Ok(_)"
+            },
+            {
+              "path": "crates/moli-energy/src/lib.rs",
+              "line": 742,
+              "note": "Dernière puissance tenue lors des tics"
+            },
+            {
+              "path": "crates/moli-runtime/src/hub.rs",
+              "line": 2339,
+              "note": "Appareils connus depuis étiquettes et état restauré"
+            }
+          ],
+          "risks": [
+            "Observation statique : aucun ordre ni consommation réelle n’a été déclenché pour la reproduire.",
+            "Ne pas confondre les durées déjà invalidées par le hub avec l’intégrale énergie encore tenue."
+          ]
+        },
+        {
+          "id": "donnees-succession",
+          "title": "Une succession validée en un seul geste",
+          "status": "proposition",
+          "decision": "Succession retenue ; deux courbes par défaut avec lien suite-de choisi pour la cible.",
+          "summary": "Le remplaçant garde sa propre identité et sa propre histoire. Les usages futurs peuvent suivre ses points après correspondance vérifiée et validation humaine unique.",
+          "details": [
+            "Appairer le nouveau en service ; proposer correspondances par clé avec contrôle de nature et unité, modifiables dans le rapport d’impact.",
+            "En une transaction de définition validée : réécrire les noms dans automatismes et aides, transférer étiquette/pièce/plan/accueil et association de compteur, puis retirer l’ancien.",
+            "La validation unique vaut celle des automatismes réécrits ; aucune modification de logique n’entre sans humain. Une refonte peut grouper les correspondances par pièce.",
+            "Historique : garder deux séries physiques et une relation explicite « suite de » pour une vue continue marquant la coupure ; ne pas reprendre le numéro de l’ancien pendant la grâce."
+          ],
+          "evolution": "Nettoyage ajoute une opération absente du produit ; le lien de continuité était ouvert, retenu ici avec identité historique séparée.",
+          "sources": [
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 468,
+              "note": "Algorithme de succession"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 819,
+              "note": "Question historique et recommandation"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/nettoyage-banc/src/refonte.rs",
+              "line": 1,
+              "note": "Scénario de75successions et références"
+            },
+            {
+              "path": "tools/nettoyage-banc/src/moteur.rs",
+              "line": 45,
+              "note": "Compilation depuis les noms"
+            }
+          ],
+          "risks": [
+            "Le compteur physique neuf exige sa propre base d’index pour éviter un delta artificiel ; transférer la configuration ne signifie pas copier l’index précédent.",
+            "L’annulation avant fin de grâce doit restaurer un état métier cohérent, pas juste une étiquette."
+          ]
+        },
+        {
+          "id": "donnees-lot",
+          "title": "Le lot de nuit libère sans rétrécir toutes les colonnes",
+          "status": "qualification",
+          "decision": "Grâce30j décidée ; lot actif seul et remise à zéro retenus.",
+          "summary": "Retirer ne libère rien immédiatement. Le lot rend les places disponibles et efface les noms, puis l’instantané de nuit enregistre cette nouvelle disposition.",
+          "details": [
+            "Choisir les retraits de plus30j, au minimum24h dans les expériences ; traiter l’appareil entier avec ses points. L’actif publie meta/lot au rang s puis applique comme une copie.",
+            "Remettre valeur/précédente/instants/qualité/échéances à zéro, effacer le nom, incrémenter génération, fusionner plages libres et rogner la queue. Retasser le tiroir des noms sans garder d’ancien décalage.",
+            "Recompiler programme et reconstruire vérités ; l’état complet ne porte les fiches que des places nommées, mais tout le registre porte générations et libres.",
+            "Les places libres restent réservées pour les nouveaux ; le lot ne rend pas nécessairement la capacité mémoire à l’OS. La copie applique le même événement, sans décider sa propre coupe."
+          ],
+          "evolution": "Remplace les cases condamnées de mémoire v2 ; les tests ont ajouté la remise à zéro après qu’une mutation passait.",
+          "sources": [
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 500,
+              "note": "Conditions et déroulé du lot"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 768,
+              "note": "Défauts trouvés par la vérification"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/nettoyage-banc/src/numeros.rs",
+              "line": 244,
+              "note": "Libération et génération du registre"
+            },
+            {
+              "path": "tools/nettoyage-banc/src/memoire.rs",
+              "line": 1,
+              "note": "Remise à zéro et état complet du modèle"
+            }
+          ],
+          "risks": [
+            "Les lots ×10/×100 dépassent4Kio et doivent passer en opération découpée puis appliquée atomiquement, pas en gros message brut.",
+            "Copie identique ne prouve pas valeur neuve effacée si les deux copies commettent le même défaut."
+          ]
+        },
+        {
+          "id": "donnees-demenagement",
+          "title": "Déménager rarement, avec une empreinte par noms",
+          "status": "qualification",
+          "decision": "Propriétaire : fin de refonte avec seuil ; retenir >25% libres et >64Kio, jamais en routine.",
+          "summary": "Le déménagement rapproche les blocs vivants pour rendre une capacité devenue inutile. Il conserve les noms et les données, mais transforme les numéros de tous les objets déplacés.",
+          "details": [
+            "Descendre les blocs appareil/points vers places libres basses ; attribuer la génération de destination et avancer celle des places quittées.",
+            "Translater causes et cibles d’exécutions, attentes, minuteries, baux, approbations et file des fins ; recompiler programme et reconstruire vérités.",
+            "Publier meta/demenagement en fragments≤4Kio, assembler et valider le tout avant application au rang critique ; comparer l’empreinte calculée par les noms avant/après.",
+            "Le banc garde une exécution de3h et une attente10min à travers le déménagement ; un oubli de translation doit devenir référence inerte, jamais commande sur un nouvel occupant."
+          ],
+          "evolution": "Nettoyage ajoute la réallocation que mémoire v2 ne permettait pas ; le coût est surtout la discipline des références.",
+          "sources": [
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 559,
+              "note": "Seuil, déplacement et empreinte"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 602,
+              "note": "Nature du risque"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 815,
+              "note": "Décision propriétaire"
+            }
+          ],
+          "verification": [
+            {
+              "path": "tools/nettoyage-banc/src/numeros.rs",
+              "line": 267,
+              "note": "Validation des destinations"
+            },
+            {
+              "path": "tools/nettoyage-banc/src/refonte.rs",
+              "line": 1,
+              "note": "Exécutions et attentes traversant le déménagement"
+            }
+          ],
+          "risks": [
+            "Le banc de nettoyage utilise un moteur réduit et des copies en mémoire sans courtier.",
+            "Le message1,55Mo à ×100 exige un transfert borné et une reprise, pas seulement une limite de taille."
+          ]
+        },
+        {
+          "id": "donnees-oubli-espaces",
+          "title": "Oublier les noms et surveiller les espaces durables",
+          "status": "proposition",
+          "decision": "Retrait/lot retenus ; réutilisation des ids SQL différée, alerte à50% retenue.",
+          "summary": "Le lot efface les noms du présent et des copies, mais ne vaut pas effacement de tous les historiques. Les numéros du stockage ont une autre durée de vie que les places mémoire.",
+          "details": [
+            "Nom effacé de l’annuaire au lot ; historique suit sa rétention, ou un retrait avec oubli utilise l’expurgation privée. Les sauvegardes antérieures conservent encore leurs copies selon leur politique.",
+            "Secrets d’intégration supprimée à retirer du coffre et destinataires ; étiquette/plan/accueil passent hors modèle vivant après grâce, sans prétendre qu’une sauvegarde ancienne les a oubliés.",
+            "Catalogue D13 :524 288points ; compteurs1 024. Alerter à moitié, puis envisager réutilisation seulement après purge de toutes données et dernière opération sous replay_floor. Compteur vivant tant que ses totaux mensuels existent, au moins13mois.",
+            "La simulation20ans montre une mémoire qui suit le pic avec lots ; elle ne constitue pas une preuve d’effacement de données personnelles sur tous les supports."
+          ],
+          "evolution": "Mémoire v2 évaluait seulement le coût de cases condamnées ; nettoyage étend à confidentialité, copies et espaces SQL.",
+          "sources": [
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 667,
+              "note": "Noms et oubli"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 680,
+              "note": "Espaces de la base"
+            },
+            {
+              "path": "docs/proposition/nettoyage-equipements.md",
+              "line": 869,
+              "note": "Limites du banc"
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-history/src/privacy.rs",
+              "line": 31,
+              "note": "Expurgation privée déjà présente"
+            },
+            {
+              "path": "tools/nettoyage-banc/src/banc.rs",
+              "line": 1,
+              "note": "Simulation de vie et mesure des places"
+            }
+          ],
+          "risks": [
+            "Une suppression logique dans le présent ne purge ni les révisions d’archive, ni reçus, ni sauvegardes par magie.",
+            "Les modèles synthétiques de vingt ans restent à distinguer d’un usage réel et de ses à-coups."
+          ]
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "family": "Valeurs, appareils et stockage",
+      "from": "docs/proposition/valeurs-appareils-stockage.md",
+      "to": "docs/proposition/valeurs-appareils-stockage-v2.md",
+      "kept": "Canonique, trois instants, qualité, équipements par liaisons, règles de cumul, familles personnelles, deux bases, double écriture et nuits.",
+      "replaced": "Long terme et agrégats permanents dans moli.db remplacés par archive Parquet ; filtres séparés remplacés par relevé à bande ; formes choisies selon nature.",
+      "reason": "Récent Turso et long terme Parquet confirmés ; distinguer mesure, état, cumul et occurrence.",
+      "sources": [
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v2.md",
+          "line": 20,
+          "note": "Table des changements"
+        },
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v2.md",
+          "line": 399,
+          "note": "Héritage explicite V1"
+        }
+      ]
+    },
+    {
+      "family": "Valeurs, appareils et stockage",
+      "from": "docs/proposition/valeurs-appareils-stockage-v2.md",
+      "to": "docs/proposition/valeurs-appareils-stockage-v3.md",
+      "kept": "Quatre étages, bandes, transitions intactes, deltas, codes, paliers et mécanismes V1 hérités.",
+      "replaced": "Heures creuses, coupure de bande à l’heure, agrégats généraux locaux et transitions de sûreté éternelles par défaut ; dictionnaire comme opération autonome.",
+      "reason": "Mesures Parquet : coût du format dominant, faible gain de creux face au dense ; respect D13 et vie privée. Catalogue révisionné transporte les dictionnaires.",
+      "sources": [
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 24,
+          "note": "Comparaison V2/V3"
+        },
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 438,
+          "note": "Mécanismes hérités V1/V2"
+        }
+      ]
+    },
+    {
+      "family": "Mémoire",
+      "from": "docs/proposition/memoire.md",
+      "to": "docs/proposition/memoire-v2.md",
+      "kept": "Adresse calculée, annuaire, fiches fixes, programme compilé, causes64o, lecture du présent et composées.",
+      "replaced": "Attente16o annoncée/52o réelle remplacée par24o ; temps mural utilisé pour durées corrigé ; fraîcheur calculée seulement à la lecture remplacée par événement ; calendrier auparavant implicite explicité.",
+      "reason": "Contre-épreuves du moteur de référence : les promesses v1 ne suffisaient pas. Ajout temps, agendas, reprise et précision.",
+      "sources": [
+        {
+          "path": "docs/proposition/memoire.md",
+          "line": 3,
+          "note": "Bandeau de remplacement"
+        },
+        {
+          "path": "docs/proposition/memoire-v2.md",
+          "line": 89,
+          "note": "Corrections vérifiées"
+        },
+        {
+          "path": "docs/proposition/memoire-v2.md",
+          "line": 1356,
+          "note": "Décisions après v2"
+        }
+      ]
+    },
+    {
+      "family": "Haute disponibilité",
+      "from": "docs/proposition/haute-disponibilite.md",
+      "to": "docs/proposition/haute-disponibilite-v2.md",
+      "kept": "Sorties et instants de l’actif, coffre scellé, un renouveleur, intégrations passives, NetBird, deux époques, clôture et arrêt figé.",
+      "replaced": "Journal de réplication disque7j et rang j supprimés ; reprise par file10 000 puis état complet ; redémarrage depuis pairs avant instantané ; workflows dans s et historique dans seq.",
+      "reason": "Contrainte propriétaire : aucun journal de réplication disque ; réduire écritures et coût des longues absences, avec risque de panne globale explicitement borné.",
+      "sources": [
+        {
+          "path": "docs/proposition/haute-disponibilite.md",
+          "line": 3,
+          "note": "v1 historique"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 130,
+          "note": "Remplacement précis"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 881,
+          "note": "Décisions propriétaire"
+        }
+      ]
+    },
+    {
+      "family": "Numéros et nettoyage",
+      "from": "docs/proposition/memoire-v2.md",
+      "to": "docs/proposition/nettoyage-equipements.md",
+      "kept": "Nom comme identité ; numéro entier jamais redonné ; fiches fixes, attente revérifiée et numéro MQTT en plus du nom.",
+      "replaced": "Place condamnée définitivement remplacée par place24bits+génération7bits, grâce30j, lot et déménagement rare ; attente vérifie aussi lisibilité.",
+      "reason": "Réutiliser la capacité sans confondre les occupants, arrêter les références et effets fantômes, oublier les noms du présent et des copies.",
+      "sources": [
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 780,
+          "note": "Modifications explicites de mémoire/HA"
+        },
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 810,
+          "note": "Décisions propriétaire"
+        }
+      ]
+    },
+    {
+      "family": "Présent durable et reprise",
+      "from": "docs/proposition/valeurs-appareils-stockage-v3.md",
+      "to": "docs/proposition/haute-disponibilite-v2.md",
+      "kept": "Mémoire seule vérité vive ; données métier et coffre durables séparément ; historique/export D13 durable inchangé.",
+      "replaced": "point_state écrit chaque60s n’est plus une seconde autorité à maintenir avec l’instantané HA. Cible de revue : instantané complet pour le présent, maison.db réservée aux données métier, moli.db au récent.",
+      "reason": "HA v2, plus récente, supprime l’écriture répétée du présent ; une autorité par donnée évite triple conservation. La réplication RAM ne remplace pas le journal immuable historique.",
+      "sources": [
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 399,
+          "note": "Ancienne double écriture de présent"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 513,
+          "note": "État courant et stockages"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 540,
+          "note": "Instantané remplaçant state.json"
+        }
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "donnees-choix-present",
+      "title": "Une autorité de reprise du présent",
+      "problem": "V3 conserve point_state dans maison.db ; HA v2 remplace state.json par un instantané et copie le présent en RAM. Maintenir les trois formes comme autorités rendrait reprise et coût incohérents.",
+      "options": [
+        {
+          "label": "Instantané complet + copies RAM",
+          "benefit": "Suit HA v2 et réduit les écritures.",
+          "cost": "Format complet et reprise par pairs à implémenter."
+        },
+        {
+          "label": "point_state + instantané + cache JSON",
+          "benefit": "Conserve toutes les propositions antérieures.",
+          "cost": "Trois écritures du présent et réconciliation ambiguë."
+        }
+      ],
+      "recommendation": "Retenir HA v2 pour le présent ; conserver maison.db pour les décisions et définitions métier et moli.db pour historique/énergie.",
+      "resolution": "Cible : hub en RAM → file critique → pairs ; instantané1h si un secours est à jour,15min sinon, ainsi qu’arrêt/mise à jour. Supprimer de la cible le writer point_state périodique et state.json après migration vérifiée. Si tous les pairs sont perdus, reprendre l’instantané en qualité incertaine et signaler la fenêtre non récupérée. Cette décision de revue ne signifie pas que le remplacement est livré.",
+      "sources": [
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 403,
+          "note": "point_state ancien"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 517,
+          "note": "Présent dans mémoire et instantané"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 563,
+          "note": "Remplacement du cache JSON"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-journaux",
+      "title": "Aucun journal critique disque, mais export D13 durable",
+      "problem": "Le mot journal recouvre réplication critique, audit d’exécution et rejeu d’archive. Le refus de journal sur disque en HA v2 ne peut effacer le journal D13 sans casser l’idempotence et la restauration.",
+      "options": [
+        {
+          "label": "File critique RAM + journal D13 durable",
+          "benefit": "Respecte la décision HA et le contrat d’archive.",
+          "cost": "Deux flux et frontières clairement nommés."
+        },
+        {
+          "label": "Tout en RAM",
+          "benefit": "Évite les écritures historiques.",
+          "cost": "Perd les octets de rejeu et la continuité export."
+        }
+      ],
+      "recommendation": "Garder zéro journal de réplication critique ; conserver le journal transactionnel historique.",
+      "resolution": "s numérote le présent et wf ; seq numérote les opérations validées d’historique. La file critique comble les petits trous, l’état complet les grands. L’historique rattrape ses opérations depuis son propre journal durable, jamais depuis une table mutable. Les opérations compactes V3 sont acceptables seulement si un lot exporté est figé et conservé à l’identique jusqu’à la fin de sa fenêtre de rejeu.",
+      "sources": [
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 134,
+          "note": "File RAM à la place du journal critique"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 487,
+          "note": "Journal D13 toujours utilisé"
+        },
+        {
+          "path": "docs/components/archive-protocol.md",
+          "line": 13,
+          "note": "Opérations non reconstruites depuis une table mutable"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-numero",
+      "title": "Jamais redonner le numéro, réutiliser la place",
+      "problem": "Mémoire v2 condamnait les cases ; nettoyage remplace expressément cette règle. Les caches et causes doivent comparer le numéro complet et non le seul indice.",
+      "options": [
+        {
+          "label": "Place+génération",
+          "benefit": "Capacité réutilisable sans confusion.",
+          "cost": "Contrôle des références longues et génération persistée dans état complet."
+        },
+        {
+          "label": "Cases condamnées",
+          "benefit": "Très simple.",
+          "cost": "Croissance et noms conservés indéfiniment."
+        }
+      ],
+      "recommendation": "Retenir24bits de place et7bits de génération, bit31 réservé.",
+      "resolution": "Retrait réversible30j, puis lot actif au rang s : zéro des fiches, effacement des noms, génération+1, recompile et instantané. À génération127, condamner. Un numéro inconnu impose meta ; aucune ancienne cause ne prend le nom du nouvel occupant. Les ids SQL restent indépendants.",
+      "sources": [
+        {
+          "path": "docs/proposition/memoire-v2.md",
+          "line": 284,
+          "note": "Règle ancienne"
+        },
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 349,
+          "note": "Remplacement précis"
+        },
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 810,
+          "note": "Grâce30j"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-incarnation",
+      "title": "Vieil instantané et cache survivant",
+      "problem": "Nettoyage autorise reprise sans pair sur un vieil instantané et suppose qu’un numéro attribué ensuite n’a rien laissé de durable. Un navigateur peut pourtant conserver ce numéro : le registre restauré pourrait le réattribuer au même indice et à la même génération.",
+      "options": [
+        {
+          "label": "Incarnation de registre et cache invalidé",
+          "benefit": "Empêche les références d’une chronologie perdue de redevenir valides.",
+          "cost": "Champ d’incarnation dans snapshot, meta et identité de connexion."
+        },
+        {
+          "label": "Numéro32bits seul après rollback",
+          "benefit": "Ne change aucun champ.",
+          "cost": "Un cache survivant peut accepter un numéro réattribué."
+        }
+      ],
+      "recommendation": "Ajouter une incarnation de registre ; conserver le numéro compact32bits au sein de cette incarnation.",
+      "resolution": "Décision de synthèse : un état complet et son instantané portent l’incarnation. Reprise d’un pair conserve son incarnation. Reprise d’un instantané sans pair après perte globale ouvre une nouvelle incarnation avant activité ; tous les abonnés invalident leur cache et relisent meta. Identité de cache=(incarnation,numéro complet), vérifiée avant lecture/commande. Cette extension est une exigence de conception déduite du cas de panne, pas une fonction présente dans les prototypes.",
+      "sources": [
+        {
+          "path": "docs/proposition/memoire-v2.md",
+          "line": 279,
+          "note": "Attribution durable avant usage ancienne"
+        },
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 652,
+          "note": "Reprise d’instantané ancien sans pair"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 611,
+          "note": "Couple époque/rang et refus du passé"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-fragments",
+      "title": "Une sortie atomique peut occuper plusieurs messages",
+      "problem": "Nettoyage décrit un lot comme une seule sortie alors que ses tailles ×10/×100 dépassent4Kio ; une table d’agenda chargée dépasse aussi ce plafond. Appliquer un fragment immédiatement exposerait un état partiel.",
+      "options": [
+        {
+          "label": "Opération logique fragmentée puis validée",
+          "benefit": "Garde le plafond réseau et l’atomicité métier.",
+          "cost": "Assemblage borné avec identité, checksum et reprise."
+        },
+        {
+          "label": "Gros message ou fragments appliqués au fil de l’eau",
+          "benefit": "Simple à écrire.",
+          "cost": "Brise plafond ou cohérence entre générations."
+        }
+      ],
+      "recommendation": "Distinguer opération logique et message transport ; publication visible seulement après assemblage complet.",
+      "resolution": "Chaque transfert porte id, incarnation/époque, s logique, numéro/total de fragments, taille totale et empreinte. Stocker des fragments≤4Kio dans un tampon préadmis borné, refuser les doublons contradictoires ; expirer/reprendre sans appliquer partiellement. Une fois complet et vérifié, appliquer le lot ou déménagement d’un bloc et avancer s. Si budget dépassé, utiliser état complet borné plutôt que contourner le plafond. Agenda même mécanisme.",
+      "sources": [
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 542,
+          "note": "Lots16,7Ko et167Ko"
+        },
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 580,
+          "note": "Déménagement en morceaux4Kio"
+        },
+        {
+          "path": "docs/proposition/memoire-v2.md",
+          "line": 1206,
+          "note": "Table agenda environ5Ko"
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 193,
+          "note": "Plafond et fragmentation"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-frontiere",
+      "title": "published_upto est une séquence, pas une date",
+      "problem": "Le pseudo-algorithme V3 coupe un intervalle temporel avec published_upto. Les deux valeurs n’ont pas la même unité ; une correction ancienne peut avoir un seq récent.",
+      "options": [
+        {
+          "label": "Superposer par seq, filtrer par temps",
+          "benefit": "Préserve corrections tardives et cohérence du manifeste.",
+          "cost": "Le lecteur doit résoudre versions et doublons."
+        },
+        {
+          "label": "Couper seulement à une date",
+          "benefit": "Facile pour courbe append seule.",
+          "cost": "Omet imports anciens et corrections énergétiques."
+        }
+      ],
+      "recommendation": "Utiliser le published_upto du manifeste épinglé comme frontière de séquence.",
+      "resolution": "Demander l’archive sur[from,to), conserver sa génération/révision/frontière P ; lire les opérations locales de seq>P qui touchent cette période, même si leur date est ancienne ; résoudre energy_hour par dernière séquence et conserver événements distincts ; compléter le présent sans dupliquer un changement déjà inclus. En absence d’archive, rendre local seulement et couverture/unavailable. Ne pas comparer une date à P.",
+      "sources": [
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 421,
+          "note": "Pseudo-algorithme D1"
+        },
+        {
+          "path": "docs/components/archive-protocol.md",
+          "line": 45,
+          "note": "Corrections et événements distincts"
+        },
+        {
+          "path": "docs/components/archive-protocol.md",
+          "line": 83,
+          "note": "Frontière exacte de lecture"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-bande",
+      "title": "L’erreur horaire n’est pas toujours bornée par la seule bande",
+      "problem": "Le relevé V3 ne ferme que si seuil franchi ET intervalle minimal écoulé. Une excursion forte avant cet intervalle peut élargir min/max au-delà de la bande, contrairement à la formulation générale d’erreur bornée par celle-ci.",
+      "options": [
+        {
+          "label": "Enveloppe min/max réelle et seuil qualité explicite",
+          "benefit": "La réponse annonce une borne honnête.",
+          "cost": "Peut déclencher fermeture supplémentaire ou détail plus dense."
+        },
+        {
+          "label": "Promettre toujours epsilon",
+          "benefit": "Présentation simple.",
+          "cost": "Promesse mathématique invalide quand intervalle minimal absorbe un saut."
+        }
+      ],
+      "recommendation": "Conserver les extrêmes et la moyenne par segment ; annoncer l’enveloppe réellement mesurée.",
+      "resolution": "Pour chaque heure qui coupe un segment, exposer erreur/enveloppe calculée depuis lo/hi réels, pas seulement epsilon configuré. Si une borne epsilon stricte est demandée, un franchissement d’enveloppe ferme immédiatement le segment et prime sur intervalle_min ; l’intervalle minimal n’est alors qu’un objectif de débit. Tester saut rapide, retour avant échéance et frontière horaire avant portage. Cette précision corrige la promesse, sans inventer un nouveau gain de banc.",
+      "sources": [
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 175,
+          "note": "Condition de fermeture à deux critères"
+        },
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 223,
+          "note": "Borne de prorata annoncée"
+        },
+        {
+          "path": "docs/reports/formes-parquet-2026-10-21T200551Z.md",
+          "line": 25,
+          "note": "Valeurs synthétiques"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-archive-format",
+      "title": "Format typé et mémoire bornée du service",
+      "problem": "V3 recommande grands groupes Parquet alors que C1 borne fortement groupes, fragments et mémoire. Le gain de compression Python ne justifie pas de charger65 536lignes arbitraires dans le cœur ou le service.",
+      "options": [
+        {
+          "label": "Encodeur typé en flux, groupes bornés par octets",
+          "benefit": "Garde gain de forme et enveloppe mémoire.",
+          "cost": "Nécessite mesure Rust et choix final du groupe."
+        },
+        {
+          "label": "Copier tous les réglages du banc Python",
+          "benefit": "Reproduit sa taille de fichier.",
+          "cost": "Risque d’excéder la mémoire et les budgets lecture."
+        }
+      ],
+      "recommendation": "Retenir archive_v2 typée/zstd/dictionnaire et conserver la discipline mémoire de C1.",
+      "resolution": "Déployer le lecteur v1+v2 et protocole étendu avant producteur. Encoder une nature/mois à la fois par petits spools ; plafond en octets de groupe et de fragment reste prioritaire sur le nombre de lignes. Départ conservateur : bornes C1 actuelles, agrandissement seulement si mesure réelle tient mémoire et latence. Garder manifeste, publication, pins et idempotence ; migrer les parts sans réécrire les reçus.",
+      "sources": [
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 323,
+          "note": "Groupes de dizaines de milliers proposés"
+        },
+        {
+          "path": "docs/components/historique-energie.md",
+          "line": 301,
+          "note": "Bornes encodeur C1"
+        },
+        {
+          "path": "docs/components/archive-protocol.md",
+          "line": 21,
+          "note": "Archive avant producteur"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-historique-runs",
+      "title": "Transporter les runs sans falsifier le contrat D13",
+      "problem": "HA v2 fait entrer le journal d’exécution dans hist/ops, mais le protocole actuel d’archive accepte seulement sample et energy_hour. Publier des champs inconnus ferait refuser les lots.",
+      "options": [
+        {
+          "label": "Étendre le protocole versionné avant producteurs",
+          "benefit": "Permet reprise exacte des runs avec même journal historique.",
+          "cost": "Évolution archive/client et migration coordonnée."
+        },
+        {
+          "label": "Envoyer les runs dans le format actuel",
+          "benefit": "Aucune préparation supplémentaire.",
+          "cost": "Refus de protocole et blocage d’export."
+        }
+      ],
+      "recommendation": "Retenir l’historique exact des runs, avec opération versionnée explicite et déploiement récepteur d’abord.",
+      "resolution": "run/ reste direct et non autorité de reprise. La base active valide une opération execution_event dans une version de protocole annoncée, séquence contiguë et octets figés ; copie de reprise applique le même journal. Étendre archive typée, quotas, filtres privés et politique de conservation avant activation du producteur. Tant que ce chemin n’existe pas, ne pas annoncer que le protocole D13 courant réplique les runs.",
+      "sources": [
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 467,
+          "note": "run puis hist/ops"
+        },
+        {
+          "path": "docs/components/archive-protocol.md",
+          "line": 12,
+          "note": "Deux opérations acceptées aujourd’hui"
+        },
+        {
+          "path": "docs/components/archive-protocol.md",
+          "line": 21,
+          "note": "Champs inconnus refusés"
+        }
+      ]
+    },
+    {
+      "id": "donnees-choix-succession-courbe",
+      "title": "Continuité lisible sans réécrire l’identité physique",
+      "problem": "La succession peut être comprise comme une fusion de séries et d’index alors que l’ancien et le nouvel appareil ont des mesures et des bases de compteur distinctes.",
+      "options": [
+        {
+          "label": "Deux séries et lien suite-de",
+          "benefit": "Préserve provenance et continuité pour l’utilisateur.",
+          "cost": "Le lecteur représente explicitement la coupure."
+        },
+        {
+          "label": "Renommer l’ancien historique au nom du nouveau",
+          "benefit": "Une courbe apparente immédiate.",
+          "cost": "Efface provenance et peut créer des deltas faux."
+        }
+      ],
+      "recommendation": "Retenir une relation de succession versionnée et une vue continue qui marque la coupure.",
+      "resolution": "Le rapport d’impact propose les points compatibles ; une validation réécrit les usages futurs, conserve séries anciennes sous leurs noms et crée suite-de. Un compteur neuf démarre sur sa référence réelle, sans reprendre le dernier index de l’ancien. La relation ne rallonge pas la rétention et un oubli doit parcourir explicitement les deux séries selon la portée demandée.",
+      "sources": [
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 475,
+          "note": "Validation et deux courbes"
+        },
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 823,
+          "note": "Lien de succession proposé"
+        },
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage.md",
+          "line": 331,
+          "note": "Changement de compteur et resoclage"
+        }
+      ]
+    }
+  ],
+  "coverage": [
+    "docs/proposition/valeurs-appareils-stockage.md",
+    "docs/proposition/valeurs-appareils-stockage-v2.md",
+    "docs/proposition/valeurs-appareils-stockage-v3.md",
+    "docs/proposition/memoire.md",
+    "docs/proposition/memoire-v2.md",
+    "docs/proposition/haute-disponibilite.md",
+    "docs/proposition/haute-disponibilite-v2.md",
+    "docs/proposition/nettoyage-equipements.md",
+    "docs/reports/inventaire-persistance-2026-10-20T060728Z.md",
+    "docs/reports/mesure-ecritures-2026-10-21T114647Z.md",
+    "docs/reports/profil-historique-2026-10-21T151507Z.md",
+    "docs/reports/formes-parquet-2026-10-21T200551Z.md",
+    "docs/annexe-d13-stockage.md",
+    "docs/components/historique-energie.md",
+    "docs/components/archive-protocol.md",
+    "docs/README.md",
+    "docs/ARCHITECTURE.md",
+    "AGENTS.md",
+    "tools/memoire-banc/README.md",
+    "tools/haute-dispo-banc/README.md",
+    "tools/nettoyage-banc/README.md"
+  ],
+  "missing": [
+    "Les rapports de stockage utilisent des fichiers de forme et certaines études privées hors dépôt ; leurs comptes sont cités, aucune donnée privée ni valeur source n’a été consultée ou recopiée.",
+    "Aucun banc, test long, déploiement, serveur, commande physique ou expérimentation fournisseur n’a été lancé pour cette contribution. Les résultats historiques restent attribués à leurs séries.",
+    "Preuve de production absente pour bascule Turso, fusion D1, archive_v2, vieillissement E1, mémoire compacte, HA active/passive et nettoyage : présence de prototype ou service autonome ne vaut pas raccordement livré.",
+    "Pi Zero2W et microSD,32Mio anonymes du cœur intégré, latence HTTP+rendu, charge complète30jours et panne électrique restent distincts des mesures de conteneurs sur AppleM4.",
+    "Époque/témoin/radios, partition réelle, promotion automatique, reprise à froid avec pairs et SIGTERM de tous les pilotes restent à qualifier ; plusieurs tests sont explicitement marqués à écrire dans HA v2.",
+    "Les modèles de rotation RFC9700 ne qualifient pas les fournisseurs réels ; aucune authentification, autorisation ou clé de maison n’a été interrogée.",
+    "Le banc nettoyage tient un moteur réduit et des copies en mémoire sans courtier ; son identité de copies ne prouve pas fragmentation réseau, crash pendant lot ni effacement de toutes les sauvegardes.",
+    "Les commentaires résiduels du prototype d’instantané mentionnent encore le journal v1 ; la cible HA v2 sans journal critique prime et impose leur mise en cohérence avant portage.",
+    "Les versions remplacées et le rapport d’inventaire ont été lus de façon ciblée, notamment héritages V3§13, anciennes décisions et conclusions ; les tableaux d’inventaire non pertinents à la synthèse ne sont pas reproduits fiche par fiche.",
+    "Incarnation du registre, atomicité des transferts fragmentés, frontière D1 par séquence et règle stricte de bande sont des résolutions de conception de cette revue, fondées sur les contrats cités ; aucun résultat de test ne leur est attribué."
+  ]
+}

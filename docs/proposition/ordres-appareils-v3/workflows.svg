@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 446" width="1000" height="446" role="img" aria-labelledby="workflows-t workflows-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="workflows-t">Les workflows interrogent les ordres</title>
+  <desc id="workflows-d">Quatre questions et leur coût. La dernière commande, la dernière demande admise : 0,37 ns. Un ordre en cours : ses demandes vivantes, lues dans la même fiche. Quand un ordre part ou tombe : un index par ordre. La valeur suit-elle la dernière commande : oui, non, ou on ne sait pas, 1,0 ns. En bas, la soirée du banc : à 20:12, éteinte et rallumée à la main, non ; à 20:16, la maison rallume la lampe éteinte, oui ; à 20:41, une teinte déjà là, on ne sait pas ; à 20:43, un geste pendant la latence de l'appareil, on ne sait pas.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="446" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="workflows-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="workflows-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="workflows-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="workflows-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="workflows-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="workflows-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="workflows-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="workflows-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="workflows-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="workflows-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="workflows-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="workflows-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="workflows-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="workflows-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="workflows-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="workflows-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="workflows-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="workflows-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="workflows-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="workflows-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="workflows-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="workflows-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="workflows-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="workflows-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="workflows-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="workflows-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="workflows-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="workflows-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="workflows-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="workflows-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="workflows-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="workflows-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="workflows-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="workflows-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="workflows-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="workflows-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="workflows-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">CE QU'UN WORKFLOW PEUT DEMANDER AUX ORDRES, ET CE QUE CELA COÛTE</text>
+          <rect x="16" y="44" width="476" height="72" rx="12" fill="url(#workflows-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#workflows-o)"/>
+          <rect x="26" y="53" width="26" height="26" rx="8" fill="url(#workflows-h-bleu)"/>
+          <g transform="translate(31.0 58.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6 M9 16h6"/></g>
+          <text x="60.0" y="71.0" font-size="12" fill="#1b5873" font-weight="700">La dernière commande</text>
+          <text x="30.0" y="93.0" font-size="10.2" fill="#52615a">la dernière demande admise : valeur, issue, origine, instant</text>
+          <rect x="428.4" y="56.0" width="49.6" height="18.5" rx="9.2" fill="#e1eef6" stroke="#3b8db4" stroke-opacity="0.7"/>
+          <text x="436.4" y="68.7" font-size="9.5" fill="#1b5873" font-weight="700">0,37 ns</text>
+          <rect x="508" y="44" width="476" height="72" rx="12" fill="url(#workflows-f-violet)" stroke="#7e6cc2" stroke-opacity=".55" stroke-width="1.1" filter="url(#workflows-o)"/>
+          <rect x="518" y="53" width="26" height="26" rx="8" fill="url(#workflows-h-violet)"/>
+          <g transform="translate(523.0 58.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1 0 18a9 9 0 1 1 0-18z M12 7v5l3 2"/></g>
+          <text x="552.0" y="71.0" font-size="12" fill="#4b3d82" font-weight="700">Un ordre est-il en cours ?</text>
+          <text x="522.0" y="93.0" font-size="10.2" fill="#52615a">ses demandes vivantes, à part de l'issue</text>
+          <rect x="902.9" y="56.0" width="67.1" height="18.5" rx="9.2" fill="#ebe7f7" stroke="#7e6cc2" stroke-opacity="0.7"/>
+          <text x="910.9" y="68.7" font-size="9.5" fill="#4b3d82" font-weight="700">même fiche</text>
+          <rect x="16" y="128" width="476" height="72" rx="12" fill="url(#workflows-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#workflows-o)"/>
+          <rect x="26" y="137" width="26" height="26" rx="8" fill="url(#workflows-h-ambre)"/>
+          <g transform="translate(31.0 142.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="60.0" y="155.0" font-size="12" fill="#94660a" font-weight="700">Quand un ordre part ou tombe</text>
+          <text x="30.0" y="177.0" font-size="10.2" fill="#52615a">un index par ordre, comme l'index par point</text>
+          <rect x="418.8" y="140.0" width="59.2" height="18.5" rx="9.2" fill="#fbefd3" stroke="#e0a12a" stroke-opacity="0.7"/>
+          <text x="426.8" y="152.7" font-size="9.5" fill="#94660a" font-weight="700">à la trace</text>
+          <rect x="508" y="128" width="476" height="72" rx="12" fill="url(#workflows-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#workflows-o)"/>
+          <rect x="518" y="137" width="26" height="26" rx="8" fill="url(#workflows-h-vert)"/>
+          <g transform="translate(523.0 142.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z M12 9a3 3 0 1 1 0 6a3 3 0 1 1 0-6z"/></g>
+          <text x="552.0" y="155.0" font-size="12" fill="#195744" font-weight="700">La valeur suit-elle la commande ?</text>
+          <text x="522.0" y="177.0" font-size="10.2" fill="#52615a">oui, non, ou on ne sait pas</text>
+          <rect x="926.5" y="140.0" width="43.6" height="18.5" rx="9.2" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity="0.7"/>
+          <text x="934.5" y="152.7" font-size="9.5" fill="#195744" font-weight="700">1,0 ns</text>
+          <rect x="16" y="222" width="968" height="160" rx="20" fill="#e3f1e9" fill-opacity=".45" stroke="#3d9a75" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(32.0 233.0) scale(0.6667)" fill="none" stroke="#195744" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="54.0" y="246.0" font-size="11" fill="#195744" font-weight="700" letter-spacing=".07em">UNE SOIRÉE : « LA VALEUR SUIT-ELLE LA DERNIÈRE COMMANDE ? »</text>
+          <g filter="url(#workflows-o2)"><rect x="45.0" y="278.0" width="190" height="54" rx="18" fill="#682c1a"/><rect x="45.0" y="273.0" width="190" height="54" rx="18" fill="url(#workflows-h-rouge)"/></g>
+          <rect x="50.0" y="276.0" width="180" height="22.7" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="61.0" y="298.0" font-size="13" fill="#ffffff" font-weight="700">20:12</text>
+          <text x="61.0" y="314.0" font-size="10" fill="#ffffff" opacity=".9">éteinte, rallumée à la main</text>
+          <rect x="117.6" y="340.0" width="44.9" height="21.5" rx="10.8" fill="url(#workflows-h-rouge)"/>
+          <text x="130.6" y="354.5" font-size="10.5" fill="#ffffff" font-weight="700">non</text>
+          <g filter="url(#workflows-o2)"><rect x="285.0" y="278.0" width="190" height="54" rx="18" fill="#134133"/><rect x="285.0" y="273.0" width="190" height="54" rx="18" fill="url(#workflows-h-vert)"/></g>
+          <rect x="290.0" y="276.0" width="180" height="22.7" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="301.0" y="298.0" font-size="13" fill="#ffffff" font-weight="700">20:16</text>
+          <text x="301.0" y="314.0" font-size="10" fill="#ffffff" opacity=".9">la maison rallume la lampe éteinte</text>
+          <rect x="359.1" y="340.0" width="41.9" height="21.5" rx="10.8" fill="url(#workflows-h-vert)"/>
+          <text x="372.1" y="354.5" font-size="10.5" fill="#ffffff" font-weight="700">oui</text>
+          <g filter="url(#workflows-o2)"><rect x="525.0" y="278.0" width="190" height="54" rx="18" fill="#6f4c08"/><rect x="525.0" y="273.0" width="190" height="54" rx="18" fill="url(#workflows-h-ambre)"/></g>
+          <rect x="530.0" y="276.0" width="180" height="22.7" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="541.0" y="298.0" font-size="13" fill="#ffffff" font-weight="700">20:41</text>
+          <text x="541.0" y="314.0" font-size="10" fill="#ffffff" opacity=".9">une teinte déjà là</text>
+          <rect x="568.9" y="340.0" width="102.2" height="21.5" rx="10.8" fill="url(#workflows-h-ambre)"/>
+          <text x="581.9" y="354.5" font-size="10.5" fill="#ffffff" font-weight="700">on ne sait pas</text>
+          <g filter="url(#workflows-o2)"><rect x="765.0" y="278.0" width="190" height="54" rx="18" fill="#6f4c08"/><rect x="765.0" y="273.0" width="190" height="54" rx="18" fill="url(#workflows-h-ambre)"/></g>
+          <rect x="770.0" y="276.0" width="180" height="22.7" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="781.0" y="298.0" font-size="13" fill="#ffffff" font-weight="700">20:43</text>
+          <text x="781.0" y="314.0" font-size="10" fill="#ffffff" opacity=".9">un geste pendant la latence</text>
+          <rect x="808.9" y="340.0" width="102.2" height="21.5" rx="10.8" fill="url(#workflows-h-ambre)"/>
+          <text x="821.9" y="354.5" font-size="10.5" fill="#ffffff" font-weight="700">on ne sait pas</text>
+  <text x="18" y="423" font-size="12" fill="#52615a" font-style="italic">Une compatibilité, pas une causalité (revue I5) : un geste humain qui fait exactement ce que l'ordre demandait, pendant la latence de l'appareil,</text>
+  <text x="18" y="440" font-size="12" fill="#52615a" font-style="italic">reste indécidable sans cause donnée par l'appareil. Un workflow prudent n'agit que sur « oui ».</text>
+</svg>

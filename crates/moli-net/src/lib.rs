@@ -556,6 +556,34 @@ impl PinnedHttps {
             .map(|(status, body, _)| (status, body))
     }
 
+    /// A pinned HTTPS order sent once, with live permission checked after every
+    /// connection/handshake wait and directly before handing the request to HTTP.
+    /// The absolute deadline includes waiting for the shared connection slot.
+    /// After handoff, permission changes never discard the bounded answer.
+    ///
+    /// # Errors
+    /// Returns the conservative before/after-send stage, without downstream text.
+    pub async fn send_once_guarded(
+        &self,
+        request: Request<Full<Bytes>>,
+        deadline: std::time::Instant,
+        allowed: impl Fn() -> bool + Send + Sync,
+    ) -> Result<(StatusCode, Bytes), OnceError> {
+        let mut slot = tokio::time::timeout_at(deadline.into(), self.conn.lock())
+            .await
+            .map_err(|_| OnceError::BeforeSend)?;
+        let connect = async {
+            match slot.take().filter(|sender| !sender.is_closed()) {
+                Some(sender) => Ok(sender),
+                None => self.connect().await,
+            }
+        };
+        let (status, body, sender) =
+            pinned_exchange_guarded(connect, request, deadline, allowed).await?;
+        *slot = Some(sender);
+        Ok((status, body))
+    }
+
     /// One exchange, including connection and body collection, with caller-owned
     /// body limit and response headers. Never retries or follows redirects.
     /// The sender is taken out of the shared slot so cancellation closes it.
@@ -600,6 +628,42 @@ impl PinnedHttps {
         }
         Ok(response.into_body())
     }
+}
+
+async fn pinned_exchange_guarded(
+    connect: impl std::future::Future<Output = anyhow::Result<SendRequest<Full<Bytes>>>>,
+    request: Request<Full<Bytes>>,
+    deadline: std::time::Instant,
+    allowed: impl Fn() -> bool,
+) -> Result<(StatusCode, Bytes, SendRequest<Full<Bytes>>), OnceError> {
+    let emitted = std::sync::atomic::AtomicBool::new(false);
+    let exchange = async {
+        let mut sender = connect.await.map_err(|_| OnceError::BeforeSend)?;
+        sender.ready().await.map_err(|_| OnceError::BeforeSend)?;
+        if std::time::Instant::now() >= deadline || !allowed() {
+            return Err(OnceError::BeforeSend);
+        }
+        // No await may separate this authorization from HTTP handoff.
+        emitted.store(true, std::sync::atomic::Ordering::Release);
+        let response = sender
+            .send_request(request)
+            .await
+            .map_err(|_| OnceError::AfterSend)?;
+        let status = response.status();
+        let body = read_body(response.into_body(), MAX_BODY)
+            .await
+            .map_err(|_| OnceError::AfterSend)?;
+        Ok((status, body, sender))
+    };
+    tokio::time::timeout_at(deadline.into(), exchange)
+        .await
+        .unwrap_or_else(|_| {
+            Err(if emitted.load(std::sync::atomic::Ordering::Acquire) {
+                OnceError::AfterSend
+            } else {
+                OnceError::BeforeSend
+            })
+        })
 }
 
 fn clone_request(request: &Request<Full<Bytes>>) -> Request<Full<Bytes>> {
@@ -1051,6 +1115,115 @@ mod body_tests {
             BodyTooLarge(MAX_BODY).to_string(),
             "body too large (over 4 MiB)"
         );
+    }
+}
+
+#[cfg(test)]
+mod pinned_guard_tests {
+    use super::*;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    fn order() -> Request<Full<Bytes>> {
+        empty(
+            Request::builder()
+                .method(Method::POST)
+                .uri("/exec/apply")
+                .header("host", "fixture"),
+        )
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn pinned_send_rechecks_after_connection_wait_and_keeps_an_emitted_answer() {
+        for revoke_before_send in [true, false] {
+            let (client, mut peer) = tokio::io::duplex(4096);
+            let entered = Arc::new(tokio::sync::Notify::new());
+            let release = Arc::new(tokio::sync::Semaphore::new(0));
+            let allowed = Arc::new(AtomicBool::new(true));
+            let live = allowed.clone();
+            let observed = tokio::spawn(async move {
+                let mut head = Vec::new();
+                loop {
+                    let mut bytes = [0; 256];
+                    let size = peer.read(&mut bytes).await.unwrap();
+                    if size == 0 {
+                        return head;
+                    }
+                    head.extend_from_slice(&bytes[..size]);
+                    assert!(head.len() <= 4096);
+                    if head.windows(4).any(|bytes| bytes == b"\r\n\r\n") {
+                        live.store(false, Ordering::Release);
+                        peer.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}")
+                            .await
+                            .unwrap();
+                        return head;
+                    }
+                }
+            });
+            let ready = entered.clone();
+            let gate = release.clone();
+            let wanted = allowed.clone();
+            let sending = tokio::spawn(async move {
+                let connect = async {
+                    ready.notify_one();
+                    gate.acquire().await.unwrap().forget();
+                    let (sender, connection) = http1::handshake(TokioIo::new(client)).await?;
+                    tokio::spawn(async move {
+                        let _ = connection.await;
+                    });
+                    anyhow::Ok(sender)
+                };
+                pinned_exchange_guarded(
+                    connect,
+                    order(),
+                    std::time::Instant::now() + Duration::from_secs(2),
+                    || wanted.load(Ordering::Acquire),
+                )
+                .await
+                .map(|(status, body, _)| (status, body))
+            });
+            entered.notified().await;
+            if revoke_before_send {
+                allowed.store(false, Ordering::Release);
+            }
+            release.add_permits(1);
+            let result = sending.await.unwrap();
+            let head = timeout_observation(observed).await;
+            if revoke_before_send {
+                assert_eq!(result, Err(OnceError::BeforeSend));
+                assert!(head.is_empty(), "revoked before the first HTTP byte");
+            } else {
+                assert_eq!(result.unwrap(), (StatusCode::OK, Bytes::from_static(b"{}")));
+                assert!(head.starts_with(b"POST /exec/apply HTTP/1.1\r\n"));
+                assert!(
+                    !allowed.load(Ordering::Acquire),
+                    "revoked while awaiting the response"
+                );
+            }
+        }
+    }
+
+    async fn timeout_observation(task: tokio::task::JoinHandle<Vec<u8>>) -> Vec<u8> {
+        tokio::time::timeout(Duration::from_secs(2), task)
+            .await
+            .unwrap()
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn pinned_send_absolute_deadline_includes_the_connection_wait() {
+        let started = std::time::Instant::now();
+        let connection = std::future::pending::<anyhow::Result<SendRequest<Full<Bytes>>>>();
+        let result = pinned_exchange_guarded(
+            connection,
+            order(),
+            started + Duration::from_millis(50),
+            || true,
+        )
+        .await;
+        assert!(matches!(result, Err(OnceError::BeforeSend)));
+        assert!(started.elapsed() < Duration::from_millis(500));
     }
 }
 

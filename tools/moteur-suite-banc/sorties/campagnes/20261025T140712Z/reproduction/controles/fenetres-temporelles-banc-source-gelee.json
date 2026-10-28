@@ -1,0 +1,62 @@
+{
+  "status": "frozen_after_checks_and_release_before_measurements",
+  "frozen_utc": "2026-10-25T14:02:03.401078+00:00",
+  "source_sha256": {
+    "main.rs": "bd7be42e75f611a920eaf9b37281e19dd971abcd21007b77722b26e4fc12207a",
+    "production.rs": "43b62d387a7a467d7478b40da3bf40df8e59950925a2c3e535f500d09c7e36f4",
+    "Cargo.toml": "fb2c829767fa52aa37ede45003460df95a8002ba742159ee5ca6a6e538280093",
+    "Cargo.lock": "7caace56202ac357e5bdc10c5b502da4505d1538e8884125fcea6216ac204d3d",
+    "executer.py": "00612a426d8d5eccb69ecb6a7669241dc11a58a71cf27bd1f9ba8ae15a11827c",
+    "README.md": "b7ab8b39dd1c90d9bef8f7421f6badddbdc5651c43d294ae8ffd010979c899b7"
+  },
+  "binary_sha256": {
+    "/target/release/structures": "a06d3e32eb1e464c4e8493c9ac65b8e4e50984d58e25bbaf50bba3ba0e519a71",
+    "/target/release/production": "b4c9ab3f0205b4d7ff35531fe28dc638ca8b84f12ca5e2d184ba1bfb6494c702"
+  },
+  "compiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-musl\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "container_system": "Linux aarch64",
+  "release_check_metadata": {
+    "command": [
+      "docker",
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--cpus",
+      "2",
+      "--memory",
+      "3g",
+      "--tmpfs",
+      "/src/.agentsroom:ro",
+      "-v",
+      "${REPO}:/src",
+      "-v",
+      "moli-cargo:/usr/local/cargo/registry",
+      "-v",
+      "moli-target:/target",
+      "-w",
+      "/src",
+      "moli-os-dev:latest",
+      "cargo",
+      "build",
+      "--offline",
+      "--locked",
+      "--release",
+      "--manifest-path",
+      "tools/fenetres-temporelles-banc/Cargo.toml"
+    ],
+    "started_utc": "2026-10-25T14:00:58.568936+00:00",
+    "elapsed_seconds": 30.813,
+    "exit_code": 0,
+    "image_id": "sha256:40c4e2a8d249be4d12e160ccffe94df1642aeef82cc787a0a3db606f70abbc53",
+    "source_tree_sha256": "5c9bad8601bb4e7b4cb39c93c0e780467eee1f9662641128a77c8018cc2a996e",
+    "source_files": 553,
+    "scope": "Dépôt réel ; données synthétiques ; aucun appareil physique."
+  },
+  "tests": {
+    "structures_passed": 12,
+    "production_passed": 1,
+    "failed": 0
+  },
+  "source_frozen": true
+}

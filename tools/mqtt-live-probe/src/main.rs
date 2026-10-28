@@ -1854,6 +1854,15 @@ async fn main() -> Result<()> {
     {
         return load_test::run(&audit_args).await;
     }
+    if audit_args.first().is_some_and(|arg| arg == "--ha-seed") {
+        let paths: Vec<_> = audit_args
+            .iter()
+            .skip(1)
+            .map(std::path::PathBuf::from)
+            .collect();
+        println!("{}", house::ha_seeds(&paths)?);
+        return Ok(());
+    }
     if audit_args
         .first()
         .is_some_and(|arg| arg == "--offline-enum-audit")

@@ -440,6 +440,7 @@ struct Inner {
     journal: Mutex<Journal>,
     keypad: crate::keypad::Inputs,
     approvals: Mutex<Approvals>,
+    write_authorities: Arc<crate::write_authority::WriteAuthorities>,
     events: broadcast::Sender<Event>,
     /// Counts emissions in exactly the broadcast order. Also gates an
     /// ordered subscription so its first event cannot fall in a gap.
@@ -601,6 +602,7 @@ impl Hub {
             }),
             keypad: crate::keypad::Inputs::default(),
             approvals: Mutex::new(Approvals::default()),
+            write_authorities: Arc::new(crate::write_authority::WriteAuthorities::default()),
             journal_log,
             secrets,
             secrets_problem,
@@ -916,6 +918,79 @@ impl Hub {
         .await
     }
 
+    /// Installs or advances the server-owned write authority for a device.
+    /// Authorities are retained for the lifetime of this hub: removal could
+    /// make a previously captured legacy permit valid again.
+    pub fn set_write_authority(
+        &self,
+        device: &DeviceId,
+        generation: u64,
+        allowed: bool,
+    ) -> Result<(), crate::WriteAuthorityError> {
+        self.0.write_authorities.set(
+            device,
+            crate::WriteAuthority {
+                generation,
+                allowed,
+            },
+        )
+    }
+
+    /// Closes write authority without changing its current generation.
+    /// This one-way fence is safe to apply before a persistent registry
+    /// commit: reopening requires a strictly newer installed generation.
+    pub fn fence_write_authority(&self, device: &DeviceId) -> crate::WriteAuthority {
+        self.0.write_authorities.fence(device)
+    }
+
+    /// Makes future devices of this configured native instance start closed.
+    /// Install this before drivers start; per-device ownership generations can
+    /// subsequently open only the devices whose migration has completed.
+    pub fn manage_write_instance(&self, instance: &InstanceId) {
+        self.0.write_authorities.manage_instance(instance);
+    }
+
+    /// Returns the installed authority, if this device is managed.
+    #[must_use]
+    pub fn write_authority(&self, device: &DeviceId) -> Option<crate::WriteAuthority> {
+        self.0.write_authorities.get(device)
+    }
+
+    /// A live permit for commands on this device from exactly one authority
+    /// generation. Older transport messages cannot become valid after a
+    /// later ownership transfer.
+    #[must_use]
+    pub fn generation_permit(
+        &self,
+        device: &DeviceId,
+        expected_generation: u64,
+    ) -> crate::CommandPermit {
+        crate::write_authority::WriteAuthorities::generation_permit(
+            Arc::clone(&self.0.write_authorities),
+            device.clone(),
+            expected_generation,
+        )
+    }
+
+    /// Captures the current authority generation and composes it with any
+    /// caller-owned live permit. Even unmanaged devices get a permit: that
+    /// legacy admission becomes invalid if a policy is installed later.
+    fn write_authority_permit(
+        &self,
+        point: &PointId,
+        previous: Option<crate::CommandPermit>,
+    ) -> crate::CommandPermit {
+        crate::write_authority::WriteAuthorities::snapshot_permit(
+            Arc::clone(&self.0.write_authorities),
+            point.clone(),
+            point.split().map(|(device, _)| device),
+            point
+                .split()
+                .and_then(|(device, _)| self.write_authority(&device)),
+            previous,
+        )
+    }
+
     async fn command_with_context(
         &self,
         point: &PointId,
@@ -929,6 +1004,7 @@ impl Hub {
             correlation,
             permit,
         } = context;
+        let permit = Some(self.write_authority_permit(point, permit));
         let started = Instant::now();
         let actor = clean_actor(actor);
         if let Some(error) = command_input_error(point, &value) {
@@ -3026,6 +3102,238 @@ mod live_permit_tests {
             Err(ApprovalError::Command(CommandError::AccessDenied))
         ));
         assert!(rx.try_recv().is_err());
+    }
+
+    #[tokio::test]
+    async fn write_authority_denies_a_native_command_when_another_writer_owns_the_device() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+        let device = point.split().unwrap().0;
+        hub.set_write_authority(&device, 1, false).unwrap();
+
+        assert!(matches!(
+            hub.command(&point, Value::Bool(true), Origin::Api, None)
+                .await,
+            Err(CommandError::AccessDenied)
+        ));
+        assert!(rx.try_recv().is_err());
+    }
+
+    #[tokio::test]
+    async fn queued_command_is_revoked_and_cannot_be_revived_by_a_later_generation() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+        let device = point.split().unwrap().0;
+        hub.set_write_authority(&device, 1, true).unwrap();
+        let task_hub = hub.clone();
+        let task_point = point.clone();
+        let task = tokio::spawn(async move {
+            task_hub
+                .command(&task_point, Value::Bool(true), Origin::Api, None)
+                .await
+        });
+        let command = rx.recv().await.unwrap();
+        assert!(!command.abandoned());
+
+        hub.set_write_authority(&device, 2, false).unwrap();
+        assert!(command.abandoned());
+        hub.set_write_authority(&device, 3, true).unwrap();
+        assert!(command.abandoned(), "the captured generation is immutable");
+
+        command.reply(Err("revoked before send".into()));
+        assert!(task.await.unwrap().is_err());
+    }
+
+    #[tokio::test]
+    async fn approval_keeps_the_captured_ownership_generation() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::Lock);
+        let device = point.split().unwrap().0;
+        hub.set_write_authority(&device, 1, true).unwrap();
+        let result = hub
+            .command(&point, Value::Bool(false), Origin::Api, None)
+            .await;
+        let Err(CommandError::NeedsApproval { id, .. }) = result else {
+            panic!("the lock guard must hold this order");
+        };
+
+        hub.set_write_authority(&device, 2, false).unwrap();
+        hub.set_write_authority(&device, 3, true).unwrap();
+        let result = hub
+            .resolve_approval(id, &point, true, Origin::Ui, None)
+            .await;
+        assert!(matches!(
+            result,
+            Err(ApprovalError::Command(CommandError::AccessDenied))
+        ));
+        assert!(rx.try_recv().is_err());
+    }
+
+    #[tokio::test]
+    async fn guest_and_write_authority_permits_are_both_required_without_changing_origin() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+        let device = point.split().unwrap().0;
+        hub.set_write_authority(&device, 1, true).unwrap();
+        let guest_allowed = Arc::new(AtomicBool::new(true));
+        let permit_state = guest_allowed.clone();
+        let task_hub = hub.clone();
+        let task_point = point.clone();
+        let task = tokio::spawn(async move {
+            task_hub
+                .command_with_permit(
+                    &task_point,
+                    Value::Bool(true),
+                    Origin::Api,
+                    None,
+                    None,
+                    crate::CommandPermit::new(move |_point| permit_state.load(Ordering::Acquire)),
+                )
+                .await
+        });
+        let command = rx.recv().await.unwrap();
+        assert_eq!(command.metadata.origin, Origin::Api);
+        assert!(!command.abandoned());
+
+        hub.set_write_authority(&device, 2, false).unwrap();
+        assert!(command.abandoned());
+        guest_allowed.store(false, Ordering::Release);
+        hub.set_write_authority(&device, 3, true).unwrap();
+        assert!(command.abandoned(), "neither permit can replace the other");
+        command.reply(Err("revoked before send".into()));
+        assert!(task.await.unwrap().is_err());
+    }
+
+    #[tokio::test]
+    async fn unmanaged_legacy_commands_remain_allowed_until_policy_is_installed() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+        let device = point.split().unwrap().0;
+        let task_hub = hub.clone();
+        let task_point = point.clone();
+        let task = tokio::spawn(async move {
+            task_hub
+                .command(&task_point, Value::Bool(true), Origin::Api, None)
+                .await
+        });
+        let command = rx.recv().await.unwrap();
+        assert!(!command.abandoned());
+
+        hub.set_write_authority(&device, 1, false).unwrap();
+        assert!(command.abandoned());
+        command.reply(Err("policy installed before send".into()));
+        assert!(task.await.unwrap().is_err());
+    }
+
+    #[tokio::test]
+    async fn emergency_fence_blocks_same_generation_reopen_and_does_not_revive_old_permit() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+        let device = point.split().unwrap().0;
+        hub.set_write_authority(&device, 41, true).unwrap();
+        let task_hub = hub.clone();
+        let task_point = point.clone();
+        let task = tokio::spawn(async move {
+            task_hub
+                .command(&task_point, Value::Bool(true), Origin::Api, None)
+                .await
+        });
+        let command = rx.recv().await.unwrap();
+        assert!(!command.abandoned());
+
+        assert_eq!(
+            hub.fence_write_authority(&device),
+            crate::WriteAuthority {
+                generation: 41,
+                allowed: false,
+            }
+        );
+        assert!(command.abandoned());
+        assert_eq!(
+            hub.set_write_authority(&device, 41, true),
+            Err(crate::WriteAuthorityError::GenerationConflict)
+        );
+        hub.set_write_authority(&device, 42, true).unwrap();
+        assert!(
+            command.abandoned(),
+            "the old permit remains generation-bound"
+        );
+
+        command.reply(Err("revoked before send".into()));
+        assert!(task.await.unwrap().is_err());
+    }
+
+    #[tokio::test]
+    async fn emergency_fence_revokes_a_queued_unmanaged_command_without_removing_none() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+        let device = point.split().unwrap().0;
+        let task_hub = hub.clone();
+        let task_point = point.clone();
+        let task = tokio::spawn(async move {
+            task_hub
+                .command(&task_point, Value::Bool(true), Origin::Api, None)
+                .await
+        });
+        let command = rx.recv().await.unwrap();
+        assert!(!command.abandoned());
+
+        assert_eq!(
+            hub.fence_write_authority(&device),
+            crate::WriteAuthority {
+                generation: 1,
+                allowed: false,
+            }
+        );
+        assert!(command.abandoned(), "None was fenced, never removed");
+        assert_eq!(
+            hub.set_write_authority(&device, 1, true),
+            Err(crate::WriteAuthorityError::GenerationConflict)
+        );
+        hub.set_write_authority(&device, 2, true).unwrap();
+        assert!(command.abandoned());
+
+        command.reply(Err("revoked before send".into()));
+        assert!(task.await.unwrap().is_err());
+    }
+
+    #[tokio::test]
+    async fn generation_permit_cannot_cross_an_ownership_transfer_and_return() {
+        let (hub, mut rx, point) = target(moli_core::Semantic::OnOff);
+        let device = point.split().unwrap().0;
+        hub.set_write_authority(&device, 5, true).unwrap();
+        let stale = hub.generation_permit(&device, 5);
+        let task_hub = hub.clone();
+        let task_point = point.clone();
+        let task = tokio::spawn(async move {
+            task_hub
+                .command_with_permit(
+                    &task_point,
+                    Value::Bool(true),
+                    Origin::Api,
+                    None,
+                    None,
+                    stale,
+                )
+                .await
+        });
+        let command = rx.recv().await.unwrap();
+        assert!(!command.abandoned());
+
+        hub.set_write_authority(&device, 6, false).unwrap();
+        hub.set_write_authority(&device, 7, true).unwrap();
+        assert!(command.abandoned());
+        command.reply(Err("old generation".into()));
+        assert!(task.await.unwrap().is_err());
+    }
+
+    #[tokio::test]
+    async fn pending_approval_permit_does_not_keep_the_hub_alive() {
+        let (hub, _rx, point) = target(moli_core::Semantic::Lock);
+        let weak = Arc::downgrade(&hub.0);
+        let result = hub
+            .command(&point, Value::Bool(false), Origin::Api, None)
+            .await;
+        assert!(matches!(result, Err(CommandError::NeedsApproval { .. })));
+
+        drop(hub);
+        assert!(
+            weak.upgrade().is_none(),
+            "approval permits must not capture Hub"
+        );
     }
 }
 

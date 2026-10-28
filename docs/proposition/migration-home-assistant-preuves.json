@@ -1,0 +1,73 @@
+{
+  "schema": "moli-migration-guide-verification-v1",
+  "date_utc": "2026-10-28T08:34:54.286217+00:00",
+  "status": "PASS",
+  "scope": "Documentation explicative autonome ; aucune nouvelle qualification matérielle ni mesure de RAM.",
+  "physical_commands": 0,
+  "reference_sha256": {
+    "docs/proposition/analyse/v6/mesures.json": "79877f9a2564b024bbb6d5bf4d4b168fecbe862aa0226816e41ca1aee2e5faae",
+    "docs/proposition/analyse/v6/ha-multimaison-pont-local.json": "f2d17435175c8801ce06357b271de06ae39a43b11a2d361f9ef80d4a2f6a3614",
+    "docs/proposition/analyse/v6/pont-ha-moli-tests.json": "29b3cdb95ad5ee78a2c0d21db3a2d31ece7dbcbeee348928549e15c6919bd48c",
+    "crates/moli-migration/src/model.rs": "c58f0abd32d94001ab48248e01854ca9f402874f613144a09f25571ee5251a5f",
+    "crates/moli-os/src/backup.rs": "ef236cfeada663d74600cf5faa34adaa9dd9aa4db5930ccb9da718804b8a1270",
+    "crates/moli-automation/src/model.rs": "5c7d463e534260330bff6eef7e4e84ede11ab308f42120842025c75db33e1402",
+    "crates/moli-assistant/src/import.rs": "8d4fe37682f50db0f515d11f25b3197390af1f33af57d3cf89e163546119086f"
+  },
+  "artifact_sha256": {
+    "docs/proposition/migration-home-assistant.html": "637c2636b41efb8a82399d5109287a1679c4c08e767bc348e226f2b7b37a8c83",
+    "tools/home-assistant/build-migration-guide.py": "a5c47e2b8e6e5c42b00fc85703eecbe7fe360867d5cc4df61289a10ef8281a75",
+    "tools/home-assistant/migration-guide.template.html": "e6bd6e09b99f8e0a07d1924f1107e51b69fb74042317720e2da595acdb537ec2",
+    "docs/README.md": "2a1534dab23c71dc65aa4fba6ce827b4821895bf82e14ae6ba48970237800217",
+    "docs/components/home-assistant.md": "7217e9fd057067fca7dcaf83647b23890d21738d42baf3c8f4e0dd2c5d3cdfee",
+    "docs/proposition/analyse/v6/README.md": "32758fc6b9b314e6f456c80e711d86a24927a669c8606553ad340d45176fe18c",
+    "docs/proposition/analyse/v6/index.html": "c3778833fab3d83d052c48aab1f4c471434bb8712c662ce0a0bde2758e9fcb81"
+  },
+  "checks": {
+    "unique_html_ids": 44,
+    "component_cards": 8,
+    "local_links": 26,
+    "unresolved_placeholders": 0,
+    "external_assets": 0,
+    "inline_javascript_syntax": "PASS",
+    "bridge_source_hashes_matching": 62,
+    "leak_check": "PASS — motifs génériques ; liste noire privée absente",
+    "chrome_desktop": {
+      "viewport": [
+        1440,
+        1000
+      ],
+      "document_scroll_width": 1440,
+      "visual": "PASS"
+    },
+    "chrome_mobile": {
+      "viewport": [
+        390,
+        844
+      ],
+      "document_scroll_width": 390,
+      "visual": "PASS ; fiche TaHoma ouverte également relue à 391 px"
+    },
+    "chrome_interactions": {
+      "four_migration_stages": "PASS",
+      "component_filters": [
+        8,
+        3,
+        3,
+        1,
+        1
+      ],
+      "budget_complete_mib": 1050,
+      "budget_missing_or_negative": "À renseigner",
+      "checklist": "2 / 8 puis remise à zéro",
+      "print_details_expansion_and_restore": "PASS — événements simulés, export PDF non effectué"
+    },
+    "chrome_runtime_errors_observed": 0,
+    "chrome_external_resources_observed": 0
+  },
+  "limits": [
+    "Les 487 tests Rust et 27 tests Python sont des références datées non relancées pour cette documentation.",
+    "Aucune installation HA ni box réelle modifiée.",
+    "Les gains RAM par composant et après retrait HA restent à mesurer.",
+    "Neutralisation HA réelle, réécriture des références et transfert du moteur des workflows restent à implémenter ou qualifier."
+  ]
+}

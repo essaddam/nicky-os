@@ -1,0 +1,21 @@
+[package]
+name = "banc-ordres"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Le banc de la proposition « les ordres des appareils » (docs/proposition/ordres-appareils.md),
+# hors workspace. Il reprend tels quels, par inclusion de fichiers (`#[path]`), la maison et les
+# outils du banc mémoire (tools/memoire-banc) et le registre à génération du banc du nettoyage
+# (tools/nettoyage-banc). Aucune dépendance aux crates de Sarah Home.
+[workspace]
+
+[dependencies]
+# Les annuaires et la table des formes (déjà dans le Cargo.lock du dépôt).
+hashbrown = "0.17"
+
+[profile.release]
+# Comme la production (Cargo.toml du dépôt).
+opt-level = "s"
+lto = "fat"
+codegen-units = 1

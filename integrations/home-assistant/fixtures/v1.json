@@ -1,0 +1,132 @@
+{
+  "binding": {
+    "ha_installation": "fixture-ha1",
+    "registry_entity_id": "entity-fixture-1",
+    "target": "moli:cover-1/control",
+    "writer_scope": "overkiz:fixture-1"
+  },
+  "moli_availability": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "session": "moli-session-1",
+    "online": true
+  },
+  "exports": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "session": "moli-session-1",
+    "items": [
+      {
+        "binding": {
+          "ha_installation": "fixture-ha1",
+          "registry_entity_id": "entity-fixture-1",
+          "target": "moli:cover-1/control",
+          "writer_scope": "overkiz:fixture-1"
+        },
+        "label": "Fixture blind",
+        "revision": 7,
+        "generation": 9,
+        "actions": ["open", "close", "stop", "my"],
+        "feedback": false
+      }
+    ]
+  },
+  "cover_state": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "binding": {
+      "ha_installation": "fixture-ha1",
+      "registry_entity_id": "entity-fixture-1",
+      "target": "moli:cover-1/control",
+      "writer_scope": "overkiz:fixture-1"
+    },
+    "revision": 7,
+    "generation": 9,
+    "available": true,
+    "feedback": false,
+    "position": null,
+    "closed": null
+  },
+  "native_command": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "session": "moli-session-1",
+    "request_id": "request-fixture-1",
+    "binding": {
+      "ha_installation": "fixture-ha1",
+      "registry_entity_id": "entity-fixture-1",
+      "target": "moli:cover-1/control",
+      "writer_scope": "overkiz:fixture-1"
+    },
+    "revision": 7,
+    "generation": 9,
+    "expires_at_ms": 1800000005000,
+    "action": "open"
+  },
+  "ha_catalog": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "revision": 123,
+    "devices": [
+      {
+        "id": "device-fixture-1",
+        "name": "Fixture device",
+        "channels": [
+          {
+            "id": "channel-temperature",
+            "entity_id": "sensor.fixture_temperature",
+            "registry_entity_id": "entity-registry-temperature",
+            "name": "Temperature",
+            "unit": "°C",
+            "kind": {"type": "numeric"},
+            "semantic": "temperature",
+            "readable": true,
+            "actions": []
+          },
+          {
+            "id": "channel-humidity",
+            "entity_id": "sensor.fixture_humidity",
+            "registry_entity_id": "entity-registry-humidity",
+            "name": "Humidity",
+            "unit": "%",
+            "kind": {"type": "numeric"},
+            "semantic": "humidity",
+            "readable": true,
+            "actions": []
+          }
+        ]
+      }
+    ]
+  },
+  "ha_state": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "catalogue_revision": 123,
+    "device": "device-fixture-1",
+    "channel": "channel-temperature",
+    "value": 21.5,
+    "available": true
+  },
+  "ha_availability": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "session": "ha-session-1",
+    "online": true
+  },
+  "ha_command": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "session": "ha-session-1",
+    "request_id": "request-fixture-2",
+    "entity_registry_id": "entity-registry-cover-1",
+    "generation": 0,
+    "expires_at_ms": 1800000005000,
+    "action": "close"
+  },
+  "result": {
+    "v": 1,
+    "installation": "fixture-ha1",
+    "request_id": "request-fixture-1",
+    "code": "accepted"
+  }
+}

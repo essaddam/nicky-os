@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 319" width="1000" height="319" role="img" aria-labelledby="coffre-t coffre-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="coffre-t">Le coffre répliqué, scellé par destinataire</title>
+  <desc id="coffre-d">À gauche, le coffre de l'actif avec deux secrets : les jetons Netatmo, du domaine cloud, et la clé Hue, du domaine maison. Au milieu, le journal de réplication scelle chaque secret pour chaque secours qui y a droit. À droite, le secours local reçoit les deux et partage la clé maître ; le secours distant ne reçoit que le secret cloud, scellé avec sa propre clé.</desc>
+  <rect width="1000" height="319" fill="#fffdf8"/>
+          <defs>
+            <marker id="coffre-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="coffre-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="coffre-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="coffre-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">UN SECRET ÉCRIT SUR L'ACTIF, ET OÙ IL VA</text>
+          <rect x="16.0" y="50.0" width="300.0" height="178.0" rx="8" fill="#f1f4ee" stroke="#195744" stroke-width="1.4"/>
+          <text x="30.0" y="72.0" font-size="11.5" fill="#1d302a" font-weight="700">Coffre de l'actif (clé maître M)</text>
+          <rect x="30.0" y="88.0" width="272.0" height="48.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1.4"/>
+          <text x="42.0" y="108.0" font-size="10.5" fill="#1d302a" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">netatmo/oauth_tokens · v12</text>
+          <text x="42.0" y="125.0" font-size="10" fill="#52615a">domaine : cloud</text>
+          <rect x="30.0" y="152.0" width="272.0" height="48.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1.4"/>
+          <text x="42.0" y="172.0" font-size="10.5" fill="#1d302a" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">hue/app_key</text>
+          <text x="42.0" y="189.0" font-size="10" fill="#52615a">domaine : maison</text>
+          <text x="30.0" y="214.0" font-size="10" fill="#52615a">écrit d'abord ici (fsync)</text>
+          <rect x="380.0" y="50.0" width="240.0" height="178.0" rx="8" fill="#ffffff" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="5 4"/>
+          <text x="500.0" y="72.0" font-size="11" fill="#52615a" font-weight="700" text-anchor="middle">journal de réplication</text>
+          <text x="500.0" y="100.0" font-size="10.5" fill="#1d302a" text-anchor="middle">chaque secret, scellé</text>
+          <text x="500.0" y="116.0" font-size="10.5" fill="#1d302a" text-anchor="middle">pour chaque secours</text>
+          <text x="500.0" y="132.0" font-size="10.5" fill="#1d302a" text-anchor="middle">qui y a droit</text>
+          <text x="500.0" y="160.0" font-size="10" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">ChaCha20-Poly1305</text>
+          <text x="500.0" y="178.0" font-size="10" fill="#52615a" text-anchor="middle">≈ 4,4 µs pour 2 Kio</text>
+          <rect x="684.0" y="50.0" width="300.0" height="76.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="696.0" y="69.0" font-size="11.5" fill="#1d302a" font-weight="700">Secours local</text>
+          <text x="696.0" y="86.0" font-size="10" fill="#52615a">reçoit tous les secrets</text>
+          <text x="696.0" y="101.0" font-size="10" fill="#52615a">les applique en mémoire, puis sur son disque</text>
+          <text x="696.0" y="116.0" font-size="10" fill="#52615a">clé maître M, installée à l'appairage</text>
+          <rect x="684.0" y="152.0" width="300.0" height="76.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="696.0" y="171.0" font-size="11.5" fill="#1d302a" font-weight="700">Secours distant</text>
+          <text x="696.0" y="188.0" font-size="10" fill="#52615a">ne reçoit que les secrets cloud</text>
+          <text x="696.0" y="203.0" font-size="10" fill="#52615a">scellés avec sa clé de liaison</text>
+          <text x="696.0" y="218.0" font-size="10" fill="#52615a">son coffre, sa propre clé maître</text>
+          <line x1="316.0" y1="112.0" x2="378.0" y2="112.0" stroke="#b07d12" stroke-width="1.6" marker-end="url(#coffre-a)"/>
+          <line x1="316.0" y1="176.0" x2="378.0" y2="176.0" stroke="#195744" stroke-width="1.6" marker-end="url(#coffre-v)"/>
+          <line x1="620.0" y1="96.0" x2="682.0" y2="88.0" stroke="#195744" stroke-width="1.8" marker-end="url(#coffre-v)"/>
+          <text x="651.0" y="84.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">les deux</text>
+          <line x1="620.0" y1="150.0" x2="682.0" y2="190.0" stroke="#b07d12" stroke-width="1.8" marker-end="url(#coffre-a)"/>
+          <text x="646.0" y="186.0" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">cloud</text>
+          <text x="16.0" y="256.0" font-size="10.5" fill="#52615a">Un secret « maison » ne quitte jamais la maison ; la clé maître de la maison non plus. Un secret « mémoire seule » passe en direct, jamais sur un disque.</text>
+          <text x="16.0" y="274.0" font-size="10.5" fill="#52615a">Ordre : coffre de l'actif (fsync) → copie scellée → usage par le pilote. Le secours garde la plus grande version reçue.</text>
+  <text x="16" y="315" font-size="12" fill="#52615a" font-style="italic">Décidé le 23 octobre : les jetons et les sessions vont au coffre, et en direct au secours ; le distant reçoit les secrets cloud, chiffrés.</text>
+</svg>

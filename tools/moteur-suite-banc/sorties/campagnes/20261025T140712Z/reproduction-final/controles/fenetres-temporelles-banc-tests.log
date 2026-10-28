@@ -1,0 +1,36 @@
+   Compiling futures-util v0.3.34
+   Compiling tokio-util v0.7.19
+   Compiling bitflags v2.13.2
+   Compiling smallvec v1.16.2
+   Compiling rusqlite v0.40.2
+   Compiling moli-rollup v0.1.0 (/src/crates/moli-rollup)
+   Compiling futures v0.3.34
+   Compiling moli-runtime v0.1.0 (/src/crates/moli-runtime)
+   Compiling moli-history v0.1.0 (/src/crates/moli-history)
+   Compiling fenetres-temporelles-banc v0.1.0 (/src/tools/fenetres-temporelles-banc)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.35s
+     Running unittests production.rs (/target/debug/deps/production-f22752af70f6ae65)
+
+running 1 test
+test tests::production_contracts ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running unittests main.rs (/target/debug/deps/structures-1385d091b5ff53a0)
+
+running 12 tests
+test tests::all_windows_against_independent_oracle ... ok
+test tests::bounded_ring_reports_loss_until_lost_history_leaves_window ... ok
+test tests::bucket_aligned_four_windows_match_oracle ... ok
+test tests::bucket_aligned_windows_exact_time_but_partial_edge_is_approximate ... ok
+test tests::duplicate_replacement_and_old_event_rejection ... ok
+test tests::every_backend_preserves_zero_missing_and_expiry ... ok
+test tests::expiry_without_new_events_and_half_open_boundaries ... ok
+test tests::invalid_numbers_close_coverage ... ok
+test tests::irregular_samples_and_time_are_different ... ok
+test tests::large_finite_values_do_not_overflow_and_drift_remains_bounded ... ok
+test tests::missing_is_unknown_but_zero_is_covered ... ok
+test tests::restart_marker_does_not_count_downtime ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+

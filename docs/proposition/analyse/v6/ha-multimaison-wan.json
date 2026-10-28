@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-27T20:57:07.935Z",
+  "scope": "preflight on two actual HA hosts, synthetic TCP echo only; no HA stop and no actual replication fault campaign",
+  "status": "BLOCKED_NOT_PROVEN",
+  "ssh_access": {
+    "A": "PASS",
+    "B": "PASS"
+  },
+  "listeners": {
+    "A": {
+      "listen_start_unix": 1793134451.443685,
+      "listen_end_unix": 1793134481.5335832,
+      "echoes": 8,
+      "observer_echoes": 8
+    },
+    "B": {
+      "listen_start_unix": 1793134510.1236746,
+      "listen_end_unix": 1793134540.2468164,
+      "echoes": 8,
+      "observer_echoes": 8
+    }
+  },
+  "peer_connection_attempts": [
+    {
+      "direction": "A_to_B",
+      "unix": 1793134517.468258,
+      "ok": false,
+      "error": "TimeoutError",
+      "timeout_seconds": 3,
+      "listener_active_during_attempt": true
+    },
+    {
+      "direction": "A_to_B",
+      "unix": 1793134520.4848754,
+      "ok": false,
+      "error": "TimeoutError",
+      "timeout_seconds": 3,
+      "listener_active_during_attempt": true
+    },
+    {
+      "direction": "B_to_A",
+      "unix": 1793134459.6334803,
+      "ok": false,
+      "error": "TimeoutError",
+      "timeout_seconds": 3,
+      "listener_active_during_attempt": true
+    },
+    {
+      "direction": "B_to_A",
+      "unix": 1793134462.6390247,
+      "ok": false,
+      "error": "TimeoutError",
+      "timeout_seconds": 3,
+      "listener_active_during_attempt": true
+    }
+  ],
+  "test_port": 53141,
+  "observer_echo_to_both_sites": "PASS",
+  "peer_baseline": "FAIL_TIMEOUT_BOTH_DIRECTIONS",
+  "cause": "Filtering or routing is suspected; the responsible VPN/firewall rule is not identified.",
+  "deployment": {
+    "scp_upload": "FAIL_CONNECTION_CLOSED_EXIT_255",
+    "source_download_from_observer": "FAIL_TIMEOUT",
+    "linux_build": "NOT_RUN",
+    "distributed_rust_sites": "NOT_STARTED"
+  },
+  "cleanup": {
+    "remote_echo_listeners": "STOPPED_NORMALLY",
+    "temporary_build_container": "REMOVED",
+    "temporary_rust_image": "REMOVED",
+    "local_artifact_server": "STOPPED",
+    "live_1414_1416": "NOT_RESTARTED"
+  },
+  "planned_fault_cases": [
+    {
+      "id": "tcp_close_short",
+      "duration_seconds": 8,
+      "status": "NOT_PROVEN"
+    },
+    {
+      "id": "same_socket_silence_short",
+      "duration_seconds": 3,
+      "status": "NOT_PROVEN"
+    },
+    {
+      "id": "one_way_tcp_close",
+      "duration_seconds": 8,
+      "status": "NOT_PROVEN"
+    },
+    {
+      "id": "silence_long",
+      "duration_seconds": 120,
+      "status": "NOT_PROVEN"
+    }
+  ],
+  "required_connectivity": [
+    {
+      "from": "house A",
+      "to": "house B",
+      "tcp_port": 53141,
+      "purpose": "test MQTT replication"
+    },
+    {
+      "from": "house B",
+      "to": "house A",
+      "tcp_port": 53141,
+      "purpose": "test MQTT replication"
+    },
+    {
+      "from": "observer",
+      "to": "both houses",
+      "tcp_port": 53142,
+      "purpose": "bounded test status and fault controls"
+    },
+    {
+      "from": "both houses",
+      "to": "observer",
+      "tcp_port": 53143,
+      "purpose": "optional temporary build artifacts if SCP remains unavailable"
+    }
+  ],
+  "physical_commands": 0,
+  "wan_outage_qualified": false,
+  "live_simulation_observation": {
+    "date_utc": "2026-10-27T21:03:05.943513+00:00",
+    "http_proxy": 200,
+    "local_leases_valid": true,
+    "sequences_observed": {
+      "house-a": 1607,
+      "house-b": 1607
+    },
+    "fake_effect_error": "house receipt capacity exhausted",
+    "receipt_capacity_per_house": 256,
+    "interpretation": "bounded refusal after receipt saturation; continuous fake-effect operation beyond this capacity is not qualified",
+    "reset_performed": false
+  },
+  "local_site_smoke": {
+    "status": "PASS",
+    "date_utc": "2026-10-27T21:05:52.375764+00:00",
+    "scope": "one local macOS loopback fixture; synthetic tiny document; no remote site",
+    "before_sequence": 0,
+    "after_sequence": 2,
+    "effects": 2,
+    "lease_valid_during_fault_and_freeze": true,
+    "remote_connected": false,
+    "physical_commands": 0,
+    "clean_shutdown": true,
+    "wan_outage_qualified": false
+  },
+  "local_checks": {
+    "rust_passed": 67,
+    "rust_failed": 0,
+    "fmt": "PASS",
+    "clippy": "PASS -D warnings",
+    "scope": "local macOS unit tests, debug build and one loopback site; no remote site or Linux build"
+  },
+  "additional_local_attempt": {
+    "observer_vpn_self_address": "HTTP_TIMEOUT",
+    "result": "not used as evidence of site failure or intersite outage; replaced by an explicitly enabled loopback fixture"
+  }
+}

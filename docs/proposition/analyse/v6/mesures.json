@@ -391,5 +391,11 @@
     "device_size": 160,
     "devices_fixed_bytes": 66560,
     "scope": "Calcul structurel indicatif, hors chaînes/index/capacités/runtime ; pas une ventilation du RSS."
+  },
+  "ha_multihome_update": {
+    "report": "ha-multimaison.html",
+    "proof": "ha-multimaison-preuves.json",
+    "live_projection": "ha-multimaison-projection.json",
+    "note": "Source B now projected; earlier measurements above remain historical."
   }
 }

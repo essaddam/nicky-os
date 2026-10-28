@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 229" width="1000" height="229" role="img" aria-labelledby="mesures-t mesures-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="mesures-t">Le pont, mesuré</title>
+  <desc id="mesures-d">Trois graphiques. Sous deux coupures, le pont de rumqttd perd des milliers de messages, le pont à reprise aucun. Après une coupure, le rattrapage prend une centaine de millisecondes. Une journée entière se rattrape en moins d'une seconde en local, en quelques secondes à 10 Mbit/s, en un peu plus d'une minute à 1 Mbit/s.</desc>
+  <rect width="1000" height="229" fill="#fffdf8"/>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">MESSAGES PERDUS SOUS DEUX COUPURES</text>
+          <text x="16.0" y="60.0" font-size="11.5" fill="#1d302a" font-weight="700">pont de rumqttd</text>
+          <rect x="140.0" y="46.0" width="160.0" height="20.0" rx="4" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="140.0" y="46.0" width="60.2" height="20.0" rx="4" fill="#8b3b22" stroke="#8b3b22" stroke-width="1"/>
+          <text x="140.0" y="82.0" font-size="11" fill="#8b3b22" font-weight="700">3 009 sur 8 000</text>
+          <text x="16.0" y="104.0" font-size="11.5" fill="#1d302a" font-weight="700">pont à reprise</text>
+          <rect x="140.0" y="90.0" width="160.0" height="20.0" rx="4" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="140.0" y="126.0" font-size="11" fill="#195744" font-weight="700">0 sur 8 000</text>
+          <text x="350.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">RATTRAPAGE APRÈS LA COUPURE</text>
+          <text x="350.0" y="60.0" font-size="11.5" fill="#1d302a" font-weight="700">5 s coupé</text>
+          <rect x="440.0" y="46.0" width="85.2" height="20.0" rx="4" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="531.2" y="61.0" font-size="11" fill="#195744" font-weight="700">110 ms</text>
+          <text x="350.0" y="104.0" font-size="11.5" fill="#1d302a" font-weight="700">10 s coupé</text>
+          <rect x="440.0" y="90.0" width="136.0" height="20.0" rx="4" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="582.0" y="105.0" font-size="11" fill="#195744" font-weight="700">176 ms</text>
+          <text x="670.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">RETOUR APRÈS UNE JOURNÉE</text>
+          <text x="670.0" y="60.0" font-size="11.5" fill="#1d302a" font-weight="700">réseau local</text>
+          <rect x="770.0" y="46.0" width="3.0" height="20.0" rx="4" fill="#b07d12" stroke="#b07d12" stroke-width="1"/>
+          <text x="779.0" y="61.0" font-size="11" fill="#b07d12" font-weight="700">1,1 s</text>
+          <text x="670.0" y="94.0" font-size="11.5" fill="#1d302a" font-weight="700">10 Mbit/s</text>
+          <rect x="770.0" y="80.0" width="24.0" height="20.0" rx="4" fill="#b07d12" stroke="#b07d12" stroke-width="1"/>
+          <text x="800.0" y="95.0" font-size="11" fill="#b07d12" font-weight="700">13 s</text>
+          <text x="670.0" y="128.0" font-size="11.5" fill="#1d302a" font-weight="700">1 Mbit/s</text>
+          <rect x="770.0" y="114.0" width="125.0" height="20.0" rx="4" fill="#b07d12" stroke="#b07d12" stroke-width="1"/>
+          <text x="901.0" y="129.0" font-size="11" fill="#b07d12" font-weight="700">69 s</text>
+          <text x="16.0" y="160.0" font-size="11.5" fill="#1d302a">Régime, 200 messages par seconde : délai de la copie 1,9 ms en médiane, 35 ms au 99e centile.</text>
+          <text x="16.0" y="180.0" font-size="11.5" fill="#1d302a">Une journée de la maison : 165 000 sorties, 7,7 Mo en tronçons. Mémoire identique à la fin, dans tous les cas.</text>
+  <text x="16" y="225" font-size="12" fill="#52615a" font-style="italic">Deux courtiers rumqttd 0.20 et un relais qui imite le lien, en Linux musl (2 CPU, 128 Mio), médiane de trois essais.</text>
+</svg>

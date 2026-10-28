@@ -1,0 +1,1290 @@
+{
+  "schema": 2,
+  "started_utc": "2026-10-25T14:09:34.055765+00:00",
+  "completed_utc": "2026-10-25T14:09:49.539570+00:00",
+  "status": "synthetic_local_prototype_and_production_api_evidence",
+  "structure_processes": 36,
+  "structure_summary_cases": 12,
+  "production_processes": 3,
+  "process_repetitions": 3,
+  "deterministic_parity": "passed_all_non_timing_fields",
+  "source_sha256_before": {
+    "main.rs": "bd7be42e75f611a920eaf9b37281e19dd971abcd21007b77722b26e4fc12207a",
+    "production.rs": "43b62d387a7a467d7478b40da3bf40df8e59950925a2c3e535f500d09c7e36f4",
+    "Cargo.toml": "fb2c829767fa52aa37ede45003460df95a8002ba742159ee5ca6a6e538280093",
+    "Cargo.lock": "7caace56202ac357e5bdc10c5b502da4505d1538e8884125fcea6216ac204d3d",
+    "executer.py": "00612a426d8d5eccb69ecb6a7669241dc11a58a71cf27bd1f9ba8ae15a11827c",
+    "README.md": "b7ab8b39dd1c90d9bef8f7421f6badddbdc5651c43d294ae8ffd010979c899b7"
+  },
+  "source_sha256_after": {
+    "main.rs": "bd7be42e75f611a920eaf9b37281e19dd971abcd21007b77722b26e4fc12207a",
+    "production.rs": "43b62d387a7a467d7478b40da3bf40df8e59950925a2c3e535f500d09c7e36f4",
+    "Cargo.toml": "fb2c829767fa52aa37ede45003460df95a8002ba742159ee5ca6a6e538280093",
+    "Cargo.lock": "7caace56202ac357e5bdc10c5b502da4505d1538e8884125fcea6216ac204d3d",
+    "executer.py": "00612a426d8d5eccb69ecb6a7669241dc11a58a71cf27bd1f9ba8ae15a11827c",
+    "README.md": "b7ab8b39dd1c90d9bef8f7421f6badddbdc5651c43d294ae8ffd010979c899b7"
+  },
+  "source_checks": [
+    {
+      "phase": "before_deque_sparse_1",
+      "utc": "2026-10-25T14:09:34.056954+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_sparse_1",
+      "utc": "2026-10-25T14:09:34.224657+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_deque_sparse_2",
+      "utc": "2026-10-25T14:09:34.225058+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_sparse_2",
+      "utc": "2026-10-25T14:09:34.375736+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_deque_sparse_3",
+      "utc": "2026-10-25T14:09:34.376436+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_sparse_3",
+      "utc": "2026-10-25T14:09:34.538224+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_sparse_1",
+      "utc": "2026-10-25T14:09:34.538526+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_sparse_1",
+      "utc": "2026-10-25T14:09:34.770206+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_sparse_2",
+      "utc": "2026-10-25T14:09:34.770520+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_sparse_2",
+      "utc": "2026-10-25T14:09:34.939564+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_sparse_3",
+      "utc": "2026-10-25T14:09:34.939857+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_sparse_3",
+      "utc": "2026-10-25T14:09:35.087569+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_sparse_1",
+      "utc": "2026-10-25T14:09:35.087852+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_sparse_1",
+      "utc": "2026-10-25T14:09:35.223784+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_sparse_2",
+      "utc": "2026-10-25T14:09:35.224061+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_sparse_2",
+      "utc": "2026-10-25T14:09:35.377686+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_sparse_3",
+      "utc": "2026-10-25T14:09:35.378186+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_sparse_3",
+      "utc": "2026-10-25T14:09:35.520727+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_sparse_1",
+      "utc": "2026-10-25T14:09:35.521445+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_sparse_1",
+      "utc": "2026-10-25T14:09:35.703013+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_sparse_2",
+      "utc": "2026-10-25T14:09:35.703754+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_sparse_2",
+      "utc": "2026-10-25T14:09:35.883653+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_sparse_3",
+      "utc": "2026-10-25T14:09:35.884305+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_sparse_3",
+      "utc": "2026-10-25T14:09:36.072707+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_deque_irregular_1",
+      "utc": "2026-10-25T14:09:36.073234+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_irregular_1",
+      "utc": "2026-10-25T14:09:36.796855+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_deque_irregular_2",
+      "utc": "2026-10-25T14:09:36.797153+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_irregular_2",
+      "utc": "2026-10-25T14:09:37.486086+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_deque_irregular_3",
+      "utc": "2026-10-25T14:09:37.487184+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_irregular_3",
+      "utc": "2026-10-25T14:09:38.266253+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_irregular_1",
+      "utc": "2026-10-25T14:09:38.266986+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_irregular_1",
+      "utc": "2026-10-25T14:09:39.162895+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_irregular_2",
+      "utc": "2026-10-25T14:09:39.163697+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_irregular_2",
+      "utc": "2026-10-25T14:09:39.857129+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_irregular_3",
+      "utc": "2026-10-25T14:09:39.857415+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_irregular_3",
+      "utc": "2026-10-25T14:09:40.519841+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_irregular_1",
+      "utc": "2026-10-25T14:09:40.520129+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_irregular_1",
+      "utc": "2026-10-25T14:09:40.691636+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_irregular_2",
+      "utc": "2026-10-25T14:09:40.691908+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_irregular_2",
+      "utc": "2026-10-25T14:09:40.868765+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_irregular_3",
+      "utc": "2026-10-25T14:09:40.869056+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_irregular_3",
+      "utc": "2026-10-25T14:09:41.023791+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_irregular_1",
+      "utc": "2026-10-25T14:09:41.024314+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_irregular_1",
+      "utc": "2026-10-25T14:09:41.200572+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_irregular_2",
+      "utc": "2026-10-25T14:09:41.201223+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_irregular_2",
+      "utc": "2026-10-25T14:09:41.415805+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_irregular_3",
+      "utc": "2026-10-25T14:09:41.416315+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_irregular_3",
+      "utc": "2026-10-25T14:09:41.642567+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_deque_burst_1",
+      "utc": "2026-10-25T14:09:41.642863+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_burst_1",
+      "utc": "2026-10-25T14:09:42.865726+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_deque_burst_2",
+      "utc": "2026-10-25T14:09:42.866474+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_burst_2",
+      "utc": "2026-10-25T14:09:44.130471+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_deque_burst_3",
+      "utc": "2026-10-25T14:09:44.131461+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_deque_burst_3",
+      "utc": "2026-10-25T14:09:45.355511+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_burst_1",
+      "utc": "2026-10-25T14:09:45.356105+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_burst_1",
+      "utc": "2026-10-25T14:09:46.203506+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_burst_2",
+      "utc": "2026-10-25T14:09:46.204175+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_burst_2",
+      "utc": "2026-10-25T14:09:47.303492+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_burst_3",
+      "utc": "2026-10-25T14:09:47.304086+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_burst_3",
+      "utc": "2026-10-25T14:09:48.146109+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_burst_1",
+      "utc": "2026-10-25T14:09:48.146407+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_burst_1",
+      "utc": "2026-10-25T14:09:48.297256+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_burst_2",
+      "utc": "2026-10-25T14:09:48.297849+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_burst_2",
+      "utc": "2026-10-25T14:09:48.491221+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_ring_small_burst_3",
+      "utc": "2026-10-25T14:09:48.491712+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_ring_small_burst_3",
+      "utc": "2026-10-25T14:09:48.642238+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_burst_1",
+      "utc": "2026-10-25T14:09:48.642567+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_burst_1",
+      "utc": "2026-10-25T14:09:48.784523+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_burst_2",
+      "utc": "2026-10-25T14:09:48.784804+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_burst_2",
+      "utc": "2026-10-25T14:09:48.970931+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_buckets_10s_burst_3",
+      "utc": "2026-10-25T14:09:48.971430+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_buckets_10s_burst_3",
+      "utc": "2026-10-25T14:09:49.121909+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_production_1",
+      "utc": "2026-10-25T14:09:49.123076+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_production_1",
+      "utc": "2026-10-25T14:09:49.270417+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_production_2",
+      "utc": "2026-10-25T14:09:49.271018+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_production_2",
+      "utc": "2026-10-25T14:09:49.400022+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "before_production_3",
+      "utc": "2026-10-25T14:09:49.400770+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "after_production_3",
+      "utc": "2026-10-25T14:09:49.539269+00:00",
+      "matches_initial": true
+    },
+    {
+      "phase": "campaign_complete",
+      "utc": "2026-10-25T14:09:49.539567+00:00",
+      "matches_initial": true
+    }
+  ],
+  "commands": [
+    {
+      "label": "deque_sparse_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:34.056957+00:00",
+      "completed_utc": "2026-10-25T14:09:34.224669+00:00"
+    },
+    {
+      "label": "deque_sparse_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:34.225062+00:00",
+      "completed_utc": "2026-10-25T14:09:34.375757+00:00"
+    },
+    {
+      "label": "deque_sparse_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:34.376442+00:00",
+      "completed_utc": "2026-10-25T14:09:34.538235+00:00"
+    },
+    {
+      "label": "ring_sparse_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:34.538529+00:00",
+      "completed_utc": "2026-10-25T14:09:34.770231+00:00"
+    },
+    {
+      "label": "ring_sparse_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:34.770525+00:00",
+      "completed_utc": "2026-10-25T14:09:34.939591+00:00"
+    },
+    {
+      "label": "ring_sparse_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:34.939861+00:00",
+      "completed_utc": "2026-10-25T14:09:35.087592+00:00"
+    },
+    {
+      "label": "ring_small_sparse_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:35.087854+00:00",
+      "completed_utc": "2026-10-25T14:09:35.223808+00:00"
+    },
+    {
+      "label": "ring_small_sparse_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:35.224064+00:00",
+      "completed_utc": "2026-10-25T14:09:35.377719+00:00"
+    },
+    {
+      "label": "ring_small_sparse_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:35.378191+00:00",
+      "completed_utc": "2026-10-25T14:09:35.520772+00:00"
+    },
+    {
+      "label": "buckets_10s_sparse_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:35.521454+00:00",
+      "completed_utc": "2026-10-25T14:09:35.703064+00:00"
+    },
+    {
+      "label": "buckets_10s_sparse_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:35.703762+00:00",
+      "completed_utc": "2026-10-25T14:09:35.883672+00:00"
+    },
+    {
+      "label": "buckets_10s_sparse_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "sparse"
+      ],
+      "started_utc": "2026-10-25T14:09:35.884313+00:00",
+      "completed_utc": "2026-10-25T14:09:36.072724+00:00"
+    },
+    {
+      "label": "deque_irregular_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:36.073240+00:00",
+      "completed_utc": "2026-10-25T14:09:36.796883+00:00"
+    },
+    {
+      "label": "deque_irregular_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:36.797156+00:00",
+      "completed_utc": "2026-10-25T14:09:37.486137+00:00"
+    },
+    {
+      "label": "deque_irregular_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:37.487196+00:00",
+      "completed_utc": "2026-10-25T14:09:38.266274+00:00"
+    },
+    {
+      "label": "ring_irregular_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:38.266996+00:00",
+      "completed_utc": "2026-10-25T14:09:39.162945+00:00"
+    },
+    {
+      "label": "ring_irregular_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:39.163714+00:00",
+      "completed_utc": "2026-10-25T14:09:39.857153+00:00"
+    },
+    {
+      "label": "ring_irregular_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:39.857418+00:00",
+      "completed_utc": "2026-10-25T14:09:40.519862+00:00"
+    },
+    {
+      "label": "ring_small_irregular_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:40.520131+00:00",
+      "completed_utc": "2026-10-25T14:09:40.691661+00:00"
+    },
+    {
+      "label": "ring_small_irregular_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:40.691911+00:00",
+      "completed_utc": "2026-10-25T14:09:40.868776+00:00"
+    },
+    {
+      "label": "ring_small_irregular_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:40.869059+00:00",
+      "completed_utc": "2026-10-25T14:09:41.023809+00:00"
+    },
+    {
+      "label": "buckets_10s_irregular_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:41.024318+00:00",
+      "completed_utc": "2026-10-25T14:09:41.200612+00:00"
+    },
+    {
+      "label": "buckets_10s_irregular_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:41.201232+00:00",
+      "completed_utc": "2026-10-25T14:09:41.415821+00:00"
+    },
+    {
+      "label": "buckets_10s_irregular_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "irregular"
+      ],
+      "started_utc": "2026-10-25T14:09:41.416319+00:00",
+      "completed_utc": "2026-10-25T14:09:41.642590+00:00"
+    },
+    {
+      "label": "deque_burst_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:41.642865+00:00",
+      "completed_utc": "2026-10-25T14:09:42.865768+00:00"
+    },
+    {
+      "label": "deque_burst_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:42.866483+00:00",
+      "completed_utc": "2026-10-25T14:09:44.130663+00:00"
+    },
+    {
+      "label": "deque_burst_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "deque",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:44.131475+00:00",
+      "completed_utc": "2026-10-25T14:09:45.355530+00:00"
+    },
+    {
+      "label": "ring_burst_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:45.356115+00:00",
+      "completed_utc": "2026-10-25T14:09:46.203543+00:00"
+    },
+    {
+      "label": "ring_burst_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:46.204181+00:00",
+      "completed_utc": "2026-10-25T14:09:47.303556+00:00"
+    },
+    {
+      "label": "ring_burst_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:47.304097+00:00",
+      "completed_utc": "2026-10-25T14:09:48.146121+00:00"
+    },
+    {
+      "label": "ring_small_burst_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:48.146411+00:00",
+      "completed_utc": "2026-10-25T14:09:48.297274+00:00"
+    },
+    {
+      "label": "ring_small_burst_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:48.297854+00:00",
+      "completed_utc": "2026-10-25T14:09:48.491237+00:00"
+    },
+    {
+      "label": "ring_small_burst_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "ring_small",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:48.491717+00:00",
+      "completed_utc": "2026-10-25T14:09:48.642250+00:00"
+    },
+    {
+      "label": "buckets_10s_burst_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:48.642571+00:00",
+      "completed_utc": "2026-10-25T14:09:48.784535+00:00"
+    },
+    {
+      "label": "buckets_10s_burst_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:48.784808+00:00",
+      "completed_utc": "2026-10-25T14:09:48.970968+00:00"
+    },
+    {
+      "label": "buckets_10s_burst_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/structures",
+        "buckets_10s",
+        "burst"
+      ],
+      "started_utc": "2026-10-25T14:09:48.971434+00:00",
+      "completed_utc": "2026-10-25T14:09:49.121928+00:00"
+    },
+    {
+      "label": "production_1",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/production"
+      ],
+      "started_utc": "2026-10-25T14:09:49.123085+00:00",
+      "completed_utc": "2026-10-25T14:09:49.270437+00:00"
+    },
+    {
+      "label": "production_2",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/production"
+      ],
+      "started_utc": "2026-10-25T14:09:49.271023+00:00",
+      "completed_utc": "2026-10-25T14:09:49.400098+00:00"
+    },
+    {
+      "label": "production_3",
+      "argv": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cpus",
+        "1",
+        "--memory",
+        "512m",
+        "-v",
+        "moli-target:/target:ro",
+        "moli-os-dev:latest",
+        "/target/release/production"
+      ],
+      "started_utc": "2026-10-25T14:09:49.400781+00:00",
+      "completed_utc": "2026-10-25T14:09:49.539293+00:00"
+    }
+  ],
+  "compilation_metadata_sha256": "9716e1b6951b35c7f287e3005285b7b29c9f64012b7dbfad9c693a1e69eeacea",
+  "compilation_metadata": {
+    "timestamp_utc": "20261025T140712Z",
+    "image_id": "sha256:40c4e2a8d249be4d12e160ccffe94df1642aeef82cc787a0a3db606f70abbc53",
+    "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-musl\nrelease: 1.99.1\nLLVM version: 23.1.1\naarch64\n",
+    "runtime_environment": "Linux aarch64, Docker, réseau none, 1 CPU, plafond 512 Mio",
+    "production_source_sha256": "5c9bad8601bb4e7b4cb39c93c0e780467eee1f9662641128a77c8018cc2a996e",
+    "binary_sha256_before": "7334f57090f38837f8dcb4b2b9e86c01493a55c45ac935d8f1a7797c5a2efee5  /target/v5/moteur-counted\n93553ecde5deb48d600ac396517db5036dd02ba1eab3fe55ff2f3fe6c88f85ca  /target/v5/moteur-plain\n500a6b44a49bd2ba618b8047cf15529cc305766512633ff439334a1bf81203e4  /target/release/transformations-banc\n1ecf488d20088400d6959f242e547dfb10b1a333ded0ddd77b1a0ce9a6cf90db  /target/release/index-memory\na06d3e32eb1e464c4e8493c9ac65b8e4e50984d58e25bbaf50bba3ba0e519a71  /target/release/structures\nb4c9ab3f0205b4d7ff35531fe28dc638ca8b84f12ca5e2d184ba1bfb6494c702  /target/release/production\n",
+    "profile": "release opt-level=s lto=fat codegen-units=1",
+    "scope": "Chemins réels et modèles proposés distincts ; aucun appareil physique."
+  },
+  "environment_policy": "measurement_environment_is_supplied_metadata_not_python_host_platform"
+}

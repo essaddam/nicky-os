@@ -1,0 +1,2107 @@
+<!doctype html>
+<html lang="fr" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Monitoring de Sarah Home : ce que consomment chaque équipement, chaque processus et chaque module (CPU, mémoire, messages MQTT, pire rafale), d'où vient chaque chiffre, ce que la mesure coûte, et la place des modules : dans le cœur une fois validés, isolés sinon, avec une bascule à chaud.">
+  <meta name="source-markdown" content="monitoring.md">
+  <meta name="source-sha256" content="b88bd3dd9a34a8dc8002204bfdcbc596ce751e5f926d2c9bc60e893d918336b7">
+  <title>Sarah Home · Monitoring</title>
+  <style>
+    :root {
+      --paper: #fffdf8; --page: #f0f1ec; --ink: #1d302a; --muted: #52615a;
+      --line: #d4ddd4; --soft: #f4f6f1; --green: #195744; --green-soft: #e6eee5;
+      --warm: #8b3b22; --warm-soft: #fae9df; --amber: #835c00; --amber-soft: #fbf0d6;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 90px; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 var(--sans); }
+    a { color: var(--green); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    button { font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--warm); outline-offset: 4px; }
+    .skip { position: fixed; top: 8px; left: 8px; z-index: 20; padding: 10px 16px; background: var(--paper); transform: translateY(-160%); }
+    .skip:focus { transform: none; }
+    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: var(--paper); }
+    .topbar-inner { max-width: 1440px; min-height: 68px; padding: 12px 36px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); font-weight: 750; }
+    .brand-mark { display: block; width: 34px; height: 34px; border-radius: 8px; }
+    .logo { background: url(data:image/png;base64,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) center / cover no-repeat; }
+    .cover-logo { display: block; width: 76px; height: 76px; border-radius: 18px; margin: 0 0 18px; box-shadow: 0 6px 18px rgba(16, 30, 60, .18); }
+    .brand-sub { border-left: 1px solid var(--line); padding-left: 15px; margin-left: 4px; font-size: 12px; font-weight: 500; color: var(--muted); }
+    .actions { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+    .print { border: 1px solid var(--line); padding: 8px 13px; border-radius: 5px; color: var(--ink); background: var(--soft); min-height: 42px; }
+    .print:hover { background: var(--green-soft); border-color: var(--green); }
+    .frame { max-width: 1440px; margin: auto; padding: 34px 36px 60px; display: grid; grid-template-columns: 238px minmax(0, 1fr); align-items: start; gap: 38px; }
+    aside { position: sticky; top: 95px; max-height: calc(100dvh - 115px); overflow-y: auto; padding-right: 12px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 750; }
+    aside .eyebrow { color: var(--muted); margin: 8px 0 17px 9px; }
+    aside ul, .mobile-toc ul { list-style: none; padding: 0; margin: 0; }
+    aside li { margin: 0 0 3px; }
+    aside a { display: block; padding: 8px 9px; color: var(--muted); font-size: 12px; line-height: 1.5; text-decoration: none; border-left: 2px solid transparent; }
+    aside a:hover, aside a[aria-current="location"] { background: var(--green-soft); color: var(--green); border-left-color: var(--green); }
+    .sidebar-note { margin: 23px 9px 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 12px; color: var(--muted); }
+    main { min-width: 0; }
+    .cover { padding: 8px 0 30px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 24px; color: var(--muted); font-size: 12px; }
+    .status { padding: 3px 9px; border: 1px solid #e0bdaa; color: var(--warm); border-radius: 3px; background: var(--warm-soft); font-weight: 650; }
+    h1 { font: 500 clamp(40px, 4.9vw, 72px)/1.06 var(--serif); letter-spacing: -.035em; margin: 0 0 23px; }
+    h1 span { display: block; color: var(--green); }
+    .lead { max-width: 760px; font-size: 18px; line-height: 1.65; margin: 0; color: var(--muted); }
+    .verdict { border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .verdict-head { padding: 15px 21px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line); }
+    .verdict-head span { font-size: 12px; color: var(--muted); }
+    .verdict-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: 20px 18px 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-top: 4px solid var(--line); }
+    .card:nth-child(4n) { border-right: 0; }
+    .card:nth-last-child(-n+4) { border-bottom: 0; }
+    .card.ok { border-top-color: var(--green); }
+    .card.high { border-top-color: var(--warm); }
+    .card.mid { border-top-color: #c79a2e; }
+    .card .number { font: 11px var(--mono); color: var(--muted); margin-bottom: 10px; display: block; }
+    .card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .card p { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+    .figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--paper); margin: 0 0 20px; }
+    .figure-item { padding: 16px 18px; border-right: 1px solid var(--line); }
+    .figure-item:last-child { border-right: 0; }
+    .figure-item strong { display: block; font: 24px/1.3 var(--mono); color: var(--green); }
+    .figure-item span { font-size: 12px; color: var(--muted); line-height: 1.45; display: block; }
+    figure.diagram { margin: 0 0 22px; padding: 18px; background: var(--paper); border: 1px solid var(--line); }
+    figure.diagram svg { display: block; width: 100%; height: auto; }
+    figure.diagram figcaption { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    article figure.diagram { margin: 26px 0; }
+    figure.tech { margin: 0 0 24px; border: 1px solid var(--line); border-left: 4px solid var(--green); background: var(--soft); }
+    figure.tech figcaption { padding: 10px 16px; font-size: 13px; font-weight: 650; border-bottom: 1px solid var(--line); background: var(--paper); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+    figure.tech .tech-tag { font: 10.5px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--green); border: 1px solid #b9cdbd; background: var(--green-soft); padding: 1px 7px; border-radius: 3px; }
+    figure.tech pre { margin: 0; background: transparent; white-space: pre; overflow-x: auto; }
+    .sev { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 750; letter-spacing: .02em; white-space: nowrap; vertical-align: 2px; }
+    .sev-high { background: var(--warm-soft); color: var(--warm); border: 1px solid #e0bdaa; }
+    .sev-crit { background: var(--warm); color: white; border: 1px solid var(--warm); }
+    .sev-mid { background: var(--amber-soft); color: var(--amber); border: 1px solid #e8d29b; }
+    .sev-low { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+    .sev-ok { background: var(--green-soft); color: var(--green); border: 1px solid #b9cdbd; }
+    h3 .sev { margin-left: 8px; font-size: 12px; }
+    .mobile-toc { display: none; }
+    article { padding: 32px 38px 36px; background: var(--paper); border: 1px solid var(--line); overflow-wrap: break-word; }
+    article > p { color: var(--muted); font-size: 13.5px; }
+    article p { margin: 0 0 1.15em; }
+    article h2 { font-size: clamp(23px, 2.2vw, 29px); font-weight: 650; line-height: 1.3; letter-spacing: -.025em; margin: 40px 0 21px; padding-top: 30px; border-top: 1px solid var(--line); text-wrap: balance; }
+    article h3 { margin: 30px 0 15px; font-size: 19px; font-weight: 650; line-height: 1.4; }
+    article ul, article ol { padding-left: 24px; margin: 0 0 22px; }
+    article li { padding-left: 3px; margin-bottom: 9px; }
+    code { background: var(--soft); padding: 2px 5px; font: .86em var(--mono); overflow-wrap: anywhere; }
+    pre { background: var(--soft); padding: 18px; white-space: pre-wrap; line-height: 1.6; overflow-wrap: anywhere; }
+    pre code { padding: 0; background: transparent; font-size: 12px; }
+    details.code { border: 1px solid var(--line); margin: 0 0 22px; }
+    details.code > summary { padding: 13px 18px; cursor: pointer; font-weight: 650; font-size: 14px; min-height: 48px; }
+    details.code[open] > summary { border-bottom: 1px solid var(--line); }
+    details.code pre { margin: 0; max-height: 640px; overflow: auto; white-space: pre; }
+    .table-wrap { max-width: 100%; overflow-x: auto; margin: 22px 0; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 12.5px; line-height: 1.6; }
+    th, td { padding: 11px 12px; vertical-align: top; text-align: left; border-bottom: 1px solid var(--line); }
+    th { background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 750; }
+    td:first-child { font-weight: 600; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr > * + * { border-left: 1px solid #e5eae1; }
+    footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 21px; color: var(--muted); font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1100px) {
+      .frame { grid-template-columns: 205px minmax(0, 1fr); gap: 24px; padding-inline: 24px; }
+      .topbar-inner { padding-inline: 24px; }
+      article { padding: 25px; }
+      .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card:nth-child(4n) { border-right: 1px solid var(--line); }
+      .card:nth-child(2n) { border-right: 0; }
+      .card:nth-last-child(-n+4) { border-bottom: 1px solid var(--line); }
+      .card:nth-last-child(-n+2) { border-bottom: 0; }
+      .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .figure-item:nth-child(2) { border-right: 0; }
+      .figure-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    }
+    @media (max-width: 780px) {
+      .frame { display: block; padding: 24px 16px 40px; }
+      .topbar-inner { padding-inline: 16px; }
+      aside, .brand-sub { display: none; }
+      .actions { gap: 12px; font-size: 12px; }
+      .cover { padding-top: 0; }
+      h1 { font-size: clamp(38px, 9vw, 58px); }
+      .lead { font-size: 16px; }
+      article { padding: 18px; }
+      .verdict-grid { grid-template-columns: 1fr; }
+      .card, .card:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .card:last-child { border-bottom: 0; }
+      .figures { grid-template-columns: 1fr; }
+      .figure-item, .figure-item:nth-child(n) { border-right: 0; border-bottom: 1px solid var(--line); }
+      .figure-item:last-child { border-bottom: 0; }
+      figure.diagram { padding: 12px; overflow-x: auto; }
+      figure.diagram svg { min-width: 760px; }
+      .mobile-toc { display: block; padding: 0 17px; margin: 0 0 22px; background: var(--paper); border: 1px solid var(--line); }
+      .mobile-toc summary { padding: 13px 0; min-height: 50px; cursor: pointer; font-size: 14px; font-weight: 650; }
+      .mobile-toc a { display: block; padding: 8px 0; font-size: 13px; }
+      .mobile-toc ul { padding-bottom: 13px; }
+    }
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      body { background: white; font-size: 10pt; color: black; }
+      .topbar, aside, .mobile-toc, .skip { display: none; }
+      .frame { display: block; max-width: none; padding: 0; }
+      h1 { font-size: 34pt; }
+      .lead { font-size: 12pt; }
+      article { border: 0; padding: 0; }
+      article h2 { break-after: avoid; font-size: 16pt; }
+      article h3 { break-after: avoid; font-size: 12pt; }
+      .verdict, .figures, figure.diagram, figure.tech, pre, tr { break-inside: avoid; }
+      figure.tech pre { white-space: pre-wrap; }
+      details.code pre { max-height: none; white-space: pre-wrap; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; font-size: 9pt; }
+      th, td { padding: 6px 7px; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#document">Aller au document</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark logo" aria-hidden="true"></span>Sarah Home<span class="brand-sub">Propositions techniques</span></a>
+      <div class="actions"><a href="monitoring.md">Source Markdown</a><button class="print" id="print-document" type="button" hidden>Imprimer / PDF</button></div>
+    </div>
+  </header>
+  <div class="frame">
+    <aside>
+      <p class="eyebrow">Dans ce document</p>
+      <nav aria-label="Sommaire du document"><ul>
+<li><a href="#1-le-verdict-en-bref">1. Le verdict en bref</a></li>
+<li><a href="#2-ce-qui-existe-aujourdhui">2. Ce qui existe aujourd'hui</a></li>
+<li><a href="#3-remue-méninges-inversé--comment-rendre-le-monitoring-nuisible-">3. Remue-méninges inversé : comment rendre le monitoring nuisible ?</a></li>
+<li><a href="#4-trois-étages-et-ce-quon-mesure-à-chacun">4. Trois étages, et ce qu'on mesure à chacun</a></li>
+<li><a href="#5-le-cpu-dun-module-dans-le-cœur">5. Le CPU d'un module dans le cœur</a></li>
+<li><a href="#6-la-mémoire-dun-module-dans-le-cœur--la-seule-mesure-difficile">6. La mémoire d'un module dans le cœur : la seule mesure difficile</a></li>
+<li><a href="#7-les-messages-mqtt-module-par-module">7. Les messages MQTT, module par module</a></li>
+<li><a href="#8-ce-que-la-mesure-coûte">8. Ce que la mesure coûte</a></li>
+<li><a href="#9-ce-quon-voit-et-qui-le-voit">9. Ce qu'on voit, et qui le voit</a></li>
+<li><a href="#10-les-alertes">10. Les alertes</a></li>
+<li><a href="#11-dans-le-cœur-ou-isolé--où-tourne-un-module">11. Dans le cœur ou isolé : où tourne un module</a></li>
+<li><a href="#12-les-choix-à-critères-visibles">12. Les choix, à critères visibles</a></li>
+<li><a href="#13-le-plan">13. Le plan</a></li>
+<li><a href="#14-les-expériences">14. Les expériences</a></li>
+<li><a href="#15-décidé-ici-et-à-trancher">15. Décidé ici, et à trancher</a></li>
+<li><a href="#annexe-a--sources">Annexe A — Sources</a></li>
+<li><a href="#annexe-b--preuves-dans-le-code">Annexe B — Preuves dans le code</a></li>
+      </ul></nav>
+      <p class="sidebar-note">Le noyau mesure le processus.<br>Le fil mesure le module.<br>La mémoire du cœur se déduit, ou s'isole.</p>
+    </aside>
+    <main>
+      <div class="cover">
+        <span class="cover-logo logo" role="img" aria-label="Logo de Sarah Home"></span>
+        <div class="meta"><span class="status">Monitoring · proposition, aucune modification du code</span><span>23 octobre 2026</span><span>complète la V7, l'étude de haute disponibilité v2 et la critique des workflows · commit a835893 · rumqttd 0.20.0, tokio 1.54.1 et rustix 1.1.5 lus dans leurs sources · un conteneur Docker vérifié · quatorze règles tirées d'un remue-méninges inversé · dix expériences</span></div>
+        <h1>Trois étages, une mesure chacun.<span>Et chaque module à sa place : dans le cœur une fois validé, isolé sinon.</span></h1>
+        <p class="lead">Le monitoring de Sarah Home, de la machine au module : ce que consomment l'équipement, le processus et chaque module (CPU, mémoire, messages MQTT, pire rafale), d'où vient chaque chiffre, ce que la mesure coûte et qui est alerté. Puis la place d'un module&nbsp;: dans le cœur quand il a fait ses preuves, isolé tant qu'il ne les a pas faites, et le passage de l'un à l'autre sans redémarrer le cœur.</p>
+      </div>
+
+      <section class="verdict" aria-label="Ce que la proposition établit">
+        <div class="verdict-head"><strong class="eyebrow">Ce que la proposition établit</strong><span>La machine et le processus se lisent exactement&nbsp;; le module, selon sa place&nbsp;; la mémoire du cœur demande une décision.</span></div>
+        <div class="verdict-grid">
+          <div class="card ok"><span class="number">01 / L'ÉQUIPEMENT</span><h2>Déjà lu, à compléter</h2><p><code>moli-host</code> relève toutes les 15&nbsp;s. Il manque la pression, les écritures sur la carte, le bridage du Pi, et la santé de Zigbee2MQTT, reçue mais jamais lue.</p><span class="sev sev-ok">Proposé</span></div>
+          <div class="card high"><span class="number">02 / LE PROCESSUS</span><h2>Exact, sans instrument</h2><p><code>/proc</code> donne le temps, la mémoire anonyme, la juste part, le disque. Moli ne lit que <code>VmRSS</code>, qui n'est pas la mesure du budget.</p><span class="sev sev-high">Écart</span></div>
+          <div class="card ok"><span class="number">03 / LE CPU PAR MODULE</span><h2>Exact dès qu'il a son fil</h2><p>Le noyau compte chaque fil à la nanoseconde&nbsp;; <code>tokio</code> 1.54 donne temps occupé et réveils, stables en 64&nbsp;bits. Avant le fil&nbsp;: <code>TaskMonitor</code> (D8).</p><span class="sev sev-ok">Proposé</span></div>
+          <div class="card mid"><span class="number">04 / LA MÉMOIRE PAR MODULE</span><h2>La seule mesure difficile</h2><p>Toujours&nbsp;: la mémoire tenue par le kit et la part non expliquée. En option&nbsp;: une étiquette d'un octet. À la demande&nbsp;: isoler pour mesurer.</p><span class="sev sev-mid">À trancher</span></div>
+          <div class="card ok"><span class="number">05 / LES MESSAGES</span><h2>Par module, et la pire rafale</h2><p>Isolé&nbsp;: le courtier compte sa connexion, ce que <code>rumqttd</code> 0.20 fait sans l'exposer. Dans le cœur&nbsp;: le kit. La rafale de 100&nbsp;ms compte plus que le débit.</p><span class="sev sev-ok">Proposé</span></div>
+          <div class="card ok"><span class="number">06 / LE COÛT</span><h2>La mesure ne réveille rien</h2><p>Un relevé par minute, 10&nbsp;s quand on regarde&nbsp;; ≈&nbsp;342&nbsp;Kio de courbes&nbsp;; des agrégats de 15&nbsp;min en base, 7&nbsp;jours, jamais archivés.</p><span class="sev sev-ok">Calculé</span></div>
+          <div class="card ok"><span class="number">07 / TA RÈGLE</span><h2>Dans le cœur une fois validé</h2><p>Relu, vérifié, 7&nbsp;jours isolé dans son budget&nbsp;: il entre, avec un PIN. Un plantage, une fuite, un budget doublé&nbsp;: il ressort, seul.</p><span class="sev sev-ok">Retenu</span></div>
+          <div class="card ok"><span class="number">08 / LA BASCULE</span><h2>Changer de place à chaud</h2><p>Le hub retient les ordres&nbsp;; l'ancienne instance finit et rend 4&nbsp;Kio&nbsp;; la nouvelle démarre. Aucun appareil hors ligne, aucun ordre rejoué.</p><span class="sev sev-ok">Proposé</span></div>
+        </div>
+      </section>
+
+      <div class="figures" aria-label="Chiffres clés">
+        <div class="figure-item"><strong>15&nbsp;s</strong><span>le rythme de <code>moli-host</code> aujourd'hui&nbsp;; la mesure proposée lit <code>/proc</code> toutes les 60&nbsp;s, 10&nbsp;s quand on regarde</span></div>
+        <div class="figure-item"><strong>≈&nbsp;0,015&nbsp;%</strong><span>d'un cœur de Pi pour le relevé complet à 60&nbsp;s&nbsp;: estimé, à mesurer (M1)</span></div>
+        <div class="figure-item"><strong>≈&nbsp;342&nbsp;Kio</strong><span>pour 24&nbsp;h de courbes de 40 modules, en entiers de 16&nbsp;bits</span></div>
+        <div class="figure-item"><strong>19 / 577&nbsp;Kio</strong><span>un module dans le cœur, un module isolé (V3, Linux musl)&nbsp;: la place a un prix</span></div>
+      </div>
+
+<details class="mobile-toc"><summary>Sommaire</summary><ul>
+<li><a href="#1-le-verdict-en-bref">1. Le verdict en bref</a></li>
+<li><a href="#2-ce-qui-existe-aujourdhui">2. Ce qui existe aujourd'hui</a></li>
+<li><a href="#3-remue-méninges-inversé--comment-rendre-le-monitoring-nuisible-">3. Remue-méninges inversé : comment rendre le monitoring nuisible ?</a></li>
+<li><a href="#4-trois-étages-et-ce-quon-mesure-à-chacun">4. Trois étages, et ce qu'on mesure à chacun</a></li>
+<li><a href="#5-le-cpu-dun-module-dans-le-cœur">5. Le CPU d'un module dans le cœur</a></li>
+<li><a href="#6-la-mémoire-dun-module-dans-le-cœur--la-seule-mesure-difficile">6. La mémoire d'un module dans le cœur : la seule mesure difficile</a></li>
+<li><a href="#7-les-messages-mqtt-module-par-module">7. Les messages MQTT, module par module</a></li>
+<li><a href="#8-ce-que-la-mesure-coûte">8. Ce que la mesure coûte</a></li>
+<li><a href="#9-ce-quon-voit-et-qui-le-voit">9. Ce qu'on voit, et qui le voit</a></li>
+<li><a href="#10-les-alertes">10. Les alertes</a></li>
+<li><a href="#11-dans-le-cœur-ou-isolé--où-tourne-un-module">11. Dans le cœur ou isolé : où tourne un module</a></li>
+<li><a href="#12-les-choix-à-critères-visibles">12. Les choix, à critères visibles</a></li>
+<li><a href="#13-le-plan">13. Le plan</a></li>
+<li><a href="#14-les-expériences">14. Les expériences</a></li>
+<li><a href="#15-décidé-ici-et-à-trancher">15. Décidé ici, et à trancher</a></li>
+<li><a href="#annexe-a--sources">Annexe A — Sources</a></li>
+<li><a href="#annexe-b--preuves-dans-le-code">Annexe B — Preuves dans le code</a></li>
+      </ul></details>
+
+      <article id="document">
+<p>Date : 23 octobre 2026. Statut : <strong>proposition, aucune modification du code</strong>. Base analysée : <code>main</code> au commit <code>a835893</code>, et les sources de <code>rumqttd</code> 0.20.0, <code>tokio</code> 1.54.1 et <code>rustix</code> 1.1.5, lues là où la proposition s'appuie sur elles.</p>
+<p>Proposition à part. Elle complète l'<a href="isolation-reactivite-runtime-v7.md">analyse V7</a> (le courtier, § 6 ; l'isolation des modules, § 9.4 ; un fil par pilote, § 20.1), l'<a href="haute-disponibilite-v2.md">étude de haute disponibilité v2</a> (le pont maison) et la <a href="critique-workflow.md">critique des workflows</a> (la zone de travail). Ta seconde idée, redémarrer le moteur sans rien perdre, a son propre document : <a href="redemarrage-a-chaud.md">Redémarrage à chaud</a>.</p>
+<p>Ta demande :</p>
+<ol type="1">
+<li><strong>Connaître la mémoire utilisée par les équipements, le CPU de l'ensemble, le CPU par module.</strong></li>
+<li><strong>La mémoire de chaque module</strong> : celui qui gère le pont, les modules API, et les autres.</li>
+<li><strong>Le nombre de messages MQTT par module</strong>, et le reste : mémoire, CPU…</li>
+<li>Hors monitoring : <strong>qu'un module tourne dans le cœur quand il a été validé, ou à part</strong> ; et qu'on puisse <strong>le relancer isolé, ou dans le cœur</strong>, comme on le souhaite.</li>
+</ol>
+<p>Les questions, reformulées pour être tranchables (« comment pourrait-on… ») :</p>
+<table>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Comment pourrait-on…</th>
+<th>§</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>savoir ce que consomme chaque équipement, chaque processus et chaque module, <strong>sans que la mesure coûte plus que ce qu'elle mesure</strong> ?</td>
+<td>4, 5, 8</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>attribuer à un module <strong>la mémoire et le CPU qu'il prend quand il partage le processus du cœur</strong> ?</td>
+<td>5, 6</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>compter les messages MQTT <strong>de chaque module</strong>, alors que les modules du cœur partagent un seul lien avec le courtier ?</td>
+<td>7</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>voir venir une dérive (une fuite, une boucle, une rafale) <strong>avant qu'elle ne touche la maison</strong>, sans réveiller personne pour rien ?</td>
+<td>3, 10</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>décider <strong>où tourne un module</strong>, et le faire passer du cœur à l'isolé, ou l'inverse, <strong>sans redémarrer le cœur ni perdre un ordre</strong> ?</td>
+<td>11</td>
+</tr>
+</tbody>
+</table>
+<p>Méthode, et techniques employées, nommées au fil du texte :</p>
+<ul>
+<li><strong>lecture du code</strong> : ce que Sarah Home mesure déjà, preuves <code>fichier:ligne</code> (§ 2, annexe B) ;</li>
+<li><strong>premiers principes</strong> : quelles mesures brutes donnent toutes les autres (§ 4) ;</li>
+<li><strong>remue-méninges inversé</strong> : « comment rendre le monitoring nuisible ? » ; chaque réponse, retournée, devient une règle (§ 3) ;</li>
+<li><strong>questions en étoile</strong> : qui mesure, quoi, où, quand, comment, pour qui (§ 4) ;</li>
+<li><strong>analyse morphologique</strong> : les façons de mesurer la mémoire d'un module qui partage le tas du cœur, côte à côte (§ 6) ;</li>
+<li><strong>analogies</strong> : Erlang, dont chaque processus a son tas et se mesure exactement ; Vector, qui étiquette chaque allocation de son composant ; Zigbee2MQTT, qui publie sa propre santé ; Home Assistant, qui n'attribue rien par intégration (§ 6, § 7, annexe A) ;</li>
+<li><strong>méthode Disney</strong> (rêveur, réaliste, critique) sur le passage d'un module du cœur à l'isolé (§ 11.6) ;</li>
+<li><strong>convergence à critères visibles</strong> : exactitude, coût au repos, mémoire, <code>unsafe</code>, effort (§ 12) ;</li>
+<li><strong>une vérification dans un conteneur</strong> : les fichiers <code>/proc</code> et le montage des cgroups, dans un conteneur Docker ordinaire (alpine, noyau 6.8), pour savoir ce qu'on peut lire sans privilège.</li>
+</ul>
+<p>Vocabulaire :</p>
+<ul>
+<li>un <strong>équipement</strong> est une machine (celle de Sarah Home, la secours, un ordinateur de la maison, le routeur) ou un appareil qui sait dire sa propre charge (Frigate, Zigbee2MQTT) ;</li>
+<li>un <strong>processus</strong> est un programme qui tourne avec sa propre mémoire : le cœur (<code>moli-os serve</code>), un module isolé (<code>moli-os module run &lt;id&gt;</code>, V7 § 9.4.2), un voisin (Zigbee2MQTT, <code>moli-archive</code>, Wyoming) ;</li>
+<li>un <strong>module</strong> est une brique de Sarah Home qui a son code et sa place dans le contrat MQTT (V7 § 3) : un module api-to-mqtt (une intégration, ce que tu appelles les modules API), le hub, le courtier, le moteur des workflows, le pont maison, le module WebSocket, la base, Sarah ;</li>
+<li><strong>dans le cœur</strong> : le module tourne dans le processus du cœur, sur son fil et son runtime (V7 § 20.1) ; aujourd'hui, sur le runtime partagé ;</li>
+<li><strong>isolé</strong> : le module tourne dans son propre processus et parle au courtier par l'écouteur local (V7 § 9.4.2). À ne pas confondre avec le mode « isolé » d'une machine dans l'étude de haute disponibilité v2 (§ 4), qui désigne une machine coupée de ses pairs ;</li>
+<li><strong>le pont</strong> a deux sens dans les études : le <strong>pont maison</strong>, qui copie la mémoire vers les secours (HA v2 § 6.4), et les <strong>ponts radio</strong> (Zigbee2MQTT, demain Matter). Les deux sont mesurés ici ;</li>
+<li>l'<strong>observatoire</strong> est le module qui relève les mesures, les range et les sert. Il porte un nom à part pour ne pas le confondre avec le <strong>superviseur</strong>, qui relance les pilotes (<code>supervisor.rs</code>) ;</li>
+<li>l'<strong>astreinte</strong> est la personne qui reçoit les alertes techniques, le propriétaire, et pas la famille (ARCHITECTURE, « l'astreinte lira ce journal ») ;</li>
+<li>le <strong>gardien</strong> est le petit processus qui reste quand le cœur redémarre : il lance les modules isolés et garde ce qui doit survivre. Il est décrit dans le document <a href="redemarrage-a-chaud.md">Redémarrage à chaud</a>.</li>
+</ul>
+
+<section id="1-le-verdict-en-bref" class="level2">
+<h2>1. Le verdict en bref</h2>
+<ul>
+<li><strong>Trois étages, une source de vérité chacun.</strong> L'<strong>équipement</strong> se lit dans <code>/proc</code> et <code>/sys</code>, ce que fait déjà <code>moli-host</code> toutes les 15 s. Le <strong>processus</strong> se lit dans <code>/proc/&lt;pid&gt;</code>, exactement, sans une ligne de code dans le programme mesuré. Le <strong>module</strong> se lit selon sa place : isolé, c'est son processus ; dans le cœur, c'est son fil, ses compteurs et, pour la mémoire seulement, une estimation ou une étiquette.</li>
+<li><strong>Le CPU par module est exact dès qu'un module a son fil.</strong> C'est la couche 1 de la V7 (un fil et un runtime par pilote, § 20.1). Le noyau compte alors le temps de chaque fil, en nanosecondes (<code>/proc/self/task/&lt;tid&gt;/schedstat</code>), et <code>tokio</code> 1.54 donne, sans option instable sur une machine 64 bits, le temps occupé et le nombre de réveils de chaque runtime. Tant que tous les pilotes partagent le runtime, comme aujourd'hui, <code>TaskMonitor</code> (décision D8, jamais faite) donne une approximation.</li>
+<li><strong>La mémoire par module est la seule mesure difficile.</strong> Un tas partagé ne sait pas à qui appartient un octet, et un octet alloué par un module est souvent libéré par un autre fil : le courtier garde les messages dans ses segments. Je propose quatre niveaux :
+<ul>
+<li><strong>toujours</strong>, la mémoire de ce que le kit tient pour le module : files, voies, caches ;</li>
+<li><strong>toujours</strong>, la part que ces comptes n'expliquent pas, entre ce total et la mémoire anonyme du cœur ;</li>
+<li><strong>en option de construction</strong>, une étiquette d'un octet par allocation, comme Vector, à mesurer sur le Pi ;</li>
+<li><strong>la vérité de terrain, à la demande</strong> : relancer le module isolé et lire sa mémoire exacte.</li>
+</ul></li>
+<li><strong>Les messages MQTT par module, sans rien ajouter au chemin des messages.</strong>
+<ul>
+<li>Isolé : le courtier compte sur sa connexion. <code>rumqttd</code> 0.20 tient déjà un compteur d'entrée par connexion, mais ne l'expose pas, et sa table par sujet fuit. Notre version le corrige.</li>
+<li>Dans le cœur : le kit compte, par une addition atomique par message.</li>
+<li>Zigbee2MQTT publie déjà ses propres comptes sur <code>bridge/health</code>, que <code>moli-z2m</code> reçoit sans le lire.</li>
+<li>Montrer <strong>la pire rafale</strong>, pas seulement le débit : la V7 a montré que c'est elle qui fait décrocher (§ 17.1.2).</li>
+</ul></li>
+<li><strong>La mesure ne réveille rien et n'écrit presque rien.</strong>
+<ul>
+<li>Un relevé par minute ; toutes les 10 s seulement quand quelqu'un regarde la page Système.</li>
+<li>Les modules ne sont jamais réveillés : on les lit de l'extérieur.</li>
+<li>En mémoire, ≈ 342 Kio de courbes pour 40 modules, 24 h au pas de 5 min.</li>
+<li>Sur la carte : des agrégats de 15 min dans la famille <code>diagnostic</code> de l'historique, 7 jours, jamais archivés.</li>
+</ul></li>
+<li><strong>Où tourne un module : dans le cœur une fois validé, isolé sinon.</strong> C'est ta règle. Elle tient sur les critères de la V7 (§ 9.4.2), avec des preuves pour « validé » : relu, vérifié par le catalogue, 7 jours isolé sans incident et dans son budget.
+<ul>
+<li><strong>Isolé</strong> : un module nouveau, écrit par un agent, en code tiers ou en FFI, déjà planté, ou au-dessus de son budget.</li>
+<li><strong>Dans le cœur, toujours</strong> : le hub, le courtier, le moteur, l'API, et les modules qui partagent la passerelle HTTP de l'API.</li>
+<li><strong>Rentrer dans le cœur</strong> demande un humain. <strong>Retourner à l'isolé</strong> peut être automatique : c'est le sens sûr.</li>
+</ul></li>
+<li><strong>Passer d'une place à l'autre se fait à chaud, sans redémarrer le cœur</strong>, parce que le même code est dans le binaire (V7 § 9.4.2).
+<ul>
+<li>Le hub retient les ordres dans leurs voies.</li>
+<li>L'ancienne instance finit et rend un petit état (≤ 4 Kio), puis la nouvelle démarre dans l'autre mode.</li>
+<li>Les appareils restent « en bascule », jamais « hors ligne », et aucun ordre n'est rejoué après son échéance.</li>
+</ul></li>
+<li><strong>Un module isolé est lancé par le gardien, pas par le cœur</strong> : il survit ainsi au redémarrage du cœur. C'est le lien avec ta seconde idée, et le sujet du document <a href="redemarrage-a-chaud.md">Redémarrage à chaud</a>.</li>
+</ul>
+</section>
+<section id="2-ce-qui-existe-aujourdhui" class="level2">
+<h2>2. Ce qui existe aujourd'hui</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Mesure</th>
+<th>Où</th>
+<th>Rythme</th>
+<th>Limite</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CPU de la machine, charge, mémoire, échange, températures, réseau, durée de marche, cœurs</td>
+<td><code>moli-host</code> (<code>crates/moli-host/src/lib.rs</code>) : points <code>cpu</code>, <code>load</code>, <code>ram</code>, <code>ram_used</code>, <code>ram_total</code>, <code>swap</code>, <code>cpu_temperature</code>, <code>disk_temperature</code>, <code>net_down</code>, <code>net_up</code>, <code>uptime</code>, <code>cores</code></td>
+<td>15 s (<code>POLL</code>, <code>lib.rs:21</code>)</td>
+<td>la machine de Moli seulement ; « disques et conteneurs » sont laissés à un script de l'hôte (<code>data/infra.json</code>)</td>
+</tr>
+<tr class="even">
+<td>Les ordinateurs de la maison</td>
+<td>l'agent Moli (<code>moli-host/src/agents.rs</code>) : CPU, mémoire, GPU, disque, réseau</td>
+<td>au rapport de l'agent</td>
+<td>seulement les machines qui ont l'agent</td>
+</tr>
+<tr class="odd">
+<td>Routeurs</td>
+<td>ASUSWRT (<code>cpu</code>, <code>memory</code>, <code>memory_total</code>, <code>memory_used</code>, <code>memory_free</code>), Netgear (<code>cpu</code>, <code>memory</code>)</td>
+<td>au sondage du pilote</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Frigate</td>
+<td><code>cpu_load</code> (<code>moli-frigate/src/lib.rs:246</code>, <code>:287</code>)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Le processus de Moli</td>
+<td><code>Stats</code> : <code>uptime_ms</code>, <code>devices</code>, <code>points</code>, <code>drivers</code>, <code>drivers_running</code>, <code>rss_bytes</code> ; ce dernier vient de <code>VmRSS</code> dans <code>/proc/self/status</code> (<code>moli-runtime/src/stats.rs:14-20</code>)</td>
+<td>à la demande (<code>/api/health</code>, <code>/api/system</code>)</td>
+<td><code>VmRSS</code> compte aussi les pages du binaire ; aucune ventilation</td>
+</tr>
+<tr class="even">
+<td>Les pilotes</td>
+<td>statut (<code>starting</code>, <code>running</code>, <code>waiting</code>, <code>backoff</code>, <code>stopped</code>), appareils, points, hors ligne, caméras (<code>moli-api/src/system.rs:95</code>, <code>:135-163</code>)</td>
+<td>à la demande</td>
+<td>ni CPU, ni mémoire, ni messages</td>
+</tr>
+<tr class="odd">
+<td>Face à Home Assistant</td>
+<td><code>data/perf.jsonl</code>, écrit par un script de l'hôte (mémoire anonyme du cgroup, CPU sur 30 s) ; les 20 dernières lignes servies par <code>/api/system</code> (<code>system.rs:103</code>, <code>:166-176</code>)</td>
+<td>à chaque déploiement</td>
+<td>hors du dépôt ; pas une mesure continue</td>
+</tr>
+<tr class="even">
+<td>Décidé, pas fait</td>
+<td>D8 : « <code>tokio-metrics</code> <code>TaskMonitor</code> par tâche supervisée, part de CPU et <code>0 poll</code> affichés sur la page Système » (ARCHITECTURE)</td>
+<td>—</td>
+<td><code>tokio-metrics</code> n'est pas dans les dépendances du dépôt</td>
+</tr>
+<tr class="odd">
+<td>Le superviseur</td>
+<td><code>spawn_driver</code> (<code>supervisor.rs:22-68</code>) : <code>tokio::spawn</code> sur le runtime partagé (<code>:31</code>), relance de 1 s à 60 s (<code>:16-19</code>, <code>:64</code>)</td>
+<td>—</td>
+<td>tous les pilotes partagent le runtime : un temps CPU par pilote n'existe pas encore</td>
+</tr>
+</tbody>
+</table></div>
+<p>Trois conclusions :</p>
+<ul>
+<li><strong>L'étage de l'équipement est déjà là</strong>, pour la machine de Moli, les PC équipés de l'agent, deux routeurs et Frigate. Il manque la pression (le temps où l'on attend), les écritures sur la carte, le bridage du Pi et la santé de Zigbee2MQTT.</li>
+<li><strong>L'étage du processus se réduit à <code>VmRSS</code></strong>, une mesure qui ne correspond pas au budget : celui-ci compte la mémoire anonyme (PERFORMANCE.md).</li>
+<li><strong>L'étage du module n'existe pas.</strong> Rien ne dit aujourd'hui ce que coûte Tuya plutôt que Hue.</li>
+</ul>
+</section>
+<section id="3-remue-méninges-inversé--comment-rendre-le-monitoring-nuisible-" class="level2">
+<h2>3. Remue-méninges inversé : comment rendre le monitoring nuisible ?</h2>
+<p>La question à l'envers fait sortir les règles plus vite que la question à l'endroit. Chaque idée pour <strong>nuire</strong> devient une règle, en la retournant :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Pour nuire, on pourrait…</th>
+<th>La règle qui en sort</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>N1</td>
+<td>relever tout chaque seconde, et réveiller chaque module pour qu'il se mesure</td>
+<td>un relevé par minute ; 10 s seulement quand la page Système est ouverte ; les modules se lisent de l'extérieur, jamais réveillés</td>
+</tr>
+<tr class="even">
+<td>N2</td>
+<td>écrire chaque relevé sur la carte SD</td>
+<td>le fin en mémoire, 24 h ; en base, seulement des agrégats de 15 min, 7 jours, famille <code>diagnostic</code>, jamais archivés</td>
+</tr>
+<tr class="odd">
+<td>N3</td>
+<td>prendre plus de mémoire que les modules mesurés</td>
+<td>un budget fixe : ≈ 342 Kio pour 40 modules ; des entiers de 16 bits, pas des flottants de 64</td>
+</tr>
+<tr class="even">
+<td>N4</td>
+<td>afficher <code>VmRSS</code> et l'appeler « mémoire »</td>
+<td>la mémoire anonyme, comme le budget ; <code>Pss</code> quand des processus partagent le binaire</td>
+</tr>
+<tr class="odd">
+<td>N5</td>
+<td>attribuer à un module ce qu'un autre a libéré, et voir une fuite qui n'existe pas</td>
+<td>une mémoire par module est mesurée, étiquetée ou estimée, et l'écran dit laquelle</td>
+</tr>
+<tr class="even">
+<td>N6</td>
+<td>montrer un module « à 0 % » parce qu'il est mort</td>
+<td>un module mort est mort, pas sobre : statut d'abord, mesures ensuite</td>
+</tr>
+<tr class="odd">
+<td>N7</td>
+<td>moyenner sur 5 min et rater la rafale de 5 000 messages qui fait décrocher le moteur</td>
+<td>la pire rafale sur 100 ms est une mesure à part entière (V7 § 17.1.2)</td>
+</tr>
+<tr class="even">
+<td>N8</td>
+<td>alerter la famille à 3 h du matin parce qu'un nuage a répondu lentement</td>
+<td>les alertes vont à l'astreinte, groupées par incident ; rien aux heures calmes, sauf si l'alarme, une serrure ou un détecteur est touché</td>
+</tr>
+<tr class="odd">
+<td>N9</td>
+<td>laisser un compteur déborder et repartir de zéro, pour faire croire à une chute</td>
+<td>des compteurs de 64 bits qui ne font que monter ; les débits se calculent par différence</td>
+</tr>
+<tr class="even">
+<td>N10</td>
+<td>perdre toutes les courbes à chaque redémarrage</td>
+<td>elles passent au cœur suivant par le relais du gardien (document Redémarrage à chaud)</td>
+</tr>
+<tr class="odd">
+<td>N11</td>
+<td>laisser un agent changer la place d'un module</td>
+<td>lire : oui ; changer : une demande, qu'un humain valide (la garde, 202)</td>
+</tr>
+<tr class="even">
+<td>N12</td>
+<td>mesurer avec une sonde qui exige <code>root</code> ou le socket Docker</td>
+<td>uniquement ce qu'un processus non privilégié lit : <code>/proc</code>, <code>/sys</code>, son propre cgroup</td>
+</tr>
+<tr class="odd">
+<td>N13</td>
+<td>montrer cent courbes, et aucune réponse à « est-ce que la maison tient ? »</td>
+<td>une ligne en tête : la maison tient, ou non, et pourquoi ; le détail ensuite</td>
+</tr>
+<tr class="even">
+<td>N14</td>
+<td>taire une perte de messages, comme <code>rumqttd</code> 0.20 au-delà de ~1 400 messages de retard (V7 § 6.1)</td>
+<td>toute perte signalée par le courtier déclenche une alerte, dès la première</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="4-trois-étages-et-ce-quon-mesure-à-chacun" class="level2">
+<h2>4. Trois étages, et ce qu'on mesure à chacun</h2>
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 420" role="img" aria-labelledby="etages-t etages-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="etages-t">Trois étages, une source de vérité chacun</title>
+          <desc id="etages-d">La machine contient le cœur, un module isolé et les voisins ; le cœur contient ses modules, chacun sur son fil. À droite, les fichiers du noyau d'où vient chaque chiffre, étage par étage.</desc>
+          <rect x="16.0" y="36.0" width="624.0" height="334.0" rx="12" fill="#ffffff" stroke="#1d302a" stroke-width="2.2"/>
+          <text x="30.0" y="58.0" font-size="11.5" fill="#1d302a" font-weight="700">L'ÉQUIPEMENT : LA MACHINE DE SARAH HOME</text>
+          <rect x="32.0" y="72.0" width="380.0" height="214.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="44.0" y="92.0" font-size="12.5" fill="#1d302a" font-weight="700">Le cœur</text>
+          <text x="400.0" y="92.0" font-size="9.5" fill="#52615a" text-anchor="end" font-family="SFMono-Regular, Consolas, monospace">moli-os serve : un processus</text>
+          <rect x="44.0" y="106.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="85.0" y="122.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">hub</text>
+          <rect x="134.0" y="106.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="175.0" y="122.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">courtier</text>
+          <rect x="224.0" y="106.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="265.0" y="122.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">moteur</text>
+          <rect x="314.0" y="106.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="355.0" y="122.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">API, écrans</text>
+          <rect x="44.0" y="140.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="85.0" y="156.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">pont maison</text>
+          <rect x="134.0" y="140.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#7fa892" stroke-width="1"/>
+          <text x="175.0" y="156.0" font-size="9.5" fill="#7fa892" font-weight="700" text-anchor="middle">Hue</text>
+          <rect x="224.0" y="140.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#7fa892" stroke-width="1"/>
+          <text x="265.0" y="156.0" font-size="9.5" fill="#7fa892" font-weight="700" text-anchor="middle">Tuya</text>
+          <rect x="314.0" y="140.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#7fa892" stroke-width="1"/>
+          <text x="355.0" y="156.0" font-size="9.5" fill="#7fa892" font-weight="700" text-anchor="middle">Sonos</text>
+          <text x="44.0" y="196.0" font-size="9.8" fill="#1d302a">Chaque module dans le cœur : son fil et son runtime (V7 § 20.1).</text>
+          <text x="44.0" y="214.0" font-size="9.8" fill="#52615a">CPU : le temps noyau du fil ; réveils et temps occupé du runtime.</text>
+          <text x="44.0" y="230.0" font-size="9.8" fill="#52615a">Mémoire : tenue par le kit, étiquetée, ou mesurée en l'isolant.</text>
+          <text x="44.0" y="246.0" font-size="9.8" fill="#52615a">Messages : comptés par le kit (un seul lien vers le courtier).</text>
+          <text x="44.0" y="270.0" font-size="9.8" fill="#195744" font-weight="700">Le processus : /proc/&lt;pid&gt; et la mémoire anonyme du cgroup.</text>
+          <rect x="424.0" y="72.0" width="200.0" height="100.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="436.0" y="92.0" font-size="12.5" fill="#1d302a" font-weight="700">Un module isolé</text>
+          <text x="436.0" y="106.0" font-size="8.8" fill="#52615a" font-family="SFMono-Regular, Consolas, monospace">moli-os module run cloud-x</text>
+          <rect x="436.0" y="116.0" width="82.0" height="24.0" rx="12" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="477.0" y="132.0" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle">cloud-x</text>
+          <text x="436.0" y="158.0" font-size="9.8" fill="#52615a">tout se lit dans son processus</text>
+          <rect x="424.0" y="184.0" width="200.0" height="102.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="436.0" y="204.0" font-size="12.5" fill="#1d302a" font-weight="700">Les voisins</text>
+          <text x="436.0" y="222.0" font-size="9.8" fill="#1d302a">Zigbee2MQTT, l'archive, Wyoming :</text>
+          <text x="436.0" y="238.0" font-size="9.8" fill="#52615a">leur processus quand on le voit ;</text>
+          <text x="436.0" y="254.0" font-size="9.8" fill="#52615a">ce qu'ils disent d'eux-mêmes</text>
+          <text x="436.0" y="270.0" font-size="9.8" fill="#52615a" font-family="SFMono-Regular, Consolas, monospace">(bridge/health)</text>
+          <rect x="32.0" y="298.0" width="592.0" height="56.0" rx="8" fill="#ffffff" stroke="#b07d12" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="44.0" y="320.0" font-size="11.5" fill="#b07d12" font-weight="700">Le gardien</text>
+          <text x="44.0" y="338.0" font-size="9.8" fill="#52615a">lance les modules isolés et garde ce qui doit survivre au cœur (document Redémarrage à chaud)</text>
+          <text x="660.0" y="58.0" font-size="11.5" fill="#52615a" font-weight="700">D'OÙ VIENT CHAQUE CHIFFRE</text>
+          <text x="660.0" y="82.0" font-size="11" fill="#195744" font-weight="700">Équipement</text>
+          <text x="660.0" y="99.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">/proc/stat · meminfo · loadavg</text>
+          <text x="660.0" y="114.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">/proc/pressure · /proc/diskstats</text>
+          <text x="660.0" y="129.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">/sys/class/hwmon · get_throttled</text>
+          <text x="660.0" y="157.0" font-size="11" fill="#195744" font-weight="700">Processus</text>
+          <text x="660.0" y="174.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">/proc/&lt;pid&gt;/stat · status</text>
+          <text x="660.0" y="189.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">smaps_rollup (Pss) · io</text>
+          <text x="660.0" y="204.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">cgroup : memory.stat (anon)</text>
+          <text x="660.0" y="232.0" font-size="11" fill="#195744" font-weight="700">Module dans le cœur</text>
+          <text x="660.0" y="249.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">/proc/self/task/&lt;tid&gt;/schedstat</text>
+          <text x="660.0" y="264.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">tokio : occupé, réveils</text>
+          <text x="660.0" y="279.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">compteurs du kit · moli-net</text>
+          <text x="660.0" y="307.0" font-size="11" fill="#195744" font-weight="700">Module isolé</text>
+          <text x="660.0" y="324.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">son processus, comme ci-dessus</text>
+          <text x="660.0" y="339.0" font-size="9.3" fill="#1d302a" font-family="SFMono-Regular, Consolas, monospace">sa connexion au courtier</text>
+          <text x="16.0" y="394.0" font-size="10.5" fill="#52615a">Hors de la machine, les équipements disent eux-mêmes leur charge : routeurs ASUSWRT et Netgear, Frigate, Zigbee2MQTT, les PC qui ont l'agent Moli.</text>
+          <text x="16.0" y="412.0" font-size="10.5" fill="#52615a">Aucune de ces lectures ne demande de privilège : un conteneur ordinaire lit /proc, /sys et son propre cgroup (vérifié).</text>
+        </svg>
+        <figcaption>L'équipement se lit dans <code>/proc</code> et <code>/sys</code>&nbsp;; le processus dans <code>/proc/&lt;pid&gt;</code>&nbsp;; le module selon sa place&nbsp;: isolé, c'est son processus&nbsp;; dans le cœur, c'est son fil et ses compteurs.</figcaption>
+      </figure>
+
+
+<p><strong>Premiers principes.</strong> Toutes les mesures se déduisent de cinq grandeurs brutes, que le noyau ou nos propres compteurs donnent sans calcul :</p>
+<ol type="1">
+<li><strong>un temps passé sur le processeur</strong>, en nanosecondes, par fil ou par processus ;</li>
+<li><strong>une mémoire résidente</strong>, en octets, par processus, anonyme d'un côté, fichier de l'autre ;</li>
+<li><strong>des octets alloués</strong>, par module, quand le module partage le tas du cœur ;</li>
+<li><strong>des compteurs qui ne font que monter</strong> : messages, octets, appels, erreurs, relances ;</li>
+<li><strong>l'heure du relevé</strong>.</li>
+</ol>
+<p>Les pourcentages, les débits, les tendances et les alertes se calculent ensuite, par différence entre deux relevés. <strong>Questions en étoile</strong> sur chaque mesure : qui la produit, qui la lit, où elle vit, combien de temps, à quel rythme, pour qui. Les tableaux qui suivent y répondent.</p>
+<section id="41-léquipement" class="level3">
+<h3>4.1 L'équipement</h3>
+<p>La machine de Sarah Home et la secours :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Mesure</th>
+<th>Source</th>
+<th>Déjà lue ?</th>
+<th>Rythme</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Processeur, total et par cœur</td>
+<td><code>/proc/stat</code> (lignes <code>cpu</code> et <code>cpuN</code>)</td>
+<td>le total, oui</td>
+<td>15 s</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Charge</td>
+<td><code>/proc/loadavg</code></td>
+<td>oui (<code>load</code>)</td>
+<td>15 s</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Mémoire totale, disponible, échange</td>
+<td><code>/proc/meminfo</code></td>
+<td>oui</td>
+<td>15 s</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><strong>Pression</strong> : la part du temps où une tâche attendait le processeur, la mémoire ou le disque</td>
+<td><code>/proc/pressure/cpu</code>, <code>memory</code>, <code>io</code> (<code>some avg10</code>, <code>avg60</code>)</td>
+<td>non</td>
+<td>15 s</td>
+<td>le meilleur signal de saturation : il dit « on attend », pas « on est occupé ». Le noyau peut la désactiver par défaut (<code>CONFIG_PSI_DEFAULT_DISABLED</code>, réactivée par <code>psi=1</code> au démarrage) : à vérifier sur le Pi, par <code>ls /proc/pressure</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Octets écrits sur la carte</strong>, par jour</td>
+<td><code>/proc/diskstats</code> (secteurs écrits × 512)</td>
+<td>non</td>
+<td>15 min</td>
+<td>l'usure de la carte SD est le vrai coût du Pi (V7 § 21.3) ; l'étude HA v2 compte les écritures (§ 10) : la mesure les vérifie</td>
+</tr>
+<tr class="even">
+<td>Températures</td>
+<td><code>/sys/class/hwmon</code></td>
+<td>oui</td>
+<td>15 s</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><strong>Bridage du Pi</strong> : sous-tension, fréquence plafonnée, bridage thermique, en cours et depuis l'allumage</td>
+<td>la propriété <code>get_throttled</code> du micrologiciel : les 16 bits bas disent l'état en cours, les 16 bits hauts ce qui s'est produit depuis l'allumage</td>
+<td>non</td>
+<td>15 s</td>
+<td>un Pi mal alimenté ralentit sans rien dire ; le fichier où le noyau du Pi l'expose est à vérifier sur la carte</td>
+</tr>
+<tr class="even">
+<td>Espace libre du dossier de données</td>
+<td><code>statvfs</code></td>
+<td>oui (<code>/api/system</code>, <code>free_bytes</code>)</td>
+<td>à la demande</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Réseau</td>
+<td><code>/proc/net/dev</code></td>
+<td>oui</td>
+<td>15 s</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Un saut de l'horloge murale</td>
+<td>le détecteur du hub (mémoire v2 § 6.5)</td>
+<td>avec la mémoire v2</td>
+<td>à chaque saut</td>
+<td>une horloge qui saute fausse les instants rangés</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les autres équipements, qui disent eux-mêmes leur charge :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Équipement</th>
+<th>Ce qu'il dit de lui</th>
+<th>Par</th>
+<th>État</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Routeur ASUSWRT</td>
+<td>processeur, mémoire totale, utilisée, libre</td>
+<td><code>moli-asuswrt</code></td>
+<td>lu</td>
+</tr>
+<tr class="even">
+<td>Routeur Netgear</td>
+<td>processeur, mémoire</td>
+<td><code>moli-netgear</code></td>
+<td>lu</td>
+</tr>
+<tr class="odd">
+<td>Frigate</td>
+<td>charge du processeur</td>
+<td><code>moli-frigate</code></td>
+<td>lu</td>
+</tr>
+<tr class="even">
+<td>Ordinateurs de la maison</td>
+<td>processeur, mémoire, GPU, disque, réseau</td>
+<td>l'agent Moli</td>
+<td>lu</td>
+</tr>
+<tr class="odd">
+<td><strong>Zigbee2MQTT</strong></td>
+<td>la charge et la mémoire de sa machine ; sa propre mémoire et sa durée de marche ; ses messages MQTT publiés, reçus, en file ; <strong>par appareil</strong> : messages, messages par seconde, départs du réseau, changements d'adresse</td>
+<td><code>zigbee2mqtt/bridge/health</code>, toutes les 10 min par défaut (<code>health.interval</code>)</td>
+<td><strong>reçu, pas lu</strong> : <code>moli-z2m</code> s'abonne à <code>{base}/#</code> (<code>lib.rs:110</code>) mais n'en fait rien</td>
+</tr>
+<tr class="even">
+<td>La machine de secours</td>
+<td>la même chose que la machine principale</td>
+<td>son propre <code>moli-host</code>, publié sur <code>sys/</code> (HA v2)</td>
+<td>avec la haute disponibilité</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="42-le-processus" class="level3">
+<h3>4.2 Le processus</h3>
+<p>Pour le cœur, chaque module isolé, et le gardien :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Mesure</th>
+<th>Source (Linux)</th>
+<th>Rythme</th>
+<th>Remarque</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Temps processeur</td>
+<td><code>/proc/&lt;pid&gt;/stat</code> (<code>utime</code>, <code>stime</code>, en tics de 10 ms) ; plus fin, <code>/proc/&lt;pid&gt;/schedstat</code> (nanosecondes sur le processeur)</td>
+<td>60 s, 10 s regardé</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Mémoire résidente, anonyme, fichier, pic</td>
+<td><code>/proc/&lt;pid&gt;/status</code> : <code>VmRSS</code>, <code>RssAnon</code>, <code>RssFile</code>, <code>VmHWM</code></td>
+<td>60 s</td>
+<td><code>RssAnon</code> est la mesure du budget ; <code>VmRSS</code>, que lit <code>stats.rs</code> aujourd'hui, compte aussi le binaire</td>
+</tr>
+<tr class="odd">
+<td>La juste part des pages partagées</td>
+<td><code>/proc/&lt;pid&gt;/smaps_rollup</code> : <code>Pss</code>, <code>Pss_Anon</code></td>
+<td>5 min</td>
+<td>les modules isolés partagent le même binaire : <code>Rss</code> compterait son code autant de fois qu'il y a de processus. Plus coûteux à lire (le noyau parcourt les tables de pages)</td>
+</tr>
+<tr class="even">
+<td>Mémoire anonyme du conteneur</td>
+<td><code>/sys/fs/cgroup/memory.stat</code> (<code>anon</code>)</td>
+<td>60 s</td>
+<td><strong>la définition même du budget</strong> (PERFORMANCE.md), lisible depuis le conteneur : le budget devient une mesure continue, plus seulement une mesure de déploiement</td>
+</tr>
+<tr class="odd">
+<td>Fils, descripteurs</td>
+<td><code>Threads:</code> dans <code>status</code> ; les entrées de <code>/proc/&lt;pid&gt;/fd</code></td>
+<td>60 s</td>
+<td>une fuite de connexions se voit là d'abord</td>
+</tr>
+<tr class="even">
+<td>Disque</td>
+<td><code>/proc/&lt;pid&gt;/io</code> (<code>read_bytes</code>, <code>write_bytes</code>)</td>
+<td>60 s</td>
+<td>qui écrit sur la carte</td>
+</tr>
+<tr class="odd">
+<td>Relances, dernier code de sortie, dernier signal</td>
+<td>celui qui l'a lancé : le gardien</td>
+<td>à chaque fin</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ce que j'ai vérifié dans un conteneur Docker ordinaire (alpine 3.20, noyau 6.8, sans privilège) : <code>smaps_rollup</code>, le <code>schedstat</code> d'un fil, <code>io</code> et <code>/proc/pressure</code> répondent. Le système de fichiers des cgroups est monté <strong>en lecture seule</strong> : <code>mkdir /sys/fs/cgroup/essai</code> répond <em>Read-only file system</em>. Dans Docker, on ne peut donc pas créer un cgroup par module isolé. On mesure son processus par <code>/proc</code>, et sa limite de mémoire passe par <code>setrlimit</code> (V7 § 9.4.2 prévoyait « cgroup ou <code>RLIMIT_AS</code> »). Sous systemd, le gardien peut recevoir un sous-arbre de cgroups (<code>Delegate=yes</code>) et donner à chaque module isolé le sien, avec sa propre limite.</p>
+</section>
+<section id="43-le-module" class="level3">
+<h3>4.3 Le module</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Mesure</th>
+<th>Dans le cœur</th>
+<th>Isolé</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Processeur</td>
+<td><strong>son fil</strong> : <code>/proc/self/task/&lt;tid&gt;/schedstat</code>, en nanosecondes ; <strong>son runtime</strong> : temps occupé et réveils (§ 5)</td>
+<td>son processus (§ 4.2)</td>
+</tr>
+<tr class="even">
+<td>Mémoire</td>
+<td>estimée, ou étiquetée (§ 6)</td>
+<td><strong>exacte</strong> : <code>Pss_Anon</code></td>
+</tr>
+<tr class="odd">
+<td>Messages MQTT</td>
+<td>comptés par le kit (§ 7)</td>
+<td>comptés par le courtier, sur sa connexion (§ 7)</td>
+</tr>
+<tr class="even">
+<td>Appels d'API</td>
+<td>comptés par <code>moli-net</code>, la couche HTTP que partagent les pilotes</td>
+<td>idem, dans son processus</td>
+</tr>
+<tr class="odd">
+<td>Ordres et issues</td>
+<td>comptés par le kit : reçus, issues par sorte (V7 § 5.6), durée de l'ordre à l'issue</td>
+<td>idem</td>
+</tr>
+<tr class="even">
+<td>Santé</td>
+<td>statut, relances, dernière erreur (le superviseur)</td>
+<td>idem, plus le code de sortie</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="44-ce-que-chaque-module-montre-en-plus" class="level3">
+<h3>4.4 Ce que chaque module montre en plus</h3>
+<p>Le CPU, la mémoire et les messages valent pour tous. Chaque module a, en plus, ce qui dit s'il fait bien son travail :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Module</th>
+<th>Où il tourne</th>
+<th>Ses mesures propres</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Hub</strong></td>
+<td>dans le cœur, toujours</td>
+<td>valeurs entrées par seconde, valeurs refusées par leur spécification, occupation du tampon d'entrée et fusions (V7 § 20.5), demandes retenues par la garde, époque, rang <code>s</code></td>
+</tr>
+<tr class="even">
+<td><strong>Courtier</strong> (<code>moli-courtier</code>)</td>
+<td>dans le cœur, toujours</td>
+<td>connexions, publications par seconde, échecs, <strong>pertes signalées</strong>, mémoire des segments par filtre (V7 § 6.4)</td>
+</tr>
+<tr class="odd">
+<td><strong>Moteur des workflows</strong></td>
+<td>dans le cœur, toujours</td>
+<td>exécutions en cours, attentes, file (n au plus, critique § 3.9), occupation de la zone de travail par rapport à son plafond, réveils</td>
+</tr>
+<tr class="even">
+<td><strong>Pont maison</strong> (HA v2 § 6.4)</td>
+<td>dans le cœur</td>
+<td>occupation de la file (sur 10 000 sorties), retard de chaque secours en rang et en secondes, âge du dernier battement, tronçons servis, états complets envoyés</td>
+</tr>
+<tr class="odd">
+<td><strong>API et écrans</strong> (WebSocket, REST, MCP)</td>
+<td>dans le cœur, toujours</td>
+<td>écrans connectés, file par écran, instantanés servis, requêtes par seconde, p95</td>
+</tr>
+<tr class="even">
+<td><strong>Base d'historique</strong></td>
+<td>dans le cœur</td>
+<td>lots par seconde, <code>fsync</code> par seconde, retard <code>seq</code>, lignes de l'outbox en attente, taille du fichier</td>
+</tr>
+<tr class="odd">
+<td><strong>Sarah</strong> (l'assistant)</td>
+<td>isolé conseillé</td>
+<td>appels au modèle, jetons en entrée et en sortie, coût estimé, durée, « trop long », réponses coupées à leur borne (critique § 3.9)</td>
+</tr>
+<tr class="even">
+<td><strong>Modules api-to-mqtt</strong> (les intégrations)</td>
+<td>dans le cœur si validés, isolés sinon</td>
+<td>appels d'API (nombre ; erreurs : délai, refus, panne, transport ; réponses 429), durée p50 et p95, connexions ouvertes, <strong>connexions au cloud par jour</strong>, valeurs publiées, doublons écartés, ordres et issues, disjoncteur ouvert (V7 § 9.2)</td>
+</tr>
+<tr class="odd">
+<td><strong>Ponts radio</strong> : Zigbee2MQTT (voisin, client extérieur)</td>
+<td>son propre processus</td>
+<td>par <code>bridge/health</code> : sa mémoire, ses messages, sa file ; par appareil : messages, départs du réseau</td>
+</tr>
+<tr class="even">
+<td><strong>Gardien</strong> (document Redémarrage à chaud)</td>
+<td>son propre processus</td>
+<td>redémarrages du cœur, durée du dernier, taille et âge du relais en mémoire</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les connexions au cloud par jour méritent une ligne à part. Un module qui se reconnecte en boucle peut faire bloquer le compte de la maison par le fabricant. C'est une panne qui ne se voit ni au CPU ni à la mémoire.</p>
+</section>
+</section>
+<section id="5-le-cpu-dun-module-dans-le-cœur" class="level2">
+<h2>5. Le CPU d'un module dans le cœur</h2>
+<p><strong>Aujourd'hui, une approximation.</strong> Tous les pilotes partagent le runtime (<code>supervisor.rs:31</code>). Le noyau ne voit que les fils de <code>tokio</code>, pas les pilotes. <code>TaskMonitor</code> de <code>tokio-metrics</code> (0.5.2), décidé par D8, instrumente une tâche et donne, entre autres, la durée moyenne d'un <code>poll</code>, la part des <code>poll</code> lents, la durée moyenne d'attente et d'inactivité. La somme des durées de <code>poll</code> d'un pilote est une bonne approximation de son CPU, avec deux défauts :</p>
+<ul>
+<li>un appel bloquant fait dans un <code>poll</code> compte comme du calcul ;</li>
+<li>un fil que le système suspend au milieu d'un <code>poll</code> compte aussi.</li>
+</ul>
+<p><strong>Avec un fil par module (V7 § 20.1), une mesure exacte.</strong> Chaque module a son fil, nommé <code>pilote-&lt;instance&gt;</code>, et son runtime <code>current_thread</code>. Deux mesures en sortent :</p>
+<ul>
+<li><strong>le noyau</strong> compte le temps de ce fil sur le processeur, en nanosecondes ; l'observatoire le lit de l'extérieur, sans réveiller le module ;</li>
+<li><strong><code>tokio</code> 1.54</strong> donne pour ce runtime le temps occupé (<code>worker_total_busy_duration</code>) et le nombre de fois où il s'est endormi puis réveillé (<code>worker_park_unpark_count</code>). Dans les sources de <code>tokio</code> 1.54.1, ces deux mesures sont sous <code>cfg_64bit_metrics!</code> : stables, sans <code>tokio_unstable</code>, sur une machine 64 bits comme le Pi Zero 2 W sous un système 64 bits. Le reste des métriques par worker demande <code>tokio_unstable</code> (<code>runtime/metrics/runtime.rs:104-249</code>).</li>
+</ul>
+<p>Les réveils sont la mesure qui prouve la règle « une brique inactive ne coûte rien » (PERFORMANCE.md) : un module au repos ne se réveille pas. D8 le visait avec « <code>0 poll</code> » ; le fil par module le donne directement.</p>
+<p><strong>Le CPU qu'un module fait dépenser aux autres.</strong> Un module qui publie beaucoup fait travailler le courtier (3,3 µs de CPU du routeur par message, V7 § 11.4.5) et le hub. Ce coût n'est pas sur son fil. L'écran le montre à part, comme <strong>coût induit</strong> : messages × coût unitaire mesuré. Il n'est jamais ajouté à son CPU propre.</p>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>lire le CPU d'un module dans le cœur (proposé)</figcaption><pre class="rust"><code>/// Le temps passé sur le processeur par le fil d&#39;un module, en nanosecondes.
+/// `/proc/self/task/&lt;tid&gt;/schedstat` : « temps sur le processeur, temps d&#39;attente, tranches ».
+/// Lu par l&#39;observatoire : le module n&#39;est pas réveillé pour ça.
+fn cpu_ns(tid: i32) -&gt; Option&lt;u64&gt; {
+    let ligne = std::fs::read_to_string(format!(&quot;/proc/self/task/{tid}/schedstat&quot;)).ok()?;
+    ligne.split_whitespace().next()?.parse().ok()
+}
+
+// Au lancement du fil d&#39;un module (V7 § 20.1), le kit note son numéro de fil
+// (`rustix::thread::gettid()`, sans `unsafe`) et garde le `Handle` de son runtime.
+// À chaque relevé, l&#39;observatoire lit, pour ce runtime `current_thread` (un seul worker, le n° 0) :
+let m = handle.metrics();
+let occupe = m.worker_total_busy_duration(0);  // stable en 64 bits (tokio 1.54)
+let reveils = m.worker_park_unpark_count(0);   // idem : un module au repos ne se réveille pas</code></pre></figure>
+</section>
+<section id="6-la-mémoire-dun-module-dans-le-cœur--la-seule-mesure-difficile" class="level2">
+<h2>6. La mémoire d'un module dans le cœur : la seule mesure difficile</h2>
+<p><strong>Pourquoi c'est difficile.</strong> Dans le cœur, tous les modules partagent un tas et un allocateur : celui de musl, que la V7 garde (§ 11.4.6). Un octet ne sait pas qui l'a demandé. Pire, il change souvent de main : un module construit un message, et c'est le fil du courtier qui le libère, quand le segment qui le garde tourne. Un compteur par fil se trompe donc dans les deux sens : le module semble fuir, le courtier semble rendre de la mémoire qu'il n'a jamais prise.</p>
+<p><strong>Analogie : Erlang.</strong> Chaque processus Erlang a son propre tas. <code>process_info(Pid, memory)</code> donne « la taille en octets du processus », pile, tas et structures internes comprises, et <code>reductions</code> le travail qu'il a fait. La mesure est simple parce que les tas sont séparés, pas parce que l'instrument est plus fin. La leçon vaut ici : <strong>la mémoire d'un module n'est exacte que s'il a sa propre mémoire</strong>, c'est-à-dire s'il est isolé.</p>
+<p><strong>Analyse morphologique</strong> : les façons de mesurer, côte à côte.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Comment</th>
+<th>Exactitude</th>
+<th>Coût</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A. <strong>La mémoire tenue par le kit</strong></td>
+<td>le kit additionne ce qu'il tient pour le module : files, voies, caches d'appareils (longueur × taille)</td>
+<td>partielle : ne voit pas une fuite hors du kit</td>
+<td>presque rien</td>
+<td><strong>toujours</strong></td>
+</tr>
+<tr class="even">
+<td>B. Un compteur par fil, sans étiquette</td>
+<td>l'allocateur ajoute à son fil ce qu'il alloue, retire ce qu'il libère</td>
+<td>fausse dès qu'un octet change de fil (ci-dessus)</td>
+<td>une ou deux nanosecondes par allocation</td>
+<td><strong>seulement comme débit</strong> : les octets alloués par seconde, qui disent qu'un module « brasse »</td>
+</tr>
+<tr class="odd">
+<td>C. <strong>Une étiquette par allocation</strong>, à la façon de Vector</td>
+<td>un octet placé après chaque allocation porte le numéro du module qui l'a faite ; la libération le relit, quel que soit le fil qui libère</td>
+<td>exacte, même quand un autre fil libère</td>
+<td>un octet, arrondi à l'alignement, par allocation vivante ; quelques nanosecondes par allocation ; Vector annonce environ 20 % de débit en moins sur ses tests, et rien quand c'est éteint</td>
+<td><strong>en option de construction</strong>, après mesure sur le Pi</td>
+</tr>
+<tr class="even">
+<td>D. Une arène par module (<code>jemalloc</code>, <code>thread.arena</code>)</td>
+<td>chaque fil alloue dans son arène ; les statistiques sont tenues par arène</td>
+<td>exacte</td>
+<td>un autre allocateur : la V7 garde celui de musl, <code>mimalloc</code> y coûtait +0,5 à +2,6 Mio (§ 11.4.6)</td>
+<td>non</td>
+</tr>
+<tr class="odd">
+<td>E. <strong>Isoler pour mesurer</strong></td>
+<td>relancer le module dans son processus et lire <code>Pss_Anon</code></td>
+<td>exacte</td>
+<td>577 Kio de plus pendant la mesure (V3, Linux musl), et une bascule (§ 11.4)</td>
+<td><strong>la vérité de terrain, à la demande</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Ce que je propose.</strong></p>
+<ol type="1">
+<li><strong>Toujours, la mémoire tenue par le kit (A) et le débit d'allocation (B).</strong> Pour chaque module, l'écran affiche « estimée » à côté du chiffre.</li>
+<li><strong>Toujours, la part non expliquée.</strong> C'est la mémoire anonyme du cœur, lue dans le cgroup comme le budget, moins ce que les comptes expliquent : les modules (A) et les structures du hub, dont la V7 donne la taille (§ 11.4). Tant qu'elle reste plate, rien à dire. Si elle monte, un module fuit hors de ce que le kit voit, et l'observatoire propose l'étape 4.</li>
+<li><strong>En option de construction, l'étiquette (C)</strong>, telle que Vector l'a faite (v0.27.0, décembre 2022, <code>--allocation-tracing</code>) : un octet de numéro de module après chaque allocation.
+<ul>
+<li>L'interrupteur est fixé <strong>à la construction</strong> du binaire, pas pendant la marche. Le code de Vector lit son interrupteur à chaque allocation et à chaque libération : si on l'allume en route, un bloc alloué avant sera libéré comme s'il portait une étiquette qu'il n'a pas.</li>
+<li>Passer au binaire de mesure coûte un redémarrage, qui ne perd rien avec le document Redémarrage à chaud.</li>
+<li>L'écran affiche alors « étiquetée ».</li>
+<li>Une limite, comme chez Vector : la mémoire est comptée <strong>à qui l'a allouée</strong>, même si un autre la garde. Un message construit par un module et gardé par le courtier reste compté au module. C'est la bonne réponse à « qu'est-ce que ce module fait garder ? ».</li>
+</ul></li>
+<li><strong>À la demande, isoler pour mesurer (E).</strong> « Mesurer exactement pendant 24 h » relance le module isolé, lit sa mémoire exacte, puis le remet à sa place. L'écran affiche « mesurée ».</li>
+</ol>
+<p><strong>Une exception à une règle du dépôt.</strong> Un allocateur global s'écrit avec <code>unsafe</code> (<code>unsafe impl GlobalAlloc</code>), et l'espace de travail l'interdit (<code>unsafe_code = "forbid"</code>, <code>Cargo.toml:110</code>). Deux voies :</p>
+<ul>
+<li>une crate à nous d'une soixantaine de lignes, seule exception nommée, relue et passée sous Miri ;</li>
+<li>la crate <code>tracking-allocator</code> (0.4.0), qui porte l'<code>unsafe</code> à notre place.</li>
+</ul>
+<p>Comme l'option ne vit que dans le binaire de mesure, le binaire de production reste sans <code>unsafe</code>.</p>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>l'étiquette d'un octet, dans le binaire de mesure seulement (esquisse)</figcaption><pre class="rust"><code>// moli-alloc : la seule crate qui contient `unsafe`, compilée avec la fonction « mesure-memoire ».
+// Un octet après chaque allocation porte le numéro du module qui l&#39;a faite (0 : le cœur lui-même).
+thread_local! { static MODULE: Cell&lt;u8&gt; = const { Cell::new(0) }; }  // posé au lancement du fil du module
+static VIVANTS: [AtomicI64; 256] = [const { AtomicI64::new(0) }; 256];
+
+unsafe impl GlobalAlloc for Etiquete {
+    unsafe fn alloc(&amp;self, l: Layout) -&gt; *mut u8 {
+        let (env, ici) = enveloppe(l);                        // l étendu d&#39;un octet, puis aligné
+        let p = unsafe { System.alloc(env) };
+        if !p.is_null() {
+            let m = MODULE.with(Cell::get);
+            unsafe { p.add(ici).write(m) };
+            VIVANTS[usize::from(m)].fetch_add(env.size() as i64, Relaxed);
+        }
+        p
+    }
+    unsafe fn dealloc(&amp;self, p: *mut u8, l: Layout) {
+        let (env, ici) = enveloppe(l);
+        let m = unsafe { p.add(ici).read() };                 // qui l&#39;a faite, pas qui la libère
+        VIVANTS[usize::from(m)].fetch_sub(env.size() as i64, Relaxed);
+        unsafe { System.dealloc(p, env) };
+    }
+    // `realloc` garde l&#39;étiquette d&#39;origine ; la version par défaut passerait par alloc et dealloc.
+}</code></pre></figure>
+</section>
+<section id="7-les-messages-mqtt-module-par-module" class="level2">
+<h2>7. Les messages MQTT, module par module</h2>
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 350" role="img" aria-labelledby="compter-t compter-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="compter-t">Où se comptent les messages MQTT</title>
+          <desc id="compter-d">À gauche, les modules du cœur passent par le kit, qui compte, puis par un seul lien en mémoire. À droite, chaque module isolé et chaque client extérieur a sa connexion, que le courtier compte.</desc>
+          <defs>
+            <marker id="compter-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="compter-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="compter-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="compter-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <rect x="16.0" y="36.0" width="380.0" height="242.0" rx="10" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="30.0" y="58.0" font-size="12.5" fill="#1d302a" font-weight="700">Le cœur</text>
+          <rect x="32.0" y="74.0" width="110.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="87.0" y="90.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">Hue</text>
+          <line x1="142.0" y1="86.0" x2="206.0" y2="86.0" stroke="#52615a" stroke-width="1.3"/>
+          <rect x="32.0" y="118.0" width="110.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="87.0" y="134.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">Tuya</text>
+          <line x1="142.0" y1="130.0" x2="206.0" y2="130.0" stroke="#52615a" stroke-width="1.3"/>
+          <rect x="32.0" y="162.0" width="110.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="87.0" y="178.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">Sonos</text>
+          <line x1="142.0" y1="174.0" x2="206.0" y2="174.0" stroke="#52615a" stroke-width="1.3"/>
+          <rect x="32.0" y="206.0" width="110.0" height="24.0" rx="12" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="87.0" y="222.0" font-size="9.5" fill="#195744" font-weight="700" text-anchor="middle">pont maison</text>
+          <line x1="142.0" y1="218.0" x2="206.0" y2="218.0" stroke="#52615a" stroke-width="1.3"/>
+          <rect x="208.0" y="70.0" width="168.0" height="180.0" rx="8" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="220.0" y="90.0" font-size="11.5" fill="#b07d12" font-weight="700">Le kit compte</text>
+          <text x="220.0" y="112.0" font-size="9.8" fill="#1d302a">· publiés, octets</text>
+          <text x="220.0" y="130.0" font-size="9.8" fill="#1d302a">· ordres reçus, issues</text>
+          <text x="220.0" y="148.0" font-size="9.8" fill="#1d302a">· doublons écartés</text>
+          <text x="220.0" y="166.0" font-size="9.8" fill="#1d302a">· appels d'API, erreurs</text>
+          <text x="220.0" y="184.0" font-size="9.8" fill="#1d302a">· pire rafale sur 100 ms</text>
+          <text x="220.0" y="222.0" font-size="9.3" fill="#52615a">une addition atomique</text>
+          <text x="220.0" y="236.0" font-size="9.3" fill="#52615a">par message</text>
+          <rect x="452.0" y="104.0" width="156.0" height="110.0" rx="12" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="530.0" y="146.0" font-size="13.5" fill="#ffffff" font-weight="700" text-anchor="middle">Le courtier</text>
+          <text x="530.0" y="164.0" font-size="9.5" fill="#ffffff" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">moli-courtier</text>
+          <text x="530.0" y="190.0" font-size="9.3" fill="#ffffff" text-anchor="middle">compte par connexion</text>
+          <line x1="376.0" y1="160.0" x2="448.0" y2="160.0" stroke="#195744" stroke-width="2.2" marker-end="url(#compter-v)"/>
+          <text x="412.0" y="150.0" font-size="9.3" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">un seul lien</text>
+          <text x="412.0" y="176.0" font-size="9.3" fill="#52615a" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">en mémoire</text>
+          <rect x="680.0" y="52.0" width="300.0" height="42.0" rx="8" fill="#ffffff" stroke="#b07d12" stroke-width="1.5"/>
+          <text x="692.0" y="69.0" font-size="10.5" fill="#b07d12" font-weight="700">cloud-x, isolé</text>
+          <text x="692.0" y="85.0" font-size="9.2" fill="#52615a">entrées, sorties, octets, pertes</text>
+          <line x1="678.0" y1="73.0" x2="612.0" y2="135.5" stroke="#b07d12" stroke-width="1.5" marker-end="url(#compter-g)"/>
+          <rect x="680.0" y="122.0" width="300.0" height="42.0" rx="8" fill="#ffffff" stroke="#b07d12" stroke-width="1.5"/>
+          <text x="692.0" y="139.0" font-size="10.5" fill="#b07d12" font-weight="700">Sarah, isolée</text>
+          <text x="692.0" y="155.0" font-size="9.2" fill="#52615a">entrées, sorties, octets, pertes</text>
+          <line x1="678.0" y1="143.0" x2="612.0" y2="160.0" stroke="#b07d12" stroke-width="1.5" marker-end="url(#compter-g)"/>
+          <rect x="680.0" y="192.0" width="300.0" height="42.0" rx="8" fill="#ffffff" stroke="#52615a" stroke-width="1.5"/>
+          <text x="692.0" y="209.0" font-size="10.5" fill="#52615a" font-weight="700">Zigbee2MQTT, extérieur</text>
+          <text x="692.0" y="225.0" font-size="9.2" fill="#52615a">et son bridge/health : par appareil</text>
+          <line x1="678.0" y1="213.0" x2="612.0" y2="184.5" stroke="#52615a" stroke-width="1.5" marker-end="url(#compter-g)"/>
+          <text x="16.0" y="304.0" font-size="10.5" fill="#52615a">Dans le cœur, le courtier ne voit qu'un lien : c'est le kit qui compte, module par module. Isolé ou extérieur, chacun a sa</text>
+          <text x="16.0" y="320.0" font-size="10.5" fill="#52615a">connexion : c'est le courtier qui compte. rumqttd 0.20 tient déjà un compteur d'entrée par connexion, sans l'exposer ;</text>
+          <text x="16.0" y="336.0" font-size="10.5" fill="#52615a">notre version l'expose, compte aussi la sortie, retire la table par sujet qui fuit, et signale chaque perte.</text>
+        </svg>
+        <figcaption>Le kit compte pour les modules du cœur&nbsp;; le courtier compte pour les autres. La pire rafale sur 100&nbsp;ms se garde à côté du débit&nbsp;: c'est elle qui fait décrocher (V7 §&nbsp;17.1.2).</figcaption>
+      </figure>
+
+
+<p><strong>Les modules isolés : le courtier compte, sur leur connexion.</strong> Chacun a sa connexion à l'écouteur local (V7 § 9.4.2). Ce que <code>rumqttd</code> 0.20.0 fait, lu dans ses sources :</p>
+<ul>
+<li>un compteur d'entrée <strong>par connexion</strong> existe : chaque publication reçue passe par <code>IncomingMeter::register_publish</code> (<code>router/routing.rs:641-642</code>), qui tient un total en nombre et en octets, <strong>et une table par sujet</strong>, la fuite relevée par la V7 (« chaque connexion garde un compteur par sujet publié, 73 o », § 6.1) ;</li>
+<li><strong>la sortie n'est pas comptée</strong> : la ligne qui ajouterait la taille est commentée (<code>routing.rs:702-703</code>) ;</li>
+<li><strong>rien de cela n'est exposé</strong> : <code>send_meters</code> ne publie que le compteur du routeur (connexions, abonnements, publications et échecs, ces deux derniers remis à zéro à chaque lecture) et un compteur par filtre d'abonnement (<code>routing.rs:1152-1160</code>, <code>router/mod.rs:272-279</code>, <code>:307-312</code>) ;</li>
+<li>l'alerte de perte <code>CursorJump { filter, lost }</code> existe (<code>router/alertlog.rs:8-10</code>), mais la V7 a mesuré que son <code>lost</code> reste à 0.</li>
+</ul>
+<p>Dans <code>moli-courtier</code>, notre version : garder les totaux par connexion, dans les deux sens, en nombre et en octets ; supprimer la table par sujet ; exposer ces compteurs au hub ; corriger <code>lost</code>. Ce sont des endroits que la V7 touche déjà pour les ACL et le signal de perte (§ 6.1).</p>
+<p><strong>Les modules du cœur : le kit compte.</strong> Ils partagent un seul lien avec le courtier (« les modules du binaire partagent un seul lien abonné à <code>cmd/#</code> ; le kit répartit par module », V7 § 6.4). Le courtier ne peut donc pas les distinguer. Le kit le peut : chaque publication et chaque ordre réparti passent par lui. Coût : une addition atomique <code>Relaxed</code> par message, de l'ordre de la nanoseconde, à 239 messages par seconde à la pointe des deux maisons (V7).</p>
+<p><strong>Les clients extérieurs</strong> (Zigbee2MQTT, appareils MQTT) : leur connexion, comme un module isolé, et ce qu'ils disent d'eux-mêmes (<code>bridge/health</code> pour Zigbee2MQTT, § 4.1).</p>
+<p><strong>Par famille de sujets.</strong> <code>in/</code>, <code>val/</code>, <code>cmd/</code>, <code>req/</code>, <code>res/</code>, <code>evt/</code>, <code>wf/</code>, <code>sys/</code>, <code>repl/</code> : <code>rumqttd</code> tient déjà un compteur par filtre d'abonnement (<code>SubscriptionMeter</code>, nombre et taille). Notre version l'expose tel quel.</p>
+<p><strong>La rafale, plus que le débit.</strong> La V7 l'a mesuré : « ce n'est pas le débit qui fait décrocher le moteur actuel, c'est la profondeur d'une rafale instantanée » (§ 17.1.2). Le kit garde donc, pour chaque module, <strong>le plus grand nombre de messages publiés en 100 ms</strong> depuis le dernier relevé. Un pont qui republie tout à sa reconnexion se voit tout de suite.</p>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>ce que le kit compte pour chaque module (proposé)</figcaption><pre class="rust"><code>/// Des compteurs qui ne font que monter, écrits par le module, lus par l&#39;observatoire.
+/// 64 bits : jamais de retour à zéro ; les débits se calculent par différence entre deux relevés.
+#[derive(Debug, Default)]
+pub struct Compteurs {
+    pub publies: AtomicU64,        // in/, avail/, res/, $vu
+    pub octets_publies: AtomicU64,
+    pub recus: AtomicU64,          // ordres reçus sur cmd/
+    pub ecartes: AtomicU64,        // doublons écartés par le kit (V7 § 5.2)
+    pub appels: AtomicU64,         // appels d&#39;API, comptés par moli-net
+    pub erreurs: [AtomicU64; 4],   // délai, refus (4xx et 429), panne (5xx), transport
+    pub connexions: AtomicU64,     // connexions ouvertes vers l&#39;appareil ou le cloud
+    pub issues: [AtomicU64; 9],    // les neuf issues d&#39;un ordre (V7 § 5.6)
+    pub rafale_max: AtomicU32,     // le plus de messages publiés en 100 ms depuis le dernier relevé
+}</code></pre></figure>
+</section>
+<section id="8-ce-que-la-mesure-coûte" class="level2">
+<h2>8. Ce que la mesure coûte</h2>
+<p>Le budget de Sarah Home est de 0,5 % de CPU au repos et de 32 Mio de mémoire anonyme (PERFORMANCE.md). La mesure doit tenir dans une petite part de ce budget.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Poste</th>
+<th>Coût</th>
+<th>Nature</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Relevé à 60 s : une quarantaine de petits fichiers de <code>/proc</code> (40 fils, 5 processus)</td>
+<td>de 10 à 30 µs par fichier dans le conteneur de production, 8 à 10 fois plus sur un Pi (V7 § 21.3) : ≈ 9 ms par minute sur le Pi, <strong>0,015 % d'un cœur</strong></td>
+<td>estimé ; à mesurer (exp. M1)</td>
+</tr>
+<tr class="even">
+<td>Le même relevé à 10 s, page Système ouverte</td>
+<td>≈ 0,09 % sur le Pi</td>
+<td>estimé ; seulement quand quelqu'un regarde</td>
+</tr>
+<tr class="odd">
+<td><code>smaps_rollup</code>, toutes les 5 min, pour 5 processus</td>
+<td>quelques millisecondes</td>
+<td>estimé</td>
+</tr>
+<tr class="even">
+<td>Compteurs du kit</td>
+<td>une addition atomique par message</td>
+<td>invisible au rythme de la maison</td>
+</tr>
+<tr class="odd">
+<td>Étiquette mémoire (option C)</td>
+<td>quelques nanosecondes par allocation ; la mémoire, à mesurer</td>
+<td>exp. M3</td>
+</tr>
+<tr class="even">
+<td>Courbes en mémoire</td>
+<td>≈ 342 Kio pour 40 modules (tableau ci-dessous)</td>
+<td>calculé</td>
+</tr>
+<tr class="odd">
+<td>Écritures sur la carte</td>
+<td>les agrégats de 15 min : 40 modules × 6 courbes × 96 = <strong>23 040 lignes par jour</strong>, dans les lots de la base (D13 : 100 ms ou 500 opérations au plus), famille <code>diagnostic</code> (7 jours, jamais archivée)</td>
+<td>calculé ; le volume en octets est à mesurer</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les courbes, rangées en entiers de 16 bits : le CPU en millièmes d'un cœur, la mémoire en pages de 4 Kio (jusqu'à 256 Mio), les messages en dixièmes par seconde (jusqu'à 6 553 par seconde).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Étage</th>
+<th>Pas</th>
+<th>Durée</th>
+<th>Courbes par module</th>
+<th>Octets par courbe</th>
+<th>Pour 40 modules</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Direct</td>
+<td>10 s</td>
+<td>30 min</td>
+<td>3 : CPU, mémoire, messages</td>
+<td>180 × 2 o = 360 o</td>
+<td>42 Kio</td>
+</tr>
+<tr class="even">
+<td>Jour</td>
+<td>5 min</td>
+<td>24 h</td>
+<td>6, moyenne et pointe</td>
+<td>288 × 2 × 2 o = 1 152 o</td>
+<td>270 Kio</td>
+</tr>
+<tr class="odd">
+<td>Semaine</td>
+<td>15 min</td>
+<td>7 jours</td>
+<td>6</td>
+<td>en base</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>La machine</td>
+<td>10 s et 5 min</td>
+<td>30 min et 24 h</td>
+<td>20</td>
+<td>1 512 o</td>
+<td>30 Kio</td>
+</tr>
+<tr class="odd">
+<td><strong>Total en mémoire</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>≈ 342 Kio</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>La mesure ne réveille rien.</strong> L'observatoire a une seule minuterie, toutes les 60 s, ou 10 s quand un écran regarde la page Système. Il lit les fichiers du noyau et des compteurs atomiques, sans jamais réveiller un module. Un module au repos reste à zéro réveil.</p>
+</section>
+<section id="9-ce-quon-voit-et-qui-le-voit" class="level2">
+<h2>9. Ce qu'on voit, et qui le voit</h2>
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 408" role="img" aria-labelledby="systeme-t systeme-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="systeme-t">La page Système, avec ses modules</title>
+          <desc id="systeme-d">Une ligne dit si la maison tient. Dessous, un module par ligne : sa place, son CPU, sa mémoire et sa nature, ses messages, sa pire rafale, ses erreurs, ses relances et sa barre de budget. Puis les gestes de la fiche d'un module.</desc>
+          <rect x="16.0" y="18.0" width="968.0" height="46.0" rx="8" fill="#f1f4ee" stroke="#195744" stroke-width="1.4"/>
+          <text x="30.0" y="47.0" font-size="13.5" fill="#195744" font-weight="700">La maison tient</text>
+          <text x="160.0" y="47.0" font-size="11" fill="#1d302a">mémoire anonyme 9,1 Mio sur 32 · CPU au repos 0,21 % · pression 0 % · aucune alerte</text>
+          <text x="970.0" y="47.0" font-size="9.5" fill="#52615a" text-anchor="end" font-style="italic">valeurs d'exemple</text>
+          <text x="24.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">Module</text>
+          <text x="150.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">Place</text>
+          <text x="232.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">CPU</text>
+          <text x="300.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">Mémoire</text>
+          <text x="470.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">Messages/s</text>
+          <text x="570.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">Rafale</text>
+          <text x="650.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">Erreurs</text>
+          <text x="730.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">Relances 24 h</text>
+          <text x="850.0" y="90.0" font-size="10" fill="#52615a" font-weight="700">Budget</text>
+          <line x1="16.0" y1="98.0" x2="984.0" y2="98.0" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="24.0" y="122.0" font-size="11" fill="#1d302a" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">hub</text>
+          <rect x="150.0" y="107.0" width="56.0" height="21.0" rx="10" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="178.0" y="122.0" font-size="9.5" fill="#ffffff" font-weight="700" text-anchor="middle">cœur</text>
+          <text x="232.0" y="122.0" font-size="10.5" fill="#1d302a">0,4 %</text>
+          <text x="300.0" y="122.0" font-size="10.5" fill="#1d302a">2,1 Mio</text>
+          <rect x="372.0" y="108.0" width="72.0" height="19.0" rx="9" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="408.0" y="122.0" font-size="9" fill="#52615a" font-weight="700" text-anchor="middle">estimée</text>
+          <text x="470.0" y="122.0" font-size="10.5" fill="#1d302a">3,8</text>
+          <text x="570.0" y="122.0" font-size="10.5" fill="#1d302a">41</text>
+          <text x="650.0" y="122.0" font-size="10.5" fill="#1d302a">0</text>
+          <text x="730.0" y="122.0" font-size="10.5" fill="#1d302a">0</text>
+          <rect x="850.0" y="111.0" width="120.0" height="10.0" rx="5" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="850.0" y="111.0" width="36.0" height="10.0" rx="5" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <line x1="16.0" y1="133.0" x2="984.0" y2="133.0" stroke="#d4ddd4" stroke-width="0.8"/>
+          <text x="24.0" y="154.0" font-size="11" fill="#1d302a" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">courtier</text>
+          <rect x="150.0" y="139.0" width="56.0" height="21.0" rx="10" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="178.0" y="154.0" font-size="9.5" fill="#ffffff" font-weight="700" text-anchor="middle">cœur</text>
+          <text x="232.0" y="154.0" font-size="10.5" fill="#1d302a">0,3 %</text>
+          <text x="300.0" y="154.0" font-size="10.5" fill="#1d302a">2,7 Mio</text>
+          <rect x="372.0" y="140.0" width="72.0" height="19.0" rx="9" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="408.0" y="154.0" font-size="9" fill="#52615a" font-weight="700" text-anchor="middle">estimée</text>
+          <text x="470.0" y="154.0" font-size="10.5" fill="#1d302a">7,6</text>
+          <text x="570.0" y="154.0" font-size="10.5" fill="#1d302a">96</text>
+          <text x="650.0" y="154.0" font-size="10.5" fill="#1d302a">0 perte</text>
+          <text x="730.0" y="154.0" font-size="10.5" fill="#1d302a">0</text>
+          <rect x="850.0" y="143.0" width="120.0" height="10.0" rx="5" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="850.0" y="143.0" width="48.0" height="10.0" rx="5" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <line x1="16.0" y1="165.0" x2="984.0" y2="165.0" stroke="#d4ddd4" stroke-width="0.8"/>
+          <text x="24.0" y="186.0" font-size="11" fill="#1d302a" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">hue</text>
+          <rect x="150.0" y="171.0" width="56.0" height="21.0" rx="10" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="178.0" y="186.0" font-size="9.5" fill="#ffffff" font-weight="700" text-anchor="middle">cœur</text>
+          <text x="232.0" y="186.0" font-size="10.5" fill="#1d302a">0,1 %</text>
+          <text x="300.0" y="186.0" font-size="10.5" fill="#1d302a">410 Kio</text>
+          <rect x="372.0" y="172.0" width="72.0" height="19.0" rx="9" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="408.0" y="186.0" font-size="9" fill="#b07d12" font-weight="700" text-anchor="middle">étiquetée</text>
+          <text x="470.0" y="186.0" font-size="10.5" fill="#1d302a">0,6</text>
+          <text x="570.0" y="186.0" font-size="10.5" fill="#1d302a">12</text>
+          <text x="650.0" y="186.0" font-size="10.5" fill="#1d302a">0</text>
+          <text x="730.0" y="186.0" font-size="10.5" fill="#1d302a">0</text>
+          <rect x="850.0" y="175.0" width="120.0" height="10.0" rx="5" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="850.0" y="175.0" width="24.0" height="10.0" rx="5" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <line x1="16.0" y1="197.0" x2="984.0" y2="197.0" stroke="#d4ddd4" stroke-width="0.8"/>
+          <text x="24.0" y="218.0" font-size="11" fill="#1d302a" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">tuya</text>
+          <rect x="150.0" y="203.0" width="56.0" height="21.0" rx="10" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="178.0" y="218.0" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle">isolé</text>
+          <text x="232.0" y="218.0" font-size="10.5" fill="#1d302a">0,2 %</text>
+          <text x="300.0" y="218.0" font-size="10.5" fill="#1d302a">1,3 Mio</text>
+          <rect x="372.0" y="204.0" width="72.0" height="19.0" rx="9" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="408.0" y="218.0" font-size="9" fill="#195744" font-weight="700" text-anchor="middle">mesurée</text>
+          <text x="470.0" y="218.0" font-size="10.5" fill="#1d302a">0,9</text>
+          <text x="570.0" y="218.0" font-size="10.5" fill="#1d302a">8</text>
+          <text x="650.0" y="218.0" font-size="10.5" fill="#1d302a">2 délais</text>
+          <text x="730.0" y="218.0" font-size="10.5" fill="#1d302a">1</text>
+          <rect x="850.0" y="207.0" width="120.0" height="10.0" rx="5" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="850.0" y="207.0" width="54.0" height="10.0" rx="5" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <line x1="16.0" y1="229.0" x2="984.0" y2="229.0" stroke="#d4ddd4" stroke-width="0.8"/>
+          <text x="24.0" y="250.0" font-size="11" fill="#1d302a" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">sarah</text>
+          <rect x="150.0" y="235.0" width="56.0" height="21.0" rx="10" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="178.0" y="250.0" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle">isolé</text>
+          <text x="232.0" y="250.0" font-size="10.5" fill="#1d302a">0,0 %</text>
+          <text x="300.0" y="250.0" font-size="10.5" fill="#1d302a">4,8 Mio</text>
+          <rect x="372.0" y="236.0" width="72.0" height="19.0" rx="9" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="408.0" y="250.0" font-size="9" fill="#195744" font-weight="700" text-anchor="middle">mesurée</text>
+          <text x="470.0" y="250.0" font-size="10.5" fill="#1d302a">0,1</text>
+          <text x="570.0" y="250.0" font-size="10.5" fill="#1d302a">1</text>
+          <text x="650.0" y="250.0" font-size="10.5" fill="#1d302a">0</text>
+          <text x="730.0" y="250.0" font-size="10.5" fill="#1d302a">0</text>
+          <rect x="850.0" y="239.0" width="120.0" height="10.0" rx="5" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="850.0" y="239.0" width="72.0" height="10.0" rx="5" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <line x1="16.0" y1="261.0" x2="984.0" y2="261.0" stroke="#d4ddd4" stroke-width="0.8"/>
+          <text x="24.0" y="282.0" font-size="11" fill="#8b3b22" font-weight="700" font-family="SFMono-Regular, Consolas, monospace">cloud-x</text>
+          <rect x="150.0" y="267.0" width="56.0" height="21.0" rx="10" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="178.0" y="282.0" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle">isolé</text>
+          <text x="232.0" y="282.0" font-size="10.5" fill="#1d302a">1,9 %</text>
+          <text x="300.0" y="282.0" font-size="10.5" fill="#8b3b22" font-weight="700">7,4 Mio</text>
+          <rect x="372.0" y="268.0" width="72.0" height="19.0" rx="9" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="408.0" y="282.0" font-size="9" fill="#195744" font-weight="700" text-anchor="middle">mesurée</text>
+          <text x="470.0" y="282.0" font-size="10.5" fill="#1d302a">2,4</text>
+          <text x="570.0" y="282.0" font-size="10.5" fill="#8b3b22" font-weight="700">380</text>
+          <text x="650.0" y="282.0" font-size="10.5" fill="#1d302a">14</text>
+          <text x="730.0" y="282.0" font-size="10.5" fill="#8b3b22" font-weight="700">3</text>
+          <rect x="850.0" y="271.0" width="120.0" height="10.0" rx="5" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="850.0" y="271.0" width="120.0" height="10.0" rx="5" fill="#8b3b22" stroke="#8b3b22" stroke-width="1"/>
+          <line x1="16.0" y1="293.0" x2="984.0" y2="293.0" stroke="#d4ddd4" stroke-width="0.8"/>
+          <rect x="24.0" y="324.0" width="71.2" height="28.0" rx="14" fill="#ffffff" stroke="#195744" stroke-width="1.5"/>
+          <text x="59.6" y="342.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle">Relancer</text>
+          <rect x="109.2" y="324.0" width="109.6" height="28.0" rx="14" fill="#ffffff" stroke="#b07d12" stroke-width="1.5"/>
+          <text x="164.0" y="342.0" font-size="10" fill="#b07d12" font-weight="700" text-anchor="middle">Relancer isolé</text>
+          <rect x="232.8" y="324.0" width="192.8" height="28.0" rx="14" fill="#ffffff" stroke="#195744" stroke-width="1.5"/>
+          <text x="329.2" y="342.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle">Relancer dans le cœur · PIN</text>
+          <rect x="439.6" y="324.0" width="180.0" height="28.0" rx="14" fill="#ffffff" stroke="#52615a" stroke-width="1.5"/>
+          <text x="529.6" y="342.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">Mesurer exactement (24 h)</text>
+          <text x="641.6" y="342.0" font-size="10" fill="#52615a">← la fiche d'un module</text>
+          <text x="16.0" y="378.0" font-size="10.5" fill="#52615a">La nature de chaque mémoire est dite : mesurée (son processus), étiquetée (binaire de mesure), estimée (ce que tient le kit).</text>
+          <text x="16.0" y="395.0" font-size="10.5" fill="#52615a">Ici, cloud-x dépasse son budget de mémoire et de rafale : une alerte à l'astreinte ; à deux fois le budget, il resterait isolé à sa prochaine relance.</text>
+        </svg>
+        <figcaption>Exemple aux valeurs fictives. Lire&nbsp;: tout le foyer et les agents&nbsp;; rentrer un module dans le cœur&nbsp;: une session PIN&nbsp;; un agent qui le demande passe par la garde.</figcaption>
+      </figure>
+
+
+<p><strong>La page Système</strong> (<code>#/systeme</code>, <code>web/src/maison/pages/Systeme.svelte</code>) garde sa carte vivante et son duel avec Home Assistant. Elle gagne trois choses :</p>
+<ul>
+<li><strong>une ligne en tête</strong> : « la maison tient » ou non, et pourquoi (le budget, la pression, une alerte en cours) ;</li>
+<li><strong>la liste des modules</strong> : place (cœur ou isolé), état, CPU, mémoire avec sa nature (mesurée, étiquetée, estimée), messages, pire rafale, appels et erreurs, relances sur 24 h, et une barre par rapport au budget ;</li>
+<li><strong>la fiche d'un module</strong> : ses courbes, ses dernières erreurs, ses connexions, et trois gestes : « Relancer », « Relancer isolé » ou « Relancer dans le cœur », « Mesurer exactement (24 h) ».</li>
+</ul>
+<p><strong>Les surfaces</strong>, en REST et en MCP, comme tout le reste (règle 8) :</p>
+<ul>
+<li><code>GET /api/system/modules</code>, la liste ;</li>
+<li><code>GET /api/system/modules/{id}/courbes?etage=jour</code>, les courbes ;</li>
+<li><code>POST /api/system/modules/{id}/relancer</code> avec <code>{"mode": "coeur" | "isole" | "inchange"}</code> ;</li>
+<li>en MCP, <code>systeme_modules</code> en lecture et <code>relancer_module</code>.</li>
+</ul>
+<p><strong>Qui peut quoi.</strong></p>
+<ul>
+<li><strong>Lire</strong> : tout le foyer, et les agents.</li>
+<li><strong>Relancer un module dans le même mode, l'isoler, le mesurer</strong> : comme une commande du foyer. Un agent passe par la garde : sa demande devient une approbation qu'un humain valide (202).</li>
+<li><strong>Rentrer un module dans le cœur</strong> : une session PIN, comme valider un automatisme, parce que c'est donner sa confiance à un code.</li>
+<li>Tous les textes passent par <code>t('systeme.…')</code> et <code>tr!("systeme.…")</code>, en français et en anglais (traduction.md).</li>
+</ul>
+</section>
+<section id="10-les-alertes" class="level2">
+<h2>10. Les alertes</h2>
+<p>Une alerte va à <strong>l'astreinte</strong> : le propriétaire, par une notice et par son bot Telegram, le canal qui existe déjà. Jamais à un invité ni à un enfant. Elle est groupée par incident : un message qui dit ce qui se passe et quoi faire, pas un message par relevé. Aux heures calmes, elle attend le matin, sauf si un module important est touché : l'alarme, une serrure, un détecteur de fumée.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Règle</th>
+<th>Seuil de départ (à régler)</th>
+<th>Ce qui suit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Une perte de messages signalée par le courtier</td>
+<td>dès la première</td>
+<td>alerte tout de suite</td>
+</tr>
+<tr class="even">
+<td>Un module relancé 3 fois en 10 min</td>
+<td>—</td>
+<td>alerte, avec la dernière erreur</td>
+</tr>
+<tr class="odd">
+<td>La mémoire d'un module au-dessus de son budget</td>
+<td>15 min au-dessus</td>
+<td>alerte ; à <strong>deux fois</strong> le budget, il est isolé à sa prochaine relance (§ 11.2)</td>
+</tr>
+<tr class="even">
+<td>Une mémoire qui monte sans redescendre</td>
+<td>un nouveau maximum chaque heure, 6 h de suite</td>
+<td>alerte « fuite probable » ; l'observatoire propose « Mesurer exactement »</td>
+</tr>
+<tr class="odd">
+<td>La part non expliquée du cœur qui monte</td>
+<td>idem</td>
+<td>idem, sans nom de module : la fuite est hors du kit</td>
+</tr>
+<tr class="even">
+<td>Le CPU d'un module au-dessus de son budget</td>
+<td>15 min</td>
+<td>alerte</td>
+</tr>
+<tr class="odd">
+<td>La pression processeur ou mémoire de la machine</td>
+<td><code>some avg60</code> au-dessus de 20 % pendant 5 min</td>
+<td>alerte</td>
+</tr>
+<tr class="even">
+<td>La mémoire disponible de la machine</td>
+<td>sous 15 %</td>
+<td>alerte</td>
+</tr>
+<tr class="odd">
+<td>Le bridage du Pi</td>
+<td>en cours ; ou une sous-tension depuis l'allumage</td>
+<td>alerte</td>
+</tr>
+<tr class="even">
+<td>Les écritures sur la carte</td>
+<td>au-dessus du budget du jour (à fixer avec l'étude HA v2 : l'instantané horaire y fait 5,7 Mo par jour)</td>
+<td>alerte</td>
+</tr>
+<tr class="odd">
+<td>Une rafale au-dessus du budget du module</td>
+<td>—</td>
+<td>alerte, avec le module et l'heure</td>
+</tr>
+<tr class="even">
+<td>Le budget de la maison</td>
+<td>mémoire anonyme au-dessus de 32 Mio ; CPU au repos au-dessus de 0,5 % sur 30 min, aucun écran ouvert</td>
+<td>alerte : c'est la règle de PERFORMANCE.md, mesurée en continu</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le budget de chaque module se déclare dans son paquet, à côté de son manifeste. L'observatoire le mesure : au bout de 7 jours, il propose un budget mesuré, qu'un humain accepte.</p>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>le budget d'un module, dans son paquet (proposé)</figcaption><pre class="toml"><code># integrations/&lt;id&gt;/integration.toml
+[budget]
+memoire = &quot;6MiB&quot;      # au-delà 15 min : alerte ; deux fois au-delà : isolé à la prochaine relance
+cpu = &quot;1%&quot;            # d&#39;un cœur, en moyenne sur 5 min
+messages = &quot;20/s&quot;     # publiés, en moyenne sur 5 min
+rafale = 500          # messages publiés en 100 ms, au plus</code></pre></figure>
+</section>
+<section id="11-dans-le-cœur-ou-isolé--où-tourne-un-module" class="level2">
+<h2>11. Dans le cœur ou isolé : où tourne un module</h2>
+<section id="111-ce-que-chaque-place-arrête-et-ce-quelle-coûte" class="level3">
+<h3>11.1 Ce que chaque place arrête, et ce qu'elle coûte</h3>
+<p>La V7 l'a établi (§ 9.4.1), en bref :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Défaillance d'un module</th>
+<th>Dans le cœur, sur son fil</th>
+<th>Isolé, dans son processus</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Panique</td>
+<td>arrêtée : <code>catch_unwind</code> du superviseur (<code>supervisor.rs:38</code>)</td>
+<td>arrêtée</td>
+</tr>
+<tr class="even">
+<td>Appel bloquant, boucle sans attente, calcul long</td>
+<td>arrêtés pour les autres (V2 C1, V4)</td>
+<td>arrêtés</td>
+</tr>
+<tr class="odd">
+<td><code>abort</code>, débordement de pile, bibliothèque C qui écrit hors de sa mémoire</td>
+<td><strong>non</strong> : tout le processus tombe</td>
+<td><strong>arrêtés</strong></td>
+</tr>
+<tr class="even">
+<td>Fuite de mémoire</td>
+<td><strong>non</strong> : elle mange le budget de tous</td>
+<td><strong>arrêtée</strong>, avec une limite de mémoire</td>
+</tr>
+<tr class="odd">
+<td>Coût</td>
+<td><strong>19 Kio</strong> par fil (Linux musl)</td>
+<td><strong>577 Kio</strong> par processus minimal (V3), trente fois plus ; avec MQTT au centre, c'est le seul coût, plus un passage par TCP local au lieu d'un lien en mémoire (V7 § 9.4.2)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Isoler un module ne change rien à la confiance : notre code est de confiance dans les deux places (V7 § 6.2). On paie de la mémoire et un passage par TCP local. Sur un Pi de 512 Mo, on isole les modules qui le méritent, pas tous.</p>
+</section>
+<section id="112-la-règle--dans-le-cœur-quand-il-est-validé" class="level3">
+<h3>11.2 La règle : dans le cœur quand il est validé</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Place par défaut</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Un module nouveau, ou écrit par un agent (la forge, D6), pas encore validé</td>
+<td><strong>isolé</strong></td>
+<td>la règle 9 le charge après validation ; isolé, il ne peut abattre que lui</td>
+</tr>
+<tr class="even">
+<td>Une nouvelle version d'un module déjà validé</td>
+<td><strong>isolée</strong>, le temps de faire ses preuves</td>
+<td>une version validée n'est pas la suivante</td>
+</tr>
+<tr class="odd">
+<td>Code tiers, FFI, SDK de fabricant, décodeur</td>
+<td><strong>isolé, toujours</strong></td>
+<td>un <code>abort</code> emporterait le cœur (V7 § 9.4.2)</td>
+</tr>
+<tr class="even">
+<td>Gros consommateur de mémoire : analyse d'images, modèle local</td>
+<td><strong>isolé, avec un plafond</strong></td>
+<td>V7 § 9.4.2</td>
+</tr>
+<tr class="odd">
+<td>Sarah (l'assistant)</td>
+<td><strong>isolé conseillé</strong></td>
+<td>elle attend un modèle pendant des secondes ; isolée, sa réponse survit à un redémarrage du cœur (critique § 3.11)</td>
+</tr>
+<tr class="even">
+<td>Un module validé : relu, vérifié par le catalogue, 7 jours isolé sans incident et dans son budget</td>
+<td><strong>dans le cœur</strong></td>
+<td>19 Kio au lieu de 577, aucun passage par TCP</td>
+</tr>
+<tr class="odd">
+<td>Un module du cœur qui a planté le processus, dépassé deux fois son budget, ou fui</td>
+<td><strong>retourne à l'isolé</strong></td>
+<td>le sens sûr ; voir plus bas</td>
+</tr>
+<tr class="even">
+<td>Le hub, le courtier, le moteur, l'API et les écrans ; les modules qui montent une passerelle HTTP partagée avec l'API (Cast, Android TV, téléphones, ordinateurs, Netatmo)</td>
+<td><strong>dans le cœur, toujours</strong></td>
+<td>ils sont le cœur, ou ils en partagent la porte (V7 § 9.4.2, crible G4)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Un module isolé garde ses besoins de service (le coffre, l'attente d'un humain, les images, les saisies privées). Il y accède par la socket locale authentifiée de la V7, jamais par le courtier (§ 9.4.2).</p>
+<p><strong>Rentrer dans le cœur est un geste humain, en sortir peut être automatique.</strong> C'est la même logique que le plancher de la critique des workflows : le sens risqué demande une personne, le sens sûr peut se faire seul. L'observatoire propose (« ce module tient depuis 7 jours dans son budget : le rentrer dans le cœur ? »), un humain valide avec son PIN. Le retour à l'isolé, lui, peut être automatique dans trois cas :</p>
+<ul>
+<li><strong>le cœur a planté et le dernier souffle désigne le module.</strong> Une panique nomme son fil. Le message de débordement de pile aussi (« thread '…' has overflowed its stack »), quand la plateforme le produit : sur musl et hors x86, un débordement peut finir en simple faute de segmentation, à vérifier sur la carte. Le gardien garde les dernières lignes de la sortie d'erreur du cœur pour les lire. Sans dernier souffle, le doute profite à la maison : les modules entrés dans le cœur depuis moins de 7 jours retournent à l'isolé, et l'astreinte décide ;</li>
+<li><strong>sa mémoire dépasse deux fois son budget</strong> ;</li>
+<li><strong>il a été relancé 3 fois en 10 min.</strong></li>
+</ul>
+</section>
+<section id="113-ce-que--validé--veut-dire" class="level3">
+<h3>11.3 Ce que « validé » veut dire</h3>
+<p>Une liste de preuves, gardées avec la version exacte du module (l'empreinte du binaire) :</p>
+<ol type="1">
+<li><strong>relu</strong> : un humain l'a validé, avec son PIN (règle 9) ;</li>
+<li><strong>vérifié</strong> : <code>moli-os catalogue check</code> passe, fixtures rejouées ;</li>
+<li><strong>observé</strong> : 7 jours isolé, sans panique ni relance anormale ;</li>
+<li><strong>dans son budget</strong> : mémoire, CPU, messages, rafale ;</li>
+<li><strong>stable</strong> : aucune mémoire qui monte sans redescendre sur la période ;</li>
+<li><strong>sans <code>unsafe</code> ni FFI</strong>, ou alors il reste isolé quoi qu'il arrive.</li>
+</ol>
+<p>Une nouvelle version repart de l'étape 3 : elle tourne isolée pendant que l'ancienne a cédé sa place. Le document Redémarrage à chaud montre qu'une version neuve d'un module peut même tourner isolée à côté d'un cœur resté à l'ancienne version, tant que le contrat <code>moli/v1/</code> ne change pas.</p>
+</section>
+<section id="114-passer-de-lun-à-lautre-à-chaud" class="level3">
+<h3>11.4 Passer de l'un à l'autre, à chaud</h3>
+      <figure class="diagram">
+        <svg viewBox="0 0 1000 304" role="img" aria-labelledby="bascule-t bascule-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="bascule-t">Passer du cœur à l'isolé, à chaud</title>
+          <desc id="bascule-d">Cinq étapes, de gauche à droite. Le hub retient les ordres pendant que l'ancienne instance finit et rend son état ; la nouvelle démarre dans l'autre place, puis le hub libère les ordres dont l'échéance court encore.</desc>
+          <defs>
+            <marker id="bascule-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="bascule-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="bascule-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="bascule-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="200.0" y="40.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">Retenir</text>
+          <line x1="130.0" y1="50.0" x2="130.0" y2="232.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 4"/>
+          <text x="345.0" y="40.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">Finir</text>
+          <line x1="270.0" y1="50.0" x2="270.0" y2="232.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 4"/>
+          <text x="490.0" y="40.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">Passer</text>
+          <line x1="420.0" y1="50.0" x2="420.0" y2="232.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 4"/>
+          <text x="645.0" y="40.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">Lancer</text>
+          <line x1="560.0" y1="50.0" x2="560.0" y2="232.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 4"/>
+          <text x="857.0" y="40.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">Reprendre</text>
+          <line x1="730.0" y1="50.0" x2="730.0" y2="232.0" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="3 4"/>
+          <text x="16.0" y="92.0" font-size="11" fill="#52615a" font-weight="700">Le hub</text>
+          <text x="16.0" y="150.0" font-size="11" fill="#52615a" font-weight="700">Dans le cœur</text>
+          <text x="16.0" y="208.0" font-size="11" fill="#52615a" font-weight="700">Isolé</text>
+          <rect x="132.0" y="74.0" width="596.0" height="28.0" rx="6" fill="#e3c77f" stroke="#b07d12" stroke-width="1"/>
+          <text x="430.0" y="93.0" font-size="9.6" fill="#1d302a" font-weight="700" text-anchor="middle">ordres retenus dans leurs voies, échéance inchangée · appareils « en bascule », jamais « hors ligne »</text>
+          <rect x="732.0" y="74.0" width="250.0" height="28.0" rx="6" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="857.0" y="93.0" font-size="9.6" fill="#ffffff" font-weight="700" text-anchor="middle">libère les ordres encore valables</text>
+          <rect x="132.0" y="132.0" width="286.0" height="28.0" rx="6" fill="#7fa892" stroke="#195744" stroke-width="1"/>
+          <text x="275.0" y="151.0" font-size="9.6" fill="#1d302a" font-weight="700" text-anchor="middle">l'ancienne : finit, vide son tampon</text>
+          <rect x="424.0" y="132.0" width="132.0" height="28.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="490.0" y="151.0" font-size="9.6" fill="#b07d12" font-weight="700" text-anchor="middle">rend son état ≤ 4 Kio</text>
+          <path d="M 556,146 C 590,146 560,204 600,204" fill="none" stroke="#b07d12" stroke-width="1.6" marker-end="url(#bascule-a)"/>
+          <rect x="604.0" y="190.0" width="378.0" height="28.0" rx="6" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="793.0" y="209.0" font-size="9.6" fill="#ffffff" font-weight="700" text-anchor="middle">la nouvelle instance : se connecte, republie $vu</text>
+          <text x="16.0" y="258.0" font-size="10.5" fill="#52615a">Jamais deux instances à la fois : deux écrivains pour les mêmes appareils, et un identifiant MQTT qui se chasse lui-même.</text>
+          <text x="16.0" y="275.0" font-size="10.5" fill="#52615a">Retour à l'ancienne place si la nouvelle instance n'est pas prête en 30 s ; pas de bascule pendant une rafale.</text>
+          <text x="16.0" y="292.0" font-size="10.5" fill="#52615a">Durée : la reconnexion du module à ses appareils, d'une fraction de seconde pour un appareil local à quelques secondes pour un cloud.</text>
+        </svg>
+        <figcaption>Le même module, compilé dans le binaire, tourne aussi dans son propre processus (V7&nbsp;§&nbsp;9.4.2)&nbsp;: changer de place ne demande pas de redémarrer le cœur. Le sens inverse, de l'isolé vers le cœur, est le même.</figcaption>
+      </figure>
+
+
+<p><strong>Pas besoin de redémarrer le cœur.</strong> Le même module est compilé dans le binaire et tourne aussi dans un petit exécutable (V7 § 9.4.2). Changer de place, c'est arrêter une instance et démarrer l'autre :</p>
+<ol type="1">
+<li><strong>Retenir.</strong> Le hub marque le module « en bascule ».
+<ul>
+<li>Ses ordres attendent dans leurs voies, avec leur échéance inchangée.</li>
+<li>Ses appareils gardent leur valeur et leur qualité.</li>
+<li>La santé suspend leur échéance « muet » le temps de la bascule, 10 s au plus. Aucun automatisme ne voit un appareil « hors ligne ».</li>
+</ul></li>
+<li><strong>Finir.</strong> L'ancienne instance cesse de prendre des ordres.
+<ul>
+<li>Elle finit l'ordre en vol en 1 s au plus ; au-delà, son issue est « incertaine » (V7 § 20.7).</li>
+<li>Elle vide son tampon de sortie : valeurs, occurrences, issues.</li>
+</ul></li>
+<li><strong>Passer.</strong> Elle rend son <strong>état de module</strong>, 4 Kio au plus (des curseurs, des abonnements, ce qu'elle veut retrouver), et s'arrête : son fil est rejoint, ou son processus sort. <strong>Jamais un secret</strong> : les secrets restent au coffre, et chaque instance les relit.</li>
+<li><strong>Lancer.</strong> La nouvelle instance démarre dans l'autre mode, avec cet état.</li>
+<li><strong>Reprendre.</strong> Elle se reconnecte à ses appareils, republie sa disponibilité et ses valeurs (<code>$vu</code>). Le hub libère les ordres en attente dont l'échéance court encore. Ceux qui sont échus sont refusés, jamais rejoués : c'est la règle de toujours.</li>
+</ol>
+<p><strong>Jamais deux instances à la fois.</strong> Deux instances seraient deux écrivains pour les mêmes appareils, et certains modules prennent un identifiant MQTT fixe : deux instances « se chassent du courtier » (HA v2 § 2.4, pour Bambu, Frigate et Zigbee2MQTT).</p>
+<p><strong>La durée</strong> est celle de la reconnexion du module à ses appareils : d'une fraction de seconde pour un appareil local à quelques secondes pour un cloud. L'écran l'annonce avant le geste : « environ 2 s sans ordre pour 4 appareils ».</p>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>la place d'un module et sa bascule (proposé)</figcaption><pre class="rust"><code>/// Où tourne un module. La valeur par défaut vient de `moli.toml` (V7 § 9.4.2) ;
+/// la page Système la change, et la configuration vivante (`data/bricks.json`, D3) la garde.
+pub enum Place {
+    Coeur,                       // son fil et son runtime, dans le processus du cœur (V7 § 20.1)
+    Isole { memoire_max: u64 },  // son processus, lancé par le gardien ; limite par cgroup ou setrlimit
+}
+
+/// Ce qu&#39;une instance passe à la suivante, dans une place ou dans l&#39;autre. 4 Kio au plus.
+/// Jamais un secret : ils restent au coffre ; chaque instance les relit.
+pub struct EtatDeModule {
+    pub format: u16,             // la version du format propre à ce module
+    pub octets: Vec&lt;u8&gt;,         // curseurs, abonnements, sessions ouvertes : ce qu&#39;il veut retrouver
+}
+
+/// Les étapes, dans l&#39;ordre. Le hub tient les voies du module pendant toute la bascule.
+pub enum Bascule {
+    Retenir,    // ordres en attente dans leurs voies ; appareils « en bascule », pas « hors ligne »
+    Finir,      // l&#39;ordre en vol aboutit en 1 s, sinon issue « incertaine » ; le tampon de sortie se vide
+    Passer,     // l&#39;EtatDeModule est rendu ; fil rejoint ou processus sorti
+    Lancer,     // la nouvelle instance démarre dans l&#39;autre place, avec l&#39;état
+    Reprendre,  // disponibilité et valeurs republiées ; ordres encore valables libérés, échus refusés
+}</code></pre></figure>
+<figure class="tech"><figcaption><span class="tech-tag">Bloc technique</span>la place par défaut, dans <code>moli.toml</code> (la forme de la V7, § 9.4.2)</figcaption><pre class="toml"><code>[[module]]
+id = &quot;cloud-x&quot;
+kind = &quot;cloud-x&quot;
+isolation = &quot;processus&quot;     # « dans le cœur » : &quot;thread&quot;, la valeur par défaut d&#39;un module validé
+memoire_max = &quot;48MiB&quot;       # isolé seulement : la limite de son processus</code></pre></figure>
+</section>
+<section id="115-qui-lance-un-module-isolé" class="level3">
+<h3>11.5 Qui lance un module isolé</h3>
+<p><strong>Le gardien, pas le cœur.</strong> Si le cœur lançait ses modules isolés, ils seraient ses enfants. Dans un conteneur, la mort du processus principal arrête tous les autres, et ils mourraient avec lui. Lancés par le gardien, ils survivent au redémarrage du cœur. Ils gardent leurs connexions aux appareils et leurs tampons, et se reconnectent au courtier dès qu'il revient. C'est ce qui rend possible ta seconde idée, décrite dans <a href="redemarrage-a-chaud.md">Redémarrage à chaud</a>.</p>
+<p>Le gardien lance un module avec son compte auprès du courtier. Il lui passe un <strong>jeton par lancement</strong>, par un tube hérité, jamais dans l'environnement ni sur la ligne de commande : les deux se lisent dans <code>/proc</code>. C'est la règle des secrets du dépôt (« par un tube, jamais au clavier ni affiché »). Le gardien le relance s'il meurt, avec la même attente croissante que le superviseur, de 1 s à 60 s.</p>
+</section>
+<section id="116-la-bascule-vue-par-le-rêveur-le-réaliste-et-le-critique" class="level3">
+<h3>11.6 La bascule, vue par le rêveur, le réaliste et le critique</h3>
+<p><strong>Méthode Disney.</strong></p>
+<ul>
+<li><strong>Le rêveur</strong> : chaque module change de place d'un geste, à tout moment, sans que personne ne le remarque. On essaie la version neuve d'un module isolée, à côté de l'ancienne, et l'on bascule quand elle a fait ses preuves.</li>
+<li><strong>Le réaliste</strong> :
+<ul>
+<li>les modules qui partagent la passerelle HTTP de l'API ne sortent pas du cœur ;</li>
+<li>un processus coûte 577 Kio ;</li>
+<li>une reconnexion au cloud prend quelques secondes et compte dans les limites du fabricant ;</li>
+<li>deux instances du même module ne doivent jamais tourner ensemble, donc « à côté » veut dire « l'une après l'autre ».</li>
+</ul></li>
+<li><strong>Le critique</strong> :
+<ul>
+<li>une bascule qui échoue au milieu laisse un module nulle part. Il faut donc un retour automatique à l'ancienne place si la nouvelle instance n'est pas prête en 30 s ;</li>
+<li>une bascule pendant une rafale prolonge la rafale. Elle attend donc que le tampon d'entrée soit vide ;</li>
+<li>une bascule aux heures calmes réveille des appareils. Le geste les signale et propose d'attendre.</li>
+</ul></li>
+</ul>
+<p>Ce qui en reste, dans le § 11.4 : arrêt puis départ, jamais en parallèle ; retour à l'ancienne place après 30 s sans nouvelle instance prête ; pas de bascule pendant une rafale.</p>
+</section>
+</section>
+<section id="12-les-choix-à-critères-visibles" class="level2">
+<h2>12. Les choix, à critères visibles</h2>
+<p><strong>La mémoire d'un module du cœur</strong> (✓ bon, ~ moyen, ✗ mauvais) :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Exacte</th>
+<th>Coût au repos</th>
+<th>Mémoire en plus</th>
+<th>Sans <code>unsafe</code> en production</th>
+<th>Effort</th>
+<th>Retenue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A. Tenue par le kit</td>
+<td>~</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td><strong>toujours</strong></td>
+</tr>
+<tr class="even">
+<td>B. Compteur par fil</td>
+<td>✗ (débit : ✓)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>~</td>
+<td>comme débit, dans le binaire de mesure</td>
+</tr>
+<tr class="odd">
+<td>C. Étiquette d'un octet</td>
+<td>✓</td>
+<td>~</td>
+<td>~ à mesurer</td>
+<td>✓ (option de construction)</td>
+<td>~</td>
+<td><strong>option de construction</strong></td>
+</tr>
+<tr class="even">
+<td>D. Une arène par module</td>
+<td>✓</td>
+<td>~</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>non</td>
+</tr>
+<tr class="odd">
+<td>E. Isoler pour mesurer</td>
+<td>✓</td>
+<td>✓</td>
+<td>~ (577 Kio, le temps de la mesure)</td>
+<td>✓</td>
+<td>✓ (avec la bascule)</td>
+<td><strong>à la demande</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Où ranger les courbes</strong> :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Écritures</th>
+<th>Survit à un redémarrage</th>
+<th>Mémoire</th>
+<th>Retenue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>En mémoire seulement</td>
+<td>0</td>
+<td>non</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>En base, chaque relevé</td>
+<td>✗ (40 × 6 par minute)</td>
+<td>oui</td>
+<td>✓</td>
+<td>non</td>
+</tr>
+<tr class="odd">
+<td>Dans l'instantané horaire (HA v2)</td>
+<td>~ (il quintuplerait : de 233 Kio à plus d'1 Mio)</td>
+<td>oui</td>
+<td>✓</td>
+<td>non</td>
+</tr>
+<tr class="even">
+<td><strong>24 h en mémoire, passées par le relais ; agrégats de 15 min en base</strong></td>
+<td>✓ (23 040 lignes par jour, en lots)</td>
+<td>oui (à chaud : tout ; à froid : les agrégats)</td>
+<td>✓ (≈ 342 Kio)</td>
+<td><strong>oui</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Le rythme</strong> : fixe à 10 s (✗ au repos), fixe à 60 s (✓ au repos, ~ pour diagnostiquer en direct), <strong>adaptatif : 60 s, 10 s quand on regarde</strong> (✓ et ✓). Retenu : adaptatif.</p>
+<p><strong>Changer de place</strong> : redémarrer le cœur (✗ : tout s'arrête), <strong>arrêt puis départ, à chaud</strong> (✓), deux instances en parallèle (✗ : deux écrivains). Retenu : arrêt puis départ.</p>
+<p><strong>Qui lance un module isolé</strong> : le cœur (✗ : il meurt avec lui), <strong>le gardien</strong> (✓ : un seul mécanisme, sous Docker et sous systemd), une unité systemd par module (~ : parfait sur le Pi, impossible sous Docker, et il faudrait piloter systemd depuis le cœur). Retenu : le gardien ; sous systemd, il reçoit un sous-arbre de cgroups pour donner à chaque module isolé sa limite et ses comptes.</p>
+</section>
+<section id="13-le-plan" class="level2">
+<h2>13. Le plan</h2>
+<p>Chaque marche est utile seule, dans l'ordre :</p>
+<ol type="1">
+<li><strong>Lire ce que le noyau donne déjà</strong> (aucun changement d'architecture) :
+<ul>
+<li><code>RssAnon</code> et <code>VmHWM</code> à la place de <code>VmRSS</code> ;</li>
+<li>la mémoire anonyme du cgroup, pour suivre le budget en continu ;</li>
+<li><code>/proc/self/io</code> ;</li>
+<li>la pression, les écritures sur la carte, le bridage du Pi ;</li>
+<li><code>bridge/health</code> de Zigbee2MQTT.</li>
+</ul></li>
+<li><strong>Un fil par module</strong> (V7 § 20.1). Le CPU par module devient exact : le temps noyau de chaque fil, le temps occupé et les réveils de son runtime. Avant cela, <code>TaskMonitor</code> (D8) donne une approximation.</li>
+<li><strong>Les compteurs du kit et de <code>moli-net</code></strong> : messages, octets, pire rafale, appels, erreurs, issues.</li>
+<li><strong>L'observatoire</strong> :
+<ul>
+<li>ses courbes en mémoire ;</li>
+<li>ses agrégats dans la famille <code>diagnostic</code> ;</li>
+<li><code>/api/system/modules</code> ;</li>
+<li>la page Système, et l'outil MCP.</li>
+</ul></li>
+<li><strong>Les compteurs par connexion dans <code>moli-courtier</code></strong>, avec la V7 (§ 6.1).</li>
+<li><strong>Le gardien, et la place d'un module</strong> : <code>moli-os module run</code>, la bascule à chaud, l'état de module, la rétrogradation automatique (document Redémarrage à chaud, pour le gardien).</li>
+<li><strong>Les alertes à l'astreinte</strong>, et les budgets dans les paquets.</li>
+<li><strong>L'étiquette mémoire</strong>, en option de construction, après la mesure M3 sur le Pi.</li>
+</ol>
+</section>
+<section id="14-les-expériences" class="level2">
+<h2>14. Les expériences</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Expérience</th>
+<th>Réussi si</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>M1</td>
+<td>Le relevé complet (40 fils, 5 processus) sur un Pi Zero 2 W, à 60 s puis à 10 s</td>
+<td>moins de 0,05 % d'un cœur à 60 s, moins de 0,2 % à 10 s</td>
+</tr>
+<tr class="even">
+<td>M2</td>
+<td>Un module au repos pendant une heure</td>
+<td>zéro réveil de son runtime ; le CPU de son fil n'avance pas</td>
+</tr>
+<tr class="odd">
+<td>M3</td>
+<td>Le binaire de mesure (étiquette) contre le binaire de production, même maison simulée, sur le Pi</td>
+<td>mémoire en plus et débit en moins mesurés ; la somme des étiquettes égale la mémoire anonyme du cœur à 5 % près</td>
+</tr>
+<tr class="even">
+<td>M4</td>
+<td>Une fuite injectée dans un module du cœur (1 Kio par minute, hors du kit)</td>
+<td>la part non expliquée monte ; l'alerte « fuite probable » part en moins de 6 h ; « Mesurer exactement » désigne le bon module</td>
+</tr>
+<tr class="odd">
+<td>M5</td>
+<td>Une rafale de 5 000 messages d'un pont qui se reconnecte</td>
+<td>la pire rafale du module la montre ; l'alerte de rafale part</td>
+</tr>
+<tr class="even">
+<td>M6</td>
+<td>Le courtier perd des messages (abonné en retard de plus de 1 400 messages)</td>
+<td>une alerte, dès la première perte, avec le nombre perdu (et plus <code>lost = 0</code>)</td>
+</tr>
+<tr class="odd">
+<td>M7</td>
+<td>Bascule d'un module du cœur vers l'isolé, puis retour, pendant que des ordres arrivent</td>
+<td>aucun ordre perdu ni rejoué après son échéance ; aucun appareil « hors ligne » ; durée de la reconnexion du module, plus 0,1 s au plus</td>
+</tr>
+<tr class="even">
+<td>M8</td>
+<td>Un module isolé plante en boucle (3 fois en 10 min)</td>
+<td>une alerte groupée ; il reste isolé ; la maison continue</td>
+</tr>
+<tr class="odd">
+<td>M9</td>
+<td>Un <code>abort</code> dans un module du cœur</td>
+<td>le cœur redémarre ; le dernier souffle désigne le module, ou les modules entrés depuis moins de 7 jours sont isolés ; une alerte</td>
+</tr>
+<tr class="even">
+<td>M10</td>
+<td>Un agent demande <code>relancer_module</code> vers le cœur</td>
+<td>la demande est retenue ; un humain la valide avec son PIN</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="15-décidé-ici-et-à-trancher" class="level2">
+<h2>15. Décidé ici, et à trancher</h2>
+<p>Décidé ici, parce que ta demande, le code ou une étude antérieure le tranche :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Sujet</th>
+<th>Décision</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>La mémoire mesurée</td>
+<td>la mémoire anonyme, comme le budget ; <code>Pss</code> entre processus qui partagent le binaire</td>
+<td>PERFORMANCE.md ; § 4.2</td>
+</tr>
+<tr class="even">
+<td>Le CPU par module</td>
+<td>le temps noyau du fil de chaque module, dès que la V7 lui donne son fil</td>
+<td>§ 5</td>
+</tr>
+<tr class="odd">
+<td>Les messages par module</td>
+<td>le courtier pour une connexion à soi, le kit pour les modules du cœur</td>
+<td>V7 § 6.4 ; § 7</td>
+</tr>
+<tr class="even">
+<td>La rafale</td>
+<td>une mesure à part entière</td>
+<td>V7 § 17.1.2</td>
+</tr>
+<tr class="odd">
+<td>Le rythme</td>
+<td>60 s, 10 s quand on regarde ; aucun module réveillé</td>
+<td>budget au repos</td>
+</tr>
+<tr class="even">
+<td>Les courbes</td>
+<td>24 h en mémoire, agrégats de 15 min en base (<code>diagnostic</code>, 7 jours)</td>
+<td>§ 8, § 12</td>
+</tr>
+<tr class="odd">
+<td>La place d'un module</td>
+<td>dans le cœur une fois validé ; isolé sinon</td>
+<td>ta demande ; V7 § 9.4.2</td>
+</tr>
+<tr class="even">
+<td>Changer de place</td>
+<td>à chaud, arrêt puis départ, sans redémarrer le cœur</td>
+<td>§ 11.4</td>
+</tr>
+<tr class="odd">
+<td>Qui lance un module isolé</td>
+<td>le gardien</td>
+<td>§ 11.5</td>
+</tr>
+</tbody>
+</table></div>
+<p>À trancher :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Ma recommandation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>La durée d'observation avant d'entrer dans le cœur</td>
+<td>7 jours sans incident et dans le budget</td>
+</tr>
+<tr class="even">
+<td>Le retour automatique à l'isolé sur incident</td>
+<td>oui, dans les trois cas du § 11.2 ; l'entrée dans le cœur jamais automatique</td>
+</tr>
+<tr class="odd">
+<td>L'étiquette mémoire</td>
+<td>option de construction (binaire de mesure), après M3 ; toujours présente seulement si M3 la trouve invisible</td>
+</tr>
+<tr class="even">
+<td>L'exception à <code>unsafe_code = "forbid"</code></td>
+<td>une crate à nous, d'une soixantaine de lignes, relue et passée sous Miri, plutôt qu'une dépendance</td>
+</tr>
+<tr class="odd">
+<td>Le budget d'un module</td>
+<td>déclaré dans son paquet par son auteur ; mesuré et proposé par l'observatoire après 7 jours</td>
+</tr>
+<tr class="even">
+<td>Qui reçoit les alertes, et comment</td>
+<td>le propriétaire, par notice et par son bot Telegram, groupées, rien aux heures calmes sauf l'alarme, les serrures et les détecteurs</td>
+</tr>
+<tr class="odd">
+<td>La page Système</td>
+<td>lecture pour tout le foyer ; « rentrer dans le cœur » avec un PIN</td>
+</tr>
+<tr class="even">
+<td>La pression sur le Pi</td>
+<td>l'activer (<code>psi=1</code>) si le noyau la désactive par défaut, après mesure de son coût</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="annexe-a--sources" class="level2">
+<h2>Annexe A — Sources</h2>
+<ul>
+<li>systemd, le dépôt de descripteurs (pour le gardien et les cgroups délégués) : <a href="https://systemd.io/FILE_DESCRIPTOR_STORE/">https://systemd.io/FILE_DESCRIPTOR_STORE/</a></li>
+<li><code>tokio-metrics</code> 0.5.2, <code>TaskMonitor</code> : <a href="https://docs.rs/tokio-metrics/latest/tokio_metrics/struct.TaskMonitor.html">https://docs.rs/tokio-metrics/latest/tokio_metrics/struct.TaskMonitor.html</a>, et la crate : <a href="https://docs.rs/tokio-metrics/latest/tokio_metrics/">https://docs.rs/tokio-metrics/latest/tokio_metrics/</a> (« some metrics require <code>tokio_unstable</code> » pour <code>RuntimeMonitor</code>)</li>
+<li>Vector, la mémoire par composant : <a href="https://vector.dev/blog/tracking-allocations/">https://vector.dev/blog/tracking-allocations/</a> (v0.27.0, 14 décembre 2022, <code>--allocation-tracing</code>, « ~20% reduction in throughput », aucun suivi de la propriété entre composants) ; son allocateur : <a href="https://github.com/vectordotdev/vector/blob/master/src/internal_telemetry/allocations/allocator/tracing_allocator.rs">https://github.com/vectordotdev/vector/blob/master/src/internal_telemetry/allocations/allocator/tracing_allocator.rs</a> (un octet de groupe après l'objet, l'interrupteur <code>TRACK_ALLOCATIONS</code> lu à l'allocation et à la libération)</li>
+<li><code>tracking-allocator</code> : <a href="https://docs.rs/tracking-allocator">https://docs.rs/tracking-allocator</a></li>
+<li>Zigbee2MQTT, <code>bridge/health</code> : <a href="https://www.zigbee2mqtt.io/guide/usage/health.html">https://www.zigbee2mqtt.io/guide/usage/health.html</a> (<code>health.interval</code> : 10 min par défaut ; <code>reset_on_check</code> : faux)</li>
+<li>Erlang, <code>process_info/2</code> (<code>memory</code> : « the size in bytes of the process. This includes call stack, heap, and internal structures ») : <a href="https://www.erlang.org/doc/apps/erts/erlang.html">https://www.erlang.org/doc/apps/erts/erlang.html</a></li>
+<li>Home Assistant, l'intégration Profiler (aucune attribution par intégration annoncée) : <a href="https://www.home-assistant.io/integrations/profiler/">https://www.home-assistant.io/integrations/profiler/</a></li>
+<li>La pression (PSI) et <code>psi=1</code> : le correctif du texte d'aide du noyau, <a href="https://lkml.rescloud.iu.edu/1812.0/00299.html">https://lkml.rescloud.iu.edu/1812.0/00299.html</a></li>
+<li>Le bridage du Pi (<code>get_throttled</code> : « lower 16-bits are the live value, upper 16-bits are the history ») : le correctif du noyau, <a href="https://android-kvm.googlesource.com/linux/+/74d1e007915fab590f8be9dc647b19511260210c%5E">https://android-kvm.googlesource.com/linux/+/74d1e007915fab590f8be9dc647b19511260210c%5E</a></li>
+<li>Le message de débordement de pile de Rust, et le cas de musl et des architectures sans sondes de pile : <a href="https://users.rust-lang.org/t/is-rust-guaranteed-to-detect-stack-overflows/52593">https://users.rust-lang.org/t/is-rust-guaranteed-to-detect-stack-overflows/52593</a></li>
+</ul>
+</section>
+<section id="annexe-b--preuves-dans-le-code" class="level2">
+<h2>Annexe B — Preuves dans le code</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Fait</th>
+<th>Où</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>moli-host</code> relève toutes les 15 s</td>
+<td><code>crates/moli-host/src/lib.rs:21</code></td>
+</tr>
+<tr class="even">
+<td>ses points : <code>cpu</code>, <code>load</code>, <code>ram</code>, <code>ram_used</code>, <code>ram_total</code>, <code>swap</code>, températures, réseau, <code>uptime</code>, <code>cores</code></td>
+<td><code>crates/moli-host/src/lib.rs</code>, <code>fn device</code></td>
+</tr>
+<tr class="odd">
+<td><code>rss_bytes</code> vient de <code>VmRSS</code></td>
+<td><code>crates/moli-runtime/src/stats.rs:14-20</code></td>
+</tr>
+<tr class="even">
+<td><code>/api/system</code> : <code>stats</code>, <code>drivers</code>, <code>perf</code> (les 20 dernières lignes de <code>perf.jsonl</code>)</td>
+<td><code>crates/moli-api/src/system.rs:94-103</code>, <code>:166-176</code></td>
+</tr>
+<tr class="odd">
+<td><code>/api/health</code> : <code>stats</code>, <code>guard</code>, <code>drivers</code>, <code>journal_failures</code></td>
+<td><code>crates/moli-api/src/rest.rs:22-34</code></td>
+</tr>
+<tr class="even">
+<td>le superviseur lance chaque pilote par <code>tokio::spawn</code>, relance de 1 s à 60 s, capture les paniques</td>
+<td><code>crates/moli-runtime/src/supervisor.rs:16-19</code>, <code>:31</code>, <code>:38</code>, <code>:64</code> (<code>spawn_driver</code> : <code>:22-68</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>moli-z2m</code> s'abonne à tout son arbre, <code>bridge/health</code> compris, sans le lire</td>
+<td><code>crates/moli-z2m/src/lib.rs:110</code></td>
+</tr>
+<tr class="even">
+<td>Frigate publie <code>cpu_load</code></td>
+<td><code>crates/moli-frigate/src/lib.rs:246</code>, <code>:287</code></td>
+</tr>
+<tr class="odd">
+<td>l'espace de travail interdit <code>unsafe</code></td>
+<td><code>Cargo.toml:110</code></td>
+</tr>
+<tr class="even">
+<td><code>rustix</code> : fonctions <code>fs</code> et <code>std</code> seulement aujourd'hui</td>
+<td><code>Cargo.toml:86</code></td>
+</tr>
+<tr class="odd">
+<td><code>rumqttd</code> 0.20.0 : compteur d'entrée par connexion, avec une table par sujet</td>
+<td><code>src/router/routing.rs:641-642</code>, <code>src/router/mod.rs</code> (<code>IncomingMeter</code>)</td>
+</tr>
+<tr class="even">
+<td><code>rumqttd</code> 0.20.0 : la sortie n'est pas comptée</td>
+<td><code>src/router/routing.rs:702-703</code></td>
+</tr>
+<tr class="odd">
+<td><code>rumqttd</code> 0.20.0 : seuls le routeur et les filtres sont publiés</td>
+<td><code>src/router/routing.rs:1152-1160</code>, <code>src/router/mod.rs:272-279</code></td>
+</tr>
+<tr class="even">
+<td><code>rumqttd</code> 0.20.0 : l'alerte de perte</td>
+<td><code>src/router/alertlog.rs:8-10</code></td>
+</tr>
+<tr class="odd">
+<td><code>tokio</code> 1.54.1 : temps occupé et réveils stables en 64 bits</td>
+<td><code>src/runtime/metrics/runtime.rs:104-249</code></td>
+</tr>
+<tr class="even">
+<td><code>rustix</code> 1.1.5 : <code>gettid</code>, <code>clock_gettime</code> avec <code>ThreadCPUTime</code>, sans <code>unsafe</code></td>
+<td><code>src/thread/id.rs:59</code>, <code>src/time/clock.rs:60</code>, <code>src/clockid.rs:63</code></td>
+</tr>
+</tbody>
+</table></div>
+</section>
+
+        <footer><span>Sarah Home · monitoring : trois étages, et chaque module à sa place · 23 octobre 2026</span><a href="#top">Haut de page ↑</a></footer>
+      </article>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const printButton = document.getElementById('print-document');
+      printButton.hidden = false;
+      printButton.addEventListener('click', () => window.print());
+      const sections = Array.from(document.querySelectorAll('article > section[id]'));
+      const links = Array.from(document.querySelectorAll('aside nav a'));
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting);
+          if (!visible.length) return;
+          const section = visible[0].target;
+          for (const link of links) {
+            if (decodeURIComponent(link.hash.slice(1)) === section.id) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          }
+        }, { rootMargin: '-10% 0px -75% 0px' });
+        sections.forEach(section => observer.observe(section));
+      }
+    })();
+  </script>
+</body>
+</html>

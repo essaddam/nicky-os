@@ -1,0 +1,522 @@
+{
+  "cases": [
+    {
+      "after": {
+        "node-a": {
+          "allocator_live_bytes": 15260120,
+          "allocator_peak_bytes": 33676820,
+          "applied_probe_updates": 0,
+          "cpu_seconds": 2.03,
+          "houses": [
+            {
+              "document_bytes": 2098094,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "a42efa418de2cc3130d5026b376102d8e6431cda0f6234f443247cf93db28830"
+            },
+            {
+              "document_bytes": 1928969,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "f5b657e714f5873f5cb8a438a7e192744baa2fe0b7e67f7d69cba89f6041905e"
+            }
+          ],
+          "node": "node-a",
+          "replica_connected": true,
+          "replica_generation": 2,
+          "rss_bytes": 47972352
+        },
+        "node-b": {
+          "allocator_live_bytes": 15258032,
+          "allocator_peak_bytes": 37530597,
+          "applied_probe_updates": 0,
+          "cpu_seconds": 2.0,
+          "houses": [
+            {
+              "document_bytes": 2098094,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "a42efa418de2cc3130d5026b376102d8e6431cda0f6234f443247cf93db28830"
+            },
+            {
+              "document_bytes": 1928969,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "f5b657e714f5873f5cb8a438a7e192744baa2fe0b7e67f7d69cba89f6041905e"
+            }
+          ],
+          "node": "node-b",
+          "replica_connected": true,
+          "replica_generation": 2,
+          "rss_bytes": 49659904
+        }
+      },
+      "case": "tcp_closed",
+      "checks": [
+        {
+          "house": "house-a",
+          "local_lease_valid": true,
+          "local_sequence": 6,
+          "local_workflow_effects_total": 6,
+          "owner": "node-a",
+          "passive_sequence": 0,
+          "promotion_refused": true
+        },
+        {
+          "house": "house-b",
+          "local_lease_valid": true,
+          "local_sequence": 6,
+          "local_workflow_effects_total": 6,
+          "owner": "node-b",
+          "passive_sequence": 0,
+          "promotion_refused": true
+        }
+      ],
+      "during": {
+        "node-a": {
+          "allocator_live_bytes": 15207772,
+          "allocator_peak_bytes": 26531222,
+          "applied_probe_updates": 0,
+          "cpu_seconds": 1.7,
+          "houses": [
+            {
+              "document_bytes": 2098094,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "a42efa418de2cc3130d5026b376102d8e6431cda0f6234f443247cf93db28830"
+            },
+            {
+              "document_bytes": 1928898,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1487,
+              "role": "passive",
+              "sequence": 0,
+              "sha256": "1c07050cea52c4247bbe0f18ea3394d87ba9f780ea810b09f5d7fd0eb52989d1"
+            }
+          ],
+          "node": "node-a",
+          "replica_connected": false,
+          "replica_generation": 1,
+          "rss_bytes": 39911424
+        },
+        "node-b": {
+          "allocator_live_bytes": 15206316,
+          "allocator_peak_bytes": 26531223,
+          "applied_probe_updates": 0,
+          "cpu_seconds": 1.66,
+          "houses": [
+            {
+              "document_bytes": 2098023,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1628,
+              "role": "passive",
+              "sequence": 0,
+              "sha256": "cbb675031a6ef7cb00c4be0d593317c380ea12f94e12551594add0658c0e2a68"
+            },
+            {
+              "document_bytes": 1928969,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "f5b657e714f5873f5cb8a438a7e192744baa2fe0b7e67f7d69cba89f6041905e"
+            }
+          ],
+          "node": "node-b",
+          "replica_connected": false,
+          "replica_generation": 1,
+          "rss_bytes": 35635200
+        }
+      },
+      "fault_ms": 6190,
+      "link_after": {
+        "accepted_connections": 47,
+        "active_connections": 2,
+        "forced_closures": 45,
+        "forwarded_bytes": 12055214,
+        "max_active_seen": 2,
+        "mode": "up"
+      },
+      "link_before": {
+        "accepted_connections": 2,
+        "active_connections": 2,
+        "forced_closures": 0,
+        "forwarded_bytes": 6027513,
+        "max_active_seen": 2,
+        "mode": "up"
+      },
+      "link_during": {
+        "accepted_connections": 45,
+        "active_connections": 0,
+        "forced_closures": 45,
+        "forwarded_bytes": 6027513,
+        "max_active_seen": 2,
+        "mode": "cut"
+      },
+      "link_fault_settled": {
+        "accepted_connections": 4,
+        "active_connections": 0,
+        "forced_closures": 4,
+        "forwarded_bytes": 6027513,
+        "max_active_seen": 2,
+        "mode": "cut"
+      },
+      "local_steps_during_fault": 6,
+      "physical_commands": 0,
+      "progress_interval_ms": 5285,
+      "reconnect_ms": 215,
+      "recovery_ms": 2616,
+      "snapshot_transfer_ms": 2401,
+      "status": "PASS",
+      "timed_out_updates_replayed": false
+    },
+    {
+      "after": {
+        "node-a": {
+          "allocator_live_bytes": 15259969,
+          "allocator_peak_bytes": 33678277,
+          "applied_probe_updates": 0,
+          "cpu_seconds": 3.46,
+          "houses": [
+            {
+              "document_bytes": 2098098,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 13,
+              "sha256": "c9022b12a3c304858587557de3c3c9fdd39e3fba2154ca6d13e152b746361fbb"
+            },
+            {
+              "document_bytes": 1928973,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 13,
+              "sha256": "31be6aea17be78c249928d42a7e3b6ce99c9fe7d333bdb7f7449ba02e88e2eee"
+            }
+          ],
+          "node": "node-a",
+          "replica_connected": true,
+          "replica_generation": 3,
+          "rss_bytes": 45907968
+        },
+        "node-b": {
+          "allocator_live_bytes": 15258169,
+          "allocator_peak_bytes": 37531422,
+          "applied_probe_updates": 0,
+          "cpu_seconds": 3.3,
+          "houses": [
+            {
+              "document_bytes": 2098098,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 13,
+              "sha256": "c9022b12a3c304858587557de3c3c9fdd39e3fba2154ca6d13e152b746361fbb"
+            },
+            {
+              "document_bytes": 1928973,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 13,
+              "sha256": "31be6aea17be78c249928d42a7e3b6ce99c9fe7d333bdb7f7449ba02e88e2eee"
+            }
+          ],
+          "node": "node-b",
+          "replica_connected": true,
+          "replica_generation": 3,
+          "rss_bytes": 49676288
+        }
+      },
+      "case": "tcp_blackhole",
+      "checks": [
+        {
+          "house": "house-a",
+          "local_lease_valid": true,
+          "local_sequence": 13,
+          "local_workflow_effects_total": 13,
+          "owner": "node-a",
+          "passive_sequence": 6,
+          "promotion_refused": true
+        },
+        {
+          "house": "house-b",
+          "local_lease_valid": true,
+          "local_sequence": 13,
+          "local_workflow_effects_total": 13,
+          "owner": "node-b",
+          "passive_sequence": 6,
+          "promotion_refused": true
+        }
+      ],
+      "during": {
+        "node-a": {
+          "allocator_live_bytes": 15260126,
+          "allocator_peak_bytes": 33676820,
+          "applied_probe_updates": 0,
+          "cpu_seconds": 3.05,
+          "houses": [
+            {
+              "document_bytes": 2098098,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 13,
+              "sha256": "c9022b12a3c304858587557de3c3c9fdd39e3fba2154ca6d13e152b746361fbb"
+            },
+            {
+              "document_bytes": 1928969,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "f5b657e714f5873f5cb8a438a7e192744baa2fe0b7e67f7d69cba89f6041905e"
+            }
+          ],
+          "node": "node-a",
+          "replica_connected": true,
+          "replica_generation": 2,
+          "rss_bytes": 47972352
+        },
+        "node-b": {
+          "allocator_live_bytes": 15258102,
+          "allocator_peak_bytes": 37530597,
+          "applied_probe_updates": 0,
+          "cpu_seconds": 2.99,
+          "houses": [
+            {
+              "document_bytes": 2098094,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "a42efa418de2cc3130d5026b376102d8e6431cda0f6234f443247cf93db28830"
+            },
+            {
+              "document_bytes": 1928973,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 13,
+              "sha256": "31be6aea17be78c249928d42a7e3b6ce99c9fe7d333bdb7f7449ba02e88e2eee"
+            }
+          ],
+          "node": "node-b",
+          "replica_connected": true,
+          "replica_generation": 2,
+          "rss_bytes": 45432832
+        }
+      },
+      "fault_ms": 6445,
+      "link_after": {
+        "accepted_connections": 49,
+        "active_connections": 2,
+        "forced_closures": 47,
+        "forwarded_bytes": 18082933,
+        "max_active_seen": 2,
+        "mode": "up"
+      },
+      "link_before": {
+        "accepted_connections": 47,
+        "active_connections": 2,
+        "forced_closures": 45,
+        "forwarded_bytes": 12055214,
+        "max_active_seen": 2,
+        "mode": "up"
+      },
+      "link_during": {
+        "accepted_connections": 47,
+        "active_connections": 2,
+        "forced_closures": 45,
+        "forwarded_bytes": 12055214,
+        "max_active_seen": 2,
+        "mode": "blackhole"
+      },
+      "link_fault_settled": {
+        "accepted_connections": 47,
+        "active_connections": 2,
+        "forced_closures": 45,
+        "forwarded_bytes": 12055214,
+        "max_active_seen": 2,
+        "mode": "blackhole"
+      },
+      "local_steps_during_fault": 7,
+      "physical_commands": 0,
+      "progress_interval_ms": 5538,
+      "reconnect_ms": 324,
+      "recovery_ms": 3052,
+      "snapshot_transfer_ms": 2727,
+      "status": "PASS",
+      "timed_out_updates_replayed": false
+    }
+  ],
+  "engine_isolation_flags_used": false,
+  "foreign_update_via_local_channel_refused": true,
+  "initial": {
+    "node-a": {
+      "allocator_live_bytes": 15254460,
+      "allocator_peak_bytes": 26531222,
+      "applied_probe_updates": 0,
+      "cpu_seconds": 0.67,
+      "houses": [
+        {
+          "document_bytes": 2098023,
+          "epoch": 1,
+          "house": "house-a",
+          "records": 1628,
+          "role": "active",
+          "sequence": 0,
+          "sha256": "cbb675031a6ef7cb00c4be0d593317c380ea12f94e12551594add0658c0e2a68"
+        },
+        {
+          "document_bytes": 1928898,
+          "epoch": 1,
+          "house": "house-b",
+          "records": 1487,
+          "role": "passive",
+          "sequence": 0,
+          "sha256": "1c07050cea52c4247bbe0f18ea3394d87ba9f780ea810b09f5d7fd0eb52989d1"
+        }
+      ],
+      "node": "node-a",
+      "replica_connected": true,
+      "replica_generation": 1,
+      "rss_bytes": 37748736
+    },
+    "node-b": {
+      "allocator_live_bytes": 15254460,
+      "allocator_peak_bytes": 26531223,
+      "applied_probe_updates": 0,
+      "cpu_seconds": 0.74,
+      "houses": [
+        {
+          "document_bytes": 2098023,
+          "epoch": 1,
+          "house": "house-a",
+          "records": 1628,
+          "role": "passive",
+          "sequence": 0,
+          "sha256": "cbb675031a6ef7cb00c4be0d593317c380ea12f94e12551594add0658c0e2a68"
+        },
+        {
+          "document_bytes": 1928898,
+          "epoch": 1,
+          "house": "house-b",
+          "records": 1487,
+          "role": "active",
+          "sequence": 0,
+          "sha256": "1c07050cea52c4247bbe0f18ea3394d87ba9f780ea810b09f5d7fd0eb52989d1"
+        }
+      ],
+      "node": "node-b",
+      "replica_connected": true,
+      "replica_generation": 1,
+      "rss_bytes": 39829504
+    }
+  },
+  "legacy_runtime_smoke": {
+    "default_direct_transport_preserved": true,
+    "houses": 2,
+    "status": "PASS"
+  },
+  "not_proven": [
+    "physical WAN or VPN outage between deployed HA hosts",
+    "loss of the central coordinator or witness",
+    "production device execution"
+  ],
+  "physical_commands": 0,
+  "schema": 1,
+  "scope": "real TCP relay faults between local replica processes; local control and central test witness remain reachable",
+  "sources": [
+    {
+      "description_bytes": 1209714,
+      "devices": 289,
+      "entities": 1830,
+      "fixture": {
+        "initial_messages": 3777,
+        "initial_payload_bytes": 48820,
+        "physical_publications": 0,
+        "registry_devices": 290,
+        "registry_entities": 1830,
+        "registry_floors": 2,
+        "registry_rooms": 17,
+        "registry_template_bytes": 549107,
+        "state_entities": 1278,
+        "states_matching_registry": 1274,
+        "states_without_registry": 4,
+        "synthetic_identities": true,
+        "updatable_points": 1343
+      },
+      "house": "house-a",
+      "kind": "private_ha_replay",
+      "nodes": 21,
+      "observed_points": 1606,
+      "physical_commands": 0,
+      "physical_freshness_proven": false,
+      "points": 1606,
+      "snapshot_bytes": 2098023,
+      "synthetic_identities": true
+    },
+    {
+      "description_bytes": 1103399,
+      "devices": 200,
+      "entities": 1524,
+      "fixture": {
+        "initial_messages": 3027,
+        "initial_payload_bytes": 38245,
+        "physical_publications": 0,
+        "registry_devices": 206,
+        "registry_entities": 1524,
+        "registry_floors": 4,
+        "registry_rooms": 17,
+        "registry_template_bytes": 454034,
+        "state_entities": 986,
+        "states_matching_registry": 977,
+        "states_without_registry": 9,
+        "synthetic_identities": true,
+        "updatable_points": 1241
+      },
+      "house": "house-b",
+      "kind": "private_ha_replay",
+      "nodes": 23,
+      "observed_points": 1463,
+      "physical_commands": 0,
+      "physical_freshness_proven": false,
+      "points": 1463,
+      "snapshot_bytes": 1928898,
+      "synthetic_identities": true
+    }
+  ],
+  "date_utc": "2026-10-27T20:36:17.169537+00:00",
+  "profile": "debug",
+  "platform": "darwin",
+  "inputs_sha256": "96db6dd27171cb3e486012d885faec83d6de2b4bcd0f5ef5f556f4bd29055993",
+  "binary_sha256": "a2b491fdd6399df82477e897ef9e83bde15c91d537cb79f14b4edd3a4cd52526"
+}

@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 435" width="1000" height="435" role="img" aria-labelledby="cycle-t cycle-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="cycle-t">Le cycle d'une demande</title>
+  <desc id="cycle-d">Sept états. Une demande arrive par req/ ou d'un client interne ; hors de sa forme ou visant un appareil retiré, elle est refusée sans prendre de case. La garde peut la retenir : un humain a dix minutes ; approuvée, elle est revalidée contre la forme du moment, puis remise. Remise à son module par cmd/, elle reçoit une issue : confirmée, exécutée ou en échec, elle est conclue ; acceptée ou envoyée, elle est suivie jusqu'à sa suite, une fois. Une bascule, un arrêt ou un module mort la rendent incertaine, jamais renvoyée ; le hub la confirme lui-même sur val/ s'il peut. Conclue, sa case se libère.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="435" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="cycle-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="cycle-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="cycle-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="cycle-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="cycle-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="cycle-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="cycle-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="cycle-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="cycle-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="cycle-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="cycle-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="cycle-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="cycle-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="cycle-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="cycle-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="cycle-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="cycle-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="cycle-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="cycle-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="cycle-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="cycle-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="cycle-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="cycle-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="cycle-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="cycle-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="cycle-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="cycle-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="cycle-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="cycle-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="cycle-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="cycle-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="cycle-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="cycle-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="cycle-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="cycle-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="cycle-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="cycle-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="cycle-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="cycle-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="cycle-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="cycle-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="cycle-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="cycle-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="cycle-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LE CYCLE D'UNE DEMANDE, ET QUI LA FAIT AVANCER</text>
+          <g filter="url(#cycle-o2)"><rect x="2.0" y="97.0" width="196" height="56" rx="18" fill="#3b4641"/><rect x="2.0" y="92.0" width="196" height="56" rx="18" fill="url(#cycle-h-gris)"/></g>
+          <rect x="7.0" y="95.0" width="186" height="23.5" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="18.0" y="118.0" font-size="13" fill="#ffffff" font-weight="700">Arrivée</text>
+          <text x="18.0" y="134.0" font-size="10" fill="#ffffff" opacity=".9">req/ ou un client interne</text>
+          <g filter="url(#cycle-o2)"><rect x="2.0" y="277.0" width="196" height="56" rx="18" fill="#682c1a"/><rect x="2.0" y="272.0" width="196" height="56" rx="18" fill="url(#cycle-h-rouge)"/></g>
+          <rect x="7.0" y="275.0" width="186" height="23.5" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="18.0" y="298.0" font-size="13" fill="#ffffff" font-weight="700">Refusée</text>
+          <text x="18.0" y="314.0" font-size="10" fill="#ffffff" opacity=".9">aucune case, une ligne</text>
+          <g filter="url(#cycle-o2)"><rect x="232.0" y="277.0" width="196" height="56" rx="18" fill="#6f4c08"/><rect x="232.0" y="272.0" width="196" height="56" rx="18" fill="url(#cycle-h-ambre)"/></g>
+          <rect x="237.0" y="275.0" width="186" height="23.5" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="248.0" y="298.0" font-size="13" fill="#ffffff" font-weight="700">Retenue</text>
+          <text x="248.0" y="314.0" font-size="10" fill="#ffffff" opacity=".9">un humain, 10 min</text>
+          <g filter="url(#cycle-o2)"><rect x="232.0" y="97.0" width="196" height="56" rx="18" fill="#144256"/><rect x="232.0" y="92.0" width="196" height="56" rx="18" fill="url(#cycle-h-bleu)"/></g>
+          <rect x="237.0" y="95.0" width="186" height="23.5" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="248.0" y="118.0" font-size="13" fill="#ffffff" font-weight="700">Remise</text>
+          <text x="248.0" y="134.0" font-size="10" fill="#ffffff" opacity=".9">cmd/ : sa voie</text>
+          <g filter="url(#cycle-o2)"><rect x="502.0" y="97.0" width="196" height="56" rx="18" fill="#382e62"/><rect x="502.0" y="92.0" width="196" height="56" rx="18" fill="url(#cycle-h-violet)"/></g>
+          <rect x="507.0" y="95.0" width="186" height="23.5" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="518.0" y="118.0" font-size="13" fill="#ffffff" font-weight="700">Suivie</text>
+          <text x="518.0" y="134.0" font-size="10" fill="#ffffff" opacity=".9">accepté, envoyé : la suite</text>
+          <g filter="url(#cycle-o2)"><rect x="772.0" y="97.0" width="196" height="56" rx="18" fill="#134133"/><rect x="772.0" y="92.0" width="196" height="56" rx="18" fill="url(#cycle-h-vert)"/></g>
+          <rect x="777.0" y="95.0" width="186" height="23.5" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="788.0" y="118.0" font-size="13" fill="#ffffff" font-weight="700">Conclue</text>
+          <text x="788.0" y="134.0" font-size="10" fill="#ffffff" opacity=".9">la case se libère</text>
+          <g filter="url(#cycle-o2)"><rect x="502.0" y="277.0" width="196" height="56" rx="18" fill="#682c1a"/><rect x="502.0" y="272.0" width="196" height="56" rx="18" fill="url(#cycle-h-rouge)"/></g>
+          <rect x="507.0" y="275.0" width="186" height="23.5" rx="14" fill="#ffffff" opacity=".17"/>
+          <text x="518.0" y="298.0" font-size="13" fill="#ffffff" font-weight="700">Incertaine</text>
+          <text x="518.0" y="314.0" font-size="10" fill="#ffffff" opacity=".9">jamais renvoyée</text>
+          <path d="M198 120 L230 120" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-vert)"/>
+          <path class="hd-lent" d="M198 120 L230 120" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M100 150 L100 270" fill="none" stroke="#8b3b22" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-rouge)"/>
+          <path class="hd-lent" d="M100 150 L100 270" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M170 150 C200 200 240 230 262 270" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-ambre)"/>
+          <path class="hd-lent" d="M170 150 C200 200 240 230 262 270" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M330 270 L330 150" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-ambre)"/>
+          <path class="hd-lent" d="M330 270 L330 150" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M428 120 L500 120" fill="none" stroke="#4b3d82" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-violet)"/>
+          <path class="hd-lent" d="M428 120 L500 120" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M698 120 L770 120" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-vert)"/>
+          <path class="hd-lent" d="M698 120 L770 120" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M428 104 C540 56 760 56 860 92" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-vert)"/>
+          <path class="hd-lent" d="M428 104 C540 56 760 56 860 92" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M420 150 C470 200 500 230 540 270" fill="none" stroke="#8b3b22" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-rouge)"/>
+          <path class="hd-lent" d="M420 150 C470 200 500 230 540 270" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M698 300 C800 300 870 230 870 150" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#cycle-m-vert)"/>
+          <path class="hd-lent" d="M698 300 C800 300 870 230 870 150" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="214.0" y="84.0" font-size="9.5" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">forme, garde</text>
+          <text x="112.0" y="214.0" font-size="9.5" fill="#4f5d57" font-weight="700" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">hors forme · retiré</text>
+          <text x="224.0" y="192.0" font-size="9.5" fill="#4f5d57" font-weight="700" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">la garde</text>
+          <text x="342.0" y="214.0" font-size="9.5" fill="#4f5d57" font-weight="700" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">approuvée : revalidée</text>
+          <text x="464.0" y="84.0" font-size="9.5" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">accepté · envoyé</text>
+          <text x="734.0" y="106.0" font-size="9.5" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">la suite</text>
+          <text x="640.0" y="54.0" font-size="9.5" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">confirmé · exécuté · échec</text>
+          <text x="500.0" y="204.0" font-size="9.5" fill="#4f5d57" font-weight="700" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">bascule · arrêt · module mort</text>
+          <text x="842.0" y="262.0" font-size="9.5" fill="#4f5d57" font-weight="700" text-anchor="end" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">le hub confirme sur val/</text>
+          <rect x="16" y="352" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 360.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="374.0" font-size="11" fill="#1d302a" font-weight="700">Une demande entre au flux critique quand elle quitte le hub (remise, retenue), et en sort à son issue : le secours voit tout ce qui a pu partir.</text>
+  <text x="18" y="429" font-size="12" fill="#52615a" font-style="italic">La V7 (§ 5.6, § 20.7) donne les neuf issues ; l'analyse leur donne une fiche, une case et une génération, et des traces au rang s.</text>
+</svg>

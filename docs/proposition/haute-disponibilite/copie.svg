@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 312" width="1000" height="312" role="img" aria-labelledby="copie-t copie-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="copie-t">Copier la mémoire par les sorties ou par les entrées</title>
+  <desc id="copie-d">Comparaison sur une heure de la maison. Par les sorties de l'actif, la mémoire du secours est identique et toutes les attentes se revérifient. Par les entrées, les valeurs perdues pendant la coupure restent fausses, les instants « changé » sont ceux du secours, et aucune attente ne se revérifie.</desc>
+  <rect width="1000" height="312" fill="#fffdf8"/>
+          <defs>
+            <marker id="copie-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="copie-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="copie-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="copie-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">UNE HEURE DE LA MAISON, PONT COUPÉ 30 S, HORLOGES À 23 MS</text>
+          <text x="300.0" y="56.0" font-size="13" fill="#195744" font-weight="700">A · par les sorties</text>
+          <text x="650.0" y="56.0" font-size="13" fill="#b07d12" font-weight="700">B · par les entrées</text>
+          <line x1="16.0" y1="93.0" x2="984.0" y2="93.0" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="16.0" y="84.0" font-size="11.5" fill="#1d302a" font-weight="700">Messages perdus pendant la coupure</text>
+          <text x="300.0" y="84.0" font-size="11.5" fill="#195744">41, vus au rang s, comblés</text>
+          <text x="650.0" y="84.0" font-size="11.5" fill="#b07d12">41, que rien ne signale</text>
+          <line x1="16.0" y1="123.0" x2="984.0" y2="123.0" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="16.0" y="114.0" font-size="11.5" fill="#1d302a" font-weight="700">Fiches dont la valeur diffère</text>
+          <text x="300.0" y="114.0" font-size="11.5" fill="#195744">0</text>
+          <text x="650.0" y="114.0" font-size="11.5" fill="#b07d12">5</text>
+          <line x1="16.0" y1="153.0" x2="984.0" y2="153.0" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="16.0" y="144.0" font-size="11.5" fill="#1d302a" font-weight="700">Fiches dont « changé » diffère</text>
+          <text x="300.0" y="144.0" font-size="11.5" fill="#195744">0</text>
+          <text x="650.0" y="144.0" font-size="11.5" fill="#b07d12">1 480 (écart médian 26 ms)</text>
+          <line x1="16.0" y1="183.0" x2="984.0" y2="183.0" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="16.0" y="174.0" font-size="11.5" fill="#1d302a" font-weight="700">Mémoire identique (empreinte)</text>
+          <text x="300.0" y="174.0" font-size="11.5" fill="#195744">oui</text>
+          <text x="650.0" y="174.0" font-size="11.5" fill="#b07d12">non</text>
+          <text x="16.0" y="224.0" font-size="11.5" fill="#1d302a" font-weight="700">Attentes « depuis 10 min » armées sur l'actif,</text>
+          <text x="16.0" y="240.0" font-size="11.5" fill="#1d302a" font-weight="700">qui se revérifient sur le secours après une bascule</text>
+          <rect x="300.0" y="210.0" width="300.0" height="20.0" rx="4" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="300.0" y="210.0" width="300.0" height="20.0" rx="4" fill="#195744" stroke="#195744" stroke-width="1"/>
+          <text x="306.0" y="246.0" font-size="12" fill="#195744" font-weight="700">86 sur 86</text>
+          <rect x="650.0" y="210.0" width="300.0" height="20.0" rx="4" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="656.0" y="246.0" font-size="12" fill="#b07d12" font-weight="700">0 sur 86</text>
+  <text x="16" y="291" font-size="12" fill="#52615a" font-style="italic">Le hub est la seule horloge de la maison. Un secours qui date les valeurs lui-même a d'autres instants « changé » : les attentes armées sur l'actif ne</text>
+  <text x="16" y="308" font-size="12" fill="#52615a" font-style="italic">se revérifient plus après la bascule (mémoire v2 § 8.5).</text>
+</svg>

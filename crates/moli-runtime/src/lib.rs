@@ -30,6 +30,7 @@ mod stats;
 pub mod supervisor;
 mod timers;
 pub mod voice;
+mod write_authority;
 
 pub use addresses::KnownAddress;
 pub use counters::CounterError;
@@ -53,6 +54,7 @@ pub use state_file::{StateFile, StateFileError};
 pub use stats::Stats;
 pub use supervisor::spawn_driver;
 pub use timers::TimerError;
+pub use write_authority::{WriteAuthority, WriteAuthorityError};
 
 mod temporal;
 pub use temporal::{TemporalError, normalize_temporal, validate_point_value};

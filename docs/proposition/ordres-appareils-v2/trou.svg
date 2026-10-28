@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 452" width="1000" height="452" role="img" aria-labelledby="trou-t trou-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="trou-t">Ce que la mémoire range, et ce qui manque</title>
+  <desc id="trou-d">Deux colonnes. À gauche, ce que la mémoire v2 range pour une valeur : la définition de 16 octets, la valeur vive de 40 octets, les échéances, l'annuaire. À droite, ce qu'un ordre demande et où c'est aujourd'hui : sa structure n'est que sur meta/, les demandes vivent dans des tâches et des canaux, la dernière commande n'existe nulle part, les retenues, reçus, baux et compositions sont à part, en textes. Un bandeau : la v2 ne garde pour un ordre qu'un octet, « sens ».</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="452" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="trou-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="trou-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="trou-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="trou-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="trou-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="trou-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="trou-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="trou-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="trou-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="trou-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="trou-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="trou-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="trou-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="trou-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="trou-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="trou-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="trou-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="trou-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="trou-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="trou-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="trou-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="trou-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="trou-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LA MÉMOIRE V2 RANGE LES VALEURS ; RIEN NE RANGE LES ORDRES</text>
+          <rect x="16" y="40" width="460" height="300" rx="20" fill="#e3f1e9" fill-opacity=".45" stroke="#3d9a75" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(32.0 51.0) scale(0.6667)" fill="none" stroke="#195744" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3v12c0 1.7-3.1 3-7 3s-7-1.3-7-3z M5 6c0 1.7 3.1 3 7 3s7-1.3 7-3 M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></g>
+          <text x="54.0" y="64.0" font-size="11" fill="#195744" font-weight="700" letter-spacing=".07em">CE QUE LA MÉMOIRE V2 RANGE, PAR POINT ET PAR APPAREIL</text>
+          <rect x="32" y="76" width="428" height="54" rx="12" fill="url(#trou-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <circle cx="47" cy="95" r="4.5" fill="url(#trou-h-vert)"/>
+          <text x="59.0" y="99.0" font-size="11.5" fill="#195744" font-weight="700">Def · 16 o</text>
+          <text x="46.0" y="117.0" font-size="10" fill="#52615a">appareil, libellé, clé, dictionnaire, nature, unité, échelle, et un octet « sens »</text>
+          <rect x="32" y="140" width="428" height="54" rx="12" fill="url(#trou-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <circle cx="47" cy="159" r="4.5" fill="url(#trou-h-vert)"/>
+          <text x="59.0" y="163.0" font-size="11.5" fill="#195744" font-weight="700">Vif · 40 o</text>
+          <text x="46.0" y="181.0" font-size="10" fill="#52615a">valeur, précédente, observé, changé, reçu, genres, qualité</text>
+          <rect x="32" y="204" width="428" height="54" rx="12" fill="url(#trou-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <circle cx="47" cy="223" r="4.5" fill="url(#trou-h-vert)"/>
+          <text x="59.0" y="227.0" font-size="11.5" fill="#195744" font-weight="700">Échéances · 4 + 4 o</text>
+          <text x="46.0" y="245.0" font-size="10" fill="#52615a">péremption, fraîcheur ; santé et échéance par appareil</text>
+          <rect x="32" y="268" width="428" height="54" rx="12" fill="url(#trou-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <circle cx="47" cy="287" r="4.5" fill="url(#trou-h-vert)"/>
+          <text x="59.0" y="291.0" font-size="11.5" fill="#195744" font-weight="700">Annuaire · ≈ 52 o</text>
+          <text x="46.0" y="309.0" font-size="10" fill="#52615a">le nom, une fois ; le numéro est l'adresse</text>
+          <rect x="500" y="40" width="484" height="300" rx="20" fill="#fae7dd" fill-opacity=".45" stroke="#d06a46" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(516.0 51.0) scale(0.6667)" fill="none" stroke="#8b3b22" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="538.0" y="64.0" font-size="11" fill="#8b3b22" font-weight="700" letter-spacing=".07em">CE QU'UN ORDRE DEMANDE, ET OÙ C'EST AUJOURD'HUI</text>
+          <rect x="516" y="76" width="452" height="54" rx="12" fill="url(#trou-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <circle cx="531" cy="95" r="4.5" fill="url(#trou-h-rouge)"/>
+          <text x="543.0" y="99.0" font-size="11.5" fill="#8b3b22" font-weight="700">La structure de l'ordre</text>
+          <text x="530.0" y="117.0" font-size="10" fill="#52615a">effet, retour, suivi, bornes d'ordre : sur meta/ (V7), dans aucune fiche</text>
+          <rect x="516" y="140" width="452" height="54" rx="12" fill="url(#trou-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <circle cx="531" cy="159" r="4.5" fill="url(#trou-h-rouge)"/>
+          <text x="543.0" y="163.0" font-size="11.5" fill="#8b3b22" font-weight="700">Les demandes en cours</text>
+          <text x="530.0" y="181.0" font-size="10" fill="#52615a">des tâches, des canaux et des verrous, une par appelant</text>
+          <rect x="516" y="204" width="452" height="54" rx="12" fill="url(#trou-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <circle cx="531" cy="223" r="4.5" fill="url(#trou-h-rouge)"/>
+          <text x="543.0" y="227.0" font-size="11.5" fill="#8b3b22" font-weight="700">La dernière commande</text>
+          <text x="530.0" y="245.0" font-size="10" fill="#52615a">nulle part : l'écran garde la sienne 8 s</text>
+          <rect x="516" y="268" width="452" height="54" rx="12" fill="url(#trou-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#trou-o)"/>
+          <circle cx="531" cy="287" r="4.5" fill="url(#trou-h-rouge)"/>
+          <text x="543.0" y="291.0" font-size="11.5" fill="#8b3b22" font-weight="700">Retenues, reçus, baux, compositions</text>
+          <text x="530.0" y="309.0" font-size="10" fill="#52615a">à part, en textes ; les retenues meurent au redémarrage</text>
+          <rect x="16" y="352" width="968" height="36" rx="12" fill="#fbefd3" stroke="#e0a12a" stroke-opacity=".5"/>
+          <g transform="translate(28.0 360.0) scale(0.8333)" fill="none" stroke="#94660a" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="56.0" y="374.0" font-size="11" fill="#1d302a" font-weight="700">Le seul octet de la v2 pour un ordre : « sens », c'est-à-dire lecture et écriture. Le reste est à ranger, à part des valeurs.</text>
+  <text x="18" y="429" font-size="12" fill="#52615a" font-style="italic">La mémoire v2 a tout rangé du côté des valeurs. Du côté des ordres, la V7 décrit la structure sur meta/, mais aucune fiche ne la garde, et l'état d'un</text>
+  <text x="18" y="446" font-size="12" fill="#52615a" font-style="italic">ordre en cours vit dans des tâches.</text>
+</svg>

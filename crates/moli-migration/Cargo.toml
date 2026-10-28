@@ -1,0 +1,19 @@
+[package]
+name = "moli-migration"
+description = "Moli OS: durable, fail-closed ownership migration contracts."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+moli-core = { path = "../moli-core" }
+moli-runtime = { path = "../moli-runtime" }
+ring.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 452" width="1000" height="452" role="img" aria-labelledby="bascule-t bascule-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="bascule-t">La bascule</title>
+  <desc id="bascule-d">À gauche, l'actif publie chaque pas d'une demande sur ord/, au rang s ; un appui attend l'accusé du secours avant de partir ; sans accusé au bout de 200 ms, il inscrit chez le témoin que le secours a décroché, puis envoie. À droite, le secours tient les mêmes cases et fiches et accuse chaque rang ; promu, il prend une époque nouvelle, lit le témoin pour savoir si la reprise est sûre, et son module relit ses appareils. Six cas : une demande remise devient incertaine, jamais renvoyée, et n'est confirmée que par une lecture faite après la reprise ; un appui sans accusé n'est jamais parti, et part une fois s'il est retenté sur une reprise sûre ; sur une reprise non sûre, une nouvelle tentative d'un appui antérieur est refusée ; un groupe garde son compte ; retenues, baux et reçus passent ; copies et écrans se rechargent.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="452" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="bascule-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="bascule-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <radialGradient id="bascule-sol"><stop offset="0" stop-color="#1d302a" stop-opacity=".22"/><stop offset="1" stop-color="#1d302a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="bascule-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="bascule-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="bascule-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="bascule-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="bascule-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="bascule-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="bascule-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="bascule-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="bascule-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="bascule-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="bascule-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="bascule-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="bascule-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="bascule-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="bascule-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="bascule-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="bascule-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="bascule-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="bascule-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="bascule-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="bascule-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="bascule-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="bascule-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="bascule-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="bascule-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="bascule-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="bascule-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="bascule-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="bascule-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="bascule-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="bascule-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="bascule-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="bascule-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="bascule-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="bascule-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LA BASCULE : CE QUI ÉTAIT EN COURS, ET CE QU'UN APPUI ATTEND</text>
+          <ellipse cx="173.0" cy="187.0" rx="149.0" ry="11" fill="url(#bascule-sol)"/>
+          <polygon points="36,60 52,51.2 316,51.2 300,60" fill="url(#bascule-t-vert)"/>
+          <polygon points="300,60 316,51.2 316,165.2 300,180" fill="url(#bascule-s-vert)"/>
+          <rect x="30" y="60" width="270" height="120" rx="8" fill="url(#bascule-f-vert)" stroke="#3d9a75" stroke-opacity=".5"/>
+          <path d="M30 94 V68 a8 8 0 0 1 8 -8 H292 a8 8 0 0 1 8 8 V94 z" fill="url(#bascule-h-vert)"/>
+          <g transform="translate(42.0 68.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z M10 10h4v4h-4z M9 4v3 M12 4v3 M15 4v3 M9 17v3 M12 17v3 M15 17v3 M4 9h3 M4 12h3 M4 15h3 M17 9h3 M17 12h3 M17 15h3"/></g>
+          <text x="68.0" y="82.5" font-size="13" fill="#ffffff" font-weight="700">L'actif</text>
+          <text x="288.0" y="82.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">jusqu'à 21:00</text>
+          <text x="165.0" y="118.0" font-size="10.2" fill="#52615a" text-anchor="middle">chaque pas d'une demande sur ord/</text>
+          <text x="165.0" y="134.0" font-size="10.2" fill="#52615a" text-anchor="middle">un appui : l'accusé du secours d'abord</text>
+          <text x="165.0" y="150.0" font-size="10.2" fill="#52615a" text-anchor="middle">sinon le témoin : « décroché »</text>
+          <ellipse cx="843.0" cy="187.0" rx="149.0" ry="11" fill="url(#bascule-sol)"/>
+          <polygon points="706,60 722,51.2 986,51.2 970,60" fill="url(#bascule-t-bleu)"/>
+          <polygon points="970,60 986,51.2 986,165.2 970,180" fill="url(#bascule-s-bleu)"/>
+          <rect x="700" y="60" width="270" height="120" rx="8" fill="url(#bascule-f-bleu)" stroke="#3b8db4" stroke-opacity=".5"/>
+          <path d="M700 94 V68 a8 8 0 0 1 8 -8 H962 a8 8 0 0 1 8 8 V94 z" fill="url(#bascule-h-bleu)"/>
+          <g transform="translate(712.0 68.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 14.5-3.5 M19 3v4h-4 M20 14a8 8 0 0 1-14.5 3.5 M5 21v-4h4"/></g>
+          <text x="738.0" y="82.5" font-size="13" fill="#ffffff" font-weight="700">Le secours</text>
+          <text x="958.0" y="82.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">puis l'actif, époque 2</text>
+          <text x="835.0" y="118.0" font-size="10.2" fill="#52615a" text-anchor="middle">les mêmes cases et fiches ; il accuse</text>
+          <text x="835.0" y="134.0" font-size="10.2" fill="#52615a" text-anchor="middle">lit le témoin : reprise sûre ou non</text>
+          <text x="835.0" y="150.0" font-size="10.2" fill="#52615a" text-anchor="middle">relit ses appareils : lectures fraîches</text>
+          <path d="M310 104 L690 104" fill="none" stroke="#94660a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#bascule-m-ambre)"/>
+          <path class="hd-flux" d="M310 104 L690 104" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="500.0" y="94.0" font-size="10.5" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">ord/ · prive/ · wf/ · val/ · meta/ — au rang s</text>
+          <path d="M690 128 L310 128" fill="none" stroke="#4b3d82" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#bascule-m-violet)"/>
+          <path class="hd-lent" d="M690 128 L310 128" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="500.0" y="142.0" font-size="10.5" fill="#4b3d82" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">l'accusé de chaque rang</text>
+          <rect x="30" y="202" width="460" height="52" rx="12" fill="url(#bascule-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#bascule-o)"/>
+          <circle cx="45" cy="221" r="4.5" fill="url(#bascule-h-rouge)"/>
+          <text x="57.0" y="225.0" font-size="11.2" fill="#8b3b22" font-weight="700">Remise, partie ou non</text>
+          <text x="44.0" y="243.0" font-size="9.8" fill="#52615a">incertaine, jamais renvoyée ; confirmée par une lecture faite après la reprise</text>
+          <rect x="510" y="202" width="460" height="52" rx="12" fill="url(#bascule-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#bascule-o)"/>
+          <circle cx="525" cy="221" r="4.5" fill="url(#bascule-h-ambre)"/>
+          <text x="537.0" y="225.0" font-size="11.2" fill="#94660a" font-weight="700">Un appui sans accusé</text>
+          <text x="524.0" y="243.0" font-size="9.8" fill="#52615a">jamais parti ; retenté sur une reprise sûre : il part, une fois</text>
+          <rect x="30" y="264" width="460" height="52" rx="12" fill="url(#bascule-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#bascule-o)"/>
+          <circle cx="45" cy="283" r="4.5" fill="url(#bascule-h-rouge)"/>
+          <text x="57.0" y="287.0" font-size="11.2" fill="#8b3b22" font-weight="700">Une reprise non sûre</text>
+          <text x="44.0" y="305.0" font-size="9.8" fill="#52615a">une nouvelle tentative d'un appui d'avant : refusée, « ambiguë »</text>
+          <rect x="510" y="264" width="460" height="52" rx="12" fill="url(#bascule-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#bascule-o)"/>
+          <circle cx="525" cy="283" r="4.5" fill="url(#bascule-h-bleu)"/>
+          <text x="537.0" y="287.0" font-size="11.2" fill="#1b5873" font-weight="700">Un groupe à demi conclu</text>
+          <text x="524.0" y="305.0" font-size="9.8" fill="#52615a">la copie a rejoué son compte : 3 sur 4</text>
+          <rect x="30" y="326" width="460" height="52" rx="12" fill="url(#bascule-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#bascule-o)"/>
+          <circle cx="45" cy="345" r="4.5" fill="url(#bascule-h-vert)"/>
+          <text x="57.0" y="349.0" font-size="11.2" fill="#195744" font-weight="700">Retenue, bail, reçu</text>
+          <text x="44.0" y="367.0" font-size="9.8" fill="#52615a">passent ; la retenue revérifiée ; le bail rétabli à son terme</text>
+          <rect x="510" y="326" width="460" height="52" rx="12" fill="url(#bascule-f-violet)" stroke="#7e6cc2" stroke-opacity=".55" stroke-width="1.1" filter="url(#bascule-o)"/>
+          <circle cx="525" cy="345" r="4.5" fill="url(#bascule-h-violet)"/>
+          <text x="537.0" y="349.0" font-size="11.2" fill="#4b3d82" font-weight="700">Copies et écrans</text>
+          <text x="524.0" y="367.0" font-size="9.8" fill="#52615a">une époque nouvelle : ils se rechargent par l'état complet</text>
+  <text x="18" y="429" font-size="12" fill="#52615a" font-style="italic">La HA v2 admet la perte des dernières sorties en vol : une trace copiée après ne protège pas un appui fait avant (revue B2). L'accusé avant l'appui,</text>
+  <text x="18" y="446" font-size="12" fill="#52615a" font-style="italic">le témoin et la reprise sûre ou non rendent « au plus une fois » vrai.</text>
+</svg>

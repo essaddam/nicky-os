@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 283" width="1000" height="283" role="img" aria-labelledby="ordre-t ordre-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="ordre-t">Remettre l'ordre : le rang s, et la dépendance de j</title>
+  <desc id="ordre-d">À gauche : le hub publie s 1 à 5, alternant val/ et vu/ ; un abonné aux deux filtres les reçoit dans l'ordre 1, 3, 5, 2, 4 ; le rattrapeur les remet dans l'ordre et n'appelle le journal qu'après 200 ms. À droite : l'enregistrement j 50, attente armée, dépend de la valeur s 100 ; arrivé avant elle au secours, il attend qu'elle soit appliquée.</desc>
+  <rect width="1000" height="283" fill="#fffdf8"/>
+          <defs>
+            <marker id="ordre-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="ordre-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="ordre-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="ordre-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">DEUX FILTRES, DEUX JOURNAUX DU COURTIER</text>
+          <text x="520.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">UN ENREGISTREMENT J ATTEND SA VALEUR</text>
+          <text x="16.0" y="46.0" font-size="10" fill="#52615a">publié par le hub</text>
+          <text x="16.0" y="114.0" font-size="10" fill="#52615a">reçu par un abonné à val/# et vu/#</text>
+          <text x="16.0" y="182.0" font-size="10" fill="#52615a">après le rattrapeur</text>
+          <rect x="16.0" y="52.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="39.0" y="69.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 1</text>
+          <rect x="72.0" y="52.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="95.0" y="69.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle">s 2</text>
+          <rect x="128.0" y="52.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="151.0" y="69.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 3</text>
+          <rect x="184.0" y="52.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="207.0" y="69.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle">s 4</text>
+          <rect x="240.0" y="52.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="263.0" y="69.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 5</text>
+          <rect x="16.0" y="120.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="39.0" y="137.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 1</text>
+          <rect x="72.0" y="120.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="95.0" y="137.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 3</text>
+          <rect x="128.0" y="120.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="151.0" y="137.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 5</text>
+          <rect x="184.0" y="120.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="207.0" y="137.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle">s 2</text>
+          <rect x="240.0" y="120.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="263.0" y="137.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle">s 4</text>
+          <rect x="16.0" y="188.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="39.0" y="205.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 1</text>
+          <rect x="72.0" y="188.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="95.0" y="205.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle">s 2</text>
+          <rect x="128.0" y="188.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="151.0" y="205.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 3</text>
+          <rect x="184.0" y="188.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="207.0" y="205.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle">s 4</text>
+          <rect x="240.0" y="188.0" width="46.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="263.0" y="205.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 5</text>
+          <text x="300.0" y="70.0" font-size="10" fill="#52615a">val/ (vert), vu/ (ambre)</text>
+          <text x="300.0" y="132.0" font-size="10" fill="#52615a">3 et 5 avant 2 et 4,</text>
+          <text x="300.0" y="146.0" font-size="10" fill="#52615a">aucun message perdu</text>
+          <text x="300.0" y="200.0" font-size="10" fill="#52615a">remis dans l'ordre de s ;</text>
+          <text x="300.0" y="214.0" font-size="10" fill="#52615a">trou demandé après 200 ms</text>
+          <line x1="500.0" y1="36.0" x2="500.0" y2="236.0" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="520.0" y="46.0" font-size="10" fill="#52615a">flux s (valeurs)</text>
+          <rect x="520.0" y="52.0" width="56.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="548.0" y="69.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 99</text>
+          <rect x="584.0" y="52.0" width="170.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="669.0" y="69.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 100 : porte ouverte</text>
+          <text x="520.0" y="104.0" font-size="10" fill="#52615a">flux j (journal)</text>
+          <rect x="520.0" y="110.0" width="270.0" height="26.0" rx="5" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="655.0" y="127.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle">j 50 : attente armée, dépend de s 100</text>
+          <text x="520.0" y="162.0" font-size="10" fill="#52615a">au secours, dans l'ordre d'arrivée puis d'application</text>
+          <rect x="520.0" y="168.0" width="50.0" height="26.0" rx="5" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="545.0" y="185.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle">j 50</text>
+          <text x="578.0" y="186.0" font-size="10" fill="#b07d12" font-weight="700">attend…</text>
+          <rect x="640.0" y="168.0" width="50.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="665.0" y="185.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 99</text>
+          <rect x="698.0" y="168.0" width="56.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="726.0" y="185.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">s 100</text>
+          <line x1="760.0" y1="181.0" x2="790.0" y2="181.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#ordre-g)"/>
+          <rect x="796.0" y="168.0" width="108.0" height="26.0" rx="5" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="850.0" y="185.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle">j 50 appliqué</text>
+          <text x="520.0" y="222.0" font-size="10" fill="#52615a">Sans cette règle, une bascule entre les deux laisserait</text>
+          <text x="520.0" y="236.0" font-size="10" fill="#52615a">une attente sans sa valeur : elle ne se revérifierait pas.</text>
+  <text x="16" y="279" font-size="12" fill="#52615a" font-style="italic">Le courtier tient un journal par filtre et les livre entrelacés : tout abonné qui lit plusieurs filtres remet l'ordre par s.</text>
+</svg>

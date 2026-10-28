@@ -10,3 +10,4 @@ web/dist
 .agentsroom/transfer-context-*.txt
 .cursor/mcp.json
 /.worktrees/
+.kimi-code/mcp.json

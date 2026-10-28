@@ -1,0 +1,4349 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-27T21:47:50.462943+00:00",
+  "scope": "two autonomous instances and two brokers on one Mac; loopback bridge faults; no WAN or VPN claim",
+  "profile": "debug",
+  "platform": "darwin",
+  "quick": false,
+  "fixture": false,
+  "qualification_120s": true,
+  "physical_commands": 0,
+  "checks_skipped": true,
+  "runner_sha256": "1590daebe68c9db145b956519d39438714b2bab8b206993fd74dcdf41c4cc709",
+  "cases": [
+    {
+      "case": "bilateral_cut_8s",
+      "status": "PASS",
+      "fault_mode": "cut",
+      "faulted_entries": [
+        "node-a",
+        "node-b"
+      ],
+      "requested_fault_seconds": 8,
+      "quick": false,
+      "physical_commands": 0,
+      "before": {
+        "node-a": {
+          "allocator_live_bytes": 15279111,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098023,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1628,
+              "role": "active",
+              "sequence": 0,
+              "sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730"
+            },
+            {
+              "document_bytes": 1928898,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1487,
+              "role": "passive",
+              "sequence": 0,
+              "sha256": "2e377b5d4035b2bd9f09f166a2f6a2d447b1cd788eaaba31ad106a2d4463efe7"
+            }
+          ],
+          "delta_recoveries": 0,
+          "effects": 0,
+          "error": "peer_unavailable",
+          "fault": {
+            "accepted_connections": 1,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 921,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 0,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 0
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 0,
+          "own_sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730",
+          "peer_freshness": null,
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": false,
+          "remote_last_success_age_ms": null,
+          "replica_rpc": {
+            "connections": 0,
+            "errors": 1,
+            "successes": 0
+          },
+          "ring_bytes": 0,
+          "ring_len": 0,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 861
+        },
+        "node-b": {
+          "allocator_live_bytes": 15320061,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098023,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1628,
+              "role": "passive",
+              "sequence": 0,
+              "sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730"
+            },
+            {
+              "document_bytes": 1928898,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1487,
+              "role": "active",
+              "sequence": 0,
+              "sha256": "2e377b5d4035b2bd9f09f166a2f6a2d447b1cd788eaaba31ad106a2d4463efe7"
+            }
+          ],
+          "delta_recoveries": 0,
+          "effects": 0,
+          "error": null,
+          "fault": {
+            "accepted_connections": 0,
+            "active_connections": 0,
+            "forced_closures": 0,
+            "forwarded_bytes": 0,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 0,
+            "max_active_seen": 0,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 0
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 0,
+          "own_sha256": "2e377b5d4035b2bd9f09f166a2f6a2d447b1cd788eaaba31ad106a2d4463efe7",
+          "peer_freshness": {
+            "age_ms": 78,
+            "own_sequence": 0,
+            "own_sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 78,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 0,
+            "successes": 1
+          },
+          "ring_bytes": 0,
+          "ring_len": 0,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 829
+        }
+      },
+      "settled": {
+        "node-a": {
+          "allocator_live_bytes": 15266639,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098023,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1628,
+              "role": "active",
+              "sequence": 0,
+              "sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730"
+            },
+            {
+              "document_bytes": 1928898,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1487,
+              "role": "passive",
+              "sequence": 0,
+              "sha256": "2e377b5d4035b2bd9f09f166a2f6a2d447b1cd788eaaba31ad106a2d4463efe7"
+            }
+          ],
+          "delta_recoveries": 0,
+          "effects": 0,
+          "error": "peer_unavailable",
+          "fault": {
+            "accepted_connections": 1,
+            "active_connections": 0,
+            "forced_closures": 1,
+            "forwarded_bytes": 921,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "cut",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 0
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 0,
+          "own_sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730",
+          "peer_freshness": null,
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": false,
+          "remote_last_success_age_ms": null,
+          "replica_rpc": {
+            "connections": 0,
+            "errors": 1,
+            "successes": 0
+          },
+          "ring_bytes": 0,
+          "ring_len": 0,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 1070
+        },
+        "node-b": {
+          "allocator_live_bytes": 15273479,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098023,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1628,
+              "role": "passive",
+              "sequence": 0,
+              "sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730"
+            },
+            {
+              "document_bytes": 1928898,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1487,
+              "role": "active",
+              "sequence": 0,
+              "sha256": "2e377b5d4035b2bd9f09f166a2f6a2d447b1cd788eaaba31ad106a2d4463efe7"
+            }
+          ],
+          "delta_recoveries": 0,
+          "effects": 0,
+          "error": null,
+          "fault": {
+            "accepted_connections": 0,
+            "active_connections": 0,
+            "forced_closures": 0,
+            "forwarded_bytes": 0,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 0,
+            "mode": "cut",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 0
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 0,
+          "own_sha256": "2e377b5d4035b2bd9f09f166a2f6a2d447b1cd788eaaba31ad106a2d4463efe7",
+          "peer_freshness": {
+            "age_ms": 287,
+            "own_sequence": 0,
+            "own_sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 287,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 0,
+            "successes": 1
+          },
+          "ring_bytes": 0,
+          "ring_len": 0,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 1038
+        }
+      },
+      "during": {
+        "node-a": {
+          "allocator_live_bytes": 15272118,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098113,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 4,
+              "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+            },
+            {
+              "document_bytes": 1928898,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1487,
+              "role": "passive",
+              "sequence": 0,
+              "sha256": "2e377b5d4035b2bd9f09f166a2f6a2d447b1cd788eaaba31ad106a2d4463efe7"
+            }
+          ],
+          "delta_recoveries": 0,
+          "effects": 4,
+          "error": "peer_unavailable",
+          "fault": {
+            "accepted_connections": 16,
+            "active_connections": 0,
+            "forced_closures": 1,
+            "forwarded_bytes": 921,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "cut",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 15
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 4,
+          "own_sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9",
+          "peer_freshness": null,
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": false,
+          "remote_last_success_age_ms": null,
+          "replica_rpc": {
+            "connections": 0,
+            "errors": 17,
+            "successes": 0
+          },
+          "ring_bytes": 600,
+          "ring_len": 4,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 8893
+        },
+        "node-b": {
+          "allocator_live_bytes": 15275350,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098023,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1628,
+              "role": "passive",
+              "sequence": 0,
+              "sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730"
+            },
+            {
+              "document_bytes": 1928988,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 4,
+              "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+            }
+          ],
+          "delta_recoveries": 0,
+          "effects": 4,
+          "error": "peer_unavailable",
+          "fault": {
+            "accepted_connections": 16,
+            "active_connections": 0,
+            "forced_closures": 0,
+            "forwarded_bytes": 0,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 0,
+            "mode": "cut",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 4,
+          "own_sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13",
+          "peer_freshness": {
+            "age_ms": 8126,
+            "own_sequence": 0,
+            "own_sha256": "1b24770debf450ddc7559e218b08672f7f38841b1db7df64d7dcc17ce6d5a730"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": false,
+          "remote_last_success_age_ms": 8126,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 16,
+            "successes": 1
+          },
+          "ring_bytes": 600,
+          "ring_len": 4,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 8878
+        }
+      },
+      "fault_poll_count": 30,
+      "checks": {
+        "node-a": {
+          "local_sequence_gain": 4,
+          "effect_admission_gain": 4,
+          "minimum_local_gain": 3,
+          "passive_frozen": true,
+          "lease_valid": true
+        },
+        "node-b": {
+          "local_sequence_gain": 4,
+          "effect_admission_gain": 4,
+          "minimum_local_gain": 3,
+          "passive_frozen": true,
+          "lease_valid": true
+        }
+      },
+      "fault_duration_ms": 8051,
+      "fault_duration_by_entry_ms": {
+        "node-a": 8050,
+        "node-b": 8050
+      },
+      "recovery_ms": 1393,
+      "recovered": {
+        "node-a": {
+          "allocator_live_bytes": 15341374,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098113,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 4,
+              "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+            },
+            {
+              "document_bytes": 1928988,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 4,
+              "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+            }
+          ],
+          "delta_recoveries": 1,
+          "effects": 4,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 1,
+            "forwarded_bytes": 4950,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 15
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 4,
+          "own_sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9",
+          "peer_freshness": {
+            "age_ms": 2,
+            "own_sequence": 4,
+            "own_sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 2,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 7
+          },
+          "ring_bytes": 600,
+          "ring_len": 4,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 10304
+        },
+        "node-b": {
+          "allocator_live_bytes": 15341374,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098113,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 4,
+              "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+            },
+            {
+              "document_bytes": 1928988,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 4,
+              "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+            }
+          ],
+          "delta_recoveries": 1,
+          "effects": 4,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 4789,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 4,
+          "own_sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13",
+          "peer_freshness": {
+            "age_ms": 2,
+            "own_sequence": 4,
+            "own_sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 2,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 16,
+            "successes": 7
+          },
+          "ring_bytes": 600,
+          "ring_len": 4,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 10272
+        }
+      },
+      "convergence": {
+        "house-a": {
+          "source": "node-a",
+          "replica_node": "node-b",
+          "source_before": {
+            "sequence": 4,
+            "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+          },
+          "replica": {
+            "sequence": 4,
+            "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+          },
+          "source_after": {
+            "sequence": 4,
+            "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+          }
+        },
+        "house-b": {
+          "source": "node-b",
+          "replica_node": "node-a",
+          "source_before": {
+            "sequence": 4,
+            "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+          },
+          "replica": {
+            "sequence": 4,
+            "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+          },
+          "source_after": {
+            "sequence": 4,
+            "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+          }
+        }
+      },
+      "same_socket_check": {
+        "required": false,
+        "passed": null
+      },
+      "resources": {
+        "node-a": {
+          "process_sample": {
+            "seconds": 10.776,
+            "rss_bytes": 69107712,
+            "cpu_seconds": 2.01
+          },
+          "allocator_live_bytes": 15341374,
+          "allocator_peak_bytes": 50978453
+        },
+        "node-b": {
+          "process_sample": {
+            "seconds": 10.521,
+            "rss_bytes": 69337088,
+            "cpu_seconds": 2.01
+          },
+          "allocator_live_bytes": 15341374,
+          "allocator_peak_bytes": 50978454
+        }
+      }
+    },
+    {
+      "case": "bilateral_blackhole_3s",
+      "status": "PASS",
+      "fault_mode": "blackhole",
+      "faulted_entries": [
+        "node-a",
+        "node-b"
+      ],
+      "requested_fault_seconds": 3,
+      "quick": false,
+      "physical_commands": 0,
+      "before": {
+        "node-a": {
+          "allocator_live_bytes": 15341374,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098113,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 4,
+              "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+            },
+            {
+              "document_bytes": 1928988,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 4,
+              "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+            }
+          ],
+          "delta_recoveries": 1,
+          "effects": 4,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 1,
+            "forwarded_bytes": 4950,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 15
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 4,
+          "own_sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9",
+          "peer_freshness": {
+            "age_ms": 15,
+            "own_sequence": 4,
+            "own_sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 15,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 7
+          },
+          "ring_bytes": 600,
+          "ring_len": 4,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 10317
+        },
+        "node-b": {
+          "allocator_live_bytes": 15341374,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098113,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 4,
+              "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+            },
+            {
+              "document_bytes": 1928988,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 4,
+              "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+            }
+          ],
+          "delta_recoveries": 1,
+          "effects": 4,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 4789,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 4,
+          "own_sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13",
+          "peer_freshness": {
+            "age_ms": 15,
+            "own_sequence": 4,
+            "own_sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 15,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 16,
+            "successes": 7
+          },
+          "ring_bytes": 600,
+          "ring_len": 4,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 10285
+        }
+      },
+      "settled": {
+        "node-a": {
+          "allocator_live_bytes": 15341374,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098113,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 4,
+              "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+            },
+            {
+              "document_bytes": 1928988,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 4,
+              "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+            }
+          ],
+          "delta_recoveries": 1,
+          "effects": 4,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 1,
+            "forwarded_bytes": 4950,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "blackhole",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 15
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 4,
+          "own_sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9",
+          "peer_freshness": {
+            "age_ms": 222,
+            "own_sequence": 4,
+            "own_sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 222,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 7
+          },
+          "ring_bytes": 600,
+          "ring_len": 4,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 10525
+        },
+        "node-b": {
+          "allocator_live_bytes": 15341374,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098113,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 4,
+              "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+            },
+            {
+              "document_bytes": 1928988,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 4,
+              "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+            }
+          ],
+          "delta_recoveries": 1,
+          "effects": 4,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 4789,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "blackhole",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 4,
+          "own_sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13",
+          "peer_freshness": {
+            "age_ms": 223,
+            "own_sequence": 4,
+            "own_sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 223,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 16,
+            "successes": 7
+          },
+          "ring_bytes": 600,
+          "ring_len": 4,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 10493
+        }
+      },
+      "during": {
+        "node-a": {
+          "allocator_live_bytes": 15343419,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098115,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+            },
+            {
+              "document_bytes": 1928988,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 4,
+              "sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+            }
+          ],
+          "delta_recoveries": 1,
+          "effects": 6,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 1,
+            "forwarded_bytes": 4950,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "blackhole",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 15
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 6,
+          "own_sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b",
+          "peer_freshness": {
+            "age_ms": 3022,
+            "own_sequence": 4,
+            "own_sha256": "d4172b1bca3fa8ffb7657a839bec6f1e261331f0f3afac4d2a86835d9ca9fb13"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 3022,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 7
+          },
+          "ring_bytes": 904,
+          "ring_len": 6,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 13324
+        },
+        "node-b": {
+          "allocator_live_bytes": 15343419,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098113,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 4,
+              "sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+            },
+            {
+              "document_bytes": 1928990,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+            }
+          ],
+          "delta_recoveries": 1,
+          "effects": 6,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 4789,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "blackhole",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 6,
+          "own_sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce",
+          "peer_freshness": {
+            "age_ms": 3023,
+            "own_sequence": 4,
+            "own_sha256": "4884449f91959b5bade433908daed36e9b63084493066c0f8877a6e8dbdf99a9"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 3023,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 16,
+            "successes": 7
+          },
+          "ring_bytes": 904,
+          "ring_len": 6,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 13293
+        }
+      },
+      "fault_poll_count": 11,
+      "checks": {
+        "node-a": {
+          "local_sequence_gain": 2,
+          "effect_admission_gain": 2,
+          "minimum_local_gain": 1,
+          "passive_frozen": true,
+          "lease_valid": true
+        },
+        "node-b": {
+          "local_sequence_gain": 2,
+          "effect_admission_gain": 2,
+          "minimum_local_gain": 1,
+          "passive_frozen": true,
+          "lease_valid": true
+        }
+      },
+      "fault_duration_ms": 3009,
+      "fault_duration_by_entry_ms": {
+        "node-a": 3008,
+        "node-b": 3009
+      },
+      "recovery_ms": 706,
+      "recovered": {
+        "node-a": {
+          "allocator_live_bytes": 15343152,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098115,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+            },
+            {
+              "document_bytes": 1928990,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+            }
+          ],
+          "delta_recoveries": 2,
+          "effects": 6,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 1,
+            "forwarded_bytes": 8412,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 15
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 6,
+          "own_sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b",
+          "peer_freshness": {
+            "age_ms": 263,
+            "own_sequence": 6,
+            "own_sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 263,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 11
+          },
+          "ring_bytes": 904,
+          "ring_len": 6,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 14032
+        },
+        "node-b": {
+          "allocator_live_bytes": 15343152,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098115,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+            },
+            {
+              "document_bytes": 1928990,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+            }
+          ],
+          "delta_recoveries": 2,
+          "effects": 6,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 7491,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 6,
+          "own_sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce",
+          "peer_freshness": {
+            "age_ms": 247,
+            "own_sequence": 6,
+            "own_sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 247,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 16,
+            "successes": 12
+          },
+          "ring_bytes": 904,
+          "ring_len": 6,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 14000
+        }
+      },
+      "convergence": {
+        "house-a": {
+          "source": "node-a",
+          "replica_node": "node-b",
+          "source_before": {
+            "sequence": 6,
+            "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+          },
+          "replica": {
+            "sequence": 6,
+            "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+          },
+          "source_after": {
+            "sequence": 6,
+            "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+          }
+        },
+        "house-b": {
+          "source": "node-b",
+          "replica_node": "node-a",
+          "source_before": {
+            "sequence": 6,
+            "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+          },
+          "replica": {
+            "sequence": 6,
+            "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+          },
+          "source_after": {
+            "sequence": 6,
+            "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+          }
+        }
+      },
+      "same_socket_check": {
+        "required": true,
+        "passed": true
+      },
+      "resources": {
+        "node-a": {
+          "process_sample": {
+            "seconds": 14.503,
+            "rss_bytes": 69140480,
+            "cpu_seconds": 2.54
+          },
+          "allocator_live_bytes": 15343152,
+          "allocator_peak_bytes": 50978453
+        },
+        "node-b": {
+          "process_sample": {
+            "seconds": 14.246,
+            "rss_bytes": 69369856,
+            "cpu_seconds": 2.55
+          },
+          "allocator_live_bytes": 15343152,
+          "allocator_peak_bytes": 50978454
+        }
+      }
+    },
+    {
+      "case": "one_way_cut_8s",
+      "status": "PASS",
+      "fault_mode": "cut",
+      "faulted_entries": [
+        "node-a"
+      ],
+      "requested_fault_seconds": 8,
+      "quick": false,
+      "physical_commands": 0,
+      "before": {
+        "node-a": {
+          "allocator_live_bytes": 15343152,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098115,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+            },
+            {
+              "document_bytes": 1928990,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+            }
+          ],
+          "delta_recoveries": 2,
+          "effects": 6,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 1,
+            "forwarded_bytes": 8412,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 15
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 6,
+          "own_sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b",
+          "peer_freshness": {
+            "age_ms": 273,
+            "own_sequence": 6,
+            "own_sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 273,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 11
+          },
+          "ring_bytes": 904,
+          "ring_len": 6,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 14042
+        },
+        "node-b": {
+          "allocator_live_bytes": 15343152,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098115,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+            },
+            {
+              "document_bytes": 1928990,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+            }
+          ],
+          "delta_recoveries": 2,
+          "effects": 6,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 7491,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 6,
+          "own_sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce",
+          "peer_freshness": {
+            "age_ms": 257,
+            "own_sequence": 6,
+            "own_sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 257,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 16,
+            "successes": 12
+          },
+          "ring_bytes": 904,
+          "ring_len": 6,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 14010
+        }
+      },
+      "settled": {
+        "node-a": {
+          "allocator_live_bytes": 15330418,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098115,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+            },
+            {
+              "document_bytes": 1928990,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+            }
+          ],
+          "delta_recoveries": 2,
+          "effects": 6,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 0,
+            "forced_closures": 2,
+            "forwarded_bytes": 8412,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 2,
+            "max_active_seen": 1,
+            "mode": "cut",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 15
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 6,
+          "own_sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b",
+          "peer_freshness": {
+            "age_ms": 482,
+            "own_sequence": 6,
+            "own_sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 482,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 11
+          },
+          "ring_bytes": 904,
+          "ring_len": 6,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 14251
+        },
+        "node-b": {
+          "allocator_live_bytes": 15296570,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098115,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+            },
+            {
+              "document_bytes": 1928990,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 6,
+              "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+            }
+          ],
+          "delta_recoveries": 2,
+          "effects": 6,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 7491,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 6,
+          "own_sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce",
+          "peer_freshness": {
+            "age_ms": 466,
+            "own_sequence": 6,
+            "own_sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 466,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 16,
+            "successes": 12
+          },
+          "ring_bytes": 904,
+          "ring_len": 6,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 14219
+        }
+      },
+      "during": {
+        "node-a": {
+          "allocator_live_bytes": 15334175,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 10,
+              "sha256": "81f82da2f36eb1aaed1c26808dd20ad48b77d5e3bda4d6cdc6dbf937072a9172"
+            },
+            {
+              "document_bytes": 1928990,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 6,
+              "sha256": "834af266d076426a4f84fbcb938495e2c6ae9f748821ebe7246027d45d9c11ce"
+            }
+          ],
+          "delta_recoveries": 6,
+          "effects": 10,
+          "error": null,
+          "fault": {
+            "accepted_connections": 32,
+            "active_connections": 0,
+            "forced_closures": 2,
+            "forwarded_bytes": 8412,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 2,
+            "max_active_seen": 1,
+            "mode": "cut",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 30
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 10,
+          "own_sha256": "81f82da2f36eb1aaed1c26808dd20ad48b77d5e3bda4d6cdc6dbf937072a9172",
+          "peer_freshness": {
+            "age_ms": 291,
+            "own_sequence": 10,
+            "own_sha256": "3a2067b7a03f0b3dbcd9e44d35036841407b3ba1fbc7c3e164ce7919fae224d5"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 291,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 31
+          },
+          "ring_bytes": 1513,
+          "ring_len": 10,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 22048
+        },
+        "node-b": {
+          "allocator_live_bytes": 15296087,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 10,
+              "sha256": "81f82da2f36eb1aaed1c26808dd20ad48b77d5e3bda4d6cdc6dbf937072a9172"
+            },
+            {
+              "document_bytes": 1928991,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 10,
+              "sha256": "3a2067b7a03f0b3dbcd9e44d35036841407b3ba1fbc7c3e164ce7919fae224d5"
+            }
+          ],
+          "delta_recoveries": 2,
+          "effects": 10,
+          "error": "peer_unavailable",
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 22060,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 10,
+          "own_sha256": "3a2067b7a03f0b3dbcd9e44d35036841407b3ba1fbc7c3e164ce7919fae224d5",
+          "peer_freshness": {
+            "age_ms": 8264,
+            "own_sequence": 6,
+            "own_sha256": "05b96ef9bc5a29f3d2c73bfef7faff5b6c6b3da70bd2f21a470d8a606d42849b"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": false,
+          "remote_last_success_age_ms": 8264,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 32,
+            "successes": 12
+          },
+          "ring_bytes": 1513,
+          "ring_len": 10,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 22017
+        }
+      },
+      "fault_poll_count": 28,
+      "checks": {
+        "node-a": {
+          "local_sequence_gain": 4,
+          "effect_admission_gain": 4,
+          "minimum_local_gain": 3,
+          "passive_frozen": true,
+          "lease_valid": true
+        },
+        "node-b": {
+          "local_sequence_gain": 4,
+          "effect_admission_gain": 4,
+          "minimum_local_gain": 3,
+          "passive_frozen": false,
+          "lease_valid": true
+        }
+      },
+      "fault_duration_ms": 8009,
+      "fault_duration_by_entry_ms": {
+        "node-a": 8009
+      },
+      "recovery_ms": 1331,
+      "recovered": {
+        "node-a": {
+          "allocator_live_bytes": 15348457,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 11,
+              "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+            },
+            {
+              "document_bytes": 1928991,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 11,
+              "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+            }
+          ],
+          "delta_recoveries": 7,
+          "effects": 11,
+          "error": null,
+          "fault": {
+            "accepted_connections": 33,
+            "active_connections": 1,
+            "forced_closures": 2,
+            "forwarded_bytes": 13812,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 2,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 30
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 11,
+          "own_sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7",
+          "peer_freshness": {
+            "age_ms": 125,
+            "own_sequence": 11,
+            "own_sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 125,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 35
+          },
+          "ring_bytes": 1666,
+          "ring_len": 11,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 23382
+        },
+        "node-b": {
+          "allocator_live_bytes": 15349543,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 11,
+              "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+            },
+            {
+              "document_bytes": 1928991,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 11,
+              "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+            }
+          ],
+          "delta_recoveries": 4,
+          "effects": 11,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 24949,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 11,
+          "own_sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6",
+          "peer_freshness": {
+            "age_ms": 97,
+            "own_sequence": 11,
+            "own_sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 97,
+          "replica_rpc": {
+            "connections": 3,
+            "errors": 32,
+            "successes": 20
+          },
+          "ring_bytes": 1666,
+          "ring_len": 11,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 23350
+        }
+      },
+      "convergence": {
+        "house-a": {
+          "source": "node-a",
+          "replica_node": "node-b",
+          "source_before": {
+            "sequence": 11,
+            "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+          },
+          "replica": {
+            "sequence": 11,
+            "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+          },
+          "source_after": {
+            "sequence": 11,
+            "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+          }
+        },
+        "house-b": {
+          "source": "node-b",
+          "replica_node": "node-a",
+          "source_before": {
+            "sequence": 11,
+            "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+          },
+          "replica": {
+            "sequence": 11,
+            "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+          },
+          "source_after": {
+            "sequence": 11,
+            "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+          }
+        }
+      },
+      "same_socket_check": {
+        "required": false,
+        "passed": null
+      },
+      "resources": {
+        "node-a": {
+          "process_sample": {
+            "seconds": 23.853,
+            "rss_bytes": 34111488,
+            "cpu_seconds": 4.06
+          },
+          "allocator_live_bytes": 15348457,
+          "allocator_peak_bytes": 50978453
+        },
+        "node-b": {
+          "process_sample": {
+            "seconds": 23.596,
+            "rss_bytes": 36438016,
+            "cpu_seconds": 4.02
+          },
+          "allocator_live_bytes": 15349543,
+          "allocator_peak_bytes": 50978454
+        }
+      }
+    },
+    {
+      "case": "bilateral_blackhole_120s",
+      "status": "PASS",
+      "fault_mode": "blackhole",
+      "faulted_entries": [
+        "node-a",
+        "node-b"
+      ],
+      "requested_fault_seconds": 120,
+      "quick": false,
+      "physical_commands": 0,
+      "before": {
+        "node-a": {
+          "allocator_live_bytes": 15348457,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 11,
+              "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+            },
+            {
+              "document_bytes": 1928991,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 11,
+              "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+            }
+          ],
+          "delta_recoveries": 7,
+          "effects": 11,
+          "error": null,
+          "fault": {
+            "accepted_connections": 33,
+            "active_connections": 1,
+            "forced_closures": 2,
+            "forwarded_bytes": 13812,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 2,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 30
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 11,
+          "own_sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7",
+          "peer_freshness": {
+            "age_ms": 135,
+            "own_sequence": 11,
+            "own_sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 135,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 35
+          },
+          "ring_bytes": 1666,
+          "ring_len": 11,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 23393
+        },
+        "node-b": {
+          "allocator_live_bytes": 15349543,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 11,
+              "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+            },
+            {
+              "document_bytes": 1928991,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 11,
+              "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+            }
+          ],
+          "delta_recoveries": 4,
+          "effects": 11,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 24949,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 11,
+          "own_sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6",
+          "peer_freshness": {
+            "age_ms": 107,
+            "own_sequence": 11,
+            "own_sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 107,
+          "replica_rpc": {
+            "connections": 3,
+            "errors": 32,
+            "successes": 20
+          },
+          "ring_bytes": 1666,
+          "ring_len": 11,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 23361
+        }
+      },
+      "settled": {
+        "node-a": {
+          "allocator_live_bytes": 15348457,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 11,
+              "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+            },
+            {
+              "document_bytes": 1928991,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 11,
+              "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+            }
+          ],
+          "delta_recoveries": 7,
+          "effects": 11,
+          "error": null,
+          "fault": {
+            "accepted_connections": 33,
+            "active_connections": 1,
+            "forced_closures": 2,
+            "forwarded_bytes": 13812,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 2,
+            "max_active_seen": 1,
+            "mode": "blackhole",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 30
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 11,
+          "own_sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7",
+          "peer_freshness": {
+            "age_ms": 344,
+            "own_sequence": 11,
+            "own_sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 344,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 17,
+            "successes": 35
+          },
+          "ring_bytes": 1666,
+          "ring_len": 11,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 23601
+        },
+        "node-b": {
+          "allocator_live_bytes": 15349543,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 11,
+              "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+            },
+            {
+              "document_bytes": 1928991,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 11,
+              "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+            }
+          ],
+          "delta_recoveries": 4,
+          "effects": 11,
+          "error": null,
+          "fault": {
+            "accepted_connections": 17,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 24949,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 1,
+            "mode": "blackhole",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 11,
+          "own_sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6",
+          "peer_freshness": {
+            "age_ms": 316,
+            "own_sequence": 11,
+            "own_sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 316,
+          "replica_rpc": {
+            "connections": 3,
+            "errors": 32,
+            "successes": 20
+          },
+          "ring_bytes": 1666,
+          "ring_len": 11,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 23569
+        }
+      },
+      "during": {
+        "node-a": {
+          "allocator_live_bytes": 15412922,
+          "allocator_peak_bytes": 50978453,
+          "copies": [
+            {
+              "document_bytes": 2098118,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 71,
+              "sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf"
+            },
+            {
+              "document_bytes": 1928991,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 11,
+              "sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+            }
+          ],
+          "delta_recoveries": 7,
+          "effects": 71,
+          "error": "peer_unavailable",
+          "fault": {
+            "accepted_connections": 56,
+            "active_connections": 2,
+            "forced_closures": 2,
+            "forwarded_bytes": 13812,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 2,
+            "max_active_seen": 3,
+            "mode": "blackhole",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 30
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 71,
+          "own_sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf",
+          "peer_freshness": {
+            "age_ms": 120145,
+            "own_sequence": 11,
+            "own_sha256": "7baba43c5fb7b5cd02a44e1f7f11d050cdcf48f00f31f76bc95b837665ff13d6"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": false,
+          "remote_last_success_age_ms": 120145,
+          "replica_rpc": {
+            "connections": 1,
+            "errors": 40,
+            "successes": 35
+          },
+          "ring_bytes": 10890,
+          "ring_len": 71,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 143403
+        },
+        "node-b": {
+          "allocator_live_bytes": 15414266,
+          "allocator_peak_bytes": 50978454,
+          "copies": [
+            {
+              "document_bytes": 2098116,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 11,
+              "sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+            },
+            {
+              "document_bytes": 1928993,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 71,
+              "sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90"
+            }
+          ],
+          "delta_recoveries": 4,
+          "effects": 71,
+          "error": "peer_unavailable",
+          "fault": {
+            "accepted_connections": 40,
+            "active_connections": 2,
+            "forced_closures": 0,
+            "forwarded_bytes": 24949,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 3,
+            "mode": "blackhole",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 71,
+          "own_sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90",
+          "peer_freshness": {
+            "age_ms": 120118,
+            "own_sequence": 11,
+            "own_sha256": "0ac3e7a51085ded95f76339e048f01c57807a56208372b8dc4bf1e912a476aa7"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": false,
+          "remote_last_success_age_ms": 120118,
+          "replica_rpc": {
+            "connections": 3,
+            "errors": 55,
+            "successes": 20
+          },
+          "ring_bytes": 10890,
+          "ring_len": 71,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 0,
+          "snapshot_threshold": 16,
+          "uptime_ms": 143371
+        }
+      },
+      "fault_poll_count": 442,
+      "checks": {
+        "node-a": {
+          "local_sequence_gain": 60,
+          "effect_admission_gain": 60,
+          "minimum_local_gain": 59,
+          "passive_frozen": true,
+          "lease_valid": true
+        },
+        "node-b": {
+          "local_sequence_gain": 60,
+          "effect_admission_gain": 60,
+          "minimum_local_gain": 59,
+          "passive_frozen": true,
+          "lease_valid": true
+        }
+      },
+      "fault_duration_ms": 120012,
+      "fault_duration_by_entry_ms": {
+        "node-a": 120011,
+        "node-b": 120011
+      },
+      "recovery_ms": 1198,
+      "recovered": {
+        "node-a": {
+          "allocator_live_bytes": 15408271,
+          "allocator_peak_bytes": 53965738,
+          "copies": [
+            {
+              "document_bytes": 2098118,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "active",
+              "sequence": 71,
+              "sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf"
+            },
+            {
+              "document_bytes": 1928993,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "passive",
+              "sequence": 71,
+              "sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90"
+            }
+          ],
+          "delta_recoveries": 7,
+          "effects": 71,
+          "error": null,
+          "fault": {
+            "accepted_connections": 56,
+            "active_connections": 1,
+            "forced_closures": 2,
+            "forwarded_bytes": 2954463,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 2,
+            "max_active_seen": 3,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62463,
+            "rejected_connections": 30
+          },
+          "frozen": false,
+          "house": "house-a",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-a",
+          "own_lease_valid": true,
+          "own_sequence": 71,
+          "own_sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf",
+          "peer_freshness": {
+            "age_ms": 2,
+            "own_sequence": 71,
+            "own_sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 2,
+          "replica_rpc": {
+            "connections": 2,
+            "errors": 40,
+            "successes": 38
+          },
+          "ring_bytes": 10890,
+          "ring_len": 71,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 1,
+          "snapshot_threshold": 16,
+          "uptime_ms": 144602
+        },
+        "node-b": {
+          "allocator_live_bytes": 15408272,
+          "allocator_peak_bytes": 54149745,
+          "copies": [
+            {
+              "document_bytes": 2098118,
+              "epoch": 1,
+              "house": "house-a",
+              "records": 1629,
+              "role": "passive",
+              "sequence": 71,
+              "sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf"
+            },
+            {
+              "document_bytes": 1928993,
+              "epoch": 1,
+              "house": "house-b",
+              "records": 1488,
+              "role": "active",
+              "sequence": 71,
+              "sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90"
+            }
+          ],
+          "delta_recoveries": 4,
+          "effects": 71,
+          "error": null,
+          "fault": {
+            "accepted_connections": 40,
+            "active_connections": 1,
+            "forced_closures": 0,
+            "forwarded_bytes": 3223442,
+            "gate_buffer_bytes_per_direction": 0,
+            "generation": 1,
+            "max_active_seen": 3,
+            "mode": "up",
+            "peer_connection_limit": 16,
+            "peer_port": 62465,
+            "rejected_connections": 16
+          },
+          "frozen": false,
+          "house": "house-b",
+          "limitations": [
+            "synthetic_updates_only",
+            "independent_local_authority_no_cross_site_promotion",
+            "vpn_ip_allowlist_not_production_authentication"
+          ],
+          "limits": {
+            "effect_receipts": 256,
+            "tick_seconds": 2,
+            "ttl_seconds": 420
+          },
+          "mode": "site_bench_simulation",
+          "network_scope": "loopback_fixture",
+          "node": "node-b",
+          "own_lease_valid": true,
+          "own_sequence": 71,
+          "own_sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90",
+          "peer_freshness": {
+            "age_ms": 2,
+            "own_sequence": 71,
+            "own_sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf"
+          },
+          "physical_commands": 0,
+          "process": {
+            "cpu_source": "unavailable",
+            "cpu_ticks": null,
+            "rss_bytes": null
+          },
+          "remote_connected": true,
+          "remote_last_success_age_ms": 2,
+          "replica_rpc": {
+            "connections": 4,
+            "errors": 55,
+            "successes": 23
+          },
+          "ring_bytes": 10890,
+          "ring_len": 71,
+          "ring_max_bytes": 1048576,
+          "ring_max_entries": 256,
+          "snapshot_recoveries": 1,
+          "snapshot_threshold": 16,
+          "uptime_ms": 144571
+        }
+      },
+      "convergence": {
+        "house-a": {
+          "source": "node-a",
+          "replica_node": "node-b",
+          "source_before": {
+            "sequence": 71,
+            "sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf"
+          },
+          "replica": {
+            "sequence": 71,
+            "sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf"
+          },
+          "source_after": {
+            "sequence": 71,
+            "sha256": "eeb79589682273d993c135f13c59db6a15e610f1310087809a5877c9a0b780cf"
+          }
+        },
+        "house-b": {
+          "source": "node-b",
+          "replica_node": "node-a",
+          "source_before": {
+            "sequence": 71,
+            "sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90"
+          },
+          "replica": {
+            "sequence": 71,
+            "sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90"
+          },
+          "source_after": {
+            "sequence": 71,
+            "sha256": "d49a1fb25b905e3ae35da2b74bef1f0818e0ade018e2f759859dd7f863ff3c90"
+          }
+        }
+      },
+      "same_socket_check": {
+        "required": false,
+        "passed": null
+      },
+      "resources": {
+        "node-a": {
+          "process_sample": {
+            "seconds": 145.075,
+            "rss_bytes": 66502656,
+            "cpu_seconds": 14.04
+          },
+          "allocator_live_bytes": 15408271,
+          "allocator_peak_bytes": 53965738
+        },
+        "node-b": {
+          "process_sample": {
+            "seconds": 144.821,
+            "rss_bytes": 69435392,
+            "cpu_seconds": 13.4
+          },
+          "allocator_live_bytes": 15408272,
+          "allocator_peak_bytes": 54149745
+        }
+      }
+    }
+  ],
+  "resources": {
+    "node-a": {
+      "sampling_period_seconds": 2,
+      "max_samples": 256,
+      "samples": [
+        {
+          "seconds": 0.017,
+          "rss_bytes": 32768,
+          "cpu_seconds": 0.0
+        },
+        {
+          "seconds": 2.026,
+          "rss_bytes": 66846720,
+          "cpu_seconds": 0.97
+        },
+        {
+          "seconds": 4.032,
+          "rss_bytes": 68960256,
+          "cpu_seconds": 1.1
+        },
+        {
+          "seconds": 6.041,
+          "rss_bytes": 68960256,
+          "cpu_seconds": 1.23
+        },
+        {
+          "seconds": 8.052,
+          "rss_bytes": 68960256,
+          "cpu_seconds": 1.37
+        },
+        {
+          "seconds": 10.066,
+          "rss_bytes": 69091328,
+          "cpu_seconds": 1.52
+        },
+        {
+          "seconds": 10.776,
+          "rss_bytes": 69107712,
+          "cpu_seconds": 2.01
+        },
+        {
+          "seconds": 12.081,
+          "rss_bytes": 69124096,
+          "cpu_seconds": 2.15
+        },
+        {
+          "seconds": 14.095,
+          "rss_bytes": 69124096,
+          "cpu_seconds": 2.54
+        },
+        {
+          "seconds": 14.503,
+          "rss_bytes": 69140480,
+          "cpu_seconds": 2.54
+        },
+        {
+          "seconds": 16.11,
+          "rss_bytes": 34078720,
+          "cpu_seconds": 2.68
+        },
+        {
+          "seconds": 18.123,
+          "rss_bytes": 34078720,
+          "cpu_seconds": 2.86
+        },
+        {
+          "seconds": 20.136,
+          "rss_bytes": 34078720,
+          "cpu_seconds": 3.01
+        },
+        {
+          "seconds": 22.147,
+          "rss_bytes": 34078720,
+          "cpu_seconds": 3.16
+        },
+        {
+          "seconds": 23.853,
+          "rss_bytes": 34111488,
+          "cpu_seconds": 4.06
+        },
+        {
+          "seconds": 24.151,
+          "rss_bytes": 34111488,
+          "cpu_seconds": 4.06
+        },
+        {
+          "seconds": 26.161,
+          "rss_bytes": 34111488,
+          "cpu_seconds": 4.2
+        },
+        {
+          "seconds": 28.169,
+          "rss_bytes": 34111488,
+          "cpu_seconds": 4.34
+        },
+        {
+          "seconds": 30.177,
+          "rss_bytes": 34160640,
+          "cpu_seconds": 4.47
+        },
+        {
+          "seconds": 32.187,
+          "rss_bytes": 34160640,
+          "cpu_seconds": 4.6
+        },
+        {
+          "seconds": 34.195,
+          "rss_bytes": 34160640,
+          "cpu_seconds": 4.74
+        },
+        {
+          "seconds": 36.205,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 4.87
+        },
+        {
+          "seconds": 38.218,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 5.01
+        },
+        {
+          "seconds": 40.229,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 5.14
+        },
+        {
+          "seconds": 42.242,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 5.28
+        },
+        {
+          "seconds": 44.249,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 5.41
+        },
+        {
+          "seconds": 46.258,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 5.56
+        },
+        {
+          "seconds": 48.271,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 5.69
+        },
+        {
+          "seconds": 50.28,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 5.83
+        },
+        {
+          "seconds": 52.288,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 5.96
+        },
+        {
+          "seconds": 54.302,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 6.1
+        },
+        {
+          "seconds": 56.315,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 6.23
+        },
+        {
+          "seconds": 58.323,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 6.37
+        },
+        {
+          "seconds": 60.336,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 6.51
+        },
+        {
+          "seconds": 62.347,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 6.64
+        },
+        {
+          "seconds": 64.357,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 6.77
+        },
+        {
+          "seconds": 66.365,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 6.9
+        },
+        {
+          "seconds": 68.376,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 7.04
+        },
+        {
+          "seconds": 70.389,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 7.2
+        },
+        {
+          "seconds": 72.398,
+          "rss_bytes": 34177024,
+          "cpu_seconds": 7.37
+        },
+        {
+          "seconds": 74.405,
+          "rss_bytes": 34193408,
+          "cpu_seconds": 7.55
+        },
+        {
+          "seconds": 76.413,
+          "rss_bytes": 34193408,
+          "cpu_seconds": 7.73
+        },
+        {
+          "seconds": 78.426,
+          "rss_bytes": 34193408,
+          "cpu_seconds": 7.87
+        },
+        {
+          "seconds": 80.437,
+          "rss_bytes": 34193408,
+          "cpu_seconds": 8.01
+        },
+        {
+          "seconds": 82.449,
+          "rss_bytes": 27918336,
+          "cpu_seconds": 8.18
+        },
+        {
+          "seconds": 84.464,
+          "rss_bytes": 23773184,
+          "cpu_seconds": 8.48
+        },
+        {
+          "seconds": 86.479,
+          "rss_bytes": 23494656,
+          "cpu_seconds": 8.7
+        },
+        {
+          "seconds": 88.487,
+          "rss_bytes": 23494656,
+          "cpu_seconds": 8.88
+        },
+        {
+          "seconds": 90.498,
+          "rss_bytes": 23576576,
+          "cpu_seconds": 9.02
+        },
+        {
+          "seconds": 92.502,
+          "rss_bytes": 23576576,
+          "cpu_seconds": 9.15
+        },
+        {
+          "seconds": 94.526,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 9.33
+        },
+        {
+          "seconds": 96.552,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 9.53
+        },
+        {
+          "seconds": 98.56,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 9.68
+        },
+        {
+          "seconds": 100.571,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 9.83
+        },
+        {
+          "seconds": 102.582,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 9.96
+        },
+        {
+          "seconds": 104.588,
+          "rss_bytes": 21479424,
+          "cpu_seconds": 10.11
+        },
+        {
+          "seconds": 106.598,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 10.25
+        },
+        {
+          "seconds": 108.612,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 10.38
+        },
+        {
+          "seconds": 110.625,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 10.52
+        },
+        {
+          "seconds": 112.712,
+          "rss_bytes": 23592960,
+          "cpu_seconds": 10.65
+        },
+        {
+          "seconds": 114.726,
+          "rss_bytes": 23052288,
+          "cpu_seconds": 10.85
+        },
+        {
+          "seconds": 116.739,
+          "rss_bytes": 23052288,
+          "cpu_seconds": 11.0
+        },
+        {
+          "seconds": 118.752,
+          "rss_bytes": 23068672,
+          "cpu_seconds": 11.14
+        },
+        {
+          "seconds": 120.765,
+          "rss_bytes": 23068672,
+          "cpu_seconds": 11.27
+        },
+        {
+          "seconds": 122.775,
+          "rss_bytes": 23101440,
+          "cpu_seconds": 11.4
+        },
+        {
+          "seconds": 124.783,
+          "rss_bytes": 23117824,
+          "cpu_seconds": 11.59
+        },
+        {
+          "seconds": 126.796,
+          "rss_bytes": 23117824,
+          "cpu_seconds": 11.74
+        },
+        {
+          "seconds": 128.8,
+          "rss_bytes": 23101440,
+          "cpu_seconds": 11.88
+        },
+        {
+          "seconds": 130.814,
+          "rss_bytes": 23101440,
+          "cpu_seconds": 12.04
+        },
+        {
+          "seconds": 132.828,
+          "rss_bytes": 23117824,
+          "cpu_seconds": 12.18
+        },
+        {
+          "seconds": 134.84,
+          "rss_bytes": 23085056,
+          "cpu_seconds": 12.32
+        },
+        {
+          "seconds": 136.852,
+          "rss_bytes": 23085056,
+          "cpu_seconds": 12.48
+        },
+        {
+          "seconds": 138.86,
+          "rss_bytes": 23085056,
+          "cpu_seconds": 12.62
+        },
+        {
+          "seconds": 140.87,
+          "rss_bytes": 23085056,
+          "cpu_seconds": 12.75
+        },
+        {
+          "seconds": 142.882,
+          "rss_bytes": 23085056,
+          "cpu_seconds": 12.89
+        },
+        {
+          "seconds": 144.897,
+          "rss_bytes": 58769408,
+          "cpu_seconds": 13.93
+        },
+        {
+          "seconds": 145.075,
+          "rss_bytes": 66502656,
+          "cpu_seconds": 14.04
+        }
+      ],
+      "scope": "one autonomous site process; ticker, broker and RPC included; runner excluded",
+      "rss_peak_sampled_bytes": 69140480,
+      "cpu_percent_one_core": 9.678887065863309,
+      "sampled_seconds": 145.058
+    },
+    "node-b": {
+      "sampling_period_seconds": 2,
+      "max_samples": 256,
+      "samples": [
+        {
+          "seconds": 0.016,
+          "rss_bytes": 3915776,
+          "cpu_seconds": 0.0
+        },
+        {
+          "seconds": 2.023,
+          "rss_bytes": 67010560,
+          "cpu_seconds": 0.96
+        },
+        {
+          "seconds": 4.03,
+          "rss_bytes": 67010560,
+          "cpu_seconds": 1.09
+        },
+        {
+          "seconds": 6.042,
+          "rss_bytes": 67010560,
+          "cpu_seconds": 1.21
+        },
+        {
+          "seconds": 8.056,
+          "rss_bytes": 67010560,
+          "cpu_seconds": 1.34
+        },
+        {
+          "seconds": 10.07,
+          "rss_bytes": 69320704,
+          "cpu_seconds": 1.95
+        },
+        {
+          "seconds": 10.521,
+          "rss_bytes": 69337088,
+          "cpu_seconds": 2.01
+        },
+        {
+          "seconds": 12.084,
+          "rss_bytes": 69353472,
+          "cpu_seconds": 2.14
+        },
+        {
+          "seconds": 14.091,
+          "rss_bytes": 69369856,
+          "cpu_seconds": 2.55
+        },
+        {
+          "seconds": 14.246,
+          "rss_bytes": 69369856,
+          "cpu_seconds": 2.55
+        },
+        {
+          "seconds": 16.111,
+          "rss_bytes": 34439168,
+          "cpu_seconds": 2.82
+        },
+        {
+          "seconds": 18.123,
+          "rss_bytes": 36421632,
+          "cpu_seconds": 3.15
+        },
+        {
+          "seconds": 20.133,
+          "rss_bytes": 36421632,
+          "cpu_seconds": 3.44
+        },
+        {
+          "seconds": 22.14,
+          "rss_bytes": 36438016,
+          "cpu_seconds": 3.72
+        },
+        {
+          "seconds": 23.596,
+          "rss_bytes": 36438016,
+          "cpu_seconds": 4.02
+        },
+        {
+          "seconds": 24.152,
+          "rss_bytes": 36438016,
+          "cpu_seconds": 4.02
+        },
+        {
+          "seconds": 26.166,
+          "rss_bytes": 36438016,
+          "cpu_seconds": 4.16
+        },
+        {
+          "seconds": 28.174,
+          "rss_bytes": 34324480,
+          "cpu_seconds": 4.28
+        },
+        {
+          "seconds": 30.187,
+          "rss_bytes": 34390016,
+          "cpu_seconds": 4.4
+        },
+        {
+          "seconds": 32.195,
+          "rss_bytes": 34390016,
+          "cpu_seconds": 4.52
+        },
+        {
+          "seconds": 34.209,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 4.65
+        },
+        {
+          "seconds": 36.221,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 4.77
+        },
+        {
+          "seconds": 38.235,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 4.9
+        },
+        {
+          "seconds": 40.239,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 5.02
+        },
+        {
+          "seconds": 42.248,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 5.14
+        },
+        {
+          "seconds": 44.255,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 5.26
+        },
+        {
+          "seconds": 46.267,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 5.41
+        },
+        {
+          "seconds": 48.281,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 5.53
+        },
+        {
+          "seconds": 50.294,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 5.65
+        },
+        {
+          "seconds": 52.316,
+          "rss_bytes": 34406400,
+          "cpu_seconds": 5.77
+        },
+        {
+          "seconds": 54.329,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 5.9
+        },
+        {
+          "seconds": 56.337,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 6.02
+        },
+        {
+          "seconds": 58.352,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 6.14
+        },
+        {
+          "seconds": 60.362,
+          "rss_bytes": 32456704,
+          "cpu_seconds": 6.27
+        },
+        {
+          "seconds": 62.373,
+          "rss_bytes": 32456704,
+          "cpu_seconds": 6.39
+        },
+        {
+          "seconds": 64.382,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 6.51
+        },
+        {
+          "seconds": 66.393,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 6.63
+        },
+        {
+          "seconds": 68.41,
+          "rss_bytes": 32489472,
+          "cpu_seconds": 6.77
+        },
+        {
+          "seconds": 70.421,
+          "rss_bytes": 32489472,
+          "cpu_seconds": 6.91
+        },
+        {
+          "seconds": 72.435,
+          "rss_bytes": 32489472,
+          "cpu_seconds": 7.06
+        },
+        {
+          "seconds": 74.444,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 7.24
+        },
+        {
+          "seconds": 76.457,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 7.4
+        },
+        {
+          "seconds": 78.469,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 7.53
+        },
+        {
+          "seconds": 80.48,
+          "rss_bytes": 32473088,
+          "cpu_seconds": 7.66
+        },
+        {
+          "seconds": 82.512,
+          "rss_bytes": 20332544,
+          "cpu_seconds": 7.83
+        },
+        {
+          "seconds": 84.518,
+          "rss_bytes": 20332544,
+          "cpu_seconds": 8.11
+        },
+        {
+          "seconds": 86.526,
+          "rss_bytes": 20332544,
+          "cpu_seconds": 8.32
+        },
+        {
+          "seconds": 88.539,
+          "rss_bytes": 20332544,
+          "cpu_seconds": 8.49
+        },
+        {
+          "seconds": 90.553,
+          "rss_bytes": 20332544,
+          "cpu_seconds": 8.61
+        },
+        {
+          "seconds": 92.565,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 8.73
+        },
+        {
+          "seconds": 94.571,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 8.91
+        },
+        {
+          "seconds": 96.59,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 9.1
+        },
+        {
+          "seconds": 98.597,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 9.24
+        },
+        {
+          "seconds": 100.611,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 9.38
+        },
+        {
+          "seconds": 102.623,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 9.5
+        },
+        {
+          "seconds": 104.636,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 9.64
+        },
+        {
+          "seconds": 106.648,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 9.77
+        },
+        {
+          "seconds": 108.662,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 9.89
+        },
+        {
+          "seconds": 110.676,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 10.02
+        },
+        {
+          "seconds": 112.691,
+          "rss_bytes": 20348928,
+          "cpu_seconds": 10.14
+        },
+        {
+          "seconds": 114.701,
+          "rss_bytes": 20316160,
+          "cpu_seconds": 10.33
+        },
+        {
+          "seconds": 116.715,
+          "rss_bytes": 20332544,
+          "cpu_seconds": 10.47
+        },
+        {
+          "seconds": 118.72,
+          "rss_bytes": 20365312,
+          "cpu_seconds": 10.6
+        },
+        {
+          "seconds": 120.725,
+          "rss_bytes": 20365312,
+          "cpu_seconds": 10.72
+        },
+        {
+          "seconds": 122.736,
+          "rss_bytes": 20365312,
+          "cpu_seconds": 10.84
+        },
+        {
+          "seconds": 124.747,
+          "rss_bytes": 20365312,
+          "cpu_seconds": 11.02
+        },
+        {
+          "seconds": 126.758,
+          "rss_bytes": 20365312,
+          "cpu_seconds": 11.16
+        },
+        {
+          "seconds": 128.772,
+          "rss_bytes": 20365312,
+          "cpu_seconds": 11.3
+        },
+        {
+          "seconds": 130.785,
+          "rss_bytes": 20365312,
+          "cpu_seconds": 11.44
+        },
+        {
+          "seconds": 132.792,
+          "rss_bytes": 20381696,
+          "cpu_seconds": 11.57
+        },
+        {
+          "seconds": 134.803,
+          "rss_bytes": 20381696,
+          "cpu_seconds": 11.71
+        },
+        {
+          "seconds": 136.81,
+          "rss_bytes": 20414464,
+          "cpu_seconds": 11.85
+        },
+        {
+          "seconds": 138.82,
+          "rss_bytes": 20414464,
+          "cpu_seconds": 11.98
+        },
+        {
+          "seconds": 140.832,
+          "rss_bytes": 20414464,
+          "cpu_seconds": 12.1
+        },
+        {
+          "seconds": 142.846,
+          "rss_bytes": 20430848,
+          "cpu_seconds": 12.23
+        },
+        {
+          "seconds": 144.821,
+          "rss_bytes": 69435392,
+          "cpu_seconds": 13.4
+        },
+        {
+          "seconds": 144.862,
+          "rss_bytes": 65273856,
+          "cpu_seconds": 13.41
+        }
+      ],
+      "scope": "one autonomous site process; ticker, broker and RPC included; runner excluded",
+      "rss_peak_sampled_bytes": 69435392,
+      "cpu_percent_one_core": 9.258108611905058,
+      "sampled_seconds": 144.846
+    }
+  },
+  "cleanup": {
+    "node-a": {
+      "stop_requested": true,
+      "reaped": true,
+      "forced_termination": false,
+      "exit_code": 0
+    },
+    "node-b": {
+      "stop_requested": true,
+      "reaped": true,
+      "forced_termination": false,
+      "exit_code": 0
+    }
+  },
+  "sources": [
+    {
+      "house": "house-a",
+      "kind": "private_ha_replay",
+      "entities": 1830,
+      "devices": 289,
+      "points": 1606,
+      "nodes": 21,
+      "observed_points": 1606,
+      "description_bytes": 1209714,
+      "snapshot_bytes": 2098023,
+      "physical_commands": 0,
+      "synthetic_identities": true
+    },
+    {
+      "house": "house-b",
+      "kind": "private_ha_replay",
+      "entities": 1524,
+      "devices": 200,
+      "points": 1463,
+      "nodes": 23,
+      "observed_points": 1463,
+      "description_bytes": 1103399,
+      "snapshot_bytes": 1928898,
+      "physical_commands": 0,
+      "synthetic_identities": true
+    }
+  ],
+  "status": "PASS",
+  "effects_admission_only": true,
+  "intermediate_delivery_proven": false,
+  "limitations": [
+    "one_host_not_two_failure_domains",
+    "replayed_exports_not_live_ha",
+    "no_physical_executor",
+    "effect_admission_not_device_delivery",
+    "no_intermediate_state_delivery_claim",
+    "quick_never_qualifies_120s"
+  ],
+  "inputs_sha256": "96db6dd27171cb3e486012d885faec83d6de2b4bcd0f5ef5f556f4bd29055993",
+  "probe_binary_sha256": "6bc9f6ccf1729a0b87dcc48d139b580bd0862eebe5c8e17593c7dbe153af6d4a",
+  "bundle_sha256": "b8ddebe2b935c8e46b64cd2b5f01f3f99da96430592e4103c44ca0e88bec1d0a",
+  "binary_sha256": "c89ae07d097e0d2845aa166e60db6d8b475cfb2e7c2eb456aafa2671970c626f",
+  "source_sha256": {
+    "tools/ha-multihome-poc/src/authority.rs": "def1029e944f2c540576d6a50e0ebdee1a4cb65287731ba3ae9518a0f3a59b21",
+    "tools/ha-multihome-poc/src/config.rs": "cd33d06988c63747ab33b99585fcd7d7e321260887d8d26f517cdcee7f32619f",
+    "tools/ha-multihome-poc/src/engine.rs": "12bb301d8bbb649ed95c2f64834955993784b5ee12522d79b27cc7265e85ec76",
+    "tools/ha-multihome-poc/src/link_fault.rs": "62f43f4dd395956cd54f1253cbb6063da8d437f960aa6e1cd03cd1fe56451589",
+    "tools/ha-multihome-poc/src/main.rs": "e2f590a3297d0831f0b1ab64e90146cff0785979ff8ed0c1f08fd50f9f37356e",
+    "tools/ha-multihome-poc/src/server.rs": "16be95c98ad727195483e067f90e82c800f620aa059e7db4efe4853245b7a2da",
+    "tools/ha-multihome-poc/src/site.rs": "b8fd251d62da1b6fa54991ed1c3f3a8e5c9033aa1c82f145ad29011926c474b5",
+    "tools/ha-multihome-poc/src/site_transport.rs": "54d47d6a8545177a7e01fddf5f60648045f65f7f4f404cd05ce1635f59ee5472",
+    "tools/ha-multihome-poc/src/tcp_loss.rs": "1ba9126f44f50fb81425dee4bc17296ce5571591f1a47ee11fbf3257b1e08ec3",
+    "tools/ha-multihome-poc/src/transport.rs": "d14e7923d2c569c0c13f855fa23fbe8dee46d69ec339af927928ddaa975e1139",
+    "tools/ha-multihome-poc/Cargo.toml": "53b442ca9852bcf2f332d4b58a92479be7d297ae89b754e1f6f5a237dd49a4b1",
+    "tools/ha-multihome-poc/Cargo.lock": "82d08ede78cd3117b78462c111c2d93435486bedf1eda5f149c0fc9f3907c2dc",
+    "tools/moteur-integre-banc/src/memory.rs": "3f7062ab7277089a4787c4a0b12d65983170689b935a2c21a1d241fe432d1607",
+    "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": "15a14147d6f164957463170075980436f7404e6c972ec373c8eafe0afc440e3e",
+    "tools/mqtt-live-probe/src/ha_seed.rs": "35d687e544e9f3dd8f01fcec3403ecdfcff637c3bfbc35e46f1cbf4bd6562081"
+  },
+  "native_checks": {
+    "date_utc": "2026-10-27T21:43:40.540311+00:00",
+    "checks": [
+      "fmt",
+      "clippy -D warnings",
+      "Rust unit tests",
+      "native debug build"
+    ],
+    "source_sha256": {
+      "tools/ha-multihome-poc/src/authority.rs": "def1029e944f2c540576d6a50e0ebdee1a4cb65287731ba3ae9518a0f3a59b21",
+      "tools/ha-multihome-poc/src/config.rs": "cd33d06988c63747ab33b99585fcd7d7e321260887d8d26f517cdcee7f32619f",
+      "tools/ha-multihome-poc/src/engine.rs": "12bb301d8bbb649ed95c2f64834955993784b5ee12522d79b27cc7265e85ec76",
+      "tools/ha-multihome-poc/src/link_fault.rs": "62f43f4dd395956cd54f1253cbb6063da8d437f960aa6e1cd03cd1fe56451589",
+      "tools/ha-multihome-poc/src/main.rs": "e2f590a3297d0831f0b1ab64e90146cff0785979ff8ed0c1f08fd50f9f37356e",
+      "tools/ha-multihome-poc/src/server.rs": "16be95c98ad727195483e067f90e82c800f620aa059e7db4efe4853245b7a2da",
+      "tools/ha-multihome-poc/src/site.rs": "b8fd251d62da1b6fa54991ed1c3f3a8e5c9033aa1c82f145ad29011926c474b5",
+      "tools/ha-multihome-poc/src/site_transport.rs": "54d47d6a8545177a7e01fddf5f60648045f65f7f4f404cd05ce1635f59ee5472",
+      "tools/ha-multihome-poc/src/tcp_loss.rs": "1ba9126f44f50fb81425dee4bc17296ce5571591f1a47ee11fbf3257b1e08ec3",
+      "tools/ha-multihome-poc/src/transport.rs": "d14e7923d2c569c0c13f855fa23fbe8dee46d69ec339af927928ddaa975e1139",
+      "tools/ha-multihome-poc/Cargo.toml": "53b442ca9852bcf2f332d4b58a92479be7d297ae89b754e1f6f5a237dd49a4b1",
+      "tools/ha-multihome-poc/Cargo.lock": "82d08ede78cd3117b78462c111c2d93435486bedf1eda5f149c0fc9f3907c2dc",
+      "tools/moteur-integre-banc/src/memory.rs": "3f7062ab7277089a4787c4a0b12d65983170689b935a2c21a1d241fe432d1607",
+      "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": "15a14147d6f164957463170075980436f7404e6c972ec373c8eafe0afc440e3e"
+    },
+    "binary_sha256": "c89ae07d097e0d2845aa166e60db6d8b475cfb2e7c2eb456aafa2671970c626f",
+    "archive_sha256": "6517d5951cff08a7b92951ea9bca1880f3fb64603c0fdfd3a75b6f461a386356",
+    "scope": "local checks only; no WAN outage is claimed by this receipt"
+  },
+  "native_checks_sha256": "38edde088feafeae89da2dc639a81a5fb8d104306bc035ba4d4ed9e3502f0e44",
+  "native_checks_match_binary": true,
+  "ports": {
+    "node-a": {
+      "mqtt": 62463,
+      "control": 62464
+    },
+    "node-b": {
+      "mqtt": 62465,
+      "control": 62466
+    }
+  },
+  "runner_resources": {
+    "sampling_period_seconds": 2,
+    "max_samples": 256,
+    "samples": [
+      {
+        "seconds": 0.005,
+        "rss_bytes": 30605312,
+        "cpu_seconds": 0.06
+      },
+      {
+        "seconds": 2.017,
+        "rss_bytes": 34783232,
+        "cpu_seconds": 0.07
+      },
+      {
+        "seconds": 4.027,
+        "rss_bytes": 110690304,
+        "cpu_seconds": 0.21
+      },
+      {
+        "seconds": 6.038,
+        "rss_bytes": 53198848,
+        "cpu_seconds": 0.22
+      },
+      {
+        "seconds": 8.046,
+        "rss_bytes": 53198848,
+        "cpu_seconds": 0.23
+      },
+      {
+        "seconds": 10.062,
+        "rss_bytes": 53198848,
+        "cpu_seconds": 0.24
+      },
+      {
+        "seconds": 12.076,
+        "rss_bytes": 53215232,
+        "cpu_seconds": 0.25
+      },
+      {
+        "seconds": 14.091,
+        "rss_bytes": 53297152,
+        "cpu_seconds": 0.27
+      },
+      {
+        "seconds": 16.104,
+        "rss_bytes": 47316992,
+        "cpu_seconds": 0.28
+      },
+      {
+        "seconds": 18.124,
+        "rss_bytes": 39649280,
+        "cpu_seconds": 0.3
+      },
+      {
+        "seconds": 20.133,
+        "rss_bytes": 39452672,
+        "cpu_seconds": 0.31
+      },
+      {
+        "seconds": 22.146,
+        "rss_bytes": 39518208,
+        "cpu_seconds": 0.32
+      },
+      {
+        "seconds": 24.158,
+        "rss_bytes": 39518208,
+        "cpu_seconds": 0.33
+      },
+      {
+        "seconds": 26.165,
+        "rss_bytes": 39600128,
+        "cpu_seconds": 0.35
+      },
+      {
+        "seconds": 28.172,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.36
+      },
+      {
+        "seconds": 30.18,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.37
+      },
+      {
+        "seconds": 32.193,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.38
+      },
+      {
+        "seconds": 34.2,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.39
+      },
+      {
+        "seconds": 36.207,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.4
+      },
+      {
+        "seconds": 38.22,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.4
+      },
+      {
+        "seconds": 40.229,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.42
+      },
+      {
+        "seconds": 42.239,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.42
+      },
+      {
+        "seconds": 44.244,
+        "rss_bytes": 39747584,
+        "cpu_seconds": 0.43
+      },
+      {
+        "seconds": 46.257,
+        "rss_bytes": 39763968,
+        "cpu_seconds": 0.44
+      },
+      {
+        "seconds": 48.265,
+        "rss_bytes": 39763968,
+        "cpu_seconds": 0.45
+      },
+      {
+        "seconds": 50.275,
+        "rss_bytes": 39780352,
+        "cpu_seconds": 0.46
+      },
+      {
+        "seconds": 52.289,
+        "rss_bytes": 39780352,
+        "cpu_seconds": 0.47
+      },
+      {
+        "seconds": 54.299,
+        "rss_bytes": 39780352,
+        "cpu_seconds": 0.48
+      },
+      {
+        "seconds": 56.311,
+        "rss_bytes": 39780352,
+        "cpu_seconds": 0.49
+      },
+      {
+        "seconds": 58.319,
+        "rss_bytes": 39780352,
+        "cpu_seconds": 0.5
+      },
+      {
+        "seconds": 60.331,
+        "rss_bytes": 39632896,
+        "cpu_seconds": 0.51
+      },
+      {
+        "seconds": 62.343,
+        "rss_bytes": 39632896,
+        "cpu_seconds": 0.52
+      },
+      {
+        "seconds": 64.349,
+        "rss_bytes": 39632896,
+        "cpu_seconds": 0.53
+      },
+      {
+        "seconds": 66.359,
+        "rss_bytes": 39632896,
+        "cpu_seconds": 0.54
+      },
+      {
+        "seconds": 68.369,
+        "rss_bytes": 39632896,
+        "cpu_seconds": 0.55
+      },
+      {
+        "seconds": 70.382,
+        "rss_bytes": 39632896,
+        "cpu_seconds": 0.56
+      },
+      {
+        "seconds": 72.395,
+        "rss_bytes": 39632896,
+        "cpu_seconds": 0.57
+      },
+      {
+        "seconds": 74.409,
+        "rss_bytes": 39206912,
+        "cpu_seconds": 0.58
+      },
+      {
+        "seconds": 76.421,
+        "rss_bytes": 39206912,
+        "cpu_seconds": 0.59
+      },
+      {
+        "seconds": 78.435,
+        "rss_bytes": 39206912,
+        "cpu_seconds": 0.6
+      },
+      {
+        "seconds": 80.449,
+        "rss_bytes": 39206912,
+        "cpu_seconds": 0.61
+      },
+      {
+        "seconds": 82.46,
+        "rss_bytes": 39206912,
+        "cpu_seconds": 0.62
+      },
+      {
+        "seconds": 84.469,
+        "rss_bytes": 39206912,
+        "cpu_seconds": 0.63
+      },
+      {
+        "seconds": 86.497,
+        "rss_bytes": 21577728,
+        "cpu_seconds": 0.65
+      },
+      {
+        "seconds": 88.513,
+        "rss_bytes": 21626880,
+        "cpu_seconds": 0.66
+      },
+      {
+        "seconds": 90.522,
+        "rss_bytes": 21659648,
+        "cpu_seconds": 0.68
+      },
+      {
+        "seconds": 92.533,
+        "rss_bytes": 21659648,
+        "cpu_seconds": 0.68
+      },
+      {
+        "seconds": 94.546,
+        "rss_bytes": 21659648,
+        "cpu_seconds": 0.69
+      },
+      {
+        "seconds": 96.56,
+        "rss_bytes": 21676032,
+        "cpu_seconds": 0.7
+      },
+      {
+        "seconds": 98.568,
+        "rss_bytes": 21676032,
+        "cpu_seconds": 0.72
+      },
+      {
+        "seconds": 100.582,
+        "rss_bytes": 21676032,
+        "cpu_seconds": 0.73
+      },
+      {
+        "seconds": 102.593,
+        "rss_bytes": 21741568,
+        "cpu_seconds": 0.74
+      },
+      {
+        "seconds": 104.606,
+        "rss_bytes": 21741568,
+        "cpu_seconds": 0.75
+      },
+      {
+        "seconds": 106.619,
+        "rss_bytes": 21741568,
+        "cpu_seconds": 0.75
+      },
+      {
+        "seconds": 108.632,
+        "rss_bytes": 21741568,
+        "cpu_seconds": 0.76
+      },
+      {
+        "seconds": 110.646,
+        "rss_bytes": 21741568,
+        "cpu_seconds": 0.77
+      },
+      {
+        "seconds": 112.657,
+        "rss_bytes": 21757952,
+        "cpu_seconds": 0.78
+      },
+      {
+        "seconds": 114.667,
+        "rss_bytes": 21757952,
+        "cpu_seconds": 0.79
+      },
+      {
+        "seconds": 116.675,
+        "rss_bytes": 21807104,
+        "cpu_seconds": 0.8
+      },
+      {
+        "seconds": 118.688,
+        "rss_bytes": 21807104,
+        "cpu_seconds": 0.81
+      },
+      {
+        "seconds": 120.701,
+        "rss_bytes": 21823488,
+        "cpu_seconds": 0.82
+      },
+      {
+        "seconds": 122.712,
+        "rss_bytes": 21872640,
+        "cpu_seconds": 0.83
+      },
+      {
+        "seconds": 124.724,
+        "rss_bytes": 21872640,
+        "cpu_seconds": 0.84
+      },
+      {
+        "seconds": 126.732,
+        "rss_bytes": 21839872,
+        "cpu_seconds": 0.85
+      },
+      {
+        "seconds": 128.742,
+        "rss_bytes": 21856256,
+        "cpu_seconds": 0.86
+      },
+      {
+        "seconds": 130.75,
+        "rss_bytes": 21807104,
+        "cpu_seconds": 0.87
+      },
+      {
+        "seconds": 132.761,
+        "rss_bytes": 21823488,
+        "cpu_seconds": 0.88
+      },
+      {
+        "seconds": 134.765,
+        "rss_bytes": 21856256,
+        "cpu_seconds": 0.89
+      },
+      {
+        "seconds": 136.772,
+        "rss_bytes": 21807104,
+        "cpu_seconds": 0.9
+      },
+      {
+        "seconds": 138.781,
+        "rss_bytes": 21823488,
+        "cpu_seconds": 0.9
+      },
+      {
+        "seconds": 140.794,
+        "rss_bytes": 21823488,
+        "cpu_seconds": 0.91
+      },
+      {
+        "seconds": 142.808,
+        "rss_bytes": 21839872,
+        "cpu_seconds": 0.92
+      },
+      {
+        "seconds": 144.819,
+        "rss_bytes": 21839872,
+        "cpu_seconds": 0.93
+      },
+      {
+        "seconds": 146.829,
+        "rss_bytes": 22052864,
+        "cpu_seconds": 0.95
+      }
+    ],
+    "scope": "Python coordinator only; autonomous site processes excluded",
+    "rss_peak_sampled_bytes": 110690304,
+    "cpu_percent_one_core": 0.6061679289489456,
+    "sampled_seconds": 146.824
+  },
+  "cleanup_complete": true,
+  "finished_utc": "2026-10-27T21:50:17.905400+00:00"
+}

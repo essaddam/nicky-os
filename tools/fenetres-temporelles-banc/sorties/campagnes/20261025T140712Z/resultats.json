@@ -1,0 +1,962 @@
+[
+  {
+    "status": "prototype_not_product",
+    "backend": "deque",
+    "workload": "sparse",
+    "rounds": 7,
+    "input_events": 2881,
+    "span_ms": 86401234,
+    "retained_items": 2881,
+    "heap_capacity_bytes": 98304,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 228.75,
+        "oracle_sample_mean": 228.75,
+        "sample_abs_error": 0.0,
+        "time_mean": 226.352833333333,
+        "oracle_time_mean": 226.352833333333,
+        "time_abs_error": 0.0,
+        "covered_ms": 60000,
+        "oracle_covered_ms": 60000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 218.75,
+        "oracle_sample_mean": 218.75,
+        "sample_abs_error": 0.0,
+        "time_mean": 216.352833333333,
+        "oracle_time_mean": 216.352833333333,
+        "time_abs_error": 0.0,
+        "covered_ms": 300000,
+        "oracle_covered_ms": 300000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 222.229166666667,
+        "oracle_sample_mean": 222.229166666667,
+        "sample_abs_error": 0.0,
+        "time_mean": 221.849615277778,
+        "oracle_time_mean": 221.849615277778,
+        "time_abs_error": 0.0,
+        "covered_ms": 3600000,
+        "oracle_covered_ms": 3600000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 223.883461270063,
+        "oracle_sample_mean": 223.883461270063,
+        "sample_abs_error": 0.0,
+        "time_mean": 223.8399676669,
+        "oracle_time_mean": 223.839967666899,
+        "time_abs_error": 0.0,
+        "covered_ms": 85980000,
+        "oracle_covered_ms": 85980000,
+        "unknown_ms": 420000,
+        "limited": false
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 15.851,
+    "ingest_ns_per_event_median_by_process": [
+      17.919,
+      15.851,
+      15.33
+    ],
+    "query_4windows_ns_median": 28664.117,
+    "query_4windows_ns_median_by_process": [
+      28664.117,
+      30219.461,
+      26468.805
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "ring",
+    "workload": "sparse",
+    "rounds": 7,
+    "input_events": 2881,
+    "span_ms": 86401234,
+    "retained_items": 2881,
+    "heap_capacity_bytes": 1572864,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 228.75,
+        "oracle_sample_mean": 228.75,
+        "sample_abs_error": 0.0,
+        "time_mean": 226.352833333333,
+        "oracle_time_mean": 226.352833333333,
+        "time_abs_error": 0.0,
+        "covered_ms": 60000,
+        "oracle_covered_ms": 60000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 218.75,
+        "oracle_sample_mean": 218.75,
+        "sample_abs_error": 0.0,
+        "time_mean": 216.352833333333,
+        "oracle_time_mean": 216.352833333333,
+        "time_abs_error": 0.0,
+        "covered_ms": 300000,
+        "oracle_covered_ms": 300000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 222.229166666667,
+        "oracle_sample_mean": 222.229166666667,
+        "sample_abs_error": 0.0,
+        "time_mean": 221.849615277778,
+        "oracle_time_mean": 221.849615277778,
+        "time_abs_error": 0.0,
+        "covered_ms": 3600000,
+        "oracle_covered_ms": 3600000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 223.883461270063,
+        "oracle_sample_mean": 223.883461270063,
+        "sample_abs_error": 0.0,
+        "time_mean": 223.8399676669,
+        "oracle_time_mean": 223.839967666899,
+        "time_abs_error": 0.0,
+        "covered_ms": 85980000,
+        "oracle_covered_ms": 85980000,
+        "unknown_ms": 420000,
+        "limited": false
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 4.96,
+    "ingest_ns_per_event_median_by_process": [
+      4.96,
+      4.975,
+      4.946
+    ],
+    "query_4windows_ns_median": 25380.266,
+    "query_4windows_ns_median_by_process": [
+      31731.516,
+      25380.266,
+      24892.633
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "ring_small",
+    "workload": "sparse",
+    "rounds": 7,
+    "input_events": 2881,
+    "span_ms": 86401234,
+    "retained_items": 2048,
+    "heap_capacity_bytes": 49152,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 228.75,
+        "oracle_sample_mean": 228.75,
+        "sample_abs_error": 0.0,
+        "time_mean": 226.352833333333,
+        "oracle_time_mean": 226.352833333333,
+        "time_abs_error": 0.0,
+        "covered_ms": 60000,
+        "oracle_covered_ms": 60000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 218.75,
+        "oracle_sample_mean": 218.75,
+        "sample_abs_error": 0.0,
+        "time_mean": 216.352833333333,
+        "oracle_time_mean": 216.352833333333,
+        "time_abs_error": 0.0,
+        "covered_ms": 300000,
+        "oracle_covered_ms": 300000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 222.229166666667,
+        "oracle_sample_mean": 222.229166666667,
+        "sample_abs_error": 0.0,
+        "time_mean": 221.849615277778,
+        "oracle_time_mean": 221.849615277778,
+        "time_abs_error": 0.0,
+        "covered_ms": 3600000,
+        "oracle_covered_ms": 3600000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 224.668792934249,
+        "oracle_sample_mean": 223.883461270063,
+        "sample_abs_error": 0.785331664186,
+        "time_mean": 224.666283452891,
+        "oracle_time_mean": 223.839967666899,
+        "time_abs_error": 0.826315785992,
+        "covered_ms": 61111234,
+        "oracle_covered_ms": 85980000,
+        "unknown_ms": 25288766,
+        "limited": true
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 5.293,
+    "ingest_ns_per_event_median_by_process": [
+      5.294,
+      5.293,
+      5.163
+    ],
+    "query_4windows_ns_median": 17801.469,
+    "query_4windows_ns_median_by_process": [
+      17734.414,
+      18121.789,
+      17801.469
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "buckets_10s",
+    "workload": "sparse",
+    "rounds": 7,
+    "input_events": 2881,
+    "span_ms": 86401234,
+    "retained_items": 8598,
+    "heap_capacity_bytes": 414816,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 227.5,
+        "oracle_sample_mean": 228.75,
+        "sample_abs_error": 1.25,
+        "time_mean": 226.352833333333,
+        "oracle_time_mean": 226.352833333333,
+        "time_abs_error": 0.0,
+        "covered_ms": 60000,
+        "oracle_covered_ms": 60000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 217.5,
+        "oracle_sample_mean": 218.75,
+        "sample_abs_error": 1.25,
+        "time_mean": 216.352833333333,
+        "oracle_time_mean": 216.352833333333,
+        "time_abs_error": 0.0,
+        "covered_ms": 300000,
+        "oracle_covered_ms": 300000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 221.900826446281,
+        "oracle_sample_mean": 222.229166666667,
+        "sample_abs_error": 0.328340220386,
+        "time_mean": 221.849615277778,
+        "oracle_time_mean": 221.849615277778,
+        "time_abs_error": 0.0,
+        "covered_ms": 3600000,
+        "oracle_covered_ms": 3600000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 223.840251133589,
+        "oracle_sample_mean": 223.883461270063,
+        "sample_abs_error": 0.043210136474,
+        "time_mean": 223.8399676669,
+        "oracle_time_mean": 223.839967666899,
+        "time_abs_error": 1e-12,
+        "covered_ms": 85980000,
+        "oracle_covered_ms": 85980000,
+        "unknown_ms": 420000,
+        "limited": false
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 9.473,
+    "ingest_ns_per_event_median_by_process": [
+      9.907,
+      9.473,
+      9.401
+    ],
+    "query_4windows_ns_median": 48039.164,
+    "query_4windows_ns_median_by_process": [
+      47572.359,
+      48039.164,
+      48181.742
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "deque",
+    "workload": "irregular",
+    "rounds": 7,
+    "input_events": 54001,
+    "span_ms": 86401234,
+    "retained_items": 54001,
+    "heap_capacity_bytes": 1572864,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 220.0,
+        "oracle_sample_mean": 220.0,
+        "sample_abs_error": 0.0,
+        "time_mean": 219.214916666667,
+        "oracle_time_mean": 219.214916666667,
+        "time_abs_error": 0.0,
+        "covered_ms": 60000,
+        "oracle_covered_ms": 60000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 220.658602150538,
+        "oracle_sample_mean": 220.658602150538,
+        "sample_abs_error": 0.0,
+        "time_mean": 222.030904522613,
+        "oracle_time_mean": 222.030904522613,
+        "time_abs_error": 0.0,
+        "covered_ms": 298500,
+        "oracle_covered_ms": 298500,
+        "unknown_ms": 1500,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 225.105004468275,
+        "oracle_sample_mean": 225.105004468275,
+        "sample_abs_error": 0.0,
+        "time_mean": 225.186195394278,
+        "oracle_time_mean": 225.186195394278,
+        "time_abs_error": 0.0,
+        "covered_ms": 3582500,
+        "oracle_covered_ms": 3582500,
+        "unknown_ms": 17500,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 224.953834698432,
+        "oracle_sample_mean": 224.953834698436,
+        "sample_abs_error": 5e-12,
+        "time_mean": 224.950240538435,
+        "oracle_time_mean": 224.950240538434,
+        "time_abs_error": 1e-12,
+        "covered_ms": 85953000,
+        "oracle_covered_ms": 85953000,
+        "unknown_ms": 447000,
+        "limited": false
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 9.132,
+    "ingest_ns_per_event_median_by_process": [
+      9.713,
+      9.132,
+      8.462
+    ],
+    "query_4windows_ns_median": 560368.055,
+    "query_4windows_ns_median_by_process": [
+      560368.055,
+      528866.68,
+      616635.422
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "ring",
+    "workload": "irregular",
+    "rounds": 7,
+    "input_events": 54001,
+    "span_ms": 86401234,
+    "retained_items": 54001,
+    "heap_capacity_bytes": 1572864,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 220.0,
+        "oracle_sample_mean": 220.0,
+        "sample_abs_error": 0.0,
+        "time_mean": 219.214916666667,
+        "oracle_time_mean": 219.214916666667,
+        "time_abs_error": 0.0,
+        "covered_ms": 60000,
+        "oracle_covered_ms": 60000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 220.658602150538,
+        "oracle_sample_mean": 220.658602150538,
+        "sample_abs_error": 0.0,
+        "time_mean": 222.030904522613,
+        "oracle_time_mean": 222.030904522613,
+        "time_abs_error": 0.0,
+        "covered_ms": 298500,
+        "oracle_covered_ms": 298500,
+        "unknown_ms": 1500,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 225.105004468275,
+        "oracle_sample_mean": 225.105004468275,
+        "sample_abs_error": 0.0,
+        "time_mean": 225.186195394278,
+        "oracle_time_mean": 225.186195394278,
+        "time_abs_error": 0.0,
+        "covered_ms": 3582500,
+        "oracle_covered_ms": 3582500,
+        "unknown_ms": 17500,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 224.953834698432,
+        "oracle_sample_mean": 224.953834698436,
+        "sample_abs_error": 5e-12,
+        "time_mean": 224.950240538435,
+        "oracle_time_mean": 224.950240538434,
+        "time_abs_error": 1e-12,
+        "covered_ms": 85953000,
+        "oracle_covered_ms": 85953000,
+        "unknown_ms": 447000,
+        "limited": false
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 4.897,
+    "ingest_ns_per_event_median_by_process": [
+      4.755,
+      4.897,
+      5.046
+    ],
+    "query_4windows_ns_median": 509462.344,
+    "query_4windows_ns_median_by_process": [
+      487768.945,
+      514555.781,
+      509462.344
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "ring_small",
+    "workload": "irregular",
+    "rounds": 7,
+    "input_events": 54001,
+    "span_ms": 86401234,
+    "retained_items": 2048,
+    "heap_capacity_bytes": 49152,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 220.0,
+        "oracle_sample_mean": 220.0,
+        "sample_abs_error": 0.0,
+        "time_mean": 219.214916666667,
+        "oracle_time_mean": 219.214916666667,
+        "time_abs_error": 0.0,
+        "covered_ms": 60000,
+        "oracle_covered_ms": 60000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 220.658602150538,
+        "oracle_sample_mean": 220.658602150538,
+        "sample_abs_error": 0.0,
+        "time_mean": 222.030904522613,
+        "oracle_time_mean": 222.030904522613,
+        "time_abs_error": 0.0,
+        "covered_ms": 298500,
+        "oracle_covered_ms": 298500,
+        "unknown_ms": 1500,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 225.042934249264,
+        "oracle_sample_mean": 225.105004468275,
+        "sample_abs_error": 0.062070219011,
+        "time_mean": 225.045429254464,
+        "oracle_time_mean": 225.186195394278,
+        "time_abs_error": 0.140766139813,
+        "covered_ms": 3260234,
+        "oracle_covered_ms": 3582500,
+        "unknown_ms": 339766,
+        "limited": true
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 225.042934249264,
+        "oracle_sample_mean": 224.953834698436,
+        "sample_abs_error": 0.089099550828,
+        "time_mean": 225.045429254464,
+        "oracle_time_mean": 224.950240538434,
+        "time_abs_error": 0.09518871603,
+        "covered_ms": 3260234,
+        "oracle_covered_ms": 85953000,
+        "unknown_ms": 83139766,
+        "limited": true
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 6.231,
+    "ingest_ns_per_event_median_by_process": [
+      6.231,
+      6.17,
+      6.246
+    ],
+    "query_4windows_ns_median": 19539.102,
+    "query_4windows_ns_median_by_process": [
+      19539.102,
+      19935.586,
+      19484.414
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "buckets_10s",
+    "workload": "irregular",
+    "rounds": 7,
+    "input_events": 54001,
+    "span_ms": 86401234,
+    "retained_items": 8640,
+    "heap_capacity_bytes": 414816,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 218.75,
+        "oracle_sample_mean": 220.0,
+        "sample_abs_error": 1.25,
+        "time_mean": 219.0575625,
+        "oracle_time_mean": 219.214916666667,
+        "time_abs_error": 0.157354166667,
+        "covered_ms": 60000,
+        "oracle_covered_ms": 60000,
+        "unknown_ms": 0,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 221.096256684492,
+        "oracle_sample_mean": 220.658602150538,
+        "sample_abs_error": 0.437654533954,
+        "time_mean": 221.999275544389,
+        "oracle_time_mean": 222.030904522613,
+        "time_abs_error": 0.031628978224,
+        "covered_ms": 298500,
+        "oracle_covered_ms": 298500,
+        "unknown_ms": 1500,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 225.079241071429,
+        "oracle_sample_mean": 225.105004468275,
+        "sample_abs_error": 0.025763396847,
+        "time_mean": 225.184210327983,
+        "oracle_time_mean": 225.186195394278,
+        "time_abs_error": 0.001985066294,
+        "covered_ms": 3582500,
+        "oracle_covered_ms": 3582500,
+        "unknown_ms": 17500,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 224.949229365997,
+        "oracle_sample_mean": 224.953834698436,
+        "sample_abs_error": 0.00460533244,
+        "time_mean": 224.950157801357,
+        "oracle_time_mean": 224.950240538434,
+        "time_abs_error": 8.2737077e-05,
+        "covered_ms": 85953000,
+        "oracle_covered_ms": 85953000,
+        "unknown_ms": 447000,
+        "limited": false
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 6.028,
+    "ingest_ns_per_event_median_by_process": [
+      6.028,
+      6.086,
+      6.015
+    ],
+    "query_4windows_ns_median": 51658.969,
+    "query_4windows_ns_median_by_process": [
+      51519.969,
+      51658.969,
+      51689.242
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "deque",
+    "workload": "burst",
+    "rounds": 7,
+    "input_events": 100000,
+    "span_ms": 10001134,
+    "retained_items": 100000,
+    "heap_capacity_bytes": 3145728,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 227.303418803419,
+        "oracle_sample_mean": 227.303418803419,
+        "sample_abs_error": 0.0,
+        "time_mean": 225.246566164154,
+        "oracle_time_mean": 225.246566164154,
+        "time_abs_error": 0.0,
+        "covered_ms": 59700,
+        "oracle_covered_ms": 59700,
+        "unknown_ms": 300,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 225.682200538358,
+        "oracle_sample_mean": 225.682200538358,
+        "sample_abs_error": 0.0,
+        "time_mean": 225.290482573728,
+        "oracle_time_mean": 225.290482573727,
+        "time_abs_error": 1e-12,
+        "covered_ms": 298400,
+        "oracle_covered_ms": 298400,
+        "unknown_ms": 1600,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 225.031423703247,
+        "oracle_sample_mean": 225.031423703249,
+        "sample_abs_error": 1e-12,
+        "time_mean": 225.000247116969,
+        "oracle_time_mean": 225.000247116969,
+        "time_abs_error": 0.0,
+        "covered_ms": 3581300,
+        "oracle_covered_ms": 3581300,
+        "unknown_ms": 18700,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 224.987736474939,
+        "oracle_sample_mean": 224.98773647494,
+        "sample_abs_error": 1e-12,
+        "time_mean": 224.97605518118,
+        "oracle_time_mean": 224.976055181181,
+        "time_abs_error": 1e-12,
+        "covered_ms": 9949334,
+        "oracle_covered_ms": 9949334,
+        "unknown_ms": 51800,
+        "limited": false
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 9.194,
+    "ingest_ns_per_event_median_by_process": [
+      9.194,
+      9.405,
+      8.968
+    ],
+    "query_4windows_ns_median": 1044595.32,
+    "query_4windows_ns_median_by_process": [
+      1018238.5,
+      1048560.5,
+      1044595.32
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "ring",
+    "workload": "burst",
+    "rounds": 7,
+    "input_events": 100000,
+    "span_ms": 10001134,
+    "retained_items": 65536,
+    "heap_capacity_bytes": 1572864,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 227.303418803419,
+        "oracle_sample_mean": 227.303418803419,
+        "sample_abs_error": 0.0,
+        "time_mean": 225.246566164154,
+        "oracle_time_mean": 225.246566164154,
+        "time_abs_error": 0.0,
+        "covered_ms": 59700,
+        "oracle_covered_ms": 59700,
+        "unknown_ms": 300,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 225.682200538358,
+        "oracle_sample_mean": 225.682200538358,
+        "sample_abs_error": 0.0,
+        "time_mean": 225.290482573728,
+        "oracle_time_mean": 225.290482573727,
+        "time_abs_error": 1e-12,
+        "covered_ms": 298400,
+        "oracle_covered_ms": 298400,
+        "unknown_ms": 1600,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 225.031423703247,
+        "oracle_sample_mean": 225.031423703249,
+        "sample_abs_error": 1e-12,
+        "time_mean": 225.000247116969,
+        "oracle_time_mean": 225.000247116969,
+        "time_abs_error": 0.0,
+        "covered_ms": 3581300,
+        "oracle_covered_ms": 3581300,
+        "unknown_ms": 18700,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 225.013842873796,
+        "oracle_sample_mean": 224.98773647494,
+        "sample_abs_error": 0.026106398856,
+        "time_mean": 224.996015019168,
+        "oracle_time_mean": 224.976055181181,
+        "time_abs_error": 0.019959837987,
+        "covered_ms": 6520734,
+        "oracle_covered_ms": 9949334,
+        "unknown_ms": 3480400,
+        "limited": true
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 5.288,
+    "ingest_ns_per_event_median_by_process": [
+      5.263,
+      5.45,
+      5.288
+    ],
+    "query_4windows_ns_median": 647167.391,
+    "query_4windows_ns_median_by_process": [
+      634072.961,
+      662004.664,
+      647167.391
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "ring_small",
+    "workload": "burst",
+    "rounds": 7,
+    "input_events": 100000,
+    "span_ms": 10001134,
+    "retained_items": 2048,
+    "heap_capacity_bytes": 49152,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 227.303418803419,
+        "oracle_sample_mean": 227.303418803419,
+        "sample_abs_error": 0.0,
+        "time_mean": 225.246566164154,
+        "oracle_time_mean": 225.246566164154,
+        "time_abs_error": 0.0,
+        "covered_ms": 59700,
+        "oracle_covered_ms": 59700,
+        "unknown_ms": 300,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 225.407461953853,
+        "oracle_sample_mean": 225.682200538358,
+        "sample_abs_error": 0.274738584505,
+        "time_mean": 224.837746663151,
+        "oracle_time_mean": 225.290482573727,
+        "time_abs_error": 0.452735910576,
+        "covered_ms": 204834,
+        "oracle_covered_ms": 298400,
+        "unknown_ms": 95166,
+        "limited": true
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 225.407461953853,
+        "oracle_sample_mean": 225.031423703249,
+        "sample_abs_error": 0.376038250605,
+        "time_mean": 224.837746663151,
+        "oracle_time_mean": 225.000247116969,
+        "time_abs_error": 0.162500453818,
+        "covered_ms": 204834,
+        "oracle_covered_ms": 3581300,
+        "unknown_ms": 3395166,
+        "limited": true
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 225.407461953853,
+        "oracle_sample_mean": 224.98773647494,
+        "sample_abs_error": 0.419725478913,
+        "time_mean": 224.837746663151,
+        "oracle_time_mean": 224.976055181181,
+        "time_abs_error": 0.13830851803,
+        "covered_ms": 204834,
+        "oracle_covered_ms": 9949334,
+        "unknown_ms": 9796300,
+        "limited": true
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 6.193,
+    "ingest_ns_per_event_median_by_process": [
+      6.128,
+      28.819,
+      6.193
+    ],
+    "query_4windows_ns_median": 22138.391,
+    "query_4windows_ns_median_by_process": [
+      22138.391,
+      22193.078,
+      21231.164
+    ]
+  },
+  {
+    "status": "prototype_not_product",
+    "backend": "buckets_10s",
+    "workload": "burst",
+    "rounds": 7,
+    "input_events": 100000,
+    "span_ms": 10001134,
+    "retained_items": 1000,
+    "heap_capacity_bytes": 414816,
+    "sample_layout_bytes": 24,
+    "bucket_layout_bytes": 48,
+    "windows": [
+      {
+        "window_ms": 60000,
+        "sample_mean": 225.824958123953,
+        "oracle_sample_mean": 227.303418803419,
+        "sample_abs_error": 1.478460679466,
+        "time_mean": 223.861352596315,
+        "oracle_time_mean": 225.246566164154,
+        "time_abs_error": 1.385213567839,
+        "covered_ms": 59700,
+        "oracle_covered_ms": 59700,
+        "unknown_ms": 300,
+        "limited": false
+      },
+      {
+        "window_ms": 300000,
+        "sample_mean": 225.634215817694,
+        "oracle_sample_mean": 225.682200538358,
+        "sample_abs_error": 0.047984720664,
+        "time_mean": 225.240497911345,
+        "oracle_time_mean": 225.290482573727,
+        "time_abs_error": 0.049984662382,
+        "covered_ms": 298411,
+        "oracle_covered_ms": 298400,
+        "unknown_ms": 1589,
+        "limited": false
+      },
+      {
+        "window_ms": 3600000,
+        "sample_mean": 225.050261078379,
+        "oracle_sample_mean": 225.031423703249,
+        "sample_abs_error": 0.018837375131,
+        "time_mean": 225.017860361778,
+        "oracle_time_mean": 225.000247116969,
+        "time_abs_error": 0.01761324481,
+        "covered_ms": 3581311,
+        "oracle_covered_ms": 3581300,
+        "unknown_ms": 18689,
+        "limited": false
+      },
+      {
+        "window_ms": 86400000,
+        "sample_mean": 224.98773647494,
+        "oracle_sample_mean": 224.98773647494,
+        "sample_abs_error": 0.0,
+        "time_mean": 224.976055181181,
+        "oracle_time_mean": 224.976055181181,
+        "time_abs_error": 0.0,
+        "covered_ms": 9949334,
+        "oracle_covered_ms": 9949334,
+        "unknown_ms": 51800,
+        "limited": false
+      }
+    ],
+    "process_repetitions": 3,
+    "aggregation": "median_of_three_process_medians_each_of_seven_rounds",
+    "ingest_ns_per_event_median": 6.115,
+    "ingest_ns_per_event_median_by_process": [
+      6.107,
+      6.221,
+      6.115
+    ],
+    "query_4windows_ns_median": 11170.922,
+    "query_4windows_ns_median_by_process": [
+      11170.922,
+      11186.875,
+      10390.977
+    ]
+  }
+]

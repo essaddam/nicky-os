@@ -20,6 +20,11 @@ tokio.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+tokio = { workspace = true, features = ["process"] }
+moli-home-assistant = { path = "../moli-home-assistant" }
+moli-migration = { path = "../moli-migration" }
+rumqttc.workspace = true
+tempfile.workspace = true
 toml.workspace = true
 tokio-util.workspace = true
 

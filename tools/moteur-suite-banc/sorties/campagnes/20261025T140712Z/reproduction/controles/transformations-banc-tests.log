@@ -1,0 +1,46 @@
+   Compiling futures-util v0.3.34
+   Compiling tokio-util v0.7.19
+   Compiling hyper v1.11.1
+   Compiling tokio-rustls v0.26.6
+   Compiling hyper-util v0.1.21
+   Compiling tokio-stream v0.1.19
+   Compiling futures v0.3.34
+   Compiling moli-runtime v0.1.0 (/src/crates/moli-runtime)
+   Compiling rumqttc v0.25.1
+   Compiling moli-net v0.1.0 (/src/crates/moli-net)
+   Compiling moli-profile v0.1.0 (/src/crates/moli-profile)
+   Compiling moli-z2m v0.1.0 (/src/crates/moli-z2m)
+   Compiling transformations-banc v0.1.0 (/src/tools/transformations-banc)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 34.60s
+     Running unittests src/lib.rs (/target/debug/deps/transformations_banc-900df78cc4ec0661)
+
+running 8 tests
+test tests::experimental_action_index_matches_production_lookup_for_all_ids_and_failures ... ok
+test tests::experimental_affine_inverse_domains_endpoints_and_integer_roundtrips ... ok
+test tests::mqtt_real_binary_numeric_enum_and_nested_codecs_round_trip ... ok
+test tests::native_brightness_keeps_254_scale_and_rejects_out_of_range_without_clamping ... ok
+test tests::production_unit_ratios_have_explicit_compatible_pairs ... ok
+test tests::profile_action_uses_compiled_mapping_and_echoes_other_parameters ... ok
+test tests::profile_value_scale_rounding_missing_invalid_and_enum ... ok
+test tests::typed_actions_buttons_parameters_identity_and_readonly_are_distinct ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running unittests src/index_memory.rs (/target/debug/deps/index_memory-8c5650d8509da64b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (/target/debug/deps/transformations_banc-967a4e02a98c1e17)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests transformations_banc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

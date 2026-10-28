@@ -1,0 +1,2983 @@
+{
+  "sections": [
+    {
+      "id": "usages-automatismes",
+      "title": "Automatismes : ce qui tourne et ce qui doit évoluer",
+      "intro": "Vue globale : la famille valide une logique précise, puis un moteur déterministe réagit aux événements. Les zooms distinguent ce socle livré de la nouvelle conception des démarches, encore proposée.",
+      "ideas": [
+        {
+          "id": "usages-graphe",
+          "title": "Un graphe validé décrit le comportement",
+          "status": "integre",
+          "decision": "Modèle et exécution présents dans le dépôt ; aucune qualification réelle supplémentaire déduite.",
+          "summary": "Un automatisme relie des déclencheurs, des conditions, des attentes et des actions. Le moteur suit les liens dans leur ordre enregistré : la disposition visuelle ne fixe pas l’ordre réel.",
+          "details": [
+            "Choisir une entrée : état, seuil, heure, soleil, intervalle, démarrage, occurrence ou lancement manuel ; les conditions filtrent ensuite la suite.",
+            "Parcourir les branches l’une après l’autre, avec 100 étapes au maximum ; une attente sur la première peut retarder la suivante.",
+            "Conserver les bornes de 60 nœuds, 120 liens et 400 automatismes ; un graphe cyclique est refusé."
+          ],
+          "evolution": "Le graphe reste la base ; la critique propose de clarifier les voies et les données lues, sans ajouter des boucles générales.",
+          "sources": [
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 39,
+              "note": "Modèle, ports et catalogue des étapes."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1380,
+              "note": "Évolution proposée des voies et de leur présentation."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 164,
+              "note": "Types effectivement représentés."
+            },
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 170,
+              "note": "Parcours séquentiel et limite des étapes."
+            }
+          ],
+          "risks": [
+            "Deux branches dessinées côte à côte ne sont pas exécutées simultanément."
+          ]
+        },
+        {
+          "id": "usages-validation",
+          "title": "Enregistrer, valider et activer sont des actes distincts",
+          "status": "integre",
+          "decision": "Validation humaine exacte et annulation des anciennes exécutions dans le contrat actuel.",
+          "summary": "Un agent prépare un brouillon ; seule une validation humaine autorise son exécution. Le serveur vérifie l’empreinte de ce que la personne a examiné pour refuser une confirmation devenue périmée.",
+          "details": [
+            "Calculer l’empreinte SHA-256 de la logique, du mode et des liens ; valider avec une session PIN et cette empreinte.",
+            "Après modification de logique, arrêter l’ancienne activation et ses attentes ; une sauvegarde de brouillon n’allume rien.",
+            "Pour planning, calcul ou scène, publier séparément le courant validé en montrant les consommateurs concernés ; le brouillon reste inerte."
+          ],
+          "evolution": "Le cadrage initial des dépendances est désormais décliné dans les composants ; les futures capacités de Sarah ne doivent pas créer un second chemin d’approbation.",
+          "sources": [
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 9,
+              "note": "Règles de validation et de brouillon."
+            },
+            {
+              "path": "docs/components/plannings.md",
+              "line": 43,
+              "note": "Versions et publication des dépendances."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 54,
+              "note": "Empreinte de logique."
+            },
+            {
+              "path": "crates/moli-runtime/src/dependencies/mod.rs",
+              "line": 59,
+              "note": "Définitions exécutables typées présentes."
+            }
+          ],
+          "risks": [
+            "Le nom et la note ne couvrent pas la logique ; ne pas traiter un texte de provenance comme une autorisation."
+          ]
+        },
+        {
+          "id": "usages-execution-concurrence",
+          "title": "Remplacer, ignorer ou attendre son tour",
+          "status": "integre",
+          "decision": "État courant : trois modes ; cible retenue : mode par voie et parallèle explicite avec admission chez le gardien.",
+          "summary": "Le moteur livré possède restart, single et queued, appliqués à l’automatisme entier. La cible conserve ces modes pour les voies séquentielles et ajoute un parallèle borné explicitement autorisé pour les éléments indépendants.",
+          "details": [
+            "En restart, un nouveau lancement remplace le précédent ; en single, il est écarté avec un motif visible ; en queued, il attend selon l’ordre gardé de sa voie, avec le niveau de survie annoncé.",
+            "Chaque voie désigne sa politique ; les réactions urgentes d’orage ou de sécurité ne partagent pas une attente de confort qui les rendrait invisibles.",
+            "Le parallèle reste une concurrence entre exécutions indépendantes ; les branches d’une exécution conservent leur ordre visible et les scènes servent aux cibles simultanées."
+          ],
+          "evolution": "La critique du 23 octobre conserve les modes séquentiels mais ajoute le principe d’exécutions parallèles bornées et propose le découpage en voies.",
+          "sources": [
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 65,
+              "note": "Modes livrés."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 859,
+              "note": "Exemple tondeuse et cube."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1669,
+              "note": "Décision rapportée sur le parallèle."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 87,
+              "note": "Seulement Restart, Single, Queued."
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 672,
+              "note": "Arbitrage actuel par automatisme."
+            }
+          ],
+          "risks": [
+            "La file actuelle pleine ignore le déclenchement ; la cible remplace ce comportement par une attente bornée chez le gardien et un support survivant explicitement annoncé."
+          ]
+        },
+        {
+          "id": "usages-occurrences",
+          "title": "Un appui est une occurrence, pas un état alterné",
+          "status": "integre",
+          "decision": "AUTO-H4 présent ; livraison en direct au plus une fois.",
+          "summary": "Deux appuis identiques restent deux occurrences distinctes, même s’ils arrivent à la même milliseconde. Une retransmission de la même requête identifiée retrouve son reçu au lieu de produire un nouvel appui.",
+          "details": [
+            "Publier une identité source/séquence et utiliser when_occurrence, sans faire osciller un booléen artificiel.",
+            "Persister la consommation avant le lancement ; ne viser que les lignées actives éligibles au moment de l’événement.",
+            "Après arrêt ou perte du bus, signaler l’incertitude sans fabriquer des appuis depuis l’état restauré ; aucun rejeu physique automatique."
+          ],
+          "evolution": "Le cadrage qui annonçait l’absence de déclencheur d’occurrence décrit une étape antérieure ; le contrat AUTO-H4 détaillé le remplace pour cette primitive.",
+          "sources": [
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 177,
+              "note": "Boutons, identités, admission et fichiers durables."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-20-auto-h4.md",
+              "line": 1,
+              "note": "Plan et vérifications historiques du lot."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 166,
+              "note": "WhenOccurrence présent."
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 143,
+              "note": "Admission des occurrences."
+            }
+          ],
+          "risks": [
+            "Au plus une fois ne garantit pas qu’un effet physique ait été confirmé ; une interruption peut laisser un résultat inconnu."
+          ]
+        },
+        {
+          "id": "usages-essai-journal",
+          "title": "Comprendre un lancement et essayer sans agir",
+          "status": "partiel",
+          "decision": "Essai à blanc et journal livrés ; validation exhaustive d’une démarche non livrée.",
+          "summary": "L’essai à blanc parcourt le graphe sans commander, attendre réellement ni appeler le modèle. Il explique un chemin possible, mais ne prouve pas toutes les branches, les échecs d’un service ou la qualité d’une réponse de Sarah.",
+          "details": [
+            "Lancer le test sur les conditions courantes ; afficher les étapes simulées et les valeurs qui seraient utilisées.",
+            "Consulter le flux d’exécution et les 500 résultats gardés ; leurs détails sont tronqués, le dernier texte généré n’est pas un dossier durable.",
+            "Le WaitFor simulé suit ok même si la condition est fausse ; la critique veut éprouver aussi timeout, une soirée fictive et les issues humaines."
+          ],
+          "evolution": "Conserver l’essai sans effet ; ajouter plus tard des jeux d’entrée et des issues simulées explicitement distincts d’un test réel du modèle.",
+          "sources": [
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 26,
+              "note": "Essai sans effet et limites."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1397,
+              "note": "Validation comportementale proposée."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 410,
+              "note": "WaitFor simulé vers ok."
+            },
+            {
+              "path": "crates/moli-automation/src/store.rs",
+              "line": 13,
+              "note": "500 résultats conservés."
+            },
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 463,
+              "note": "Write simulé sans modèle."
+            }
+          ],
+          "risks": [
+            "Un essai vert sur le chemin heureux ne qualifie ni la reprise ni les branches de refus."
+          ]
+        },
+        {
+          "id": "usages-reprise-ha",
+          "title": "Reprendre les usages de Home Assistant sans double commande",
+          "status": "partiel",
+          "decision": "Import en brouillons présent ; équivalence et transfert de propriété restent humains.",
+          "summary": "L’import traduit des automatismes HA vers des brouillons Moli à relire. Une traduction ne prouve ni que toutes les fonctions sont représentées ni que l’ancien moteur a cessé d’agir.",
+          "details": [
+            "Exporter en lecture seule ; limiter les dépenses et dédupliquer les entrées avant traduction.",
+            "Relire les conditions, attentes et cibles ; conserver chez HA les logiques non représentables et les services dont la dépendance manque.",
+            "Lors de la bascule, désactiver l’usage HA avant d’autoriser celui de Moli ; pour revenir, couper et annuler Moli avant de réactiver HA."
+          ],
+          "evolution": "AUTO-M1/M2 proposent une provenance privée structurée et une comparaison d’équivalence ; l’import actuel conserve encore une partie de la provenance dans une note.",
+          "sources": [
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 139,
+              "note": "Import et mesures historiques attribuées au document."
+            },
+            {
+              "path": "docs/components/moli.md",
+              "line": 112,
+              "note": "Limites de provenance et déduplication après redémarrage."
+            },
+            {
+              "path": "docs/components/automatismes-primitives.md",
+              "line": 277,
+              "note": "Reprise utile et propriétaire unique."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-assistant/src/import.rs",
+              "line": 1,
+              "note": "Module de traduction actuel ; sa présence ne vaut pas bascule."
+            }
+          ],
+          "risks": [
+            "Les 86 traductions et 61 sans erreur sont des résultats historiques documentés, pas des tests rejoués pour cette revue."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usages-primitives",
+      "title": "Les briques du temps et des mesures",
+      "intro": "Vue globale : les aides portent les faits durables, les plannings donnent un contexte temporel et les calculs donnent des valeurs dérivées. Leurs contrats détaillés et leur présence dans le code priment sur les introductions anciennes qui les annoncent encore toutes comme futures.",
+      "ideas": [
+        {
+          "id": "usages-minuteur",
+          "title": "Minuteur durable et expiration récupérable",
+          "status": "integre",
+          "decision": "AUTO-H1 représenté et raccordé ; l’en-tête de son document conserve le statut de soumission initial.",
+          "summary": "Démarrer un minuteur crée une génération ; l’annuler ou le remplacer invalide cette génération. Le restant est calculé sans réécrire le fichier chaque seconde et l’expiration courante peut être livrée après redémarrage sans doubler son admission.",
+          "details": [
+            "Admettre start avec un entier de 1 à 604800 secondes, ou cancel avec null ; conserver état, échéance UTC, génération et reçu ensemble.",
+            "Utiliser le temps monotone pendant la marche ; à la reprise, recalculer le restant depuis l’échéance durable sans rallonger silencieusement la durée initiale.",
+            "Figer au départ les destinataires validés et leurs lignées ; persister l’admission avant acquittement ; une nouvelle validation tardive ne reçoit pas l’ancienne expiration."
+          ],
+          "evolution": "Ce rattrapage explicite complète les occurrences live-only d’AUTO-H4 sans changer leur contrat.",
+          "sources": [
+            {
+              "path": "docs/components/minuteurs.md",
+              "line": 16,
+              "note": "Modèle, limites et audience figée."
+            },
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 247,
+              "note": "Intégration aux graphes."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-auto-h1.md",
+              "line": 1,
+              "note": "Plan et corrections du permis vivant."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/timers.rs",
+              "line": 225,
+              "note": "Commandes du propriétaire durable."
+            },
+            {
+              "path": "crates/moli-runtime/src/timer_hub.rs",
+              "line": 198,
+              "note": "Ordonnanceur et raccordement au hub."
+            }
+          ],
+          "risks": [
+            "Le rattrapage garantit une admission, pas une transaction entre disque et appareil ; 128 minuteurs à 1 Hz peuvent produire un volume important de variations."
+          ]
+        },
+        {
+          "id": "usages-compteur",
+          "title": "Compter sans perdre un incrément",
+          "status": "integre",
+          "decision": "AUTO-H2 présent ; compteur entier et reçus atomiques.",
+          "summary": "Un compteur incrémente côté serveur selon un pas configuré et revient à son initial par reset. Le client n’effectue jamais une lecture suivie d’une affectation qui pourrait écraser un incrément concurrent.",
+          "details": [
+            "Sérialiser les opérations après la garde ; contrôler les entiers exacts et les bornes sans clamp implicite.",
+            "Écrire valeur et reçu dans le même commit avant confirmation ; un refus de dépassement reste refusé lors d’un réessai ultérieur.",
+            "Réutiliser l’identité pour un réessai, une nouvelle séquence pour une nouvelle intention ; retry d’un ancien incrément après reset ne réapplique pas sa valeur historique."
+          ],
+          "evolution": "Le compteur fournit un fait durable réutilisable pour les usages longs ; il ne remplace pas encore tous les compteurs périodiques AUTO-K2.",
+          "sources": [
+            {
+              "path": "docs/components/compteurs.md",
+              "line": 3,
+              "note": "Valeur et commandes explicites."
+            },
+            {
+              "path": "docs/components/compteurs.md",
+              "line": 26,
+              "note": "Ordre et réessais."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-20-auto-h2.md",
+              "line": 1,
+              "note": "Plan du lot."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/counters.rs",
+              "line": 233,
+              "note": "Exécution sérialisée."
+            },
+            {
+              "path": "crates/moli-helpers/src/lib.rs",
+              "line": 108,
+              "note": "Type Counter présent."
+            }
+          ],
+          "risks": [
+            "Sans identité, un appel réessayé est une nouvelle opération ; une sauvegarde ancienne restaure aussi un ancien horizon de déduplication."
+          ]
+        },
+        {
+          "id": "usages-date-heure",
+          "title": "Une date saisie ne programme pas encore un réveil",
+          "status": "integre",
+          "decision": "AUTO-H3 représenté ; échéance dynamique du futur moteur distincte.",
+          "summary": "Les aides date, time et datetime distinguent une date civile, une heure civile et un instant UTC avec fuseau. Elles valident et mémorisent une valeur ; cette valeur ne déclenche pas seule une action lorsqu’on atteint son heure.",
+          "details": [
+            "Refuser les dates impossibles et les formes implicites ; datetime impose un fuseau IANA explicite.",
+            "Refuser une heure locale sautée ; sur une heure répétée, demander un décalage explicite cohérent puis conserver l’instant canonique UTC.",
+            "Écrire la valeur métier avant confirmation, sans la reconstruire depuis le cache ; employer aujourd’hui les déclencheurs de changement explicites, et concevoir séparément le réveil porté par une valeur."
+          ],
+          "evolution": "La critique propose de ranger les échéances longues dans ces aides, mais reconnaît que le réveil dynamique manque encore.",
+          "sources": [
+            {
+              "path": "docs/components/dates-heures.md",
+              "line": 9,
+              "note": "Intention et absence de réveil implicite."
+            },
+            {
+              "path": "docs/components/dates-heures.md",
+              "line": 45,
+              "note": "Saisie et changement d’heure."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1445,
+              "note": "Usage futur des dates pour le temps long."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/temporal.rs",
+              "line": 41,
+              "note": "Normalisation temporelle présente."
+            },
+            {
+              "path": "crates/moli-helpers/src/lib.rs",
+              "line": 103,
+              "note": "Date, Time et Datetime présents."
+            }
+          ],
+          "risks": [
+            "Une nouvelle affectation d’une ancienne valeur peut écraser une plus récente ; ces aides n’ont pas le registre de reçus des opérations compteur/minuteur."
+          ]
+        },
+        {
+          "id": "usages-planning",
+          "title": "Planning hebdomadaire et publication de ses dépendances",
+          "status": "integre",
+          "decision": "AUTO-H5 présent ; ne couvre pas seul une alternance de deux semaines.",
+          "summary": "Un planning publie active, un booléen en lecture seule calculé dans son fuseau. Il n’envoie aucun ordre ; un graphe humainement validé décide des effets de ses changements.",
+          "details": [
+            "Définir des intervalles début inclus, fin exclue ; découper les passages à minuit et refuser les chevauchements au-delà de 256 créneaux normalisés.",
+            "Préparer le brouillon, montrer les consommateurs et publier l’aperçu exact avec PIN ; en cas de modification concurrente, refuser par conflit.",
+            "À la reprise, recalculer le contexte présent sans rejouer les frontières manquées ; les deux occurrences d’une heure répétée suivent le prédicat civil."
+          ],
+          "evolution": "Le socle brouillon/courant est partagé avec scènes, agrégats et durées ; une alternance de séjour sur deux semaines exige une extension ou une autre source.",
+          "sources": [
+            {
+              "path": "docs/components/plannings.md",
+              "line": 7,
+              "note": "Créneaux, fuseau et ordonnanceur."
+            },
+            {
+              "path": "docs/components/plannings.md",
+              "line": 43,
+              "note": "Contrat partagé."
+            },
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 400,
+              "note": "Limite pour les séjours alternés."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-auto-h5-planning.md",
+              "line": 1,
+              "note": "Plan d’implémentation."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/dependencies/mod.rs",
+              "line": 60,
+              "note": "Schedule parmi les définitions typées."
+            }
+          ],
+          "risks": [
+            "Une restauration de contexte n’est pas une transition observée ; ne pas en déduire une arrivée ou une commande à rattraper."
+          ]
+        },
+        {
+          "id": "usages-agregats",
+          "title": "Min, max et moyenne sur les seules observations utilisables",
+          "status": "integre",
+          "decision": "AUTO-K1 présent avec fraîcheur, unités et propagation bornées.",
+          "summary": "Un agrégat produit une valeur numérique à partir de sources compatibles et suffisamment fraîches. Une liste devenue vide produit une indisponibilité, jamais une mesure inventée égale à zéro.",
+          "details": [
+            "Valider les sources, leur lisibilité, leur type et leurs unités ; autoriser uniquement les conversions déclarées.",
+            "Écarter données absentes, nulles, non finies, hors ligne ou périmées ; un changement d’unité exige une vraie observation nouvelle.",
+            "Propager dans un ordre topologique stable en conservant l’âge le plus ancien ; une réception fraîche de même valeur peut rétablir l’usage sans fabriquer state_changed."
+          ],
+          "evolution": "Ce socle sert aux durées ; les compteurs périodiques et les modèles d’estimation du cadrage restent des lots distincts.",
+          "sources": [
+            {
+              "path": "docs/components/calculs.md",
+              "line": 25,
+              "note": "Données utilisables et unités."
+            },
+            {
+              "path": "docs/components/calculs.md",
+              "line": 55,
+              "note": "Âge et reprise."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-auto-k1-calculs.md",
+              "line": 1,
+              "note": "Plan du lot."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/computed_hub.rs",
+              "line": 12,
+              "note": "Initialisation et raccordement."
+            },
+            {
+              "path": "crates/moli-runtime/src/computed/engine.rs",
+              "line": 108,
+              "note": "Propagation bornée."
+            }
+          ],
+          "risks": [
+            "La présence d’une valeur calculée ne signifie pas que toutes ses sources participent ; afficher la qualité et la couverture utiles à la décision."
+          ]
+        },
+        {
+          "id": "usages-duree",
+          "title": "Mesurer une durée en montrant ce qu’on ignore",
+          "status": "integre",
+          "decision": "AUTO-K3 présent ; bilan durable séparant observé, connu et inconnu.",
+          "summary": "Une durée calculée compte le temps réellement observé dans un état pendant une fenêtre glissante. Elle distingue zéro mesuré et absence d’observation, et n’attribue pas la durée d’une panne à l’état précédent.",
+          "details": [
+            "Ouvrir la couverture sur une observation valide puis la fermer sur péremption, perte de lisibilité, indisponibilité ou interruption.",
+            "Capturer les transitions sans les fusionner ; checkpoint durable au plus une fois par seconde avant publication du bilan.",
+            "À la reprise, conserver l’acquis jusqu’au checkpoint et exiger une observation réelle ; si 256 segments ne suffisent plus, rendre l’ancienne partie inconnue et signaler limited."
+          ],
+          "evolution": "Remplace une simple soustraction d’horodatages par une mesure avec couverture explicite ; ne constitue pas une reconstitution historique universelle.",
+          "sources": [
+            {
+              "path": "docs/components/durees.md",
+              "line": 24,
+              "note": "Bilan et couverture."
+            },
+            {
+              "path": "docs/components/durees.md",
+              "line": 59,
+              "note": "Reprise durable."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-auto-k3-durees.md",
+              "line": 1,
+              "note": "Plan et bornes."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/durations.rs",
+              "line": 1,
+              "note": "Capture indexée et rédacteur de checkpoint."
+            },
+            {
+              "path": "crates/moli-runtime/src/duration_hub.rs",
+              "line": 133,
+              "note": "Checkpoint des durées."
+            }
+          ],
+          "risks": [
+            "Un arrêt brutal peut perdre la fin non checkpointée ; le bilan doit conserver sa date et son temps inconnu."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usages-demarches",
+      "title": "Démarches : demander, conserver les produits, reprendre",
+      "intro": "Vue globale : la cible conserve les réflexes déterministes et leurs fiches compactes ; les démarches disposent de produits privés et bornés, gardés par le relais, les segments et les pairs de HA v2. Les sept décisions rapportées dans la critique sont conservées comme provenance ; son journal disque des dossiers est remplacé par les supports survivants et l’instantané périodique, sans base écrite à chaque événement.",
+      "ideas": [
+        {
+          "id": "usages-reflexes-demarches",
+          "title": "Deux usages, un moteur qui reste déterministe",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Distinction conceptuelle de la critique ; pas deux moteurs déjà livrés.",
+          "summary": "Un réflexe lit la maison, attend le temps et donne des ordres. Une démarche attend aussi un modèle, un service ou une personne et doit garder les produits de cette attente.",
+          "details": [
+            "Classer le graphe lors de la compilation ; un réflexe conserve sa fiche compacte sans dossier supplémentaire.",
+            "Adresser les tâches lentes à des répondeurs et traiter leur issue comme un événement ; le moteur ne devient pas un dialogue général.",
+            "Garder les calculs continus, collections et médias lourds chez leur module ; ne transférer qu’un résultat borné ou une référence."
+          ],
+          "evolution": "La critique conserve la mémoire v2 pour les réflexes et l’étend pour les démarches ; elle ne déclare pas cette exécution compilée présente dans main.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 68,
+              "note": "Vocabulaire et séparation."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1182,
+              "note": "Trois sortes d’étapes."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1489,
+              "note": "Frontière du workflow."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 164,
+              "note": "Modèle actuel sans types Demander ou fiche."
+            },
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 124,
+              "note": "Contexte actuel limité au texte."
+            }
+          ],
+          "risks": [
+            "Les chiffres compacts de la soirée de référence ne qualifient pas les démarches avec services ou personnes."
+          ]
+        },
+        {
+          "id": "usages-zone-produits",
+          "title": "Programme, fiche de 64 octets et produits sont trois mémoires distinctes",
+          "status": "proposition",
+          "decision": "Zone séparée conservée ; cible harmonisée avec HA v2 : gardien, pairs et instantané périodique, sans journal disque des dossiers.",
+          "summary": "La fiche compacte dit où en est une exécution ; elle ne porte ni un récapitulatif ni une date extraite. Le dossier privé réside dans la zone de produits lorsqu’il travaille, puis dans la mémoire segmentée du gardien et des pairs lorsqu’il dort.",
+          "details": [
+            "Conserver le programme partagé et la fiche cible de 64 octets ; identifier le dossier par incarnation du registre, époque, case et génération, sans agrandir cette fiche.",
+            "Ranger produits typés, origine, instant et étape dans la zone de travail bornée ; garder corps de courriel, image et document chez leur module détenteur. Les dossiers endormis sortent de cette RAM de travail vers les segments du gardien et des pairs.",
+            "Reprendre depuis un pair survivant au rang confirmé, sinon depuis l’instantané périodique selon HA v2 ; aucun dossier ni exécution n’ajoute un journal disque par événement. Le niveau de survie est déclaré : crash du cœur, perte de machine ou panne électrique totale ne sont pas équivalents.",
+            "Ne jamais lire le dossier d’un autre workflow ; publier une valeur ou un message de maison pour partager un résultat. Le journal explicatif après clôture appartient à l’historique et ne fait jamais autorité pour la reprise."
+          ],
+          "evolution": "La critique du 23 octobre proposait une descente au journal du moteur ; la cible finale retient sa séparation des produits mais adopte HA v2 : segments du gardien, pairs survivants et instantané périodique. La fiche compacte des réflexes reste distincte.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 222,
+              "note": "Pourquoi la fiche ne peut pas porter les données."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1196,
+              "note": "Dossier et visibilité."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1670,
+              "note": "Décisions rapportées sur la zone et le journal."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 124,
+              "note": "Un seul Option<String> dans le contexte actuel."
+            }
+          ],
+          "risks": [
+            "Un accusé n’est durable que face au support survivant annoncé ; sans pair survivant ni arrêt figé, une panne électrique totale peut perdre ce qui est postérieur au dernier instantané."
+          ]
+        },
+        {
+          "id": "usages-produits-types",
+          "title": "Des produits nommés dont chaque lecture est vérifiable",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Cases typées et analyse des chemins proposées ; non présentes dans le contexte courant.",
+          "summary": "Chaque étape lente écrit son produit une seule fois dans une case nommée. La compilation refuse de lire un champ qui n’existe pas sur tous les chemins possibles, ou impose un défaut explicite.",
+          "details": [
+            "Numéroter les cases et définir genre, taille maximale, origine et instant ; une date, une personne, un choix et un texte restent distincts.",
+            "Exiger que tout chemin vers le lecteur passe par l’issue réussie du producteur ; fiche.date ne peut pas être lue après ne sait pas sans repli.",
+            "Calculer les derniers lecteurs pour réutiliser les octets ; libérer une case après transfert des données encore nécessaires vers les segments du gardien et des pairs au niveau de survie demandé, sans écriture d’un dossier sur disque par étape."
+          ],
+          "evolution": "Remplace le dernier {{texte}} unique par des produits adressables ; conserve le graphe sans boucle pour rendre les écritures uniques vérifiables. La reprise repose sur les supports survivants du gardien, pas sur le journal explicatif de clôture.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 386,
+              "note": "Cases, dominance des lectures et écritures uniques."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 596,
+              "note": "Dernier lecteur et libération."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 716,
+              "note": "Interpolation actuelle du dernier texte."
+            },
+            {
+              "path": "crates/moli-automation/src/check.rs",
+              "line": 477,
+              "note": "Détection actuelle des cycles."
+            }
+          ],
+          "risks": [
+            "La protection ne tient que si le vérificateur couvre toutes les branches et les défauts ; elle reste à construire et éprouver."
+          ]
+        },
+        {
+          "id": "usages-bornes-zone",
+          "title": "Calculer la place au pire avant d’admettre la démarche",
+          "status": "proposition",
+          "decision": "Choix consolidé : zone de produits de 1 Mio, 64 dossiers résidents maximum, 16 Kio cumulés par dossier ; admission simultanée en comptes et octets.",
+          "summary": "Le compilateur calcule le pic des produits vivants, plutôt que la somme de toutes les sorties. La démarche prend cette place au départ, attend si la zone est pleine et la rend à sa fin.",
+          "details": [
+            "Calculer le maximum des produits vivants, en comptant les octets UTF-8 et les en-têtes : 2000 caractères peuvent occuper 8000 octets ; deux textes maximaux et les autres produits doivent tenir ensemble dans les 16384 octets du dossier.",
+            "Fixer 16 champs par fiche, 64 produits par démarche et 2000 caractères par texte ; refuser un graphe dont le plan dépasse le plafond cumulé et refuser un produit dépassant sa borne, sans troncature silencieuse.",
+            "Admettre un dossier seulement si les limites de 1 Mio et 64 résidents le permettent toutes deux, avec son bloc de 16 Kio maximum ; la zone en reste seule propriétaire et réutilise les octets après le dernier lecteur.",
+            "À pression mémoire, transférer les dossiers endormis les plus anciens vers la mémoire segmentée du gardien et des pairs, puis libérer leur RAM de travail. Au réveil, remonter uniquement les produits vivants ; l’instantané périodique assure la reprise annoncée hors des mémoires survivantes, sans base ni journal de dossiers par événement.",
+            "Appliquer aussi le budget global de 2 Mio à l’ensemble des files : mille causes est un plafond de compte soumis à ce plafond d’octets partagé, pas mille dossiers de 16 Kio supplémentaires. Qualifier le processus avant, pendant et après la rafale."
+          ],
+          "evolution": "Le principe d’empreinte connue est conservé ; la réservation de tous les workflows à la compilation est écartée. La cible utilise des blocs à propriétaire unique et la mémoire segmentée du gardien pour les attentes, avec libération déterministe de Rust.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 525,
+              "note": "Calcul de l’empreinte et admission."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 627,
+              "note": "Propriété Rust et allocateur."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1681,
+              "note": "Bornes historiques non fixées par l’auteur ; paramètres retenus explicitement par cette revue."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-assistant/src/auto.rs",
+              "line": 313,
+              "note": "Limite actuelle en jetons sans mesure de caractères de sortie."
+            }
+          ],
+          "risks": [
+            "Le budget de la zone ne couvre pas magiquement toutes les allocations du processus : métadonnées, files et répondeurs conservent leurs budgets propres ; aucune performance mesurée n’est inventée."
+          ]
+        },
+        {
+          "id": "usages-engagements",
+          "title": "Écrire l’intention avant un engagement, puis conserver son reçu",
+          "status": "proposition",
+          "decision": "Choix consolidé : file/relais du gardien et accusé du pair survivant avant engagement irréversible ou auprès d’un tiers ; pas de journal disque par engagement.",
+          "summary": "Un message envoyé ou un rendez-vous créé ne se reprend pas comme une lecture. Le gardien conserve l’intention et son reçu sur les supports survivants annoncés ; les engagements irréversibles ou auprès d’un tiers attendent l’acquittement du pair avant émission.",
+          "details": [
+            "Former une clé avec incarnation du registre, époque, identité de l’automatisme, case, génération et rang d’étape ; une restauration ou une nouvelle incarnation ne réutilise jamais une ancienne clé.",
+            "Placer produits nécessaires et intention dans les segments et la file du gardien, puis obtenir l’acquittement du pair exigé pour la classe irréversible/tiers. Le reçu annonce précisément ce qui survit ; aucune écriture de dossier ou d’exécution par événement n’est ajoutée.",
+            "Sans accusé requis, suspendre cet engagement ou solliciter une personne ; les réflexes locaux, lectures et préparations réversibles continuent selon leur contrat. Un acte auprès d’un tiers requiert également son Oui humain ponctuel.",
+            "Après reprise, rendre le reçu existant s’il prouve le traitement. Un renvoi réseau n’est permis que si la non-émission est prouvée, ou si le récepteur reconnaît et déduplique la même clé ; un simple constat de l’état courant ne suffit jamais. Sans preuve, rester non confirmé et demander une nouvelle intention humaine."
+          ],
+          "evolution": "La critique proposait intention et produits sur disque ; la cible finale conserve l’engagement gardé mais adopte le relais, les segments et les pairs de HA v2. L’historique explicatif après clôture reste séparé de la reprise.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 332,
+              "note": "L’engagement, pas la durée, déclenche la descente."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1220,
+              "note": "Table de reprise par répondeur."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/store.rs",
+              "line": 113,
+              "note": "Journal actuel des exécutions terminées."
+            },
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 259,
+              "note": "Écriture du résultat à la fin du run."
+            }
+          ],
+          "risks": [
+            "Le gardien survivant permet de reprendre après crash du cœur ; sans pair ou support résistant annoncé, une panne électrique totale peut perdre les derniers reçus. Aucune garantie exactement une fois globale n’est promise."
+          ]
+        },
+        {
+          "id": "usages-ponts",
+          "title": "Un module de chaque côté d’un lien qui peut couper",
+          "status": "proposition",
+          "decision": "Principe des deux modules rapporté décidé ; résolution de revue : accusé pair obligatoire pour la classe irréversible/tiers.",
+          "summary": "L’émetteur garde une demande ou une réponse jusqu’à son accusé, et le récepteur reconnaît une clé déjà vue. Cette règle vise aussi bien Sarah sur une autre machine qu’une réponse humaine venant d’un téléphone.",
+          "details": [
+            "Côté maison, les segments et la file/relais du gardien portent les demandes sans issue et leurs clés ; les pairs recopient le même état critique ordonné, sans second journal disque des exécutions.",
+            "Côté répondeur ou application, garder la même réponse jusqu’à l’accusé et reconnaître une demande déjà traitée. Le téléphone ne perd pas son Oui pendant une coupure et Sarah ne refait pas une réponse encore conservée.",
+            "Un engagement irréversible ou auprès d’un tiers attend l’accusé pair ; sans lui, il reste suspendu ou revient à une personne. Une lecture tardive est écartée après sa fenêtre ; une réussite tardive d’engagement est conservée et signalée, jamais présentée comme pas fait.",
+            "Pour un service externe, reprendre la même clé incluant incarnation et époque. Ne renvoyer que si la non-émission est prouvée ou si le récepteur garantit la déduplication de cette clé ; une lecture de l’état ne transforme pas une émission ambiguë en autorisation de réessai."
+          ],
+          "evolution": "Le contrat garde-jusqu’à-accusé est appliqué aux deux bouts avec les supports de HA v2. Le journal du moteur proposé dans la critique est remplacé pour la cible ; le journal d’explication reste un domaine historique distinct.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 689,
+              "note": "Ponts, accusés et service externe."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1671,
+              "note": "Principe décidé."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1694,
+              "note": "Arbitrage historique sur l’accusé de secours, résolu dans la cible de revue."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 463,
+              "note": "L’appel actuel du writer est direct, limité à 60 secondes."
+            }
+          ],
+          "risks": [
+            "Sans preuve de non-émission ni clé dédupliquée par le récepteur, une intervention humaine est nécessaire ; aucune lecture de l’état ne remplace cette preuve et aucune transaction exactement une fois globale n’est annoncée."
+          ]
+        },
+        {
+          "id": "usages-parallele",
+          "title": "Parallèle borné pour des exécutions indépendantes",
+          "status": "proposition",
+          "decision": "Choix consolidé : parallèle explicite, dix maximum par workflow par défaut, 64 dossiers résidents sous 1 Mio ; jusqu’à 1000 causes sous 2 Mio de files partagés.",
+          "summary": "Une rafale de courriels doit pouvoir lancer plusieurs démarches sans abandonner la précédente ni ignorer la suivante. Chaque exécution admise obtient sa fiche et son dossier ; les autres attendent chez le gardien avec une survie au crash du cœur annoncée, sans garantie électrique implicite.",
+          "details": [
+            "Refuser le parallèle par défaut ; l’autoriser seulement pour des exécutions indépendantes par élément. Dix est le plafond par workflow par défaut ; 64 dossiers résidents, 1 Mio de produits et 16 Kio par dossier s’appliquent simultanément, avec les quotas de répondeur.",
+            "Au-delà de l’admission active, garder jusqu’à 1000 causes opaques dans l’ordre chez le gardien, sous le budget global de 2 Mio partagé par les différentes files. À la première limite atteinte, la source conserve la suite jusqu’à accusé et la saturation est visible.",
+            "La file survit au crash du cœur par le gardien et les copies reçues ; elle n’est pas durable face à une panne électrique totale sans pair survivant ou instantané couvrant ces causes. Les dossiers endormis vivent dans les segments du gardien/pairs, pas dans une base écrite à chaque événement.",
+            "Refuser le parallèle pour mode de maison et plancher de sécurité ; pour appareils ordinaires partagés, les couches ordonnent les raisons et les permis contrôlent l’envoi. Sarah sert l’urgent avant le fond et respecte ses quotas ; parallèle ne signifie pas capacité du modèle augmentée."
+          ],
+          "evolution": "Le principe décidé est conservé avec des plafonds explicites et simultanés. La cible remplace la perte au-delà de dix par une file gardée et un retour de pression vers la source, sous le contrat de panne de HA v2.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 564,
+              "note": "Rafales et contraintes du parallèle."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1674,
+              "note": "Décision rapportée."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1697,
+              "note": "Paramètres ouverts dans la source, fixés dans la cible consolidée avec budgets globaux."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 87,
+              "note": "Absence de mode Parallel actuel."
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 690,
+              "note": "File actuelle plafonnée à dix."
+            }
+          ],
+          "risks": [
+            "Mille causes n’autorise ni mille dossiers résidents ni une file supplémentaire hors budget. Un reçu ne promet jamais davantage que les supports qui ont effectivement confirmé sa copie."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usages-assistant",
+      "title": "Assistant, personnes et confiance",
+      "intro": "Vue globale : Moli converse et prépare des brouillons sous la garde. La cible retenue autorise une décision bornée de Sarah seulement si le workflow validé la lui confie explicitement, avec un plancher compilé ; elle distingue ce contrat proposé des fonctions réellement présentes.",
+      "ideas": [
+        {
+          "id": "usages-conversation",
+          "title": "La conversation explique et commande sous la garde",
+          "status": "integre",
+          "decision": "Assistant actuel présent ; accès aux secrets, images caméra et localisation précise filtrés.",
+          "summary": "Moli répond par texte ou voix, choisit des cartes et peut demander une commande sous Origin::Assistant. Une commande retenue reste à autoriser par une personne ; une phrase du modèle ne crée pas un droit.",
+          "details": [
+            "Construire un inventaire adapté, présenter les outils autorisés et borner le nombre de tours et d’appels payants.",
+            "Lire les faits par les outils d’inventaire, énergie et historique avant d’affirmer ce qui s’est passé ; créer les automatismes comme brouillons.",
+            "Retirer latitude, longitude, précision et Wi-Fi de l’inventaire du modèle ; la zone et home peuvent rester visibles, sans donner une position au mètre près."
+          ],
+          "evolution": "La conversation actuelle reste distincte d’un moteur qui déléguerait un choix à Sarah dans un workflow validé.",
+          "sources": [
+            {
+              "path": "docs/components/moli.md",
+              "line": 3,
+              "note": "Rôle et confidentialité."
+            },
+            {
+              "path": "docs/components/moli.md",
+              "line": 36,
+              "note": "Tour et outils."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-assistant/src/house.rs",
+              "line": 236,
+              "note": "Filtre des points privés."
+            },
+            {
+              "path": "crates/moli-runtime/src/guard.rs",
+              "line": 133,
+              "note": "Assistant ne bénéficie pas du passage automatique des origines validées."
+            }
+          ],
+          "risks": [
+            "Un inventaire filtré n’est pas encore une mémoire personnelle avec audiences privées ; les responsabilités doivent rester explicites."
+          ]
+        },
+        {
+          "id": "usages-ecrire-remplir",
+          "title": "Écrire pour des humains ou remplir une fiche",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Write présent ; Sarah remplit + Selon est une proposition de la seconde version.",
+          "summary": "Le code actuel sait générer le dernier texte d’un automatisme. La cible sépare ce texte destiné à des humains d’une fiche structurée dont le moteur valide les champs avant un aiguillage déterministe.",
+          "details": [
+            "Sarah écrit produit un texte borné pour Prévenir, jamais un texte libre interprété comme une consigne d’appareil.",
+            "Sarah remplit produit choix autorisé, nombre borné avec unité, date, personne et raison courte ; ne sait pas reste une issue légitime.",
+            "Un Selon déterministe choisit la suite depuis les champs ; la brique visuelle Sarah choisit peut réunir les deux sans les confondre dans le modèle."
+          ],
+          "evolution": "Remplace la Décision de Sarah qui mélange règles fixes, modèle et confirmation ; le nœud actuel Write ne suffit pas à réaliser cette cible.",
+          "sources": [
+            {
+              "path": "docs/components/moli.md",
+              "line": 123,
+              "note": "Texte actuel et arrêt sur échec."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1293,
+              "note": "Deux gestes et aiguillage."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 251,
+              "note": "Write ne porte actuellement qu’un prompt."
+            },
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 463,
+              "note": "Exécution actuelle du writer."
+            }
+          ],
+          "risks": [
+            "La qualité d’une fiche ne se déduit pas de la confiance déclarée du modèle ; chaque champ et chaque issue doivent être vérifiés."
+          ]
+        },
+        {
+          "id": "usages-entrees-declarees",
+          "title": "Donner à Sarah les données demandées et montrer les manques",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Entrées déclarées proposées ; compose actuel reçoit encore l’inventaire global filtré.",
+          "summary": "Un récapitulatif demandant agenda, météo de demain et consommation du jour ne peut pas les inventer depuis la puissance instantanée. La cible rassemble explicitement les entrées nécessaires avant l’appel et rend les données manquantes visibles.",
+          "details": [
+            "Déclarer sur chaque étape les faits qu’elle lit ; confier aux modules agenda, historique ou école la lecture spécialisée.",
+            "Transmettre uniquement ces champs et références autorisées ; garder le contenu externe non fiable et sa provenance jusqu’au résultat.",
+            "Prévoir un repli déterministe obligatoire pour le texte et les branches erreur, trop long ou ne sait pas pour une fiche."
+          ],
+          "evolution": "Corrige le compose actuel qui envoie date, puissance et inventaire ; le récap des échanges livré ne devient pas pour autant le récap général de la maison imaginé par la critique.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 770,
+              "note": "Cas du récap et informations manquantes."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1298,
+              "note": "Entrées et repli."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1617,
+              "note": "Correction proposée dans le moteur actuel."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-assistant/src/auto.rs",
+              "line": 293,
+              "note": "Construction réelle du prompt de compose."
+            },
+            {
+              "path": "crates/moli-assistant/src/recap.rs",
+              "line": 32,
+              "note": "Récap actuel fondé sur les échanges."
+            }
+          ],
+          "risks": [
+            "La doc ICS exclut volontairement les titres et participants ; il faut une autre lecture autorisée pour résumer un agenda personnel."
+          ]
+        },
+        {
+          "id": "usages-origine-capacites",
+          "title": "Origine des produits et autonomie par capacité",
+          "status": "proposition",
+          "decision": "Cible consolidée : choix Sarah explicitement confié par un workflow validé, capacité réglée et plancher compilé non abaissable.",
+          "summary": "La seconde version rapporte que Sarah peut choisir seule dans un workflow qui lui confie la décision. Elle propose de conserver un plancher de sécurité et de faire suivre l’origine des données jusque dans les actions, au lieu de compter sur le modèle pour résister au texte externe.",
+          "details": [
+            "Un workflow validé déclare explicitement le choix confié à Sarah, les branches autorisées, entrées, bornes et capacité ; sans cette déclaration, le modèle ne décide pas d’un appareil. Les réflexes restent entièrement déterministes.",
+            "Cumuler Validé, Maison, Estimé, Service, Personne, Sarah et Dehors jusque dans les conditions et commandes dérivées ; vérifier ce graphe à la compilation et transmettre l’origine à la garde avant émission.",
+            "La famille règle une capacité sur seule, me proposer ou jamais ; si le choix lit le dehors, le défaut est me proposer. Un Oui cette fois ne change jamais ce réglage ; Oui toujours modifie explicitement la capacité avec son autorisation requise.",
+            "Le plancher est obligatoire : une origine Sarah/Dehors/Estimé ne suffit jamais à ouvrir ou déverrouiller ; une pièce protégée attend sa personne ; désarmer exige son code ; chaque acte auprès d’un tiers attend un Oui humain ponctuel et le gardien pair."
+          ],
+          "evolution": "La revue conserve la décision rapportée du 23 octobre et résout le conflit rédactionnel par une cible explicite : jamais de commande libre rédigée par le modèle. Les règles du dépôt et le code courant restent les preuves de l’état livré, à faire évoluer avec ce socle.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1240,
+              "note": "Origines et plancher."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1665,
+              "note": "Décisions rapportées."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1682,
+              "note": "Réécriture encore ouverte."
+            },
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 23,
+              "note": "Règle actuelle en vigueur."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/guard.rs",
+              "line": 133,
+              "note": "Automation passe actuellement sans masque Sarah/Dehors."
+            },
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 164,
+              "note": "Pas de produits à masque d’origine dans les étapes actuelles."
+            }
+          ],
+          "risks": [
+            "Le contrat retenu est une cible de la revue, pas une fonction déjà raccordée ni une modification effective des règles d’exécution actuelles."
+          ]
+        },
+        {
+          "id": "usages-demander",
+          "title": "Une question humaine avec délai, défaut et revérification",
+          "status": "proposition",
+          "decision": "Choix consolidé : question gardée et copiée selon le support de survie annoncé, rôle authentifié, délai et défaut obligatoires ; revalidation avant effet.",
+          "summary": "Une personne devient un répondeur auquel la démarche pose une question structurée. La réponse précise sa portée et n’applique pas aveuglément une décision devenue périmée pendant l’attente.",
+          "details": [
+            "Choisir le rôle ou la personne concernée, les réponses autorisées, un délai et un défaut ; le gardien et le module de messages gardent question et réponse jusqu’aux accusés exigés, sans journal disque de dossier par étape.",
+            "Au Oui, relire les préconditions et la validité de la personne ; appliquer seulement si l’action reste utile et changerait l’état. Un nouveau déclenchement met à jour la question équivalente au lieu d’en créer une rafale.",
+            "Distinguer Oui cette fois de Oui toujours ; le second modifie la capacité selon ses droits, sans abaisser le plancher. Pour un tiers, chaque engagement requiert toujours sa réponse ponctuelle et le pair ; une réponse non couverte par un support survivant ne reçoit aucune promesse de durabilité supplémentaire."
+          ],
+          "evolution": "Remplace la case tu confirmes d’un nœud de décision par une vraie étape ; une demande retenue de la garde ne possède pas automatiquement tout ce contrat métier.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1325,
+              "note": "Contrat de Demander."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1689,
+              "note": "Réglage de capacité encore ouvert."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 164,
+              "note": "Aucune variante Demander actuelle."
+            }
+          ],
+          "risks": [
+            "Refus, silence, réponse tardive et compte retiré doivent tous avoir une suite ; une attente sans défaut reproduirait le problème des tablettes bloquées."
+          ]
+        },
+        {
+          "id": "usages-validation-modeles",
+          "title": "Mesurer la qualité et borner le coût",
+          "status": "proposition",
+          "decision": "Choix consolidé : jeux étiquetés, modèle dans l’empreinte, À revoir en cas de régression ; cinquante appels par jour et automatisme par défaut.",
+          "summary": "Un seuil de confiance auto déclaré ne mesure pas la justesse. La critique propose un jeu d’exemples étiquetés, un suivi des modèles utilisés et des plafonds d’appels ou de dépenses qui déclenchent un repli visible.",
+          "details": [
+            "Mesurer accord, abstention et erreurs sur un jeu d’entrées étiquetées, avec le vrai modèle ; conserver séparément une soirée fictive qui couvre refus, lenteur et silence humain. La confiance déclarée reste une information, jamais un garde-fou.",
+            "Inclure moteur, modèle et version de consigne système dans l’empreinte exécutable ; rejouer les exemples à un changement. Sur régression, suspendre les choix du modèle et marquer À revoir ; sinon publier la nouvelle configuration avec la validation humaine prévue et inscrire les résultats au journal.",
+            "Fixer cinquante appels par jour et par automatisme par défaut, sous un plafond mensuel de foyer explicitement réglé. Au-delà, prendre le repli déterministe et envoyer un avis unique ; les appels déjà en vol restent suivis.",
+            "Au-delà de vingt lancements par minute, fusionner les états coalescibles et ralentir ; conserver les occurrences en file bornée plutôt que les fusionner. Si la surcharge dure dix minutes, couper la voie concernée et le signaler ; la sécurité dédiée conserve son chemin propre."
+          ],
+          "evolution": "La cible remplace le pourcentage auto déclaré et l’arrêt brutal actuel par une mesure observable et une limitation progressive ; elle ne prétend pas ces mécanismes déjà présents.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1397,
+              "note": "Essais et empreinte du modèle."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1417,
+              "note": "Budgets, repli et journal."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1684,
+              "note": "Modèle et budget encore à trancher."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 54,
+              "note": "Empreinte actuelle sans configuration du writer."
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 561,
+              "note": "Désactivation au seuil actuel."
+            }
+          ],
+          "risks": [
+            "Les plafonds choisis sont des limites de fonctionnement à qualifier, pas des chiffres de performance ; les courriels indépendants ne doivent pas être fusionnés comme des états."
+          ]
+        },
+        {
+          "id": "usages-memoire-proactivite",
+          "title": "Mémoire de personne, boîte de la maison et proactivité mesurée",
+          "status": "proposition",
+          "decision": "Choix consolidé : dossiers privés, visibilité héritée, boîte par audience ; trente jours après clôture puis codes seuls.",
+          "summary": "La mémoire d’une personne et le dossier d’une démarche répondent à des besoins différents. La critique propose que les dossiers héritent de la visibilité des données lues et que les messages différés passent par une boîte de la maison plutôt que par un partage entre dossiers.",
+          "details": [
+            "Garder le dossier privé à son exécution ; sa visibilité est l’intersection des audiences des données lues. Une personne non autorisée voit seulement l’existence et un résultat neutre, pas le contenu sensible.",
+            "Publier entre workflows seulement une donnée de maison ou un message de boîte avec audience et urgence : urgent, important ou plus tard. Canal et heures calmes appartiennent à la maison ; aucune relance sans borne ne découle du silence.",
+            "Le récap lit cette boîte et les entrées déclarées. Après clôture, transférer le dossier explicatif dans le domaine historique pour trente jours, puis les seuls codes d’issue, origine et taille ; ce journal historique ne commande jamais la reprise d’une exécution.",
+            "Ne conserver dans le dossier ni corps de courriel, ni image, ni document : seulement références et produits nécessaires. Pendant l’activité ou l’attente, les supports de vérité sont les segments du gardien, les pairs confirmés et l’instantané périodique selon le niveau de survie annoncé."
+          ],
+          "evolution": "La revue fixe une rétention explicite et la boîte comme propriétaire des messages différés ; le récap actuel des échanges de Moli demeure une fonction existante distincte.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1094,
+              "note": "Boîte et récap proposés."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1213,
+              "note": "Durée de vie et visibilité."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1689,
+              "note": "Rétention à décider."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-assistant/src/lib.rs",
+              "line": 188,
+              "note": "Le modèle reçoit les messages de conversation ; pas de mémoire native présumée."
+            },
+            {
+              "path": "crates/moli-assistant/src/recap.rs",
+              "line": 32,
+              "note": "Composition du récap des échanges."
+            }
+          ],
+          "risks": [
+            "La purge et l’audience héritée doivent être vérifiées dans le stockage et toutes les surfaces ; aucune durée historique citée n’est assimilée à une mise en œuvre déjà accomplie."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usages-modes",
+      "title": "Modes, transitions et profils d’équipements",
+      "intro": "Vue globale : la cible unique réunit groupes de contextes, transitions explicables et scènes partagées. Des couches bornées arbitrent les raisons simultanées et leur retrait ; les descriptions de capture du 21 octobre sont conservées comme filiation, sans constituer un second moteur concurrent.",
+      "ideas": [
+        {
+          "id": "usages-groupes-modes",
+          "title": "Plusieurs contextes sans multiplier toutes les combinaisons",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Groupes métier proposés ; mode principal actuel encore une aide select.",
+          "summary": "Maison, séjour, occupation, activité et vigilance peuvent rester actifs simultanément, avec un seul état par groupe. Cela évite un état combiné différent pour chaque configuration de la famille.",
+          "details": [
+            "Donner des identités stables aux groupes et états, des libellés traduisibles et une portée visible.",
+            "Conserver un seul principal à l’accueil et afficher les autres sur une page générique ; une maison choisit seulement les groupes utiles.",
+            "Distinguer séjour prévu, présence physique, occupation et armement ; indisponible n’est jamais assimilé à libre, absent ou vert."
+          ],
+          "evolution": "Le sélecteur actuel est conservé comme point de départ ; son adoption par le service de modes demanderait un aperçu et une validation explicites.",
+          "sources": [
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 50,
+              "note": "Groupes, simultanéité et distinctions métier."
+            },
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 650,
+              "note": "Migration explicite des aides existantes."
+            }
+          ],
+          "verification": [
+            {
+              "path": "web/src/maison/pages/Accueil.svelte",
+              "line": 42,
+              "note": "Recherche actuelle du suffixe :mode_maison."
+            }
+          ],
+          "risks": [
+            "Une aide portant le bon nom ne prouve pas l’existence d’un service de transition, de provenance ou de dérogation."
+          ]
+        },
+        {
+          "id": "usages-sources-modes",
+          "title": "Arbitrer les sources et les dérogations sans dernier arrivé gagnant",
+          "status": "proposition",
+          "decision": "Priorités, fraîcheur et retour au planning proposés.",
+          "summary": "Une personne, un planning, un agenda ou un capteur peuvent demander un contexte, mais pas avec une autorité implicite. Le groupe doit définir les sources retenues, leur priorité et la durée d’une correction manuelle.",
+          "details": [
+            "Établir origine et acteur côté serveur ; configurer une priorité stable par source. Pour un groupe ordinaire, la dérogation humaine prime pendant sa validité, puis planning validé, liaison d’agenda et estimation de capteur ; la sécurité relit sa centrale de référence.",
+            "La dérogation humaine dure deux heures par défaut. Afficher avant confirmation son terme et l’état qui reprendra ; une date, une frontière ou Reprendre le planning remplace explicitement ce défaut, jamais de maintien indéfini implicite. À la fin, recalculer le présent sans rejouer les passages manqués.",
+            "Sur panne, conserver le dernier contexte marqué périmé et fermer les nouveaux effets exigeant une preuve fraîche ; un autre repli nécessite une définition validée. Jamais agenda injoignable égale chambre libre."
+          ],
+          "evolution": "Réutilise les plannings et ICS existants, mais ajoute les liaisons métier et les règles d’arbitrage qui n’en découlent pas seules.",
+          "sources": [
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 85,
+              "note": "Sources et autorité."
+            },
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 104,
+              "note": "Dérogations et fraîcheur."
+            },
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 400,
+              "note": "Liaisons calendaires manquantes."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/dependencies/mod.rs",
+              "line": 59,
+              "note": "Pas de définition de mode parmi les dépendances typées actuelles."
+            }
+          ],
+          "risks": [
+            "Prioriser les sources dans un groupe ne résout pas le conflit de deux groupes sur le même appareil."
+          ]
+        },
+        {
+          "id": "usages-transitions",
+          "title": "Une transition conserve d’où l’on vient, où l’on va et pourquoi",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Contexte complet et phases proposées ; filtres from/to actuels plus limités.",
+          "summary": "Quitter Cinéma vers Nuit peut demander d’autres effets que quitter Cinéma vers Normal. Le plan proposé engage le nouvel état, puis exécute les réactions de sortie, de passage et d’entrée avec un contexte immuable.",
+          "details": [
+            "Contrôler droits et révision attendue avant l’engagement durable ; identifier groupe, versions, cause, acteur et corrélation.",
+            "Exécuter sortie A, passage A vers B, entrée B dans cet ordre ; additionner règles générales et spécifiques en montrant les contradictions.",
+            "Une transition plus récente invalide les effets non émis de l’ancienne ; une panne d’appareil laisse B engagé avec un résultat partiel, sans rollback physique automatique."
+          ],
+          "evolution": "Étend les filtres d’état from/to existants à un événement métier complet ; redemander B déjà courant ne simule pas un faux passage B vers B.",
+          "sources": [
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 124,
+              "note": "Contexte et trois accroches."
+            },
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 167,
+              "note": "Ordre, sérialisation et erreurs."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 172,
+              "note": "From/to présents sur WhenState, sans service de modes complet."
+            }
+          ],
+          "risks": [
+            "Les phases de sortie lisent from=A dans le contexte alors que B est déjà courant ; relire seulement l’état courant ferait perdre la provenance."
+          ]
+        },
+        {
+          "id": "usages-profils-scenes",
+          "title": "Un profil d’équipements utilise le même moteur que les scènes",
+          "status": "partiel",
+          "decision": "Scènes livrées ; cible consolidée : profil ponctuel par scène et profil temporaire par session de couche, à raccorder aux modes.",
+          "summary": "Un profil décrit des valeurs voulues réutilisables pour éclairages, volets, chauffage ou volume. Il doit s’appuyer sur les scènes livrées, avec leurs résultats par cible, plutôt que créer un second moteur d’ordres.",
+          "details": [
+            "Sélectionner des points et valeurs compatibles ou capturer un sous-ensemble explicite ; ne pas confondre profil d’équipements et profil déclaratif de pilote.",
+            "Prévalider les cibles et la portée humaine ; résoudre le courant validé ; exécuter dans les voies bornées et confirmer chaque point avec une observation récente.",
+            "Conserver lancer un film, annoncer ou ouvrir une gâche comme actions événementielles distinctes ; appliquer un profil ponctuel ne change pas implicitement un mode. Le temporaire ajoute une session au registre de couches et sa fin retire cette raison."
+          ],
+          "evolution": "La proposition du 21 octobre citait AUTO-S1 avant sa livraison ; scènes.md et le code montrent désormais son moteur. La cible utilise ce moteur unique pour appliquer les valeurs voulues issues des couches, sans second mécanisme de restauration par ordres anciens.",
+          "sources": [
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 225,
+              "note": "Profil fonctionnel et moteur commun."
+            },
+            {
+              "path": "docs/components/scenes.md",
+              "line": 50,
+              "note": "Exécution et limites."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-auto-s1-scenes.md",
+              "line": 1,
+              "note": "Plan du moteur partagé."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/scene_hub.rs",
+              "line": 209,
+              "note": "Lancement de scène présent."
+            },
+            {
+              "path": "crates/moli-runtime/src/scenes.rs",
+              "line": 49,
+              "note": "Résultats individuels distincts."
+            }
+          ],
+          "risks": [
+            "Acquittement pilote, observation cible et état simultané de tous les membres sont trois preuves différentes."
+          ]
+        },
+        {
+          "id": "usages-capture-restauration",
+          "title": "Profil temporaire : conserver la base et retirer sa couche",
+          "status": "proposition",
+          "decision": "Choix consolidé : la session possède une couche bornée ; sa fin retire cette raison sans réécrire un état devenu caduc.",
+          "summary": "Le profil temporaire conserve une base connue et ajoute sa raison à l’arbitrage des points concernés. À sa fin, il retire sa couche : la prochaine raison admissible reprend, sans écraser un geste humain plus récent.",
+          "details": [
+            "Avant la première utilisation d’un point arbitré, faire admettre sa base connue et sa provenance par le gardien et les copies requises ; une base obligatoire inconnue empêche l’application. Chaque session porte incarnation du registre, époque, identifiant, génération, échéance et points bornés.",
+            "Appliquer le profil au rang mode/profil et conserver les autres couches ; un geste humain même vers la même valeur crée sa propre révision et reste prioritaire. La capture du 21 octobre devient cette base traçable, pas une liste d’ordres de rollback.",
+            "Terminer et restaurer retire la session ; vers Nuit, installer la couche Nuit puis retirer Cinéma dans la même admission logique pour éviter un retour intermédiaire visible à Normal. Les points repris ailleurs ne sont jamais écrasés.",
+            "Au redémarrage, restaurer le registre de raisons et leurs échéances, invalider les effets non prouvés et relire les observations ; aucun ordre d’ouverture ni ancien plan physique n’est rejoué automatiquement. Une base est une valeur voulue, pas une preuve fraîche de l’état réel."
+          ],
+          "evolution": "La cible retient les couches du 23 octobre et conserve les garanties du 21 : base connue traçable, identité par utilisation, priorité humaine et sortie selon destination. La base courante suit les supports critiques de HA v2 ; l’ancienne restauration par ordres n’est pas une variante concurrente.",
+          "sources": [
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 296,
+              "note": "Politiques de fin."
+            },
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 307,
+              "note": "Capture avant application."
+            },
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 353,
+              "note": "Provenance plutôt qu’égalité de valeur."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/scenes.rs",
+              "line": 69,
+              "note": "SceneRun actuel contient résultats et version, sans session de capture/restauration."
+            }
+          ],
+          "risks": [
+            "Les couches et sessions restent à implémenter. Leur survie dépend du gardien, des pairs confirmés et de l’instantané ; le résultat éphémère d’une scène actuelle ne fournit pas ce registre."
+          ]
+        },
+        {
+          "id": "usages-couches",
+          "title": "Arbitrer plusieurs usages sur un appareil par des couches",
+          "status": "proposition",
+          "decision": "Choix consolidé : un propriétaire de couches dans le hub, six rangs, huit couches maximum par point et dérogation humaine de deux heures par défaut.",
+          "summary": "Chaque raison possède une couche bornée et la valeur voulue vient de la raison prioritaire admissible. Retirer une raison fait reprendre la suivante sans qu’un workflow doive mémoriser puis réémettre une ancienne consigne.",
+          "details": [
+            "Fixer les rangs sécurité, geste humain, raison de maison, mode/profil, workflow/planning et défaut ; départager à rang égal par révision logique admise puis identité stable, jamais par arrivée des paquets.",
+            "Limiter chaque point à huit couches, défaut compris. Une nouvelle raison au-delà de cette borne est refusée visiblement sans éviction implicite ; chaque couche porte propriétaire, incarnation, époque, génération, portée validée, valeur typée, révision et échéance.",
+            "Le geste humain dure deux heures par défaut ; tout autre terme est montré et confirmé explicitement. Expirer ou retirer une raison recalcule la consigne effective et ne reconstitue jamais un ordre événementiel ancien.",
+            "Afficher la raison retenue et les autres ; transmettre la nouvelle consigne au moteur de scènes avec permis vivant. Une scène ponctuelle ne crée pas une raison maintenue ; le profil temporaire possède une session dans ce registre unique.",
+            "L’état courant des raisons est gardé dans les segments et copies critiques de HA v2, avec instantané périodique et niveau de survie annoncé ; l’audit explicatif est séparé. Qualifier fenêtre ouverte puis arrivée, geste humain de même valeur, expiration, changement d’époque et reprise."
+          ],
+          "evolution": "Le 21 octobre reportait les superpositions ; la revue retient la cible du 23 et préserve les politiques de destination par admission logique des couches. Les anciennes captures sont la filiation de la base durable, pas une variante concurrente.",
+          "sources": [
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 481,
+              "note": "Conflits et superposition reportée."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1458,
+              "note": "Couches et ordre proposé."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1692,
+              "note": "Choix encore ouvert."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 72,
+              "note": "Cible HA v2 : état critique en mémoire, pairs survivants et instantané ; remplace le journal disque des exécutions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/scene_hub.rs",
+              "line": 22,
+              "note": "Suivi actuel des intentions concurrentes de scènes, distinct d’un arbitrage permanent par priorité."
+            }
+          ],
+          "risks": [
+            "C’est un changement à réaliser dans le hub ; des valeurs de consigne ne doivent pas transformer ouvrir, annoncer ou lancer un média en états maintenus."
+          ]
+        },
+        {
+          "id": "usages-vigilance",
+          "title": "Vigilance, incidents et armement restent distincts",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Modèle d’incidents proposé ; aucune fusion implicite avec la centrale validée.",
+          "summary": "Vert, Orange et Rouge décrivent un niveau d’incident selon des règles choisies, pas l’armement réel. Plusieurs incidents actifs maintiennent le niveau maximal encore nécessaire et un acquittement signifie vu, pas résolu.",
+          "details": [
+            "Définir ce qui confirme l’incident : centrale de référence, combinaison déterministe ou personne ; ne pas transformer un texte suspect en preuve via le modèle.",
+            "Conserver les incidents expliquant le niveau et les réactions déjà faites ; borner anti-rebond et retour au calme.",
+            "Autoriser les descentes seulement lorsque les incidents concernés sont résolus ; une source en panne ne remet jamais automatiquement au Vert."
+          ],
+          "evolution": "Ajoute une coordination graduée autour de la centrale et des contextes, sans remplacer la machine d’alarme ni les protections des chambres.",
+          "sources": [
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 370,
+              "note": "Vigilance et réactions graduées."
+            },
+            {
+              "path": "docs/components/alarme.md",
+              "line": 400,
+              "note": "Aucune liaison implicite avec le mode maison."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-alarm/src/engine.rs",
+              "line": 11,
+              "note": "Moteur d’alarme distinct, pas moteur de niveaux de vigilance."
+            }
+          ],
+          "risks": [
+            "Les niveaux ne doivent pas masquer couverture dégradée, capteurs inconnus et sorties non confirmées."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usages-entrees",
+      "title": "Entrées techniques, agendas et localisation",
+      "intro": "Vue globale : le transport acquiert l’information, tandis que le moteur réagit à un état, une occurrence ou une échéance. Les connecteurs cités sont un catalogue de possibilités ; leur mention ne promet ni accès universel aux comptes ni qualification matérielle.",
+      "ideas": [
+        {
+          "id": "usages-signaux",
+          "title": "Séparer acquisition, mutation et occurrence",
+          "status": "partiel",
+          "decision": "Distinction état/occurrence présente ; vocabulaire normalisé complet encore proposé.",
+          "summary": "Recevoir deux mesures de 21 degrés peut rafraîchir le capteur sans produire un second changement d’état. Deux scans ou appuis identiques peuvent au contraire constituer deux événements légitimes.",
+          "details": [
+            "L’adaptateur identifie la source, l’instant de mesure et la réception, puis indique mesure acquise, valeur changée ou occurrence reçue.",
+            "Conserver l’identité logique lors d’une retransmission et en créer une nouvelle pour un nouvel événement réel.",
+            "Ne pas traiter le retour d’un abonnement, un message retained ou un cache restauré comme une nouvelle action ; distinguer fraîcheur du transport et de la mesure."
+          ],
+          "evolution": "Conserve State et Occurrence déjà séparés dans le modèle ; la nomenclature sample_received/state_changed/event_received est une proposition de contrat, pas trois routes garanties.",
+          "sources": [
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 13,
+              "note": "Source, adaptateur, déclencheur, condition."
+            },
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 125,
+              "note": "Trois signaux distincts."
+            },
+            {
+              "path": "docs/components/calculs.md",
+              "line": 57,
+              "note": "Rafraîchissement de même valeur déjà traité."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 166,
+              "note": "Déclencheur spécifique d’occurrence."
+            },
+            {
+              "path": "crates/moli-runtime/src/computed/engine.rs",
+              "line": 108,
+              "note": "Propagation depuis observations et signaux."
+            }
+          ],
+          "risks": [
+            "Dédupliquer le contenu ferait perdre des appuis ; ne rien dédupliquer pourrait rejouer un ancien message."
+          ]
+        },
+        {
+          "id": "usages-mecanismes",
+          "title": "Quatre mécanismes et une invocation explicite",
+          "status": "partiel",
+          "decision": "Bases actuelles présentes ; cron général et échéances dynamiques non établis.",
+          "summary": "La proposition regroupe les déclencheurs en planification, minuterie, mutation d’état et réception d’événement, plus un lancement explicite. Elle évite un nouveau type de moteur pour chaque source ou protocole.",
+          "details": [
+            "Calculer une prochaine échéance pour horaires, soleil et calendriers ; préciser l’ancrage d’un intervalle plutôt que confondre heure civile et durée écoulée.",
+            "Associer une génération aux minuteries remplaçables ; comparer les anciennes et nouvelles valeurs pour les mutations.",
+            "Pour l’invocation explicite, conserver identité et droits du demandeur, même si elle est normalisée en événement interne."
+          ],
+          "evolution": "Le code actuel fournit horaires, soleil, Every, manuel, démarrage, états, seuils et occurrences ; cela ne prouve pas un cron général ou tous les fournisseurs d’échéances proposés.",
+          "sources": [
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 36,
+              "note": "Familles de mécanismes."
+            },
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 389,
+              "note": "Correspondance et limites du code."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 164,
+              "note": "Catalogue actuel."
+            },
+            {
+              "path": "crates/moli-automation/src/engine.rs",
+              "line": 499,
+              "note": "Horloge actuelle du moteur."
+            }
+          ],
+          "risks": [
+            "Every actuel est aligné sur l’heure selon son modèle ; ne pas lui attribuer une durée libre ancrée au démarrage."
+          ]
+        },
+        {
+          "id": "usages-connecteurs-messages",
+          "title": "Courriels et messageries deviennent des sources contrôlées",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Mail, Teams et WhatsApp sont des pistes ; compatibilités et permissions à choisir.",
+          "summary": "Un connecteur de messagerie publie des événements structurés pour un compte ou canal sélectionné. Le texte libre reste une donnée extérieure et ne prouve jamais l’autorité d’exécuter ou d’envoyer une réponse.",
+          "details": [
+            "Choisir humainement compte, ressource et permissions ; distinguer message reçu, modification, mention et réponse à un bouton.",
+            "Conserver curseur, identité et révision afin qu’une reconnexion ne transforme pas tout l’historique en nouveaux messages.",
+            "Borner taille, abonnements, déduplication et reprise ; n’exposer sur le bus que références opaques et champs nécessaires, sans corps privé par défaut."
+          ],
+          "evolution": "Prolonge les occurrences existantes ; l’envoi Telegram actuel n’établit pas une réception multi-messageries ni l’accès à une boîte WhatsApp personnelle.",
+          "sources": [
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 94,
+              "note": "Catalogue d’adaptateurs possibles."
+            },
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 145,
+              "note": "Contrat des messages."
+            },
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 402,
+              "note": "Connecteurs non déclarés livrés."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 166,
+              "note": "Réutilisation possible des occurrences, sans connecteurs dédiés dans ce modèle."
+            }
+          ],
+          "risks": [
+            "Les affirmations sur les API fournisseurs sont celles du document daté ; aucune vérification extérieure ni accès à un compte n’a été effectué pour cette revue."
+          ]
+        },
+        {
+          "id": "usages-agenda-mobile",
+          "title": "Dix minutes avant une réunion, même si elle change",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Ordonnanceur générique d’agenda proposé ; ICS actuel spécialisé en réservations.",
+          "summary": "Le rappel dépend du début de l’occurrence et de son décalage, pas du moment où l’invitation arrive. Déplacer ou annuler la réunion invalide les échéances anciennes avant qu’elles puissent agir.",
+          "details": [
+            "Identifier série, occurrence, révision et règle ; calculer début moins dix minutes dans un fuseau explicite.",
+            "À une modification, remplacer la génération et coordonner l’admission au même instant que l’échéance ; traiter exceptions et journée entière selon un contrat distinct.",
+            "Reconstituer les futures échéances à la reprise et rendre les rappels tardifs explicites ; un rendez-vous ne prouve pas une participation effective à un appel."
+          ],
+          "evolution": "Réutilise la mécanique de temps cible ; les fenêtres ICS de location ne sont pas un calendrier universel ni une lecture de titres de réunion.",
+          "sources": [
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 181,
+              "note": "Différence entre calendrier et présence en réunion."
+            },
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 199,
+              "note": "Calcul, révisions et cas limites."
+            },
+            {
+              "path": "docs/components/reservations.md",
+              "line": 9,
+              "note": "Portée spécialisée du lecteur existant."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-reservations/src/timeline.rs",
+              "line": 29,
+              "note": "Frontières de réservations, sans décalage de réunion générique."
+            }
+          ],
+          "risks": [
+            "Une annulation non synchronisée reste inconnue ; le moteur doit afficher la fraîcheur au lieu de promettre une exactitude absolue."
+          ]
+        },
+        {
+          "id": "usages-gps-ble",
+          "title": "Une zone GPS et une pièce BLE sont des estimations de qualités différentes",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Contrat d’estimation proposé ; téléphone existant ne qualifie pas la localisation par pièce.",
+          "summary": "Le GPS situe une zone autour de la maison, le Bluetooth peut contribuer à une pièce estimée. Un appareil posé quelque part ne prouve pas que sa personne y est, et perdre le BLE ne prouve pas qu’elle a quitté la maison.",
+          "details": [
+            "Associer explicitement appareils et personnes ; conserver précision, instant et provenance sans diffuser les coordonnées brutes dans chaque événement.",
+            "Stabiliser entrée/sortie par fraîcheur, hystérésis et durée ; en cas de récepteurs contradictoires ou de RSSI incertain, autoriser pièce inconnue.",
+            "Arbitrer GPS, BLE et Wi-Fi par une politique déterministe ; une estimation ne peut ouvrir une porte, contourner la garde ni désarmer."
+          ],
+          "evolution": "Conserve les états home et zone du téléphone existant ; la présence par pièce et sa confidentialité sont une extension à qualifier, pas une propriété déduite du plan 3D.",
+          "sources": [
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 241,
+              "note": "Deux échelles et signaux."
+            },
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 280,
+              "note": "BLE et limites d’identité."
+            },
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 301,
+              "note": "Présence, identité et arbitrage."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-assistant/src/house.rs",
+              "line": 236,
+              "note": "Coordonnées et Wi-Fi filtrés du modèle actuel."
+            }
+          ],
+          "risks": [
+            "Arrière-plan mobile et émission BLE stable ne sont pas garantis par la proposition ; les règles pour enfants et invités demandent un choix explicite de visibilité."
+          ]
+        },
+        {
+          "id": "usages-expressions-temps-long",
+          "title": "Composer les conditions et ranger le temps long dans la maison",
+          "status": "proposition",
+          "decision": "Choix consolidé : dépendances complètes, temps long en faits durables et fenêtres d’utilité explicites par type.",
+          "summary": "Une expression qui devient vraie doit suivre toutes ses dépendances, y compris le temps. Une échéance de plusieurs semaines doit vivre dans une date ou un compteur durable, plutôt que dans une exécution qui attend et sera perdue à la modification.",
+          "details": [
+            "Distinguer à 22 h si présent de dès qu’il est après 22 h et présent ; le second suit le temps et toutes ses sources afin de réagir aussi à une arrivée tardive.",
+            "Garder les échéances de plusieurs jours dans dates, compteurs ou plannings ; le réveil dynamique est une fonction à réaliser, distincte de la saisie temporelle déjà présente. Les durées inconnues ne sont pas reconstruites.",
+            "Fixer la fenêtre d’utilité par type : appareil/scène deux minutes après l’instant prévu ; rappel d’agenda jusqu’au début ; récap ou notification jusqu’à l’heure limite validée, vingt-trois heures pour le récap du soir ; Demander jusqu’à son délai avec branche de défaut ; Sarah/service jusqu’à la limite du consommateur.",
+            "Un bail retire toujours sa raison à son terme, sans rejouer un événement ; une alarme ou sécurité ne rattrape jamais un ordre tardif mais traite immédiatement son état et ses échéances spécifiques. Au-delà de la fenêtre, inscrire trop tard et demander si une nouvelle intention est nécessaire."
+          ],
+          "evolution": "Les aides H1–H5, K1 et K3 fournissent des briques ; une expression observée complète, un calendrier plurihebdomadaire et les usages longs ne s’en déduisent pas automatiquement.",
+          "sources": [
+            {
+              "path": "docs/proposition/declencheurs-techniques.md",
+              "line": 314,
+              "note": "Opérateurs et dépendances."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1430,
+              "note": "Temps long et aides."
+            },
+            {
+              "path": "docs/components/dates-heures.md",
+              "line": 124,
+              "note": "Absence de réveil implicite."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/model.rs",
+              "line": 217,
+              "note": "If évalue les règles après lancement, sans abonnement général à toute expression."
+            }
+          ],
+          "risks": [
+            "La fenêtre n’autorise jamais un ordre dont le permis, la personne, la source ou la génération n’est plus valide ; la reprise d’alarme conserve son contrat spécifique."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usages-interface",
+      "title": "Comprendre globalement, puis ouvrir le détail",
+      "intro": "Vue globale : Maison simplifie l’usage quotidien et Atelier expose les détails techniques. Le plan 2D/3D livré représente la maison ; les vues de modes et de dossiers de démarches décrivent encore une expérience future.",
+      "ideas": [
+        {
+          "id": "usages-maison-atelier",
+          "title": "Deux niveaux d’interface sur le même état",
+          "status": "integre",
+          "decision": "Maison et Atelier documentés et présents ; caractéristiques chiffrées de la doc datées.",
+          "summary": "Maison présente les pièces, alertes et commandes de la famille. Atelier expose appareils, valeurs, journal et approbations pour comprendre ou configurer ce qui se passe.",
+          "details": [
+            "Entrer par l’accueil et ses informations utiles ; montrer une alerte quand un problème ou une approbation existe.",
+            "Ouvrir une pièce ou un équipement pour ses réglages et son état réel, avec une indisponibilité distincte de sa dernière valeur.",
+            "Passer à Atelier ou Système pour l’explication technique ; partager un seul flux SSE au lieu d’en ouvrir un pour chaque carte."
+          ],
+          "evolution": "La revue conserve ce double accès global/détaillé ; elle ne réduit pas tout le produit à une liste de modules internes.",
+          "sources": [
+            {
+              "path": "docs/components/dashboard.md",
+              "line": 3,
+              "note": "Deux visages et flux partagé."
+            },
+            {
+              "path": "docs/components/dashboard.md",
+              "line": 13,
+              "note": "Pages familiales et détails."
+            }
+          ],
+          "verification": [
+            {
+              "path": "web/src/maison/pages/Accueil.svelte",
+              "line": 40,
+              "note": "Commandes du mode sur l’accueil."
+            }
+          ],
+          "risks": [
+            "La documentation de certaines pages conserve des limites anciennes ; le rôle d’une vue est prouvé séparément de la disponibilité de chaque intégration."
+          ]
+        },
+        {
+          "id": "usages-editeur-zoom",
+          "title": "L’éditeur montre le comportement avant la validation",
+          "status": "partiel",
+          "decision": "Éditeur actuel livré ; enrichissements de la critique encore proposés.",
+          "summary": "L’éditeur actuel relie les étapes, décrit le graphe et affiche problèmes et exécutions. La cible doit aussi montrer les lectures de données, l’ordre réel, les issues et ce qui sera autorisé, pour ne pas faire valider seulement un dessin.",
+          "details": [
+            "Choisir les cibles par nom et pièce, régler types, durées et jours, puis lire la phrase produite par le serveur.",
+            "Consulter portée protégée, identité native et dernière exécution ; confirmer la version exacte par PIN.",
+            "Proposition de zoom : numéroter les branches séquentielles, distinguer lecture en pointillé et ensuite, montrer place mémoire, origine et produits effectivement disponibles."
+          ],
+          "evolution": "Le canevas reste utile ; la critique corrige les ambiguïtés entre flux de données et ordre d’exécution et propose une validation de comportement.",
+          "sources": [
+            {
+              "path": "docs/components/automatismes.md",
+              "line": 120,
+              "note": "Éditeur actuel."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1380,
+              "note": "Ordre et lectures."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1634,
+              "note": "Évolution de la maquette."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-automation/src/run.rs",
+              "line": 186,
+              "note": "Ordre réel du parcours ; preuve à refléter dans l’éditeur."
+            }
+          ],
+          "risks": [
+            "La maquette de règles citée par la critique est absente du dépôt consulté ; ses détails sont rapportés par le document, pas inspectés directement."
+          ]
+        },
+        {
+          "id": "usages-page-modes",
+          "title": "Accueil compact, page Modes complète",
+          "status": "proposition",
+          "decision": "Cible consolidée retenue par la revue ; réalisation non annoncée comme livrée. Page générique et référence principale configurée non annoncées comme livrées.",
+          "summary": "Le mode principal reste accessible en un geste sur l’accueil. Une page Modes construite depuis les définitions doit montrer tous les groupes visibles sans modifier le code de l’interface à chaque ajout.",
+          "details": [
+            "Afficher pour chaque groupe état, portée, provenance, paire précédente/suivante, qualité et prochaine échéance.",
+            "Ouvrir le détail des réactions, profils liés, dérogation et journal ; distinguer courant publié et brouillon.",
+            "Pour une session temporaire, présenter Terminer et restaurer et l’aperçu des points repris ou ignorés ; une simulation ne change aucun contexte."
+          ],
+          "evolution": "Remplace la recherche par suffixe du seul mode principal par une référence déclarée, en conservant son identité et les graphes existants.",
+          "sources": [
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 435,
+              "note": "Accueil et page Modes."
+            },
+            {
+              "path": "docs/proposition/modes.md",
+              "line": 463,
+              "note": "Éditeur et aperçu."
+            }
+          ],
+          "verification": [
+            {
+              "path": "web/src/maison/pages/Accueil.svelte",
+              "line": 42,
+              "note": "Sélecteur actuel adossé au suffixe de l’aide."
+            }
+          ],
+          "risks": [
+            "Ne pas annoncer des routes proposées ou des cartes dynamiques de modes comme des écrans déjà disponibles."
+          ]
+        },
+        {
+          "id": "usages-plan-2d",
+          "title": "Plan 2D vivant à partir de données de maison",
+          "status": "integre",
+          "decision": "Principe D11 et rendu SVG présents ; aucune donnée privée recopiée dans la revue.",
+          "summary": "Le plan est une donnée géométrique par étage, pas seulement une image de fond. Le rendu 2D peut changer d’habillage, zoomer et montrer appareils, ouvertures et lumières sans changer cette donnée.",
+          "details": [
+            "Décrire murs, pièces, ouvertures, éléments et appareils ; garder possible un étage en simple image.",
+            "Afficher les halos dans les limites de pièce et ouvrir le détail d’un appareil au toucher ; un groupe Hue ne devient pas une lampe supplémentaire sur le plan.",
+            "En édition, déplacer ou ajouter les éléments puis enregistrer avec la validation humaine prévue pour le plan."
+          ],
+          "evolution": "D11 remplace la dépendance exclusive à une image fixe ; les mêmes données servent aux vues 2D et 3D.",
+          "sources": [
+            {
+              "path": "docs/components/dashboard.md",
+              "line": 22,
+              "note": "Plan dessiné, image et édition."
+            },
+            {
+              "path": "docs/ARCHITECTURE.md",
+              "line": 166,
+              "note": "D11 : maison donnée, rendu habillage."
+            }
+          ],
+          "verification": [
+            {
+              "path": "web/src/maison/pages/Plan.svelte",
+              "line": 6,
+              "note": "Import du rendu Drawing."
+            },
+            {
+              "path": "web/src/maison/pages/Plan.svelte",
+              "line": 550,
+              "note": "Rendu et édition 2D."
+            }
+          ],
+          "risks": [
+            "Un halo ou une pastille reflète un état disponible ; il ne qualifie pas une position de personne ni une présence réelle."
+          ]
+        },
+        {
+          "id": "usages-plan-3d",
+          "title": "Vue 3D issue du même plan, chargée à la demande",
+          "status": "integre",
+          "decision": "Rendu 3D présent ; pas une simulation physique ni une preuve de localisation.",
+          "summary": "La vue 3D empile les étages et représente murs, meubles et lumières à partir du même plan. Elle aide à se repérer et à ouvrir un équipement, sans créer une seconde source de vérité géométrique.",
+          "details": [
+            "Charger three.js seulement au besoin ; sélectionner un étage et adapter la coupe des murs pour voir les pièces.",
+            "Placer meubles et ouvertures depuis les données communes ; conserver les interactions tactiles avec les appareils.",
+            "Distinguer la représentation spatiale des estimations BLE futures et de leurs règles de visibilité par personne."
+          ],
+          "evolution": "Étend la vue 2D décidée par D11 ; l’existence d’une scène 3D ne livre pas le suivi des occupants imaginé dans les vidéos.",
+          "sources": [
+            {
+              "path": "docs/components/dashboard.md",
+              "line": 22,
+              "note": "Fonctionnement de la vue 3D."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1654,
+              "note": "Contradictions de localisation à trancher dans les scénarios."
+            }
+          ],
+          "verification": [
+            {
+              "path": "web/src/maison/plan/House3D.svelte",
+              "line": 6,
+              "note": "Composant et chargement à la demande."
+            },
+            {
+              "path": "web/src/maison/pages/Plan.svelte",
+              "line": 547,
+              "note": "Usage effectif de la vue 3D."
+            }
+          ],
+          "risks": [
+            "Le coût courant de ce rendu n’est pas mesuré à nouveau ici ; aucune capture privée ou preuve physique n’est créée."
+          ]
+        },
+        {
+          "id": "usages-personnes-invites",
+          "title": "Personnes, droits et vue invitée avec ouverture du détail utile",
+          "status": "integre",
+          "decision": "Invitations datées et vue restreinte présentes ; mémoire de personne et capacités restent distinctes.",
+          "summary": "Un invité reçoit des pièces et une période, avec une réservation facultative. Son interface remplace les pages complètes par les seules pièces permises et ferme les commandes lorsque la politique ou le flux ne permet plus d’agir.",
+          "details": [
+            "Préparer humainement dates début inclus et fin exclue, pièces et éventuelle liaison au séjour.",
+            "Afficher code, lien et QR local ; le lien est copié par une personne et n’est pas envoyé automatiquement par Moli.",
+            "À chaque requête et avant les données SSE, relire la validité ; l’invitation ne donne pas accès aux modes globaux, aux dossiers d’autrui ou à la gestion d’alarme."
+          ],
+          "evolution": "L’accès invité est déjà spécialisé ; il ne doit pas être élargi implicitement par les futurs écrans de modes, mémoire ou catalogue.",
+          "sources": [
+            {
+              "path": "docs/components/dashboard.md",
+              "line": 120,
+              "note": "Invitation et écran invité."
+            },
+            {
+              "path": "docs/components/reservations.md",
+              "line": 56,
+              "note": "Droits vivants et flux."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/reservations.rs",
+              "line": 87,
+              "note": "Contrôle vivant de la fenêtre liée."
+            }
+          ],
+          "risks": [
+            "Un compte ouvert avant la fin du séjour ne prolonge aucun droit ; le QR n’est pas un mécanisme de partage à des tiers sans geste humain."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usages-medias",
+      "title": "Médias : découvrir, choisir, puis prouver ce qui peut être lancé",
+      "intro": "Vue globale : le domaine de découverte R1 est pur et fondé sur des fixtures synthétiques. Ses identités, offres et contrôles de sélection existent, mais aucun catalogue réel ni lancement depuis cette découverte n’est raccordé.",
+      "ideas": [
+        {
+          "id": "usages-identites-medias",
+          "title": "Un contenu et ses références fournisseur restent distincts",
+          "status": "partiel",
+          "decision": "Domaine pur R1 livré ; sources réelles non raccordées.",
+          "summary": "Un film, épisode, chaîne ou replay possède une identité dans sa source. Un identifiant de métadonnées ou numéro de chaîne affiché ne se transforme jamais en identifiant lançable par simple conversion.",
+          "details": [
+            "Conserver la paire source et identifiant comme clé ; garder titre, année, langue et parents seulement lorsqu’ils sont connus.",
+            "Différencier série, saison, épisode spécial, diffusion, portail et collection ; garder les références fournisseur avec namespace et provenance.",
+            "Vérifier que les références utilisées pour choisir proviennent bien du contenu et de l’offre concernés, sans rapprochement par titre seul."
+          ],
+          "evolution": "Pose le contrat pour les futures découvertes et adaptateurs ; ne remplace ni un lecteur ni son mécanisme de lancement.",
+          "sources": [
+            {
+              "path": "docs/components/medias.md",
+              "line": 15,
+              "note": "Identités et types."
+            },
+            {
+              "path": "docs/components/medias.md",
+              "line": 82,
+              "note": "Frontières sans cible opérationnelle."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-media-catalog/src/selection.rs",
+              "line": 21,
+              "note": "Contrôle offre/contenu et type."
+            },
+            {
+              "path": "crates/moli-media-catalog/src/selection.rs",
+              "line": 42,
+              "note": "Référence fournisseur requise."
+            }
+          ],
+          "risks": [
+            "Deux titres identiques ne suffisent pas à prouver la même œuvre ni le même droit de lecture."
+          ]
+        },
+        {
+          "id": "usages-offres-medias",
+          "title": "L’offre ne prouve pas l’abonnement ni l’accès du foyer",
+          "status": "partiel",
+          "decision": "Modèle Offer livré ; vérification d’accès future.",
+          "summary": "L’identité de l’œuvre et son offre commerciale sont deux objets différents. Une offre conserve fournisseur, pays, monétisation, formule, dates et entitlement, et une donnée inconnue reste inconnue.",
+          "details": [
+            "Contrôler le pays et les bornes temporelles de l’offre ; ne pas transformer abonnement en location.",
+            "Conserver provenance et fraîcheur des relevés du contenu et de l’offre ; une date de fin inconnue ne signifie pas illimitée.",
+            "Au futur lancement, vérifier l’accès réel du foyer chez l’adaptateur, y compris après attente d’une approbation."
+          ],
+          "evolution": "Sépare la découverte des droits d’usage effectifs ; aucun achat ou abonnement partenaire n’est créé par R1.",
+          "sources": [
+            {
+              "path": "docs/components/medias.md",
+              "line": 26,
+              "note": "Offres et entitlement."
+            },
+            {
+              "path": "docs/components/medias.md",
+              "line": 89,
+              "note": "Contexte d’offre et accès à conserver jusqu’à émission."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-media-catalog/src/selection.rs",
+              "line": 51,
+              "note": "Dates et fraîcheur contrôlées."
+            }
+          ],
+          "risks": [
+            "Une capacité déclarée par un lecteur ou un client ne constitue pas une preuve officielle ou matérielle."
+          ]
+        },
+        {
+          "id": "usages-recherche-medias",
+          "title": "Recherche bornée et états de source explicites",
+          "status": "partiel",
+          "decision": "Validation des requêtes/pages livrée ; service de recherche et cache non raccordés.",
+          "summary": "La recherche R1 cible France et métadonnées françaises. Elle distingue une recherche réussie sans résultat d’une source indisponible, non configurée, hors quota ou trop lente.",
+          "details": [
+            "Valider une requête de 4 Kio maximum et un texte borné ; normaliser seulement les alias et espaces prévus.",
+            "Contrôler identités, parents, offres, fraîcheur et état de chaque source sur des pages de 20 résultats par défaut, 50 au maximum.",
+            "Limiter la réponse à 256 Kio sans construire une deuxième copie complète ; ne jamais servir les fixtures comme un vrai catalogue."
+          ],
+          "evolution": "La tranche A établit un schéma et ses vérifications ; la tranche B doit encore raccorder découverte et API avec provenance.",
+          "sources": [
+            {
+              "path": "docs/components/medias.md",
+              "line": 36,
+              "note": "États et absence de snapshot."
+            },
+            {
+              "path": "docs/components/medias.md",
+              "line": 47,
+              "note": "Interfaces et bornes."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-media-catalog/src/lib.rs",
+              "line": 1,
+              "note": "Crate de domaine pur, distincte du réseau et runtime."
+            }
+          ],
+          "risks": [
+            "Les budgets de cache et d’enveloppe active de l’étude ne sont ni implémentés ni mesurés par cette tranche."
+          ]
+        },
+        {
+          "id": "usages-lancement-media",
+          "title": "Ouvrir une fiche n’est pas lancer exactement le contenu",
+          "status": "partiel",
+          "decision": "Frontière de sélection livrée ; PlayExact refusé dans R1.",
+          "summary": "La sélection distingue OpenDetails et PlayExact, sans repli automatique vers une application. Même un résultat positif de métadonnées ne constitue pas l’autorisation d’envoyer une commande à un lecteur.",
+          "details": [
+            "Vérifier type, fournisseur, intention, référence explicite, dates et fraîcheur.",
+            "Pour OpenDetails, rendre seulement RequiresAdapterEvidence ; l’adaptateur futur doit encore établir la preuve et construire sa cible.",
+            "Refuser PlayExact dans cette tranche, même si le client prétend posséder cette capacité ; ne pas déclarer un lancement au vu d’une simple recherche."
+          ],
+          "evolution": "Conserve une frontière stricte entre découverte et commande ; l’existence des pilotes Cast/Android TV ailleurs ne raccorde pas automatiquement le catalogue.",
+          "sources": [
+            {
+              "path": "docs/components/medias.md",
+              "line": 41,
+              "note": "Intentions et preuve d’adaptateur."
+            },
+            {
+              "path": "docs/components/medias.md",
+              "line": 56,
+              "note": "PlayExact refusé."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-media-catalog/src/selection.rs",
+              "line": 63,
+              "note": "Refus effectif de PlayExact et seul retour positif."
+            }
+          ],
+          "risks": [
+            "Une URL syntaxiquement HTTPS ne prouve ni origine officielle ni sécurité du futur accès réseau."
+          ]
+        },
+        {
+          "id": "usages-medias-modules",
+          "title": "Média généré ou conversation : garder le moteur petit",
+          "status": "proposition",
+          "decision": "Frontière retenue : demande vers un module, produit de type référence ; ni média lourd ni dialogue dans le moteur.",
+          "summary": "Une chanson, une voix générée ou un journal audiovisuel n’a pas à vivre dans le dossier d’un workflow. La démarche demande le travail à un module et reçoit une référence bornée, pendant que le module garde le média et ses contraintes.",
+          "details": [
+            "Confier génération, collection ou dialogue au module qui sait les gérer ; garder dans le workflow demande, issue et référence.",
+            "Définir autorisations, visibilité, durée de conservation et possibilité de lecture avant de transmettre la référence.",
+            "Prévoir refus, indisponibilité et résultat tardif sans bloquer la commande déterministe des appareils."
+          ],
+          "evolution": "Écarte l’ajout d’un dialogue général ou d’une boucle sur chaque élément dans le moteur ; complète le rôle de la zone de produits.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1489,
+              "note": "Ce qui reste hors du workflow."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 621,
+              "note": "Données volumineuses gardées chez leur module."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-media-catalog/src/lib.rs",
+              "line": 1,
+              "note": "Catalogue pur distinct des sorties et générateurs."
+            }
+          ],
+          "risks": [
+            "Aucun module de génération nouveau, droit de contenu ou service externe n’est prouvé par cette frontière conceptuelle."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usages-alarme-sejours",
+      "title": "Alarme, réservations et accès : des responsabilités séparées",
+      "intro": "Vue globale : la centrale complète est une cible validée, dont le moteur pur et les profils privés existent. Alarmo garde le rôle opérationnel tant que la bascule n’est pas qualifiée ; le lecteur ICS et les accès invités sont distincts de la présence, d’une serrure et du désarmement.",
+      "ideas": [
+        {
+          "id": "usages-centrale",
+          "title": "Une vraie machine d’alarme remplace la simple aide active",
+          "status": "partiel",
+          "decision": "Spécification validée le 18 octobre ; moteur pur livré ; centrale complète à raccorder.",
+          "summary": "La centrale différencie désarmée, sortie en cours, armée selon quatre modes, entrée en attente et déclenchée. Une demande acceptée, un armement confirmé, la couverture réelle et une sirène qui sonne sont quatre choses différentes.",
+          "details": [
+            "Faire passer demandes, observations et minuteries par un propriétaire unique ; calculer step avec état, événement, maintenant, configuration et profils.",
+            "Produire des effets typés sans I/O dans le moteur pur ; laisser au futur pilote persistance, sorties et raccordements.",
+            "Publier à terme état, mode visé, échéance, bloquants, exclusions et dégradation ; les routes et points de la spécification décrivent cette cible, pas une centrale déjà en service."
+          ],
+          "evolution": "Remplace conceptuellement l’aide booléenne alarme_active ; la présence du crate pur ne remplace pas le moteur Alarmo opérationnel.",
+          "sources": [
+            {
+              "path": "docs/components/alarme.md",
+              "line": 3,
+              "note": "Statut et cible."
+            },
+            {
+              "path": "docs/components/alarme.md",
+              "line": 55,
+              "note": "États et points prévus."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-alarm/src/engine.rs",
+              "line": 11,
+              "note": "Fonction pure et effets."
+            },
+            {
+              "path": "crates/moli-api/src/alarm_access.rs",
+              "line": 1,
+              "note": "Routes encore attribuées au lot 7/9."
+            }
+          ],
+          "risks": [
+            "Le statut ancien de la page alarme ne mentionne pas encore partout les profils 3/9 ; lire leur doc et le code complémentaire."
+          ]
+        },
+        {
+          "id": "usages-couverture-alarme",
+          "title": "Armer en sachant exactement ce qui est surveillé",
+          "status": "partiel",
+          "decision": "Couverture et exclusions calculées par le moteur pur ; raccordement capteurs futur.",
+          "summary": "Chaque capteur a une politique par mode, délai et comportement d’indisponibilité. Inconnu, injoignable et ouvert sont des résultats différents ; une valeur restaurée du cache ne confirme pas que la maison est actuellement sûre.",
+          "details": [
+            "Interpréter par sémantique de point : contact, mouvement, serrure ou sabotage ; une valeur inattendue ne devient ni ouverte ni fermée.",
+            "Lister les bloquants avant armement ; séparer allow_open qui reste surveillé d’une exclusion limitée à la période.",
+            "Forcer une exclusion seulement avec code et liste nominative ; attendre une vraie observation après démarrage et traiter une première observation ouverte selon le mode."
+          ],
+          "evolution": "Renforce la parité Alarmo sur premier état connu et dégradation ; ne confond pas occupation planifiée et couverture réelle.",
+          "sources": [
+            {
+              "path": "docs/components/alarme.md",
+              "line": 181,
+              "note": "Politique par capteur."
+            },
+            {
+              "path": "docs/components/alarme.md",
+              "line": 206,
+              "note": "Fraîcheur et exclusions."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-alarm/src/coverage.rs",
+              "line": 1,
+              "note": "Domaine pur de couverture."
+            },
+            {
+              "path": "crates/moli-alarm/src/engine.rs",
+              "line": 6,
+              "note": "Couverture utilisée par le moteur."
+            }
+          ],
+          "risks": [
+            "Une ouverture puis fermeture pendant un arrêt ne peut pas être reconstituée sans observation ; cette limite est assumée."
+          ]
+        },
+        {
+          "id": "usages-codes-alarme",
+          "title": "Code d’alarme à chaque désarmement, droits relus vivants",
+          "status": "partiel",
+          "decision": "Décision propriétaire validée ; service privé 3/9 présent ; surfaces et pilote encore à raccorder.",
+          "summary": "Un code de quatre à huit chiffres identifie un profil et ses droits. Le PIN du dashboard ne le remplace jamais pour désarmer, et un automatisme ou un agent ne gagne pas ce pouvoir en passant par un profil.",
+          "details": [
+            "Garder clé et HMAC au coffre ; ne publier ni code ni empreinte dans points, journal, SSE ou réponses.",
+            "Pour une gestion de profil, exiger propriétaire et session humaine ; relire droits, validité de personne et restriction de réservation lors de l’autorisation.",
+            "Révoquer les profils avant suppression d’une personne ; cinq refus en dix minutes verrouillent leur source quinze minutes, puis doublent jusqu’à vingt-quatre heures, sans bloquer les autres sources."
+          ],
+          "evolution": "Le lot 3 complète le moteur pur sans le rendre opérationnel ; la confidentialité du clavier est un prérequis indépendant, déjà décrit comme livré.",
+          "sources": [
+            {
+              "path": "docs/components/alarme.md",
+              "line": 536,
+              "note": "Décisions Q1–Q4."
+            },
+            {
+              "path": "docs/components/alarme-profils.md",
+              "line": 28,
+              "note": "Profils et personne liée."
+            },
+            {
+              "path": "docs/components/alarme-profils.md",
+              "line": 59,
+              "note": "Secrets et frontières."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-21-alarm-profiles.md",
+              "line": 1,
+              "note": "Plan sans endpoint ou pilote actif."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-alarm-access/src/authorization.rs",
+              "line": 8,
+              "note": "Politique et validité vivantes."
+            },
+            {
+              "path": "crates/moli-api/src/alarm_access.rs",
+              "line": 37,
+              "note": "Propriétaire et session PIN établis côté serveur."
+            }
+          ],
+          "risks": [
+            "La critique cite encore l’arrivée qui désarme comme contradiction à corriger dans les vidéos ; la décision Q1/Q3 de la centrale est déjà explicite."
+          ]
+        },
+        {
+          "id": "usages-reprise-sirenes",
+          "title": "Reprise des délais et arrêt borné des sirènes",
+          "status": "partiel",
+          "decision": "Règles de reprise calculées par le moteur ; ordres réels et persistance du pilote à raccorder.",
+          "summary": "Les délais d’entrée et de sortie utilisent des échéances absolues afin qu’un redémarrage ne les rallonge pas. Une entrée échue pendant l’arrêt doit mener au déclenchement, tandis que la sirène reste limitée à trois minutes.",
+          "details": [
+            "Au retour, lire état et échéances ; un capteur en cache reste non confirmé, une échéance d’entrée dépassée ne désarme pas.",
+            "Arrêter la sirène à 180 secondes au plus ou à toute sortie de triggered ; conserver distincts commanded, confirmed et unconfirmed.",
+            "Prévoir état perdu, sirène hors ligne et ordre d’arrêt non confirmé ; ces contrats de sorties nécessitent encore le pilote et sa qualification."
+          ],
+          "evolution": "Corrige la recréation d’un délai entier et les sirènes sans borne ; la reprise d’alarme est un contrat spécifique, pas une application uniforme du non-rejeu d’un confort.",
+          "sources": [
+            {
+              "path": "docs/components/alarme.md",
+              "line": 311,
+              "note": "Sirènes et confirmation."
+            },
+            {
+              "path": "docs/components/alarme.md",
+              "line": 363,
+              "note": "Reprise par état."
+            },
+            {
+              "path": "docs/components/alarme.md",
+              "line": 540,
+              "note": "Plafond de trois minutes décidé."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-alarm/src/restore.rs",
+              "line": 43,
+              "note": "Calcul pur de reprise."
+            },
+            {
+              "path": "crates/moli-alarm/src/engine.rs",
+              "line": 40,
+              "note": "Traitement des jetons de sirène."
+            }
+          ],
+          "risks": [
+            "Un arrêt réel de Moli reste une période non surveillée ; détecter l’arrêt lui-même exige une surveillance extérieure distincte."
+          ]
+        },
+        {
+          "id": "usages-qualification-bascule",
+          "title": "Qualification et propriétaire unique des sorties",
+          "status": "qualification",
+          "decision": "Qualification réelle non acquise par la présence du code ; Alarmo reste propriétaire.",
+          "summary": "La bascule doit passer par une phase d’ombre où Moli décide et journalise sans commander les sorties. Le passage en direct ne commence qu’après validation humaine et arrêt des anciens automatismes, claviers et notifications concurrents.",
+          "details": [
+            "En shadow, comparer les décisions et états aux observations d’Alarmo sur une période choisie, sans double ordre.",
+            "Après le jalon humain H1, éprouver clavier, sirène neutre, arrêt, reprise et retour arrière avec une personne présente et l’état initial rétabli.",
+            "Avant live, retirer la propriété des sorties à HA ; surveiller ensuite toute commande étrangère comme un conflit et garder un retour vers shadow."
+          ],
+          "evolution": "Conserve la spécification validée et les résultats logiciels comme étapes distinctes ; aucune commande physique ni nouvelle campagne n’est lancée dans cette revue.",
+          "sources": [
+            {
+              "path": "docs/components/alarme.md",
+              "line": 416,
+              "note": "Ombre, live et retour arrière."
+            },
+            {
+              "path": "docs/components/alarme.md",
+              "line": 529,
+              "note": "Qualification après H1."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-alarm/src/engine.rs",
+              "line": 1,
+              "note": "Le moteur pur laisse les effets à son appelant."
+            }
+          ],
+          "risks": [
+            "Tests synthétiques, revue, intégration, déploiement et qualification sont cinq états distincts ; aucun raccourci de vocabulaire ne doit annoncer une centrale active."
+          ]
+        },
+        {
+          "id": "usages-reservations",
+          "title": "Le calendrier donne des séjours prévus, jamais une présence",
+          "status": "integre",
+          "decision": "Lecteur ICS et cycle présents ; fournisseur réel non qualifié.",
+          "summary": "Le pilote lit un export ICS HTTPS choisi humainement et expose cinq séjours courants ou futurs. Ses états checked_in et checked_out suivent les horaires prévus, sans changer mode, présence, ballon, serrure ou alarme.",
+          "details": [
+            "Lire l’URL depuis le coffre et refuser calendrier trop grand, règle inconnue ou heure ambiguë ; ne publier ni titre, participant, UID fournisseur ni URL embarquée.",
+            "Développer seulement le sous-ensemble de récurrences prévu, avec bornes d’expansion et dates civiles locales ; aucune anticipation arbitraire d’arrivée n’est ajoutée.",
+            "Émettre arrival/departure seulement pour une frontière future observée en marche ; démarrage, interruption de plus de deux secondes ou recul d’horloge réconcilient sans rattrapage."
+          ],
+          "evolution": "Fournit une source spécialisée réutilisable pour futurs modes ; ne devient ni agenda de réunions universel ni preuve d’arrivée réelle.",
+          "sources": [
+            {
+              "path": "docs/components/reservations.md",
+              "line": 3,
+              "note": "Source humaine et confidentialité."
+            },
+            {
+              "path": "docs/components/reservations.md",
+              "line": 9,
+              "note": "Cycle et absence de rejeu."
+            },
+            {
+              "path": "docs/superpowers/specs/2026-10-20-reservations-ics-design.md",
+              "line": 1,
+              "note": "Spécification."
+            },
+            {
+              "path": "docs/superpowers/plans/2026-10-20-reservations-ics.md",
+              "line": 1,
+              "note": "Plan et corrections historiques."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-reservations/src/timeline.rs",
+              "line": 29,
+              "note": "Frontières live-only et interruption >2000 ms."
+            }
+          ],
+          "risks": [
+            "Une réservation active peut être visible sans occurrence d’arrivée ; les fixtures n’établissent aucune compatibilité d’un fournisseur réel."
+          ]
+        },
+        {
+          "id": "usages-acces-vivant",
+          "title": "L’accès invité ferme à l’expiration jusqu’au transport",
+          "status": "integre",
+          "decision": "Fenêtres de réservation et contrôle vivant présents ; coordination serrure explicitement facultative.",
+          "summary": "La réservation restreint un invité déjà créé par une personne ; elle n’ajoute ni compte ni pièce autorisée. L’accès dépend d’un instantané frais et d’une fenêtre début inclus, fin exclue, même si une session était ouverte auparavant.",
+          "details": [
+            "Associer humainement une référence opaque de séjour ; intersecter la fenêtre avec expiration du compte et pièces autorisées.",
+            "Fermer sur annulation connue, erreur, pilote arrêté ou péremption, avec contrôle mural et monotone ; conserver une liaison indisponible au lieu de supprimer silencieusement sa restriction.",
+            "Relire les droits à chaque requête et donnée SSE, puis jusqu’au premier envoi de l’ordre, y compris groupe et continuation composée ; une émission déjà engagée garde son suivi au journal."
+          ],
+          "evolution": "Le permis vivant corrige la fenêtre entre admission et transport ; toute coordination avec serrure reste un automatisme explicitement validé, jamais une propriété du lecteur ICS.",
+          "sources": [
+            {
+              "path": "docs/components/reservations.md",
+              "line": 28,
+              "note": "Liaison humaine."
+            },
+            {
+              "path": "docs/components/reservations.md",
+              "line": 56,
+              "note": "Accès et permis vivant."
+            },
+            {
+              "path": "docs/components/reservations.md",
+              "line": 77,
+              "note": "Serrure facultative."
+            }
+          ],
+          "verification": [
+            {
+              "path": "crates/moli-runtime/src/reservations.rs",
+              "line": 87,
+              "note": "Contrôle double horloge et fenêtre."
+            },
+            {
+              "path": "crates/moli-alarm-access/src/authorization.rs",
+              "line": 23,
+              "note": "Validité invitée aussi relue pour un profil d’alarme."
+            }
+          ],
+          "risks": [
+            "La modification distante reste inconnue jusqu’à la prochaine lecture ; le système ne promet pas une révocation antérieure à ce qu’il a observé."
+          ]
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "family": "Primitives",
+      "from": "Cadrage initial : aides futures, pas de scène ou occurrence",
+      "to": "Contrats détaillés et types présents du code courant",
+      "kept": "Validation humaine, garde, unités, bornes et absence de rejeu aveugle.",
+      "replaced": "L’inventaire initial d’absences ne décrit plus les lots H1–H5, K1, K3 et S1 désormais représentés.",
+      "reason": "Éviter de faire croire qu’une introduction historique annule les développements plus récents.",
+      "sources": [
+        {
+          "path": "docs/components/automatismes-primitives.md",
+          "line": 21,
+          "note": "État initial."
+        },
+        {
+          "path": "docs/components/automatismes.md",
+          "line": 177,
+          "note": "Ajouts successifs."
+        },
+        {
+          "path": "crates/moli-runtime/src/dependencies/mod.rs",
+          "line": 59,
+          "note": "Types présents."
+        }
+      ]
+    },
+    {
+      "family": "Données des démarches",
+      "from": "Registre compact et dernier texte",
+      "to": "Zone de produits et segments du gardien/pairs, instantané périodique",
+      "kept": "Programme partagé, fiche cible de 64 octets, cause et génération.",
+      "replaced": "Le tiroir de textes devient un dossier typé privé ; la descente au journal proposée par la critique est remplacée dans la cible par les segments du gardien/pairs. Le journal de clôture relève de l’historique.",
+      "reason": "Les produits d’une API, d’une personne ou du modèle dépassent la fiche et doivent survivre aux attentes.",
+      "sources": [
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1196,
+          "note": "Dossier cible."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1525,
+          "note": "Changements de la mémoire v2."
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 180,
+          "note": "État critique, historique et instantané sont des domaines distincts."
+        }
+      ]
+    },
+    {
+      "family": "Durabilité",
+      "from": "Critique : journal de dossiers et intention sur disque",
+      "to": "HA v2 : gardien, acquittements des pairs et instantané périodique",
+      "kept": "Séparer état compact et produits, garder une clé et une issue, ne jamais rejouer un effet ambigu.",
+      "replaced": "Le journal disque des exécutions et produits par événement est abandonné dans la cible ; l’irréversible/tiers attend un pair et chaque reçu déclare son support survivant.",
+      "reason": "La copie critique en mémoire et l’instantané de HA v2 remplacent la dépendance au journal ; une panne totale sans pair ni arrêt figé expose le retard depuis le dernier instantané.",
+      "sources": [
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 332,
+          "note": "Corrections du concept."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1669,
+          "note": "Décisions et conséquences rapportées."
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 180,
+          "note": "État critique, historique et instantané sont des domaines distincts."
+        }
+      ]
+    },
+    {
+      "family": "Concurrence",
+      "from": "Restart, Single, Queued et file de dix",
+      "to": "Cible retenue : mode par voie et parallèle opt-in, dix au plus par défaut sous budget global",
+      "kept": "Les exécutions séquentielles et leur annulation.",
+      "replaced": "L’ignorance silencieuse du surplus est remplacée conceptuellement par attente et conservation côté source.",
+      "reason": "Les rafales d’éléments indépendants exigent d’éviter perte et abandon du travail précédent.",
+      "sources": [
+        {
+          "path": "crates/moli-automation/src/model.rs",
+          "line": 87,
+          "note": "Modes courants."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 564,
+          "note": "Cible parallèle."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1697,
+          "note": "Paramètres ouverts."
+        }
+      ]
+    },
+    {
+      "family": "Sarah dans le workflow",
+      "from": "Moli écrit ; décision de commande interdite par les règles actuelles",
+      "to": "Cible retenue : décision Sarah explicitement confiée par workflow validé, bornes et plancher compilé",
+      "kept": "Le moteur déterministe et l’interdiction pour le modèle d’écrire une commande libre.",
+      "replaced": "L’interdiction absolue de choix devient interdiction de commande libre ; le portage des règles accompagne le socle vérifiable avant son activation.",
+      "reason": "Suivre la décision rapportée sans annoncer que ses garde-fous ou ses règles écrites sont déjà livrés.",
+      "sources": [
+        {
+          "path": "docs/components/automatismes.md",
+          "line": 23,
+          "note": "Règle actuelle."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1280,
+          "note": "Conflit explicite."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1682,
+          "note": "Réécriture ouverte."
+        }
+      ]
+    },
+    {
+      "family": "Profils",
+      "from": "21 octobre : capture/restauration par session, superposition reportée",
+      "to": "Cible retenue : couches par point et session temporaire bornée",
+      "kept": "Modes simultanés, origine du geste humain et respect des modifications ultérieures.",
+      "replaced": "La réémission d’un instantané ancien est remplacée par retrait de couche ; la base connue et sa provenance sont gardées dans les supports critiques, avec huit couches maximum et dérogation humaine de deux heures par défaut.",
+      "reason": "Plusieurs raisons simultanées sur un même radiateur ne se résolvent pas par un instantané isolé.",
+      "sources": [
+        {
+          "path": "docs/proposition/modes.md",
+          "line": 307,
+          "note": "Capture par utilisation."
+        },
+        {
+          "path": "docs/proposition/modes.md",
+          "line": 498,
+          "note": "Superposition reportée."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1458,
+          "note": "Couches proposées."
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 180,
+          "note": "État critique, historique et instantané sont des domaines distincts."
+        }
+      ]
+    },
+    {
+      "family": "Alarme",
+      "from": "Aide booléenne et Alarmo opérationnel",
+      "to": "Centrale cible validée, moteur pur et profils privés",
+      "kept": "Alarmo reste opérationnel jusqu’à qualification et propriétaire unique des sorties.",
+      "replaced": "L’aide alarme_active doit être remplacée à la bascule ; aucune bascule n’est acquise par le code pur.",
+      "reason": "Les délais, codes, couverture et sorties exigent une machine métier et des raccordements qualifiés.",
+      "sources": [
+        {
+          "path": "docs/components/alarme.md",
+          "line": 9,
+          "note": "Limite de l’aide."
+        },
+        {
+          "path": "docs/components/alarme-profils.md",
+          "line": 3,
+          "note": "Service 3/9."
+        },
+        {
+          "path": "docs/components/alarme.md",
+          "line": 416,
+          "note": "Bascule et retour."
+        }
+      ]
+    },
+    {
+      "family": "Temps long",
+      "from": "Exécution qui attend des jours ; retard générique de deux minutes",
+      "to": "Dates et compteurs durables, fenêtre d’utilité proposée par étape",
+      "kept": "Aides temporelles, compteur, planning et durée déjà réutilisables.",
+      "replaced": "L’attente longue devient un fait de maison ; le retard unique est remplacé par la fenêtre explicitement définie pour chaque type d’étape.",
+      "reason": "Modifier la logique ou le modèle ne doit pas effacer une échéance familiale de plusieurs semaines.",
+      "sources": [
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1355,
+          "note": "Fenêtre d’utilité."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1430,
+          "note": "Temps long."
+        },
+        {
+          "path": "docs/components/dates-heures.md",
+          "line": 124,
+          "note": "Réveil dynamique non livré."
+        }
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "usages-conflit-autorite-llm",
+      "title": "Quelle règle fait foi pour un choix de Sarah ?",
+      "problem": "La critique rapporte une décision du propriétaire autorisant certains choix, mais les règles actuelles interdisent encore une décision LLM d’appareil ; le masque d’origine et le réglage par capacité ne sont pas livrés.",
+      "options": [
+        {
+          "label": "Décision bornée, autorisée par le workflow",
+          "benefit": "La décision récente rapportée est respectée sans commande libre ni autorité implicite.",
+          "cost": "Il faut réaliser compilateur, traçabilité et garde avant activation."
+        }
+      ],
+      "recommendation": "Contrat retenu par la revue : Décision bornée, autorisée par le workflow.",
+      "sources": [
+        {
+          "path": "docs/components/automatismes.md",
+          "line": 23,
+          "note": "Contrat actuel."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1625,
+          "note": "Phrases proposées."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1682,
+          "note": "Choix encore ouvert."
+        }
+      ],
+      "resolution": "La cible autorise Sarah à choisir seulement dans les branches et bornes explicitement confiées par un workflow humainement validé. Les réflexes restent déterministes ; les origines se propagent ; le plancher compilé exige code pour désarmer, autorité humaine pour ouverture issue d’estimation/modèle, autorisation de pièce protégée et Oui ponctuel pour un tiers. Le changement des règles écrites est une conséquence de cette cible, avec le socle vérifiable, pas une seconde option."
+    },
+    {
+      "id": "usages-conflit-profils-couches",
+      "title": "Capture de session ou couches permanentes ?",
+      "problem": "La proposition de modes exige une capture durable et une restauration sous contrôle de provenance ; la critique ultérieure propose de les remplacer par retrait de couche sans supprimer toutes les nuances de fin.",
+      "options": [
+        {
+          "label": "Couches uniques et base courante gardée par point",
+          "benefit": "Les raisons simultanées et le geste humain sont préservés sans rollback concurrent.",
+          "cost": "Le propriétaire de couches et sa persistance doivent être réalisés dans le hub."
+        }
+      ],
+      "recommendation": "Contrat retenu par la revue : couches uniques et base courante gardée par point.",
+      "sources": [
+        {
+          "path": "docs/proposition/modes.md",
+          "line": 296,
+          "note": "Trois politiques de sortie."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1458,
+          "note": "Priorités proposées."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1692,
+          "note": "Arbitrage ouvert."
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 95,
+          "note": "Workflows critiques copiés ; journal explicatif historique ; risque de panne totale explicite."
+        }
+      ],
+      "resolution": "Un registre unique du hub conserve au maximum huit couches par point, défaut compris, ordonnées par sécurité, geste humain, raison de maison, mode/profil, workflow/planning et défaut. Le geste humain expire après deux heures par défaut, avec un autre terme seulement explicitement confirmé. Une session temporaire possède sa couche et sa base connue gardée avec provenance, incarnation et époque ; sa fin retire la raison, sans écraser une révision humaine. La destination est installée avant retrait de l’ancienne session dans la même admission logique. Les supports critiques de HA v2 et l’instantané périodique déterminent la survie ; aucun journal disque de dossiers ni rollback événementiel ancien n’est ajouté."
+    },
+    {
+      "id": "usages-conflit-parallele",
+      "title": "Le parallèle est décidé, ses limites ne le sont pas",
+      "problem": "Le §11 décide le principe n au plus mais laisse ouverts n=10, droits d’accès au parallèle et file de 1000 ; le moteur actuel ignore le surplus de sa file de dix.",
+      "options": [
+        {
+          "label": "Parallèle opt-in sous admission globale",
+          "benefit": "Les rafales indépendantes sont conservées sans imposer leurs ressources aux réflexes.",
+          "cost": "Les plafonds de compte et d’octets ainsi que le support survivant de chaque reçu doivent être respectés ensemble."
+        }
+      ],
+      "recommendation": "Contrat retenu par la revue : Parallèle opt-in sous admission globale.",
+      "sources": [
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1674,
+          "note": "Principe rapporté décidé."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1697,
+          "note": "Paramètres à décider."
+        },
+        {
+          "path": "crates/moli-automation/src/engine.rs",
+          "line": 690,
+          "note": "Limite actuelle."
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 95,
+          "note": "Workflows critiques copiés ; journal explicatif historique ; risque de panne totale explicite."
+        }
+      ],
+      "resolution": "Parallèle refusé par défaut, explicite pour éléments indépendants ; dix maximum par workflow par défaut, sous les plafonds globaux simultanés de 64 dossiers résidents et 1 Mio, avec 16 Kio maximum par dossier. Jusqu’à 1000 causes chez le gardien, sous 2 Mio partagés par toutes les files ; la source garde le surplus jusqu’à accusé. Cette file survit au crash du cœur, mais pas à une panne électrique totale sans pair survivant ou instantané la couvrant. Les dossiers en sommeil passent dans les segments du gardien/pairs, pas dans une base par événement. Modes et plancher restent séquentiels ; les branches internes restent ordonnées."
+    },
+    {
+      "id": "usages-conflit-arrivee-desarmement",
+      "title": "L’arrivée ne remplace pas le code d’alarme",
+      "problem": "Les scénarios rapportés promettent parfois un désarmement à l’arrivée, tandis que la spécification validée exige un code à chaque fois et interdit le désarmement automatisé.",
+      "options": [
+        {
+          "label": "Code d’alarme obligatoire",
+          "benefit": "Respecte Q1/Q3 et sépare estimation de présence et autorité.",
+          "cost": "Une arrivée prépare le confort mais ne supprime pas la saisie du code."
+        }
+      ],
+      "recommendation": "Contrat retenu par la revue : Code d’alarme obligatoire.",
+      "sources": [
+        {
+          "path": "docs/components/alarme.md",
+          "line": 540,
+          "note": "Code et armer seulement."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 931,
+          "note": "Contradictions des scénarios."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1691,
+          "note": "Question encore posée par la critique."
+        }
+      ],
+      "resolution": "L’arrivée, une estimation GPS/BLE, Je rentre, un mode et une réservation ne désarment jamais. Seule une personne avec son code d’alarme courant le peut ; un PIN de dashboard ne le remplace pas. Les récits contradictoires sont conservés comme sources historiques à corriger, pas comme une alternative fonctionnelle."
+    },
+    {
+      "id": "usages-conflit-retention",
+      "title": "Combien garder du dossier et à qui le montrer ?",
+      "problem": "La critique propose trente jours puis codes seuls, avec visibilité héritée ; aucune rétention globale ni audience de dossiers n’est livrée par le journal actuel tronqué.",
+      "options": [
+        {
+          "label": "Trente jours, audience héritée, puis codes",
+          "benefit": "La démarche reste explicable avec une fin de conservation définie.",
+          "cost": "Purge et contrôle d’audience doivent être réalisés sur toutes les copies et vues."
+        }
+      ],
+      "recommendation": "Contrat retenu par la revue : Trente jours, audience héritée, puis codes.",
+      "sources": [
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1213,
+          "note": "Vie et visibilité du dossier."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1689,
+          "note": "Rétention ouverte."
+        },
+        {
+          "path": "crates/moli-automation/src/store.rs",
+          "line": 13,
+          "note": "Journal courant de 500 résultats."
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 95,
+          "note": "Workflows critiques copiés ; journal explicatif historique ; risque de panne totale explicite."
+        }
+      ],
+      "resolution": "Le dossier actif ou endormi reste dans la zone de produits ou les segments du gardien et des pairs selon le support survivant annoncé, avec instantané périodique. Après clôture seulement, trente jours d’explication sont conservés dans le domaine historique avec l’intersection des audiences, puis les seuls codes d’issue, origine et taille. Ce journal n’est jamais autorité de reprise. Aucun corps de courriel ou image n’est conservé dans le dossier."
+    },
+    {
+      "id": "usages-conflit-cameras-personnes",
+      "title": "Images et localisation : revoir les promesses avant la fonction",
+      "problem": "La doc actuelle promet que le modèle ne voit pas d’image caméra ; la critique rapporte un exemple Connu et une présence d’enfant sur le plan qui contredisent certaines vidéos.",
+      "options": [
+        {
+          "label": "Détection locale minimale, reconnaissance nominative exclue de la cible courante",
+          "benefit": "L’utilité personne/colis et le plan restent possibles sans promettre une identification.",
+          "cost": "Les fonctions Connu et le suivi nominatif des personnes ne sont pas retenus dans cette cible."
+        }
+      ],
+      "recommendation": "Contrat retenu par la revue : Détection locale minimale, reconnaissance nominative exclue de la cible courante.",
+      "sources": [
+        {
+          "path": "docs/components/moli.md",
+          "line": 6,
+          "note": "Confidentialité actuelle."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 827,
+          "note": "Cas caméra."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1687,
+          "note": "Images encore ouvertes."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1656,
+          "note": "Localisation à clarifier."
+        }
+      ],
+      "resolution": "Conserver le filtre actuel de Moli : aucune image de caméra au modèle de conversation et aucune position précise dans son inventaire. Autoriser une détection locale personne/colis par le module compétent, avec seulement résultat minimal et référence privée ; exclure la reconnaissance nominative et le suivi des enfants/invités de la cible de cette revue. Une estimation de pièce affichée à une personne autorisée reste de qualité explicite et n’accorde jamais un droit physique."
+    },
+    {
+      "id": "usages-conflit-accord-service",
+      "title": "Un accord à la validation ou à chaque passage ?",
+      "problem": "Le tri des messages devient inutilisable s’il exige un accord identique à chaque lecture, mais une autorisation vague de toute la boîte ne correspond pas aux capacités décrites.",
+      "options": [
+        {
+          "label": "Accord révocable à portée précise",
+          "benefit": "Le tri peut fonctionner sans question identique par élément.",
+          "cost": "La portée et la révocation doivent rester vérifiées jusqu’à l’envoi."
+        }
+      ],
+      "recommendation": "Contrat retenu par la revue : Accord révocable à portée précise.",
+      "sources": [
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1262,
+          "note": "Accord et champs."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1683,
+          "note": "Arbitrage encore ouvert."
+        },
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1693,
+          "note": "Portée de lecture des courriels."
+        }
+      ],
+      "resolution": "Un accord à la validation couvre un workflow, une capacité et la liste précise des champs confiés au service ; il est révocable et n’autorise pas toute une boîte par défaut. Chaque acte auprès d’un tiers exige séparément le Oui humain ponctuel et l’acquittement du gardien pair. Une lecture autorisée ne crée aucun droit d’envoyer, payer, réserver ou signer."
+    },
+    {
+      "id": "usages-conflit-confirmation-reprise",
+      "title": "Résultat inconnu ou réessai automatique ?",
+      "problem": "Les appareils, messages et écritures d’agenda n’offrent pas tous la même possibilité de prouver un effet après une panne ; appliquer un seul contrat de rejeu créerait doublons ou actions tardives.",
+      "options": [
+        {
+          "label": "Reprise par type, engagement gardé avant émission",
+          "benefit": "Évite actions tardives et doublons non prouvés.",
+          "cost": "Une issue sans preuve fiable peut nécessiter une personne."
+        }
+      ],
+      "recommendation": "Contrat retenu par la revue : Reprise par type, engagement gardé avant émission.",
+      "sources": [
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 1228,
+          "note": "Matrice de reprise."
+        },
+        {
+          "path": "docs/components/scenes.md",
+          "line": 133,
+          "note": "Lancements éphémères."
+        },
+        {
+          "path": "docs/components/reservations.md",
+          "line": 16,
+          "note": "Occurrences non rejouées."
+        },
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 95,
+          "note": "Workflows critiques copiés ; journal explicatif historique ; risque de panne totale explicite."
+        }
+      ],
+      "resolution": "Pour irréversible ou tiers, le gardien garde l’intention dans sa file/relais et ses segments, avec une clé incluant incarnation du registre, époque, automatisme, case, génération et étape ; un pair survivant doit l’acquitter avant émission. Sans ce pair, suspendre cet engagement ou solliciter une personne, en laissant les réflexes continuer. Aucun dossier ou exécution ne crée un journal disque par événement ; le reçu annonce son support survivant. Au retour, rendre les reçus existants ; ne renvoyer que si la non-émission est prouvée ou si le récepteur reconnaît et déduplique la même clé. Un simple constat d’état ne suffit pas ; tout effet ambigu reste non confirmé, jamais réémis automatiquement. Reprendre d’un pair au rang confirmé, sinon de l’instantané périodique, sans faire de l’historique explicatif une autorité de reprise."
+    }
+  ],
+  "coverage": [
+    "docs/components/automatismes.md",
+    "docs/components/automatismes-primitives.md",
+    "docs/components/calculs.md",
+    "docs/components/compteurs.md",
+    "docs/components/minuteurs.md",
+    "docs/components/dates-heures.md",
+    "docs/components/durees.md",
+    "docs/components/plannings.md",
+    "docs/components/scenes.md",
+    "docs/components/alarme.md",
+    "docs/components/alarme-profils.md",
+    "docs/components/moli.md",
+    "docs/components/medias.md",
+    "docs/components/reservations.md",
+    "docs/components/dashboard.md",
+    "docs/proposition/modes.md",
+    "docs/proposition/declencheurs-techniques.md",
+    "docs/proposition/critique-workflow.md",
+    "docs/superpowers/plans/2026-10-20-auto-h2.md",
+    "docs/superpowers/plans/2026-10-20-auto-h4.md",
+    "docs/superpowers/plans/2026-10-21-auto-h1.md",
+    "docs/superpowers/plans/2026-10-21-auto-h5-planning.md",
+    "docs/superpowers/plans/2026-10-21-auto-k1-calculs.md",
+    "docs/superpowers/plans/2026-10-21-auto-k3-durees.md",
+    "docs/superpowers/plans/2026-10-21-auto-s1-scenes.md",
+    "docs/superpowers/plans/2026-10-21-alarm-profiles.md",
+    "docs/superpowers/plans/2026-10-20-reservations-ics.md",
+    "docs/superpowers/specs/2026-10-20-reservations-ics-design.md",
+    "docs/README.md"
+  ],
+  "missing": [
+    "maquette/maquette-regles-sarah-v3.html est citée par critique-workflow.md mais le dossier maquette/ est absent du dépôt consulté ; aucun écran ni numéro de ligne de cette maquette n’est présenté comme vérifié directement.",
+    "Les scénarios et vidéos sarah-home-videos cités par la critique vivent hors du dépôt consulté : leurs 216 comportements, exemples et contradictions sont des constats attribués au document, pas un inventaire refait ici.",
+    "Les contenus memoire-v2 et V7 sont recoupés dans cette contribution uniquement par leurs changements explicités dans critique-workflow.md ; leurs analyses complètes relèvent des autres familles de la revue.",
+    "Aucun banc n’a été rejoué : les chiffres et résultats de plans sont historiques et attribués ; les estimations de zone de travail et expériences du §12 ne sont pas des nouvelles preuves.",
+    "Aucune source web, API fournisseur, boîte mail, messagerie, caméra, calendrier privé ou appareil physique n’a été consulté ; les compatibilités proposées restent à qualifier.",
+    "Présence de code ne prouve ni déploiement, ni ouverture d’un service, ni qualification physique : centrale d’alarme complète, modules des démarches, mémoire personnelle, couches et découverte média raccordée restent à distinguer.",
+    "Références de code contrôlées en lecture ciblée uniquement ; aucune nouvelle suite de tests, compilation ou capture de navigateur n’a été exécutée.",
+    "Harmonisation HA v2 recoupée dans les extraits de docs/proposition/haute-disponibilite-v2.md : vocabulaire, verdict, classes de données et écritures. Lecture complète et mesures de ce document relèvent de la famille runtime de la revue ; aucun banc rejoué."
+  ]
+}

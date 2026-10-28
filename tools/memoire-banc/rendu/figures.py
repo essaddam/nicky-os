@@ -1001,4 +1001,607 @@ ecrire("cron", figure("cron", "Le coût d'un « cron » selon sa précision",
     d.texte(), y + 64,
     "Processeur par jour pour tenir les déclencheurs horaires, mesuré en Linux musl (un tour du balayage, une journée du moteur du temps) ; les fréquences de 10 et 1 000 tours par seconde sont extrapolées du tour mesuré. La ligne rouge : 1 % d'un cœur.", fleches=False))
 
+# ================================================================ Critique des workflows
+# docs/proposition/critique-workflow.md : quatre schémas dessinés à la main, sans chiffre du banc
+# (le moteur et ses répondeurs ; l'origine qui suit les données jusqu'aux actions ; un dossier de bout
+# en bout ; un module de chaque côté d'un lien qui se coupe).
+ecrire("demande", r'''      <figure class="diagram">
+        <svg viewBox="0 0 1000 500" role="img" aria-labelledby="demande-t demande-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="demande-t">Une demande, un produit, une origine</title>
+          <desc id="demande-d">Le moteur de workflow, déterministe, lit les valeurs, attend les échéances et adresse des demandes par le courtier à quatre sortes de répondeurs : un appareil, Sarah, un service, une personne. Les issues reviennent par le même chemin ; ce qu'elles rapportent est rangé dans le dossier de la démarche, pris au départ dans la zone de travail, à la taille que le compilateur a calculée, avec son origine. Le dossier descend au journal du moteur : avant chaque engagement, en attendant le disque, et par lots pour le reste. Un réflexe n'a pas de dossier.</desc>
+          <defs>
+            <marker id="demande-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+          </defs>
+          <rect x="16" y="30" width="330" height="236" rx="12" fill="#ffffff" stroke="#1d302a" stroke-width="2.2"/>
+          <text x="28" y="54" font-size="14" fill="#1d302a" font-weight="700">Le moteur de workflow</text>
+          <text x="334" y="54" font-size="9.5" fill="#52615a" text-anchor="end">déterministe</text>
+          <text x="28" y="72" font-size="10.5" fill="#52615a" font-style="italic">il lit, il attend, il demande</text>
+          <rect x="28" y="84" width="306" height="23" rx="4" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="36" y="100" font-size="10" fill="#1d302a">lit les valeurs par numéro (son miroir)</text>
+          <rect x="28" y="112" width="306" height="23" rx="4" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="36" y="128" font-size="10" fill="#1d302a">attend les échéances (le moteur du temps)</text>
+          <rect x="28" y="140" width="306" height="23" rx="4" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="36" y="156" font-size="10" fill="#1d302a">adresse une demande, attend son issue</text>
+          <rect x="28" y="168" width="306" height="23" rx="4" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="36" y="184" font-size="10" fill="#1d302a">Si, Selon : sur la maison, la cause, un produit</text>
+          <rect x="28" y="196" width="306" height="23" rx="4" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="36" y="212" font-size="10" fill="#1d302a">fiche d'exécution : 64 o, inchangée</text>
+          <text x="28" y="250" font-size="10" fill="#1d302a" font-weight="700">un réflexe s'arrête là : il n'a pas de dossier</text>
+          <text x="520" y="20" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">le courtier</text>
+          <line x1="520" y1="30" x2="520" y2="251" stroke="#52615a" stroke-width="1.5"/>
+          <line x1="346" y1="142" x2="516" y2="142" stroke="#52615a" stroke-width="1.5" marker-end="url(#demande-g)"/>
+          <text x="433" y="135" font-size="10" fill="#52615a" text-anchor="middle">une demande (req/)</text>
+          <line x1="518" y1="162" x2="350" y2="162" stroke="#52615a" stroke-width="1.5" marker-end="url(#demande-g)"/>
+          <text x="433" y="179" font-size="10" fill="#52615a" text-anchor="middle">une issue et son produit (res/)</text>
+          <line x1="520" y1="57" x2="596" y2="57" stroke="#52615a" stroke-width="1.5" marker-end="url(#demande-g)"/>
+          <line x1="520" y1="121" x2="596" y2="121" stroke="#52615a" stroke-width="1.5" marker-end="url(#demande-g)"/>
+          <line x1="520" y1="185" x2="596" y2="185" stroke="#52615a" stroke-width="1.5" marker-end="url(#demande-g)"/>
+          <line x1="520" y1="249" x2="596" y2="249" stroke="#52615a" stroke-width="1.5" marker-end="url(#demande-g)"/>
+          <rect x="600" y="30" width="384" height="54" rx="10" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="612" y="51" font-size="13" fill="#195744" font-weight="700">Un appareil</text>
+          <text x="972" y="51" font-size="9.5" fill="#52615a" text-anchor="end">par le hub et la garde</text>
+          <text x="612" y="71" font-size="10" fill="#1d302a">ordre ou scène · fait, refus, trop long · jamais rejoué</text>
+          <rect x="600" y="94" width="384" height="54" rx="10" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="612" y="115" font-size="13" fill="#b07d12" font-weight="700">Sarah</text>
+          <text x="972" y="115" font-size="9.5" fill="#52615a" text-anchor="end">un module, ailleurs que le cœur</text>
+          <text x="612" y="135" font-size="10" fill="#1d302a">écrire pour des humains, remplir une fiche · ne sait pas</text>
+          <rect x="600" y="158" width="384" height="54" rx="10" fill="#ffffff" stroke="#52615a" stroke-width="1.6"/>
+          <text x="612" y="179" font-size="13" fill="#52615a" font-weight="700">Un service</text>
+          <text x="972" y="179" font-size="9.5" fill="#52615a" text-anchor="end">météo, agenda, courriel, école</text>
+          <text x="612" y="199" font-size="10" fill="#1d302a">lire · écrire avec une clé, sans effet si renvoyé</text>
+          <rect x="600" y="222" width="384" height="54" rx="10" fill="#ffffff" stroke="#1d302a" stroke-width="1.6"/>
+          <text x="612" y="243" font-size="13" fill="#1d302a" font-weight="700">Une personne</text>
+          <text x="972" y="243" font-size="9.5" fill="#52615a" text-anchor="end">le nœud « Demander »</text>
+          <text x="612" y="263" font-size="10" fill="#1d302a">un délai, une réponse par défaut, revérifier à la réponse</text>
+          <line x1="520" y1="252" x2="520" y2="298" stroke="#52615a" stroke-width="1.5" marker-end="url(#demande-g)"/>
+          <text x="530" y="283" font-size="10" fill="#52615a">ce qui revient va au dossier, avant la suite</text>
+          <rect x="16" y="302" width="968" height="82" rx="12" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="28" y="326" font-size="13" fill="#b07d12" font-weight="700">La zone de travail · le dossier de la démarche</text>
+          <text x="972" y="326" font-size="9.5" fill="#52615a" text-anchor="end">à part des fiches · prise au départ, à la taille calculée · une case par produit</text>
+          <rect x="28" y="342" width="150" height="26" rx="5" fill="#f1f4ee" stroke="#b07d12" stroke-width="1.2"/>
+          <text x="40" y="359" font-size="10" fill="#b07d12" font-weight="700">texte · Sarah</text>
+          <rect x="190" y="342" width="220" height="26" rx="5" fill="#f1f4ee" stroke="#8b3b22" stroke-width="1.2"/>
+          <text x="202" y="359" font-size="10" fill="#8b3b22" font-weight="700">fiche.date · Sarah + Dehors</text>
+          <rect x="422" y="342" width="170" height="26" rx="5" fill="#f1f4ee" stroke="#52615a" stroke-width="1.2"/>
+          <text x="434" y="359" font-size="10" fill="#52615a" font-weight="700">prévision · Service</text>
+          <rect x="604" y="342" width="170" height="26" rx="5" fill="#f1f4ee" stroke="#1d302a" stroke-width="1.2"/>
+          <text x="616" y="359" font-size="10" fill="#1d302a" font-weight="700">réponse · Personne</text>
+          <rect x="786" y="342" width="186" height="26" rx="5" fill="#f1f4ee" stroke="#195744" stroke-width="1.2"/>
+          <text x="798" y="359" font-size="10" fill="#195744" font-weight="700">issue de l'ordre · Maison</text>
+          <line x1="500" y1="384" x2="500" y2="410" stroke="#52615a" stroke-width="1.5" marker-end="url(#demande-g)"/>
+          <text x="510" y="401" font-size="10" fill="#52615a">descend : avant chaque engagement, en attendant le disque ; par lots pour le reste</text>
+          <rect x="16" y="414" width="968" height="34" rx="10" fill="#f1f4ee" stroke="#1d302a" stroke-width="1.4"/>
+          <text x="28" y="436" font-size="12" fill="#1d302a" font-weight="700">Le journal du moteur</text>
+          <text x="972" y="436" font-size="9.5" fill="#52615a" text-anchor="end">la base : fait foi · relu au redémarrage · reçu par la secours · gardé 30 jours après la fin, puis les codes</text>
+          <text x="16" y="474" font-size="10.5" fill="#52615a">Un réflexe ne fait que lire, attendre et ordonner. Une démarche attend aussi Sarah, un service ou une personne : leurs demandes ont la même</text>
+          <text x="16" y="490" font-size="10.5" fill="#52615a">mécanique que l'ordre à un appareil (une issue, un délai, une génération), et ce qu'elles rapportent va au dossier, puis au journal.</text>
+        </svg>
+      </figure>
+''')
+
+ecrire("origine", r'''      <figure class="diagram">
+        <svg viewBox="0 0 1000 340" role="img" aria-labelledby="origine-t origine-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="origine-t">L'origine suit les données jusqu'aux actions</title>
+          <desc id="origine-d">Un courriel du collège, d'origine Dehors, est lu par Sarah, qui remplit une fiche : catégorie École, date, enfant. La fiche hérite des origines Sarah et Dehors. Un nœud Selon aiguille sur la catégorie. Noter à l'agenda et prévenir la famille sont permis. Ouvrir le portail est refusé par le compilateur : un texte du dehors n'ouvre jamais une porte, c'est le plancher. Régler le radiateur dépend du réglage de la famille : en « seule », Sarah choisit, dans des bornes écrites ; en « me proposer », la question est posée aux parents, et la réponse a l'origine Personne.</desc>
+          <defs>
+            <marker id="origine-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="origine-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <rect x="16" y="30" width="168" height="94" rx="10" fill="#ffffff" stroke="#8b3b22" stroke-width="1.6"/>
+          <text x="28" y="52" font-size="12.5" fill="#8b3b22" font-weight="700">Courriel reçu</text>
+          <text x="28" y="70" font-size="10" fill="#1d302a">du collège, à 12 h 05</text>
+          <rect x="28" y="88" width="66" height="22" rx="5" fill="#f1f4ee" stroke="#8b3b22" stroke-width="1.2"/>
+          <text x="36" y="103" font-size="10" fill="#8b3b22" font-weight="700">Dehors</text>
+          <rect x="210" y="30" width="232" height="94" rx="10" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="222" y="52" font-size="12.5" fill="#b07d12" font-weight="700">Sarah remplit</text>
+          <text x="222" y="70" font-size="10" fill="#1d302a">catégorie : École</text>
+          <text x="222" y="84" font-size="10" fill="#1d302a">date : vendredi 10 h · enfant : la cadette</text>
+          <rect x="222" y="92" width="112" height="22" rx="5" fill="#f1f4ee" stroke="#8b3b22" stroke-width="1.2"/>
+          <text x="230" y="107" font-size="10" fill="#8b3b22" font-weight="700">Sarah + Dehors</text>
+          <rect x="468" y="30" width="150" height="94" rx="10" fill="#ffffff" stroke="#1d302a" stroke-width="1.6"/>
+          <text x="480" y="52" font-size="12.5" fill="#1d302a" font-weight="700">Selon catégorie</text>
+          <text x="480" y="70" font-size="10" fill="#1d302a">« École »</text>
+          <rect x="480" y="88" width="112" height="22" rx="5" fill="#f1f4ee" stroke="#8b3b22" stroke-width="1.2"/>
+          <text x="488" y="103" font-size="10" fill="#8b3b22" font-weight="700">Sarah + Dehors</text>
+          <rect x="644" y="30" width="170" height="94" rx="10" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="656" y="52" font-size="12.5" fill="#195744" font-weight="700">Noter à l'agenda</text>
+          <text x="656" y="70" font-size="10" fill="#1d302a">clé : exécution, rang</text>
+          <text x="656" y="84" font-size="10" fill="#1d302a">accord donné à la validation</text>
+          <text x="656" y="110" font-size="10" fill="#195744" font-weight="700">✓ permis</text>
+          <rect x="840" y="30" width="144" height="94" rx="10" fill="#ffffff" stroke="#195744" stroke-width="1.6"/>
+          <text x="852" y="52" font-size="12.5" fill="#195744" font-weight="700">Prévenir</text>
+          <text x="852" y="70" font-size="10" fill="#1d302a">« d'après le courriel</text>
+          <text x="852" y="84" font-size="10" fill="#1d302a">du collège de 12 h 05 »</text>
+          <text x="852" y="110" font-size="10" fill="#195744" font-weight="700">✓ permis</text>
+          <line x1="184" y1="77" x2="206" y2="77" stroke="#52615a" stroke-width="1.5" marker-end="url(#origine-g)"/>
+          <line x1="442" y1="77" x2="464" y2="77" stroke="#52615a" stroke-width="1.5" marker-end="url(#origine-g)"/>
+          <line x1="618" y1="77" x2="640" y2="77" stroke="#52615a" stroke-width="1.5" marker-end="url(#origine-g)"/>
+          <line x1="814" y1="77" x2="836" y2="77" stroke="#52615a" stroke-width="1.5" marker-end="url(#origine-g)"/>
+          <line x1="505" y1="124" x2="334" y2="182" stroke="#8b3b22" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#origine-r)"/>
+          <line x1="575" y1="124" x2="604" y2="176" stroke="#52615a" stroke-width="1.5" marker-end="url(#origine-g)"/>
+          <rect x="150" y="186" width="300" height="84" rx="10" fill="#ffffff" stroke="#8b3b22" stroke-width="1.6" stroke-dasharray="6 4"/>
+          <text x="162" y="208" font-size="12.5" fill="#8b3b22" font-weight="700">Ouvrir le portail</text>
+          <text x="162" y="226" font-size="10" fill="#8b3b22" font-weight="700">✗ jamais sans une personne :</text>
+          <text x="162" y="242" font-size="10" fill="#1d302a">un texte du dehors n'ouvre pas une porte</text>
+          <text x="162" y="258" font-size="10" fill="#52615a">le plancher, vérifié par le compilateur</text>
+          <rect x="480" y="180" width="270" height="96" rx="10" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="492" y="202" font-size="12.5" fill="#b07d12" font-weight="700">Régler le radiateur</text>
+          <text x="492" y="220" font-size="10" fill="#1d302a">votre réglage décide :</text>
+          <text x="492" y="236" font-size="10" fill="#195744" font-weight="700">« seule » ✓ Sarah choisit, de 17 à 21 °C</text>
+          <text x="492" y="252" font-size="10" fill="#1d302a">« me proposer » : la question, à droite</text>
+          <text x="492" y="268" font-size="9.5" fill="#52615a">à la validation : « un courriel l'oriente »</text>
+          <line x1="750" y1="228" x2="776" y2="228" stroke="#52615a" stroke-width="1.5" marker-end="url(#origine-g)"/>
+          <rect x="780" y="180" width="204" height="96" rx="10" fill="#ffffff" stroke="#1d302a" stroke-width="1.6"/>
+          <text x="792" y="202" font-size="12.5" fill="#1d302a" font-weight="700">Demander aux parents</text>
+          <text x="792" y="220" font-size="10" fill="#1d302a">« Je baisse le chauffage ? »</text>
+          <rect x="792" y="228" width="74" height="20" rx="5" fill="#f1f4ee" stroke="#1d302a" stroke-width="1.2"/>
+          <text x="800" y="242" font-size="10" fill="#1d302a" font-weight="700">Personne</text>
+          <text x="792" y="266" font-size="10" fill="#195744" font-weight="700">✓ permis, après la réponse</text>
+          <text x="16" y="306" font-size="10.5" fill="#52615a">Le masque d'origine suit les données et les conditions jusqu'aux actions. Le compilateur tient le plancher : ouvrir, déverrouiller, désarmer, une pièce</text>
+          <text x="16" y="322" font-size="10.5" fill="#52615a">protégée, agir auprès d'un tiers. Au-dessus, le réglage de la famille décide si Sarah agit seule ; la garde reçoit le même masque, en défense de profondeur.</text>
+        </svg>
+      </figure>
+''')
+
+ecrire("zone", r'''      <figure class="diagram">
+        <svg viewBox="0 0 1000 500" role="img" aria-labelledby="zone-t zone-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="zone-t">Le dossier d'une démarche, de bout en bout</title>
+          <desc id="zone-d">Le courriel trié, de 12:05:00 à 12:05:06, sur trois lignes. La fiche de 64 octets, inchangée. La zone de travail, où le dossier reçoit le courriel (produit 0, Dehors), la fiche remplie par Sarah (produits 1 à 4, Sarah et Dehors) et l'identifiant du rendez-vous (produit 5, Service). Le journal du moteur, où les produits et les demandes descendent par lots, sans attendre, et où les intentions de noter à l'agenda et de prévenir sont attendues sur le disque avant l'envoi. Le dossier a pris au départ la place que le compilateur a calculée ; à la fin, elle est rendue à la zone, et le dossier reste 30 jours au journal, puis il est réduit à ses codes.</desc>
+          <defs>
+            <marker id="zone-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+          </defs>
+          <rect x="160" y="24" width="112" height="36" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="216" y="38" font-size="9.5" fill="#52615a" text-anchor="middle">12:05:00</text>
+          <text x="216" y="53" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">courriel reçu</text>
+          <rect x="278" y="24" width="112" height="36" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="334" y="38" font-size="9.5" fill="#52615a" text-anchor="middle">12:05:00</text>
+          <text x="334" y="53" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">Sarah remplit</text>
+          <rect x="396" y="24" width="112" height="36" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="452" y="38" font-size="9.5" fill="#52615a" text-anchor="middle">12:05:04</text>
+          <text x="452" y="53" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">fiche remplie</text>
+          <rect x="514" y="24" width="112" height="36" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="570" y="38" font-size="9.5" fill="#52615a" text-anchor="middle">12:05:04</text>
+          <text x="570" y="53" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">Selon : École</text>
+          <rect x="632" y="24" width="112" height="36" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="688" y="38" font-size="9.5" fill="#52615a" text-anchor="middle">12:05:04</text>
+          <text x="688" y="53" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">Noter à l'agenda</text>
+          <rect x="750" y="24" width="112" height="36" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="806" y="38" font-size="9.5" fill="#52615a" text-anchor="middle">12:05:05</text>
+          <text x="806" y="53" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">Prévenir</text>
+          <rect x="868" y="24" width="112" height="36" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="924" y="38" font-size="9.5" fill="#52615a" text-anchor="middle">12:05:06</text>
+          <text x="924" y="53" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">fin</text>
+          <rect x="16" y="70" width="134" height="40" rx="8" fill="#ffffff" stroke="#1d302a" stroke-width="1.6"/>
+          <text x="28" y="86" font-size="11.5" fill="#1d302a" font-weight="700">La fiche · 64 o</text>
+          <text x="28" y="101" font-size="9.5" fill="#52615a" font-style="italic">où elle en est</text>
+          <rect x="160" y="70" width="820" height="40" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="172" y="94" font-size="10" fill="#1d302a">curseur, réveil, demande en vol, génération, et la cause (le courriel : un code) : inchangée, comme pour un réflexe</text>
+          <rect x="16" y="124" width="134" height="126" rx="8" fill="#ffffff" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="28" y="146" font-size="11.5" fill="#b07d12" font-weight="700">La zone</text>
+          <text x="28" y="161" font-size="11.5" fill="#b07d12" font-weight="700">de travail</text>
+          <text x="28" y="180" font-size="9.5" fill="#52615a">en mémoire,</text>
+          <text x="28" y="194" font-size="9.5" fill="#52615a">à part des fiches :</text>
+          <text x="28" y="212" font-size="9.5" fill="#52615a">un dossier, pris</text>
+          <text x="28" y="226" font-size="9.5" fill="#52615a">au départ, rendu</text>
+          <text x="28" y="240" font-size="9.5" fill="#52615a">à la fin</text>
+          <rect x="160" y="124" width="820" height="126" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1" stroke-opacity="0.6"/>
+          <rect x="163" y="132" width="106" height="82" rx="6" fill="#f1f4ee" stroke="#8b3b22" stroke-width="1.2"/>
+          <text x="171" y="148" font-size="10" fill="#1d302a" font-weight="700">0 · le courriel</text>
+          <text x="171" y="163" font-size="9" fill="#1d302a">sa référence</text>
+          <text x="171" y="176" font-size="9" fill="#1d302a">expéditeur classé</text>
+          <rect x="171" y="188" width="50" height="16" rx="4" fill="#ffffff" stroke="#8b3b22" stroke-width="1"/>
+          <text x="178" y="200" font-size="9" fill="#8b3b22" font-weight="700">Dehors</text>
+          <rect x="399" y="132" width="106" height="110" rx="6" fill="#f1f4ee" stroke="#8b3b22" stroke-width="1.2"/>
+          <text x="407" y="148" font-size="10" fill="#1d302a" font-weight="700">1 à 4 · la fiche</text>
+          <text x="407" y="163" font-size="9" fill="#1d302a">École</text>
+          <text x="407" y="176" font-size="9" fill="#1d302a">vendredi 10 h</text>
+          <text x="407" y="189" font-size="9" fill="#1d302a">la cadette</text>
+          <text x="407" y="202" font-size="9" fill="#1d302a">l'objet, court</text>
+          <rect x="407" y="212" width="86" height="16" rx="4" fill="#ffffff" stroke="#8b3b22" stroke-width="1"/>
+          <text x="413" y="224" font-size="9" fill="#8b3b22" font-weight="700">Sarah + Dehors</text>
+          <text x="570" y="178" font-size="9.5" fill="#52615a" text-anchor="middle">le « Selon »</text>
+          <text x="570" y="192" font-size="9.5" fill="#52615a" text-anchor="middle">lit la case 1</text>
+          <rect x="635" y="132" width="106" height="82" rx="6" fill="#f1f4ee" stroke="#52615a" stroke-width="1.2"/>
+          <text x="643" y="148" font-size="10" fill="#1d302a" font-weight="700">5 · rendez-vous</text>
+          <text x="643" y="163" font-size="9" fill="#1d302a">son identifiant,</text>
+          <text x="643" y="176" font-size="9" fill="#1d302a">rendu par l'agenda</text>
+          <rect x="643" y="188" width="52" height="16" rx="4" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="649" y="200" font-size="9" fill="#52615a" font-weight="700">Service</text>
+          <text x="806" y="170" font-size="9.5" fill="#52615a" text-anchor="middle">le message :</text>
+          <text x="806" y="184" font-size="9.5" fill="#52615a" text-anchor="middle">gabarit validé</text>
+          <text x="806" y="198" font-size="9.5" fill="#52615a" text-anchor="middle">et cases 2, 3</text>
+          <text x="924" y="172" font-size="9.5" fill="#b07d12" font-weight="700" text-anchor="middle">la place</text>
+          <text x="924" y="186" font-size="9.5" fill="#52615a" text-anchor="middle">est rendue</text>
+          <text x="924" y="200" font-size="9.5" fill="#52615a" text-anchor="middle">à la zone</text>
+          <rect x="16" y="262" width="134" height="132" rx="8" fill="#ffffff" stroke="#1d302a" stroke-width="1.6"/>
+          <text x="28" y="284" font-size="11.5" fill="#1d302a" font-weight="700">Le journal</text>
+          <text x="28" y="299" font-size="11.5" fill="#1d302a" font-weight="700">du moteur</text>
+          <text x="28" y="318" font-size="9.5" fill="#52615a">la base : fait foi,</text>
+          <text x="28" y="332" font-size="9.5" fill="#52615a">relu au redémarrage,</text>
+          <text x="28" y="346" font-size="9.5" fill="#52615a">reçu par la secours</text>
+          <rect x="160" y="262" width="820" height="132" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <rect x="163" y="274" width="106" height="28" rx="5" fill="#ffffff" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="216" y="292" font-size="9.5" fill="#1d302a" text-anchor="middle">départ, produit 0</text>
+          <rect x="281" y="274" width="106" height="28" rx="5" fill="#ffffff" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="334" y="292" font-size="9.5" fill="#1d302a" text-anchor="middle">demande partie</text>
+          <rect x="399" y="274" width="106" height="28" rx="5" fill="#ffffff" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="452" y="292" font-size="9.5" fill="#1d302a" text-anchor="middle">produits 1 à 4</text>
+          <text x="570" y="292" font-size="9.5" fill="#52615a" font-style="italic" text-anchor="middle">rien à écrire</text>
+          <rect x="635" y="270" width="106" height="40" rx="5" fill="#ffffff" stroke="#1d302a" stroke-width="2.4"/>
+          <text x="688" y="286" font-size="9.5" fill="#1d302a" font-weight="700" text-anchor="middle">intention + clé</text>
+          <text x="688" y="300" font-size="9" fill="#1d302a" font-style="italic" text-anchor="middle">attendue</text>
+          <rect x="635" y="318" width="106" height="28" rx="5" fill="#ffffff" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="688" y="336" font-size="9.5" fill="#1d302a" text-anchor="middle">reçu : produit 5</text>
+          <rect x="753" y="270" width="106" height="40" rx="5" fill="#ffffff" stroke="#1d302a" stroke-width="2.4"/>
+          <text x="806" y="286" font-size="9.5" fill="#1d302a" font-weight="700" text-anchor="middle">intention</text>
+          <text x="806" y="300" font-size="9" fill="#1d302a" font-style="italic" text-anchor="middle">attendue</text>
+          <rect x="753" y="318" width="106" height="28" rx="5" fill="#ffffff" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="806" y="336" font-size="9.5" fill="#1d302a" text-anchor="middle">reçu</text>
+          <rect x="871" y="274" width="106" height="28" rx="5" fill="#ffffff" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="924" y="292" font-size="9.5" fill="#1d302a" text-anchor="middle">fin</text>
+          <text x="924" y="330" font-size="9" fill="#52615a" text-anchor="middle">gardé 30 jours,</text>
+          <text x="924" y="344" font-size="9" fill="#52615a" text-anchor="middle">puis réduit</text>
+          <text x="924" y="358" font-size="9" fill="#52615a" text-anchor="middle">à ses codes</text>
+          <line x1="216" y1="214" x2="216" y2="271" stroke="#52615a" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#zone-g)"/>
+          <line x1="452" y1="242" x2="452" y2="271" stroke="#52615a" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#zone-g)"/>
+          <rect x="16" y="410" width="44" height="16" rx="4" fill="#ffffff" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="68" y="422" font-size="10" fill="#52615a">une ligne dans le lot suivant, sous 100 ms, sans attendre : une panne avant le lot ne perd que ce qui se redemande</text>
+          <rect x="16" y="434" width="44" height="16" rx="4" fill="#ffffff" stroke="#1d302a" stroke-width="2.4"/>
+          <text x="68" y="446" font-size="10" fill="#52615a">attendue sur le disque avant l'envoi : un engagement ne part jamais sans trace</text>
+          <text x="16" y="474" font-size="10.5" fill="#52615a">Le dossier vit en mémoire pendant que la démarche tourne ; ce qu'il obtient descend au journal du moteur, qui fait foi. Si la panne tombe entre</text>
+          <text x="16" y="490" font-size="10.5" fill="#52615a">deux lignes, la reprise relit le journal : l'agenda a sa clé et son reçu, il n'est pas refait ; un message parti sans reçu est « non confirmé ».</text>
+        </svg>
+      </figure>
+''')
+
+ecrire("pont", r'''      <figure class="diagram">
+        <svg viewBox="0 0 1000 420" role="img" aria-labelledby="pont-t pont-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+          <title id="pont-t">Un module de chaque côté du lien</title>
+          <desc id="pont-d">Côté maison, le module du pont garde le journal du moteur, c'est-à-dire les demandes sans issue, les renvoie au retour du lien avec la même clé, et écarte une issue déjà rangée. Côté lointain, un module garde ses issues jusqu'à l'accusé et reconnaît une demande déjà traitée. Pendant une coupure, chacun garde ; au retour, chacun renvoie ce qui n'a pas d'accusé. La machine de Sarah, la secours et le téléphone ont un module de chaque côté ; un service en ligne n'en a pas chez lui : la clé va dans l'objet, et le module relit pour constater.</desc>
+          <defs>
+            <marker id="pont-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+          </defs>
+          <rect x="16" y="30" width="330" height="196" rx="12" fill="#ffffff" stroke="#1d302a" stroke-width="2.2"/>
+          <text x="28" y="54" font-size="14" fill="#1d302a" font-weight="700">Côté maison</text>
+          <text x="334" y="54" font-size="9.5" fill="#52615a" text-anchor="end">le moteur, la zone de travail</text>
+          <rect x="28" y="68" width="306" height="146" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="40" y="88" font-size="11" fill="#195744" font-weight="700">Le module du pont, côté maison</text>
+          <text x="40" y="108" font-size="10" fill="#1d302a">garde : le journal du moteur, c'est-à-dire</text>
+          <text x="40" y="122" font-size="10" fill="#1d302a">les demandes sans issue, dans l'ordre</text>
+          <text x="40" y="142" font-size="10" fill="#1d302a">renvoie, au retour du lien, ce qui n'a</text>
+          <text x="40" y="156" font-size="10" fill="#1d302a">pas d'accusé, avec la même clé</text>
+          <text x="40" y="176" font-size="10" fill="#1d302a">reconnaît : (case, génération, rang) ;</text>
+          <text x="40" y="190" font-size="10" fill="#1d302a">une issue déjà rangée est écartée</text>
+          <rect x="654" y="30" width="330" height="196" rx="12" fill="#ffffff" stroke="#1d302a" stroke-width="2.2"/>
+          <text x="666" y="54" font-size="14" fill="#1d302a" font-weight="700">Côté lointain</text>
+          <text x="972" y="54" font-size="9.5" fill="#52615a" text-anchor="end">Sarah, la secours, le téléphone</text>
+          <rect x="666" y="68" width="306" height="146" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="678" y="88" font-size="11" fill="#b07d12" font-weight="700">Le module du pont, côté lointain</text>
+          <text x="678" y="108" font-size="10" fill="#1d302a">garde : ses issues, jusqu'à l'accusé</text>
+          <text x="678" y="122" font-size="10" fill="#1d302a">(la réponse de Sarah, le « Oui » tapé)</text>
+          <text x="678" y="142" font-size="10" fill="#1d302a">renvoie, au retour du lien, ce qui n'a</text>
+          <text x="678" y="156" font-size="10" fill="#1d302a">pas d'accusé</text>
+          <text x="678" y="176" font-size="10" fill="#1d302a">reconnaît : les clés déjà vues ; une</text>
+          <text x="678" y="190" font-size="10" fill="#1d302a">demande renvoyée rend la même issue</text>
+          <line x1="346" y1="102" x2="650" y2="102" stroke="#52615a" stroke-width="1.6" marker-end="url(#pont-g)"/>
+          <text x="498" y="94" font-size="10" fill="#52615a" text-anchor="middle">une demande et sa clé</text>
+          <line x1="654" y1="152" x2="350" y2="152" stroke="#52615a" stroke-width="1.6" marker-end="url(#pont-g)"/>
+          <text x="498" y="170" font-size="10" fill="#52615a" text-anchor="middle">une issue et sa clé, puis l'accusé</text>
+          <polyline points="624,80 608,98 626,116 608,134 624,160" fill="none" stroke="#8b3b22" stroke-width="2.4"/>
+          <text x="498" y="196" font-size="10" fill="#8b3b22" font-weight="700" text-anchor="middle">coupure : chacun garde</text>
+          <text x="498" y="210" font-size="10" fill="#8b3b22" text-anchor="middle">au retour, chacun renvoie</text>
+          <text x="498" y="224" font-size="10" fill="#8b3b22" text-anchor="middle">ce qui n'a pas d'accusé</text>
+          <text x="16" y="262" font-size="11.5" fill="#1d302a" font-weight="700">Qui tient le côté lointain</text>
+          <text x="16" y="284" font-size="10" fill="#1d302a" font-weight="700">la machine de Sarah (un Mac, un NAS)</text>
+          <text x="330" y="284" font-size="10" fill="#1d302a">un module à nous, à côté de Sarah : il garde ses réponses et reconnaît une demande déjà traitée</text>
+          <line x1="16" y1="294" x2="984" y2="294" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="16" y="310" font-size="10" fill="#1d302a" font-weight="700">la machine de secours</text>
+          <text x="330" y="310" font-size="10" fill="#1d302a">le pont vers la secours (V7 § 18), que l'étude de haute disponibilité prolonge d'un pont à reprise</text>
+          <line x1="16" y1="320" x2="984" y2="320" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="16" y="336" font-size="10" fill="#1d302a" font-weight="700">le téléphone, pour « Demander »</text>
+          <text x="330" y="336" font-size="10" fill="#1d302a">l'application : elle garde le « Oui » jusqu'à l'accusé ; la revérification dit s'il s'applique encore</text>
+          <line x1="16" y1="346" x2="984" y2="346" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="16" y="362" font-size="10" fill="#1d302a" font-weight="700">un service en ligne (agenda, école)</text>
+          <text x="330" y="362" font-size="10" fill="#1d302a">personne de notre côté : la clé va dans l'objet (l'identifiant du rendez-vous), et le module relit pour constater</text>
+          <text x="16" y="394" font-size="10.5" fill="#52615a">Celui qui envoie garde jusqu'à l'accusé ; celui qui reçoit reconnaît ce qu'il a déjà vu. Côté maison, le tampon est le journal du moteur :</text>
+          <text x="16" y="410" font-size="10.5" fill="#52615a">il n'y a pas de seconde file à tenir d'accord avec la première. Quand le lien ne mène pas chez nous, c'est l'objet qui porte la clé.</text>
+        </svg>
+      </figure>
+''')
+
+# ================================================================ Monitoring (docs/proposition/monitoring.md)
+BLANC = "#ffffff"
+
+
+def puce(d, x, y, w, s, coul=VERT, fond=BLANC, taille=9.5):
+    d.rect(x, y, w, 24, fond, coul, 12)
+    d.t(x + w / 2, y + 16, s, taille, True, coul if fond == BLANC else BLANC, "middle")
+
+
+# ---------------- les trois étages
+d = Dessin("etages")
+d.rect(16, 36, 624, 334, BLANC, ENCRE, 12, 2.2)
+d.titre(30, 58, "L'équipement : la machine de Sarah Home", ENCRE)
+d.rect(32, 72, 380, 214, DOUX, LIGNE, 8)
+d.t(44, 92, "Le cœur", 12.5, True)
+d.t(400, 92, "moli-os serve : un processus", 9.5, coul=GRIS, ancre="end", mono=True)
+for i, nom in enumerate(["hub", "courtier", "moteur", "API, écrans", "pont maison", "Hue", "Tuya", "Sonos"]):
+    puce(d, 44 + (i % 4) * 90, 106 + (i // 4) * 34, 82, nom, VERT if i < 5 else VERT2)
+d.t(44, 196, "Chaque module dans le cœur : son fil et son runtime (V7 § 20.1).", 9.8)
+d.t(44, 214, "CPU : le temps noyau du fil ; réveils et temps occupé du runtime.", 9.8, coul=GRIS)
+d.t(44, 230, "Mémoire : tenue par le kit, étiquetée, ou mesurée en l'isolant.", 9.8, coul=GRIS)
+d.t(44, 246, "Messages : comptés par le kit (un seul lien vers le courtier).", 9.8, coul=GRIS)
+d.t(44, 270, "Le processus : /proc/<pid> et la mémoire anonyme du cgroup.", 9.8, True, VERT)
+d.rect(424, 72, 200, 100, DOUX, LIGNE, 8)
+d.t(436, 92, "Un module isolé", 12.5, True)
+d.t(436, 106, "moli-os module run cloud-x", 8.8, coul=GRIS, mono=True)
+puce(d, 436, 116, 82, "cloud-x", AMBRE)
+d.t(436, 158, "tout se lit dans son processus", 9.8, coul=GRIS)
+d.rect(424, 184, 200, 102, DOUX, LIGNE, 8)
+d.t(436, 204, "Les voisins", 12.5, True)
+d.t(436, 222, "Zigbee2MQTT, l'archive, Wyoming :", 9.8)
+d.t(436, 238, "leur processus quand on le voit ;", 9.8, coul=GRIS)
+d.t(436, 254, "ce qu'ils disent d'eux-mêmes", 9.8, coul=GRIS)
+d.t(436, 270, "(bridge/health)", 9.8, coul=GRIS, mono=True)
+d.rect(32, 298, 592, 56, BLANC, AMBRE, 8, 1.5, "5 4")
+d.t(44, 320, "Le gardien", 11.5, True, AMBRE)
+d.t(44, 338, "lance les modules isolés et garde ce qui doit survivre au cœur (document Redémarrage à chaud)", 9.8, coul=GRIS)
+d.titre(660, 58, "D'où vient chaque chiffre")
+blocs = [("Équipement", ["/proc/stat · meminfo · loadavg", "/proc/pressure · /proc/diskstats", "/sys/class/hwmon · get_throttled"]),
+         ("Processus", ["/proc/<pid>/stat · status", "smaps_rollup (Pss) · io", "cgroup : memory.stat (anon)"]),
+         ("Module dans le cœur", ["/proc/self/task/<tid>/schedstat", "tokio : occupé, réveils", "compteurs du kit · moli-net"]),
+         ("Module isolé", ["son processus, comme ci-dessus", "sa connexion au courtier"])]
+y = 82
+for titre_, lignes_ in blocs:
+    d.t(660, y, titre_, 11, True, VERT)
+    for j, l in enumerate(lignes_):
+        d.t(660, y + 17 + j * 15, l, 9.3, mono=True)
+    y += 30 + 15 * len(lignes_)
+d.t(16, 394, "Hors de la machine, les équipements disent eux-mêmes leur charge : routeurs ASUSWRT et Netgear, Frigate, Zigbee2MQTT, les PC qui ont l'agent Moli.", 10.5, coul=GRIS)
+d.t(16, 412, "Aucune de ces lectures ne demande de privilège : un conteneur ordinaire lit /proc, /sys et son propre cgroup (vérifié).", 10.5, coul=GRIS)
+ecrire("etages", figure("etages", "Trois étages, une source de vérité chacun",
+                        "La machine contient le cœur, un module isolé et les voisins ; le cœur contient ses modules, chacun sur son fil. "
+                        "À droite, les fichiers du noyau d'où vient chaque chiffre, étage par étage.",
+                        d.texte(), 420, "L'équipement se lit dans <code>/proc</code> et <code>/sys</code>&nbsp;; le processus dans "
+                        "<code>/proc/&lt;pid&gt;</code>&nbsp;; le module selon sa place&nbsp;: isolé, c'est son processus&nbsp;; dans le cœur, "
+                        "c'est son fil et ses compteurs.", fleches=False))
+
+# ---------------- où se comptent les messages
+d = Dessin("compter")
+d.rect(16, 36, 380, 242, DOUX, LIGNE, 10)
+d.t(30, 58, "Le cœur", 12.5, True)
+for i, nom in enumerate(["Hue", "Tuya", "Sonos", "pont maison"]):
+    puce(d, 32, 74 + i * 44, 110, nom, VERT)
+    d.ligne(142, 86 + i * 44, 206, 86 + i * 44, GRIS, 1.3)
+d.rect(208, 70, 168, 180, BLANC, AMBRE, 8, 1.6)
+d.t(220, 90, "Le kit compte", 11.5, True, AMBRE)
+for j, l in enumerate(["publiés, octets", "ordres reçus, issues", "doublons écartés", "appels d'API, erreurs", "pire rafale sur 100 ms"]):
+    d.t(220, 112 + j * 18, "· " + l, 9.8)
+d.t(220, 222, "une addition atomique", 9.3, coul=GRIS)
+d.t(220, 236, "par message", 9.3, coul=GRIS)
+d.rect(452, 104, 156, 110, VERT, VERT, 12)
+d.t(530, 146, "Le courtier", 13.5, True, BLANC, "middle")
+d.t(530, 164, "moli-courtier", 9.5, coul=BLANC, ancre="middle", mono=True)
+d.t(530, 190, "compte par connexion", 9.3, coul=BLANC, ancre="middle")
+d.ligne(376, 160, 448, 160, VERT, 2.2, fleche="v")
+d.t(412, 150, "un seul lien", 9.3, True, VERT, "middle", halo=True)
+d.t(412, 176, "en mémoire", 9.3, coul=GRIS, ancre="middle", halo=True)
+droite = [("cloud-x, isolé", AMBRE, 52, "entrées, sorties, octets, pertes"),
+          ("Sarah, isolée", AMBRE, 122, "entrées, sorties, octets, pertes"),
+          ("Zigbee2MQTT, extérieur", GRIS, 192, "et son bridge/health : par appareil")]
+for nom, coul, yy, note in droite:
+    d.rect(680, yy, 300, 42, BLANC, coul, 8, 1.5)
+    d.t(692, yy + 17, nom, 10.5, True, coul)
+    d.t(692, yy + 33, note, 9.2, coul=GRIS)
+    d.ligne(678, yy + 21, 612, 160 + (yy - 122) * 0.35, coul, 1.5, fleche="g")
+d.t(16, 304, "Dans le cœur, le courtier ne voit qu'un lien : c'est le kit qui compte, module par module. Isolé ou extérieur, chacun a sa", 10.5, coul=GRIS)
+d.t(16, 320, "connexion : c'est le courtier qui compte. rumqttd 0.20 tient déjà un compteur d'entrée par connexion, sans l'exposer ;", 10.5, coul=GRIS)
+d.t(16, 336, "notre version l'expose, compte aussi la sortie, retire la table par sujet qui fuit, et signale chaque perte.", 10.5, coul=GRIS)
+ecrire("compter", figure("compter", "Où se comptent les messages MQTT",
+                         "À gauche, les modules du cœur passent par le kit, qui compte, puis par un seul lien en mémoire. À droite, chaque module "
+                         "isolé et chaque client extérieur a sa connexion, que le courtier compte.",
+                         d.texte(), 350, "Le kit compte pour les modules du cœur&nbsp;; le courtier compte pour les autres. La pire rafale "
+                         "sur 100&nbsp;ms se garde à côté du débit&nbsp;: c'est elle qui fait décrocher (V7 §&nbsp;17.1.2)."))
+
+# ---------------- la bascule d'un module
+d = Dessin("bascule")
+phases = [("Retenir", 130, 270), ("Finir", 270, 420), ("Passer", 420, 560), ("Lancer", 560, 730), ("Reprendre", 730, 984)]
+for nom, x0, x1 in phases:
+    d.t((x0 + x1) / 2, 40, nom, 11.5, True, ENCRE, "middle")
+    d.ligne(x0, 50, x0, 232, LIGNE, 1, "3 4")
+lanes = [("Le hub", 74), ("Dans le cœur", 132), ("Isolé", 190)]
+for nom, yy in lanes:
+    d.t(16, yy + 18, nom, 11, True, GRIS)
+d.rect(132, 74, 596, 28, AMBRE2, AMBRE, 6)
+d.t(430, 93, "ordres retenus dans leurs voies, échéance inchangée · appareils « en bascule », jamais « hors ligne »", 9.6, True, ENCRE, "middle")
+d.rect(732, 74, 250, 28, VERT, VERT, 6)
+d.t(857, 93, "libère les ordres encore valables", 9.6, True, BLANC, "middle")
+d.rect(132, 132, 286, 28, VERT2, VERT, 6)
+d.t(275, 151, "l'ancienne : finit, vide son tampon", 9.6, True, ENCRE, "middle")
+d.rect(424, 132, 132, 28, BLANC, AMBRE, 6, 1.6)
+d.t(490, 151, "rend son état ≤ 4 Kio", 9.6, True, AMBRE, "middle")
+d.chemin("M 556,146 C 590,146 560,204 600,204", AMBRE, 1.6, None, "a")
+d.rect(604, 190, 378, 28, VERT, VERT, 6)
+d.t(793, 209, "la nouvelle instance : se connecte, republie $vu", 9.6, True, BLANC, "middle")
+d.t(16, 258, "Jamais deux instances à la fois : deux écrivains pour les mêmes appareils, et un identifiant MQTT qui se chasse lui-même.", 10.5, coul=GRIS)
+d.t(16, 275, "Retour à l'ancienne place si la nouvelle instance n'est pas prête en 30 s ; pas de bascule pendant une rafale.", 10.5, coul=GRIS)
+d.t(16, 292, "Durée : la reconnexion du module à ses appareils, d'une fraction de seconde pour un appareil local à quelques secondes pour un cloud.", 10.5, coul=GRIS)
+ecrire("bascule", figure("bascule", "Passer du cœur à l'isolé, à chaud",
+                         "Cinq étapes, de gauche à droite. Le hub retient les ordres pendant que l'ancienne instance finit et rend son état ; la "
+                         "nouvelle démarre dans l'autre place, puis le hub libère les ordres dont l'échéance court encore.",
+                         d.texte(), 304, "Le même module, compilé dans le binaire, tourne aussi dans son propre processus (V7&nbsp;§&nbsp;9.4.2)&nbsp;: "
+                         "changer de place ne demande pas de redémarrer le cœur. Le sens inverse, de l'isolé vers le cœur, est le même."))
+
+# ---------------- la page Système (exemple, valeurs fictives)
+d = Dessin("systeme")
+d.rect(16, 18, 968, 46, DOUX, VERT, 8, 1.4)
+d.t(30, 47, "La maison tient", 13.5, True, VERT)
+d.t(160, 47, "mémoire anonyme 9,1 Mio sur 32 · CPU au repos 0,21 % · pression 0 % · aucune alerte", 11)
+d.t(970, 47, "valeurs d'exemple", 9.5, coul=GRIS, ancre="end", italique=True)
+cols = [("Module", 24), ("Place", 150), ("CPU", 232), ("Mémoire", 300), ("Messages/s", 470), ("Rafale", 570),
+        ("Erreurs", 650), ("Relances 24 h", 730), ("Budget", 850)]
+for nom, x in cols:
+    d.t(x, 90, nom, 10, True, GRIS)
+d.ligne(16, 98, 984, 98, LIGNE, 1)
+NAT = {"tenue": (GRIS, "estimée"), "étiquetée": (AMBRE, "étiquetée"), "mesurée": (VERT, "mesurée")}
+rangs = [("hub", "cœur", "0,4 %", "2,1 Mio", "tenue", "3,8", "41", "0", "0", 0.30),
+         ("courtier", "cœur", "0,3 %", "2,7 Mio", "tenue", "7,6", "96", "0 perte", "0", 0.40),
+         ("hue", "cœur", "0,1 %", "410 Kio", "étiquetée", "0,6", "12", "0", "0", 0.20),
+         ("tuya", "isolé", "0,2 %", "1,3 Mio", "mesurée", "0,9", "8", "2 délais", "1", 0.45),
+         ("sarah", "isolé", "0,0 %", "4,8 Mio", "mesurée", "0,1", "1", "0", "0", 0.60),
+         ("cloud-x", "isolé", "1,9 %", "7,4 Mio", "mesurée", "2,4", "380", "14", "3", 1.10)]
+for i, (m, place, cpu, mem, nat, msg, raf, err, rel, part) in enumerate(rangs):
+    yy = 122 + i * 32
+    alerte = part > 1
+    d.t(24, yy, m, 11, True, ROUGE if alerte else ENCRE, mono=True)
+    d.rect(150, yy - 15, 56, 21, VERT if place == "cœur" else BLANC, VERT if place == "cœur" else AMBRE, 10)
+    d.t(178, yy, place, 9.5, True, BLANC if place == "cœur" else AMBRE, "middle")
+    d.t(232, yy, cpu, 10.5)
+    d.t(300, yy, mem, 10.5, alerte, ROUGE if alerte else ENCRE)
+    coul, lib = NAT[nat]
+    d.rect(372, yy - 14, 72, 19, BLANC, coul, 9)
+    d.t(408, yy, lib, 9, True, coul, "middle")
+    d.t(470, yy, msg, 10.5)
+    d.t(570, yy, raf, 10.5, alerte, ROUGE if alerte else ENCRE)
+    d.t(650, yy, err, 10.5)
+    d.t(730, yy, rel, 10.5, alerte, ROUGE if alerte else ENCRE)
+    d.rect(850, yy - 11, 120, 10, DOUX, LIGNE, 5)
+    d.rect(850, yy - 11, 120 * min(part, 1.0), 10, ROUGE if alerte else VERT, ROUGE if alerte else VERT, 5)
+    d.ligne(16, yy + 11, 984, yy + 11, LIGNE, 0.8)
+gestes = [("Relancer", VERT), ("Relancer isolé", AMBRE), ("Relancer dans le cœur · PIN", VERT), ("Mesurer exactement (24 h)", GRIS)]
+x = 24
+for nom, coul in gestes:
+    w = 20 + 6.4 * len(nom)
+    d.rect(x, 324, w, 28, BLANC, coul, 14, 1.5)
+    d.t(x + w / 2, 342, nom, 10, True, coul, "middle")
+    x += w + 14
+d.t(x + 8, 342, "← la fiche d'un module", 10, coul=GRIS)
+d.t(16, 378, "La nature de chaque mémoire est dite : mesurée (son processus), étiquetée (binaire de mesure), estimée (ce que tient le kit).", 10.5, coul=GRIS)
+d.t(16, 395, "Ici, cloud-x dépasse son budget de mémoire et de rafale : une alerte à l'astreinte ; à deux fois le budget, il resterait isolé à sa prochaine relance.", 10.5, coul=GRIS)
+ecrire("systeme", figure("systeme", "La page Système, avec ses modules",
+                         "Une ligne dit si la maison tient. Dessous, un module par ligne : sa place, son CPU, sa mémoire et sa nature, ses messages, "
+                         "sa pire rafale, ses erreurs, ses relances et sa barre de budget. Puis les gestes de la fiche d'un module.",
+                         d.texte(), 408, "Exemple aux valeurs fictives. Lire&nbsp;: tout le foyer et les agents&nbsp;; rentrer un module dans le cœur&nbsp;: "
+                         "une session PIN&nbsp;; un agent qui le demande passe par la garde.", fleches=False))
+
+# ================================================================ Redémarrage à chaud (docs/proposition/redemarrage-a-chaud.md)
+# ---------------- le gardien
+d = Dessin("gardien")
+d.rect(16, 36, 452, 300, BLANC, AMBRE, 12, 2.2)
+d.t(30, 60, "Ce qui reste : le gardien", 14, True)
+d.t(456, 60, "moli-os gardien", 9.5, coul=GRIS, ancre="end", mono=True)
+d.rect(32, 76, 420, 60, DOUX, LIGNE, 8)
+d.t(44, 96, "Les portes", 11.5, True, VERT)
+d.t(44, 113, "8790 : l'API et les écrans · 1883 : le courtier", 10)
+d.t(44, 128, "un client qui se connecte attend dans la file du noyau", 9.5, coul=GRIS)
+d.rect(32, 146, 420, 72, DOUX, LIGNE, 8)
+d.t(44, 166, "Le relais et la file", 11.5, True, VERT)
+d.t(44, 183, "l'état complet du cœur, dans un memfd scellé : 233 Kio à ×1", 10)
+d.t(44, 199, "la file du pont : 10 000 sorties, 0,45 Mio", 10)
+d.t(44, 212, "aucun secret : le nouveau cœur relit le coffre", 9.5, coul=GRIS)
+d.rect(32, 228, 420, 94, DOUX, LIGNE, 8)
+d.t(44, 248, "Les modules isolés : ses enfants", 11.5, True, VERT)
+for i, nom in enumerate(["Sarah", "cloud-x", "tuya"]):
+    puce(d, 44 + i * 96, 258, 86, nom, AMBRE)
+d.t(44, 300, "ils gardent leurs connexions et leurs tampons, et se", 9.8, coul=GRIS)
+d.t(44, 314, "reconnectent à une porte qui n'a jamais fermé", 9.8, coul=GRIS)
+d.rect(532, 36, 452, 300, BLANC, ENCRE, 12, 2.2)
+d.t(546, 60, "Ce qui redémarre : le cœur", 14, True)
+d.t(972, 60, "moli-os serve", 9.5, coul=GRIS, ancre="end", mono=True)
+for k, (titre_, note, y0) in enumerate([("L'ancien cœur", "se fige au rang N, confie son état, rend la base, sort", 76),
+                                       ("Le nouveau cœur", "prêt en reprise avant la coupure ; relit, reprend au rang N", 206)]):
+    d.rect(548, y0, 420, 116, DOUX, LIGNE, 8)
+    d.t(560, y0 + 20, titre_, 11.5, True, GRIS if k == 0 else VERT)
+    for i, nom in enumerate(["hub", "courtier", "moteur", "API", "Hue", "Sonos"]):
+        puce(d, 560 + (i % 4) * 100, y0 + 32 + (i // 4) * 32, 90, nom, GRIS if k == 0 else VERT)
+    d.t(560, y0 + 108, note, 9.6, coul=GRIS)
+d.ligne(546, 150, 456, 176, AMBRE, 1.8, fleche="a")
+d.t(500, 150, "confier", 9.6, True, AMBRE, "middle", halo=True)
+d.ligne(456, 198, 544, 262, VERT, 1.8, fleche="v")
+d.t(510, 216, "reprendre", 9.6, True, VERT, "middle", halo=True)
+d.chemin("M 454,100 C 500,100 506,226 544,226", VERT, 1.4, "5 4", "v")
+d.t(500, 92, "les portes", 9.6, True, VERT, "middle", halo=True)
+d.ligne(454, 290, 544, 296, GRIS, 1.3, "4 4", "g")
+d.t(500, 284, "reconnexion", 9.2, coul=GRIS, ancre="middle", halo=True)
+d.t(16, 364, "Le gardien ne parle jamais MQTT, ne tient aucun secret, ne décide rien pour la maison, et ne renouvelle jamais le bail à la place du cœur.", 10.5, coul=GRIS)
+d.t(16, 381, "Sous systemd, le dépôt de descripteurs garde aussi ses propres portes et son relais ; sous Docker, il est le processus principal du conteneur.", 10.5, coul=GRIS)
+ecrire("gardien", figure("gardien", "Ce qui reste, ce qui redémarre",
+                         "À gauche, le gardien garde les portes, le relais et la file, et les modules isolés. À droite, l'ancien cœur confie son état "
+                         "au relais et sort ; le nouveau, prêt en reprise, reprend l'état, les portes, puis voit les modules se reconnecter.",
+                         d.texte(), 394, "Le contenu de la mémoire passe, pas la mémoire&nbsp;: l'état complet de l'étude HA&nbsp;v2, encodé champ par "
+                         "champ, se fige en 132&nbsp;µs et se relit en 272&nbsp;µs à ×1."))
+
+# ---------------- un redémarrage prévu, pas à pas
+d = Dessin("redemarrage")
+ph = [("avant la coupure", 130, 430), ("la coupure", 430, 600), ("après", 600, 984)]
+for nom, x0, x1 in ph:
+    d.t((x0 + x1) / 2, 36, nom, 11.5, True, ROUGE if nom == "la coupure" else ENCRE, "middle")
+    d.ligne(x0, 46, x0, 340, LIGNE, 1, "3 4")
+d.rect(430, 46, 170, 294, "#faf1ec", "#faf1ec", 0)
+lanes = [("Ancien cœur", 62), ("Nouveau cœur", 122), ("Gardien", 182), ("Module isolé", 242), ("Écran", 302)]
+for nom, yy in lanes:
+    d.t(16, yy + 18, nom, 11, True, GRIS)
+d.rect(132, 62, 296, 28, VERT, VERT, 6)
+d.t(280, 81, "sert la maison", 9.8, True, BLANC, "middle")
+d.rect(432, 62, 126, 28, AMBRE2, AMBRE, 6)
+d.t(495, 81, "fige au rang N, confie", 9.4, True, ENCRE, "middle")
+d.t(564, 81, "sort", 9.4, True, GRIS)
+d.rect(200, 122, 228, 28, DOUX, GRIS, 6)
+d.t(314, 141, "s'initialise en reprise", 9.6, True, GRIS, "middle")
+d.rect(432, 122, 136, 28, BLANC, GRIS, 6, 1.2, "4 3")
+d.t(500, 141, "attend la main", 9.4, coul=GRIS, ancre="middle")
+d.rect(572, 122, 410, 28, VERT, VERT, 6)
+d.t(777, 141, "reprend au rang N, ouvre les portes, la maison continue", 9.6, True, BLANC, "middle")
+d.ligne(132, 196, 982, 196, AMBRE, 2)
+for x, s in [(200, "lance le nouveau"), (560, "passe relais et portes")]:
+    d.c.append(f'          <circle cx="{x}" cy="196" r="5" fill="{AMBRE}"/>')
+    d.t(x, 186, s, 9.4, True, AMBRE, "middle", halo=True)
+d.rect(132, 242, 296, 28, VERT2, VERT, 6)
+d.t(280, 261, "garde ses connexions aux appareils", 9.6, True, ENCRE, "middle")
+d.rect(432, 242, 166, 28, AMBRE2, AMBRE, 6)
+d.t(515, 261, "tamponne", 9.6, True, ENCRE, "middle")
+d.rect(602, 242, 380, 28, VERT2, VERT, 6)
+d.t(792, 261, "se reconnecte, renvoie ce qui dépasse son accusé", 9.6, True, ENCRE, "middle")
+d.rect(132, 302, 296, 28, VERT2, VERT, 6)
+d.t(280, 321, "connecté", 9.6, True, ENCRE, "middle")
+d.rect(432, 302, 166, 28, AMBRE2, AMBRE, 6)
+d.t(515, 321, "attend dans la file", 9.6, True, ENCRE, "middle")
+d.rect(602, 302, 380, 28, VERT2, VERT, 6)
+d.t(792, 321, "servi, reçoit un instantané", 9.6, True, ENCRE, "middle")
+d.t(16, 366, "Mesuré (banc de l'étude HA v2) : figer l'état 132 µs, le relire 272 µs à ×1. Borné : le dernier lot d'historique, 100 ms (D13) ; les ordres d'un module du cœur, 1 s.", 10.3, coul=GRIS)
+d.t(16, 383, "Visé : une coupure de 1 s au plus sur la machine de production, 2 s sur un Pi Zero 2 W, sous le délai du bail : la secours ne bascule pas.", 10.3, coul=GRIS)
+d.t(16, 400, "Preuve : la même empreinte au gel et à la reprise, et une ligne au journal avec le rang et la durée de la coupure.", 10.3, coul=GRIS)
+ecrire("redemarrage", figure("redemarrage", "Un redémarrage prévu, pas à pas",
+                             "Cinq lignes, de gauche à droite : l'ancien cœur sert puis se fige ; le nouveau s'initialise avant la coupure puis reprend ; "
+                             "le gardien lance et passe la main ; le module isolé tamponne pendant la coupure ; l'écran attend puis est servi.",
+                             d.texte(), 412, "La leçon d'Envoy&nbsp;: le nouveau s'initialise avant que l'ancien ne lâche. La coupure ne contient "
+                             "plus que le passage de la main&nbsp;: figer, confier, rendre la base, reprendre.", fleches=False))
+
+# ---------------- trois étages de durée
+d = Dessin("durees")
+pannes = ["un redémarrage prévu", "un plantage du cœur", "une coupure de courant", "la perte de la machine"]
+for j, p in enumerate(pannes):
+    d.t(330 + j * 166, 40, p, 10.5, True, ENCRE, "middle")
+etages_ = [("La mémoire du cœur", ["non", "non", "non", "non"], ["", "", "", ""]),
+           ("Le relais et la file (le gardien)", ["oui", "oui", "non", "non"], ["", "au dernier lot de 10 ms", "", ""]),
+           ("L'instantané sur le disque", ["oui", "oui", "oui", "non"], ["", "au dernier instantané", "au dernier instantané", ""]),
+           ("La mémoire d'un pair (le secours)", ["oui", "oui", "oui", "oui"], ["", "", "s'il vit", "au délai du pont"])]
+for i, (nom, oui, note) in enumerate(etages_):
+    yy = 66 + i * 48
+    d.rect(16, yy, 968, 40, DOUX if i % 2 == 0 else BLANC, LIGNE, 6)
+    d.t(28, yy + 25, nom, 11, True)
+    for j, v in enumerate(oui):
+        cx = 330 + j * 166
+        ok = v == "oui"
+        d.rect(cx - 75, yy + 8, 150, 24, VERT if ok else "#f6e3da", VERT if ok else ROUGE, 12)
+        d.t(cx, yy + 25, ("✓ " if ok else "✗ ") + (note[j] or ("survit" if ok else "perdu")), 9.4, True, BLANC if ok else ROUGE, "middle")
+d.t(16, 280, "Chaque donnée choisit son étage. Un engagement (un message, un rendez-vous) s'écrit avant, au moins dans la file du gardien, puis chez le pair.", 10.5, coul=GRIS)
+d.t(16, 297, "Coût d'une écriture : rien (mémoire) · un pwrite par lot de 10 ms (file) · 3 ms avec fsync (instantané) · 36 ms au 99e centile (pair, banc HA v2).", 10.5, coul=GRIS)
+ecrire("durees", figure("durees", "Trois étages de durée, et ce qui survit à quoi",
+                        "Quatre lignes, quatre pannes. La mémoire du cœur ne survit à rien ; le relais et la file survivent au redémarrage et au "
+                        "plantage du cœur ; l'instantané survit aussi à une coupure de courant ; la mémoire d'un pair survit même à la perte de la machine.",
+                        d.texte(), 310, "Le relais comble le trou entre la mémoire, qui meurt avec le processus, et le disque, que l'étude "
+                        "HA&nbsp;v2 réserve à l'instantané&nbsp;: un plantage ne coûte plus qu'un lot de 10&nbsp;ms, sans écrire sur la carte.",
+                        fleches=False))
+
 print("figures :", ", ".join(sorted(p.name.split(".")[0] for p in F.glob("*.svg.html"))))

@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 477" width="1000" height="477" role="img" aria-labelledby="lot-t lot-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="lot-t">Le lot : libérer, sur l'actif et chez les copies</title>
+  <desc id="lot-d">À gauche, les cinq pas du lot sur l'actif : choisir les places retirées depuis le délai de grâce ; publier meta/lot au rang s, les places en plages de 8 octets ; appliquer, fiches à zéro, nom effacé, génération suivante, plages recollées ; recompiler le programme et reconstruire la vérité des conditions composées ; l'instantané de la nuit enregistre le tout. À droite, les copies reçoivent meta/lot au même rang et appliquent les pas 3 et 4 avec le même code ; une copie qui a décroché le trouve dans la file, ou prend l'état complet. En bas, une rangée de seize places : six retirées deviennent libres à la génération suivante. Mesuré : 29 µs à ×1, 329 µs à ×10, 3,4 ms à ×100.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="477" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="lot-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="lot-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="lot-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="lot-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="lot-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="lot-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="lot-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="lot-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="lot-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="lot-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="lot-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="lot-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="lot-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="lot-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="lot-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="lot-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="lot-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="lot-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="lot-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="lot-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="lot-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="lot-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="lot-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="lot-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="lot-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="lot-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="lot-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="lot-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="lot-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="lot-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="lot-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="lot-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="lot-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="lot-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="lot-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="lot-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="lot-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="lot-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="lot-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="lot-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="lot-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="lot-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="lot-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="lot-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="lot-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="lot-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="lot-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="lot-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="lot-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="lot-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="lot-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">SUR L'ACTIF</text>
+          <text x="680.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">SUR CHAQUE COPIE</text>
+          <rect x="16" y="40" width="560" height="54" rx="12" fill="url(#lot-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#lot-o)"/>
+          <circle cx="31" cy="59" r="4.5" fill="url(#lot-h-gris)"/>
+          <text x="43.0" y="63.0" font-size="12" fill="#4f5d57" font-weight="700">1. Choisir</text>
+          <text x="566.0" y="74.0" font-size="10.2" fill="#52615a" text-anchor="end">les places retirées depuis le délai de grâce</text>
+          <rect x="16" y="104" width="560" height="54" rx="12" fill="url(#lot-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#lot-o)"/>
+          <circle cx="31" cy="123" r="4.5" fill="url(#lot-h-ambre)"/>
+          <text x="43.0" y="127.0" font-size="12" fill="#94660a" font-weight="700">2. Publier meta/lot</text>
+          <text x="566.0" y="138.0" font-size="10.2" fill="#52615a" text-anchor="end">au rang s : les places, en plages de 8 o</text>
+          <rect x="16" y="168" width="560" height="54" rx="12" fill="url(#lot-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#lot-o)"/>
+          <circle cx="31" cy="187" r="4.5" fill="url(#lot-h-vert)"/>
+          <text x="43.0" y="191.0" font-size="12" fill="#195744" font-weight="700">3. Appliquer</text>
+          <text x="566.0" y="202.0" font-size="10.2" fill="#52615a" text-anchor="end">fiches à zéro, nom effacé, génération + 1, plages recollées</text>
+          <rect x="16" y="232" width="560" height="54" rx="12" fill="url(#lot-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#lot-o)"/>
+          <circle cx="31" cy="251" r="4.5" fill="url(#lot-h-vert)"/>
+          <text x="43.0" y="255.0" font-size="12" fill="#195744" font-weight="700">4. Recompiler</text>
+          <text x="566.0" y="266.0" font-size="10.2" fill="#52615a" text-anchor="end">le programme ; la vérité des composées (3,6 µs)</text>
+          <rect x="16" y="296" width="560" height="54" rx="12" fill="url(#lot-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#lot-o)"/>
+          <circle cx="31" cy="315" r="4.5" fill="url(#lot-h-ardoise)"/>
+          <text x="43.0" y="319.0" font-size="12" fill="#3b5676" font-weight="700">5. L'instantané de la nuit</text>
+          <text x="566.0" y="330.0" font-size="10.2" fill="#52615a" text-anchor="end">une seule écriture pour le lot</text>
+          <path d="M580 132 C620 132 640 92 676 92" fill="none" stroke="#94660a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#lot-m-ambre)"/>
+          <path class="hd-flux" d="M580 132 C620 132 640 92 676 92" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="626.0" y="90.0" font-size="9.5" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">rang s</text>
+          <rect x="680" y="40" width="304" height="118" rx="12" fill="url(#lot-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#lot-o)"/>
+          <rect x="690" y="49" width="26" height="26" rx="8" fill="url(#lot-h-bleu)"/>
+          <g transform="translate(695.0 54.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 14.5-3.5 M19 3v4h-4 M20 14a8 8 0 0 1-14.5 3.5 M5 21v-4h4"/></g>
+          <text x="724.0" y="67.0" font-size="12" fill="#1b5873" font-weight="700">Secours local, distant</text>
+          <text x="694.0" y="89.0" font-size="10.2" fill="#52615a">reçoivent meta/lot au même rang</text>
+          <text x="694.0" y="104.0" font-size="10.2" fill="#52615a">appliquent 3 et 4, avec le même code</text>
+          <text x="694.0" y="119.0" font-size="10.2" fill="#52615a">ne décident rien</text>
+          <text x="694.0" y="134.0" font-size="10.2" fill="#52615a">même empreinte que l'actif</text>
+          <rect x="680" y="172" width="304" height="118" rx="12" fill="url(#lot-f-violet)" stroke="#7e6cc2" stroke-opacity=".55" stroke-width="1.1" filter="url(#lot-o)"/>
+          <rect x="690" y="181" width="26" height="26" rx="8" fill="url(#lot-h-violet)"/>
+          <g transform="translate(695.0 186.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 9.1A4.5 4.5 0 0 0 7 18z"/></g>
+          <text x="724.0" y="199.0" font-size="12" fill="#4b3d82" font-weight="700">Celui qui a décroché</text>
+          <text x="694.0" y="221.0" font-size="10.2" fill="#52615a">la file : le lot à sa place, dans l'ordre</text>
+          <text x="694.0" y="236.0" font-size="10.2" fill="#52615a">au-delà : l'état complet, qui porte</text>
+          <text x="694.0" y="251.0" font-size="10.2" fill="#52615a">l'annuaire, les générations</text>
+          <text x="694.0" y="266.0" font-size="10.2" fill="#52615a">et les places libres</text>
+          <text x="16.0" y="372.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">UNE RANGÉE DE PLACES, AVANT ET APRÈS</text>
+          <rect x="16.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="29.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">a</text>
+          <rect x="516.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="529.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">a</text>
+          <rect x="46.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="59.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">b</text>
+          <rect x="546.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="559.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">b</text>
+          <rect x="76.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-rouge)"/>
+          <text x="89.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">c</text>
+          <rect x="576.0" y="384.0" width="26" height="26" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <text x="589.0" y="399.9" font-size="8" fill="#4f5d57" font-weight="700" text-anchor="middle">g+1</text>
+          <rect x="106.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-rouge)"/>
+          <text x="119.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">d</text>
+          <rect x="606.0" y="384.0" width="26" height="26" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <text x="619.0" y="399.9" font-size="8" fill="#4f5d57" font-weight="700" text-anchor="middle">g+1</text>
+          <rect x="136.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-rouge)"/>
+          <text x="149.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">e</text>
+          <rect x="636.0" y="384.0" width="26" height="26" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <text x="649.0" y="399.9" font-size="8" fill="#4f5d57" font-weight="700" text-anchor="middle">g+1</text>
+          <rect x="166.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="179.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">f</text>
+          <rect x="666.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="679.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">f</text>
+          <rect x="196.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="209.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">g</text>
+          <rect x="696.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="709.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">g</text>
+          <rect x="226.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="239.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">h</text>
+          <rect x="726.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="739.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">h</text>
+          <rect x="256.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="269.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">i</text>
+          <rect x="756.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="769.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">i</text>
+          <rect x="286.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-rouge)"/>
+          <text x="299.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">j</text>
+          <rect x="786.0" y="384.0" width="26" height="26" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <text x="799.0" y="399.9" font-size="8" fill="#4f5d57" font-weight="700" text-anchor="middle">g+1</text>
+          <rect x="316.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-rouge)"/>
+          <text x="329.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">k</text>
+          <rect x="816.0" y="384.0" width="26" height="26" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <text x="829.0" y="399.9" font-size="8" fill="#4f5d57" font-weight="700" text-anchor="middle">g+1</text>
+          <rect x="346.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="359.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">l</text>
+          <rect x="846.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="859.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">l</text>
+          <rect x="376.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="389.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">m</text>
+          <rect x="876.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="889.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">m</text>
+          <rect x="406.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="419.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">n</text>
+          <rect x="906.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="919.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">n</text>
+          <rect x="436.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-rouge)"/>
+          <text x="449.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">o</text>
+          <rect x="936.0" y="384.0" width="26" height="26" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8" stroke-dasharray="4 3"/>
+          <text x="949.0" y="399.9" font-size="8" fill="#4f5d57" font-weight="700" text-anchor="middle">g+1</text>
+          <rect x="466.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="479.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">p</text>
+          <rect x="966.0" y="384.0" width="26" height="26" rx="5" fill="url(#lot-h-vert)"/>
+          <text x="979.0" y="400.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">p</text>
+          <path d="M496 397 L510 397" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#lot-m-vert)"/>
+          <text x="16.0" y="428.0" font-size="10" fill="#52615a">en rouge : retirées depuis plus que le délai de grâce</text>
+          <text x="516.0" y="428.0" font-size="10" fill="#52615a">libres, à la génération suivante : les neufs les prennent d'abord</text>
+          <rect x="680.0" y="312.0" width="255.5" height="19.0" rx="9.5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity="0.7"/>
+          <text x="688.0" y="325.1" font-size="10" fill="#195744" font-weight="700">mesuré : 29 µs à ×1, 329 µs à ×10, 3,4 ms à ×100</text>
+  <text x="18" y="471" font-size="12" fill="#52615a" font-style="italic">Le lot est une seule sortie critique : une copie l'applique en entier ou pas du tout, au même rang que l'actif.</text>
+</svg>

@@ -1,0 +1,23 @@
+
+running 18 tests
+test tests::action_has_no_fake_state_or_set ... ok
+test tests::duplicate_index_ids_rejected ... ok
+test tests::equipment_health_updates_all_layouts ... ok
+test tests::exact_integer_and_float_payload_bits ... ok
+test tests::exact_sizes_alignment ... ok
+test tests::external_metadata_and_full_decode_equal ... ok
+test tests::ids_are_independent_of_storage_slots ... ok
+test tests::immutable_text_record_handle_changes_advance_date_all_layouts ... ok
+test tests::local_id_exhaustion_and_zero_are_rejected ... ok
+test tests::local_id_high_water_prevents_reuse_after_removal ... ok
+test tests::numeric_flag_without_bounds_keeps_quartet ... ok
+test tests::parser_rejects_invalid_and_forward_parents ... ok
+test tests::readonly_retains_absent_has_set ... ok
+test tests::record_parent_is_valid_and_csr_exact ... ok
+test tests::replicated_ids_parents_are_disjoint ... ok
+test tests::signed_zero_is_equal_but_incoming_bits_retained_all_layouts ... ok
+test tests::unknown_parent_rejected ... ok
+test tests::update_timestamp_semantics_all_layouts ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

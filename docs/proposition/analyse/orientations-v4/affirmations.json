@@ -1,0 +1,258 @@
+[
+  {
+    "id": "M01",
+    "claim": "Alias sans copie de valeur",
+    "origin": "C01 · utilisateur M3/M9",
+    "status": "À conserver",
+    "assessment": "Correspond à la demande et au banc V3 : source96 et lien32. Cela ne supprime pas index, identité ou notifications.",
+    "evidence": "V3, 17 tests et 150 essais"
+  },
+  {
+    "id": "M02",
+    "claim": "Un résultat calculé a sa propre valeur",
+    "origin": "C01 · utilisateur M5/M9",
+    "status": "À conserver",
+    "assessment": "Une ligne96 par résultat distinct ; ses vues peuvent ensuite partager ce résultat.",
+    "evidence": "V3 et computed_hub.rs"
+  },
+  {
+    "id": "M03",
+    "claim": "Un indice coûte4 o, un pointeur8 o",
+    "origin": "C01 · assistant M4/M10",
+    "status": "Vrai sous conditions",
+    "assessment": "u32=4, pointeur64bits=8. La paire appareil:u32/position:u16 occupe8 o avec padding ; le lien complet V3 coûte32 o.",
+    "evidence": "Nouveau test de layout"
+  },
+  {
+    "id": "M04",
+    "claim": "Exemple de16 f64 par appareil",
+    "origin": "C01 · assistant M4/M10",
+    "status": "Illustratif seulement",
+    "assessment": "Le chat pose une hypothèse pour expliquer l’indexation ; ne pas en faire un schéma universel. Bool/Int/Text/Null et composites restent nécessaires.",
+    "evidence": "moli-core Value/Kind et inventaireHA"
+  },
+  {
+    "id": "M05",
+    "claim": "Les indices permettent O(1) sans allocation à la lecture",
+    "origin": "C01 · assistant M4/M10",
+    "status": "Confirmé sur chemin ciblé",
+    "assessment": "Un accès déjà résolu ne parcourt pas le graphe ; chargement, validation, index et invalidation gardent leur propre coût.",
+    "evidence": "Banc V3 et Vec Rust"
+  },
+  {
+    "id": "M06",
+    "claim": "Zéro HashMap au runtime",
+    "origin": "C01 · assistant M10",
+    "status": "À reformuler",
+    "assessment": "Éviter le hachage sur les lectures fréquentes est pertinent. Configuration, recherche externe et reconstructions peuvent garder un annuaire.",
+    "evidence": "V3 : cache handle, index global encore présent"
+  },
+  {
+    "id": "M07",
+    "claim": "Les liens sont résolus définitivement",
+    "origin": "C01 · assistant M10",
+    "status": "À corriger",
+    "assessment": "Retrait, nouvelle unité, nouveau schéma, redémarrage et réemploi de slot exigent révalidation/époque.",
+    "evidence": "V3 : tests de génération ; calculs existants"
+  },
+  {
+    "id": "M08",
+    "claim": "CSR compact pour un graphe surtout consulté",
+    "origin": "C01 · assistant M2",
+    "status": "Pertinent sous ce profil",
+    "assessment": "Le chat nuance déjà le choix selon les modifications. Les reconstructions gardent un coût ; un gain de cache n’est pas une loi universelle.",
+    "evidence": "Dimensions vérifiées ; choix selon profil"
+  },
+  {
+    "id": "M09",
+    "claim": "Somme et moyenne incrémentales",
+    "origin": "C01 · assistant M6",
+    "status": "Utile sous conditions",
+    "assessment": "L’idée est valable, mais il faut traiter invalidité, retraits, unités et dérive flottante. Min/max ne se maintiennent pas par une simple différence.",
+    "evidence": "Contre-exemples V4 ; AggregateOp actuel"
+  },
+  {
+    "id": "M10",
+    "claim": "Un cycle de50 ms est décidé",
+    "origin": "C01 · assistant M8",
+    "status": "Non validé",
+    "assessment": "L’utilisateur demande d’éviter les tempêtes ;50 ms est un exemple de l’assistant, sans budget de latence accepté.",
+    "evidence": "Distinction des auteurs M7/M8"
+  },
+  {
+    "id": "M11",
+    "claim": "Dédupliquer la publication de l’état calculé",
+    "origin": "C01 · assistant M8/M10",
+    "status": "Piste pertinente à borner",
+    "assessment": "Le chat vise les résultats calculés ; cela ne remplace pas le traitement des renouvellements de fraîcheur, qualité, disponibilité et occurrences.",
+    "evidence": "docs calculs et durees"
+  },
+  {
+    "id": "M12",
+    "claim": "Échéances de calcul même sans nouveau message",
+    "origin": "Point non détaillé par C01",
+    "status": "À expliciter",
+    "assessment": "Une échéance peut changer la moyenne sans nouvelle mesure ; les délais sont des entrées du moteur. Ce n’est pas une affirmation fausse attribuée au chat.",
+    "evidence": "Test V4 de péremption ; moteur courant"
+  },
+  {
+    "id": "T01",
+    "claim": "20 o de charge → WS22/26 et MQTT28/29",
+    "origin": "C02 · assistant M4",
+    "status": "Confirmé dans ce cas",
+    "assessment": "TopicUTF-8 de4 o, PUBLISH QoS0, sans propriétésMQTT5, compression, TCP/IP/TLS ni handshake.",
+    "evidence": "RFC6455 et OASIS ; calcul automatique"
+  },
+  {
+    "id": "T02",
+    "claim": "Le JSON de l’exemple fait64 o",
+    "origin": "C02 · assistant M4",
+    "status": "Confirmé dans ce cas",
+    "assessment": "Comptage exact UTF-8 du littéral fourni ; ni tous les états domotiques ni un budget universel.",
+    "evidence": "Calcul automatique :64 octets"
+  },
+  {
+    "id": "T03",
+    "claim": "WebSocket consomme14/64 Kio par connexion",
+    "origin": "C02 · assistant M4",
+    "status": "Propre à une bibliothèque",
+    "assessment": "Ces chiffres concernent Python websockets asyncio selon compression. Ce ne sont pas les coûts du serveur Rust.",
+    "evidence": "Documentation primaire websockets"
+  },
+  {
+    "id": "T04",
+    "claim": "Classement CPU/RAM des transports",
+    "origin": "C02 · comparaison assistant",
+    "status": "Ne pas extrapoler",
+    "assessment": "Le chat donne plusieurs limites de portée. Connexions, fan-out, TLS et files exigent un banc de cette implémentation.",
+    "evidence": "Banc complet non fourni dans les chats"
+  },
+  {
+    "id": "T05",
+    "claim": "Gros historiques possibles, avec bornes",
+    "origin": "C02 · échanges M5–M9",
+    "status": "Confirmé comme possibilité",
+    "assessment": "Pas d’interdiction générale ; mémoire et quotas restent à gérer. HTTP progressif ou pages restent des choix d’interface.",
+    "evidence": "OASIS/RFC ; D13 conserve archive séparée"
+  },
+  {
+    "id": "T06",
+    "claim": "Blocs de16–64 Kio",
+    "origin": "C02 · suggestion assistant",
+    "status": "Suggestion, pas norme",
+    "assessment": "Le chat les propose comme réglage. Leur valeur doit être mesurée, pas présentée comme une limite du protocole.",
+    "evidence": "Spécifications et contrat archive Moli"
+  },
+  {
+    "id": "T07",
+    "claim": "QoS2 ne remplace pas l’idempotence applicative",
+    "origin": "C02/C03 · distinction explicite",
+    "status": "Distinction correcte",
+    "assessment": "Le chat le précise déjà : la livraison protocolaire ne forme pas une transaction appareil/brokers. Reçus et issues inconnues restent nécessaires.",
+    "evidence": "OASIS et contrats de commandes Moli"
+  },
+  {
+    "id": "T08",
+    "claim": "Retained est un dernier message par topic",
+    "origin": "C02/C03 · reprise d’état",
+    "status": "Limite à conserver",
+    "assessment": "Ni journal complet ni instantané multi-points atomique. Ne pas interpréter un ancien ordre retenu comme une nouvelle intention.",
+    "evidence": "OASIS MQTT"
+  },
+  {
+    "id": "T09",
+    "claim": "Pont MQTT distinct d’un cluster HA",
+    "origin": "C03 · question M5 et assistant M10",
+    "status": "Distinction correcte",
+    "assessment": "Un pont transporte ; autorité unique, fencing et reprise de sessions/ordres exigent des garanties séparées.",
+    "evidence": "API rumqttd et analyses HA du dépôt"
+  },
+  {
+    "id": "T10",
+    "claim": "Pont fiable, sans rejeu : objectif à préciser",
+    "origin": "C03 · utilisateur M5",
+    "status": "Ambiguïté ouverte",
+    "assessment": "L’utilisateur n’affirme pas qu’absence de rejeu signifie absence de pertes. Distinguer doublons, reprise d’état et commandes volontairement non rejouables.",
+    "evidence": "Contrats hub/ordres et archiveD13"
+  },
+  {
+    "id": "T11",
+    "claim": "HA peut envoyer initial puis deltas",
+    "origin": "C04 · assistant M2/M4",
+    "status": "Confirmé pour cette API",
+    "assessment": "subscribe_entities envoie les changements compacts ; subscribe_events et une autre application n’ont pas forcément ce format.",
+    "evidence": "Documentation officielle HA et RFC"
+  },
+  {
+    "id": "T12",
+    "claim": "MQTT ne fixe pas un modèle domotique commun",
+    "origin": "C04 · utilisateur M5, assistant M6",
+    "status": "Distinction correcte",
+    "assessment": "Le chat distingue les conventions. Les payloads applicatifs doivent être adaptés au catalogue canonique.",
+    "evidence": "OASIS payload agnostique ; profils/pilotes Moli"
+  },
+  {
+    "id": "T13",
+    "claim": "Convertisseurs avant publication",
+    "origin": "C04 · utilisateur M7",
+    "status": "Contrat à préciser",
+    "assessment": "Piste utile : préserver type, unité, identité, dates et contrôle de la cible réelle. Ce n’est pas une simple substitution de noms.",
+    "evidence": "PointSpec, hub et V3"
+  },
+  {
+    "id": "R01",
+    "claim": "Plusieurs réseaux Zigbee peuvent coexister",
+    "origin": "C03 · utilisateur M3, assistant M4",
+    "status": "Confirmé",
+    "assessment": "Le chat répond correctement. Chaque appareil rejoint un réseau ; deux coordinateurs et un bridge ne créent pas un secours transparent.",
+    "evidence": "FAQ Zigbee2MQTT"
+  },
+  {
+    "id": "R02",
+    "claim": "Redondance de Border Routers Thread",
+    "origin": "C03 · comparaison radio",
+    "status": "Confirmé pour le routage",
+    "assessment": "Ne pas étendre cette garantie à toutes les applications, données ou commandes.",
+    "evidence": "Documentation primaire Silicon Labs"
+  },
+  {
+    "id": "R03",
+    "claim": "Les références produit garantissent autonomie/compatibilité",
+    "origin": "C03 · exemples de matériels",
+    "status": "Non qualifié ici",
+    "assessment": "Les achats et migrations se vérifient par modèle/firmware ; aucune recommandation d’achat n’est déduite de ce corpus.",
+    "evidence": "Hors périmètre des preuves mémoire"
+  },
+  {
+    "id": "D01",
+    "claim": "Le résumé de l’export énumère des décisions approuvées",
+    "origin": "Index et titres de résumés",
+    "status": "Non",
+    "assessment": "Vérifier le rôle et le texte des messages : des suggestions sont résumées comme décisions, et le corpus est partiel.",
+    "evidence": "43 marqueurs lus,23 utilisateurs"
+  },
+  {
+    "id": "D02",
+    "claim": "Suggestion PostgreSQL/InfluxDB",
+    "origin": "C02 · assistant M9",
+    "status": "Piste générique non adoptée",
+    "assessment": "La suggestion ne remplace pas D13 Turso/Parquet ni les garanties de reprise déjà documentées.",
+    "evidence": "docs ARCHITECTURE D13"
+  },
+  {
+    "id": "O01",
+    "claim": "Familles/maisons/étages/pièces/zones doivent rester",
+    "origin": "Instruction de cette session",
+    "status": "À préserver",
+    "assessment": "Besoin d’organisation explicite. La hiérarchie exacte et ses règles d’accès ne sont pas déduites des réponses de ChatGPT.",
+    "evidence": "Demande actuelle et modèle à valider"
+  },
+  {
+    "id": "O02",
+    "claim": "Plusieurs sens de zone existent déjà",
+    "origin": "Code et proposition V4",
+    "status": "À distinguer explicitement",
+    "assessment": "Géozone people::Zone, pièce du plan, zone Hue et zone logique ne sont pas interchangeables et n’accordent aucun droit par leur seul nom.",
+    "evidence": "people.rs, plan.rs, moli-hue/model.rs"
+  }
+]

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 289" width="1000" height="289" role="img" aria-labelledby="stockage-t stockage-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="stockage-t">Le rang d'export de l'historique</title>
+  <desc id="stockage-d">Trois rangées d'opérations. L'actif et le secours qui reçoit ses opérations ont les mêmes rangs. Le secours qui dérive son historique du flux numérote autrement à partir d'un import fait sur l'actif et d'une heure close à sa propre horloge.</desc>
+  <rect width="1000" height="289" fill="#fffdf8"/>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">LES OPÉRATIONS DE MOLI.DB (D13), DANS L'ORDRE DE LEUR RANG SEQ</text>
+          <text x="16.0" y="68.0" font-size="11.5" fill="#1d302a" font-weight="700">Actif</text>
+          <rect x="190.0" y="46.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="249.0" y="61.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="249.0" y="74.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 971</text>
+          <rect x="318.0" y="46.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="377.0" y="61.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="377.0" y="74.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 972</text>
+          <rect x="446.0" y="46.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="505.0" y="61.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="505.0" y="74.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 973</text>
+          <rect x="574.0" y="46.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="633.0" y="61.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">import</text>
+          <text x="633.0" y="74.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 974</text>
+          <rect x="702.0" y="46.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="761.0" y="61.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">import</text>
+          <text x="761.0" y="74.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 975</text>
+          <rect x="830.0" y="46.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="889.0" y="61.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">heure close</text>
+          <text x="889.0" y="74.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 976</text>
+          <text x="16.0" y="124.0" font-size="11.5" fill="#8b3b22" font-weight="700">Secours qui dérive</text>
+          <rect x="190.0" y="102.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="249.0" y="117.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="249.0" y="130.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 971</text>
+          <rect x="318.0" y="102.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="377.0" y="117.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="377.0" y="130.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 972</text>
+          <rect x="446.0" y="102.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="505.0" y="117.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="505.0" y="130.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 973</text>
+          <rect x="574.0" y="102.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#8b3b22" stroke-width="1.5"/>
+          <text x="633.0" y="117.0" font-size="10.5" fill="#8b3b22" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="633.0" y="130.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 974</text>
+          <rect x="702.0" y="102.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#8b3b22" stroke-width="1.5"/>
+          <text x="761.0" y="117.0" font-size="10.5" fill="#8b3b22" font-weight="700" text-anchor="middle">heure close</text>
+          <text x="761.0" y="130.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 975</text>
+          <rect x="830.0" y="102.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#8b3b22" stroke-width="1.5"/>
+          <text x="889.0" y="117.0" font-size="10.5" fill="#8b3b22" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="889.0" y="130.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 976</text>
+          <text x="16.0" y="180.0" font-size="11.5" fill="#195744" font-weight="700">Secours qui reçoit</text>
+          <rect x="190.0" y="158.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="249.0" y="173.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="249.0" y="186.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 971</text>
+          <rect x="318.0" y="158.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="377.0" y="173.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="377.0" y="186.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 972</text>
+          <rect x="446.0" y="158.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="505.0" y="173.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">relevé</text>
+          <text x="505.0" y="186.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 973</text>
+          <rect x="574.0" y="158.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="633.0" y="173.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">import</text>
+          <text x="633.0" y="186.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 974</text>
+          <rect x="702.0" y="158.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="761.0" y="173.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">import</text>
+          <text x="761.0" y="186.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 975</text>
+          <rect x="830.0" y="158.0" width="118.0" height="34.0" rx="5" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="889.0" y="173.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">heure close</text>
+          <text x="889.0" y="186.0" font-size="9.5" fill="#52615a" text-anchor="middle" font-family="SFMono-Regular, Consolas, monospace">seq 1 976</text>
+          <text x="16.0" y="222.0" font-size="11" fill="#52615a">L'archive a reçu les rangs jusqu'à K ; elle exige pour la suite exactement les mêmes octets (sinon 409). Le secours qui dérive diverge dès le 1 974e rang :</text>
+          <text x="16.0" y="240.0" font-size="11" fill="#52615a">il ne peut pas reprendre l'export. Le secours qui reçoit les opérations de l'actif, avec leur rang, le peut.</text>
+  <text x="16" y="285" font-size="12" fill="#52615a" font-style="italic">Un import, une correction, une heure close à l'horloge de chaque machine : deux bases dérivées du même flux ne donnent pas les mêmes rangs.</text>
+</svg>

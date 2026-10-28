@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-27T16:59:46.436326+00:00",
+  "base_git": "a83589366f67d6b8273a10ad41658d688e498fda",
+  "scope": "native provider catalogue/auth clients plus isolated MQTT/HTTP media proof; no complete cloud audio",
+  "format": "pass",
+  "clippy": "pass -D warnings",
+  "tests": {
+    "passed": 61,
+    "failed": 0
+  },
+  "demos": {
+    "merged": {
+      "processes": 1,
+      "samples": 48000,
+      "sample_rate": 48000,
+      "pcm_sha256": "8d9db0f2ec4e60f8d5f9c83f783d00ae3cb146a095a508587f4d698c7610670b"
+    },
+    "isolated": {
+      "processes": 2,
+      "samples": 48000,
+      "sample_rate": 48000,
+      "pcm_sha256": "8d9db0f2ec4e60f8d5f9c83f783d00ae3cb146a095a508587f4d698c7610670b"
+    }
+  },
+  "physical_commands": 0,
+  "cloud_provider_auth_tested": true,
+  "cast_airplay_alexa_playback_tested": false,
+  "rss_per_module": null,
+  "source_sha256": {
+    "tools/music-poc/src/audio.rs": "a9df8fb41ee974d01bee440dda1ef9ad39114b3d973a9af6b202dd0b7715d607",
+    "tools/music-poc/src/control.rs": "3613610c184c8e7a6d71dc91258f25c828260cbf2b1da8cb67709c14a10b80f9",
+    "tools/music-poc/src/lib.rs": "8205496218111b534b6ba65ad08e7ce056bc1d50252c39313771c37983314de8",
+    "tools/music-poc/src/main.rs": "157fb00d1650f8a3816ab870b538ebb5db182a516088f7b68ac72b669acec3b5",
+    "tools/music-poc/src/media.rs": "76bc363b97e8da0cf0e37c65723484345fa9f35f9fdc249e7251c95054cebc1d",
+    "tools/music-poc/src/native/apple.rs": "71a12d35025a0d04a67e4ea9c0da9a03f07686387ac5593adf9b65f9e9b333fd",
+    "tools/music-poc/src/native/apple_token.rs": "306c358d891021d41158630081477fbe441ac5a29140e540fd6a766920db4dd3",
+    "tools/music-poc/src/native/browser_import.rs": "72de6674d339ca844a06fdde1ceb5703e0c1e832f2e5081d05e60a669cff4a66",
+    "tools/music-poc/src/native/http.rs": "e945f6c97855dcfbe4d691796cef44296648bc25d677838df932defd6c64ca2c",
+    "tools/music-poc/src/native/mod.rs": "4142ac473fdee5fa2253cc11b880e1638cf8152a6733abcbc89b1db630759f8e",
+    "tools/music-poc/src/native/pairing.rs": "6e12fc167595d1aaa7e506adda1d2260c3415178b3173fc1a91742cd597502f3",
+    "tools/music-poc/src/native/youtube.rs": "e9a6b44311607a02d0567e659a64e25f8bfbf46fc598b822e8397116fd15f3e1",
+    "tools/music-poc/src/providers.rs": "b63719b2cc6bcb848f4c2e9b94a5e5726b3f90537e2f00d2951f672f201f14ec",
+    "tools/music-poc/Cargo.toml": "ac8868058b3b8c4b29b69d0bf98908ea0414601fee7cedd289ffe8f1fb4e8ffd",
+    "tools/music-poc/Cargo.lock": "188ff7a2c2733716e1535854a1c3a7ed9ca6707563b42917851526fb61300229",
+    "tools/music-poc/check.sh": "4ae7911e138049e83447a53ece2b8c1901056e55a53eb810598d84a8f01ecbe4",
+    "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": "91c171e816498fa7d33bc891666973d8e5a8f0faf3677c4e9ba02df6f6b73661",
+    "crates/moli-audio/src/flac.rs": "40fa25e504e8f9849625b916e6f2645bfcb507de718dd6340d2c33ff740569e5"
+  },
+  "native_clients": {
+    "apple_music": {
+      "catalogue_http_contract": "passed_loopback",
+      "account_http_contract": "passed_loopback",
+      "real_credentials_available": false,
+      "full_stream": "not_implemented"
+    },
+    "ytmusic": {
+      "bootstrap_and_search_http_contract": "passed_loopback",
+      "real_public_probe": {
+        "status": 302,
+        "stage": "bootstrap",
+        "reason": "consent_redirect",
+        "followed": false
+      },
+      "full_stream": "not_implemented",
+      "native_account_verified": true,
+      "native_catalogue_verified": true,
+      "live_search_result_count": 5,
+      "credentials_stored_persistently": false
+    }
+  },
+  "native_pairing": {
+    "status": "native_account_and_search_confirmed",
+    "session_imported": true,
+    "lifetime_seconds": 600,
+    "persistent": false,
+    "mock_association_search_cleanup_contract": "passed",
+    "association_confirmed": true,
+    "transfer_outcome": "owner-confirmed complete request imported through stdin; account and search verified by Rust",
+    "browser_local_network_access": "confirmed",
+    "browser_account_api": "HTTP200 with active account header",
+    "native_bootstrap": "browser metadata supported; account verification still required"
+  },
+  "apple_signing": {
+    "implementation": "native_ES256",
+    "key_source": "environment_from_vault",
+    "validity_seconds": 900,
+    "signature_verified_with_synthetic_key": true,
+    "real_key_available": false
+  },
+  "apple_developer_setup": {
+    "media_id_created_with_owner_approval": true,
+    "musickit_only": true,
+    "media_services_key_created_with_owner_approval": true,
+    "private_key_download_triggered": false,
+    "vault_destination_configured": false
+  },
+  "browser_import": {
+    "implemented": true,
+    "source": "explicitly confirmed clipboard pipe only",
+    "clipboard_read": true,
+    "executes_copied_code": false,
+    "max_input_bytes": 65536,
+    "origin_and_read_only_endpoints_validated": true,
+    "cookie_written_to_file": false,
+    "mock_submit_and_redaction": "passed",
+    "live_import_verified": true,
+    "recorded_secret_values": false
+  },
+  "leak_check": "generic patterns passed; no private blacklist"
+}

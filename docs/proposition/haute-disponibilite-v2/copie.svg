@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 364" width="1000" height="364" role="img" aria-labelledby="copie-t copie-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="copie-t">Copier la mémoire par les sorties, pas par les entrées</title>
+  <desc id="copie-d">Comparaison sur une heure de la maison. Par les sorties de l'actif, la mémoire du secours est identique et toutes les attentes se revérifient. Par les entrées, les valeurs perdues pendant la coupure restent fausses, les instants « changé » sont ceux du secours, et aucune attente ne se revérifie.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="364" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="copie-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="copie-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="copie-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="copie-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="copie-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="copie-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="copie-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="copie-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="copie-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="copie-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="copie-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="copie-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="copie-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="copie-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="copie-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="copie-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">UNE HEURE DE LA MAISON, PONT COUPÉ 30 S, HORLOGES À 23 MS</text>
+          <rect x="300" y="38" width="338" height="262" rx="14" fill="url(#copie-f-vert)" stroke="#3d9a75" stroke-opacity=".55" filter="url(#copie-o)"/>
+          <path d="M300 80 V52 a14 14 0 0 1 14 -14 H624 a14 14 0 0 1 14 14 V80 z" fill="url(#copie-h-vert)"/>
+          <g transform="translate(314.0 49.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="340.0" y="59.0" font-size="13" fill="#ffffff" font-weight="700">A · par les sorties</text>
+          <text x="340.0" y="73.0" font-size="9.5" fill="#ffffff" opacity=".9">le secours recopie val/ (rang s)</text>
+          <rect x="646" y="38" width="338" height="262" rx="14" fill="url(#copie-f-rouge)" stroke="#d06a46" stroke-opacity=".55" filter="url(#copie-o)"/>
+          <path d="M646 80 V52 a14 14 0 0 1 14 -14 H970 a14 14 0 0 1 14 14 V80 z" fill="url(#copie-h-rouge)"/>
+          <g transform="translate(660.0 49.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="686.0" y="59.0" font-size="13" fill="#ffffff" font-weight="700">B · par les entrées</text>
+          <text x="686.0" y="73.0" font-size="9.5" fill="#ffffff" opacity=".9">le secours retraite in/ lui-même</text>
+          <line x1="16" y1="113" x2="984" y2="113" stroke="#e3e8e1"/>
+          <text x="16.0" y="104.0" font-size="11" fill="#1d302a" font-weight="700">Messages perdus pendant la coupure</text>
+          <text x="316.0" y="104.0" font-size="11" fill="#195744" font-weight="700">41, vus au rang s, comblés</text>
+          <text x="662.0" y="104.0" font-size="11" fill="#8b3b22" font-weight="700">41, que rien ne signale</text>
+          <line x1="16" y1="143" x2="984" y2="143" stroke="#e3e8e1"/>
+          <text x="16.0" y="134.0" font-size="11" fill="#1d302a" font-weight="700">Fiches dont la valeur diffère</text>
+          <text x="316.0" y="134.0" font-size="11" fill="#195744" font-weight="700">0</text>
+          <text x="662.0" y="134.0" font-size="11" fill="#8b3b22" font-weight="700">5</text>
+          <line x1="16" y1="173" x2="984" y2="173" stroke="#e3e8e1"/>
+          <text x="16.0" y="164.0" font-size="11" fill="#1d302a" font-weight="700">Fiches dont « changé » diffère</text>
+          <text x="316.0" y="164.0" font-size="11" fill="#195744" font-weight="700">0</text>
+          <text x="662.0" y="164.0" font-size="11" fill="#8b3b22" font-weight="700">1 480 (écart médian 26 ms)</text>
+          <line x1="16" y1="203" x2="984" y2="203" stroke="#e3e8e1"/>
+          <text x="16.0" y="194.0" font-size="11" fill="#1d302a" font-weight="700">Mémoire identique (empreinte)</text>
+          <text x="316.0" y="194.0" font-size="11" fill="#195744" font-weight="700">oui</text>
+          <text x="662.0" y="194.0" font-size="11" fill="#8b3b22" font-weight="700">non</text>
+          <text x="16.0" y="240.0" font-size="11" fill="#1d302a" font-weight="700">Attentes « depuis 10 min » armées</text>
+          <text x="16.0" y="255.0" font-size="11" fill="#1d302a" font-weight="700">sur l'actif, qui se revérifient</text>
+          <text x="16.0" y="270.0" font-size="11" fill="#1d302a" font-weight="700">sur le secours après une bascule</text>
+          <rect x="316" y="228" width="300" height="20" rx="7" fill="#eef0ec"/>
+          <rect x="316.0" y="228.0" width="300.0" height="20" rx="6" fill="url(#copie-b-vert)"/>
+          <rect x="318.0" y="230.0" width="296.0" height="7.6" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="316.0" y="268.0" font-size="13" fill="#195744" font-weight="700">86 sur 86</text>
+          <rect x="662" y="228" width="300" height="20" rx="7" fill="#eef0ec"/>
+          <text x="662.0" y="268.0" font-size="13" fill="#8b3b22" font-weight="700">0 sur 86</text>
+  <text x="18" y="341" font-size="12" fill="#52615a" font-style="italic">Le hub est la seule horloge de la maison. Un secours qui date les valeurs lui-même a d'autres instants « changé » : les attentes armées sur l'actif ne</text>
+  <text x="18" y="358" font-size="12" fill="#52615a" font-style="italic">se revérifient plus après la bascule (mémoire v2 § 8.5).</text>
+</svg>

@@ -1,0 +1,87 @@
+<p class="lead">Un booléen dit quelle proposition est vraie. Il ne dit, à lui seul, ni ce que cette proposition signifie, ni si elle est fraîche, ni si on peut la commander.</p>
+<p>Complément fondé sur le code du dépôt. Les exemples sont des contrats de pilotes, sans observation d’une maison réelle. Les propositions ci-dessous ne modifient aucune polarité existante.</p>
+<h3>1. Le contrat actuel, précisément</h3>
+<p><code>Kind::Binary</code> accepte uniquement <code>Value::Bool(true/false)</code> dans <code>validate</code>. Les nombres 0/1, les chaînes ON/OFF et <code>Null</code> ne sont pas des commandes binaires valides. La conversion du protocole appartient au pilote. Les états observés peuvent toutefois porter <code>Null</code> : domaine des commandes et qualité des observations sont deux sujets distincts.</p>
+<p><code>PointSpec</code> ajoute accès et sémantique, mais ne décrit pas explicitement le sens de true/false, la fraîcheur ni les opérations autorisées au-delà de read/write. <code>Binary</code> utilise normalement le cache d’état ; il n’est classé ni comme opération ni comme occurrence par les méthodes de <code>Kind</code>. À l’inverse, <code>Schedule</code> est aussi projeté en booléen, mais reste possédé par son moteur et exclu du cache périodique.</p>
+<p>Sources : <a href="../../../crates/moli-core/src/spec.rs"><code>spec.rs</code></a> et <a href="../../../crates/moli-core/src/value.rs"><code>value.rs</code></a>.</p>
+<h3>2. Les familles binaires à distinguer</h3>
+<div class="scroll"><table><thead><tr><th>Famille</th><th>Proposition portée par true</th><th>False signifie</th><th>Commande et stockage</th></tr></thead><tbody>
+<tr><td>Alimentation / marche</td><td>La fonction est déclarée en marche</td><td>Elle est déclarée arrêtée</td><td>Souvent R/W ; transitions. Ne prouve pas une consommation électrique ni un fonctionnement physique.</td></tr>
+<tr><td>Contact</td><td>Le contact est fermé, dans les contrats Hue et Nuki examinés</td><td>Le contact est ouvert</td><td>Lecture ; durée fermé/ouvert. Fermé ne prouve pas verrouillé.</td></tr>
+<tr><td>Occupation / présence</td><td>La source signale une présence ou un mouvement selon son contrat</td><td>La source n’en signale pas</td><td>Lecture ; expiration propre à la source. Absence de mouvement ne prouve pas absence humaine.</td></tr>
+<tr><td>Fuite / fumée / sabotage</td><td>Le signal d’alerte est actif</td><td>Le signal est inactif</td><td>Lecture ; transitions et durée d’alerte. Ne pas assimiler un capteur muet à une alerte inactive.</td></tr>
+<tr><td>Batterie faible</td><td>Le seuil fournisseur est signalé</td><td>Le seuil fournisseur n’est pas signalé</td><td>Lecture ; conserver séparément le pourcentage. Aucun seuil universel à inventer.</td></tr>
+<tr><td>Verrouillage</td><td>Le verrou est déclaré verrouillé</td><td>Il n’est pas déclaré verrouillé dans les états couverts</td><td>R/W ; garder l’état métier détaillé. Chez Nuki, mouvement ou blocage peuvent projeter false : ce n’est pas une preuve de porte ouverte.</td></tr>
+<tr><td>Configuration</td><td>Une fonction est activée : détection, sourdine, option…</td><td>La fonction est désactivée</td><td>Accès selon pilote ; ne pas confondre activation de détection et détection actuelle.</td></tr>
+<tr><td>Diagnostic</td><td>Un prédicat technique nommé est vrai : en charge, connecté…</td><td>Le prédicat est faux</td><td>Lecture ou réglage explicitement décrit. La disponibilité reste un signal indépendant.</td></tr>
+<tr><td>Aide virtuelle</td><td>La valeur humaine ou calculée est vraie</td><td>Elle est fausse</td><td>Propriétaire déclaré : aide, planning, calcul. Ne pas inventer un appareil physique derrière cette valeur.</td></tr>
+<tr><td>Action déguisée en booléen</td><td>Une intention déclenche l’action</td><td>Peut être refusé, et non une action inverse</td><td>Exemple Nuki unlatch : write-only, true seulement. À décrire comme invocation explicite dans le modèle cible.</td></tr>
+</tbody></table></div>
+<h3>3. Ce que font réellement les adaptateurs examinés</h3>
+<div class="scroll"><table><thead><tr><th>Source</th><th>Comportement constaté</th><th>Conséquence pour la consolidation</th></tr></thead><tbody>
+<tr><td>Zigbee2MQTT</td><td>Le catalogue conserve value_on/value_off ; ces deux valeurs deviennent true/false au décodage et sont réémises à l’encodage. Une autre valeur passe par Value::from_json.</td><td>Le booléen reflète la polarité de l’exposition fournisseur. Une valeur inattendue peut donc rester texte/nombre : vérifier le chemin de publication avant de conclure qu’elle est rejetée. Prévoir une politique explicite d’invalidité.</td></tr>
+<tr><td>Profils HTTP</td><td>Map explicite puis conversion binaire ; bool JSON et chaînes 1/true/on/ON ou 0/false/off/OFF reconnues. Les autres cas suivent le traitement de valeur invalide du profil.</td><td>Centraliser la description du codec, sans étendre implicitement les valeurs admises. L’absence de champ et missing=keep/null sont distinctes de false.</td></tr>
+<tr><td>Hue contact</td><td>Lorsqu’un état texte contact_report.state est reçu, le code produit state == "contact".</td><td>Tout autre texte produit false dans ce chemin. Une extension fournisseur inconnue risquerait donc d’être interprétée comme ouvert : point de revue à vérifier sur fixtures, sans affirmer un incident réel.</td></tr>
+<tr><td>Nuki door</td><td>État 2 → true (fermé), 3 → false (ouvert), autre → Null ; capteur désactivé non publié comme contact actif.</td><td>Exemple de table de vérité explicite qui préserve l’inconnu. Une absence de capacité ne vaut pas une mesure false.</td></tr>
+<tr><td>Nuki locked</td><td>État 1 → true ; états 2 à 7 → false ; autre → Null. Un point enum state conserve les détails.</td><td>Le booléen est une projection d’un état plus riche. Garder cet enum pour expliquer mouvement et blocage.</td></tr>
+<tr><td>Nuki unlatch</td><td>Binary write-only, sémantique Lock ; true accepté, false refusé par le pilote.</td><td>Le validateur générique Binary accepte pourtant les deux booléens : l’admission générique ne décrit pas tout le domaine d’action du pilote. Ajouter un contrat d’opération restreint, sans relâcher la garde.</td></tr>
+<tr><td>Frigate</td><td>Le constructeur utilise Semantic::infer(key, None) ; motion est un Binary en lecture.</td><td>Une forme binaire ne suffit pas à classer les autres clés du pilote : inventorier les inférences et leurs exceptions plutôt que supposer une sémantique commune.</td></tr>
+</tbody></table></div>
+<p>Sources : <a href="../../../crates/moli-z2m/src/catalog.rs">codec Z2M</a>, <a href="../../../crates/moli-profile/src/profile.rs">profils et conversion</a>, <a href="../../../crates/moli-hue/src/model.rs">modèle Hue</a>, <a href="../../../crates/moli-nuki/src/model.rs">modèle Nuki</a>, <a href="../../../crates/moli-frigate/src/lib.rs">Frigate</a>.</p>
+<h3>4. Le catalogue binaire proposé</h3>
+<p>Méthode : séparer les dimensions, puis choisir le descripteur minimal qui couvre les cas observés. Conserver un seul scalaire booléen, enrichi par des métadonnées ; éviter un nouveau type Rust pour chaque capteur.</p>
+<pre>BinaryDescriptor — proposition, non livré
+  predicate       : contact_closed | motion_detected | locked | enabled | …
+  true_label_key  : clé de traduction du sens vrai
+  false_label_key : clé de traduction du sens faux
+  role            : observation | configuration | projection
+  source_mapping  : valeurs natives exactes ↔ booléen
+  invalid_policy  : observation inconnue + diagnostic borné
+  freshness       : observation datée + politique propre à la source
+  operations      : aucune | assign_bool | invoke_action
+  history         : transitions + couverture + ancre
+  safety          : contrat existant conservé séparément</pre>
+<p>Les noms de prédicats sont proposés ; ils ne constituent pas un enum existant. <code>Contact</code> peut rester une famille d’affichage, mais le prédicat explicite doit dire « fermé » ou « ouvert ». Les libellés traduits ne déterminent jamais la polarité. La transformation d’une polarité existante exige une nouvelle version, avec adaptation des automatismes et interprétation de l’historique ; aucun retournement en place.</p>
+<p>Pour <code>unlatch</code>, la cible proposée est une opération nommée, sans état retenu. L’ancienne écriture true reste un adaptateur de compatibilité jusqu’à migration des clients. Un faux état « porte ouverte » ne doit jamais être publié en réponse à cette intention.</p>
+<h3>5. Inconnu, périmé et hors ligne ne sont pas des états faux</h3>
+<p>Le domaine logique reste {true, false}. La connaissance de la valeur est une dimension séparée : inconnu (pas de mesure valide), périmé (dernière observation trop ancienne), hors ligne (disponibilité de l’appareil). Une ancienne valeur true peut rester consultable comme dernière observation datée sans être considérée vraie maintenant. Une remise en ligne seule ne renouvelle pas une observation.</p>
+<p>À l’écriture, null doit rester refusé pour une affectation binaire ; à la lecture, une donnée invalide ne doit devenir ni false ni un maintien frais silencieux. Les sources événementielles, les capteurs endormis et les sources interrogées périodiquement nécessitent des politiques de fraîcheur différentes, déclarées et bornées.</p>
+<p>Le moteur de durées possède déjà ces distinctions : fermeture de couverture sur invalidité/hors ligne, péremption, reprise sans temps inventé, nouvelle observation requise. Une observation égale renouvelle la fraîcheur sans créer une nouvelle transition. La consolidation doit réutiliser ce contrat plutôt qu’en créer un concurrent. Source : <a href="../../../docs/components/durees.md">durées et couverture</a>.</p>
+<h3>6. Commandes : affecter, basculer, invoquer</h3>
+<ul>
+<li><b>Affecter true/false :</b> seulement si les deux intentions sont admises ; attendre le retour observé pour confirmer l’état physique. Un acquittement de transport n’est pas une observation.</li>
+<li><b>Basculer :</b> exige un état valide et un contrat explicite ; non idempotent. Ne pas rejouer après timeout ou reconnexion. Un verrou doit garder son traitement de sûreté conservateur.</li>
+<li><b>Invoquer :</b> ouvrir une gâche, appuyer, déclencher. Deux intentions identiques sont distinctes ; reçu et corrélation remplacent une valeur retenue artificielle.</li>
+<li><b>Groupes :</b> true/false ne décrit pas un ensemble dont les membres sont mixtes ou inconnus. Conserver une projection explicite (tous, au moins un…) et les protections de chaque membre.</li>
+</ul>
+<p>Ne jamais déduire une permission de <code>Binary</code>, du nom « on » ou d’un libellé. Conserver accès, origine, garde, portée des membres et permis vivant. Pour <code>Lock</code>, le contrat existant considère true sur un point lisible comme verrouillage ; une ouverture write-only reste sensible. Source : <a href="../../../crates/moli-core/src/spec.rs">PointSpec::opens</a> et <a href="../../../docs/components/coeur.md">garde</a>.</p>
+<h3>7. Stockage efficace : conserver le temps connu, pas seulement les bits</h3>
+<p>La priorité est d’éviter les écritures répétitives sans perdre la fraîcheur. Stocker les transitions logiques et les changements de qualité, avec l’ancre précédente nécessaire à une fenêtre. Les renouvellements d’observation identique doivent nourrir la couverture selon le contrat du moteur ; les éliminer partout rendrait une durée fausse. Ne pas inventer de heartbeat disque à chaque seconde.</p>
+<pre>Exemple synthétique sur une fenêtre de 10 minutes
+00:00  true, observation valide
+00:02  false, observation valide
+00:05  hors ligne → couverture inconnue
+00:08  true, nouvelle observation valide
+00:10  fin de fenêtre
+
+Temps vrai    = 4 min ; temps faux = 3 min ; inconnu = 3 min
+Couverture    = 7 / 10 = 70 %
+Part du vrai parmi le connu = 4 / 7 ≈ 57,1 %
+Part du vrai sur la fenêtre = 4 / 10 = 40 %</pre>
+<p>Hypothèse de cet exemple : fraîcheur suffisante jusqu’à chaque transition ou invalidation. Afficher le dénominateur ; 40 % et 57,1 % répondent à deux questions différentes. Un résumé conserve au minimum durées vraie/fausse/inconnue et bornes de fenêtre ; le comptage des fronts n’est pas le comptage d’occurrences d’un bouton.</p>
+<p>Dans le schéma SQLite historique, bool est déjà codé par kind=b et num=0/1. Un bitset n’est donc pas une économie démontrée : identités, index, horodatages et journal peuvent dominer. Garder la chaîne D13, tester les types booléens et encodages du stockage retenu avec leurs coûts réels. La compaction doit préserver les trous, l’ancre, la version de polarité et les données nécessaires aux résumés.</p>
+<h3>8. Choix et expériences proposés</h3>
+<div class="scroll"><table><thead><tr><th>Option</th><th>Couverture des cas / 5</th><th>Migration / 5</th><th>Sobriété / 5</th><th>Choix</th></tr></thead><tbody>
+<tr><td>Bool nu + conventions de noms</td><td>2</td><td>5</td><td>5</td><td>12/15 ; laisse polarité et actions implicites.</td></tr>
+<tr><td>Bool + prédicat, qualité et capacités</td><td>5</td><td>4</td><td>4</td><td>13/15 ; recommandé, déploiement additif possible.</td></tr>
+<tr><td>Type et table spécialisés pour chaque usage</td><td>4</td><td>2</td><td>2</td><td>8/15 ; multiplication des contrats et migrations.</td></tr>
+</tbody></table></div>
+<p>Scores architecturaux indicatifs, poids égaux ; aucun gain de stockage mesuré. La proposition retenue pour discussion est le booléen accompagné d’un prédicat explicite, d’une qualité indépendante et d’un contrat d’action.</p>
+<ol>
+<li><b>Table de vérité par adaptateur :</b> valeurs natives vraies/fausses, champ absent, null, texte inconnu, nombre inattendu ; résultat attendu explicite, aucun false par défaut non justifié.</li>
+<li><b>Polarité et compatibilité :</b> contact fermé, verrou, batterie faible et activation ; mêmes règles et historiques avant/après ajout des métadonnées.</li>
+<li><b>Sûreté des actions :</b> unlatch true/false, verrouillage/déverrouillage, groupe mixte, valeur périmée ; aucune permission élargie.</li>
+<li><b>Durées :</b> répétition d’observation identique, expiration sans événement, coupure, retour en ligne, redémarrage et ancre purgée ; vraie + fausse + inconnue = durée de fenêtre couverte par le contrat.</li>
+<li><b>Mesure :</b> comparer volume écrit, disque total et latence sur le même flux synthétique ; dédupliquer les transitions sans perdre la fraîcheur ni les occurrences.</li>
+</ol>
+<p><b>Conclusion proposée :</b> consolider les <code>Binary</code> par leur proposition logique et leur contrat d’usage. Le stockage reste commun ; les sens, les protections, les projections et les actions restent explicites.</p>

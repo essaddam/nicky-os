@@ -1,0 +1,15 @@
+test flux::tests::une_charge_se_relit_a_l_identique ... ok
+test flux::tests::la_replique_comble_un_trou_et_ecarte_les_doublons ... ok
+test instantane::tests::un_instantane_abime_ou_d_une_version_inconnue_est_refuse ... ok
+test jetons::tests::deux_renouveleurs_se_font_toujours_revoquer ... ok
+test jetons::tests::le_fournisseur_revoque_quand_un_vieux_jeton_revient ... ok
+test copie::tests::sans_coupure_ni_decalage_b_garde_quand_meme_le_delai_du_pont ... ok
+test instantane::tests::un_instantane_se_reprend_a_l_identique_sur_une_horloge_neuve ... ok
+test pont::tests::une_fenetre_finie_en_retard_demande_la_suivante ... ok
+test copie::tests::la_copie_par_les_sorties_est_exacte_celle_par_les_entrees_ne_l_est_pas ... ok
+test stockage::tests::sans_import_ni_ecart_d_horloge_les_releves_seuls_se_suivent ... ok
+test jetons::tests::un_seul_renouveleur_tient_si_la_copie_arrive ... ok
+test pont::tests::le_rattrapeur_remet_dans_l_ordre_et_attend_la_grace ... ok
+test stockage::tests::une_base_derivee_ne_peut_pas_reprendre_l_export_une_base_expediee_si ... ok
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.84s
+rustc 1.99.1 (58cf8f9c3 2026-10-13)

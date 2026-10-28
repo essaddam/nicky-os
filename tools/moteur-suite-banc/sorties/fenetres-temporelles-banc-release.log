@@ -1,0 +1,16 @@
+   Compiling vcpkg v0.2.15
+   Compiling pkg-config v0.3.34
+   Compiling futures-util v0.3.34
+   Compiling libsqlite3-sys v0.38.2
+   Compiling futures v0.3.34
+   Compiling tokio-util v0.7.19
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling bitflags v2.13.2
+   Compiling smallvec v1.16.2
+   Compiling fallible-iterator v0.3.0
+   Compiling moli-runtime v0.1.0 (/src/crates/moli-runtime)
+   Compiling moli-rollup v0.1.0 (/src/crates/moli-rollup)
+   Compiling rusqlite v0.40.2
+   Compiling moli-history v0.1.0 (/src/crates/moli-history)
+   Compiling fenetres-temporelles-banc v0.1.0 (/src/tools/fenetres-temporelles-banc)
+    Finished `release` profile [optimized] target(s) in 30.39s

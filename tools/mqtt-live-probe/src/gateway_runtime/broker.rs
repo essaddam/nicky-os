@@ -523,7 +523,9 @@ fn allowed_filter(role: Role, filter: &str) -> bool {
     match role {
         Role::Bridge => filter.starts_with("moli-probe/"),
         Role::Browser => {
-            filter.starts_with("moli-probe/maison/") || filter.starts_with("moli-probe/runtime/")
+            filter.starts_with("moli-probe/maison/")
+                || filter.starts_with("moli-probe/runtime/")
+                || filter.starts_with("moli-probe/ha/")
         }
     }
 }
@@ -634,6 +636,23 @@ async fn send_delivery<W: AsyncWrite + Unpin>(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn browser_reads_ha_diagnostics_without_source_or_bench_control() {
+        assert!(super::allowed_filter(
+            super::Role::Browser,
+            "moli-probe/ha/#"
+        ));
+        assert!(!super::allowed_filter(super::Role::Browser, "moli-probe/#"));
+        assert!(!super::allowed_filter(
+            super::Role::Browser,
+            "moli-probe/source/#"
+        ));
+        assert!(!super::allowed_filter(
+            super::Role::Browser,
+            "moli-probe/ha-bench/#"
+        ));
+    }
+
     use super::*;
     use rumqttc::mqttbytes::v4::{LastWill, SubscribeFilter, Unsubscribe};
     use tokio::io::{DuplexStream, duplex};

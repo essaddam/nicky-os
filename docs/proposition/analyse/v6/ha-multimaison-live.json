@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "scope": "read-only MQTT observation performed on the two Home Assistant hosts; distinct from the replay process-failure bench",
+  "authentication": "native HA MQTT integration credentials used on each host; never exported",
+  "sources": [
+    {
+      "id": "A",
+      "connack": 0,
+      "subscribed": true,
+      "messages": 7151,
+      "unique_topics": 7122,
+      "retained": 7122,
+      "observed_live": 29,
+      "payload_bytes": 913759,
+      "observation_seconds": 4,
+      "physical_publications": 0
+    },
+    {
+      "id": "B",
+      "connack": 0,
+      "subscribed": true,
+      "messages": 5589,
+      "unique_topics": 5589,
+      "retained": 5589,
+      "observed_live": 0,
+      "payload_bytes": 347462,
+      "observation_seconds": 4,
+      "physical_publications": 0
+    }
+  ],
+  "notes": [
+    "No PUBLISH frame was sent; CONNECT, SUBSCRIBE and DISCONNECT only.",
+    "Zero live messages in a four-second window does not prove a source is stale or inactive.",
+    "No HA service or physical device was stopped."
+  ]
+}

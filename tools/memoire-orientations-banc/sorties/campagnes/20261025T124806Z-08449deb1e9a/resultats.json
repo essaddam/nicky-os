@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "source_sha256": "08449deb1e9ace6fa4cfbd90dd3920bdad9ff43335508f0a59e5649c09e75544",
+    "image_id": "sha256:40c4e2a8d249be4d12e160ccffe94df1642aeef82cc787a0a3db606f70abbc53",
+    "network": "none",
+    "flags": "edition2024 -Dwarnings opt-level=s",
+    "timestamp_utc": "2026-10-25T12:48:06Z"
+  },
+  "measured": {
+    "sizes_bytes": {
+      "row": 96,
+      "alias": 32,
+      "stable_membership": 24,
+      "cached_edge": 8,
+      "reference_pair": 8,
+      "raw_u32": 4,
+      "pointer": 8,
+      "usize": 8
+    },
+    "csr_example": {
+      "nodes": 1000000,
+      "arcs": 4000000,
+      "usize_offsets_bytes": 24000008,
+      "u32_offsets_bytes": 20000004,
+      "u32_offsets_require_bounded_arc_count": true
+    },
+    "raw_budget_example": {
+      "rows": 1000000,
+      "aliases": 1000000,
+      "memberships": 4000000,
+      "cached_edges": 4000000,
+      "row_bytes": 96000000,
+      "alias_bytes": 32000000,
+      "membership_bytes": 96000000,
+      "cached_edge_bytes": 32000000,
+      "total_bytes": 256000000,
+      "excludes_indexes_allocators_strings_runtime": true
+    },
+    "protocol_examples": {
+      "payload_bytes": 20,
+      "topic_bytes": 4,
+      "ws_server": 22,
+      "ws_client": 26,
+      "mqtt311_qos0": 28,
+      "mqtt5_qos0_no_properties": 29,
+      "json_literal_utf8": 64
+    }
+  }
+}

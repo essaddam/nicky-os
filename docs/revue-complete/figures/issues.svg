@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="595" viewBox="0 0 1180 595" role="img" aria-labelledby="titre desc">
+<title id="titre">Demander, envoyer et prouver sont distincts</title>
+<desc id="desc">Le journal et l’écran ne promettent jamais plus que le retour de l’appareil. Un PUBACK prouve la réception du courtier. La fin d’une tâche longue reste une attente du workflow, pas l’issue de son ordre de départ.</desc>
+<defs><marker id="fleche" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#974e2c" stroke-width="1.4"/></marker></defs>
+<rect width="1180" height="595" fill="#fbfaf6"/>
+<text x="36" y="53" fill="#161512" font-family="Georgia,serif" font-size="30">Demander, envoyer et prouver sont distincts</text>
+<text x="36" y="89" fill="#57534b" font-family="sans-serif" font-size="17">Le journal et l’écran ne promettent jamais plus que le retour de l’appareil.</text>
+<rect x="36.0" y="125" width="354.6666666666667" height="125" rx="4" fill="#f2f0ea" stroke="#d9d5c9"/>
+<rect x="52.0" y="143" width="24" height="3" fill="#e8b931"/>
+<text x="52.0" y="175" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Avant le transport</text>
+<text x="52.0" y="205" fill="#57534b" font-family="sans-serif" font-size="16">Refusé · retenu</text>
+<text x="52.0" y="228" fill="#57534b" font-family="sans-serif" font-size="16">Non envoyé · échec certain</text>
+<rect x="412.6666666666667" y="125" width="354.6666666666667" height="125" rx="4" fill="#f2f0ea" stroke="#d9d5c9"/>
+<rect x="428.6666666666667" y="143" width="24" height="3" fill="#e8b931"/>
+<text x="428.6666666666667" y="175" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Émission possible</text>
+<text x="428.6666666666667" y="205" fill="#57534b" font-family="sans-serif" font-size="16">Peut-être parti</text>
+<text x="428.6666666666667" y="228" fill="#57534b" font-family="sans-serif" font-size="16">Jamais une réussite inventée</text>
+<rect x="789.3333333333334" y="125" width="354.6666666666667" height="125" rx="4" fill="#f2f0ea" stroke="#d9d5c9"/>
+<rect x="805.3333333333334" y="143" width="24" height="3" fill="#e8b931"/>
+<text x="805.3333333333334" y="175" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Envoi établi</text>
+<text x="805.3333333333334" y="205" fill="#57534b" font-family="sans-serif" font-size="16">Envoyé sans confirmation</text>
+<text x="805.3333333333334" y="228" fill="#57534b" font-family="sans-serif" font-size="16">Attente de suite corrélée</text>
+<rect x="36.0" y="285" width="354.6666666666667" height="125" rx="4" fill="#fffefa" stroke="#d9d5c9"/>
+<rect x="52.0" y="303" width="24" height="3" fill="#e8b931"/>
+<text x="52.0" y="335" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Accusé de prise en charge</text>
+<text x="52.0" y="365" fill="#57534b" font-family="sans-serif" font-size="16">Accepté par le robot</text>
+<text x="52.0" y="388" fill="#57534b" font-family="sans-serif" font-size="16">Ne veut pas dire ménage terminé</text>
+<rect x="412.6666666666667" y="285" width="354.6666666666667" height="125" rx="4" fill="#fffefa" stroke="#d9d5c9"/>
+<rect x="428.6666666666667" y="303" width="24" height="3" fill="#e8b931"/>
+<text x="428.6666666666667" y="335" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Accusé du pont</text>
+<text x="428.6666666666667" y="365" fill="#57534b" font-family="sans-serif" font-size="16">Exécuté par la box RTS</text>
+<text x="428.6666666666667" y="388" fill="#57534b" font-family="sans-serif" font-size="16">Ne prouve pas la position</text>
+<rect x="789.3333333333334" y="285" width="354.6666666666667" height="125" rx="4" fill="#fffefa" stroke="#d9d5c9"/>
+<rect x="805.3333333333334" y="303" width="24" height="3" fill="#e8b931"/>
+<text x="805.3333333333334" y="335" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Retour physique admissible</text>
+<text x="805.3333333333334" y="365" fill="#57534b" font-family="sans-serif" font-size="16">Confirmé par le point prévu</text>
+<text x="805.3333333333334" y="388" fill="#57534b" font-family="sans-serif" font-size="16">Tolérance et fenêtre déclarées</text>
+<line x1="36" y1="501" x2="1144" y2="501" stroke="#d9d5c9"/>
+<text x="36" y="532" fill="#57534b" font-family="sans-serif" font-size="15">Un PUBACK prouve la réception du courtier. La fin d’une tâche longue reste une attente du workflow, pas l’issue de son ordre de</text>
+<text x="36" y="555" fill="#57534b" font-family="sans-serif" font-size="15">départ.</text>
+</svg>

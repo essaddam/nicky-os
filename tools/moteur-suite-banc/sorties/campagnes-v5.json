@@ -1,0 +1,8 @@
+{
+  "campaign": "tools/moteur-suite-banc/sorties/campagnes/20261025T140712Z",
+  "experiments": {
+    "moteur-integre-banc": "tools/moteur-integre-banc/sorties/campagnes/20261025T140712Z",
+    "transformations-banc": "tools/transformations-banc/sorties/campagnes/20261025T140712Z",
+    "fenetres-temporelles-banc": "tools/fenetres-temporelles-banc/sorties/campagnes/20261025T140712Z"
+  }
+}

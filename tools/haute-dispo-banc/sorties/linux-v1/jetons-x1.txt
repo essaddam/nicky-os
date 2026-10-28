@@ -1,0 +1,12 @@
+RESULTAT|jetons|1|a_deux_renouveleurs_revoques|1000.000|sur 1 000
+RESULTAT|jetons|1|a_jours_avant_revocation_max|0.250|jours
+RESULTAT|jetons|1|b_local_echecs|0.000|sur 10 000 bascules
+RESULTAT|jetons|1|c_distant_hors_ligne_1h_jour_echecs|429.000|sur 10 000 bascules
+RESULTAT|jetons|1|d_par_machine_echecs|0.000|sur 1 000
+RESULTAT|jetons|1|sceller_2kio|4.370|µs
+RESULTAT|jetons|1|ouvrir_2kio|4.254|µs
+RESULTAT|jetons|1|octets_scelles_2kio|2064.000|o
+RESULTAT|jetons|1|rss_fin|1296.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

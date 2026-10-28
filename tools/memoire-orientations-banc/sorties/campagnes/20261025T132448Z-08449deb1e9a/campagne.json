@@ -1,0 +1,9 @@
+{
+  "experiment": "memoire-orientations-banc",
+  "source_sha256": "08449deb1e9ace6fa4cfbd90dd3920bdad9ff43335508f0a59e5649c09e75544",
+  "timestamp_utc": "2026-10-25T13:24:48Z",
+  "image_id": "sha256:40c4e2a8d249be4d12e160ccffe94df1642aeef82cc787a0a3db606f70abbc53",
+  "fixture_archive": null,
+  "fixture_archive_sha256": null,
+  "scope": "Sources et sorties publiques uniquement ; aucune conversation ni export HA brut."
+}

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 422" width="1000" height="422" role="img" aria-labelledby="principe-t principe-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="principe-t">Trois sortes d'état, trois chemins</title>
+  <desc id="principe-d">À gauche l'actif, à droite le secours. Les sorties du hub passent par le pont ; ce qui n'est pas sur MQTT passe par le journal de réplication, dans le même pont ; ce qui se recalcule ne voyage pas. Trois règles en dessous.</desc>
+  <rect width="1000" height="422" fill="#fffdf8"/>
+          <defs>
+            <marker id="principe-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="principe-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="principe-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="principe-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">ACTIF : IL AGIT, IL DATE, IL NUMÉROTE</text>
+          <text x="684.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">SECOURS : IL APPLIQUE, DANS L'ORDRE</text>
+          <rect x="16.0" y="44.0" width="300.0" height="58.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="28.0" y="63.0" font-size="11.5" fill="#1d302a" font-weight="700">Hub : valeurs, santé, numéros</text>
+          <text x="28.0" y="80.0" font-size="10" fill="#52615a">sorties val/ vu/ avail/ meta/ evt/ · rang s</text>
+          <rect x="684.0" y="44.0" width="300.0" height="58.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="696.0" y="63.0" font-size="11.5" fill="#1d302a" font-weight="700">copie du journal → mémoire</text>
+          <text x="696.0" y="80.0" font-size="10" fill="#52615a">copie exacte des valeurs, instants de l'actif</text>
+          <line x1="330.0" y1="73.0" x2="670.0" y2="73.0" stroke="#195744" stroke-width="2.4" marker-end="url(#principe-v)"/>
+          <text x="500.0" y="66.0" font-size="11" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">le pont</text>
+          <rect x="16.0" y="122.0" width="300.0" height="58.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="28.0" y="141.0" font-size="11.5" fill="#1d302a" font-weight="700">Moteur, coffre, fichiers métier</text>
+          <text x="28.0" y="158.0" font-size="10" fill="#52615a">journal de réplication · rang j, dépend d'un s</text>
+          <rect x="684.0" y="122.0" width="300.0" height="58.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="696.0" y="141.0" font-size="11.5" fill="#1d302a" font-weight="700">copie du journal → mémoire</text>
+          <text x="696.0" y="158.0" font-size="10" fill="#52615a">exécutions, attentes, horaires, coffre…</text>
+          <line x1="330.0" y1="151.0" x2="670.0" y2="151.0" stroke="#b07d12" stroke-width="2.4" marker-end="url(#principe-a)"/>
+          <text x="500.0" y="144.0" font-size="11" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">le même pont, repl/</text>
+          <rect x="16.0" y="200.0" width="300.0" height="58.0" rx="6" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="28.0" y="219.0" font-size="11.5" fill="#1d302a" font-weight="700">Programme, index, réseau, niveaux</text>
+          <text x="28.0" y="236.0" font-size="10" fill="#52615a">échéances monotones : à chaque machine</text>
+          <rect x="684.0" y="200.0" width="300.0" height="58.0" rx="6" fill="#ffffff" stroke="#52615a" stroke-width="1"/>
+          <text x="696.0" y="219.0" font-size="11.5" fill="#1d302a" font-weight="700">se recalcule sur place</text>
+          <text x="696.0" y="236.0" font-size="10" fill="#52615a">recompilé, reconstruit, refait</text>
+          <line x1="330.0" y1="229.0" x2="670.0" y2="229.0" stroke="#52615a" stroke-width="1.2" stroke-dasharray="4 5"/>
+          <text x="500.0" y="222.0" font-size="11" fill="#52615a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">rien ne voyage</text>
+          <rect x="16.0" y="284.0" width="968.0" height="72.0" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="30.0" y="304.0" font-size="11" fill="#1d302a">1. Recopier les sorties de l'actif, jamais ses entrées : le secours ne date rien, ne numérote rien, ne décide rien.</text>
+          <text x="30.0" y="323.0" font-size="11" fill="#1d302a">2. Tout ce qui quitte une machine est en heure murale ; chaque machine refait ses échéances monotones.</text>
+          <text x="30.0" y="342.0" font-size="11" fill="#1d302a">3. Le porteur de l'époque est seul à agir : ordres, numéros, jetons, export, notifications.</text>
+  <text x="16" y="401" font-size="12" fill="#52615a" font-style="italic">Ce qui se recalcule ne voyage pas ; ce que le hub publie passe par le pont ; le reste passe par le journal de réplication. Le secours n'est jamais une</text>
+  <text x="16" y="418" font-size="12" fill="#52615a" font-style="italic">seconde source de vérité.</text>
+</svg>

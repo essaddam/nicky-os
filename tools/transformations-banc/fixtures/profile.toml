@@ -1,0 +1,56 @@
+[profile]
+id = "synthetic-transform"
+name = "Synthetic transform"
+identity = "status.identity"
+
+[[request]]
+id = "status"
+path = "/status"
+format = "json"
+every = "30s"
+
+[[point]]
+key = "temperature"
+label = "Synthetic temperature"
+from = "status.temperature"
+kind = "numeric"
+unit = "°C"
+scale = 0.01
+round = 2
+
+[[point]]
+key = "power"
+label = "Synthetic power"
+from = "status.power"
+kind = "numeric"
+unit = "W"
+scale = 0.001
+round = 3
+
+[[point]]
+key = "on"
+label = "Synthetic on"
+from = "status.on"
+kind = "binary"
+map = { "ON" = true, "OFF" = false }
+
+[[point]]
+key = "mode"
+label = "Synthetic mode"
+from = "status.mode"
+kind = "enum"
+values = ["low", "high"]
+map = { "1" = "low", "2" = "high" }
+
+[[point]]
+key = "brightness"
+label = "Synthetic percent brightness"
+from = "status.brightness"
+kind = "numeric"
+unit = "%"
+scale = 0.3937007874015748
+round = 3
+min = 0
+max = 100
+missing = "null"
+

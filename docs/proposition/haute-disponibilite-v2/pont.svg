@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="1000" height="560" role="img" aria-labelledby="pont-t pont-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="pont-t">Le pont maison, ses deux bouts</title>
+  <desc id="pont-d">Trois colonnes. Le bout actif : le séquenceur numérote ; le courtier transporte, sans rien garder ; la file en mémoire des 10 000 dernières sorties (46 octets chacune, 0,45 Mio) sert les tronçons ; l'état complet se construit en mémoire à la demande ; un battement annonce le bout toutes les 500 ms. Le lien : les sorties en direct, le battement, la demande d'un tronçon, les tronçons de 64 sorties, la réponse « hors file » quand le rang n'y est plus, la demande d'état complet, l'état complet en morceaux de 4 Kio, l'accusé de rang. Le bout secours : le pont remet l'ordre de s, garde ce qui arrive en avance, voit un trou au rang ou au battement, demande un tronçon ou l'état complet, l'applique ; la mémoire du secours ; le courtier du secours, où seul le pont publie ; la file du secours pour ses abonnés locaux.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="560" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="pont-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="pont-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="pont-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="pont-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="pont-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="pont-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="pont-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="pont-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="pont-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="pont-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="pont-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="pont-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="pont-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="pont-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="pont-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="pont-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="pont-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="pont-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="pont-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="pont-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="pont-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="pont-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="pont-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="pont-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="pont-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="pont-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="pont-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="pont-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="pont-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="pont-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="pont-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="pont-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="pont-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="pont-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="pont-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="pont-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="pont-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">BOUT ACTIF</text>
+          <text x="340.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LE LIEN : RÉSEAU LOCAL, OU NETBIRD</text>
+          <text x="678.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">BOUT SECOURS</text>
+          <rect x="16" y="40" width="300" height="60" rx="12" fill="url(#pont-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#pont-o)"/>
+          <rect x="26" y="49" width="26" height="26" rx="8" fill="url(#pont-h-ambre)"/>
+          <g transform="translate(31.0 54.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="60.0" y="67.0" font-size="12" fill="#94660a" font-weight="700">Séquenceur</text>
+          <text x="30.0" y="89.0" font-size="10.2" fill="#52615a">chaque sortie critique : s + 1</text>
+          <rect x="16" y="114" width="300" height="60" rx="12" fill="url(#pont-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#pont-o)"/>
+          <rect x="26" y="123" width="26" height="26" rx="8" fill="url(#pont-h-vert)"/>
+          <g transform="translate(31.0 128.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></g>
+          <text x="60.0" y="141.0" font-size="12" fill="#195744" font-weight="700">Courtier de l'actif</text>
+          <text x="30.0" y="163.0" font-size="10.2" fill="#52615a">transport seulement : QoS 0, session propre</text>
+          <path d="M166 100 L166 112" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#pont-m-ambre)"/>
+          <path d="M79.3 192.0 A44 44 0 0 1 85.9 192.7" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M88.4 193.3 A44 44 0 0 1 94.7 195.3" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M97.1 196.4 A44 44 0 0 1 102.8 199.6" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M104.9 201.2 A44 44 0 0 1 109.8 205.6" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M111.6 207.6 A44 44 0 0 1 115.4 212.9" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M116.7 215.2 A44 44 0 0 1 119.4 221.2" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M120.2 223.7 A44 44 0 0 1 121.6 230.1" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M121.9 232.7 A44 44 0 0 1 121.9 239.3" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M121.6 241.9 A44 44 0 0 1 120.2 248.3" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M119.4 250.8 A44 44 0 0 1 116.7 256.8" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M115.4 259.1 A44 44 0 0 1 111.6 264.4" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M109.8 266.4 A44 44 0 0 1 104.9 270.8" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M102.8 272.4 A44 44 0 0 1 97.1 275.6" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M94.7 276.7 A44 44 0 0 1 88.4 278.7" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M85.9 279.3 A44 44 0 0 1 79.3 280.0" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M76.7 280.0 A44 44 0 0 1 70.1 279.3" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M67.6 278.7 A44 44 0 0 1 61.3 276.7" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M58.9 275.6 A44 44 0 0 1 53.2 272.4" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M51.1 270.8 A44 44 0 0 1 46.2 266.4" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M44.4 264.4 A44 44 0 0 1 40.6 259.1" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M39.3 256.8 A44 44 0 0 1 36.6 250.8" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M35.8 248.3 A44 44 0 0 1 34.4 241.9" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M34.1 239.3 A44 44 0 0 1 34.1 232.7" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M34.4 230.1 A44 44 0 0 1 35.8 223.7" fill="none" stroke="url(#pont-h-ambre)" stroke-width="10"/>
+          <path d="M36.6 221.2 A44 44 0 0 1 39.3 215.2" fill="none" stroke="#fbefd3" stroke-width="10"/>
+          <path d="M40.6 212.9 A44 44 0 0 1 44.4 207.6" fill="none" stroke="#fbefd3" stroke-width="10"/>
+          <path d="M46.2 205.6 A44 44 0 0 1 51.1 201.2" fill="none" stroke="#fbefd3" stroke-width="10"/>
+          <path d="M53.2 199.6 A44 44 0 0 1 58.9 196.4" fill="none" stroke="#fbefd3" stroke-width="10"/>
+          <path d="M61.3 195.3 A44 44 0 0 1 67.6 193.3" fill="none" stroke="#fbefd3" stroke-width="10"/>
+          <path d="M70.1 192.7 A44 44 0 0 1 76.7 192.0" fill="none" stroke="#fbefd3" stroke-width="10"/>
+          <circle class="hd-pouls" cx="36.2" cy="222.4" r="5.5" fill="#94660a"/>
+          <text x="78.0" y="232.0" font-size="12" fill="#94660a" font-weight="700" text-anchor="middle">10 000</text>
+          <text x="78.0" y="247.0" font-size="9.5" fill="#52615a" text-anchor="middle">sorties</text>
+          <text x="140.0" y="210.0" font-size="12" fill="#94660a" font-weight="700">File en mémoire</text>
+          <text x="140.0" y="228.0" font-size="10" fill="#52615a">les dernières sorties, en binaire :</text>
+          <text x="140.0" y="243.0" font-size="10" fill="#52615a">46 o chacune, 0,45 Mio en tout ;</text>
+          <text x="140.0" y="258.0" font-size="10" fill="#52615a">elle sert les tronçons</text>
+          <rect x="16" y="296" width="300" height="74" rx="12" fill="url(#pont-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#pont-o)"/>
+          <rect x="26" y="305" width="26" height="26" rx="8" fill="url(#pont-h-ambre)"/>
+          <g transform="translate(31.0 310.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="60.0" y="323.0" font-size="12" fill="#94660a" font-weight="700">État complet</text>
+          <text x="30.0" y="345.0" font-size="10.2" fill="#52615a">construit en mémoire au rang s0, à la demande ;</text>
+          <text x="30.0" y="360.0" font-size="10.2" fill="#52615a">envoyé en morceaux de 4 Kio, jamais écrit</text>
+          <rect x="16" y="384" width="300" height="60" rx="12" fill="url(#pont-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#pont-o)"/>
+          <rect x="26" y="393" width="26" height="26" rx="8" fill="url(#pont-h-gris)"/>
+          <g transform="translate(31.0 398.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h5l2-5 3 10 2-5h8"/></g>
+          <text x="60.0" y="411.0" font-size="12" fill="#4f5d57" font-weight="700">Battement</text>
+          <text x="30.0" y="433.0" font-size="10.2" fill="#52615a">toutes les 500 ms : « le bout est s »</text>
+          <rect x="334" y="36" width="332" height="408" rx="18" fill="#ffffff" fill-opacity=".6" stroke="#97a39d" stroke-dasharray="6 5"/>
+          <path d="M346 74 L654 74" fill="none" stroke="#94660a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#pont-m-ambre)"/>
+          <path class="hd-flux" d="M346 74 L654 74" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.4"/>
+          <text x="500.0" y="66.0" font-size="10" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">sorties critiques, en direct</text>
+          <path d="M346 120 L654 120" fill="none" stroke="#4f5d57" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#pont-m-gris)"/>
+          <path class="hd-flux" d="M346 120 L654 120" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="500.0" y="112.0" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">battement : bout = s</text>
+          <path d="M654 166 L346 166" fill="none" stroke="#94660a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#pont-m-ambre)"/>
+          <text x="500.0" y="158.0" font-size="10" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">demande {de : s}</text>
+          <path d="M346 212 L654 212" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" marker-end="url(#pont-m-ambre)"/>
+          <text x="500.0" y="204.0" font-size="10" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">tronçons : 64 sorties à la fois</text>
+          <path d="M346 258 L654 258" fill="none" stroke="#8b3b22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#pont-m-rouge)"/>
+          <text x="500.0" y="250.0" font-size="10" fill="#8b3b22" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">« hors file » : ce rang n'y est plus</text>
+          <path d="M654 304 L346 304" fill="none" stroke="#94660a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#pont-m-ambre)"/>
+          <text x="500.0" y="296.0" font-size="10" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">demande d'état complet</text>
+          <path d="M346 350 L654 350" fill="none" stroke="#94660a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 4" marker-end="url(#pont-m-ambre)"/>
+          <text x="500.0" y="342.0" font-size="10" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">état complet, en morceaux</text>
+          <path d="M654 396 L346 396" fill="none" stroke="#4f5d57" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" marker-end="url(#pont-m-gris)"/>
+          <text x="500.0" y="388.0" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">accusé du rang, 500 ms</text>
+          <circle class="hd-pouls" cx="352" cy="120" r="4.5" fill="#4f5d57"/>
+          <rect x="678" y="40" width="306" height="118" rx="12" fill="url(#pont-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#pont-o)"/>
+          <rect x="688" y="49" width="26" height="26" rx="8" fill="url(#pont-h-ambre)"/>
+          <g transform="translate(693.0 54.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 14.5-3.5 M19 3v4h-4 M20 14a8 8 0 0 1-14.5 3.5 M5 21v-4h4"/></g>
+          <text x="722.0" y="67.0" font-size="12" fill="#94660a" font-weight="700">Pont maison</text>
+          <text x="692.0" y="89.0" font-size="10.2" fill="#52615a">remet l'ordre de s (grâce de 200 ms)</text>
+          <text x="692.0" y="103.5" font-size="10.2" fill="#52615a">garde ce qui arrive en avance</text>
+          <text x="692.0" y="118.0" font-size="10.2" fill="#52615a">voit un trou : au rang s, au battement</text>
+          <text x="692.0" y="132.5" font-size="10.2" fill="#52615a">demande : un tronçon, sinon l'état complet</text>
+          <text x="692.0" y="147.0" font-size="10.2" fill="#52615a">réassemble et applique l'état complet</text>
+          <rect x="678" y="170" width="306" height="60" rx="12" fill="url(#pont-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#pont-o)"/>
+          <rect x="688" y="179" width="26" height="26" rx="8" fill="url(#pont-h-bleu)"/>
+          <g transform="translate(693.0 184.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="722.0" y="197.0" font-size="12" fill="#1b5873" font-weight="700">Mémoire du secours</text>
+          <text x="692.0" y="219.0" font-size="10.2" fill="#52615a">appliquée dans l'ordre ; même empreinte</text>
+          <rect x="678" y="242" width="306" height="60" rx="12" fill="url(#pont-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#pont-o)"/>
+          <rect x="688" y="251" width="26" height="26" rx="8" fill="url(#pont-h-bleu)"/>
+          <g transform="translate(693.0 256.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></g>
+          <text x="722.0" y="269.0" font-size="12" fill="#1b5873" font-weight="700">Courtier du secours</text>
+          <text x="692.0" y="291.0" font-size="10.2" fill="#52615a">seul le pont y publie</text>
+          <path d="M830 158 L830 168" fill="none" stroke="#1b5873" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#pont-m-bleu)"/>
+          <path d="M830 230 L830 240" fill="none" stroke="#1b5873" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#pont-m-bleu)"/>
+          <path d="M722.9 322.0 A30 30 0 0 1 728.9 322.8" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M730.6 323.3 A30 30 0 0 1 736.2 325.6" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M737.8 326.5 A30 30 0 0 1 742.6 330.2" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M743.8 331.4 A30 30 0 0 1 747.5 336.2" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M748.4 337.8 A30 30 0 0 1 750.7 343.4" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M751.2 345.1 A30 30 0 0 1 752.0 351.1" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M752.0 352.9 A30 30 0 0 1 751.2 358.9" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M750.7 360.6 A30 30 0 0 1 748.4 366.2" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M747.5 367.8 A30 30 0 0 1 743.8 372.6" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M742.6 373.8 A30 30 0 0 1 737.8 377.5" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M736.2 378.4 A30 30 0 0 1 730.6 380.7" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M728.9 381.2 A30 30 0 0 1 722.9 382.0" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M721.1 382.0 A30 30 0 0 1 715.1 381.2" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M713.4 380.7 A30 30 0 0 1 707.8 378.4" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M706.2 377.5 A30 30 0 0 1 701.4 373.8" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M700.2 372.6 A30 30 0 0 1 696.5 367.8" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M695.6 366.2 A30 30 0 0 1 693.3 360.6" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M692.8 358.9 A30 30 0 0 1 692.0 352.9" fill="none" stroke="url(#pont-h-bleu)" stroke-width="8"/>
+          <path d="M692.0 351.1 A30 30 0 0 1 692.8 345.1" fill="none" stroke="#e1eef6" stroke-width="8"/>
+          <path d="M693.3 343.4 A30 30 0 0 1 695.6 337.8" fill="none" stroke="#e1eef6" stroke-width="8"/>
+          <path d="M696.5 336.2 A30 30 0 0 1 700.2 331.4" fill="none" stroke="#e1eef6" stroke-width="8"/>
+          <path d="M701.4 330.2 A30 30 0 0 1 706.2 326.5" fill="none" stroke="#e1eef6" stroke-width="8"/>
+          <path d="M707.8 325.6 A30 30 0 0 1 713.4 323.3" fill="none" stroke="#e1eef6" stroke-width="8"/>
+          <path d="M715.1 322.8 A30 30 0 0 1 721.1 322.0" fill="none" stroke="#e1eef6" stroke-width="8"/>
+          <circle class="hd-pouls" cx="692.0" cy="352.0" r="5.5" fill="#1b5873"/>
+          <text x="764.0" y="342.0" font-size="11.5" fill="#1b5873" font-weight="700">File du secours</text>
+          <text x="764.0" y="358.0" font-size="10" fill="#52615a">ses abonnés locaux y comblent</text>
+          <text x="764.0" y="372.0" font-size="10" fill="#52615a">leurs propres trous</text>
+          <rect x="678" y="400" width="306" height="44" rx="12" fill="url(#pont-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#pont-o)"/>
+          <rect x="688" y="409" width="26" height="26" rx="8" fill="url(#pont-h-bleu)"/>
+          <g transform="translate(693.0 414.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="722.0" y="427.0" font-size="11" fill="#1b5873" font-weight="700">Abonnés locaux : moteur, base, écrans</text>
+          <rect x="16" y="462" width="968" height="34" rx="11" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 469.0) scale(0.7500)" fill="none" stroke="#195744" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z M10 3v4 M12.5 3v4 M15 3v4"/></g>
+          <text x="54.0" y="484.0" font-size="11" fill="#1d302a" font-weight="700">Aucun disque sur ce chemin. Les courtiers ne gardent rien ; c'est le pont qui sait ce qui manque, et le redemande.</text>
+  <text x="18" y="537" font-size="12" fill="#52615a" font-style="italic">Un module de Sarah Home, à deux bouts, présent sur chaque machine : le mode décide quel bout travaille. Le courtier n'est qu'un transport ; les</text>
+  <text x="18" y="554" font-size="12" fill="#52615a" font-style="italic">tampons, les trous et la reprise sont au pont, des deux côtés.</text>
+</svg>

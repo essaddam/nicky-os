@@ -1376,8 +1376,10 @@ dependencies = [
  "moli-energy",
  "moli-helpers",
  "moli-history",
+ "moli-home-assistant",
  "moli-host",
  "moli-i18n",
+ "moli-migration",
  "moli-net",
  "moli-netatmo",
  "moli-phones",
@@ -1673,6 +1675,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-home-assistant"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "moli-core",
+ "moli-i18n",
+ "moli-migration",
+ "moli-runtime",
+ "ring",
+ "rumqttc",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
 name = "moli-host"
 version = "0.1.0"
 dependencies = [
@@ -1823,6 +1844,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "moli-migration"
+version = "0.1.0"
+dependencies = [
+ "moli-core",
+ "moli-runtime",
+ "ring",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "moli-moonraker"
 version = "0.1.0"
 dependencies = [
@@ -1945,6 +1979,7 @@ dependencies = [
  "moli-frigate",
  "moli-helpers",
  "moli-history",
+ "moli-home-assistant",
  "moli-host",
  "moli-huawei-lte",
  "moli-hue",
@@ -1953,6 +1988,7 @@ dependencies = [
  "moli-ipp",
  "moli-landroid",
  "moli-lights",
+ "moli-migration",
  "moli-moonraker",
  "moli-net",
  "moli-netatmo",
@@ -1995,11 +2031,15 @@ dependencies = [
  "http",
  "http-body-util",
  "moli-core",
+ "moli-home-assistant",
  "moli-i18n",
+ "moli-migration",
  "moli-net",
  "moli-runtime",
+ "rumqttc",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "tokio-util",
  "toml",

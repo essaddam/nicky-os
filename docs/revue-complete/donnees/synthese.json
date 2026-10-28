@@ -1,0 +1,468 @@
+{
+  "sections": [
+    {
+      "id": "cible-contrats",
+      "title": "Les contrats qui rendent la cible cohérente",
+      "intro": "Ces règles communes relient les études récentes. Elles ferment les ambiguïtés entre domaines : une autorité par donnée, une seule décision d'émission, des temps bien définis et des garanties annoncées selon la panne réellement couverte.",
+      "ideas": [
+        {
+          "id": "cible-gros-produits",
+          "title": "Transporter un produit borné sans dépasser les messages du courtier",
+          "status": "arbitrage",
+          "decision": "Complément de consolidation entre les bornes MQTT V7 et les produits de la critique des workflows.",
+          "summary": "La borne de 4 Kio d'un message MQTT et la borne de 16 Kio d'un dossier s'appliquent à deux objets différents. Une demande courte transporte une référence et son schéma ; un produit trop grand pour ce message se transfère séparément, sous admission et contrôle d'audience.",
+          "details": [
+            "Pour le canon moli/v1, le message entier reste limité à 4 Kio, avec une charge utile plafonnée à 3,5 Kio pour garder la place des identités, instants et signatures de contexte. Un champ ne grossit pas silencieusement parce qu'un texte respecte sa limite en caractères.",
+            "Une réponse de service porte une référence opaque de produit, sa taille en octets, son empreinte, son type, ses origines, son audience et son expiration. Le consommateur autorisé obtient les octets par service local ou HTTP authentifié borné ; le moteur valide à nouveau le schéma et la taille avant de les admettre dans la réservation du dossier.",
+            "Quand le produit entre dans l'état critique de reprise, le transfert vers le gardien et les pairs le fragmente sous un identifiant de transfert. L'application attend tous les fragments et leur empreinte, dans le budget global de files. Une intention ne reçoit pas l'accusé de pair tant que tous les produits nécessaires à sa reprise ne sont pas présents.",
+            "Le tampon de 10 000 sorties de 46 octets décrit les valeurs compactes du banc HA v2. Il ne dimensionne pas à lui seul les produits, fragments, couches ou reçus ajoutés par la consolidation : leurs octets et leurs métadonnées comptent dans l'admission. Corps de courriel, documents et médias lourds restent chez leur module avec une référence privée."
+          ],
+          "evolution": "Le canon reste petit ; le dossier peut conserver plusieurs produits sans introduire une exception générale de taille sur MQTT.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1,
+              "note": "Messages réseau bornés et services distincts pour les gros contenus."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 96,
+              "note": "Sorties bornées et empreinte calculée par démarche."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 254,
+              "note": "Pont, file de sorties et état complet transféré par morceaux."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "La taille et le temps de transfert du dossier complet doivent être mesurés après portage ; les chiffres du banc de valeurs ne sont pas étendus à ces produits."
+          ]
+        },
+        {
+          "id": "cible-autorites",
+          "title": "Attribuer chaque vérité à un seul propriétaire",
+          "status": "arbitrage",
+          "decision": "Choix de consolidation à partir de la V7, du stockage V3, de la mémoire v2 et de la haute disponibilité v2.",
+          "summary": "Le hub possède l'état vif et le droit d'autoriser les commandes. Le courtier transporte ; le moteur possède la progression des workflows ; le stockage récent possède les opérations d'historique ; le pair recopie l'autorité active sans la recalculer.",
+          "details": [
+            "Une intégration est seule à traduire le protocole de son appareil. Elle publie une observation, jamais une valeur officielle ni un ordre de confiance. Le hub valide l'identité, le type, les instants et la qualité avant de publier la valeur canonique.",
+            "Le programme compilé est partagé ; chaque exécution garde son état compact et son dossier de produits distinct. Une donnée métier durable reste sous l'autorité de son domaine. Les projections affichées et les caches sont reconstruisibles et ne deviennent pas une deuxième source de vérité.",
+            "L'archive est alimentée par les opérations validées du stockage récent, avec leurs séquences d'origine. Le secours recopie les sorties et les états de l'actif ; il ne régénère ni les instants de changement ni les identités d'opération. La promotion transfère l'autorité, elle n'en crée pas une seconde."
+          ],
+          "evolution": "Les propositions successives sont ramenées à ces responsabilités communes ; les mots base, journal, mémoire et copie ne sont plus utilisés comme des synonymes.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 57,
+              "note": "Le hub tient la vérité et le courtier est le transport."
+            },
+            {
+              "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+              "line": 39,
+              "note": "Les quatre étages de conservation ont des responsabilités distinctes."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 254,
+              "note": "La copie conforme reprend les sorties de l'autorité active."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Ce contrat organise la cible ; le code actuel conserve encore son bus broadcast et ses bases SQLite séparées."
+          ]
+        },
+        {
+          "id": "cible-decision-sarah",
+          "title": "Séparer le réflexe déterministe et la décision confiée à Sarah",
+          "status": "arbitrage",
+          "decision": "Décision récente rapportée dans la critique des workflows ; formulation transversale arrêtée par cette consolidation.",
+          "summary": "Un réflexe lit des valeurs, applique des règles et commande sans modèle de langage. Une démarche peut confier à Sarah le choix d'une branche ou d'une valeur bornée, dans un workflow explicitement validé ; le moteur garde seul la validation et l'émission.",
+          "details": [
+            "Le nœud de Sarah produit une donnée typée dans une borne déclarée. Il ne publie jamais cmd/, ne reçoit aucun secret et ne choisit ni appareil supplémentaire ni URL arbitraire. Le compilateur vérifie les branches possibles, les appareils, les bornes et les capacités déléguées lors de la validation humaine du workflow.",
+            "Les portes, serrures, désarmements, pièces protégées et actes auprès de tiers conservent un plancher humain. Une sortie influencée par un contenu extérieur propose par défaut. Un produit absent, trop long, périmé ou hors schéma ne choisit pas silencieusement une branche permissive : la démarche suit sa branche d'échec explicite.",
+            "La règle consolidée s'écrit ainsi : le moteur d'émission et les réflexes restent déterministes ; une décision de Sarah n'est admissible que dans une démarche à délégation humaine explicite, bornée et révocable. Cela remplace dans la cible l'interdiction générale trop large qui contredisait la décision récente. Les règles d'exécution actuelles du dépôt restent appliquées tant que ce contrat n'est pas porté et validé."
+          ],
+          "evolution": "La décision rapportée le 23 octobre précise le rôle de Sarah. Elle n'autorise ni commande libre par un LLM ni contournement de la garde.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 92,
+              "note": "La seconde version rapporte la décision sur Sarah et reconnaît deux règles à réécrire."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1669,
+              "note": "Décision attribuée au propriétaire et plancher de protection."
+            },
+            {
+              "path": "docs/ARCHITECTURE.md",
+              "line": 16,
+              "note": "Règle générale ancienne à contextualiser ; elle demeure la règle du logiciel actuel."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "La présence d'une délégation dans cette conception ne prouve pas sa disponibilité dans le moteur livré."
+          ]
+        },
+        {
+          "id": "cible-reprise-engagements",
+          "title": "Écrire avant l'effet, sur un support qui survit à la panne visée",
+          "status": "arbitrage",
+          "decision": "Consolidation de la critique des workflows avec la haute disponibilité v2 et le redémarrage à chaud.",
+          "summary": "La reprise des workflows utilise la file et le relais du gardien, copiés aux pairs ; elle ne réintroduit pas le journal de réplication disque abandonné. Un engagement irréversible ou auprès d'un tiers attend sa copie accusée par un pair avant émission automatique.",
+          "details": [
+            "Le moteur prépare une identité stable d'engagement, sa cible, son empreinte, son échéance et son état préparé. Il les inscrit dans la file survivant au cœur, puis attend l'accusé du pair requis. L'émission ne commence qu'après ces deux admissions et une dernière vérification de la garde et de l'échéance.",
+            "Sans pair disponible, les réflexes ordinaires continuent. Un engagement irréversible ou externe passe à l'état suspendu et est présenté à un humain ; il ne part pas automatiquement en dégradant sa garantie. Le geste humain direct reste possible sous les protections habituelles, avec une issue honnête et aucun rejeu automatique après une ambiguïté.",
+            "Un reçu émis par un module ou service reconnaissant la même identité termine l'engagement sans refaire l'effet. Si l'émission est possible mais le reçu manque, la reprise recherche le statut ; faute de preuve, elle affiche incertain. Une clé d'idempotence ne constitue pas une garantie exactement une fois si le destinataire ne la reconnaît pas.",
+            "Le journal d'audit et le journal d'export historique D13 restent des domaines durables distincts. L'abandon du journal de réplication disque ne supprime ni les secrets persistants, ni les définitions validées, ni les transactions d'historique.",
+            "Une clé inclut incarnation, époque, exécution, génération et étape à sa création. Une bascule ou une nouvelle incarnation de registre conserve ensuite cette clé originale comme opaque : elle ne la recalcule jamais depuis les nouvelles identités. Une reprise obsolète sans reçu suffisant reste incertaine ; elle ne fabrique pas un nouvel engagement à partir de la même cause."
+          ],
+          "evolution": "Le support de reprise devient celui du gardien et des pairs, comme proposé dans le document le plus récent. La règle écrire avant l'engagement est conservée.",
+          "sources": [
+            {
+              "path": "docs/proposition/redemarrage-a-chaud.md",
+              "line": 675,
+              "note": "La file du gardien est proposée pour remplacer l'écriture disque des engagements."
+            },
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 1694,
+              "note": "L'acquittement du secours était le point à résoudre entre disponibilité et garantie."
+            },
+            {
+              "path": "docs/proposition/haute-disponibilite-v2.md",
+              "line": 254,
+              "note": "File de reprise en mémoire et copie conforme sans journal de réplication disque."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "La panne électrique de toutes les copies volatiles conserve une fenêtre perdable depuis l'instantané. Le document ne promet pas une conservation universelle sans support survivant."
+          ]
+        },
+        {
+          "id": "cible-limites-memoire",
+          "title": "Une admission mémoire explicite pour les démarches et leurs produits",
+          "status": "arbitrage",
+          "decision": "Contrat de dimensionnement fixé pour cette consolidation ; valeurs de départ à éprouver à l'intégration.",
+          "summary": "Le profil compact alloue une zone de travail de 1 Mio, bornée indépendamment de la mémoire des valeurs et du programme compilé. Chaque démarche réserve au plus 16 Kio de produits vivants ; l'admission refuse un départ lorsque sa réservation complète ne tient pas.",
+          "details": [
+            "Le compilateur calcule le pic des produits simultanément vivants, pas la somme de toutes les sorties du graphe. La réservation est prise au démarrage de la démarche et rendue à sa fin. Un produit est libéré après son dernier lecteur ; aucun produit externe ne rentre dans un espace non réservé.",
+            "Le contrat de produit retient au plus 2 000 caractères par texte, 16 champs par objet et 64 cases par démarche, sous un plafond cumulé de 16 Kio d'octets UTF-8 vivants. Les plafonds s'appliquent ensemble : 64 textes maximaux ne sont donc pas admissibles. Une sortie trop grande suit l'issue trop volumineux, sans troncature silencieuse de son sens.",
+            "La concurrence d’un workflow est explicitement choisie : séquentiel par défaut ; parallèle sur validation, dix exécutions au plus, sous la même admission globale. Soixante-quatre dossiers au plus résident dans la zone de 1 Mio. La file de départs contient au plus 1 000 causes compactes et opaques, sous le budget global de 2 Mio pour les files de tous les modules. Les plafonds par nombre et par octets s’appliquent ensemble ; une saturation rend une issue visible. Un dossier endormi quitte la RAM de travail pour le stockage segmenté en mémoire du gardien et des pairs ; il revient seulement si sa réservation peut être réadmise. L’instantané périodique est le filet de reprise après perte de toutes ces mémoires ; aucune base de reprise événementielle sur disque n’est réintroduite.",
+            "Le 1 Mio est un budget de départ de conception, pas un résultat de banc. Les charges existantes de la mémoire v2 portent surtout sur les réflexes ; le portage doit mesurer ensemble zone, files, courtier, snapshots et processus. Un plafond de cgroup ne remplace pas le budget anonyme de 32 Mio.",
+            "Le stockage segmenté des dossiers endormis est lui aussi borné : 2 Mio et 128 dossiers au plus, en-têtes inclus. Les zones de produits, dossiers endormis et files sont comptées séparément puis rapprochées du budget total. Si aucune éviction admissible ne reste, suspendre ou refuser avant d’acquitter la source ; déplacer des octets hors de la zone de travail ne les rend pas gratuits."
+          ],
+          "evolution": "La fiche d'exécution de 64 octets reste compacte ; elle n'est plus présentée comme la mémoire totale d'une démarche avec texte ou service.",
+          "sources": [
+            {
+              "path": "docs/proposition/critique-workflow.md",
+              "line": 96,
+              "note": "Le compilateur connaît l'empreinte, la zone se réserve au départ et les sorties doivent être bornées."
+            },
+            {
+              "path": "docs/proposition/memoire-v2.md",
+              "line": 1,
+              "note": "Programme et exécution compacte ; banc de référence des réflexes."
+            },
+            {
+              "path": "docs/PERFORMANCE.md",
+              "line": 1,
+              "note": "Budgets et définitions des métriques du produit."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Ce dimensionnement ferme le contrat d'admission mais ne constitue pas une mesure validée sur le matériel cible."
+          ]
+        },
+        {
+          "id": "cible-degrade",
+          "title": "Démarrer dégradé seulement lorsque l'autorité nécessaire est intacte",
+          "status": "arbitrage",
+          "decision": "Choix de consolidation pour fermer l'alternative arrêt global ou poursuite silencieuse.",
+          "summary": "Une configuration invalide ou une autorité de sécurité illisible empêche l'activation. Une panne d'intégration, d'historique ou d'archive laisse disponibles les fonctions indépendantes et un diagnostic visible ; aucune valeur inconnue n'est fabriquée.",
+          "details": [
+            "Le démarrage valide les droits, les identités, les définitions et les formats avant tout effet. Si la garde, les droits des personnes ou les secrets nécessaires à l'identité active sont incohérents, le cœur reste en reprise sans commandes physiques ; une page de diagnostic locale et authentifiée explique le défaut.",
+            "Un module d'appareil indisponible est inscrit en attente, ses valeurs sont inconnues et les workflows dépendants ne démarrent pas. Une archive injoignable laisse lire la fenêtre locale avec un indicateur de couverture. Une base d'historique indisponible bloque son export et sa purge ; l'énergie ne prétend plus une continuité de compteur non prouvée.",
+            "Le superviseur des briques surveille leurs sorties, publie le défaut et relance uniquement les briques reconstructibles depuis une autorité saine. Une brique de sécurité non reconstructible maintient le verrou d'activation et sollicite une intervention. L'interface reste utile pour constater l'état ; elle ne masque pas l'incident derrière un voyant sain."
+          ],
+          "evolution": "Les pistes d'isolation de la V1 deviennent une politique d'activation explicite, compatible avec les protections des versions récentes.",
+          "sources": [
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime.md",
+              "line": 1,
+              "note": "Défauts d'isolation et propagation des erreurs au démarrage."
+            },
+            {
+              "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+              "line": 1,
+              "note": "Cloisons et propriétés d'activation de la cible."
+            },
+            {
+              "path": "docs/components/coeur.md",
+              "line": 49,
+              "note": "Supervision, disponibilité et journalisation du runtime actuel."
+            }
+          ],
+          "verification": [],
+          "risks": [
+            "Le mode de diagnostic proposé doit conserver un accès authentifié ; il ne devient pas une porte de commande permissive."
+          ]
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "parcours-valeur",
+      "title": "Un capteur publie une valeur, puis cesse de répondre",
+      "summary": "Suivre la différence entre valeur observée, rapport reçu, changement et fraîcheur.",
+      "steps": [
+        {
+          "title": "Le module reçoit et met au canon",
+          "text": "Il décode un message borné, contrôle l'identité, convertit une fois unités et énumérations et déclare les instants de la source. Une mesure remplaçable se fusionne ; une transition significative garde son identité et son ordre."
+        },
+        {
+          "title": "Le hub valide et publie",
+          "text": "Sur in/, le hub reçoit une proposition d'observation. Il possède la fiche du point et écrit sa valeur, sa précédente, son dernier changement, son dernier rapport et sa qualité, puis publie val/ avec le rang critique s."
+        },
+        {
+          "title": "Les consommateurs lisent la même vérité",
+          "text": "L'écran reçoit une projection filtrée, le moteur relit les points nécessaires et le stockage enregistre selon la nature déclarée. Une valeur identique observée plus récemment peut rafraîchir le point sans créer une transition."
+        },
+        {
+          "title": "L'échéancier rend la péremption visible",
+          "text": "L'échéance de fraîcheur est monotone. Quand elle arrive, la qualité du point change et les conditions composées sont réévaluées. Un dernier contact valide de l'appareil ne rajeunit pas une mesure provenant d'un cache ancien."
+        },
+        {
+          "title": "La reprise conserve le sens du changement",
+          "text": "Le pair copie les sorties et leurs instants, sans recalculer changé à la réception. Un nouvel abonné prend un état figé au rang N, puis les sorties supérieures à N. Un trou critique non récupérable rend les consommateurs dépendants inconnus."
+        }
+      ],
+      "failure": "Un champ absent ou invalide devient inconnu. Un appareil muet dégrade sa disponibilité. Une attente ne se débloque pas sur une ancienne valeur ; elle vérifie génération, qualité et dernier changement.",
+      "sources": [
+        {
+          "path": "docs/proposition/memoire-v2.md",
+          "line": 1,
+          "note": "Fiches, échéances, péremption événementielle et deux horloges."
+        },
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 1,
+          "note": "La référence reste valide seulement avec sa génération et un appareil utilisable."
+        }
+      ]
+    },
+    {
+      "id": "parcours-ordre",
+      "title": "Une personne ou un workflow demande un ordre",
+      "summary": "Suivre l'autorisation jusqu'à une issue qui dit exactement ce que l'appareil a confirmé.",
+      "steps": [
+        {
+          "title": "La surface formule une demande identifiée",
+          "text": "Elle précise point, valeur typée, origine prouvée, identité de requête et échéance absolue. Elle ne publie jamais directement un cmd/ de confiance."
+        },
+        {
+          "title": "Le hub applique la garde",
+          "text": "Il vérifie écriture, plage, droits vivants, portée réelle des membres et protections. Un ordre retenu devient une demande humaine datée ; il n'est pas déjà envoyé."
+        },
+        {
+          "title": "La voie du module admet l'envoi",
+          "text": "Une voie par portée réellement contrainte partage équitablement le budget de sa passerelle. Juste avant le transport, le permis revérifie appelant, autorisation et délai. Une demande périmée ou abandonnée reste non envoyée."
+        },
+        {
+          "title": "Le transport émet une fois",
+          "text": "Après le début d'envoi, une erreur peut signifier peut-être parti. Le système recherche un reçu ou un état au lieu de réémettre aveuglément. Le même identifiant n'autorise un retour de reçu sans effet que si le destinataire sait réellement le reconnaître."
+        },
+        {
+          "title": "L'issue respecte le plafond de preuve",
+          "text": "Un volet RTS peut être exécuté par la box sans position mesurée. Un volet io peut être confirmé par sa position. Un robot accepté n'a pas encore terminé son ménage : son retour à la base est une attente distincte du workflow."
+        }
+      ],
+      "failure": "Une file pleine refuse immédiatement. Une émission ambiguë reste incertaine au journal et à l'écran ; ni un PUBACK MQTT ni un retour HTTP générique ne deviennent une confirmation physique inventée.",
+      "sources": [
+        {
+          "path": "docs/proposition/isolation-reactivite-runtime-v7.md",
+          "line": 1,
+          "note": "Contrat demande/ordre/issue, cas RTS/io et robot."
+        },
+        {
+          "path": "docs/components/coeur.md",
+          "line": 39,
+          "note": "Échéance, abandon et garde présents dans le hub actuel."
+        }
+      ]
+    },
+    {
+      "id": "parcours-demarche",
+      "title": "Une démarche demande à Sarah, puis attend une personne",
+      "summary": "Suivre les trois mémoires : programme, progression et produits du dossier.",
+      "steps": [
+        {
+          "title": "Compiler et valider le contrat",
+          "text": "Le graphe déclare répondeur, type et borne de chaque produit, capacités autorisées, fenêtres d'utilité et branches d'échec. Le compilateur calcule la mémoire maximale simultanée et vérifie chaque lecture de produit."
+        },
+        {
+          "title": "Admettre une exécution",
+          "text": "Une cause immuable est gardée dans la fiche compacte. La zone réserve son budget avant le départ ; si elle est pleine, le départ attend dans sa file bornée ou rend saturé, sans allocation incontrôlée."
+        },
+        {
+          "title": "Recevoir un produit sans lui donner des droits",
+          "text": "Sarah rend un produit typé, jamais une commande libre. Le moteur revérifie schéma, taille, origine et durée d'usage. Un contenu venu du dehors garde son marquage jusque dans les dérivés."
+        },
+        {
+          "title": "Attendre avec une identité de demande",
+          "text": "La question humaine désigne personne, expiration, réponses autorisées et identifiant stable. Une réponse répétée retrouve le reçu ; une réponse périmée n'avance plus le dossier. Les produits sont libérés après leur dernier lecteur."
+        },
+        {
+          "title": "Préparer puis autoriser l'engagement",
+          "text": "Le moteur inscrit l'intention dans la file survivante. Pour un effet irréversible ou auprès d'un tiers, il attend aussi l'accusé d'un pair. La garde vivante est contrôlée immédiatement avant l'émission ; sans pair l'engagement automatique est suspendu."
+        }
+      ],
+      "failure": "Un modèle lent, une personne silencieuse ou un service déconnecté suit une issue explicitement prévue. Aucun silence ne vaut accord et aucun redémarrage ne fabrique une nouvelle exécution d'un engagement ambigu.",
+      "sources": [
+        {
+          "path": "docs/proposition/critique-workflow.md",
+          "line": 80,
+          "note": "Dossier, produit, engagement et origine."
+        },
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 675,
+          "note": "Support de reprise des engagements dans la file et le pair."
+        }
+      ]
+    },
+    {
+      "id": "parcours-stockage",
+      "title": "Une mesure devient une courbe puis une archive",
+      "summary": "Suivre les étages sans confondre fraîcheur en mémoire, précision historique et accusé d'archive.",
+      "steps": [
+        {
+          "title": "L'état vif répond immédiatement",
+          "text": "La dernière valeur sert aux conditions et à l'affichage sans requête sur une base. L'état métier durable conserve les définitions et droits, séparément des séries de mesures."
+        },
+        {
+          "title": "La nature choisit l'enregistrement",
+          "text": "Une mesure se résume par bande et porte min/max réels ; une porte garde ses transitions ; un compteur garde des deltas et son index. Une énumération conserve un code et son dictionnaire révisionné."
+        },
+        {
+          "title": "Le récent valide une opération autonome",
+          "text": "Un unique rédacteur tient les transactions de moli.db, l'outbox et le journal d'export immuable. L'opération garde son nom métier et son seq ; elle n'exporte pas la place mémoire réutilisable du point."
+        },
+        {
+          "title": "L'archive accuse puis publie",
+          "text": "durable_upto signifie reçu durablement ; published_upto signifie publié et autorise la purge conforme. Le format Parquet typé, dictionnaires et compression retenue suivent la V3 ; le service actuel conserve encore son format livré antérieur."
+        },
+        {
+          "title": "La lecture réunit les fenêtres sans doublon",
+          "text": "Le cœur demande à l'archive la partie publiée et superpose le récent après sa frontière de séquence, en filtrant aussi l'intervalle temporel. Un seq n'est jamais utilisé comme une date. L'archive absente laisse une réponse locale explicitement partielle."
+        }
+      ],
+      "failure": "L'export attend une séquence contiguë ; aucune purge ne passe devant la publication. Une archive restaurée trop ancienne pour replay_floor est refusée explicitement. Un relevé trop vieux n'est pas rendu frais par une simple nouvelle lecture de la courbe.",
+      "sources": [
+        {
+          "path": "docs/proposition/valeurs-appareils-stockage-v3.md",
+          "line": 39,
+          "note": "Quatre étages, formes par nature et format Parquet retenu."
+        },
+        {
+          "path": "docs/ARCHITECTURE.md",
+          "line": 204,
+          "note": "D13, séquences et accusés de publication."
+        }
+      ]
+    },
+    {
+      "id": "parcours-reprise",
+      "title": "Le cœur redémarre, ou la machine active disparaît",
+      "summary": "Distinguer le relais sur le même hôte, la copie chez un pair et le retour depuis un instantané.",
+      "steps": [
+        {
+          "title": "Le gardien possède ce qui doit survivre au cœur",
+          "text": "Il garde les sockets d'écoute, les modules isolés, le relais encodé et la file critique. Il ne choisit aucune action pour la maison et ne renouvelle pas le bail à la place du cœur."
+        },
+        {
+          "title": "L'ancien cœur se fige à un rang",
+          "text": "Il cesse les admissions, termine ou qualifie les ordres en vol, vide l'entrée et encode l'état complet au rang N. Le relais inclut progression, générations, échéances et demandes ; les secrets sont relus au coffre."
+        },
+        {
+          "title": "Le nouveau cœur vérifie avant d'agir",
+          "text": "Il charge configuration et formats en mode reprise. Sur le même boot_id il reprend l'origine monotone ; après un autre démarrage il reconvertit les échéances murales. L'époque et le bail doivent toujours l'autoriser à agir."
+        },
+        {
+          "title": "Le pair devient actif uniquement après clôture",
+          "text": "Un témoin ou un mécanisme de clôture exclut l'ancien écrivain. Le pair reprend l'état et le rang s, les sessions autorisées et les opérations d'historique d'origine. Un secours distant garde copie, alerte et cloud sur geste humain ; il ne prend pas les radios."
+        },
+        {
+          "title": "La portée de la garantie est affichée",
+          "text": "Le relais couvre le crash du cœur ; un pair vivant couvre la perte de l'hôte selon son accusé ; un instantané couvre un redémarrage après perte de toutes les mémoires volatiles. Une mise à jour d'image Docker suit l'arrêt figé car elle arrête aussi le gardien."
+        }
+      ],
+      "failure": "Jamais deux actifs. Un retour dont l'état est plus ancien ne remplace pas une copie plus avancée. Sans source assez récente, le système annonce la fenêtre inconnue et n'émet aucun engagement ambigu en reprise.",
+      "sources": [
+        {
+          "path": "docs/proposition/haute-disponibilite-v2.md",
+          "line": 586,
+          "note": "Reprise par les pairs et cas de perte sans journal."
+        },
+        {
+          "path": "docs/proposition/redemarrage-a-chaud.md",
+          "line": 58,
+          "note": "État complet, instantané et relais sont le même format sous des supports distincts."
+        }
+      ]
+    },
+    {
+      "id": "parcours-remplacement",
+      "title": "Un appareil est remplacé sans envoyer d'ordre au mauvais",
+      "summary": "Suivre retrait, succession, grâce et réutilisation sûre de la place mémoire.",
+      "steps": [
+        {
+          "title": "Distinguer absent et retiré",
+          "text": "Un appareil absent garde ses références et peut revenir. Un retrait est un geste explicite : il ferme commandes, attentes, minuteries, baux et approbations, puis marque les automatismes à revoir."
+        },
+        {
+          "title": "Valider la succession",
+          "text": "Le remplacement conserve les usages par des noms métier : pièce, étiquette, plan, favori et rôle de compteur passent au nouvel appareil sous une validation humaine unique. L'ancien reste retiré avec le lien remplacé par."
+        },
+        {
+          "title": "Attendre la grâce puis libérer la place",
+          "text": "Le lot nocturne attend trente jours, et jamais moins que l'horizon maximal d'attente. L'actif décide du lot ; les copies l'appliquent atomiquement après réception de tous ses fragments."
+        },
+        {
+          "title": "Changer la génération et remettre à zéro",
+          "text": "Le numéro porte place et génération. Réutiliser une place incrémente la génération, efface toutes les fiches puis redéclare le nouveau point. Le numéro entier n'est jamais redonné ; après épuisement des générations, la place est condamnée."
+        },
+        {
+          "title": "Conserver les noms dans ce qui dure",
+          "text": "Base, audit, historique d'exécution et archive gardent des identités métier. Le client vérifie l'incarnation du registre et la génération ; une référence inconnue redemande la méta, jamais la dernière valeur d'un occupant précédent."
+        }
+      ],
+      "failure": "Une réponse retardée portant une ancienne génération est refusée. Une attente exige encore une valeur lisible et fraîche, pas seulement changé identique. Une copie qui a manqué le lot reprend un état complet, sans inventer ses propres attributions.",
+      "sources": [
+        {
+          "path": "docs/proposition/nettoyage-equipements.md",
+          "line": 57,
+          "note": "Place, génération, retrait et succession."
+        },
+        {
+          "path": "docs/proposition/memoire-v2.md",
+          "line": 1,
+          "note": "Références compactes et vérification des attentes."
+        }
+      ]
+    }
+  ],
+  "conflicts": [],
+  "transitions": [],
+  "coverage": [
+    "docs/superpowers/plans/2026-10-18-archive-parquet.md"
+  ],
+  "missing": []
+}

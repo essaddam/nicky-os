@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 426" width="1000" height="426" role="img" aria-labelledby="pannes-t pannes-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="pannes-t">Que perd-on, sans journal sur disque ?</title>
+  <desc id="pannes-d">Six cas. L'actif tombe : la mémoire est chez H2, à jour ; perdu, ce qui était en vol, 36 ms au 99e centile. Les deux machines locales tombent : la mémoire est chez le distant ; perdu, son retard, 58 ms en médiane à la cadence de la maison. Coupure de courant avec onduleur : l'arrêt figé au signal de l'onduleur ; rien de perdu. Coupure franche sans onduleur ni distant : le dernier instantané ; au plus sa période d'exécutions et d'attentes, les valeurs revenant des appareils. Le lien du distant tombe une journée : rien de perdu, l'état complet au retour en 1,8 s à 1 Mbit/s. Un actif qui redémarre vide : interdit, il revient en secours.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="426" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="pannes-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="pannes-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="pannes-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="pannes-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="pannes-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="pannes-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="pannes-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="pannes-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="pannes-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="pannes-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="pannes-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="pannes-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="pannes-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="pannes-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="pannes-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="pannes-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="pannes-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="pannes-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="pannes-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="pannes-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="pannes-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="pannes-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="pannes-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="pannes-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="pannes-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="pannes-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="pannes-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="pannes-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="pannes-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="pannes-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <rect x="16" y="16" width="312" height="172" rx="14" fill="url(#pannes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" filter="url(#pannes-o)"/>
+          <text x="32.0" y="42.0" font-size="12" fill="#1d302a" font-weight="700">L'actif tombe</text>
+          <rect x="32" y="65" width="40" height="30" rx="7" fill="#612918"/><rect x="32" y="62" width="40" height="30" rx="7" fill="url(#pannes-h-rouge)"/>
+          <text x="52.0" y="81.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H1</text>
+          <g transform="translate(58.0 54.0) scale(0.5833)" fill="none" stroke="#8b3b22" stroke-width="4.46" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <rect x="82" y="65" width="40" height="30" rx="7" fill="#123d30"/><rect x="82" y="62" width="40" height="30" rx="7" fill="url(#pannes-h-vert)"/>
+          <text x="102.0" y="81.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H2</text>
+          <rect x="132" y="65" width="40" height="30" rx="7" fill="#123d30"/><rect x="132" y="62" width="40" height="30" rx="7" fill="url(#pannes-h-vert)"/>
+          <text x="152.0" y="81.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">D</text>
+          <rect x="280.8" y="66.0" width="31.2" height="19.5" rx="9.8" fill="url(#pannes-h-vert)" stroke="#3d9a75" stroke-opacity="0"/>
+          <text x="288.8" y="79.5" font-size="10.5" fill="#ffffff" font-weight="700">≈ 0</text>
+          <text x="32.0" y="122.0" font-size="10.5" fill="#195744" font-weight="700">la mémoire : chez H2, à jour</text>
+          <text x="32.0" y="137.0" font-size="10" fill="#52615a">perdu : ce qui était en vol (36 ms au 99e centile)</text>
+          <rect x="344" y="16" width="312" height="172" rx="14" fill="url(#pannes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" filter="url(#pannes-o)"/>
+          <text x="360.0" y="42.0" font-size="12" fill="#1d302a" font-weight="700">Les deux machines locales tombent</text>
+          <rect x="360" y="65" width="40" height="30" rx="7" fill="#612918"/><rect x="360" y="62" width="40" height="30" rx="7" fill="url(#pannes-h-rouge)"/>
+          <text x="380.0" y="81.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H1</text>
+          <g transform="translate(386.0 54.0) scale(0.5833)" fill="none" stroke="#8b3b22" stroke-width="4.46" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <rect x="410" y="65" width="40" height="30" rx="7" fill="#612918"/><rect x="410" y="62" width="40" height="30" rx="7" fill="url(#pannes-h-rouge)"/>
+          <text x="430.0" y="81.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H2</text>
+          <g transform="translate(436.0 54.0) scale(0.5833)" fill="none" stroke="#8b3b22" stroke-width="4.46" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <rect x="460" y="65" width="40" height="30" rx="7" fill="#123d30"/><rect x="460" y="62" width="40" height="30" rx="7" fill="url(#pannes-h-vert)"/>
+          <text x="480.0" y="81.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">D</text>
+          <rect x="608.8" y="66.0" width="31.2" height="19.5" rx="9.8" fill="url(#pannes-h-vert)" stroke="#3d9a75" stroke-opacity="0"/>
+          <text x="616.8" y="79.5" font-size="10.5" fill="#ffffff" font-weight="700">≈ 0</text>
+          <text x="360.0" y="122.0" font-size="10.5" fill="#195744" font-weight="700">la mémoire : chez le distant</text>
+          <text x="360.0" y="137.0" font-size="10" fill="#52615a">perdu : son retard, 58 ms en médiane</text>
+          <rect x="672" y="16" width="312" height="172" rx="14" fill="url(#pannes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" filter="url(#pannes-o)"/>
+          <text x="688.0" y="42.0" font-size="12" fill="#1d302a" font-weight="700">Coupure de courant, avec onduleur</text>
+          <rect x="688" y="65" width="40" height="30" rx="7" fill="#37413d"/><rect x="688" y="62" width="40" height="30" rx="7" fill="url(#pannes-h-gris)"/>
+          <text x="708.0" y="81.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H1</text>
+          <g transform="translate(714.0 54.0) scale(0.5833)" fill="none" stroke="#94660a" stroke-width="3.77" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <rect x="738" y="65" width="40" height="30" rx="7" fill="#37413d"/><rect x="738" y="62" width="40" height="30" rx="7" fill="url(#pannes-h-gris)"/>
+          <text x="758.0" y="81.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H2</text>
+          <g transform="translate(764.0 54.0) scale(0.5833)" fill="none" stroke="#94660a" stroke-width="3.77" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <rect x="788" y="62" width="40" height="30" rx="7" fill="none" stroke="#97a39d" stroke-dasharray="3 3"/>
+          <text x="808.0" y="81.0" font-size="10" fill="#97a39d" font-weight="700" text-anchor="middle">D</text>
+          <rect x="932.4" y="66.0" width="35.6" height="19.5" rx="9.8" fill="url(#pannes-h-vert)" stroke="#3d9a75" stroke-opacity="0"/>
+          <text x="940.4" y="79.5" font-size="10.5" fill="#ffffff" font-weight="700">rien</text>
+          <text x="688.0" y="122.0" font-size="10.5" fill="#195744" font-weight="700">l'arrêt figé, au signal de l'onduleur</text>
+          <text x="688.0" y="137.0" font-size="10" fill="#52615a">perdu : rien</text>
+          <rect x="16" y="202" width="312" height="172" rx="14" fill="url(#pannes-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" filter="url(#pannes-o)"/>
+          <text x="32.0" y="228.0" font-size="12" fill="#1d302a" font-weight="700">Coupure franche, sans onduleur ni distant</text>
+          <rect x="32" y="251" width="40" height="30" rx="7" fill="#612918"/><rect x="32" y="248" width="40" height="30" rx="7" fill="url(#pannes-h-rouge)"/>
+          <text x="52.0" y="267.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H1</text>
+          <g transform="translate(58.0 240.0) scale(0.5833)" fill="none" stroke="#8b3b22" stroke-width="4.46" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <rect x="82" y="251" width="40" height="30" rx="7" fill="#612918"/><rect x="82" y="248" width="40" height="30" rx="7" fill="url(#pannes-h-rouge)"/>
+          <text x="102.0" y="267.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H2</text>
+          <g transform="translate(108.0 240.0) scale(0.5833)" fill="none" stroke="#8b3b22" stroke-width="4.46" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <rect x="132" y="248" width="40" height="30" rx="7" fill="none" stroke="#97a39d" stroke-dasharray="3 3"/>
+          <text x="152.0" y="267.0" font-size="10" fill="#97a39d" font-weight="700" text-anchor="middle">D</text>
+          <rect x="268.2" y="252.0" width="43.8" height="19.5" rx="9.8" fill="url(#pannes-h-ambre)" stroke="#e0a12a" stroke-opacity="0"/>
+          <text x="276.2" y="265.5" font-size="10.5" fill="#ffffff" font-weight="700">borné</text>
+          <text x="32.0" y="308.0" font-size="10.5" fill="#94660a" font-weight="700">la mémoire : le dernier instantané</text>
+          <text x="32.0" y="323.0" font-size="10" fill="#52615a">perdu : au plus sa période d'exécutions ; les</text>
+          <text x="32.0" y="337.0" font-size="10" fill="#52615a">valeurs, les appareils les redonnent</text>
+          <rect x="344" y="202" width="312" height="172" rx="14" fill="url(#pannes-f-vert)" stroke="#3d9a75" stroke-opacity=".55" filter="url(#pannes-o)"/>
+          <text x="360.0" y="228.0" font-size="12" fill="#1d302a" font-weight="700">Le lien du distant tombe une journée</text>
+          <rect x="360" y="251" width="40" height="30" rx="7" fill="#123d30"/><rect x="360" y="248" width="40" height="30" rx="7" fill="url(#pannes-h-vert)"/>
+          <text x="380.0" y="267.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H1</text>
+          <rect x="410" y="251" width="40" height="30" rx="7" fill="#123d30"/><rect x="410" y="248" width="40" height="30" rx="7" fill="url(#pannes-h-vert)"/>
+          <text x="430.0" y="267.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H2</text>
+          <rect x="460" y="251" width="40" height="30" rx="7" fill="#37413d"/><rect x="460" y="248" width="40" height="30" rx="7" fill="url(#pannes-h-gris)"/>
+          <text x="480.0" y="267.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">D</text>
+          <g transform="translate(486.0 240.0) scale(0.5833)" fill="none" stroke="#94660a" stroke-width="3.77" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <rect x="604.4" y="252.0" width="35.6" height="19.5" rx="9.8" fill="url(#pannes-h-vert)" stroke="#3d9a75" stroke-opacity="0"/>
+          <text x="612.4" y="265.5" font-size="10.5" fill="#ffffff" font-weight="700">rien</text>
+          <text x="360.0" y="308.0" font-size="10.5" fill="#195744" font-weight="700">le distant garde sa mémoire, figée</text>
+          <text x="360.0" y="323.0" font-size="10" fill="#52615a">perdu : rien ; au retour, l'état complet (1,8 s à</text>
+          <text x="360.0" y="337.0" font-size="10" fill="#52615a">1 Mbit/s)</text>
+          <rect x="672" y="202" width="312" height="172" rx="14" fill="url(#pannes-f-rouge)" stroke="#d06a46" stroke-opacity=".55" filter="url(#pannes-o)"/>
+          <text x="688.0" y="228.0" font-size="12" fill="#1d302a" font-weight="700">Un actif redémarre vide</text>
+          <rect x="688" y="251" width="40" height="30" rx="7" fill="#37413d"/><rect x="688" y="248" width="40" height="30" rx="7" fill="url(#pannes-h-gris)"/>
+          <text x="708.0" y="267.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H1</text>
+          <g transform="translate(714.0 240.0) scale(0.5833)" fill="none" stroke="#94660a" stroke-width="3.77" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <rect x="738" y="251" width="40" height="30" rx="7" fill="#123d30"/><rect x="738" y="248" width="40" height="30" rx="7" fill="url(#pannes-h-vert)"/>
+          <text x="758.0" y="267.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">H2</text>
+          <rect x="788" y="251" width="40" height="30" rx="7" fill="#123d30"/><rect x="788" y="248" width="40" height="30" rx="7" fill="url(#pannes-h-vert)"/>
+          <text x="808.0" y="267.0" font-size="10.5" fill="#ffffff" font-weight="700" text-anchor="middle">D</text>
+          <rect x="926.8" y="252.0" width="41.2" height="19.5" rx="9.8" fill="url(#pannes-h-rouge)" stroke="#d06a46" stroke-opacity="0"/>
+          <text x="934.8" y="265.5" font-size="10.5" fill="#ffffff" font-weight="700">règle</text>
+          <text x="688.0" y="308.0" font-size="10.5" fill="#8b3b22" font-weight="700">le piège de Redis : ses copies se videraient</text>
+          <text x="688.0" y="323.0" font-size="10" fill="#52615a">interdit : il revient en secours et prend l'état du</text>
+          <text x="688.0" y="337.0" font-size="10" fill="#52615a">plus avancé</text>
+  <text x="18" y="403" font-size="12" fill="#52615a" font-style="italic">Sans journal, la durabilité vient des autres machines. Le seul cas qui coûte est la panne franche de tout, sans onduleur ni distant : l'instantané en</text>
+  <text x="18" y="420" font-size="12" fill="#52615a" font-style="italic">borne la perte.</text>
+</svg>

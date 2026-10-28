@@ -182,6 +182,92 @@ async fn rest_command_round_trip() {
 }
 
 #[tokio::test]
+async fn home_assistant_migration_http_is_household_only_pin_gated_and_bounded() {
+    let root = tempfile::tempdir().unwrap();
+    let hub = Hub::new(HubOptions::default()).unwrap();
+    let native_instance = InstanceId::from("fixture-overkiz");
+    let native_device = moli_core::DeviceId::new(&native_instance, "cover");
+    hub.manage_write_instance(&native_instance);
+    let registry = moli_migration::Registry::open(hub.clone(), root.path().join("migration.json"))
+        .await
+        .unwrap();
+    let gateway = moli_home_assistant::Gateway::new(
+        &moli_home_assistant::Config {
+            host: "127.0.0.1".into(),
+            port: 1883,
+            installation: "fixture-ha".into(),
+            base_topic: "moli/ha-bridge/fixture-ha".into(),
+            client_id: None,
+            tls: false,
+            native_instances: vec![native_instance],
+        },
+        hub.clone(),
+        registry,
+    )
+    .unwrap();
+    let mut home_assistant = std::collections::BTreeMap::new();
+    home_assistant.insert("fixture-ha".into(), gateway.clone());
+    let options = moli_api::Options {
+        ui_pin: Some(moli_api::UiPin::new("482915")),
+        home_assistant,
+        ..moli_api::Options::default()
+    };
+    let addr = serve(&hub, &options).await;
+
+    let authority_before = hub.write_authority(&native_device);
+    assert_eq!(
+        authority_before,
+        Some(moli_runtime::WriteAuthority {
+            generation: 1,
+            allowed: false,
+        })
+    );
+    let (status, snapshot_body) = request(
+        &addr,
+        "GET",
+        "/api/integrations/home-assistant/fixture-ha",
+        None,
+    )
+    .await;
+    assert_eq!(status, 200, "{snapshot_body}");
+    assert!(snapshot_body.contains("fixture-ha"));
+    assert!(!snapshot_body.contains("mqtt_password"));
+    let (status, unknown) = request(
+        &addr,
+        "GET",
+        "/api/integrations/home-assistant/unknown",
+        None,
+    )
+    .await;
+    assert_eq!(status, 404, "{unknown}");
+    assert!(!unknown.contains("mqtt_password"));
+
+    let prepare_path = "/api/integrations/home-assistant/fixture-ha/prepare";
+    let (status, denied) = request(&addr, "POST", prepare_path, Some(&json!({}))).await;
+    assert_eq!(status, 403, "{denied}");
+    assert_eq!(hub.write_authority(&native_device), authority_before);
+
+    let pin = pin_session(&addr, "482915").await;
+    let oversized = json!({"padding": "x".repeat(9000)});
+    let (status, limited) = request_with(&addr, "POST", prepare_path, Some(&oversized), &pin).await;
+    assert_eq!(status, 413, "{limited}");
+    assert_eq!(hub.write_authority(&native_device), authority_before);
+
+    // No HTTP route can acknowledge a proof; only the MQTT companion can do it.
+    let before = gateway.snapshot().await["migration"].clone();
+    let (status, _) = request_with(
+        &addr,
+        "POST",
+        "/api/integrations/home-assistant/fixture-ha/proof",
+        Some(&json!({"quiescent": true, "observed_owner": "ha"})),
+        &pin,
+    )
+    .await;
+    assert_eq!(status, 404);
+    assert_eq!(gateway.snapshot().await["migration"], before);
+}
+
+#[tokio::test]
 async fn auto_h1_rest_timer_requests_validate_duration_and_preserve_retries() {
     let hub = Hub::new(HubOptions::default()).unwrap();
     let config = serde_json::from_value(

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 361" width="1000" height="361" role="img" aria-labelledby="cloud-t cloud-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="cloud-t">Le cloud repris par le secours distant</title>
+  <desc id="cloud-d">Un automate à quatre états. La maison porte le cloud. Si les deux veilles se taisent, un geste humain donne l'époque cloud suivante au distant. Quand la maison revient, elle lit l'époque cloud chez le distant et ne relance rien. Un geste humain lui rend la main avec l'époque suivante. Une seule veille muette ne déclenche rien.</desc>
+  <rect width="1000" height="361" fill="#fffdf8"/>
+          <defs>
+            <marker id="cloud-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="cloud-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="cloud-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="cloud-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">L'ÉPOQUE CLOUD, D'UN GESTE HUMAIN À L'AUTRE</text>
+          <rect x="16.0" y="50.0" width="300.0" height="70.0" rx="14" fill="#ffffff" stroke="#195744" stroke-width="1.8"/>
+          <text x="166.0" y="80.0" font-size="12" fill="#1d302a" font-weight="700" text-anchor="middle">La maison porte le cloud</text>
+          <text x="166.0" y="100.0" font-size="10.5" fill="#52615a" text-anchor="middle">époque cloud N : le cas normal</text>
+          <rect x="684.0" y="50.0" width="300.0" height="70.0" rx="14" fill="#ffffff" stroke="#b07d12" stroke-width="1.8"/>
+          <text x="834.0" y="80.0" font-size="12" fill="#1d302a" font-weight="700" text-anchor="middle">Le distant porte le cloud</text>
+          <text x="834.0" y="100.0" font-size="10.5" fill="#52615a" text-anchor="middle">époque cloud N + 1</text>
+          <rect x="684.0" y="220.0" width="300.0" height="70.0" rx="14" fill="#ffffff" stroke="#52615a" stroke-width="1.8"/>
+          <text x="834.0" y="250.0" font-size="12" fill="#1d302a" font-weight="700" text-anchor="middle">La maison revient</text>
+          <text x="834.0" y="270.0" font-size="10.5" fill="#52615a" text-anchor="middle">lit l'époque cloud ; ne relance rien</text>
+          <rect x="16.0" y="220.0" width="300.0" height="70.0" rx="14" fill="#ffffff" stroke="#195744" stroke-width="1.8"/>
+          <text x="166.0" y="250.0" font-size="12" fill="#1d302a" font-weight="700" text-anchor="middle">Rendre la main</text>
+          <text x="166.0" y="270.0" font-size="10.5" fill="#52615a" text-anchor="middle">époque cloud N + 2 à la maison</text>
+          <line x1="318.0" y1="78.0" x2="682.0" y2="78.0" stroke="#b07d12" stroke-width="2" marker-end="url(#cloud-a)"/>
+          <text x="500.0" y="68.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">les deux veilles se taisent, puis un geste humain</text>
+          <line x1="834.0" y1="122.0" x2="834.0" y2="218.0" stroke="#52615a" stroke-width="1.6" marker-end="url(#cloud-g)"/>
+          <text x="842.0" y="176.0" font-size="10" fill="#52615a" paint-order="stroke" stroke="#fffdf8" stroke-width="4">la maison redémarre</text>
+          <line x1="682.0" y1="255.0" x2="318.0" y2="255.0" stroke="#195744" stroke-width="2" marker-end="url(#cloud-v)"/>
+          <text x="500.0" y="245.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">geste humain</text>
+          <line x1="166.0" y1="218.0" x2="166.0" y2="122.0" stroke="#195744" stroke-width="1.6" marker-end="url(#cloud-v)"/>
+          <text x="16.0" y="150.0" font-size="10" fill="#52615a">une seule veille muette :</text>
+          <text x="16.0" y="164.0" font-size="10" fill="#52615a">c'est le lien, pas la maison</text>
+          <text x="16.0" y="178.0" font-size="10" fill="#52615a">→ aucune proposition</text>
+          <text x="684.0" y="310.0" font-size="10" fill="#52615a">distant injoignable au redémarrage : un humain décide</text>
+          <text x="16.0" y="316.0" font-size="10.5" fill="#52615a">Le distant ne touche jamais aux radios ni au réseau local ; il n'appelle un cloud et ne renouvelle un jeton que s'il porte l'époque cloud.</text>
+  <text x="16" y="357" font-size="12" fill="#52615a" font-style="italic">Les deux veilles : le pont par NetBird, et un battement direct en HTTPS. Une seule qui se tait, c'est le lien, pas la maison.</text>
+</svg>

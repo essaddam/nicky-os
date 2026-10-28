@@ -1,0 +1,77 @@
+<p class="lead">64 octets pour une ligne commune avec références ; 96 octets si l’on garde aussi min, max, pas et origine de grille dans chaque ligne. Ces tailles sont vérifiées en Rust sous Linux ARM64 ; elles ne sont pas le poids total de toutes les données.</p>
+<div class="notice"><b>Il n’existe pas de taille fixe minimale qui contienne intégralement toutes les valeurs possibles.</b> Un texte ou composite peut dépasser n’importe quelle case fixe. Un scalaire i64/f64 tient en 8 octets ; une fiche complète doit ajouter son type, ses dates, ses capacités et ses références. Les formats 64/96 o sont deux contrats proposés et vérifiés, pas une preuve de minimum théorique universel.</div>
+<h3>1. Ce qu’on met dans la même ligne</h3>
+<p>Un tableau contigu de fiches de même taille ; un numéro stable donne la position, un discriminant indique <code>value</code>, <code>action</code> ou <code>device</code>. Les équipements ont donc eux aussi une ligne. Les références parent/enfants relient les objets ; les identités publiques restent dans un annuaire. Une case vide n’est pas un objet absent : présence, inconnu et capacité sont des flags explicites.</p>
+<div class="scroll"><table><thead><tr><th>Offset</th><th>Champ</th><th>Taille</th><th>Sens</th></tr></thead><tbody>
+<tr><td>0</td><td>payload u64</td><td>8 o</td><td>Bits d’un i64/f64, bool/enum, ou handle vers texte/record ; jamais une conversion i64→f64 implicite.</td></tr>
+<tr><td>8</td><td>observed_ms u64</td><td>8 o</td><td>Date d’observation amont, si connue ; présence séparée.</td></tr>
+<tr><td>16</td><td>received_ms u64</td><td>8 o</td><td>Dernière réception valide dans le hub.</td></tr>
+<tr><td>24</td><td>changed_ms u64</td><td>8 o</td><td>Dernier changement de la valeur effective selon le contrat ; pas chaque réception.</td></tr>
+<tr><td>32</td><td>parent u32</td><td>4 o</td><td>Équipement, composite ou conteneur parent.</td></tr>
+<tr><td>36</td><td>identity u32</td><td>4 o</td><td>Référence d’identité dans l’annuaire ; libellés via métadonnées.</td></tr>
+<tr><td>40</td><td>schema u32</td><td>4 o</td><td>Référence de descripteur versionné, partagé quand identique.</td></tr>
+<tr><td>44</td><td>aux u32</td><td>4 o</td><td>Extension typée : numérique, liens d’actions, équipement…</td></tr>
+<tr><td>48</td><td>revision u32</td><td>4 o</td><td>Révision locale de fiche ; saturation/changement d’époque défini, jamais ABA ignoré.</td></tr>
+<tr><td>52 / 54</td><td>unit / semantic u16</td><td>4 o</td><td>Numéros de dictionnaires, pas des symboles répétés.</td></tr>
+<tr><td>56</td><td>flags u16</td><td>2 o</td><td>Lisible, set présent, refresh présent, qualité, dates/bornes présentes… Répartition normative à figer ; extension si nécessaire.</td></tr>
+<tr><td>58 / 59</td><td>scale i8 / decimals u8</td><td>2 o</td><td>Échelle décimale fixe éventuelle et précision d’affichage ; sentinelles/validité explicites. Pas un facteur d’unité universel.</td></tr>
+<tr><td>60 / 61</td><td>row_kind / value_kind u8</td><td>2 o</td><td>Objet value/action/device et représentation de sa charge.</td></tr>
+<tr><td>62</td><td>codec u16</td><td>2 o</td><td>Référence bornée de conversion ; le contrat complet est externe.</td></tr>
+</tbody></table></div>
+<p><b>Total exact : 64 octets, sans champ Option Rust ni pointeur natif.</b> Les dates sont en millisecondes UTC sur 64 bits. Cela évite de gagner quelques octets avec des secondes u32 ou des écarts i16 au prix de bornes temporelles cachées. L’horloge monotone nécessaire aux délais reste à part ; les dates civiles ne deviennent pas une autorité pour les timeouts.</p>
+<p>Capacités : <code>read-only = read &amp;&amp; !has_set</code>. Ne pas stocker aussi un flag readonly indépendant qui pourrait contredire has_set. Write-only et absence de capacité restent possibles. Le bit has_set annonce une capacité ; le contrat et les arguments permis viennent de sa référence d’action, l’autorisation étant vérifiée au moment d’agir.</p>
+<h3>2. Min/max pour pourcentages et autres nombres</h3>
+<p>Chaque valeur numérique peut avoir min et max, indépendamment de son unité ; chaque borne est facultative et sa présence explicite. Un pourcentage natif porte normalement une référence 0–100, mais ses commandes peuvent être limitées, par exemple à 5–100. Une plage signée, un compteur ou une mesure peuvent aussi avoir des bornes différentes ou inconnues.</p>
+<pre>Numeric32 : 32 octets — commun à tous les nombres
+  min_bits    u64  8 o
+  max_bits    u64  8 o
+  step_bits   u64  8 o
+  anchor_bits u64  8 o
+
+Les bits sont interprétés selon le type numérique du schéma :
+  i64 exact OU f64 fini OU entier décimal à échelle fixe.
+La présence des champs est déclarée séparément ; zéro n’est pas « absent ».
+
+Percent32 : 32 octets supplémentaires si une normalisation est nécessaire
+  reference_low  u64   8 o
+  reference_high u64   8 o
+  version        u32   4 o
+  curve_ref      u32   4 o
+  mode           u16   2 o
+  réserve              6 o</pre>
+<p>Numeric32 décrit ici le domaine de commande et sa grille. Une enveloppe d’observation différente reste dans une extension de schéma. Percent32 distingue ratio, % natif, plage croissante ou décroissante, courbe déclarée. Un pourcentage déjà natif peut partager son schéma et n’a pas besoin d’une extension privée de normalisation. Ces extensions peuvent être internées et partagées ; elles ne sont pas automatiquement dupliquées par ligne.</p>
+<p><b>Variante 96 o :</b> les 64 o communs suivis des 32 o Numeric32. Min/max/pas/origine sont donc accessibles dans la même ligne. Les actions et équipements réservent les mêmes 32 o même s’ils restent inutilisés. Une plage de référence distincte, une courbe, plusieurs domaines ou une description composite restent externes même dans ce format.</p>
+<h3>3. Les trois catégories gardent leur sens</h3>
+<div class="scroll"><table><thead><tr><th>Catégorie</th><th>Charge / liens</th><th>Dates</th><th>Ce qui reste à côté</th></tr></thead><tbody>
+<tr><td>Valeur</td><td>Scalaire ou référence de composite ; liens get/set/refresh via schéma/extension</td><td>Observation amont, réception hub, changement de valeur</td><td>Ancienne valeur si nécessaire, détails qualité et date de qualité, schémas, texte, contraintes.</td></tr>
+<tr><td>Action</td><td>Référence de contrat et éventuellement valeur cible ; paramètres non retenus comme état artificiel</td><td>Dates de synthèse de dernière activité, clairement typées ; aucune action effectuée = dates absentes</td><td>Chaque invocation, arguments, files, reçus, permis, confirmation et génération. Plusieurs invocations concurrentes ne tiennent pas dans une unique dernière ligne.</td></tr>
+<tr><td>Équipement</td><td>État de santé résumé et références pilote, parent/bus, métadonnées et membres</td><td>Dernière observation de santé, dernier contact reçu, dernier changement de santé déclaré</td><td>Liste des points/actions, rythme, échéance monotone, capacités, pièces et protections.</td></tr>
+</tbody></table></div>
+<p><b>Sur l’équipement lui-même :</b> last_contact peut avancer à chaque preuve de vie valide, même si toutes les valeurs restent égales. last_health_change n’avance que si sa santé change. Si l’on souhaite aussi « dernière modification d’une de ses valeurs », c’est un autre agrégat horodaté de 8 o dans l’extension ; ne pas réutiliser la date de santé. Un message d’un enfant ne prouve la disponibilité de son parent que si le pilote déclare cette relation. Les dates d’un set demandé ne remplacent jamais l’observation du matériel.</p>
+<p>Une action get/set peut avoir sa propre fiche référencée par la valeur, conformément au souhait d’une représentation uniforme ; l’action ne duplique pas son schéma numérique. Une action autonome n’exige aucun point fictif. Le nombre de fiches actions doit être compté séparément des valeurs, sans recréer une seconde fiche pour les points write-only déjà reclassés.</p>
+<h3>4. Taille vérifiée, cache et limites des handles</h3>
+<p>Le petit banc Rust vérifie <code>size_of</code>, <code>align_of</code>, l’offset final et le pas réel d’un tableau. Résultat : <b>Linux ARM64 : Ligne64 = 64 o, alignement 64 ; Ligne96 = 96 o, alignement 8 ; Numeric32 et Percent32 = 32 o</b>. 2 760 fiches demandent respectivement 176 640 et 264 960 octets de contenu. Aucune mesure RSS ou de latence n’est déduite de ce test de layout.</p>
+<p>La fiche 64 est alignée sur 64 par <code>repr(C, align(64))</code>. Sur une machine à lignes de cache de 64 o, elle occupe une ligne de cache ; ce n’est pas une garantie universelle de taille de cache. Le format 96 est une fiche logique de 96 o : si on lui impose aussi un alignement de 64, Rust arrondit son pas à 128 o. Le banc garde donc un alignement de 8 pour préserver les 96 o annoncés.</p>
+<p>Les références u32 limitent les espaces à moins de 2³² entrées et requièrent validation, sentinelle documentée et absence de réemploi ambigu. Un handle peut numéroter des objets segmentés, sans imposer une limite globale de 4 Gio aux octets de texte. Les dictionnaires u16 sont limités à moins de 65 536 entrées par espace. Les débordements, saturations et versions doivent être refusés ou migrés explicitement.</p>
+<h3>5. Les environnements et leurs coûts fixes</h3>
+<p>Les études précédentes donnent une petite maison de 50 équipements / 250 points, et un jeu réunissant deux maisons de 496 équipements / 2 264 points. Leur découpage individuel n’est pas disponible dans le constructeur du banc mémoire ; aucune répartition n’est inventée. On reprend leur somme, puis ×10 et, pour une charge massive supplémentaire, ×100. Les nombres sont des dimensions de scénarios, pas un nouvel inventaire réel.</p>
+<p><b>Hypothèse de charge actions :</b> une fiche action par valeur dans la colonne A=V. Ce n’est ni un décompte réel ni un maximum : un appareil peut avoir plusieurs actions par valeur, ou des gestes autonomes. La colonne A=0 isole la base valeurs+équipements. Le calcul exact est <code>N = V + A + E</code> puis <code>64N</code> ou <code>96N</code>.</p>
+<!-- MEMORY_TABLE -->
+<p>Le coût fixe de 96 o représente exactement +50 % par rapport à 64 o, avant extensions. Le format 64 avec Numeric32 pour toutes les valeurs coûte <code>64(V+A+E)+32V</code>, donc économise <code>32(A+E)</code> face à 96 o partout, à métadonnées égales. Si chaque valeur a une extension différente et que les équipements/actions utilisent aussi ces 32 o, l’économie disparaît. L’internage peut la renforcer, mais reste à mesurer sur les véritables descripteurs.</p>
+<h3>6. Budget élargi : les octets qu’il ne faut pas oublier</h3>
+<pre>M64 = 64N + 32Dn + 32Dp + Bpayload + Bschemas + Bannuaire
+      + Bindex + Bexecution + Bcapacity + Ballocator
+M96 = 96N + 32Dp + Bpayload + Bschemas + Bannuaire
+      + Bindex + Bexecution + Bcapacity + Ballocator
+
+Dn : nombre de Numeric32 uniques, pas nécessairement V
+Dp : nombre de Percent32 uniques
+Bpayload : textes, composites et autres données variables</pre>
+<p>Les deux lignes utilisent les mêmes informations : Numeric32 est externe dans M64 et inline dans M96. Le schéma doit aussi chiffrer les enveloppes supplémentaires réellement requises. Un booléen n’a pas besoin de bornes numériques ; un composite compte sa fiche parent, ses membres et leur regroupement sans double comptage des projections.</p>
+<p>Pour donner un ordre de grandeur reproductible, le tableau suivant ajoute une <b>hypothèse synthétique</b> : Dn=V, Dp=V, 52 o d’annuaire par fiche (ancienne estimation du banc pour un nom moyen de 39 caractères), 24 o de libellé par fiche, et 256 o de charge variable pour chaque valeur et action. Rien ne prouve que ces moyennes décrivent les maisons ; ce n’est pas une borne supérieure. Les index, capacités excédentaires, allocations, historiques et exécutions restent exclus.</p>
+<!-- MEMORY_EXPANDED -->
+<p>Un texte accepté peut atteindre 4 000 caractères et nécessiter jusqu’à 16 000 octets UTF-8, hors index et allocation ; la moyenne de 256 o ne couvre pas un cas où toutes les valeurs atteignent cette limite. Il faut fixer les quotas de payload et de composites avant de parler de maximum garanti. Aucune des tables n’est le RSS du processus Moli complet ni la preuve du respect des 32 Mio anonymes.</p>
+<h3>7. Proposition et prochain banc</h3>
+<p><b>Pour ton format strictement uniforme avec bornes directement présentes, retenir 96 octets par fiche.</b> Le modèle 64 o reste l’alternative compacte à comparer, avec extensions numériques partagées. Les deux gardent les mêmes champs communs et les mêmes discriminants ; changer de représentation ne change pas le sens ni les droits.</p>
+<p>À information égale, le prochain banc devra mesurer : annuaire réel, descriptions uniques, payloads, index de membres, coût de recherche, lecture aléatoire, mise à jour des trois dates, contention entre voisins, copies de snapshots, exécutions concurrentes et reprise. Comparer aussi les colonnes chaud/froid de l’étude mémoire v2, qui peuvent mieux servir les parcours de conditions ; l’uniformité ne prouve pas à elle seule le meilleur débit.</p>
+<p>Sources et reproduction : <a href="banc-lignes.rs">banc Rust de layout</a>, <a href="layout-lignes-linux.json">résultat Linux brut</a>, <a href="../memoire-v2.md">étude mémoire précédente</a>, <a href="../../../tools/memoire-banc/src/maison.rs">dimensions du banc</a>, <a href="../isolation-reactivite-runtime-v5.md">petite maison et jeu cumulé</a>. Le générateur produit les tables par calcul ; les totaux élargis sont des estimations paramétrées, pas des allocations mesurées.</p>

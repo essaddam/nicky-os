@@ -1,0 +1,2585 @@
+{
+  "cases": [
+    {
+      "case": "cross_initial",
+      "snapshot": {
+        "computed_at_ms": 1793128929747,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 3303,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": 2098105,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "90b43503b4c20c3e84326b742d8ba7214efabd0f0bfe02ddd18f8a0f075a0f57"
+              },
+              {
+                "document_bytes": 2098105,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1629,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "90b43503b4c20c3e84326b742d8ba7214efabd0f0bfe02ddd18f8a0f075a0f57"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "local",
+            "sequence": 1
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928980,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "36087820fd7118b21cae5edda7d0ef71017fb87b3ea2e9df3bb5a3c74f381f71"
+              },
+              {
+                "document_bytes": 1928980,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1488,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "36087820fd7118b21cae5edda7d0ef71017fb87b3ea2e9df3bb5a3c74f381f71"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 1
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 0,
+          "ticks": 1
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 15198623,
+            "cpu_percent_one_core": 10.761988167437295,
+            "error": null,
+            "fenced": false,
+            "id": "node-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 39567360,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 15198623,
+            "cpu_percent_one_core": 10.761742788234042,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 37502976,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-b"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-a"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "coordinator_compute_pause",
+      "pause_ms": 3500,
+      "snapshot": {
+        "computed_at_ms": 1793128934079,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 3303,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": 2098105,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "90b43503b4c20c3e84326b742d8ba7214efabd0f0bfe02ddd18f8a0f075a0f57"
+              },
+              {
+                "document_bytes": 2098105,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1629,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "90b43503b4c20c3e84326b742d8ba7214efabd0f0bfe02ddd18f8a0f075a0f57"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "local",
+            "sequence": 1
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928980,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "36087820fd7118b21cae5edda7d0ef71017fb87b3ea2e9df3bb5a3c74f381f71"
+              },
+              {
+                "document_bytes": 1928980,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1488,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "36087820fd7118b21cae5edda7d0ef71017fb87b3ea2e9df3bb5a3c74f381f71"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 1
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 0,
+          "ticks": 1
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 15198600,
+            "cpu_percent_one_core": 0.0,
+            "error": null,
+            "fenced": false,
+            "id": "node-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 35356672,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 15198600,
+            "cpu_percent_one_core": 0.0,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 35405824,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-b"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-a"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "wan_partition_independent_houses",
+      "snapshot": {
+        "computed_at_ms": 1793128988721,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 3303,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          },
+          {
+            "at_ms": 12592,
+            "house": "",
+            "kind": "wan_isolated",
+            "node": "node-a"
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": 2098108,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 25,
+                "sha256": "6718e45d7f878997f3094a8034987efa7c5d52397c55a04ae25e46d1f10d6d1c"
+              },
+              {
+                "document_bytes": 2098105,
+                "epoch": 1,
+                "in_sync": false,
+                "node": "node-b",
+                "records": 1629,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "90b43503b4c20c3e84326b742d8ba7214efabd0f0bfe02ddd18f8a0f075a0f57"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "local",
+            "sequence": 25
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928983,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 25,
+                "sha256": "18084726fa0bbe0a6c02c70d721060470cd0983acfbef19858796405432c9058"
+              },
+              {
+                "document_bytes": 1928980,
+                "epoch": 1,
+                "in_sync": false,
+                "node": "node-a",
+                "records": 1488,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "36087820fd7118b21cae5edda7d0ef71017fb87b3ea2e9df3bb5a3c74f381f71"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 25
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 10,
+          "ticks": 25
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 15198856,
+            "cpu_percent_one_core": 7.012290024370962,
+            "error": null,
+            "fenced": false,
+            "id": "node-a",
+            "isolated": true,
+            "online": true,
+            "rss_bytes": 24739840,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 15198504,
+            "cpu_percent_one_core": 6.570942516557703,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 25870336,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-b"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-a"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "wan_recovery_and_stale_candidate_refused",
+      "snapshot": {
+        "computed_at_ms": 1793128994841,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 3303,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          },
+          {
+            "at_ms": 12592,
+            "house": "",
+            "kind": "wan_isolated",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 67308,
+            "house": "house-a",
+            "kind": "snapshot_recovery",
+            "node": "node-b"
+          },
+          {
+            "at_ms": 68376,
+            "house": "house-b",
+            "kind": "snapshot_recovery",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 68522,
+            "house": "",
+            "kind": "wan_restored",
+            "node": "node-a"
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": 2098108,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 26,
+                "sha256": "fdbe5aec7a5bf2e74a0663367ca6bed342e00ef919173c0f5e72af3176b8395e"
+              },
+              {
+                "document_bytes": 2098108,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1629,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 26,
+                "sha256": "fdbe5aec7a5bf2e74a0663367ca6bed342e00ef919173c0f5e72af3176b8395e"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "local",
+            "sequence": 26
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928983,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 26,
+                "sha256": "e49f6af92180f6c1519fc7af0cf567b4c7b5ae4cf6f25cedf711898f8eb60107"
+              },
+              {
+                "document_bytes": 1928983,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1488,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 26,
+                "sha256": "e49f6af92180f6c1519fc7af0cf567b4c7b5ae4cf6f25cedf711898f8eb60107"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 26
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 10,
+          "ticks": 26
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 15198128,
+            "cpu_percent_one_core": 10.94135620102852,
+            "error": null,
+            "fenced": false,
+            "id": "node-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 44957696,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 15196040,
+            "cpu_percent_one_core": 10.23381803989213,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 47136768,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-b"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-a"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "node_a_failure_cloud_only_takeover_and_fencing",
+      "snapshot": {
+        "computed_at_ms": 1793129001246,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 3303,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          },
+          {
+            "at_ms": 12592,
+            "house": "",
+            "kind": "wan_isolated",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 67308,
+            "house": "house-a",
+            "kind": "snapshot_recovery",
+            "node": "node-b"
+          },
+          {
+            "at_ms": 68376,
+            "house": "house-b",
+            "kind": "snapshot_recovery",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 68522,
+            "house": "",
+            "kind": "wan_restored",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 72412,
+            "house": "",
+            "kind": "node_stopped",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 76297,
+            "house": "house-a",
+            "kind": "promoted",
+            "node": "node-b"
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": null,
+                "epoch": null,
+                "in_sync": false,
+                "node": "node-a",
+                "records": null,
+                "reported_role": null,
+                "role": "offline",
+                "sequence": null,
+                "sha256": null
+              },
+              {
+                "document_bytes": 2098108,
+                "epoch": 2,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 27,
+                "sha256": "73dee42332c067fa8de10342ea4384e1b16f29f83bd2e77443a5714ca6cb5194"
+              }
+            ],
+            "epoch": 2,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "cloud",
+            "sequence": 27
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928983,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 28,
+                "sha256": "2fe5261137765ef4ca4b3d54a6e106c692ca38fb706cd0da29f19ba8d74f98db"
+              },
+              {
+                "document_bytes": null,
+                "epoch": null,
+                "in_sync": false,
+                "node": "node-a",
+                "records": null,
+                "reported_role": null,
+                "role": "offline",
+                "sequence": null,
+                "sha256": null
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 28
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 10,
+          "ticks": 28
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": null,
+            "cpu_percent_one_core": null,
+            "error": null,
+            "fenced": true,
+            "id": "node-a",
+            "isolated": false,
+            "online": false,
+            "rss_bytes": null,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 15196038,
+            "cpu_percent_one_core": 15.657296574754524,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 47169536,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-b"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-a"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "node_b_failure_house_a_continues",
+      "snapshot": {
+        "computed_at_ms": 1793129007949,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 3303,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          },
+          {
+            "at_ms": 12592,
+            "house": "",
+            "kind": "wan_isolated",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 67308,
+            "house": "house-a",
+            "kind": "snapshot_recovery",
+            "node": "node-b"
+          },
+          {
+            "at_ms": 68376,
+            "house": "house-b",
+            "kind": "snapshot_recovery",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 68522,
+            "house": "",
+            "kind": "wan_restored",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 72412,
+            "house": "",
+            "kind": "node_stopped",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 76297,
+            "house": "house-a",
+            "kind": "promoted",
+            "node": "node-b"
+          },
+          {
+            "at_ms": 79509,
+            "house": "house-a",
+            "kind": "snapshot_recovery",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 80304,
+            "house": "house-b",
+            "kind": "snapshot_recovery",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 80453,
+            "house": "",
+            "kind": "node_restarted",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 80616,
+            "house": "",
+            "kind": "node_stopped",
+            "node": "node-b"
+          },
+          {
+            "at_ms": 81677,
+            "house": "house-a",
+            "kind": "promoted",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 82618,
+            "house": "house-b",
+            "kind": "promoted",
+            "node": "node-a"
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": 2098108,
+                "epoch": 3,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 28,
+                "sha256": "602c77605a92cc7a8dfb293bcf4cc8a89c5130c002ab757c48d121405f59ef87"
+              },
+              {
+                "document_bytes": null,
+                "epoch": null,
+                "in_sync": false,
+                "node": "node-b",
+                "records": null,
+                "reported_role": null,
+                "role": "offline",
+                "sequence": null,
+                "sha256": null
+              }
+            ],
+            "epoch": 3,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "local",
+            "sequence": 28
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": null,
+                "epoch": null,
+                "in_sync": false,
+                "node": "node-b",
+                "records": null,
+                "reported_role": null,
+                "role": "offline",
+                "sequence": null,
+                "sha256": null
+              },
+              {
+                "document_bytes": 1928983,
+                "epoch": 2,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 29,
+                "sha256": "891a06aeb4b38aebb8fe8073c7ead5345be292d4eddd1b64b8dcd0f8b32dcb5c"
+              }
+            ],
+            "epoch": 2,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "cloud",
+            "sequence": 29
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 12,
+          "ticks": 30
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 15195271,
+            "cpu_percent_one_core": 12.529589002477296,
+            "error": null,
+            "fenced": false,
+            "id": "node-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 47595520,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": null,
+            "cpu_percent_one_core": null,
+            "error": null,
+            "fenced": true,
+            "id": "node-b",
+            "isolated": false,
+            "online": false,
+            "rss_bytes": null,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-b"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "node-a"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "none",
+      "snapshot": {
+        "computed_at_ms": 1793129019996,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 86963,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          },
+          {
+            "at_ms": 90487,
+            "house": "",
+            "kind": "node_stopped",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 92407,
+            "house": "house-a",
+            "kind": "snapshot_recovery",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 93583,
+            "house": "house-a",
+            "kind": "promoted",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 93588,
+            "house": "",
+            "kind": "node_restarted",
+            "node": "node-a"
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": 2098107,
+                "epoch": 2,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 2,
+                "sha256": "5c36693e42300dce94967b39ecf9b979a6c44d7dba8a9236dec751f32d9a8d2f"
+              }
+            ],
+            "epoch": 2,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "local",
+            "sequence": 2
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928982,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 3,
+                "sha256": "f404ed582116a8a8bfc1fa70af48d4c7511305d104bd149bf06d0e7fc3755303"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 3
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 0,
+          "ticks": 3
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 8053170,
+            "cpu_percent_one_core": 9.123036326030661,
+            "error": null,
+            "fenced": false,
+            "id": "node-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 39469056,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 7270885,
+            "cpu_percent_one_core": 7.200094178383869,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 26345472,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": false,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": []
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": []
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            }
+          ],
+          "witness": false
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "local",
+      "snapshot": {
+        "computed_at_ms": 1793129030990,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 100291,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          },
+          {
+            "at_ms": 104321,
+            "house": "",
+            "kind": "node_stopped",
+            "node": "node-a"
+          },
+          {
+            "at_ms": 105531,
+            "house": "house-a",
+            "kind": "promoted",
+            "node": "backup-local-a"
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": null,
+                "epoch": null,
+                "in_sync": false,
+                "node": "node-a",
+                "records": null,
+                "reported_role": null,
+                "role": "offline",
+                "sequence": null,
+                "sha256": null
+              },
+              {
+                "document_bytes": 2098109,
+                "epoch": 2,
+                "in_sync": true,
+                "node": "backup-local-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "4cad40ed3f37a70d08cd12a0440a16588b41738dab8c6f8253b40c4f376e1c2f"
+              }
+            ],
+            "epoch": 2,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "backup-local-a",
+            "scope": "local",
+            "sequence": 1
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928984,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 2,
+                "sha256": "f6a30b39418ba3726ef30196a21df596b8c87e119f8557a6ba25b6747ec95bc8"
+              },
+              {
+                "document_bytes": 1928984,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "backup-local-b",
+                "records": 1488,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 2,
+                "sha256": "f6a30b39418ba3726ef30196a21df596b8c87e119f8557a6ba25b6747ec95bc8"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 2
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 0,
+          "ticks": 2
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 8052768,
+            "cpu_percent_one_core": 12.949147516811168,
+            "error": null,
+            "fenced": false,
+            "id": "backup-local-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 39485440,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 7270934,
+            "cpu_percent_one_core": 5.754945257550748,
+            "error": null,
+            "fenced": false,
+            "id": "backup-local-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 26312704,
+            "site": "house-b"
+          },
+          {
+            "allocator_live_bytes": null,
+            "cpu_percent_one_core": null,
+            "error": null,
+            "fenced": true,
+            "id": "node-a",
+            "isolated": false,
+            "online": false,
+            "rss_bytes": null,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 7270844,
+            "cpu_percent_one_core": 6.474037185937334,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 26345472,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": true,
+                  "node": "backup-local-a"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": true,
+                  "node": "backup-local-b"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            },
+            {
+              "enabled": true,
+              "id": "backup-local-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "backup-local-b",
+              "site": "house-b"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "cloud",
+      "snapshot": {
+        "computed_at_ms": 1793129038313,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 111250,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": 2098109,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "6299801d9e47235dca6371a048f186dafba85487160a6da0351e46cde36995e8"
+              },
+              {
+                "document_bytes": 2098109,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "cloud-a",
+                "records": 1629,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "6299801d9e47235dca6371a048f186dafba85487160a6da0351e46cde36995e8"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "local",
+            "sequence": 1
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928984,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "64a1a39f7ed7fe462884a902be8ba639b8f8fbfb004ff0c7fc507058afb193a6"
+              },
+              {
+                "document_bytes": 1928984,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "cloud-b",
+                "records": 1488,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "64a1a39f7ed7fe462884a902be8ba639b8f8fbfb004ff0c7fc507058afb193a6"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 1
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 0,
+          "ticks": 1
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 8055863,
+            "cpu_percent_one_core": 5.412123752539301,
+            "error": null,
+            "fenced": false,
+            "id": "cloud-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 30605312,
+            "site": "cloud"
+          },
+          {
+            "allocator_live_bytes": 7270721,
+            "cpu_percent_one_core": 5.051208050381016,
+            "error": null,
+            "fenced": false,
+            "id": "cloud-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 26345472,
+            "site": "cloud"
+          },
+          {
+            "allocator_live_bytes": 8055922,
+            "cpu_percent_one_core": 5.411575740618263,
+            "error": null,
+            "fenced": false,
+            "id": "node-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 30621696,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 7270652,
+            "cpu_percent_one_core": 5.050863016755609,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 26296320,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "cloud-a"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": false,
+                  "node": "cloud-b"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            },
+            {
+              "enabled": true,
+              "id": "cloud-a",
+              "site": "cloud"
+            },
+            {
+              "enabled": true,
+              "id": "cloud-b",
+              "site": "cloud"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "local-cloud",
+      "snapshot": {
+        "computed_at_ms": 1793129049528,
+        "configured": true,
+        "error": null,
+        "events": [
+          {
+            "at_ms": 120762,
+            "house": "",
+            "kind": "configured",
+            "node": ""
+          }
+        ],
+        "houses": [
+          {
+            "copies": [
+              {
+                "document_bytes": 2098109,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-a",
+                "records": 1629,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "b1b6535bfa7627379ff6ed98811b3646e5aba3ad73a8eab00b09c56bfcae2572"
+              },
+              {
+                "document_bytes": 2098109,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "backup-local-a",
+                "records": 1629,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "b1b6535bfa7627379ff6ed98811b3646e5aba3ad73a8eab00b09c56bfcae2572"
+              },
+              {
+                "document_bytes": 2098109,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "cloud-a",
+                "records": 1629,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "b1b6535bfa7627379ff6ed98811b3646e5aba3ad73a8eab00b09c56bfcae2572"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-a",
+            "lease_valid": true,
+            "owner": "node-a",
+            "scope": "local",
+            "sequence": 1
+          },
+          {
+            "copies": [
+              {
+                "document_bytes": 1928984,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "node-b",
+                "records": 1488,
+                "reported_role": "active",
+                "role": "active",
+                "sequence": 1,
+                "sha256": "d9d628762af8ae97dd36b7bf6e227b201085cef1ee13ed4fbd70620786538c6c"
+              },
+              {
+                "document_bytes": 1928984,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "backup-local-b",
+                "records": 1488,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "d9d628762af8ae97dd36b7bf6e227b201085cef1ee13ed4fbd70620786538c6c"
+              },
+              {
+                "document_bytes": 1928984,
+                "epoch": 1,
+                "in_sync": true,
+                "node": "cloud-b",
+                "records": 1488,
+                "reported_role": "passive",
+                "role": "passive",
+                "sequence": 1,
+                "sha256": "d9d628762af8ae97dd36b7bf6e227b201085cef1ee13ed4fbd70620786538c6c"
+              }
+            ],
+            "epoch": 1,
+            "id": "house-b",
+            "lease_valid": true,
+            "owner": "node-b",
+            "scope": "local",
+            "sequence": 1
+          }
+        ],
+        "limitations": [
+          "central_test_witness",
+          "local_processes_not_remote_sites",
+          "ha_export_replay_not_live_state",
+          "no_physical_executor",
+          "no_secret_replication",
+          "no_real_radio_failover"
+        ],
+        "metrics": {
+          "physical_commands": 0,
+          "rejected_effects": 0,
+          "simulated_effects": 0,
+          "ticks": 1
+        },
+        "mode": "simulation",
+        "nodes": [
+          {
+            "allocator_live_bytes": 8056076,
+            "cpu_percent_one_core": 4.138235738131326,
+            "error": null,
+            "fenced": false,
+            "id": "backup-local-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 21954560,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 7270870,
+            "cpu_percent_one_core": 3.6209295033576727,
+            "error": null,
+            "fenced": false,
+            "id": "backup-local-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 25690112,
+            "site": "house-b"
+          },
+          {
+            "allocator_live_bytes": 8055927,
+            "cpu_percent_one_core": 4.3967974801008065,
+            "error": null,
+            "fenced": false,
+            "id": "cloud-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 27934720,
+            "site": "cloud"
+          },
+          {
+            "allocator_live_bytes": 7270657,
+            "cpu_percent_one_core": 3.620974143561215,
+            "error": null,
+            "fenced": false,
+            "id": "cloud-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 25739264,
+            "site": "cloud"
+          },
+          {
+            "allocator_live_bytes": 8055922,
+            "cpu_percent_one_core": 4.138539238847317,
+            "error": null,
+            "fenced": false,
+            "id": "node-a",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 17219584,
+            "site": "house-a"
+          },
+          {
+            "allocator_live_bytes": 7270716,
+            "cpu_percent_one_core": 3.8800219609242994,
+            "error": null,
+            "fenced": false,
+            "id": "node-b",
+            "isolated": false,
+            "online": true,
+            "rss_bytes": 25722880,
+            "site": "house-b"
+          }
+        ],
+        "sources": [
+          {
+            "description_bytes": 1209714,
+            "devices": 289,
+            "entities": 1830,
+            "fixture": {
+              "initial_messages": 3777,
+              "initial_payload_bytes": 48820,
+              "physical_publications": 0,
+              "registry_devices": 290,
+              "registry_entities": 1830,
+              "registry_floors": 2,
+              "registry_rooms": 17,
+              "registry_template_bytes": 549107,
+              "state_entities": 1278,
+              "states_matching_registry": 1274,
+              "states_without_registry": 4,
+              "synthetic_identities": true,
+              "updatable_points": 1343
+            },
+            "house": "house-a",
+            "kind": "private_ha_replay",
+            "nodes": 21,
+            "observed_points": 1606,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1606,
+            "snapshot_bytes": 2098023,
+            "synthetic_identities": true
+          },
+          {
+            "description_bytes": 1103399,
+            "devices": 200,
+            "entities": 1524,
+            "fixture": {
+              "initial_messages": 3027,
+              "initial_payload_bytes": 38245,
+              "physical_publications": 0,
+              "registry_devices": 206,
+              "registry_entities": 1524,
+              "registry_floors": 4,
+              "registry_rooms": 17,
+              "registry_template_bytes": 454034,
+              "state_entities": 986,
+              "states_matching_registry": 977,
+              "states_without_registry": 9,
+              "synthetic_identities": true,
+              "updatable_points": 1241
+            },
+            "house": "house-b",
+            "kind": "private_ha_replay",
+            "nodes": 23,
+            "observed_points": 1463,
+            "physical_commands": 0,
+            "physical_freshness_proven": false,
+            "points": 1463,
+            "snapshot_bytes": 1928898,
+            "synthetic_identities": true
+          }
+        ],
+        "topology": {
+          "enabled": true,
+          "houses": [
+            {
+              "id": "house-a",
+              "primary": "node-a",
+              "standbys": [
+                {
+                  "automatic": true,
+                  "node": "backup-local-a"
+                },
+                {
+                  "automatic": false,
+                  "node": "cloud-a"
+                }
+              ]
+            },
+            {
+              "id": "house-b",
+              "primary": "node-b",
+              "standbys": [
+                {
+                  "automatic": true,
+                  "node": "backup-local-b"
+                },
+                {
+                  "automatic": false,
+                  "node": "cloud-b"
+                }
+              ]
+            }
+          ],
+          "nodes": [
+            {
+              "enabled": true,
+              "id": "node-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "node-b",
+              "site": "house-b"
+            },
+            {
+              "enabled": true,
+              "id": "backup-local-a",
+              "site": "house-a"
+            },
+            {
+              "enabled": true,
+              "id": "cloud-a",
+              "site": "cloud"
+            },
+            {
+              "enabled": true,
+              "id": "backup-local-b",
+              "site": "house-b"
+            },
+            {
+              "enabled": true,
+              "id": "cloud-b",
+              "site": "cloud"
+            }
+          ],
+          "witness": true
+        },
+        "v": 1
+      },
+      "status": "PASS"
+    }
+  ],
+  "physical_commands": 0,
+  "process_metrics": "RSS/CPU per node; shared-page and sampler overhead caveats apply",
+  "schema": 1,
+  "sources": [
+    {
+      "description_bytes": 1209714,
+      "devices": 289,
+      "entities": 1830,
+      "fixture": {
+        "initial_messages": 3777,
+        "initial_payload_bytes": 48820,
+        "physical_publications": 0,
+        "registry_devices": 290,
+        "registry_entities": 1830,
+        "registry_floors": 2,
+        "registry_rooms": 17,
+        "registry_template_bytes": 549107,
+        "state_entities": 1278,
+        "states_matching_registry": 1274,
+        "states_without_registry": 4,
+        "synthetic_identities": true,
+        "updatable_points": 1343
+      },
+      "house": "house-a",
+      "kind": "private_ha_replay",
+      "nodes": 21,
+      "observed_points": 1606,
+      "physical_commands": 0,
+      "physical_freshness_proven": false,
+      "points": 1606,
+      "snapshot_bytes": 2098023,
+      "synthetic_identities": true
+    },
+    {
+      "description_bytes": 1103399,
+      "devices": 200,
+      "entities": 1524,
+      "fixture": {
+        "initial_messages": 3027,
+        "initial_payload_bytes": 38245,
+        "physical_publications": 0,
+        "registry_devices": 206,
+        "registry_entities": 1524,
+        "registry_floors": 4,
+        "registry_rooms": 17,
+        "registry_template_bytes": 454034,
+        "state_entities": 986,
+        "states_matching_registry": 977,
+        "states_without_registry": 9,
+        "synthetic_identities": true,
+        "updatable_points": 1241
+      },
+      "house": "house-b",
+      "kind": "private_ha_replay",
+      "nodes": 23,
+      "observed_points": 1463,
+      "physical_commands": 0,
+      "physical_freshness_proven": false,
+      "points": 1463,
+      "snapshot_bytes": 1928898,
+      "synthetic_identities": true
+    }
+  ],
+  "test_witness": "central in this process; not distributed consensus",
+  "transport": "real loopback MQTT and owned node processes",
+  "date_utc": "2026-10-27T19:24:10.722188+00:00",
+  "profile": "debug",
+  "platform": "darwin",
+  "inputs_sha256": "96db6dd27171cb3e486012d885faec83d6de2b4bcd0f5ef5f556f4bd29055993",
+  "binary_sha256": "5aebbf5b5a51f5b9e26695c20483c99b31b1c2fa78ddefa723e01383c25368bf"
+}

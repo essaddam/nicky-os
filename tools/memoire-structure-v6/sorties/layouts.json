@@ -1,0 +1,255 @@
+{
+  "pointer_bytes": 8,
+  "endianness": "little",
+  "structures": [
+    {
+      "name": "Row64",
+      "size": 64,
+      "align": 8,
+      "offsets": {
+        "id": 0,
+        "parent": 8,
+        "payload": 16,
+        "previous_payload": 24,
+        "received_ms": 32,
+        "changed_ms": 40,
+        "schema": 48,
+        "aux": 52,
+        "revision": 56,
+        "flags": 60,
+        "row_kind": 62,
+        "value_kind": 63
+      }
+    },
+    {
+      "name": "Numeric32",
+      "size": 32,
+      "align": 8,
+      "offsets": {
+        "min": 0,
+        "max": 8,
+        "step": 16,
+        "anchor": 24
+      }
+    },
+    {
+      "name": "Row96",
+      "size": 96,
+      "align": 8,
+      "offsets": {
+        "base": 0,
+        "numeric": 64
+      }
+    },
+    {
+      "name": "Hot32",
+      "size": 32,
+      "align": 8,
+      "offsets": {
+        "payload": 0,
+        "previous_payload": 8,
+        "received_ms": 16,
+        "changed_ms": 24
+      }
+    },
+    {
+      "name": "Cold32",
+      "size": 32,
+      "align": 8,
+      "offsets": {
+        "id": 0,
+        "parent": 8,
+        "schema": 16,
+        "aux": 20,
+        "revision": 24,
+        "flags": 28,
+        "row_kind": 30,
+        "value_kind": 31
+      }
+    },
+    {
+      "name": "Alias32",
+      "size": 32,
+      "align": 8,
+      "offsets": {
+        "alias_id": 0,
+        "owner_id": 8,
+        "source_id": 16,
+        "source_slot": 24,
+        "source_generation": 28
+      }
+    },
+    {
+      "name": "GlobalSlot16",
+      "size": 16,
+      "align": 4,
+      "offsets": {
+        "physical_index": 0,
+        "generation": 4,
+        "meta_index": 8,
+        "arena": 12,
+        "flags": 13,
+        "reserved": 14
+      }
+    },
+    {
+      "name": "Handle8",
+      "size": 8,
+      "align": 4,
+      "offsets": {
+        "slot": 0,
+        "generation": 4
+      }
+    },
+    {
+      "name": "Meta32",
+      "size": 32,
+      "align": 4,
+      "offsets": {
+        "label": 0,
+        "native_key": 4,
+        "location": 8,
+        "policy": 12,
+        "read_plan": 16,
+        "write_plan": 20,
+        "executable": 24,
+        "extra": 28
+      }
+    },
+    {
+      "name": "Schema64",
+      "size": 64,
+      "align": 8,
+      "offsets": {
+        "unit": 0,
+        "semantic": 4,
+        "numeric_repr": 6,
+        "decimals": 7,
+        "prefix_exp10": 8,
+        "value_kind": 9,
+        "flags": 10,
+        "max_bytes": 12,
+        "max_items": 16,
+        "composite_schema": 20,
+        "native_min": 24,
+        "native_max": 32,
+        "scale_num": 40,
+        "scale_den": 48,
+        "reserved": 56
+      }
+    },
+    {
+      "name": "Transform64",
+      "size": 64,
+      "align": 8,
+      "offsets": {
+        "mul": 0,
+        "add": 8,
+        "in_min": 16,
+        "in_max": 24,
+        "out_min": 32,
+        "out_max": 40,
+        "revision": 48,
+        "opcode": 52,
+        "flags": 54,
+        "input_kind": 56,
+        "output_kind": 57,
+        "rounding": 58,
+        "overflow": 59,
+        "reserved": 60
+      }
+    },
+    {
+      "name": "Edge24",
+      "size": 24,
+      "align": 8,
+      "offsets": {
+        "from": 0,
+        "to": 8,
+        "relation": 16,
+        "flags": 18,
+        "revision": 20
+      }
+    },
+    {
+      "name": "Target12",
+      "size": 12,
+      "align": 4,
+      "offsets": {
+        "to": 0,
+        "relation": 4,
+        "flags": 6,
+        "revision": 8
+      }
+    },
+    {
+      "name": "PoolEntry16",
+      "size": 16,
+      "align": 4,
+      "offsets": {
+        "offset": 0,
+        "len": 4,
+        "generation": 8,
+        "kind": 12,
+        "flags": 14
+      }
+    },
+    {
+      "name": "Slice8",
+      "size": 8,
+      "align": 4,
+      "offsets": {
+        "offset": 0,
+        "len": 4
+      }
+    },
+    {
+      "name": "Component32",
+      "size": 32,
+      "align": 4,
+      "offsets": {
+        "a": 0,
+        "b": 4,
+        "c": 8,
+        "d": 12,
+        "e": 16,
+        "f": 20,
+        "g": 24,
+        "h": 28
+      }
+    },
+    {
+      "name": "Calc48",
+      "size": 48,
+      "align": 8,
+      "offsets": {
+        "definition_id": 0,
+        "deadline_tick": 8,
+        "source_ts": 16,
+        "version": 24,
+        "first_edge": 28,
+        "edge_count": 32,
+        "operation": 34,
+        "flags": 35,
+        "history_ref": 36,
+        "unit_ref": 40,
+        "reserved": 44
+      }
+    },
+    {
+      "name": "Route32",
+      "size": 32,
+      "align": 8,
+      "offsets": {
+        "point_id": 0,
+        "handle": 8,
+        "read_plan": 16,
+        "write_plan": 20,
+        "native_key": 24,
+        "flags": 28,
+        "codec": 30,
+        "access": 31
+      }
+    }
+  ]
+}

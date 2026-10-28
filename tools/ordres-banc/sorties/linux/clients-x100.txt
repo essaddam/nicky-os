@@ -1,0 +1,10 @@
+RESULTAT|clients|100|propose_meme_contenu_json_o|14811321.000|o
+RESULTAT|clients|100|mqtt_etat_client_complet_o|11388658.000|o
+RESULTAT|clients|100|mqtt_etat_client_morceaux_4kio|2781.000|
+RESULTAT|clients|100|mqtt_etat_client_deux_pieces_o|1904977.000|o
+RESULTAT|clients|100|mqtt_etat_client_complet_us|7882.771|µs
+RESULTAT|clients|100|mqtt_etat_client_deux_pieces_us|1595.256|µs
+RESULTAT|clients|100|rss_fin|2492.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

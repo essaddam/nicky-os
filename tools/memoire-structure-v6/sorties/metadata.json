@@ -1,0 +1,21 @@
+{
+  "timestamp_utc": "2026-10-25T20:39:13Z",
+  "image_id": "sha256:40c4e2a8d249be4d12e160ccffe94df1642aeef82cc787a0a3db606f70abbc53",
+  "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-musl\nrelease: 1.99.1\nLLVM version: 23.1.1\naarch64\n",
+  "flags": "--edition=2024 -D warnings -C opt-level=s -C codegen-units=1",
+  "cpus": 1,
+  "memory": "512m",
+  "network": "none",
+  "source_sha256": {
+    "alternatives.rs": "c476a19afec3910157944c57fdcbc86ea755cbd77b4f39d91e5d0542bc0c4e37",
+    "layouts.rs": "5bf8a071e70e22dfc32977c151621fb463b25f47bad5664efa8b7f4979c09ff3",
+    "main.rs": "7efae1c5f6444ce8b1f319d675523e85ab5029d226a25b71d6edf7f8d3e80ca9",
+    "tests.rs": "f66d0e45e2b09bdf1cc3c7d50e27ce4d89f2c255793eaa52ea1f4f5756167bea",
+    "model.rs": "8d98e724308e5e1b73421b05c4695d7b8be0ad66e44946e70ef66d8367045e7c",
+    "probe_index.rs": "d02ba9f99453ac73fc9d652851832f48fc7fe72ca291919b14831b65c676c414"
+  },
+  "index_reservations": 23,
+  "test_count": 24,
+  "row_contract": "two_dates_and_previous_distinct_value",
+  "scope": "18 layouts et modèle structurel synthétique ; pas moteur livré/RSS/latence"
+}

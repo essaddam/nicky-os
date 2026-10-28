@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 475" width="1000" height="475" role="img" aria-labelledby="aujourdhui-t aujourdhui-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="aujourdhui-t">Aujourd'hui, quand un appareil sort</title>
+  <desc id="aujourdhui-d">Un capteur sort : l'intégration ne le donne plus, et son pilote appelle remove_device. Le hub retire ses valeurs, sa disponibilité et sa définition, et publie DeviceRemoved. Trois défauts : les automatismes qui le citent restent approuvés et ne partent plus, sans trace ; un compteur d'énergie continue de compter sa dernière puissance ; un remplaçant est refusé parce que l'ancien reste connu. Six orphelins restent pour toujours : l'étiquette, l'état restauré, le plan et l'accueil, les aides, l'historique sous son nom, la clé Tuya au coffre. Une intégration retirée de la configuration n'est ni rechargée ni retirée ; remplacer un appareil est impossible.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="475" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="aujourdhui-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="aujourdhui-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="aujourdhui-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="aujourdhui-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="aujourdhui-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="aujourdhui-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="aujourdhui-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="aujourdhui-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="aujourdhui-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="aujourdhui-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="aujourdhui-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="aujourdhui-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="aujourdhui-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="aujourdhui-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="aujourdhui-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="aujourdhui-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="aujourdhui-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="aujourdhui-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="aujourdhui-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="aujourdhui-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="aujourdhui-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="aujourdhui-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="aujourdhui-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">AUJOURD'HUI : UN APPAREIL SORT, ET CE QUI LE CITE RESTE</text>
+          <rect x="16" y="48" width="220" height="92" rx="12" fill="url(#aujourdhui-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="26" y="57" width="26" height="26" rx="8" fill="url(#aujourdhui-h-rouge)"/>
+          <g transform="translate(31.0 62.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="60.0" y="75.0" font-size="12" fill="#8b3b22" font-weight="700">Un capteur sort</text>
+          <text x="30.0" y="97.0" font-size="10.2" fill="#52615a">l'intégration ne le donne</text>
+          <text x="30.0" y="112.0" font-size="10.2" fill="#52615a">plus : remove_device</text>
+          <text x="30.0" y="127.0" font-size="10.2" fill="#52615a">(catalogue relu)</text>
+          <path d="M240 94 L284 94" fill="none" stroke="#8b3b22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#aujourdhui-m-rouge)"/>
+          <path class="hd-flux" d="M240 94 L284 94" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <rect x="288" y="48" width="220" height="92" rx="12" fill="url(#aujourdhui-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="298" y="57" width="26" height="26" rx="8" fill="url(#aujourdhui-h-vert)"/>
+          <g transform="translate(303.0 62.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="332.0" y="75.0" font-size="12" fill="#195744" font-weight="700">Le hub</text>
+          <text x="302.0" y="97.0" font-size="10.2" fill="#52615a">valeurs, disponibilité et</text>
+          <text x="302.0" y="112.0" font-size="10.2" fill="#52615a">définition retirées ;</text>
+          <text x="302.0" y="127.0" font-size="10.2" fill="#52615a">DeviceRemoved publié</text>
+          <path d="M512 94 L552 94" fill="none" stroke="#4f5d57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#aujourdhui-m-gris)"/>
+          <rect x="556" y="40" width="428" height="58" rx="12" fill="url(#aujourdhui-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="566" y="49" width="26" height="26" rx="8" fill="url(#aujourdhui-h-rouge)"/>
+          <g transform="translate(571.0 54.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="600.0" y="67.0" font-size="11.5" fill="#8b3b22" font-weight="700">Automatismes</text>
+          <text x="570.0" y="89.0" font-size="10.2" fill="#52615a">approuvés, ne partent plus, sans trace</text>
+          <rect x="929.4" y="52.0" width="44.6" height="18.0" rx="9.0" fill="#fae7dd" stroke="#d06a46" stroke-opacity="0.7"/>
+          <text x="937.4" y="64.2" font-size="9" fill="#8b3b22" font-weight="700">défaut</text>
+          <rect x="556" y="106" width="428" height="58" rx="12" fill="url(#aujourdhui-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="566" y="115" width="26" height="26" rx="8" fill="url(#aujourdhui-h-rouge)"/>
+          <g transform="translate(571.0 120.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="600.0" y="133.0" font-size="11.5" fill="#8b3b22" font-weight="700">Énergie</text>
+          <text x="570.0" y="155.0" font-size="10.2" fill="#52615a">la dernière puissance, comptée sans fin</text>
+          <rect x="929.4" y="118.0" width="44.6" height="18.0" rx="9.0" fill="#fae7dd" stroke="#d06a46" stroke-opacity="0.7"/>
+          <text x="937.4" y="130.2" font-size="9" fill="#8b3b22" font-weight="700">défaut</text>
+          <rect x="556" y="172" width="428" height="58" rx="12" fill="url(#aujourdhui-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="566" y="181" width="26" height="26" rx="8" fill="url(#aujourdhui-h-rouge)"/>
+          <g transform="translate(571.0 186.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6z"/></g>
+          <text x="600.0" y="199.0" font-size="11.5" fill="#8b3b22" font-weight="700">Le remplaçant</text>
+          <text x="570.0" y="221.0" font-size="10.2" fill="#52615a">refusé : l'ancien reste « connu »</text>
+          <rect x="929.4" y="184.0" width="44.6" height="18.0" rx="9.0" fill="#fae7dd" stroke="#d06a46" stroke-opacity="0.7"/>
+          <text x="937.4" y="196.2" font-size="9" fill="#8b3b22" font-weight="700">défaut</text>
+          <rect x="16" y="252" width="312" height="58" rx="12" fill="url(#aujourdhui-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="26" y="261" width="26" height="26" rx="8" fill="url(#aujourdhui-h-gris)"/>
+          <g transform="translate(31.0 266.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11a4 4 0 1 1 0 8a4 4 0 1 1 0-8z M11 12l8-8 M16 7l2 2 M14 9l2 2"/></g>
+          <text x="60.0" y="279.0" font-size="11.5" fill="#4f5d57" font-weight="700">Étiquette</text>
+          <text x="30.0" y="301.0" font-size="10.2" fill="#52615a">gardée ; plus effaçable</text>
+          <rect x="268.3" y="264.0" width="49.7" height="18.0" rx="9.0" fill="#eef0ec" stroke="#97a39d" stroke-opacity="0.7"/>
+          <text x="276.3" y="276.2" font-size="9" fill="#4f5d57" font-weight="700">orphelin</text>
+          <rect x="344" y="252" width="312" height="58" rx="12" fill="url(#aujourdhui-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="354" y="261" width="26" height="26" rx="8" fill="url(#aujourdhui-h-gris)"/>
+          <g transform="translate(359.0 266.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z M10 3v4 M12.5 3v4 M15 3v4"/></g>
+          <text x="388.0" y="279.0" font-size="11.5" fill="#4f5d57" font-weight="700">État restauré</text>
+          <text x="358.0" y="301.0" font-size="10.2" fill="#52615a">gardé sans limite</text>
+          <rect x="596.3" y="264.0" width="49.7" height="18.0" rx="9.0" fill="#eef0ec" stroke="#97a39d" stroke-opacity="0.7"/>
+          <text x="604.3" y="276.2" font-size="9" fill="#4f5d57" font-weight="700">orphelin</text>
+          <rect x="672" y="252" width="312" height="58" rx="12" fill="url(#aujourdhui-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="682" y="261" width="26" height="26" rx="8" fill="url(#aujourdhui-h-gris)"/>
+          <g transform="translate(687.0 266.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="716.0" y="279.0" font-size="11.5" fill="#4f5d57" font-weight="700">Plan, accueil</text>
+          <text x="686.0" y="301.0" font-size="10.2" fill="#52615a">gardés ; masqués à l'écran</text>
+          <rect x="924.3" y="264.0" width="49.7" height="18.0" rx="9.0" fill="#eef0ec" stroke="#97a39d" stroke-opacity="0.7"/>
+          <text x="932.3" y="276.2" font-size="9" fill="#4f5d57" font-weight="700">orphelin</text>
+          <rect x="16" y="318" width="312" height="58" rx="12" fill="url(#aujourdhui-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="26" y="327" width="26" height="26" rx="8" fill="url(#aujourdhui-h-gris)"/>
+          <g transform="translate(31.0 332.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="60.0" y="345.0" font-size="11.5" fill="#4f5d57" font-weight="700">Aides</text>
+          <text x="30.0" y="367.0" font-size="10.2" fill="#52615a">dormantes, une place sur 128</text>
+          <rect x="268.3" y="330.0" width="49.7" height="18.0" rx="9.0" fill="#eef0ec" stroke="#97a39d" stroke-opacity="0.7"/>
+          <text x="276.3" y="342.2" font-size="9" fill="#4f5d57" font-weight="700">orphelin</text>
+          <rect x="344" y="318" width="312" height="58" rx="12" fill="url(#aujourdhui-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="354" y="327" width="26" height="26" rx="8" fill="url(#aujourdhui-h-gris)"/>
+          <g transform="translate(359.0 332.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3v12c0 1.7-3.1 3-7 3s-7-1.3-7-3z M5 6c0 1.7 3.1 3 7 3s7-1.3 7-3 M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></g>
+          <text x="388.0" y="345.0" font-size="11.5" fill="#4f5d57" font-weight="700">Historique</text>
+          <text x="358.0" y="367.0" font-size="10.2" fill="#52615a">sous son nom ; purgé à son rythme</text>
+          <rect x="596.3" y="330.0" width="49.7" height="18.0" rx="9.0" fill="#eef0ec" stroke="#97a39d" stroke-opacity="0.7"/>
+          <text x="604.3" y="342.2" font-size="9" fill="#4f5d57" font-weight="700">orphelin</text>
+          <rect x="672" y="318" width="312" height="58" rx="12" fill="url(#aujourdhui-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#aujourdhui-o)"/>
+          <rect x="682" y="327" width="26" height="26" rx="8" fill="url(#aujourdhui-h-gris)"/>
+          <g transform="translate(687.0 332.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v10H6z M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></g>
+          <text x="716.0" y="345.0" font-size="11.5" fill="#4f5d57" font-weight="700">Secrets Tuya</text>
+          <text x="686.0" y="367.0" font-size="10.2" fill="#52615a">la clé reste au coffre</text>
+          <rect x="924.3" y="330.0" width="49.7" height="18.0" rx="9.0" fill="#eef0ec" stroke="#97a39d" stroke-opacity="0.7"/>
+          <text x="932.3" y="342.2" font-size="9" fill="#4f5d57" font-weight="700">orphelin</text>
+          <text x="16.0" y="240.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">CE QUI RESTE, SANS DANGER MAIS POUR TOUJOURS</text>
+          <rect x="16" y="392" width="968" height="36" rx="12" fill="#fae7dd" stroke="#d06a46" stroke-opacity=".5"/>
+          <g transform="translate(28.0 400.0) scale(0.8333)" fill="none" stroke="#8b3b22" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="56.0" y="414.0" font-size="11" fill="#1d302a" font-weight="700">Une intégration retirée de la configuration : ses appareils ne sont ni rechargés, ni retirés. Remplacer un appareil : impossible.</text>
+  <text x="18" y="469" font-size="12" fill="#52615a" font-style="italic">Relevé dans le code au commit a835893 : les lignes sont citées au § 4.3. Les trois défauts se corrigent sans attendre la mémoire v2.</text>
+</svg>

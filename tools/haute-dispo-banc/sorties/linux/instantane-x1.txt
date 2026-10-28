@@ -1,0 +1,16 @@
+RESULTAT|instantane|1|octets|238562.000|o
+RESULTAT|instantane|1|octets_annuaire|92808.000|o
+RESULTAT|instantane|1|octets_valeurs|86032.000|o
+RESULTAT|instantane|1|octets_executions|25600.000|o
+RESULTAT|instantane|1|octets_horaires|10000.000|o
+RESULTAT|instantane|1|figer|131.501|µs
+RESULTAT|instantane|1|ecrire_fsync|2.961|ms
+RESULTAT|instantane|1|relire_et_reprendre|272.251|µs
+RESULTAT|instantane|1|repris_identique|1.000|booléen
+RESULTAT|instantane|1|octets_lz4|104336.000|o
+RESULTAT|instantane|1|octets_json_valeurs_aujourdhui|163597.000|o
+RESULTAT|instantane|1|json_valeurs_ecrire_fsync|2.394|ms
+RESULTAT|instantane|1|rss_fin|1488.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

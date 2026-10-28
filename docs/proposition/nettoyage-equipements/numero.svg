@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 414" width="1000" height="414" role="img" aria-labelledby="numero-t numero-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="numero-t">Le numéro : une place et sa génération</title>
+  <desc id="numero-d">En haut, les 32 bits du numéro : le bit 31 reste réservé aux marques de cause ; les bits 24 à 30 portent la génération, de 0 à 127 ; les bits 0 à 23 la place, de 0 à 16 777 215, qui est l'adresse de la fiche. Au milieu, une place et deux occupants : génération 0, numéro 1 234, l'ancien capteur du salon ; il est retiré, le nom reste pour pouvoir annuler ; le lot efface le nom, remet à zéro et passe à la génération 1 ; le nouveau capteur prend la même place sous le numéro 16 778 450. En bas : l'adresse reste place fois taille ; l'ancien numéro est inerte ; sur MQTT, i porte le numéro entier, et un abonné qui ne le connaît pas redemande meta/.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="414" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="numero-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="numero-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="numero-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="numero-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="numero-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="numero-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="numero-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="numero-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="numero-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="numero-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="numero-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="numero-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="numero-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="numero-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="numero-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="numero-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="numero-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="numero-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="numero-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="numero-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="numero-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="numero-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="numero-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="numero-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="numero-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="numero-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="numero-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="numero-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="numero-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="numero-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="numero-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="numero-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="numero-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="numero-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="numero-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="numero-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="numero-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LES 32 BITS DU NUMÉRO</text>
+          <rect x="40.0" y="50" width="24.8" height="46" rx="10" fill="#000000" opacity=".12"/>
+          <rect x="40.0" y="46.0" width="24.75" height="46" rx="5" fill="url(#numero-h-gris)"/>
+          <rect x="44.0" y="49" width="16.8" height="16" rx="6" fill="#ffffff" opacity=".17"/>
+          <rect x="68.8" y="50" width="197.2" height="46" rx="10" fill="#000000" opacity=".12"/>
+          <rect x="68.8" y="46.0" width="197.25" height="46" rx="5" fill="url(#numero-h-violet)"/>
+          <rect x="72.8" y="49" width="189.2" height="16" rx="6" fill="#ffffff" opacity=".17"/>
+          <text x="80.8" y="67.0" font-size="12.5" fill="#ffffff" font-weight="700">génération</text>
+          <text x="80.8" y="83.0" font-size="10" fill="#ffffff" opacity=".92">0 à 127</text>
+          <rect x="270.0" y="50" width="686.0" height="46" rx="10" fill="#000000" opacity=".12"/>
+          <rect x="270.0" y="46.0" width="686.0" height="46" rx="5" fill="url(#numero-h-vert)"/>
+          <rect x="274.0" y="49" width="678.0" height="16" rx="6" fill="#ffffff" opacity=".17"/>
+          <text x="282.0" y="67.0" font-size="12.5" fill="#ffffff" font-weight="700">place</text>
+          <text x="282.0" y="83.0" font-size="10" fill="#ffffff" opacity=".92">0 à 16 777 215 : l'adresse de la fiche</text>
+          <text x="984.0" y="24.0" font-size="10" fill="#52615a" text-anchor="end">le bit 31 reste aux marques de cause (horloge, agenda)</text>
+          <text x="42.0" y="110.0" font-size="9.5" fill="#52615a">bit 31</text>
+          <text x="70.8" y="110.0" font-size="9.5" fill="#52615a">bits 24 à 30</text>
+          <text x="956.0" y="110.0" font-size="9.5" fill="#52615a" text-anchor="end">bits 0 à 23</text>
+          <text x="16.0" y="150.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">UNE PLACE, DEUX OCCUPANTS</text>
+          <rect x="16" y="168" width="270" height="76" rx="12" fill="url(#numero-f-violet)" stroke="#7e6cc2" stroke-opacity=".55" stroke-width="1.1" filter="url(#numero-o)"/>
+          <rect x="26" y="177" width="26" height="26" rx="8" fill="url(#numero-h-violet)"/>
+          <g transform="translate(31.0 182.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="60.0" y="195.0" font-size="11.5" fill="#4b3d82" font-weight="700">Génération 0 : numéro 1 234</text>
+          <text x="30.0" y="217.0" font-size="10" fill="#52615a">z2m:0x00158d00…a1/temperature</text>
+          <text x="30.0" y="232.0" font-size="10" fill="#52615a">l'ancien capteur du salon</text>
+          <path d="M290 206 L338 206" fill="none" stroke="#8b3b22" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#numero-m-rouge)"/>
+          <rect x="342" y="168" width="150" height="76" rx="12" fill="url(#numero-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#numero-o)"/>
+          <rect x="352" y="177" width="26" height="26" rx="8" fill="url(#numero-h-rouge)"/>
+          <g transform="translate(357.0 182.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="386.0" y="195.0" font-size="11.5" fill="#8b3b22" font-weight="700">Retiré</text>
+          <text x="356.0" y="217.0" font-size="10" fill="#52615a">le nom reste,</text>
+          <text x="356.0" y="232.0" font-size="10" fill="#52615a">pour annuler</text>
+          <path d="M496 206 L544 206" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#numero-m-vert)"/>
+          <path class="hd-flux" d="M496 206 L544 206" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <rect x="548" y="168" width="150" height="76" rx="12" fill="url(#numero-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#numero-o)"/>
+          <rect x="558" y="177" width="26" height="26" rx="8" fill="url(#numero-h-gris)"/>
+          <g transform="translate(563.0 182.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 14.5-3.5 M19 3v4h-4 M20 14a8 8 0 0 1-14.5 3.5 M5 21v-4h4"/></g>
+          <text x="592.0" y="195.0" font-size="11.5" fill="#4f5d57" font-weight="700">Le lot</text>
+          <text x="562.0" y="217.0" font-size="10" fill="#52615a">nom effacé, à zéro ;</text>
+          <text x="562.0" y="232.0" font-size="10" fill="#52615a">génération 1</text>
+          <path d="M702 206 L726 206" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#numero-m-vert)"/>
+          <rect x="730" y="168" width="254" height="76" rx="12" fill="url(#numero-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#numero-o)"/>
+          <rect x="740" y="177" width="26" height="26" rx="8" fill="url(#numero-h-vert)"/>
+          <g transform="translate(745.0 182.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="774.0" y="195.0" font-size="11.5" fill="#195744" font-weight="700">Génération 1 : n° 16 778 450</text>
+          <text x="744.0" y="217.0" font-size="10" fill="#52615a">z2m:0x00158d00…b2/temperature</text>
+          <text x="744.0" y="232.0" font-size="10" fill="#52615a">le nouveau, sur la même place</text>
+          <text x="16.0" y="276.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">CE QUI EN DÉCOULE</text>
+          <rect x="16" y="288" width="312" height="62" rx="12" fill="url(#numero-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#numero-o)"/>
+          <rect x="26" y="297" width="26" height="26" rx="8" fill="url(#numero-h-vert)"/>
+          <g transform="translate(31.0 302.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z M10 10h4v4h-4z M9 4v3 M12 4v3 M15 4v3 M9 17v3 M12 17v3 M15 17v3 M4 9h3 M4 12h3 M4 15h3 M17 9h3 M17 12h3 M17 15h3"/></g>
+          <text x="60.0" y="315.0" font-size="11.5" fill="#195744" font-weight="700">L'adresse : place × taille</text>
+          <text x="30.0" y="337.0" font-size="10" fill="#52615a">une instruction de plus, rien d'autre</text>
+          <rect x="344" y="288" width="312" height="62" rx="12" fill="url(#numero-f-violet)" stroke="#7e6cc2" stroke-opacity=".55" stroke-width="1.1" filter="url(#numero-o)"/>
+          <rect x="354" y="297" width="26" height="26" rx="8" fill="url(#numero-h-violet)"/>
+          <g transform="translate(359.0 302.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6z"/></g>
+          <text x="388.0" y="315.0" font-size="11.5" fill="#4b3d82" font-weight="700">L'ancien numéro est inerte</text>
+          <text x="358.0" y="337.0" font-size="10" fill="#52615a">1 234 ne désigne plus rien : génération 0</text>
+          <rect x="672" y="288" width="312" height="62" rx="12" fill="url(#numero-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#numero-o)"/>
+          <rect x="682" y="297" width="26" height="26" rx="8" fill="url(#numero-h-bleu)"/>
+          <g transform="translate(687.0 302.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></g>
+          <text x="716.0" y="315.0" font-size="11.5" fill="#1b5873" font-weight="700">Sur MQTT, « i » = le numéro entier</text>
+          <text x="686.0" y="337.0" font-size="10" fill="#52615a">inconnu d'un abonné : il redemande meta/</text>
+  <text x="18" y="391" font-size="12" fill="#52615a" font-style="italic">Le numéro entier n'est jamais redonné ; seule la place se réutilise. C'est la forme des identifiants d'entité des moteurs de jeu (EnTT : 20 bits</text>
+  <text x="18" y="408" font-size="12" fill="#52615a" font-style="italic">d'entité, 12 de version).</text>
+</svg>

@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" width="1000" height="640" role="img" aria-labelledby="revue2-t revue2-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="revue2-t">La seconde revue : les droits</title>
+  <desc id="revue2-d">Vingt-trois cartes en trois groupes. Les droits : une connexion n'est pas une personne ; des droits par classe d'ordre ; l'approbateur habilité pour l'opération ; la révision de la carte ; l'autorité qui suit l'agent ; les droits revérifiés à la remise au module ; la fin d'un droit comme échéance ; ord/ qui ne dit pas qui ; désarmer par son chemin dédié. La mémoire : les comptes relus par leur nom ; l'acteur d'une décision ; des droits frais au secours ; le budget refait ; « en cours » sur 16 bits ; l'empreinte canonique des arguments ; l'époque d'émission ; un texte privé par forme. Les automatismes : exécution appelée ou autonome ; le responsable qui borne le mandat ; un bail qui possède l'état ; l'empreinte du programme ; les exécutions au secours ; vingt départs par minute. Dix sont bloquants, treize importants.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="640" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="revue2-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="revue2-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="revue2-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="revue2-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="revue2-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="revue2-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="revue2-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="revue2-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="revue2-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="revue2-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="revue2-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="revue2-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="revue2-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="revue2-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="revue2-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="revue2-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="revue2-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="revue2-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="revue2-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="revue2-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="revue2-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="revue2-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="revue2-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LA SECONDE REVUE CODEX : 23 CONSTATS SUR LES DROITS, CHACUN CORRIGÉ, CHACUN PROUVÉ</text>
+          <text x="16.0" y="52.0" font-size="11" fill="#1d302a" font-weight="700">Les droits</text>
+          <rect x="16" y="60" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="26" y="69" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(31.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">D1</text>
+          <text x="30.0" y="109.0" font-size="9.8" fill="#52615a">Connexion ≠ personne</text>
+          <rect x="210" y="60" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="220" y="69" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(225.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">D2</text>
+          <text x="224.0" y="109.0" font-size="9.8" fill="#52615a">Des droits par classe</text>
+          <rect x="404" y="60" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="414" y="69" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(419.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">D3</text>
+          <text x="418.0" y="109.0" font-size="9.8" fill="#52615a">L'approbateur habilité</text>
+          <rect x="598" y="60" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="608" y="69" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(613.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">D4</text>
+          <text x="612.0" y="109.0" font-size="9.8" fill="#52615a">La révision de la carte</text>
+          <rect x="792" y="60" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="802" y="69" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(807.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="836.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">D5</text>
+          <text x="806.0" y="109.0" font-size="9.8" fill="#52615a">L'autorité suit l'agent</text>
+          <rect x="16" y="126" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="26" y="135" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(31.0 140.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="153.0" font-size="11.5" fill="#8b3b22" font-weight="700">D6</text>
+          <text x="30.0" y="175.0" font-size="9.8" fill="#52615a">Revérifiés à la remise</text>
+          <rect x="210" y="126" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="220" y="135" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(225.0 140.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="153.0" font-size="11.5" fill="#94660a" font-weight="700">D7</text>
+          <text x="224.0" y="175.0" font-size="9.8" fill="#52615a">La fin, une échéance</text>
+          <rect x="404" y="126" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="414" y="135" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(419.0 140.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="153.0" font-size="11.5" fill="#94660a" font-weight="700">D8</text>
+          <text x="418.0" y="175.0" font-size="9.8" fill="#52615a">ord/ ne dit pas qui</text>
+          <rect x="598" y="126" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="608" y="135" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(613.0 140.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="153.0" font-size="11.5" fill="#8b3b22" font-weight="700">D9</text>
+          <text x="612.0" y="175.0" font-size="9.8" fill="#52615a">Désarmer : chemin dédié</text>
+          <text x="16.0" y="206.0" font-size="11" fill="#1d302a" font-weight="700">La mémoire</text>
+          <rect x="16" y="214" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="26" y="223" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(31.0 228.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="241.0" font-size="11.5" fill="#8b3b22" font-weight="700">M1</text>
+          <text x="30.0" y="263.0" font-size="9.8" fill="#52615a">Les comptes par leur nom</text>
+          <rect x="210" y="214" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="220" y="223" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(225.0 228.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="241.0" font-size="11.5" fill="#94660a" font-weight="700">M2</text>
+          <text x="224.0" y="263.0" font-size="9.8" fill="#52615a">L'acteur d'une décision</text>
+          <rect x="404" y="214" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="414" y="223" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(419.0 228.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="241.0" font-size="11.5" fill="#94660a" font-weight="700">M3</text>
+          <text x="418.0" y="263.0" font-size="9.8" fill="#52615a">Des droits frais au secours</text>
+          <rect x="598" y="214" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="608" y="223" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(613.0 228.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="241.0" font-size="11.5" fill="#94660a" font-weight="700">M4</text>
+          <text x="612.0" y="263.0" font-size="9.8" fill="#52615a">Le budget refait</text>
+          <rect x="792" y="214" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="802" y="223" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(807.0 228.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="836.0" y="241.0" font-size="11.5" fill="#94660a" font-weight="700">M5</text>
+          <text x="806.0" y="263.0" font-size="9.8" fill="#52615a">« En cours » sur 16 bits</text>
+          <rect x="16" y="280" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="26" y="289" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(31.0 294.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="307.0" font-size="11.5" fill="#94660a" font-weight="700">M6</text>
+          <text x="30.0" y="329.0" font-size="9.8" fill="#52615a">L'empreinte canonique</text>
+          <rect x="210" y="280" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="220" y="289" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(225.0 294.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="307.0" font-size="11.5" fill="#8b3b22" font-weight="700">M7</text>
+          <text x="224.0" y="329.0" font-size="9.8" fill="#52615a">L'époque d'émission</text>
+          <rect x="404" y="280" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="414" y="289" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(419.0 294.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="307.0" font-size="11.5" fill="#94660a" font-weight="700">M8</text>
+          <text x="418.0" y="329.0" font-size="9.8" fill="#52615a">Un texte privé par forme</text>
+          <text x="16.0" y="360.0" font-size="11" fill="#1d302a" font-weight="700">Les automatismes</text>
+          <rect x="16" y="368" width="184" height="58" rx="12" fill="url(#revue2-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="26" y="377" width="26" height="26" rx="8" fill="url(#revue2-h-rouge)"/>
+          <g transform="translate(31.0 382.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="395.0" font-size="11.5" fill="#8b3b22" font-weight="700">W1</text>
+          <text x="30.0" y="417.0" font-size="9.8" fill="#52615a">Appelée ou autonome</text>
+          <rect x="210" y="368" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="220" y="377" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(225.0 382.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="395.0" font-size="11.5" fill="#94660a" font-weight="700">W2</text>
+          <text x="224.0" y="417.0" font-size="9.8" fill="#52615a">Le responsable borne</text>
+          <rect x="404" y="368" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="414" y="377" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(419.0 382.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="395.0" font-size="11.5" fill="#94660a" font-weight="700">W3</text>
+          <text x="418.0" y="417.0" font-size="9.8" fill="#52615a">Un bail qui possède</text>
+          <rect x="598" y="368" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="608" y="377" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(613.0 382.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="395.0" font-size="11.5" fill="#94660a" font-weight="700">W4</text>
+          <text x="612.0" y="417.0" font-size="9.8" fill="#52615a">L'empreinte du programme</text>
+          <rect x="792" y="368" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="802" y="377" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(807.0 382.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="836.0" y="395.0" font-size="11.5" fill="#94660a" font-weight="700">W5</text>
+          <text x="806.0" y="417.0" font-size="9.8" fill="#52615a">Les exécutions au secours</text>
+          <rect x="16" y="434" width="184" height="58" rx="12" fill="url(#revue2-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue2-o)"/>
+          <rect x="26" y="443" width="26" height="26" rx="8" fill="url(#revue2-h-ambre)"/>
+          <g transform="translate(31.0 448.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="461.0" font-size="11.5" fill="#94660a" font-weight="700">W6</text>
+          <text x="30.0" y="483.0" font-size="9.8" fill="#52615a">20 départs par minute</text>
+          <rect x="16.0" y="508.0" width="73.3" height="21.5" rx="10.8" fill="url(#revue2-h-rouge)"/>
+          <text x="29.0" y="522.5" font-size="10.5" fill="#ffffff" font-weight="700">bloquant</text>
+          <rect x="101.3" y="508.0" width="83.1" height="21.5" rx="10.8" fill="url(#revue2-h-ambre)"/>
+          <text x="114.3" y="522.5" font-size="10.5" fill="#ffffff" font-weight="700">important</text>
+          <rect x="16" y="540" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 548.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="562.0" font-size="11" fill="#1d302a" font-weight="700">Chacun vérifié dans le code, corrigé, puis gardé par des fautes injectées : 46 pour cette revue, toutes détectées. M4 est un budget : il est refait (§ 19).</text>
+  <text x="18" y="617" font-size="12" fill="#52615a" font-style="italic">Codex a relu la v2 et le code d'aujourd'hui sous l'angle des droits ; un agent Claude a inventorié ce que le code fait aujourd'hui (§ 5.4). Les</text>
+  <text x="18" y="634" font-size="12" fill="#52615a" font-style="italic">vingt-trois constats étaient fondés ; le § 3.5 dit, pour chacun, la correction et sa preuve.</text>
+</svg>

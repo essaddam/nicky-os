@@ -15,6 +15,8 @@ mod timer_cli_tests;
 use anyhow::{Context as _, bail, ensure};
 use clap::{Parser, Subcommand};
 use moli_core::InstanceId;
+use moli_home_assistant::{Config as HomeAssistantConfig, Gateway as HomeAssistantGateway};
+use moli_migration::Registry as MigrationRegistry;
 use moli_runtime::{Driver, Hub, HubOptions, MasterKey, spawn_driver};
 use tokio_util::sync::CancellationToken;
 use tracing_subscriber::EnvFilter;
@@ -420,6 +422,9 @@ async fn serve(config: Config, boot: Instant) -> anyhow::Result<()> {
     let hub = open_hub(&config)?;
     let cancel = CancellationToken::new();
 
+    // Fence and load the shared migration state before the first driver starts.
+    let prepared_home_assistant = prepare_home_assistant(&config, &hub).await?;
+
     // History first: it must be listening before drivers publish anything.
     let (history, recorder) = start_history(&config, &hub, &cancel)?.unzip();
     // Energy too: a reading missed is energy filed in the wrong hour.
@@ -437,7 +442,7 @@ async fn serve(config: Config, boot: Instant) -> anyhow::Result<()> {
         None => (None, None),
     };
 
-    let (mut tasks, gates) = spawn_drivers(&config, &hub, &cancel)?;
+    let (mut tasks, gates) = spawn_drivers(&config, &hub, &cancel, prepared_home_assistant)?;
     if let Some(timer_task) = start_timer_scheduler(&config, &hub, &cancel) {
         tasks.push(timer_task);
     }
@@ -1003,6 +1008,7 @@ const KINDS: &[&str] = &[
     "frigate",
     "helpers",
     "host",
+    "home-assistant",
     "huawei-lte",
     "hue",
     "igd",
@@ -1088,12 +1094,116 @@ fn spawn_household(
     (household, task)
 }
 
+#[derive(Default)]
+struct PreparedHomeAssistant {
+    drivers: std::collections::BTreeMap<String, Arc<dyn Driver>>,
+    gateways: std::collections::BTreeMap<String, HomeAssistantGateway>,
+}
+
+/// Open the single migration registry and build every HA gateway before any
+/// driver task can publish or receive a physical command.
+async fn prepare_home_assistant(
+    config: &Config,
+    hub: &Hub,
+) -> anyhow::Result<PreparedHomeAssistant> {
+    let mut configs = Vec::new();
+    let mut installations = std::collections::BTreeSet::new();
+    let mut native_owners = std::collections::BTreeMap::<InstanceId, String>::new();
+
+    for driver in config
+        .drivers
+        .iter()
+        .filter(|driver| driver.enabled != Some(false) && driver.kind == "home-assistant")
+    {
+        let options: HomeAssistantConfig =
+            driver.options.clone().try_into().map_err(|_| {
+                anyhow::anyhow!(moli_i18n::tr!("home_assistant.status.configuration"))
+            })?;
+        let options = options
+            .validate()
+            .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("home_assistant.status.configuration")))?;
+        ensure!(
+            installations.insert(options.installation.clone()),
+            "{}",
+            moli_i18n::tr!("home_assistant.status.configuration")
+        );
+
+        // Reject duplicate native references instead of relying on Config's
+        // normalization, and require each owner to be a running Overkiz driver.
+        if let Some(native) = driver
+            .options
+            .get("native_instances")
+            .and_then(toml::Value::as_array)
+            && native.len() != options.native_instances.len()
+        {
+            bail!("{}", moli_i18n::tr!("home_assistant.status.configuration"));
+        }
+        for instance in &options.native_instances {
+            let Some(native) = config
+                .drivers
+                .iter()
+                .find(|candidate| candidate.id == instance.as_str())
+            else {
+                bail!("{}", moli_i18n::tr!("home_assistant.status.configuration"));
+            };
+            ensure!(
+                native.kind == "overkiz" && native.enabled != Some(false),
+                "{}",
+                moli_i18n::tr!("home_assistant.status.configuration")
+            );
+            if native_owners
+                .insert(instance.clone(), driver.id.clone())
+                .is_some()
+            {
+                bail!("{}", moli_i18n::tr!("home_assistant.status.configuration"));
+            }
+            // This must precede Registry::open and every driver startup.
+            hub.manage_write_instance(instance);
+        }
+        // Exercise the public validation-only constructor at the same startup
+        // boundary used by configured integrations.
+        let _validated = moli_home_assistant::HomeAssistant::new(options.clone())
+            .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("home_assistant.status.configuration")))?;
+        configs.push((driver.id.clone(), options));
+    }
+
+    // Always reopen the one durable registry: an old migration file must keep
+    // its native devices fenced even after the bridge is removed from config.
+    let registry =
+        MigrationRegistry::open(hub.clone(), config.server.data_dir.join("migration.json"))
+            .await
+            .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("home_assistant.api.unavailable")))?;
+
+    let mut prepared = PreparedHomeAssistant::default();
+    for (instance, options) in configs {
+        let gateway = HomeAssistantGateway::new(&options, hub.clone(), registry.clone()).map_err(
+            |error| {
+                let key = match error.code() {
+                    "unavailable" => "home_assistant.status.unavailable",
+                    "unsupported" => "home_assistant.status.unsupported",
+                    _ => "home_assistant.status.configuration",
+                };
+                anyhow::anyhow!(moli_i18n::tr!(key))
+            },
+        )?;
+        let driver = moli_home_assistant::HomeAssistant::with_gateway(options, gateway)
+            .map_err(|_| anyhow::anyhow!(moli_i18n::tr!("home_assistant.status.configuration")))?;
+        let gateway = driver
+            .gateway()
+            .context("prepared Home Assistant driver has no gateway")?;
+        prepared.gateways.insert(instance.clone(), gateway);
+        prepared.drivers.insert(instance, Arc::new(driver));
+    }
+    Ok(prepared)
+}
+
 /// What some drivers share with the API: the phones' pairing and reports,
 /// the computers' agents.
 #[derive(Default)]
 struct Gateways {
     cast: std::collections::BTreeMap<String, moli_cast::gateway::Gateway>,
     androidtv: std::collections::BTreeMap<String, moli_androidtv_driver::pairing::PairingGateway>,
+    home_assistant: std::collections::BTreeMap<String, HomeAssistantGateway>,
     phones: Option<moli_phones::Gateway>,
     machines: Option<moli_host::agents::Agents>,
     netatmo: std::collections::BTreeMap<InstanceId, moli_api::NetatmoEndpoint>,
@@ -1105,6 +1215,7 @@ impl Gateways {
         moli_api::Options {
             androidtv: self.androidtv,
             cast: self.cast,
+            home_assistant: self.home_assistant,
             machines: self.machines,
             netatmo: self.netatmo,
             phones: self.phones,
@@ -1117,13 +1228,28 @@ fn spawn_drivers(
     config: &Config,
     hub: &Hub,
     cancel: &CancellationToken,
+    mut prepared_home_assistant: PreparedHomeAssistant,
 ) -> anyhow::Result<(Vec<tokio::task::JoinHandle<()>>, Gateways)> {
     let mut tasks = Vec::new();
     let mut gates = Gateways::default();
+    let mut deferred_home_assistant = Vec::new();
     let cast_owners = cast_ownership(config);
     for driver in config.drivers.iter().filter(|d| d.enabled != Some(false)) {
         let context = || format!("driver {:?} options", driver.id);
         let built: Arc<dyn Driver> = match driver.kind.as_str() {
+            "home-assistant" => {
+                let instance = driver.id.clone();
+                let gateway = prepared_home_assistant
+                    .gateways
+                    .remove(&instance)
+                    .context("Home Assistant gateway was not prepared before startup")?;
+                let driver = prepared_home_assistant
+                    .drivers
+                    .remove(&instance)
+                    .context("Home Assistant driver was not prepared before startup")?;
+                gates.home_assistant.insert(instance, gateway);
+                driver
+            }
             "androidtv" => {
                 let options = driver.options.clone().try_into().with_context(context)?;
                 let tv = moli_androidtv_driver::AndroidTv::new(options)?;
@@ -1157,10 +1283,24 @@ fn spawn_drivers(
             }
             _ => build_driver(driver, &config.server.data_dir)?,
         };
+        if driver.kind == "home-assistant" {
+            deferred_home_assistant.push((driver.id.clone(), built));
+        } else {
+            tasks.push(spawn_driver(
+                hub,
+                InstanceId::from(driver.id.as_str()),
+                built,
+                cancel.clone(),
+            ));
+        }
+    }
+    // The MQTT bridge only starts after its native owners have registered with
+    // the Hub, so an early HA message cannot target an absent driver queue.
+    for (instance, driver) in deferred_home_assistant {
         tasks.push(spawn_driver(
             hub,
-            InstanceId::from(driver.id.as_str()),
-            built,
+            InstanceId::from(instance.as_str()),
+            driver,
             cancel.clone(),
         ));
     }
@@ -1292,6 +1432,7 @@ fn build_driver_n_to_z(
 ) -> anyhow::Result<Arc<dyn Driver>> {
     let context = || format!("driver {:?} options", config.id);
     Ok(match config.kind.as_str() {
+        "home-assistant" => bail!("Home Assistant drivers require a prepared migration registry"),
         "netatmo" => Arc::new(netatmo_driver(config)?.0),
         "netgear" => Arc::new(moli_netgear::Netgear::new(
             config.options.clone().try_into().with_context(context)?,
@@ -1655,6 +1796,127 @@ async fn wait_for_signal() {
 mod tests {
     use super::*;
 
+    static NEXT_HOME_ASSISTANT_TEST: std::sync::atomic::AtomicU64 =
+        std::sync::atomic::AtomicU64::new(1);
+
+    fn home_assistant_options(config_text: &str) -> (Config, std::path::PathBuf) {
+        let root = std::env::temp_dir().join(format!(
+            "moli-ha-prepare-{}-{}",
+            std::process::id(),
+            NEXT_HOME_ASSISTANT_TEST.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&root).unwrap();
+        let mut config: Config = toml::from_str(config_text).unwrap();
+        config.server.data_dir = root.clone();
+        (config, root)
+    }
+
+    #[tokio::test]
+    async fn home_assistant_native_targets_must_be_enabled_overkiz_instances() {
+        let (config, root) = home_assistant_options(
+            r#"
+[[driver]]
+id = "bridge"
+kind = "home-assistant"
+[driver.options]
+installation = "ha-fixture"
+native_instances = ["not-overkiz"]
+
+[[driver]]
+id = "not-overkiz"
+kind = "helpers"
+"#,
+        );
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let result = prepare_home_assistant(&config, &hub).await;
+        assert!(result.is_err(), "non-Overkiz native reference is rejected");
+        assert_eq!(hub.stats().drivers, 0, "preparation must not start drivers");
+        assert!(!config.server.data_dir.join("migration.json").exists());
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[tokio::test]
+    async fn home_assistant_cannot_duplicate_a_native_writer_or_installation() {
+        let duplicate_native = r#"
+[[driver]]
+id = "bridge-a"
+kind = "home-assistant"
+[driver.options]
+installation = "ha-fixture-a"
+native_instances = ["overkiz-a"]
+
+[[driver]]
+id = "bridge-b"
+kind = "home-assistant"
+[driver.options]
+installation = "ha-fixture-b"
+native_instances = ["overkiz-a"]
+
+[[driver]]
+id = "overkiz-a"
+kind = "overkiz"
+"#;
+        let (config, root) = home_assistant_options(duplicate_native);
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        assert!(prepare_home_assistant(&config, &hub).await.is_err());
+        assert_eq!(hub.stats().drivers, 0);
+        assert!(!config.server.data_dir.join("migration.json").exists());
+        let _ = std::fs::remove_dir_all(root);
+
+        let duplicate_installation = r#"
+[[driver]]
+id = "bridge-a"
+kind = "home-assistant"
+[driver.options]
+installation = "ha-fixture"
+
+[[driver]]
+id = "bridge-b"
+kind = "home-assistant"
+[driver.options]
+installation = "ha-fixture"
+"#;
+        let (config, root) = home_assistant_options(duplicate_installation);
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        assert!(prepare_home_assistant(&config, &hub).await.is_err());
+        assert_eq!(hub.stats().drivers, 0);
+        assert!(!config.server.data_dir.join("migration.json").exists());
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[tokio::test]
+    async fn native_write_instances_are_closed_before_gateways_are_prepared() {
+        let (config, root) = home_assistant_options(
+            r#"
+[[driver]]
+id = "bridge"
+kind = "home-assistant"
+[driver.options]
+installation = "ha-fixture"
+native_instances = ["overkiz-a"]
+
+[[driver]]
+id = "overkiz-a"
+kind = "overkiz"
+"#,
+        );
+        let hub = Hub::new(HubOptions::default()).unwrap();
+        let device = moli_core::DeviceId::new(&InstanceId::from("overkiz-a"), "cover");
+        let prepared = prepare_home_assistant(&config, &hub).await.unwrap();
+        assert_eq!(prepared.drivers.len(), 1);
+        assert_eq!(prepared.gateways.len(), 1);
+        assert_eq!(
+            hub.write_authority(&device),
+            Some(moli_runtime::WriteAuthority {
+                generation: 1,
+                allowed: false,
+            })
+        );
+        assert_eq!(hub.stats().drivers, 0, "preparation must not start drivers");
+        drop(prepared);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
     #[test]
     fn cast_builder_is_network_free_and_requires_an_explicit_scope() {
         let mut config = driver("cast");
@@ -1676,7 +1938,8 @@ mod tests {
         let config: Config = toml::from_str("[[driver]]\nid='example'\nkind='cast'\n[driver.options]\nhost='192.168.1.10'\n[[driver]]\nid='disabled'\nkind='cast'\nenabled=false\n[driver.options]\nhost='192.168.1.11'\n").unwrap();
         let hub = Hub::new(HubOptions::default()).unwrap();
         let cancel = CancellationToken::new();
-        let (tasks, gates) = spawn_drivers(&config, &hub, &cancel).unwrap();
+        let (tasks, gates) =
+            spawn_drivers(&config, &hub, &cancel, PreparedHomeAssistant::default()).unwrap();
         assert_eq!(tasks.len(), 1);
         assert_eq!(gates.cast.len(), 1);
         let options = gates.into_api_options();
@@ -1746,7 +2009,8 @@ mod tests {
         .unwrap();
         let hub = Hub::new(HubOptions::default()).unwrap();
         let cancel = CancellationToken::new();
-        let (tasks, gates) = spawn_drivers(&config, &hub, &cancel).unwrap();
+        let (tasks, gates) =
+            spawn_drivers(&config, &hub, &cancel, PreparedHomeAssistant::default()).unwrap();
         assert_eq!(tasks.len(), 1);
         assert_eq!(gates.androidtv.len(), 1);
         assert!(gates.androidtv.contains_key("example"));
@@ -1759,7 +2023,13 @@ mod tests {
     async fn androidtv_disabled_instance_has_no_task_or_pairing_gateway() {
         let config:Config=toml::from_str("[[driver]]\nid='example'\nkind='androidtv'\nenabled=false\n[driver.options]\nhost='tv.example.invalid'\n").unwrap();
         let hub = Hub::new(HubOptions::default()).unwrap();
-        let (tasks, gates) = spawn_drivers(&config, &hub, &CancellationToken::new()).unwrap();
+        let (tasks, gates) = spawn_drivers(
+            &config,
+            &hub,
+            &CancellationToken::new(),
+            PreparedHomeAssistant::default(),
+        )
+        .unwrap();
         assert!(tasks.is_empty());
         assert!(gates.androidtv.is_empty());
         assert!(hub.snapshot().drivers.is_empty());
@@ -1827,8 +2097,9 @@ mod tests {
         let config = netatmo_config(true);
         let hub = Hub::new(HubOptions::default()).unwrap();
         let cancel = CancellationToken::new();
-        let (tasks, gates) = spawn_drivers(&config, &hub, &cancel)
-            .unwrap_or_else(|error| panic!("enabled weather driver: {error}"));
+        let (tasks, gates) =
+            spawn_drivers(&config, &hub, &cancel, PreparedHomeAssistant::default())
+                .unwrap_or_else(|error| panic!("enabled weather driver: {error}"));
         assert_eq!(tasks.len(), 1);
         assert_eq!(gates.netatmo.len(), 1);
         assert!(gates.netatmo.contains_key(&InstanceId::from("t")));
@@ -1846,7 +2117,13 @@ mod tests {
         let mut config = netatmo_config(false);
         config.drivers[0].options = toml::Value::Table(toml::Table::new());
         let hub = Hub::new(HubOptions::default()).unwrap();
-        let (tasks, gates) = spawn_drivers(&config, &hub, &CancellationToken::new()).unwrap();
+        let (tasks, gates) = spawn_drivers(
+            &config,
+            &hub,
+            &CancellationToken::new(),
+            PreparedHomeAssistant::default(),
+        )
+        .unwrap();
         assert!(tasks.is_empty());
         assert!(gates.netatmo.is_empty());
     }

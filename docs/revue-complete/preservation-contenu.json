@@ -1,0 +1,34 @@
+{
+  "description": "Contenu à conserver lors de l’ajout des onglets",
+  "files": [
+    {
+      "path": "corpus.json",
+      "sha256": "da3213b41249ce321f8b1e69c25c11381d410ea746f8a468b2825c18099cfecc"
+    },
+    {
+      "path": "consolidation.json",
+      "sha256": "8ee8a305c697951f9e8ca99bf42b8aa6107564764bb79bfe424462177c6a95bf"
+    },
+    {
+      "path": "donnees/donnees.json",
+      "sha256": "ae9565340297312a736cb432dec6e12820a166600aced2af0ffeaf0679ccb66a"
+    },
+    {
+      "path": "donnees/fondations.json",
+      "sha256": "ba7bd5c94ff7ffa4a251137b7adbbe4bba1dbf46be802f653e92640f2715a0c6"
+    },
+    {
+      "path": "donnees/runtime.json",
+      "sha256": "4c557dc599d176477d178e1b8ad25875984a0f97d88a7886bbe42d9fdb878326"
+    },
+    {
+      "path": "donnees/synthese.json",
+      "sha256": "66386d5bb79c608d1f5431b6031ec6c58507ef83fe972e39e4dba860f8db3b03"
+    },
+    {
+      "path": "donnees/usages.json",
+      "sha256": "464c7f5541a8811cd497d43ae94df50ae6e125f2a39ab0ac7e709579f643ed50"
+    }
+  ],
+  "ideas": 220
+}

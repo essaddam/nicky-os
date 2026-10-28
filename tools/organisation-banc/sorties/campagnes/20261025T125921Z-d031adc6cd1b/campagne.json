@@ -1,0 +1,9 @@
+{
+  "experiment": "organisation-banc",
+  "source_sha256": "d031adc6cd1b9e2915e957e48a0aa886d202e702d4ffe33bf30c72778271e0e1",
+  "timestamp_utc": "2026-10-25T12:59:21Z",
+  "image_id": "sha256:40c4e2a8d249be4d12e160ccffe94df1642aeef82cc787a0a3db606f70abbc53",
+  "fixture_archive": "tools/bancs-reproductibilite/charges/charges-synthetiques-928384326b1d1fbb.zip",
+  "fixture_archive_sha256": "f6df10b140c97575624f90292c99f998eff3c76a34bd4b4c7e692b13fc31c73c",
+  "scope": "Sources et sorties publiques uniquement ; aucune conversation ni export HA brut."
+}

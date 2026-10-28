@@ -1,0 +1,21 @@
+[package]
+name = "banc-nettoyage"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Le banc de la proposition « nettoyage des équipements » (docs/proposition/nettoyage-equipements.md),
+# hors workspace. Il reprend tels quels, par inclusion de fichiers (`#[path]`), la maison, les fiches
+# de la mémoire v2 et les outils du banc mémoire (tools/memoire-banc). Aucune dépendance aux crates de
+# Sarah Home.
+[workspace]
+
+[dependencies]
+# La table des noms, comme l'annuaire de la mémoire v2 (déjà dans le Cargo.lock du dépôt).
+hashbrown = "0.17"
+
+[profile.release]
+# Comme la production (Cargo.toml du dépôt).
+opt-level = "s"
+lto = "fat"
+codegen-units = 1

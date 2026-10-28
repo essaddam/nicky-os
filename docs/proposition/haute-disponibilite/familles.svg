@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 479" width="1000" height="479" role="img" aria-labelledby="familles-t familles-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="familles-t">Les intégrations : que fait le secours ?</title>
+  <desc id="familles-d">Un arbre de questions. Le secret change-t-il à chaque renouvellement ? Oui : un seul renouveleur (Netatmo). Sinon, une session par identifiant ? Oui : connexion après la bascule. Sinon, une clé fixe ou un appairage ? Oui : copier le coffre. Puis trois questions pour toutes : identifiant MQTT fixe, effets visibles, lien à l'adresse de la machine. Sinon, rien à faire.</desc>
+  <rect width="1000" height="479" fill="#fffdf8"/>
+          <defs>
+            <marker id="familles-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="familles-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="familles-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="familles-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">CE QUE FAIT LE SECOURS, INTÉGRATION PAR INTÉGRATION</text>
+          <rect x="16.0" y="48.0" width="360.0" height="40.0" rx="18" fill="#ffffff" stroke="#e3c77f" stroke-width="1.6"/>
+          <text x="196.0" y="73.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Le secret change-t-il à chaque renouvellement ?</text>
+          <line x1="378.0" y1="68.0" x2="438.0" y2="68.0" stroke="#195744" stroke-width="1.8" marker-end="url(#familles-v)"/>
+          <text x="408.0" y="62.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">oui</text>
+          <rect x="442.0" y="48.0" width="542.0" height="40.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1.4"/>
+          <text x="456.0" y="65.0" font-size="11" fill="#1d302a" font-weight="700">A · un seul renouveleur ; copie scellée au secours</text>
+          <text x="456.0" y="80.0" font-size="9.5" fill="#52615a">Netatmo</text>
+          <line x1="196.0" y1="88.0" x2="196.0" y2="102.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#familles-g)"/>
+          <text x="204.0" y="100.0" font-size="9.5" fill="#52615a">non</text>
+          <rect x="16.0" y="104.0" width="360.0" height="40.0" rx="18" fill="#ffffff" stroke="#e3c77f" stroke-width="1.6"/>
+          <text x="196.0" y="129.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Une session par identifiant et mot de passe ?</text>
+          <line x1="378.0" y1="124.0" x2="438.0" y2="124.0" stroke="#195744" stroke-width="1.8" marker-end="url(#familles-v)"/>
+          <text x="408.0" y="118.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">oui</text>
+          <rect x="442.0" y="104.0" width="542.0" height="40.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1.4"/>
+          <text x="456.0" y="121.0" font-size="11" fill="#1d302a" font-weight="700">B · connexion après la bascule, jamais avant</text>
+          <text x="456.0" y="136.0" font-size="9.5" fill="#52615a">Ariston, Voltalis, Landroid, Overkiz cloud, Reolink, Twinkly, routeurs</text>
+          <line x1="196.0" y1="144.0" x2="196.0" y2="158.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#familles-g)"/>
+          <text x="204.0" y="156.0" font-size="9.5" fill="#52615a">non</text>
+          <rect x="16.0" y="160.0" width="360.0" height="40.0" rx="18" fill="#ffffff" stroke="#e3c77f" stroke-width="1.6"/>
+          <text x="196.0" y="185.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Une clé fixe, un appairage, une empreinte ?</text>
+          <line x1="378.0" y1="180.0" x2="438.0" y2="180.0" stroke="#195744" stroke-width="1.8" marker-end="url(#familles-v)"/>
+          <text x="408.0" y="174.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">oui</text>
+          <rect x="442.0" y="160.0" width="542.0" height="40.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1.4"/>
+          <text x="456.0" y="177.0" font-size="11" fill="#1d302a" font-weight="700">C · copier le coffre ; sinon réappairage humain</text>
+          <text x="456.0" y="192.0" font-size="9.5" fill="#52615a">Hue, Samsung, Android TV, Cast, Philips, Nuki, ESPHome, Tuya…</text>
+          <rect x="16.0" y="236.0" width="360.0" height="40.0" rx="18" fill="#ffffff" stroke="#e3c77f" stroke-width="1.6"/>
+          <text x="196.0" y="261.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Un identifiant MQTT fixe ?</text>
+          <line x1="378.0" y1="256.0" x2="438.0" y2="256.0" stroke="#b07d12" stroke-width="1.8" marker-end="url(#familles-a)"/>
+          <text x="408.0" y="250.0" font-size="10" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">oui</text>
+          <rect x="442.0" y="236.0" width="542.0" height="40.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1.4"/>
+          <text x="456.0" y="253.0" font-size="11" fill="#1d302a" font-weight="700">D · rien ne démarre en mode passif</text>
+          <text x="456.0" y="268.0" font-size="9.5" fill="#52615a">Bambu, Frigate, Zigbee2MQTT</text>
+          <rect x="16.0" y="292.0" width="360.0" height="40.0" rx="18" fill="#ffffff" stroke="#e3c77f" stroke-width="1.6"/>
+          <text x="196.0" y="317.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Des effets visibles (envois, appuis) ?</text>
+          <line x1="378.0" y1="312.0" x2="438.0" y2="312.0" stroke="#b07d12" stroke-width="1.8" marker-end="url(#familles-a)"/>
+          <text x="408.0" y="306.0" font-size="10" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">oui</text>
+          <rect x="442.0" y="292.0" width="542.0" height="40.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1.4"/>
+          <text x="456.0" y="309.0" font-size="11" fill="#1d302a" font-weight="700">E · un seul actif, jamais deux</text>
+          <text x="456.0" y="324.0" font-size="9.5" fill="#52615a">Telegram, notifications, récap de 21 h, Toggle</text>
+          <rect x="16.0" y="348.0" width="360.0" height="40.0" rx="18" fill="#ffffff" stroke="#e3c77f" stroke-width="1.6"/>
+          <text x="196.0" y="373.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="middle">Liée à l'adresse de la machine ?</text>
+          <line x1="378.0" y1="368.0" x2="438.0" y2="368.0" stroke="#b07d12" stroke-width="1.8" marker-end="url(#familles-a)"/>
+          <text x="408.0" y="362.0" font-size="10" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">oui</text>
+          <rect x="442.0" y="348.0" width="542.0" height="40.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1.4"/>
+          <text x="456.0" y="365.0" font-size="11" fill="#1d302a" font-weight="700">F · adresse virtuelle, ou réglage par machine</text>
+          <text x="456.0" y="380.0" font-size="9.5" fill="#52615a">Sonos, ESPHome, Cast, Netatmo, présence</text>
+          <text x="16.0" y="222.0" font-size="11" fill="#52615a" font-weight="700">Et, pour toutes, trois questions de plus :</text>
+          <rect x="16.0" y="404.0" width="968.0" height="30.0" rx="6" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="30.0" y="424.0" font-size="10.5" fill="#1d302a">G · sinon, rien à faire : météo, Open-Meteo, Tempo, Wyoming, IGD, IPP, profils sans secret.</text>
+  <text x="16" y="475" font-size="12" fill="#52615a" font-style="italic">Une seule instance active par intégration, toujours ; le secours est prêt (secrets, matériel de session), sans aucun appel avant la bascule.</text>
+</svg>

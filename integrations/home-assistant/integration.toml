@@ -1,0 +1,20 @@
+[integration]
+id = "home-assistant"
+name = "Home Assistant (pont MQTT)"
+brands = ["Home Assistant"]
+models = []
+transport = "mqtt"
+driver = "home-assistant"
+crate = "moli-home-assistant"
+
+[needs]
+secrets = ["mqtt_username", "mqtt_password"]
+vars = []
+options = ["installation"]
+
+[origin]
+reused = "Protocole MQTT versionné Moli et API asynchrone publique Home Assistant ; aucune migration de configuration HA exécutée automatiquement."
+author = "agent"
+
+[[fixture]]
+file = "fixtures/v1.json"

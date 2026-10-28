@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 548" width="1000" height="548" role="img" aria-labelledby="canaux-t canaux-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="canaux-t">Chaque canal, et ce qu'il prouve</title>
+  <desc id="canaux-d">Dix lignes. La tablette partagée ne prouve personne, sauf une session personnelle de quelques minutes. L'appli ou le navigateur personnels prouvent leur personne. Le satellite vocal donne au mieux un indice : une voix reconnue vaut sa personne pour le confort, et le sensible se confirme sur un écran. L'assistant, depuis un écran, porte l'autorité de cet écran. Un agent MCP ou un script : un mandat du serveur, ou aucune personne ; le texte « pour Alice » n'accorde rien. Un bouton : aucune personne ; ouvrir par un bouton est une décision explicite. Le clavier d'alarme : le code, par le chemin privé de l'alarme. Un automatisme : un mandat. Un invité : sa personne, datée. Le hub : ses propres gestes, sans personne implicite.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="548" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="canaux-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="canaux-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="canaux-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="canaux-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="canaux-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="canaux-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="canaux-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="canaux-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="canaux-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="canaux-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="canaux-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="canaux-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="canaux-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="canaux-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="canaux-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="canaux-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="canaux-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="canaux-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="canaux-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="canaux-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="canaux-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="canaux-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="canaux-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="canaux-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="canaux-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="canaux-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="canaux-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="canaux-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="canaux-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="canaux-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">CHAQUE CANAL, ET LA MEILLEURE PREUVE QU'IL SAIT DONNER DE LA PERSONNE</text>
+          <text x="60.0" y="52.0" font-size="10" fill="#52615a" font-weight="700">Le canal</text>
+          <text x="330.0" y="52.0" font-size="10" fill="#52615a" font-weight="700">Ce qu'il prouve</text>
+          <text x="520.0" y="52.0" font-size="10" fill="#52615a" font-weight="700">Ce qui en découle</text>
+          <rect x="16" y="62" width="968" height="32" rx="9" fill="#ffffff" stroke="#d4ddd4"/>
+          <rect x="24" y="66" width="24" height="24" rx="7" fill="url(#canaux-h-gris)"/>
+          <g transform="translate(28.0 70.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="60.0" y="83.0" font-size="11" fill="#1d302a" font-weight="700">Tablette partagée</text>
+          <rect x="330.0" y="68.0" width="129.1" height="20.5" rx="10.2" fill="url(#canaux-h-gris)"/>
+          <text x="343.0" y="81.7" font-size="9.5" fill="#ffffff" font-weight="700">aucune, sauf session</text>
+          <text x="520.0" y="83.0" font-size="10.2" fill="#52615a">un inconnu ; un PIN personnel ouvre une session de quelques minutes</text>
+          <rect x="16" y="100" width="968" height="32" rx="9" fill="#eef0ec" stroke="#d4ddd4"/>
+          <rect x="24" y="104" width="24" height="24" rx="7" fill="url(#canaux-h-vert)"/>
+          <g transform="translate(28.0 108.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5h8a1.5 1.5 0 0 1 1.5 1.5v16a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 20V4A1.5 1.5 0 0 1 8 2.5z M11 18.5h2"/></g>
+          <text x="60.0" y="121.0" font-size="11" fill="#1d302a" font-weight="700">Appli, navigateur personnels</text>
+          <rect x="330.0" y="106.0" width="83.2" height="20.5" rx="10.2" fill="url(#canaux-h-vert)"/>
+          <text x="343.0" y="119.7" font-size="9.5" fill="#ffffff" font-weight="700">personnelle</text>
+          <text x="520.0" y="121.0" font-size="10.2" fill="#52615a">sa personne : son rôle, ses pièces, sa fenêtre, ses exceptions</text>
+          <rect x="16" y="138" width="968" height="32" rx="9" fill="#ffffff" stroke="#d4ddd4"/>
+          <rect x="24" y="142" width="24" height="24" rx="7" fill="url(#canaux-h-ambre)"/>
+          <g transform="translate(28.0 146.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="60.0" y="159.0" font-size="11" fill="#1d302a" font-weight="700">Satellite vocal</text>
+          <rect x="330.0" y="144.0" width="118.4" height="20.5" rx="10.2" fill="url(#canaux-h-ambre)"/>
+          <text x="343.0" y="157.7" font-size="9.5" fill="#ffffff" font-weight="700">un indice, au mieux</text>
+          <text x="520.0" y="159.0" font-size="10.2" fill="#52615a">une voix reconnue : son confort ; le sensible se confirme sur un écran</text>
+          <rect x="16" y="176" width="968" height="32" rx="9" fill="#eef0ec" stroke="#d4ddd4"/>
+          <rect x="24" y="180" width="24" height="24" rx="7" fill="url(#canaux-h-vert)"/>
+          <g transform="translate(28.0 184.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></g>
+          <text x="60.0" y="197.0" font-size="11" fill="#1d302a" font-weight="700">L'assistant, depuis un écran</text>
+          <rect x="330.0" y="182.0" width="100.9" height="20.5" rx="10.2" fill="url(#canaux-h-vert)"/>
+          <text x="343.0" y="195.7" font-size="9.5" fill="#ffffff" font-weight="700">celle de l'écran</text>
+          <text x="520.0" y="197.0" font-size="10.2" fill="#52615a">l'autorité de l'écran qui lui parle, jamais celle de « Moli »</text>
+          <rect x="16" y="214" width="968" height="32" rx="9" fill="#ffffff" stroke="#d4ddd4"/>
+          <rect x="24" y="218" width="24" height="24" rx="7" fill="url(#canaux-h-ambre)"/>
+          <g transform="translate(28.0 222.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z M10 10h4v4h-4z M9 4v3 M12 4v3 M15 4v3 M9 17v3 M12 17v3 M15 17v3 M4 9h3 M4 12h3 M4 15h3 M17 9h3 M17 12h3 M17 15h3"/></g>
+          <text x="60.0" y="235.0" font-size="11" fill="#1d302a" font-weight="700">Agent MCP, script</text>
+          <rect x="330.0" y="220.0" width="132.2" height="20.5" rx="10.2" fill="url(#canaux-h-ambre)"/>
+          <text x="343.0" y="233.7" font-size="9.5" fill="#ffffff" font-weight="700">un mandat, ou aucune</text>
+          <text x="520.0" y="235.0" font-size="10.2" fill="#52615a">« pour Alice » : un mandat du serveur ; le texte n'accorde rien</text>
+          <rect x="16" y="252" width="968" height="32" rx="9" fill="#eef0ec" stroke="#d4ddd4"/>
+          <rect x="24" y="256" width="24" height="24" rx="7" fill="url(#canaux-h-gris)"/>
+          <g transform="translate(28.0 260.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="60.0" y="273.0" font-size="11" fill="#1d302a" font-weight="700">Bouton, télécommande</text>
+          <rect x="330.0" y="258.0" width="60.1" height="20.5" rx="10.2" fill="url(#canaux-h-gris)"/>
+          <text x="343.0" y="271.7" font-size="9.5" fill="#ffffff" font-weight="700">aucune</text>
+          <text x="520.0" y="273.0" font-size="10.2" fill="#52615a">une source connue ; ouvrir par un bouton : une décision explicite</text>
+          <rect x="16" y="290" width="968" height="32" rx="9" fill="#ffffff" stroke="#d4ddd4"/>
+          <rect x="24" y="294" width="24" height="24" rx="7" fill="url(#canaux-h-violet)"/>
+          <g transform="translate(28.0 298.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v10H6z M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></g>
+          <text x="60.0" y="311.0" font-size="11" fill="#1d302a" font-weight="700">Clavier d'alarme</text>
+          <rect x="330.0" y="296.0" width="60.5" height="20.5" rx="10.2" fill="url(#canaux-h-violet)"/>
+          <text x="343.0" y="309.7" font-size="9.5" fill="#ffffff" font-weight="700">le code</text>
+          <text x="520.0" y="311.0" font-size="10.2" fill="#52615a">le chemin privé de l'alarme, jamais une demande générique</text>
+          <rect x="16" y="328" width="968" height="32" rx="9" fill="#eef0ec" stroke="#d4ddd4"/>
+          <rect x="24" y="332" width="24" height="24" rx="7" fill="url(#canaux-h-violet)"/>
+          <g transform="translate(28.0 336.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="60.0" y="349.0" font-size="11" fill="#1d302a" font-weight="700">Automatisme</text>
+          <rect x="330.0" y="334.0" width="77.6" height="20.5" rx="10.2" fill="url(#canaux-h-violet)"/>
+          <text x="343.0" y="347.7" font-size="9.5" fill="#ffffff" font-weight="700">un mandat</text>
+          <text x="520.0" y="349.0" font-size="10.2" fill="#52615a">lancé : les droits de qui le lance ; autonome : ceux du responsable</text>
+          <rect x="16" y="366" width="968" height="32" rx="9" fill="#ffffff" stroke="#d4ddd4"/>
+          <rect x="24" y="370" width="24" height="24" rx="7" fill="url(#canaux-h-ambre)"/>
+          <g transform="translate(28.0 374.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11a4 4 0 1 1 0 8a4 4 0 1 1 0-8z M11 12l8-8 M16 7l2 2 M14 9l2 2"/></g>
+          <text x="60.0" y="387.0" font-size="11" fill="#1d302a" font-weight="700">Invité</text>
+          <rect x="330.0" y="372.0" width="117.7" height="20.5" rx="10.2" fill="url(#canaux-h-ambre)"/>
+          <text x="343.0" y="385.7" font-size="9.5" fill="#ffffff" font-weight="700">personnelle, datée</text>
+          <text x="520.0" y="387.0" font-size="10.2" fill="#52615a">ses pièces, sa fenêtre ; il propose ce qu'un adulte commande</text>
+          <rect x="16" y="404" width="968" height="32" rx="9" fill="#eef0ec" stroke="#d4ddd4"/>
+          <rect x="24" y="408" width="24" height="24" rx="7" fill="url(#canaux-h-vert)"/>
+          <g transform="translate(28.0 412.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="60.0" y="425.0" font-size="11" fill="#1d302a" font-weight="700">Le hub</text>
+          <rect x="330.0" y="410.0" width="63.1" height="20.5" rx="10.2" fill="url(#canaux-h-vert)"/>
+          <text x="343.0" y="423.7" font-size="9.5" fill="#ffffff" font-weight="700">interne</text>
+          <text x="520.0" y="425.0" font-size="10.2" fill="#52615a">ses propres gestes (une minuterie) ; aucune personne implicite</text>
+          <rect x="16" y="448" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 456.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="470.0" font-size="11" fill="#1d302a" font-weight="700">Une connexion n'est pas une personne : la tablette garde son compte quand Charlie tape son PIN, et redevient anonyme à la fin de la session.</text>
+  <text x="18" y="525" font-size="12" fill="#52615a" font-style="italic">Ce que le code d'aujourd'hui prouve, canal par canal, est au § 5.4 : la session PIN est commune et liée à l'appelant, la voix n'a pas de locuteur, MCP</text>
+  <text x="18" y="542" font-size="12" fill="#52615a" font-style="italic">n'a pas de personne. La v3 range la preuve à côté de la personne, et décide avec.</text>
+</svg>

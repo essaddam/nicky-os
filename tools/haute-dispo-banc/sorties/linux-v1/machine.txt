@@ -1,0 +1,4 @@
+machine : Apple M4
+docker : 29.2.1 · 4 CPU · 8309014528 o
+conteneurs : 2 CPU, 128 Mio sans échange, trois essais par mesure (médiane ; le pire pour _max)
+charge à la fin de la série : 5.37 5.84 5.89

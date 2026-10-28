@@ -18,6 +18,8 @@
 
 mod api;
 #[cfg(test)]
+mod bridge_tests;
+#[cfg(test)]
 mod fake;
 mod follow;
 /// Pure device/state/command codec, also used by modular MQTT hosts.
@@ -29,7 +31,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Context as _, bail};
 use moli_core::DeviceId;
-use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx};
+use moli_runtime::{BoxFuture, CommandRequest, Driver, DriverCtx, SendPermit};
 use serde::Deserialize;
 use serde_json::Value as Json;
 use tokio::task::JoinSet;
@@ -100,7 +102,23 @@ pub struct Overkiz {
 }
 
 impl Overkiz {
-    pub fn new(config: Config) -> anyhow::Result<Self> {
+    pub fn new(mut config: Config) -> anyhow::Result<Self> {
+        // Home Assistant stores the box as `ip:port`: accept that form
+        // (a bare IPv6 address, with several colons, is left alone).
+        if let Some((name, port)) = config
+            .host
+            .as_deref()
+            .map(str::trim)
+            .and_then(|h| h.rsplit_once(':'))
+            && !name.contains(':')
+            && let Ok(port) = port.parse::<u16>()
+        {
+            if config.port != default_port() && config.port != port {
+                bail!("host gives port {port} but port is {}", config.port);
+            }
+            config.host = Some(name.to_owned());
+            config.port = port;
+        }
         match (config.transport, config.host.as_deref().map(str::trim)) {
             (Transport::Local, None | Some("")) => {
                 bail!("transport \"local\" needs the box's address: host")
@@ -324,6 +342,7 @@ struct Queued {
     order: Order,
     /// The absolute instant past which it must not leave.
     reply_by: Instant,
+    permit: SendPermit,
 }
 
 impl Link {
@@ -627,11 +646,13 @@ impl Link {
             device: Arc::clone(&command.device.native_name),
             order: order.command,
         };
+        let permit = command.send_permit(reply_by);
         self.tracker.track(key, command, about, reply_by);
         self.queue.push_back(Queued {
             key,
             order,
             reply_by,
+            permit,
         });
     }
 
@@ -682,7 +703,10 @@ impl Link {
             self.writing = true;
             let api = Arc::clone(&self.api);
             self.jobs.spawn(async move {
-                Done::Applied(next.key, emit(&api, &next.order, next.reply_by).await)
+                Done::Applied(
+                    next.key,
+                    emit(&api, &next.order, next.reply_by, Some(&next.permit)).await,
+                )
             });
         }
     }
@@ -691,13 +715,30 @@ impl Link {
 /// One order to the box, never after `deadline`: refused unsent if the
 /// task starts late, abandoned at that instant if the box is slow (maybe
 /// sent then, never sent again).
-async fn emit(api: &Api, order: &Order, deadline: Instant) -> anyhow::Result<String> {
-    if Instant::now() >= deadline {
+async fn emit(
+    api: &Api,
+    order: &Order,
+    deadline: Instant,
+    permit: Option<&SendPermit>,
+) -> anyhow::Result<String> {
+    if Instant::now() >= deadline || permit.is_some_and(|permit| !permit.wanted()) {
         return Err(api::NotSent.into());
     }
-    tokio::time::timeout_at(deadline.into(), api.apply(order, deadline))
+    let applying = async {
+        match permit {
+            Some(permit) => api.apply_with_permit(order, permit).await,
+            None => api.apply(order, deadline).await,
+        }
+    };
+    tokio::time::timeout_at(deadline.into(), applying)
         .await
-        .unwrap_or_else(|_| Err(NoAnswer.into()))
+        .unwrap_or_else(|_| {
+            Err(if permit.is_some_and(|permit| !permit.emitted()) {
+                api::NotSent.into()
+            } else {
+                NoAnswer.into()
+            })
+        })
 }
 
 /// What an execution's end means for its caller or the household.

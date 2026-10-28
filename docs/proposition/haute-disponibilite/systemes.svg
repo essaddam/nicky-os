@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 852" width="1000" height="852" role="img" aria-labelledby="systemes-t systemes-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="systemes-t">Les deux systèmes, en détail : courtiers, cœur et clients</title>
+  <desc id="systemes-d">Deux machines l'une sous l'autre. H1, actif : dans un seul binaire, le hub, le moteur, la base, le module WebSocket, l'API, le coffre et le journal, reliés en mémoire au courtier MQTT embarqué, qui écoute en 1883 (local), 8883 (réseau, TLS) et 8885 (secours, TLS) ; les modules api-to-mqtt parlent aux appareils et aux clouds ; Zigbee2MQTT et les modules à part sont clients de 1883 ; le contrôleur Matter parle à son module. Les écrans et les appareils MQTT du réseau viennent par l'adresse virtuelle de l'actif ; le boîtier radio A parle à Zigbee2MQTT. H2, passif : les mêmes composants en copie, son courtier sans client, ses modules et ses ponts radio arrêtés ; le pont à reprise, client de H1:8885, est le seul éditeur de son courtier. Le témoin vote le bail des deux.</desc>
+  <rect width="1000" height="852" fill="#fffdf8"/>
+          <defs>
+            <marker id="systemes-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="systemes-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="systemes-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="systemes-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">LES CLIENTS</text>
+          <rect x="236.0" y="36.0" width="748.0" height="352.0" rx="8" fill="#f1f4ee" stroke="#195744" stroke-width="1.6"/>
+          <text x="962.0" y="56.0" font-size="11.5" fill="#195744" font-weight="700" text-anchor="end">H1 · ACTIF : PORTE L'ÉPOQUE</text>
+          <rect x="250.0" y="68.0" width="720.0" height="240.0" rx="8" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="262.0" y="86.0" font-size="10.5" fill="#52615a" font-weight="700">Sarah Home : un seul binaire</text>
+          <text x="958.0" y="86.0" font-size="10" fill="#52615a" text-anchor="end">liens en mémoire, sans TCP</text>
+          <line x1="317.0" y1="154.0" x2="317.0" y2="168.0" stroke="#195744" stroke-width="1.6"/>
+          <rect x="262.0" y="94.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="274.0" y="113.0" font-size="11" fill="#1d302a" font-weight="700">Hub</text>
+          <text x="274.0" y="130.0" font-size="10" fill="#52615a">vérité, garde</text>
+          <text x="274.0" y="145.0" font-size="10" fill="#52615a">publie val/ (rang s)</text>
+          <line x1="435.0" y1="154.0" x2="435.0" y2="168.0" stroke="#195744" stroke-width="1.6"/>
+          <rect x="380.0" y="94.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="392.0" y="113.0" font-size="11" fill="#1d302a" font-weight="700">Moteur</text>
+          <text x="392.0" y="130.0" font-size="10" fill="#52615a">automatismes,</text>
+          <text x="392.0" y="145.0" font-size="10" fill="#52615a">moteur du temps</text>
+          <line x1="553.0" y1="154.0" x2="553.0" y2="168.0" stroke="#195744" stroke-width="1.6"/>
+          <rect x="498.0" y="94.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="510.0" y="113.0" font-size="11" fill="#1d302a" font-weight="700">Base</text>
+          <text x="510.0" y="130.0" font-size="10" fill="#52615a">maison.db, moli.db</text>
+          <text x="510.0" y="145.0" font-size="10" fill="#52615a">export (D13)</text>
+          <line x1="671.0" y1="154.0" x2="671.0" y2="168.0" stroke="#195744" stroke-width="1.6"/>
+          <rect x="616.0" y="94.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="628.0" y="113.0" font-size="11" fill="#1d302a" font-weight="700">WebSocket</text>
+          <text x="628.0" y="130.0" font-size="10" fill="#52615a">les écrans</text>
+          <line x1="789.0" y1="154.0" x2="789.0" y2="168.0" stroke="#195744" stroke-width="1.6"/>
+          <rect x="734.0" y="94.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="746.0" y="113.0" font-size="11" fill="#1d302a" font-weight="700">API, MCP</text>
+          <text x="746.0" y="130.0" font-size="10" fill="#52615a">Sarah, outils</text>
+          <line x1="907.0" y1="154.0" x2="907.0" y2="168.0" stroke="#195744" stroke-width="1.6"/>
+          <rect x="852.0" y="94.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="864.0" y="113.0" font-size="11" fill="#1d302a" font-weight="700">Coffre, journal</text>
+          <text x="864.0" y="130.0" font-size="10" fill="#52615a">secrets ; journal</text>
+          <text x="864.0" y="145.0" font-size="10" fill="#52615a">7 jours (s, j)</text>
+          <rect x="262.0" y="168.0" width="700.0" height="40.0" rx="6" fill="#e6eee5" stroke="#195744" stroke-width="1.4"/>
+          <text x="612.0" y="185.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">Courtier MQTT embarqué (rumqttd)</text>
+          <text x="612.0" y="200.0" font-size="10" fill="#52615a" text-anchor="middle">in/, req/ → hub ; val/, evt/, avail/, meta/, cmd/ → abonnés</text>
+          <rect x="262.0" y="168.0" width="94.0" height="40.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1.4"/>
+          <text x="309.0" y="185.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">1883 · 8883</text>
+          <text x="309.0" y="200.0" font-size="9.5" fill="#52615a" text-anchor="middle">local · réseau</text>
+          <rect x="868.0" y="168.0" width="94.0" height="40.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1.4"/>
+          <text x="915.0" y="185.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">8885</text>
+          <text x="915.0" y="200.0" font-size="9.5" fill="#52615a" text-anchor="middle">secours, TLS</text>
+          <rect x="360.0" y="222.0" width="602.0" height="46.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="372.0" y="241.0" font-size="11" fill="#1d302a" font-weight="700">Modules api-to-mqtt du binaire : Hue, Overkiz, Netatmo, Sonos…</text>
+          <text x="372.0" y="258.0" font-size="10" fill="#52615a">in/ vers le hub, cmd/ depuis le hub ; ils parlent aux appareils IP et aux clouds</text>
+          <text x="730.0" y="290.0" font-size="10" fill="#52615a">seul le hub écrit val/ et cmd/</text>
+          <rect x="262.0" y="318.0" width="158.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="274.0" y="337.0" font-size="11" fill="#1d302a" font-weight="700">Zigbee2MQTT</text>
+          <text x="274.0" y="354.0" font-size="10" fill="#52615a">1883 ; radio A par TCP</text>
+          <rect x="432.0" y="318.0" width="158.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="444.0" y="337.0" font-size="11" fill="#1d302a" font-weight="700">Modules à part</text>
+          <text x="444.0" y="354.0" font-size="10" fill="#52615a">clients de 1883</text>
+          <rect x="602.0" y="318.0" width="198.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="614.0" y="337.0" font-size="11" fill="#1d302a" font-weight="700">Contrôleur Matter</text>
+          <text x="614.0" y="354.0" font-size="10" fill="#52615a">matter.js, WebSocket</text>
+          <text x="820.0" y="340.0" font-size="10" fill="#52615a">un seul écrivain par radio :</text>
+          <text x="820.0" y="356.0" font-size="10" fill="#52615a">attachés à l'époque (V7)</text>
+          <line x1="300.0" y1="318.0" x2="300.0" y2="210.0" stroke="#195744" stroke-width="1.5" marker-end="url(#systemes-v)"/>
+          <path d="M 511 318 L 511 313 L 330 313 L 330 210" fill="none" stroke="#195744" stroke-width="1.5" marker-end="url(#systemes-v)"/>
+          <line x1="701.0" y1="318.0" x2="701.0" y2="270.0" stroke="#195744" stroke-width="1.5" marker-end="url(#systemes-v)"/>
+          <rect x="236.0" y="416.0" width="748.0" height="352.0" rx="8" fill="#f1f4ee" stroke="#b07d12" stroke-width="1.6"/>
+          <text x="962.0" y="436.0" font-size="11.5" fill="#b07d12" font-weight="700" text-anchor="end">H2 · SECOURS LOCAL : PASSIF</text>
+          <rect x="250.0" y="448.0" width="720.0" height="240.0" rx="8" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="262.0" y="466.0" font-size="10.5" fill="#52615a" font-weight="700">Sarah Home : un seul binaire</text>
+          <text x="958.0" y="466.0" font-size="10" fill="#52615a" text-anchor="end">liens en mémoire, sans TCP</text>
+          <line x1="317.0" y1="534.0" x2="317.0" y2="548.0" stroke="#b07d12" stroke-width="1.6"/>
+          <rect x="262.0" y="474.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="274.0" y="493.0" font-size="11" fill="#1d302a" font-weight="700">Hub</text>
+          <text x="274.0" y="510.0" font-size="10" fill="#52615a">applique les sorties</text>
+          <text x="274.0" y="525.0" font-size="10" fill="#52615a">dans l'ordre de s</text>
+          <line x1="435.0" y1="534.0" x2="435.0" y2="548.0" stroke="#b07d12" stroke-width="1.6"/>
+          <rect x="380.0" y="474.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="392.0" y="493.0" font-size="11" fill="#1d302a" font-weight="700">Moteur</text>
+          <text x="392.0" y="510.0" font-size="10" fill="#52615a">applique le journal,</text>
+          <text x="392.0" y="525.0" font-size="10" fill="#52615a">n'agit pas</text>
+          <line x1="553.0" y1="534.0" x2="553.0" y2="548.0" stroke="#b07d12" stroke-width="1.6"/>
+          <rect x="498.0" y="474.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="510.0" y="493.0" font-size="11" fill="#1d302a" font-weight="700">Base</text>
+          <text x="510.0" y="510.0" font-size="10" fill="#52615a">copie de reprise</text>
+          <text x="510.0" y="525.0" font-size="10" fill="#52615a">n'exporte pas</text>
+          <line x1="671.0" y1="534.0" x2="671.0" y2="548.0" stroke="#b07d12" stroke-width="1.6"/>
+          <rect x="616.0" y="474.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="628.0" y="493.0" font-size="11" fill="#1d302a" font-weight="700">WebSocket</text>
+          <text x="628.0" y="510.0" font-size="10" fill="#52615a">écrans en lecture</text>
+          <text x="628.0" y="525.0" font-size="10" fill="#52615a">seule</text>
+          <line x1="789.0" y1="534.0" x2="789.0" y2="548.0" stroke="#b07d12" stroke-width="1.6"/>
+          <rect x="734.0" y="474.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="746.0" y="493.0" font-size="11" fill="#1d302a" font-weight="700">API, MCP</text>
+          <text x="746.0" y="510.0" font-size="10" fill="#52615a">lecture seule</text>
+          <line x1="907.0" y1="534.0" x2="907.0" y2="548.0" stroke="#b07d12" stroke-width="1.6"/>
+          <rect x="852.0" y="474.0" width="110.0" height="60.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="864.0" y="493.0" font-size="11" fill="#1d302a" font-weight="700">Coffre, journal</text>
+          <text x="864.0" y="510.0" font-size="10" fill="#52615a">copies, écrites</text>
+          <text x="864.0" y="525.0" font-size="10" fill="#52615a">par le pont</text>
+          <rect x="262.0" y="548.0" width="700.0" height="40.0" rx="6" fill="#fbf0d6" stroke="#b07d12" stroke-width="1.4"/>
+          <text x="612.0" y="565.0" font-size="11.5" fill="#1d302a" font-weight="700" text-anchor="middle">Courtier MQTT du secours : seul le pont y publie</text>
+          <text x="612.0" y="580.0" font-size="10" fill="#52615a" text-anchor="middle">les abonnés locaux y lisent, comme sur l'actif</text>
+          <rect x="262.0" y="548.0" width="94.0" height="40.0" rx="6" fill="#eef0ec" stroke="#52615a" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="309.0" y="565.0" font-size="10.5" fill="#52615a" font-weight="700" text-anchor="middle">1883 · 8883</text>
+          <text x="309.0" y="580.0" font-size="9.5" fill="#52615a" text-anchor="middle">sans client</text>
+          <rect x="868.0" y="548.0" width="94.0" height="40.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1.4"/>
+          <text x="915.0" y="565.0" font-size="10.5" fill="#1d302a" font-weight="700" text-anchor="middle">pont</text>
+          <text x="915.0" y="580.0" font-size="9.5" fill="#52615a" text-anchor="middle">seul éditeur</text>
+          <rect x="360.0" y="602.0" width="402.0" height="46.0" rx="6" fill="#eef0ec" stroke="#52615a" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="372.0" y="621.0" font-size="11" fill="#52615a" font-weight="700">Modules api-to-mqtt : arrêtés</text>
+          <text x="372.0" y="638.0" font-size="10" fill="#52615a">ils démarrent à la prise de l'époque</text>
+          <rect x="774.0" y="602.0" width="188.0" height="46.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="786.0" y="621.0" font-size="11" fill="#1d302a" font-weight="700">Pont à reprise</text>
+          <text x="786.0" y="638.0" font-size="10" fill="#52615a">client de H1:8885, TLS</text>
+          <line x1="868.0" y1="602.0" x2="868.0" y2="590.0" stroke="#195744" stroke-width="1.8" marker-end="url(#systemes-v)"/>
+          <text x="360.0" y="670.0" font-size="10" fill="#52615a">Les abonnés comblent leurs trous par la copie du journal ; rien ne part vers un appareil.</text>
+          <rect x="262.0" y="698.0" width="158.0" height="52.0" rx="6" fill="#eef0ec" stroke="#52615a" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="274.0" y="717.0" font-size="11" fill="#52615a" font-weight="700">Zigbee2MQTT</text>
+          <text x="274.0" y="734.0" font-size="10" fill="#52615a">arrêté</text>
+          <rect x="432.0" y="698.0" width="158.0" height="52.0" rx="6" fill="#eef0ec" stroke="#52615a" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="444.0" y="717.0" font-size="11" fill="#52615a" font-weight="700">Modules à part</text>
+          <text x="444.0" y="734.0" font-size="10" fill="#52615a">arrêté</text>
+          <rect x="602.0" y="698.0" width="198.0" height="52.0" rx="6" fill="#eef0ec" stroke="#52615a" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="614.0" y="717.0" font-size="11" fill="#52615a" font-weight="700">Contrôleur Matter</text>
+          <text x="614.0" y="734.0" font-size="10" fill="#52615a">arrêté</text>
+          <text x="820.0" y="720.0" font-size="10" fill="#52615a">démarrés après la clôture</text>
+          <text x="820.0" y="736.0" font-size="10" fill="#52615a">de l'ancien actif (V7)</text>
+          <rect x="16.0" y="52.0" width="200.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="28.0" y="71.0" font-size="11.5" fill="#1d302a" font-weight="700">Écrans</text>
+          <text x="28.0" y="88.0" font-size="10" fill="#52615a">navigateur, appli</text>
+          <rect x="16.0" y="122.0" width="200.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="28.0" y="141.0" font-size="11.5" fill="#1d302a" font-weight="700">Appareils MQTT du réseau</text>
+          <text x="28.0" y="158.0" font-size="10" fill="#52615a">Tasmota, Shelly · MQTT TLS</text>
+          <rect x="16.0" y="262.0" width="200.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="28.0" y="281.0" font-size="11.5" fill="#1d302a" font-weight="700">Boîtier radio A</text>
+          <text x="28.0" y="298.0" font-size="10" fill="#52615a">Zigbee actif · Thread actif</text>
+          <rect x="16.0" y="470.0" width="200.0" height="52.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="28.0" y="489.0" font-size="11.5" fill="#1d302a" font-weight="700">Boîtier radio B</text>
+          <text x="28.0" y="506.0" font-size="10" fill="#52615a">Zigbee secours · Thread actif</text>
+          <rect x="16.0" y="590.0" width="200.0" height="52.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="28.0" y="609.0" font-size="11.5" fill="#1d302a" font-weight="700">Témoin</text>
+          <text x="28.0" y="626.0" font-size="10" fill="#52615a">vote le bail de l'époque</text>
+          <text x="16.0" y="200.0" font-size="10" fill="#52615a" font-weight="700">Adresse virtuelle (VRRP) :</text>
+          <text x="16.0" y="215.0" font-size="10" fill="#52615a">écrans et appareils parlent</text>
+          <text x="16.0" y="230.0" font-size="10" fill="#52615a">à celle de l'actif</text>
+          <path d="M 216 78 L 228 78 L 228 62 L 671 62 L 671 92" fill="none" stroke="#195744" stroke-width="1.5" marker-end="url(#systemes-v)"/>
+          <text x="450.0" y="57.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">WebSocket, par l'adresse virtuelle</text>
+          <path d="M 216 148 L 230 148 L 230 188 L 260 188" fill="none" stroke="#195744" stroke-width="1.5" marker-end="url(#systemes-v)"/>
+          <path d="M 216 288 L 232 288 L 232 344 L 260 344" fill="none" stroke="#195744" stroke-width="1.5" marker-end="url(#systemes-v)"/>
+          <path d="M 216 496 L 232 496 L 232 724 L 260 724" fill="none" stroke="#52615a" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#systemes-g)"/>
+          <path d="M 216 606 L 226 606 L 226 380 L 236 380" fill="none" stroke="#52615a" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <line x1="216.0" y1="626.0" x2="236.0" y2="626.0" stroke="#52615a" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <path d="M 962 188 L 992 188 L 992 625 L 964 625" fill="none" stroke="#195744" stroke-width="2.4" marker-end="url(#systemes-v)"/>
+          <text x="984.0" y="405.0" font-size="11" fill="#195744" font-weight="700" text-anchor="end" paint-order="stroke" stroke="#fffdf8" stroke-width="4">pont à reprise : sorties et journal (8885, TLS)</text>
+          <text x="16.0" y="790.0" font-size="10.5" fill="#52615a">À la bascule, H2 prend l'époque et l'adresse virtuelle, démarre Zigbee2MQTT, Matter et ses modules ; les clients se reconnectent à la même adresse ; le pont s'arrête.</text>
+  <text x="16" y="831" font-size="12" fill="#52615a" font-style="italic">Un seul binaire par machine ; un courtier par machine ; les clients ne parlent qu'à l'actif, par l'adresse virtuelle. Le secours ne reçoit que le</text>
+  <text x="16" y="848" font-size="12" fill="#52615a" font-style="italic">pont.</text>
+</svg>

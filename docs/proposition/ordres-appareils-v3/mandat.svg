@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 496" width="1000" height="496" role="img" aria-labelledby="mandat-t mandat-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="mandat-t">Qui répond d'un automatisme</title>
+  <desc id="mandat-d">Deux zones. Lancé par une personne, une routine ou une scène garde les droits de la personne, ceux de sa connexion et le mandat de l'automatisme : Charlie lance « Départ » sur la tablette ; sa lampe s'allume, la porte non, ce n'est pas sa pièce ; depuis la tablette anonyme, la chambre se propose. Autonome, un automatisme a les droits de son responsable dans la limite de son mandat, ou son seul mandat s'il est adopté par le foyer : « Sonnette ouvre » est à revoir tant que personne n'a accepté qu'un bouton que tout le monde peut presser ouvre la porte ; accepté par Bob, il ouvre ; Alice partie, sa « Nuit » est refusée et mise à revoir. En bas, quatre cartes : le manifeste, le bail, l'exécution, les rafales.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="496" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="mandat-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="mandat-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="mandat-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="mandat-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="mandat-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="mandat-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="mandat-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="mandat-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="mandat-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="mandat-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="mandat-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="mandat-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="mandat-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="mandat-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="mandat-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="mandat-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="mandat-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="mandat-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="mandat-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="mandat-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="mandat-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="mandat-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="mandat-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="mandat-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="mandat-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="mandat-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="mandat-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="mandat-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="mandat-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="mandat-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="mandat-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="mandat-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="mandat-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="mandat-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="mandat-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="mandat-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="mandat-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="mandat-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="mandat-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="mandat-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="mandat-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="mandat-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="mandat-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="mandat-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">UN AUTOMATISME NE FAIT JAMAIS PLUS QUE CELUI QUI EN RÉPOND</text>
+          <rect x="16" y="40" width="476" height="210" rx="20" fill="#e1eef6" fill-opacity=".45" stroke="#3b8db4" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(32.0 51.0) scale(0.6667)" fill="none" stroke="#1b5873" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></g>
+          <text x="54.0" y="64.0" font-size="11" fill="#1b5873" font-weight="700" letter-spacing=".07em">LANCÉ PAR UNE PERSONNE : UNE ROUTINE, UNE SCÈNE</text>
+          <rect x="32" y="76" width="444" height="52" rx="12" fill="url(#mandat-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#mandat-o)"/>
+          <circle cx="47" cy="95" r="4.5" fill="url(#mandat-h-bleu)"/>
+          <text x="59.0" y="99.0" font-size="11.5" fill="#1b5873" font-weight="700">Charlie lance « Départ » sur la tablette, son PIN</text>
+          <text x="46.0" y="117.0" font-size="10" fill="#52615a">les droits de Charlie ∩ ceux de la tablette ∩ le mandat de « Départ »</text>
+          <circle cx="41" cy="149" r="10" fill="url(#mandat-h-vert)"/>
+          <g transform="translate(34.0 142.0) scale(0.5833)" fill="none" stroke="#ffffff" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="153.0" font-size="10.8" fill="#1d302a" font-weight="700">sa lampe : oui</text>
+          <circle cx="41" cy="183" r="10" fill="url(#mandat-h-rouge)"/>
+          <g transform="translate(34.0 176.0) scale(0.5833)" fill="none" stroke="#ffffff" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="60.0" y="187.0" font-size="10.8" fill="#1d302a" font-weight="700">la porte : non, ce n'est pas sa pièce</text>
+          <circle cx="41" cy="217" r="10" fill="url(#mandat-h-ambre)"/>
+          <g transform="translate(34.0 210.0) scale(0.5833)" fill="none" stroke="#ffffff" stroke-width="3.77" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1 0 18a9 9 0 1 1 0-18z M12 7v5l3 2"/></g>
+          <text x="60.0" y="221.0" font-size="10.8" fill="#1d302a" font-weight="700">depuis la tablette anonyme : la chambre se propose</text>
+          <rect x="508" y="40" width="476" height="210" rx="20" fill="#ebe7f7" fill-opacity=".45" stroke="#7e6cc2" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(524.0 51.0) scale(0.6667)" fill="none" stroke="#4b3d82" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="546.0" y="64.0" font-size="11" fill="#4b3d82" font-weight="700" letter-spacing=".07em">AUTONOME : UN DÉCLENCHEUR</text>
+          <rect x="524" y="76" width="444" height="52" rx="12" fill="url(#mandat-f-violet)" stroke="#7e6cc2" stroke-opacity=".55" stroke-width="1.1" filter="url(#mandat-o)"/>
+          <circle cx="539" cy="95" r="4.5" fill="url(#mandat-h-violet)"/>
+          <text x="551.0" y="99.0" font-size="11.5" fill="#4b3d82" font-weight="700">« Sonnette ouvre » : la sonnette sonne, la porte s'ouvre</text>
+          <text x="538.0" y="117.0" font-size="10" fill="#52615a">les droits de son responsable ∩ le mandat ; adopté par le foyer : le mandat</text>
+          <circle cx="533" cy="149" r="10" fill="url(#mandat-h-rouge)"/>
+          <g transform="translate(526.0 142.0) scale(0.5833)" fill="none" stroke="#ffffff" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="552.0" y="153.0" font-size="10.8" fill="#1d302a" font-weight="700">n'importe qui peut sonner : à revoir, sans décision</text>
+          <circle cx="533" cy="183" r="10" fill="url(#mandat-h-vert)"/>
+          <g transform="translate(526.0 176.0) scale(0.5833)" fill="none" stroke="#ffffff" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="552.0" y="187.0" font-size="10.8" fill="#1d302a" font-weight="700">accepté par Bob, en connaissance de cause : oui</text>
+          <circle cx="533" cy="217" r="10" fill="url(#mandat-h-rouge)"/>
+          <g transform="translate(526.0 210.0) scale(0.5833)" fill="none" stroke="#ffffff" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="552.0" y="221.0" font-size="10.8" fill="#1d302a" font-weight="700">Alice partie : sa « Nuit » refusée, mise à revoir</text>
+          <rect x="16" y="266" width="234" height="114" rx="12" fill="url(#mandat-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#mandat-o)"/>
+          <rect x="26" y="275" width="26" height="26" rx="8" fill="url(#mandat-h-ardoise)"/>
+          <g transform="translate(31.0 280.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6 M9 16h6"/></g>
+          <text x="60.0" y="293.0" font-size="12" fill="#3b5676" font-weight="700">Le manifeste</text>
+          <text x="30.0" y="315.0" font-size="10.2" fill="#52615a">classes et pièces que le graphe</text>
+          <text x="30.0" y="330.0" font-size="10.2" fill="#52615a">commande, à la validation ; le</text>
+          <text x="30.0" y="345.0" font-size="10.2" fill="#52615a">responsable doit l'approuver</text>
+          <rect x="260" y="266" width="234" height="114" rx="12" fill="url(#mandat-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#mandat-o)"/>
+          <rect x="270" y="275" width="26" height="26" rx="8" fill="url(#mandat-h-ardoise)"/>
+          <g transform="translate(275.0 280.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1 0 18a9 9 0 1 1 0-18z M12 7v5l3 2"/></g>
+          <text x="304.0" y="293.0" font-size="12" fill="#3b5676" font-weight="700">Le bail</text>
+          <text x="274.0" y="315.0" font-size="10.2" fill="#52615a">s'ouvre au succès de son ordre ;</text>
+          <text x="274.0" y="330.0" font-size="10.2" fill="#52615a">ne rétablit que s'il possède</text>
+          <text x="274.0" y="345.0" font-size="10.2" fill="#52615a">encore l'état</text>
+          <rect x="504" y="266" width="234" height="114" rx="12" fill="url(#mandat-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#mandat-o)"/>
+          <rect x="514" y="275" width="26" height="26" rx="8" fill="url(#mandat-h-ardoise)"/>
+          <g transform="translate(519.0 280.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 14.5-3.5 M19 3v4h-4 M20 14a8 8 0 0 1-14.5 3.5 M5 21v-4h4"/></g>
+          <text x="548.0" y="293.0" font-size="12" fill="#3b5676" font-weight="700">L'exécution</text>
+          <text x="518.0" y="315.0" font-size="10.2" fill="#52615a">son empreinte : jamais dans un</text>
+          <text x="518.0" y="330.0" font-size="10.2" fill="#52615a">autre programme ; elle passe</text>
+          <text x="518.0" y="345.0" font-size="10.2" fill="#52615a">au secours (wf/ex)</text>
+          <rect x="748" y="266" width="234" height="114" rx="12" fill="url(#mandat-f-ardoise)" stroke="#7494bb" stroke-opacity=".55" stroke-width="1.1" filter="url(#mandat-o)"/>
+          <rect x="758" y="275" width="26" height="26" rx="8" fill="url(#mandat-h-ardoise)"/>
+          <g transform="translate(763.0 280.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h5l2-5 3 10 2-5h8"/></g>
+          <text x="792.0" y="293.0" font-size="12" fill="#3b5676" font-weight="700">Les rafales</text>
+          <text x="762.0" y="315.0" font-size="10.2" fill="#52615a">20 départs par minute et par</text>
+          <text x="762.0" y="330.0" font-size="10.2" fill="#52615a">automatisme ; une transition</text>
+          <text x="762.0" y="345.0" font-size="10.2" fill="#52615a">d'une demande, une fois</text>
+          <rect x="16" y="396" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 404.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="418.0" font-size="11" fill="#1d302a" font-weight="700">Désarmer n'est dans aucun mandat. Un agent rédige un brouillon ; seule la validation d'une personne habilitée crée un mandat.</text>
+  <text x="18" y="473" font-size="12" fill="#52615a" font-style="italic">Aujourd'hui, un automatisme agit en « automation », une origine que la garde ne retient jamais, et la routine lancée par un appareil anonyme ignore</text>
+  <text x="18" y="490" font-size="12" fill="#52615a" font-style="italic">les scènes (§ 5.4, E4 et E5). La v3 distingue l'exécution appelée de l'autonome (revue W1 à W6).</text>
+</svg>

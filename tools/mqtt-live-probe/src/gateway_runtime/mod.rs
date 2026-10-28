@@ -1,6 +1,8 @@
 //! HTTP, authenticated WebSocket and bounded MQTT transport for the POC.
 mod broker;
 mod commands;
+mod ha_proxy;
+mod overkiz;
 
 use anyhow::{Context, Result, bail, ensure};
 use axum::{
@@ -132,6 +134,7 @@ struct Private {
     rust_rss: u64,
     gateway_rss: u64,
     child_id: Option<u32>,
+    overkiz: JsonValue,
 }
 struct App {
     broker: OnceLock<Arc<Broker>>,
@@ -143,6 +146,7 @@ struct App {
     port: u16,
     description_storage: String,
     cancel: CancellationToken,
+    overkiz: OnceLock<mpsc::Sender<overkiz::Order>>,
 }
 #[derive(Clone)]
 struct Job {
@@ -193,6 +197,15 @@ impl App {
             .get(topic)
             .cloned()
             .context("unknown command")?;
+        if binding.native["schema"] == "overkiz" {
+            let order = overkiz::order(topic, &binding.native, &body)?;
+            self.overkiz
+                .get()
+                .context("overkiz not started")?
+                .try_send(order)
+                .context("command queue full")?;
+            return Ok(data.to_vec());
+        }
         native_packets(&binding, &body)?;
         self.jobs
             .try_send(Job {
@@ -211,7 +224,7 @@ impl App {
             let projection=&state.runtime["sources"][index];
             json!({"index":index,"registry":projection["projection"]["channels"].as_u64().unwrap_or(0)>0,"projection":projection})
         }).collect();
-        json!({"ready":state.config.is_some(),"port":self.port,"mqtt_port":self.port+1,"sources":sources,"hub":state.runtime,"memory":{"gateway_rss":state.gateway_rss,"gateway_requested":crate::memory::live(),"rust_rss":state.rust_rss,"retained_topics":broker["retained_topics"],"retained_payload_bytes":broker["retained_payload_bytes"],"description_storage":self.description_storage,"description_ram_bytes":broker["description_ram_bytes"],"description_disk_bytes":broker["description_disk_bytes"]},"clients":broker["clients"],"gateway":"rust"})
+        json!({"ready":state.config.is_some(),"port":self.port,"mqtt_port":self.port+1,"sources":sources,"hub":state.runtime,"memory":{"gateway_rss":state.gateway_rss,"gateway_requested":crate::memory::live(),"rust_rss":state.rust_rss,"retained_topics":broker["retained_topics"],"retained_payload_bytes":broker["retained_payload_bytes"],"description_storage":self.description_storage,"description_ram_bytes":broker["description_ram_bytes"],"description_disk_bytes":broker["description_disk_bytes"]},"clients":broker["clients"],"gateway":"rust","overkiz":state.overkiz})
     }
     async fn configure(self: &Arc<Self>, config: Config) -> Result<()> {
         config.validate()?;
@@ -279,6 +292,65 @@ impl App {
         self.publish_runtime_description()?;
         Ok(())
     }
+    /// Starts the Somfy box driver once; its secret store dies with us.
+    async fn start_overkiz(self: &Arc<Self>, setup: overkiz::Setup) -> Result<()> {
+        ensure!(self.overkiz.get().is_none(), "already started");
+        let hub = overkiz::start(setup, overkiz_secrets()).await?;
+        let (orders, mut receiver) = mpsc::channel::<overkiz::Order>(16);
+        self.overkiz
+            .set(orders)
+            .map_err(|_| anyhow::anyhow!("already started"))?;
+        let app = self.clone();
+        tokio::spawn(async move {
+            let mut published = JsonValue::Null;
+            let mut points = BTreeMap::new();
+            let mut tick = tokio::time::interval(Duration::from_secs(1));
+            loop {
+                tokio::select! {
+                    () = app.cancel.cancelled() => break,
+                    _ = tick.tick() => {
+                        let snapshot = hub.snapshot();
+                        let (description, found, states) = overkiz::project(&snapshot);
+                        app.private.lock().expect("state").overkiz = overkiz::status(&snapshot);
+                        if description == published {
+                            continue;
+                        }
+                        let prefix = format!("{}/canal/", overkiz::ROOT);
+                        {
+                            let mut state = app.private.lock().expect("state");
+                            state.bindings.retain(|key, _| !key.starts_with(&prefix));
+                            for channel in description["canaux"].as_object().into_iter().flatten().map(|(_, c)| c) {
+                                let mut native = channel["commande"].clone();
+                                native["schema"] = json!("overkiz");
+                                if let Some(topic) = channel["commande"]["topic"].as_str() {
+                                    state.bindings.insert(topic.into(), Binding { source: usize::MAX, native });
+                                }
+                            }
+                        }
+                        let _ = app.broker().publish(format!("{}/config", overkiz::ROOT), description.to_string().into_bytes(), true);
+                        for (topic, state) in states {
+                            let _ = app.broker().publish(topic, state.to_string().into_bytes(), true);
+                        }
+                        published = description;
+                        points = found;
+                    },
+                    Some(order) = receiver.recv() => {
+                        let Some(point) = points.get(&order.channel).cloned() else { continue };
+                        let (hub, app) = (hub.clone(), app.clone());
+                        tokio::spawn(async move {
+                            let result = overkiz::send(&hub, &point, &order.value).await;
+                            let ok = result.is_ok();
+                            let body = json!({"v":3,"type":"commande_resultat","ok":ok,
+                                "livraison":if ok {"acceptee_par_la_box"} else {"non_confirmee"},
+                                "cause":result.err().map(|e| e.to_string()),"ts":now_ms()});
+                            let _ = app.broker().publish(order.topic.trim_end_matches("/set").to_owned() + "/result", body.to_string().into_bytes(), false);
+                        });
+                    },
+                }
+            }
+        });
+        Ok(())
+    }
     fn publish_runtime_description(&self) -> Result<()> {
         let fields = runtime_fields();
         let gauges: Vec<_> = fields
@@ -287,6 +359,13 @@ impl App {
             .collect();
         self.broker().publish("moli-probe/runtime/config".into(),serde_json::to_vec(&json!({"v":3,"type":"description","pont":"moli-probe/runtime","nom":"Hub","noeuds":[],"appareils":[],"systeme":gauges}))?,true)
     }
+}
+
+/// Ephemeral store of the box token: encrypted with a key held in memory only.
+fn overkiz_secrets() -> PathBuf {
+    PathBuf::from("/tmp")
+        .join(format!("moli-poc-{}", rustix::process::getuid().as_raw()))
+        .join(format!("overkiz-{}.enc", std::process::id()))
 }
 
 fn runtime_fields() -> Vec<(&'static str, &'static str)> {
@@ -348,6 +427,12 @@ async fn static_file(State(app): State<Arc<App>>, uri: axum::http::Uri) -> Respo
                 .join("docs/proposition/analyse/poc-interface-mqtt.html"),
             "text/html; charset=utf-8",
             "no-cache",
+        ),
+        "/ha" | "/ha/" => (
+            app.root
+                .join("docs/proposition/analyse/poc-ha-multimaison.html"),
+            "text/html; charset=utf-8",
+            "no-store",
         ),
         "/mqtt.min.js" => (
             app.root
@@ -412,7 +497,8 @@ async fn websocket(
     {
         return json_response(StatusCode::UNAUTHORIZED, json!({"error":"socket_ticket"}));
     }
-    ws.max_message_size(64 * 1024)
+    ws.protocols(["mqtt"])
+        .max_message_size(64 * 1024)
         .max_frame_size(64 * 1024)
         .on_upgrade(move |socket| websocket_session(app, socket))
 }
@@ -615,6 +701,14 @@ async fn control_session(app: Arc<App>, mut stream: UnixStream) -> Result<()> {
     let body: JsonValue = serde_json::from_slice(&bytes)?;
     let reply = if body["op"] == "status" {
         app.status()
+    } else if body["op"] == "overkiz" {
+        match serde_json::from_value::<overkiz::Setup>(body["setup"].clone()) {
+            Ok(setup) => match app.start_overkiz(setup).await {
+                Ok(()) => json!({"overkiz":"started"}),
+                Err(e) => json!({"error":"overkiz_refused","cause":e.to_string()}),
+            },
+            Err(_) => json!({"error":"overkiz_refused"}),
+        }
     } else {
         match serde_json::from_value::<Config>(body) {
             Ok(config) => {
@@ -661,6 +755,7 @@ pub async fn run() -> Result<()> {
         port,
         description_storage: storage.into(),
         cancel: CancellationToken::new(),
+        overkiz: OnceLock::new(),
     });
     let weak = Arc::downgrade(&app);
     let broker = Broker::new(Arc::new(move |role, topic, data, retain| {
@@ -715,9 +810,12 @@ pub async fn run() -> Result<()> {
         }
     });
     tokio::spawn(monitor(app.clone()));
+    tokio::spawn(ha_proxy::monitor(app.clone()));
     tokio::spawn(commands_worker(app.clone(), receiver));
     let routes = Router::new()
         .route("/", get(static_file))
+        .route("/ha", get(static_file))
+        .route("/ha/", get(static_file))
         .route("/mqtt.min.js", get(static_file))
         .route("/service-worker.js", get(static_file))
         .route("/manifest.webmanifest", get(static_file))
@@ -726,6 +824,7 @@ pub async fn run() -> Result<()> {
         .route("/api/socket-ticket", get(ticket))
         .route("/mqtt", get(websocket))
         .route("/source/registry", post(source_registry))
+        .merge(ha_proxy::routes())
         .layer(DefaultBodyLimit::max(MAX_BODY))
         .with_state(app.clone());
     println!("Passerelle web Rust prête sur le port {port} ; configuration privée attendue.");
@@ -744,6 +843,7 @@ pub async fn run() -> Result<()> {
         let _ = child.wait().await;
     }
     let _ = std::fs::remove_file(socket);
+    let _ = std::fs::remove_file(overkiz_secrets());
     result.context("HTTP server")
 }
 
@@ -779,6 +879,7 @@ mod tests {
             port: 1414,
             description_storage: "memory".into(),
             cancel: CancellationToken::new(),
+            overkiz: OnceLock::new(),
         });
         let weak = Arc::downgrade(&app);
         let broker = Broker::new(Arc::new(move |role, topic, data, retain| {

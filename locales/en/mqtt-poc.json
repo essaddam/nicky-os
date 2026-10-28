@@ -184,5 +184,17 @@
   "mqtt-poc.enumWaiting": "Waiting for description",
   "mqtt-poc.enumUnknown": "Unknown choice in this description",
   "mqtt-poc.enumInactive": "Choice unavailable in this description",
-  "mqtt-poc.enumInvalid": "Invalid choice reference"
+  "mqtt-poc.enumInvalid": "Invalid choice reference",
+  "mqtt-poc.cover_open": "Open",
+  "mqtt-poc.cover_my": "Favourite (My)",
+  "mqtt-poc.cover_stop": "Stop",
+  "mqtt-poc.cover_close": "Close",
+  "mqtt-poc.writeOnly": "No feedback",
+  "mqtt-poc.portail": "Gate",
+  "mqtt-poc.coverNoFeedback": "RTS motor: the box does not report the position. Look at the shutter to confirm.",
+  "mqtt-poc.homeSelector": "Displayed home",
+  "mqtt-poc.allHomes": "All homes",
+  "mqtt-poc.ha": "Continuity",
+  "mqtt-poc.haFrameTitle": "Continuity simulation for both homes",
+  "mqtt-poc.homeWaiting": "Only homes whose projection has been received are available."
 }

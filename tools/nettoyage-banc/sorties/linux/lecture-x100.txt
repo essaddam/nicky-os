@@ -1,0 +1,8 @@
+RESULTAT|lecture|100|numero_adresse_v2|0.590|ns
+RESULTAT|lecture|100|place_et_generation|0.610|ns
+RESULTAT|lecture|100|place_et_generation_verifiee|0.916|ns
+RESULTAT|lecture|100|numero_fixe_par_une_table|0.966|ns
+RESULTAT|lecture|100|rss_fin|504.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

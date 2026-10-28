@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 488" width="1000" height="488" role="img" aria-labelledby="decision-t decision-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="decision-t">La table des droits</title>
+  <desc id="decision-d">Une grille de six rôles sur dix classes d'ordres. Le propriétaire commande et approuve tout, sauf désarmer. L'adulte commande et approuve le confort, le média, le climat, l'accès, l'alarme et les machines ; il commande la vie privée et les messages, et propose le système. L'enfant commande le confort, le média et les messages, propose le climat, l'accès et les machines, et n'a ni l'alarme, ni la vie privée, ni le système. L'invité commande le confort, le média, le climat et les messages, et propose l'accès et les machines. Le service commande le confort et le climat et propose l'accès. L'inconnu, celui d'une tablette sans session ou d'une voix, commande le confort, le média, le climat et les messages, et propose l'accès, l'alarme et les machines. Désarmer est fermé à tous.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="488" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="decision-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="decision-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="decision-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="decision-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="decision-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="decision-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="decision-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="decision-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="decision-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="decision-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="decision-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="decision-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="decision-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="decision-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="decision-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="decision-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="decision-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="decision-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="decision-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="decision-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="decision-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="decision-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="decision-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LA TABLE : CE QUE CHAQUE RÔLE COMMANDE, PROPOSE OU APPROUVE, PAR CLASSE D'ORDRE</text>
+          <text x="174.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">confort</text>
+          <text x="259.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">média</text>
+          <text x="344.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">climat</text>
+          <text x="429.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">accès</text>
+          <text x="514.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">alarme</text>
+          <text x="599.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">machine</text>
+          <text x="684.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">vie privée</text>
+          <text x="769.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">système</text>
+          <text x="854.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">message</text>
+          <text x="939.5" y="60.0" font-size="10" fill="#52615a" font-weight="700" text-anchor="middle">désarmer</text>
+          <text x="120.0" y="95.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="end">inconnu</text>
+          <rect x="135.0" y="74.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="174.5" y="95.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="220.0" y="74.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="259.5" y="95.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="305.0" y="74.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="344.5" y="95.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="390.0" y="74.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="429.5" y="95.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="475.0" y="74.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="514.5" y="95.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="560.0" y="74.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="599.5" y="95.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="645.0" y="74.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="684.5" y="95.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="730.0" y="74.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="769.5" y="95.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="815.0" y="74.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="854.5" y="95.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="900.0" y="74.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="939.5" y="95.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <text x="120.0" y="139.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="end">propriétaire</text>
+          <rect x="135.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="174.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(196.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="220.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="259.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(281.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="305.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="344.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(366.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="390.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="429.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(451.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="475.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="514.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(536.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="560.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="599.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(621.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="645.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="684.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(706.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="730.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="769.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(791.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="815.0" y="118.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="854.5" y="139.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(876.0 121.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="900.0" y="118.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="939.5" y="139.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <text x="120.0" y="183.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="end">adulte</text>
+          <rect x="135.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="174.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(196.0 165.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="220.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="259.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(281.0 165.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="305.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="344.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(366.0 165.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="390.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="429.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(451.0 165.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="475.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="514.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(536.0 165.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="560.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="599.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <g transform="translate(621.0 165.0) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.80" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <rect x="645.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="684.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="730.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="769.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="815.0" y="162.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="854.5" y="183.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="900.0" y="162.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="939.5" y="183.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <text x="120.0" y="227.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="end">enfant</text>
+          <rect x="135.0" y="206.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="174.5" y="227.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="220.0" y="206.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="259.5" y="227.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="305.0" y="206.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="344.5" y="227.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="390.0" y="206.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="429.5" y="227.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="475.0" y="206.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="514.5" y="227.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="560.0" y="206.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="599.5" y="227.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="645.0" y="206.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="684.5" y="227.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="730.0" y="206.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="769.5" y="227.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="815.0" y="206.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="854.5" y="227.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="900.0" y="206.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="939.5" y="227.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <text x="120.0" y="271.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="end">invité</text>
+          <rect x="135.0" y="250.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="174.5" y="271.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="220.0" y="250.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="259.5" y="271.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="305.0" y="250.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="344.5" y="271.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="390.0" y="250.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="429.5" y="271.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="475.0" y="250.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="514.5" y="271.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="560.0" y="250.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="599.5" y="271.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="645.0" y="250.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="684.5" y="271.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="730.0" y="250.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="769.5" y="271.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="815.0" y="250.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="854.5" y="271.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="900.0" y="250.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="939.5" y="271.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <text x="120.0" y="315.0" font-size="11" fill="#1d302a" font-weight="700" text-anchor="end">service</text>
+          <rect x="135.0" y="294.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="174.5" y="315.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="220.0" y="294.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="259.5" y="315.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="305.0" y="294.0" width="79.0" height="36" rx="5" fill="url(#decision-h-vert)"/>
+          <text x="344.5" y="315.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">oui</text>
+          <rect x="390.0" y="294.0" width="79.0" height="36" rx="5" fill="url(#decision-h-ambre)"/>
+          <text x="429.5" y="315.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">propose</text>
+          <rect x="475.0" y="294.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="514.5" y="315.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="560.0" y="294.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="599.5" y="315.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="645.0" y="294.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="684.5" y="315.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="730.0" y="294.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="769.5" y="315.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="815.0" y="294.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="854.5" y="315.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="900.0" y="294.0" width="79.0" height="36" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="939.5" y="315.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">non</text>
+          <rect x="16.0" y="348.0" width="87.0" height="21.5" rx="10.8" fill="url(#decision-h-vert)"/>
+          <text x="29.0" y="362.5" font-size="10.5" fill="#ffffff" font-weight="700">oui : il part</text>
+          <rect x="115.0" y="348.0" width="172.2" height="21.5" rx="10.8" fill="url(#decision-h-ambre)"/>
+          <text x="128.0" y="362.5" font-size="10.5" fill="#ffffff" font-weight="700">propose : un humain décide</text>
+          <rect x="299.2" y="348.0" width="44.9" height="21.5" rx="10.8" fill="url(#decision-h-gris)"/>
+          <text x="312.2" y="362.5" font-size="10.5" fill="#ffffff" font-weight="700">non</text>
+          <g transform="translate(360.0 352.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="4.11" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="380.0" y="363.0" font-size="10.5" fill="#195744" font-weight="700">approuve aussi ce que d'autres proposent</text>
+          <rect x="16" y="388" width="968" height="36" rx="12" fill="#fbefd3" stroke="#e0a12a" stroke-opacity=".5"/>
+          <g transform="translate(28.0 396.0) scale(0.8333)" fill="none" stroke="#94660a" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="56.0" y="410.0" font-size="11" fill="#1d302a" font-weight="700">Une proposition, que le propriétaire règle (§ 22). Une voix reconnue : sa ligne pour le confort ; le sensible sans preuve : la ligne « inconnu ».</text>
+  <text x="18" y="465" font-size="12" fill="#52615a" font-style="italic">Lue dans le banc (droits::table_par_defaut), comme les mesures. Chaque personne a en plus ses pièces, sa fenêtre et ses exceptions ; chaque canal, ses</text>
+  <text x="18" y="482" font-size="12" fill="#52615a" font-style="italic">classes ; une chambre et un secours incertain font proposer.</text>
+</svg>

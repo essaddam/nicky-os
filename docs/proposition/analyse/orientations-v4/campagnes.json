@@ -1,0 +1,30 @@
+{
+  "campaigns": [
+    {
+      "experiment": "catalogue-banc",
+      "path": "tools/catalogue-banc/sorties/campagnes/20261025T104218Z-d66e645aa2ad",
+      "source_sha256": "d66e645aa2add13474291419b1748aeb1a3886d56d28f45d2e1f356240632004"
+    },
+    {
+      "experiment": "alias-banc",
+      "path": "tools/alias-banc/sorties/campagnes/20261025T113014Z-602c1a8b466f",
+      "source_sha256": "602c1a8b466fb0d953f978eed407de49bd202c96ca560f3a4f9d18dcc02062be"
+    },
+    {
+      "experiment": "memoire-orientations-banc",
+      "path": "tools/memoire-orientations-banc/sorties/campagnes/20261025T132448Z-08449deb1e9a",
+      "source_sha256": "08449deb1e9ace6fa4cfbd90dd3920bdad9ff43335508f0a59e5649c09e75544"
+    },
+    {
+      "experiment": "organisation-banc",
+      "path": "tools/organisation-banc/sorties/campagnes/20261025T125921Z-d031adc6cd1b",
+      "source_sha256": "d031adc6cd1b9e2915e957e48a0aa886d202e702d4ffe33bf30c72778271e0e1"
+    },
+    {
+      "experiment": "mqtt-canonicalisation-banc",
+      "path": "tools/mqtt-canonicalisation-banc/sorties/campagnes/20261025T131502Z-1fc466d4bbdd",
+      "source_sha256": "1fc466d4bbdd82fa9689fe7292d6e5323d0c613ecbfe7d8cebd2bb1bb828a44d"
+    }
+  ],
+  "fixture": "tools/bancs-reproductibilite/charges/charges-synthetiques-928384326b1d1fbb.zip"
+}

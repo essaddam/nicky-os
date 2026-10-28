@@ -1,0 +1,20 @@
+{
+  "home_assistant.status.credentials": "Identifiants MQTT indisponibles dans le coffre chiffré.",
+  "home_assistant.status.unavailable": "Le pont Home Assistant est indisponible ; aucune commande n’a été confirmée.",
+  "home_assistant.status.configuration": "La configuration du pont Home Assistant est invalide ou incompatible.",
+  "home_assistant.status.unsupported": "Cette commande ou cette migration n’est pas prise en charge.",
+  "home_assistant.status.expired": "La commande Home Assistant a expiré avant son émission.",
+  "home_assistant.status.uncertain": "L’issue de la commande est incertaine ; elle ne sera pas rejouée.",
+  "home_assistant.status.rejected": "Home Assistant a refusé la commande ou son état ne correspond plus.",
+  "home_assistant.status.unattached": "Le pilote Home Assistant n’a pas reçu son gateway préparé.",
+  "home_assistant.api.human": "Cette opération de migration exige une session humaine Moli.",
+  "home_assistant.api.unknown": "Cette instance Home Assistant n’est pas configurée.",
+  "home_assistant.api.body": "La demande est invalide ou dépasse la limite de 8 Kio.",
+  "home_assistant.api.unavailable": "Le registre de migration Home Assistant est indisponible.",
+  "home_assistant.api.conflict": "La migration a été refusée : la révision, le propriétaire ou l’empreinte de la demande ne correspond plus. Rechargez l’état.",
+  "home_assistant.api.invalid": "Le plan ou la demande de migration est invalide.",
+  "home_assistant.api.unsupported": "Cette entité ou cette transition n’est pas prise en charge.",
+  "home_assistant.api.busy": "Une opération de migration est déjà en cours.",
+  "home_assistant.api.reconcile": "Une nouvelle preuve est nécessaire avant de poursuivre.",
+  "home_assistant.api.demo": "La migration est désactivée en mode démonstration."
+}

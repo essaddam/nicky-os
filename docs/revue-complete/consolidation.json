@@ -1,0 +1,258 @@
+{
+  "summary": [
+    {
+      "title": "Un cœur qui possède l'état, un courtier qui transporte",
+      "text": "La cible reprend la V7 : MQTT en Rust embarqué, liens internes en mémoire, modules API vers MQTT, garde centrale et une seule autorité d'émission. Les sujets de commande et de valeur officielle ne sont jamais ouverts aux appareils."
+    },
+    {
+      "title": "Des valeurs compactes, fraîches et correctement identifiées",
+      "text": "Le hub tient les colonnes compactes ; l'index évite le balayage des automatismes. Les instants observé, reçu et changé restent distincts. Une place peut être réutilisée avec une génération nouvelle ; les données durables conservent des noms stables."
+    },
+    {
+      "title": "Des réflexes déterministes et des démarches explicitement déléguées",
+      "text": "Les réflexes n'appellent pas de LLM. Une démarche peut demander un produit borné à Sarah et choisir une branche prévue dans son contrat validé. Le programme, la fiche d'exécution et les produits sont trois mémoires distinctes. Le plancher de sécurité reste humain."
+    },
+    {
+      "title": "Un présent répliqué, un historique durable",
+      "text": "Le présent et la progression reprennent depuis le gardien, ses pairs et un instantané. Aucun journal de réplication disque n'est réintroduit. Les définitions métier et le journal d'export historique ont leurs transactions durables propres ; l'archive Parquet typée est indépendante."
+    },
+    {
+      "title": "Un seul actif, une reprise dont la garantie est précise",
+      "text": "Époque, bail et témoin ferment la double émission. La copie reprend les sorties de l'actif et leurs instants d'origine. Les engagements automatiques irréversibles ou auprès d'un tiers attendent le pair ; un effet ambigu ne se rejoue pas aveuglément."
+    },
+    {
+      "title": "Des usages qui s'expliquent et un budget qui se contrôle",
+      "text": "Modes et profils utilisent une pile bornée de raisons, avec le geste humain préservé. Le monitoring sépare équipement, processus et module. Toute admission applique ses limites en octets et en nombre ; les budgets et les preuves matérielles restent distincts des projections de conception."
+    }
+  ],
+  "order": [
+    "cible-contrats",
+    "runtime-mqtt",
+    "runtime-sens",
+    "fondations-securite",
+    "donnees-valeurs",
+    "donnees-memoire",
+    "donnees-temps",
+    "usages-automatismes",
+    "usages-primitives",
+    "usages-demarches",
+    "usages-assistant",
+    "usages-modes",
+    "usages-entrees",
+    "runtime-cloisons",
+    "runtime-redemarrage",
+    "donnees-replication",
+    "donnees-secrets-radios",
+    "donnees-stockage",
+    "donnees-archive",
+    "donnees-nettoyage",
+    "fondations-surfaces",
+    "usages-interface",
+    "usages-medias",
+    "usages-alarme-sejours",
+    "fondations-integrations",
+    "fondations-profils",
+    "fondations-exploitation",
+    "runtime-monitoring",
+    "runtime-cout",
+    "runtime-existant"
+  ],
+  "figures": {
+    "cible-contrats": [
+      "revue-complete/figures/engagement.svg",
+      "revue-complete/figures/stockages.svg"
+    ],
+    "runtime-mqtt": [
+      "isolation-reactivite-runtime-v7.html#2",
+      "isolation-reactivite-runtime-v7.html#4"
+    ],
+    "runtime-sens": [
+      "revue-complete/figures/issues.svg"
+    ],
+    "donnees-memoire": [
+      "revue-complete/figures/numeros.svg",
+      "memoire-v2.html#4"
+    ],
+    "donnees-temps": [
+      "revue-complete/figures/temps.svg",
+      "memoire-v2.html#15"
+    ],
+    "usages-demarches": [
+      "revue-complete/figures/workflow.svg",
+      "revue-complete/figures/engagement.svg"
+    ],
+    "usages-modes": [
+      "revue-complete/figures/couches.svg"
+    ],
+    "runtime-redemarrage": [
+      "redemarrage-a-chaud.html"
+    ],
+    "donnees-replication": [
+      "haute-disponibilite-v2/ensemble.svg",
+      "haute-disponibilite-v2/pont.svg"
+    ],
+    "donnees-secrets-radios": [
+      "haute-disponibilite-v2/coffre.svg",
+      "haute-disponibilite-v2/familles.svg"
+    ],
+    "donnees-stockage": [
+      "revue-complete/figures/stockages.svg"
+    ],
+    "donnees-archive": [
+      "valeurs-appareils-stockage-v3.html#2",
+      "valeurs-appareils-stockage-v3.html#3"
+    ],
+    "donnees-nettoyage": [
+      "revue-complete/figures/numeros.svg",
+      "nettoyage-equipements/succession.svg"
+    ],
+    "runtime-monitoring": [
+      "monitoring.html#1",
+      "monitoring.html#3"
+    ]
+  },
+  "hidden_choices": [
+    "runtime-contrat-journal",
+    "usages-conflit-confirmation-reprise"
+  ],
+  "choice_titles": {
+    "runtime-contrat-reessais": "Émettre une fois, chercher le statut après une ambiguïté",
+    "runtime-contrat-retenus": "Le hub sert l'état ; le courtier ne conserve pas le présent",
+    "runtime-contrat-vu": "La fraîcheur d'un point suit sa source de mesure",
+    "runtime-contrat-transitions": "Conserver les transitions significatives dans un flux borné",
+    "runtime-contrat-validation": "L'essai d'un module exige des droits limités et une validation",
+    "runtime-contrat-sans-perte": "Chaque garantie de reprise nomme la panne couverte",
+    "runtime-contrat-memoire-exacte": "Séparer mémoire allouée, mémoire anonyme et coût de processus",
+    "usages-conflit-autorite-llm": "Une décision de Sarah reste dans le contrat humain validé",
+    "usages-conflit-profils-couches": "Une seule pile de raisons pour les profils temporaires",
+    "usages-conflit-parallele": "Paralléliser seulement des démarches indépendantes et admises",
+    "usages-conflit-arrivee-desarmement": "Une arrivée ou une réservation ne désarme jamais",
+    "usages-conflit-retention": "Conserver le dossier clos trente jours avec son audience stricte",
+    "usages-conflit-caméras-personnes": "Garder images et localisation précise hors du modèle de conversation",
+    "usages-conflit-accord-service": "Un accord de lecture n'autorise pas un acte auprès d'un tiers"
+  },
+  "choices": {
+    "runtime-contrat-sans-perte": "Les acquittements nomment leur support survivant et leur catégorie de données. Le gardien conserve relais au rang C et suffixe critique contigu C+1…S ; avant éviction, il admet atomiquement un relais plus récent. Files : 2 Mio globalement, quotas de messages coappliqués ; zone résidente : 1 Mio et 64 dossiers ; dossiers endormis : 2 Mio et 128 dossiers, métadonnées comprises ; état complet encodé : 4 Mio au plus dans le profil compact. Une fusion de mesures ne crée pas un faux trou dans les séquences critiques. Une saturation suspend admission/accusés et se voit. Le relais couvre le cœur, les pairs couvrent leur hôte selon accusé ; une nouvelle image Docker passe par arrêt figé et reprise à froid. Le pic de copie des relais compte dans le budget, aucune conservation universelle n’est promise."
+  },
+  "merges": {
+    "donnees-canon": [
+      "runtime-canon"
+    ],
+    "donnees-qualite": [
+      "runtime-fraicheur"
+    ],
+    "donnees-adresse": [
+      "runtime-colonnes"
+    ]
+  },
+  "ideas": {
+    "donnees-adresse": {
+      "title": "Lire une fiche par place, vérifier sa génération",
+      "summary": "La référence compacte u32 contient une place de 24 bits et une génération de 7 bits. Le hub calcule la place, vérifie sa génération et son incarnation de registre, puis lit sa fiche sans rechercher un nom à chaque accès.",
+      "details": [
+        "Le bord traduit l'identité métier stable en une référence locale typée. Le bit supérieur reste réservé aux causes temporelles ; les types Point, Appareil et Noeud empêchent de mélanger leurs espaces.",
+        "Lire utilise Vec[place], après vérification de la génération ; le numéro complet n'est donc plus un indice brut. Une référence de cache porte aussi l'incarnation. Le déplacement du tableau n'expose aucune adresse mémoire et ne modifie pas les identités métier.",
+        "Le banc mémoire v2 mesure les fiches compactes Vif de 40 octets, Def de 16 et Sante de 20, les tiroirs de textes séparés et environ 124 octets par point tout compris. Le nettoyage ajoute le contrôle générationnel. Ces tailles décrivent leurs prototypes datés, pas une mesure du produit intégré."
+      ]
+    },
+    "donnees-deux-horloges": {
+      "summary": "Les durées utilisent le monotone, les rendez-vous utilisent le mural. Un relais du même démarrage d'hôte conserve l'origine monotone ; après un autre démarrage, la reprise reconvertit depuis les échéances murales quand l'heure est sûre.",
+      "details": [
+        "Les durées vives utilisent des secondes u32 ; observé, changé et calendrier utilisent des millisecondes murales u64. Le changement NTP ne prolonge pas une attente et ne déclare pas un appareil muet.",
+        "Le relais du gardien porte boot_id et l'origine monotone. Sur le même boot_id, les échéances sont reprises directement. L'instantané exportable conserve la version murale ; après nouveau boot_id, calculer maintenant_mono + échéance_murale − maintenant_mural, uniquement après validation de l'heure.",
+        "Une heure murale non sûre suspend le calendrier, pas les durées nouvellement armées. La santé des appareils reçoit une grâce de démarrage. Au réveil, un écart d'une seconde entre les avancées des deux horloges recale le calendrier sans réémettre une occurrence déjà connue."
+      ]
+    },
+    "donnees-rattrapage": {
+      "title": "Rattraper selon la fenêtre d'utilité déclarée",
+      "summary": "Deux minutes est le défaut des occurrences horaires ordinaires, pas une règle uniforme de toute action. Les rappels d'agenda restent utiles avant le début du rendez-vous, et un bail se termine en rétablissant sa valeur même après un retard.",
+      "details": [
+        "Chaque étape compilée porte une fenêtre d'utilité : occurrence horaire ordinaire, deux minutes ; rappel d'agenda, avant le début ; demande humaine ou produit, avant leur expiration déclarée ; fin de bail, restauration au terme même si elle est tardive.",
+        "Une attente de condition échue pendant la panne est revérifiée sur la génération, la qualité et changé. L'exécution reprend au même curseur seulement si cette attente et la prochaine étape restent admissibles ; une étape franchie n'est pas rejouée.",
+        "La dernière occurrence partie est conservée dans l'état critique de reprise. Saut d'heure et panne utilisent le même calcul des échéances échues. Au-delà de l'utilité, produire manquée ; plusieurs manques sont regroupés dans une alerte comptée, sans rafale d'actions anciennes."
+      ]
+    },
+    "donnees-oubli-espaces": {
+      "details": [
+        "Le lot efface les noms du présent et des copies ; l'historique conserve ses identités selon sa rétention. Un oubli explicite parcourt les données désignées et leur provenance. Une sauvegarde antérieure garde sa propre durée de conservation ; elle n'est pas annoncée comme déjà expurgée.",
+        "Un secret d'intégration n'est retiré du coffre et de ses destinataires que lorsque tous ses consommateurs ont été retirés et que les besoins de restauration autorisés sont soldés. Un remplacement d'appareil ne supprime pas le secret partagé de son pont actif.",
+        "Le catalogue SQL a des identifiants distincts des places mémoire : 524 288 points et 1 024 compteurs. À 50 % de l'espace, alerter. Réutiliser un identifiant seulement après purge de toutes ses lignes et références métier, et après passage de sa dernière opération sous replay_floor ; l'opération est transactionnelle, sans remise à zéro de next_seq.",
+        "Un compteur reste réservé tant que ses totaux ou relations sont conservés, au moins les treize mois de totaux mensuels du profil courant. Les simulations de vingt ans qualifient la croissance du registre, pas l'effacement personnel sur tous les supports."
+      ]
+    },
+    "donnees-qualite": {
+      "summary": "Le contact de l’appareil prouve que son transport répond ; la fraîcheur d’un point prouve que sa source de mesure a avancé. Une température inchangée peut être fraîche, tandis qu’une valeur relue dans un cache peut rester périmée.",
+      "details": [
+        "Tout rapport valide peut avancer reçu et le contact de l’appareil. L’échéance de fraîcheur avance uniquement pour les points dont le rapport prouve une observation source nouvelle ; la réception d’une batterie ne rajeunit pas la température et une réponse cache ne rajeunit rien par sa seule arrivée.",
+        "Le module distingue observé, reçu et changé, annonce la source et les points couverts par vu/, et déclare le rythme attendu avec ses pertes tolérées. Une source sans instant fiable porte cette limite ; le hub n’invente pas une observation à l’instant de réception.",
+        "L’échéancier publie l’expiration comme un événement de qualité : les feuilles composées sont relues et une attente exige encore une valeur admissible. Le dernier nombre reste consultable avec son âge ; il ne commande pas comme une mesure valide.",
+        "La pause d’un fournisseur suspend l’attente du transport, pas le vieillissement de ses points. Les variantes d’appareils sans rapport périodique gardent une disponibilité explicitement inconnue plutôt qu’une panne calculée depuis leur dernier appui."
+      ]
+    },
+    "donnees-epoque": {
+      "summary": "Un témoin attribue l’époque active après expiration du bail précédent. Chaque module contrôle lui-même l’époque et la fin du bail immédiatement avant l’émission ; un cœur bloqué ne peut pas prolonger seul son autorité.",
+      "details": [
+        "Le bail est renouvelé chaque seconde ; l’actif cesse d’agir après deux secondes sans droit renouvelé et une nouvelle époque ne peut être accordée avant trois secondes. Le permis d’émission porte époque et expiration ; le module les vérifie à begin_send avec son horloge sûre, indépendamment de la boucle du cœur. Un bail absent, expiré ou non vérifiable interdit l’envoi.",
+        "Maison et cloud ont des domaines d’autorité distincts. Le secours local prend leurs rôles selon sa clôture ; le distant ne prend que le cloud sur geste humain. Le témoin réside hors des deux mêmes domaines de panne et ne se résume pas à un identifiant de client MQTT.",
+        "Une intégration n’est promue que si l’ancien écrivain est réellement exclu : permis locaux expirés, session révoquée, ancien processus arrêté ou clôture du matériel vérifiable. Un appareil qui ne sait pas reconnaître l’époque ne reçoit aucune promesse de fencing natif ; si cette exclusion n’est pas établie, cette intégration reste indisponible au lieu de créer deux propriétaires.",
+        "Une émission admise avant expiration peut avoir un effet encore en cours : la nouvelle autorité réconcilie son statut et ne la rejoue pas. Les occurrences entre la dernière sortie copiée et la fin du bail sont marquées peut-être déjà parties ; aucune alerte de continuité ne devient une action supposée.",
+        "La perte du pair suspend les engagements automatiques qui exigent son accusé. Elle ne retire pas à elle seule un bail encore valide du témoin : les réflexes locaux autorisés continuent jusqu’à expiration du droit, en affichant leur garantie de reprise dégradée."
+      ],
+      "decision": "Choix de conception retenu par cette consolidation, avec les sources antérieures et les preuves d’existant citées séparément."
+    },
+    "usages-engagements": {
+      "details": [
+        "La clé inclut incarnation et époque à sa création. Un engagement déjà créé conserve sa clé originale opaque après une bascule ou un changement d’incarnation ; une restauration ne lui fabrique jamais une nouvelle clé. Sans preuve suffisante sur un effet antérieur, marquer incertain et solliciter une personne.",
+        "Placer produits nécessaires et intention dans les segments et la file du gardien, puis obtenir l’acquittement du pair exigé pour la classe irréversible/tiers. Le reçu annonce précisément ce qui survit ; aucune écriture de dossier ou d’exécution par événement n’est ajoutée.",
+        "Sans accusé requis, suspendre cet engagement ou solliciter une personne ; les réflexes locaux, lectures et préparations réversibles continuent selon leur contrat. Un acte auprès d’un tiers requiert également son Oui humain ponctuel.",
+        "Après reprise, rendre le reçu existant s’il prouve le traitement. Un renvoi réseau n’est permis que si la non-émission est prouvée, ou si le récepteur reconnaît et déduplique la même clé ; un simple constat de l’état courant ne suffit jamais. Sans preuve, rester non confirmé et demander une nouvelle intention humaine.",
+        "La mémoire endormie ne contourne pas l’admission : son stockage segmenté dans le gardien est plafonné à 2 Mio et 128 dossiers, métadonnées comprises. Le dossier garde sa réservation de reprise et son identité ; une incapacité de conservation suspend avant tout accusé à la source."
+      ]
+    },
+    "runtime-crash-et-support": {
+      "details": [
+        "La file du gardien conserve jusqu’à 10 000 sorties, sous le plafond commun de 2 Mio de toutes les files transitoires, sans réservation de 0,45 Mio : charges et métadonnées variables sont comptées avant admission. Les changements ordinaires sont groupés par lots de 10 ms ; un engagement externe doit être inscrit avant émission et accusé par un pair à jour avant tout effet automatique irréversible ou vers un tiers.",
+        "Les dossiers et exécutions n’ont aucun journal disque. Avec pair à jour, l’instantané complet est horaire ; sans pair à jour, il est pris toutes les quinze minutes, ainsi qu’à l’arrêt et avant mise à jour. Sans pair, les engagements automatiques irréversibles ou vers des tiers sont suspendus ; une action humaine explicite reste possible avec avertissement de l’incertitude, sans promesse exactement une fois.",
+        "Une clé reconnue renvoie le reçu antérieur sans refaire l’effet ; elle ne prouve pas l’idempotence d’un service externe. Après émission ambiguë, aucun rejeu automatique : lire le statut s’il existe, sinon conserver incertain. Audit et export D13 restent des flux durables distincts du mécanisme de reprise.",
+        "Sous systemd, le gardien et ses descripteurs subsistent pendant le remplacement du cœur. Une nouvelle image Docker remplace aussi le gardien : arrêt figé, instantané puis reprise à froid avec modules reconnectés. Les événements externes manqués pendant cette coupure constituent un intervalle inconnu, jamais une continuité supposée.",
+        "La perte électrique ou la mort du gardien sans pair survivant ramène au dernier instantané. La reprise annonce son âge et les intervalles inconnus ; elle ne réactive pas les engagements dont l’issue ne peut être établie. Si le contrôle de sécurité, droits, coffre ou identité active échoue, seul le diagnostic authentifié démarre.",
+        "Invariant de reprise locale : le gardien possède un relais scellé au rang C et un suffixe critique contigu C+1 à S. Avant d’évincer une sortie non intégrée, le cœur construit un relais plus récent, le gardien l’admet atomiquement puis seulement libère le préfixe. Si cette opération ne tient plus dans les budgets, suspendre l’admission et les accusés ; aucune éviction silencieuse d’un état déjà acquitté.",
+        "Le profil compact borne un état complet encodé à 4 Mio. Le pic ancien relais plus nouveau relais, les zones de travail, les dossiers endormis et les files sont comptés dans le budget réel du processus/cgroup. La limite de 4 Mio et les plafonds par objet s’appliquent ensemble : refuser une nouvelle admission qui rendrait impossible la constitution du prochain relais."
+      ],
+      "decision": "Choix de conception retenu par cette consolidation, avec les sources antérieures et les preuves d’existant citées séparément."
+    },
+    "donnees-annuaire": {
+      "summary": "Le rang compact est local à un registre ; le nom métier reste stable entre fichiers, imports et archives. Toute nouvelle attribution est admise dans l’état critique avant publication, avec place, génération et incarnation.",
+      "details": [
+        "La cible conserve l’annuaire dans l’état vif, la file du gardien, les pairs et l’instantané. Elle ne garde pas un journal disque d’attribution par numéro en parallèle de HA v2. Une attribution n’est publiée qu’après son admission dans la garantie de reprise annoncée.",
+        "meta/ annonce le numéro complet et l’incarnation, val/ le référence. Un client inconnu redemande la métadonnée ; une génération périmée interdit la lecture et la commande.",
+        "Une reprise depuis un pair conserve l’incarnation et ses attributions. Une reprise obsolète sans pair ouvre une incarnation nouvelle avant l’activité ; les caches se vident et rechargent meta/. Une clé d’engagement déjà créée garde pourtant son identité opaque d’origine : l’incarnation de cache ne réécrit pas l’identité de l’effet."
+      ],
+      "decision": "Choix de conception retenu par cette consolidation, avec les sources antérieures et les preuves d’existant citées séparément."
+    },
+    "donnees-paliers": {
+      "details": [
+        "Puissance : récent7j, détail archive30j, heures10ans ; climat14j/90j/5ans ; états31j/365j ; diagnostic7j sans archive ; autres7j/30j.",
+        "Énergie : heures locales deux mois civils, totaux quotidiens 62 jours et mensuels 13 mois ; archive horaire dix ans. Au-delà du détail des états, conserver des durées et nombres quotidiens selon l’horizon configuré, avec un plafond par défaut de dix ans ; tout allongement de détail reste un consentement explicite. Les séries climatiques horaires gardent cinq ans selon D13.",
+        "E1 écrit le palier suivant, vérifie quantités/durées/nombres/min-max/couverture, publie la révision puis retire l’ancien : jamais supprimer d’abord.",
+        "Un état ne se lisse ni ne se rééchantillonne ; un cumul additionne ses deltas ; un segment de mesure fusionne ses statistiques pondérées. Une conservation éternelle exige un choix explicite."
+      ],
+      "decision": "Choix de conception retenu par cette consolidation, avec les sources antérieures et les preuves d’existant citées séparément."
+    },
+    "donnees-familles-personnelles": {
+      "details": [
+        "Une évaluation conserve élève autorisé, année scolaire, matière, date, note, barème, coefficient et exclusion. La moyenne officielle reste distincte d’une moyenne recalculée. Les identités privées ne sont pas des appareils ni des codes publics du catalogue.",
+        "Le profil cible conserve par défaut l’année scolaire courante et les 90 jours suivant sa fin, sans archivage automatique des données d’enfants. Les droits sont vérifiés par personne ; une conservation supplémentaire exige un accord distinct. Ce défaut de conception n’applique aucune purge au logiciel actuel.",
+        "Une session média référence un contenu unique avec début et fin, plutôt qu’une mesure de position à chaque seconde. Le profil cible conserve les sessions trente jours sans archive par défaut ; le titre s’efface dans le dictionnaire unique et les références périmées deviennent un contenu inconnu."
+      ],
+      "decision": "Choix de conception retenu par cette consolidation, avec les sources antérieures et les preuves d’existant citées séparément."
+    },
+    "donnees-modes": {
+      "details": [
+        "Reprise : aucun pilote actif, aucune commande physique et aucun accès d’écriture métier ; le diagnostic authentifié reste disponible. Rattrapage : appliquer l’état du pair. À jour : lecture autorisée selon les droits, aucun réveil qui agit.",
+        "Un secours sans battement pendant deux secondes passe isolé et cherche son pair. L’actif suit son bail du témoin : il poursuit seulement ses effets autorisés tant que ce droit reste valide, puis cesse toute émission dès expiration. Les engagements automatiques exigeant le pair sont suspendus dès que son accusé manque.",
+        "Actif : rôle unique des pilotes, du moteur et des rédacteurs ; arrêt figé : refuser les nouvelles admissions, conclure les ordres pris, vider les entrées et transmettre le relais. Un flock interdit deux instances du même hôte ; l’époque et le bail ferment l’autorité entre machines. Les identifiants MQTT fixes ne constituent jamais ce verrou."
+      ]
+    }
+  }
+}

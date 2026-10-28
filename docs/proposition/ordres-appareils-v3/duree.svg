@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 510" width="1000" height="510" role="img" aria-labelledby="duree-t duree-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="duree-t">La durée des droits</title>
+  <desc id="duree-d">Trois frises. Une demande, puis une révocation : Alice allume, la demande est admise ; Alice est révoquée avant que rien ne parte ; à la remise au module, les droits sont revérifiés ; la demande n'est pas envoyée, cause droits. Un appui et l'accusé du secours : le « volume + » attend l'accusé ; Alice est révoquée avant ; l'appui est retiré de l'attente tout de suite, et ne part jamais, même si l'accusé arrive. Une invitation qui finit : à 18 h 39, l'invité propose d'arrêter l'imprimante ; la retenue a dix minutes ; à 18 h 40, sa fin est une échéance du hub ; la retenue est refusée à la seconde, pas à 18 h 49.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="510" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="duree-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="duree-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="duree-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="duree-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="duree-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="duree-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="duree-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="duree-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="duree-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="duree-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="duree-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="duree-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="duree-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="duree-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="duree-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="duree-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="duree-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="duree-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="duree-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="duree-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="duree-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="duree-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="duree-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="duree-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="duree-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="duree-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="duree-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="duree-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="duree-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="duree-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="duree-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="duree-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="duree-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="duree-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="duree-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="duree-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="duree-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LES DROITS SE VÉRIFIENT À CHAQUE FRONTIÈRE, ET LEUR FIN RÉVEILLE LE HUB</text>
+          <rect x="16" y="52" width="968" height="104" rx="20" fill="#e1eef6" fill-opacity=".45" stroke="#3b8db4" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <text x="34.0" y="76.0" font-size="11" fill="#1b5873" font-weight="700" letter-spacing=".07em">UNE DEMANDE, PUIS UNE RÉVOCATION</text>
+          <path d="M60.0 116.0 L940.0 116.0" fill="none" stroke="#1b5873" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#duree-m-bleu)"/>
+          <circle cx="120" cy="116" r="7" fill="url(#duree-h-bleu)"/>
+          <text x="120.0" y="98.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">Alice allume</text>
+          <text x="120.0" y="140.0" font-size="10" fill="#52615a" text-anchor="middle">admise</text>
+          <circle cx="360" cy="116" r="7" fill="url(#duree-h-bleu)"/>
+          <text x="360.0" y="98.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">Alice révoquée</text>
+          <text x="360.0" y="140.0" font-size="10" fill="#52615a" text-anchor="middle">rien n'est parti</text>
+          <circle cx="620" cy="116" r="7" fill="url(#duree-h-bleu)"/>
+          <text x="620.0" y="98.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">la remise au module</text>
+          <text x="620.0" y="140.0" font-size="10" fill="#52615a" text-anchor="middle">droits revérifiés</text>
+          <circle cx="860" cy="116" r="7" fill="url(#duree-h-rouge)"/>
+          <text x="860.0" y="98.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">non envoyée</text>
+          <text x="860.0" y="140.0" font-size="10" fill="#52615a" text-anchor="middle">cause « droits »</text>
+          <rect x="16" y="170" width="968" height="104" rx="20" fill="#ebe7f7" fill-opacity=".45" stroke="#7e6cc2" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <text x="34.0" y="194.0" font-size="11" fill="#4b3d82" font-weight="700" letter-spacing=".07em">UN APPUI, ET L'ACCUSÉ DU SECOURS</text>
+          <path d="M60.0 234.0 L940.0 234.0" fill="none" stroke="#4b3d82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#duree-m-violet)"/>
+          <circle cx="120" cy="234" r="7" fill="url(#duree-h-violet)"/>
+          <text x="120.0" y="216.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">« volume + »</text>
+          <text x="120.0" y="258.0" font-size="10" fill="#52615a" text-anchor="middle">attend l'accusé</text>
+          <circle cx="360" cy="234" r="7" fill="url(#duree-h-violet)"/>
+          <text x="360.0" y="216.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">Alice révoquée</text>
+          <text x="360.0" y="258.0" font-size="10" fill="#52615a" text-anchor="middle">avant l'accusé</text>
+          <circle cx="620" cy="234" r="7" fill="url(#duree-h-violet)"/>
+          <text x="620.0" y="216.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">retiré de l'attente</text>
+          <text x="620.0" y="258.0" font-size="10" fill="#52615a" text-anchor="middle">tout de suite</text>
+          <circle cx="860" cy="234" r="7" fill="url(#duree-h-rouge)"/>
+          <text x="860.0" y="216.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">ne part jamais</text>
+          <text x="860.0" y="258.0" font-size="10" fill="#52615a" text-anchor="middle">même accusé</text>
+          <rect x="16" y="288" width="968" height="104" rx="20" fill="#fbefd3" fill-opacity=".45" stroke="#e0a12a" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <text x="34.0" y="312.0" font-size="11" fill="#94660a" font-weight="700" letter-spacing=".07em">UNE INVITATION QUI FINIT</text>
+          <path d="M60.0 352.0 L940.0 352.0" fill="none" stroke="#94660a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#duree-m-ambre)"/>
+          <circle cx="120" cy="352" r="7" fill="url(#duree-h-ambre)"/>
+          <text x="120.0" y="334.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">18:39, l'invité</text>
+          <text x="120.0" y="376.0" font-size="10" fill="#52615a" text-anchor="middle">propose d'arrêter</text>
+          <circle cx="360" cy="352" r="7" fill="url(#duree-h-ambre)"/>
+          <text x="360.0" y="334.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">la retenue</text>
+          <text x="360.0" y="376.0" font-size="10" fill="#52615a" text-anchor="middle">dix minutes</text>
+          <circle cx="620" cy="352" r="7" fill="url(#duree-h-ambre)"/>
+          <text x="620.0" y="334.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">18:40, sa fin</text>
+          <text x="620.0" y="376.0" font-size="10" fill="#52615a" text-anchor="middle">une échéance du hub</text>
+          <circle cx="860" cy="352" r="7" fill="url(#duree-h-rouge)"/>
+          <text x="860.0" y="334.0" font-size="10.8" fill="#1d302a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">refusée à la seconde</text>
+          <text x="860.0" y="376.0" font-size="10" fill="#52615a" text-anchor="middle">pas à 18:49</text>
+          <rect x="16" y="410" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 418.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="432.0" font-size="11" fill="#1d302a" font-weight="700">À l'arrivée, à l'approbation, et au dernier point avant l'envoi ; la fin d'une personne ou d'un compte est une échéance : le hub s'y réveille sans battement.</text>
+  <text x="18" y="487" font-size="12" fill="#52615a" font-style="italic">La v2 vérifiait le permis à l'arrivée et à l'approbation, et retirait des voies ; une commande encore dans le hub pouvait partir après une révocation</text>
+  <text x="18" y="504" font-size="12" fill="#52615a" font-style="italic">(revue D6), et la fin d'un permis attendait un battement (D7).</text>
+</svg>

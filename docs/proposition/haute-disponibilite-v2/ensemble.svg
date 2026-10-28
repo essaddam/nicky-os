@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 604" width="1000" height="604" role="img" aria-labelledby="ensemble-t ensemble-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="ensemble-t">La maison en double, vue d'ensemble</title>
+  <desc id="ensemble-d">À gauche, la maison : H1, l'actif, porte les époques ; il a le cœur, un rang s pour tout le critique, une file en mémoire de 10 000 sorties, son courtier, ses pilotes ; sur disque, l'instantané seulement. H2, le secours local, reçoit par le pont maison le flux critique et l'historique, et renvoie battements et demandes ; il applique sans rien réveiller, pilotes arrêtés. Un témoin vote le bail. Les clients (écrans, téléphones, appareils MQTT, boîtiers radio) parlent à l'adresse virtuelle de l'actif ; les caméras écrivent sur le NAS, hors MQTT. À droite, hors de la maison : le secours distant reçoit le même flux par un tunnel NetBird ; il copie, alerte et peut reprendre les clouds sur geste humain ; l'archive reçoit l'export du porteur de l'époque.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="604" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="ensemble-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="ensemble-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <radialGradient id="ensemble-sol"><stop offset="0" stop-color="#1d302a" stop-opacity=".22"/><stop offset="1" stop-color="#1d302a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="ensemble-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="ensemble-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="ensemble-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="ensemble-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="ensemble-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="ensemble-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="ensemble-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="ensemble-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="ensemble-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="ensemble-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="ensemble-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="ensemble-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="ensemble-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="ensemble-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="ensemble-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="ensemble-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="ensemble-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="ensemble-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="ensemble-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="ensemble-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="ensemble-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="ensemble-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="ensemble-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="ensemble-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="ensemble-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="ensemble-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="ensemble-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="ensemble-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="ensemble-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="ensemble-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="ensemble-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="ensemble-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="ensemble-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="ensemble-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="ensemble-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="ensemble-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="ensemble-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="ensemble-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="ensemble-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="ensemble-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="ensemble-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="ensemble-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <rect x="16" y="34" width="650" height="476" rx="20" fill="#e3f1e9" fill-opacity=".45" stroke="#3d9a75" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(32.0 45.0) scale(0.6667)" fill="none" stroke="#195744" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="54.0" y="58.0" font-size="11" fill="#195744" font-weight="700" letter-spacing=".07em">LA MAISON</text>
+          <rect x="684" y="34" width="300" height="476" rx="20" fill="#ebe7f7" fill-opacity=".45" stroke="#7e6cc2" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(700.0 45.0) scale(0.6667)" fill="none" stroke="#4b3d82" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 9.1A4.5 4.5 0 0 0 7 18z"/></g>
+          <text x="722.0" y="58.0" font-size="11" fill="#4b3d82" font-weight="700" letter-spacing=".07em">HORS DE LA MAISON</text>
+          <path d="M170 92 L170 74 L838 74 L838 96" fill="none" stroke="#ebe7f7" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"/>
+          <path d="M170 92 L170 74 L838 74 L838 96" fill="none" stroke="#7e6cc2" stroke-opacity=".5" stroke-width="16" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1 0" opacity=".25"/>
+          <path d="M170 90 L170 70 L834 70 L834 92" fill="none" stroke="#94660a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ensemble-m-ambre)"/>
+          <path class="hd-flux" d="M170 90 L170 70 L834 70 L834 92" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M176 92 L176 78 L842 78 L842 96" fill="none" stroke="#3b5676" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="hd-lent" d="M176 92 L176 78 L842 78 L842 96" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <rect x="644.2" y="64.0" width="119.7" height="18.5" rx="9.2" fill="url(#ensemble-h-violet)" stroke="#7e6cc2" stroke-opacity="0"/>
+          <g transform="translate(650.2 67.2) scale(0.5000)" fill="none" stroke="#ffffff" stroke-width="4.00" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6z"/></g>
+          <text x="666.2" y="76.7" font-size="9.5" fill="#ffffff" font-weight="700">NetBird (WireGuard)</text>
+          <ellipse cx="176.0" cy="297.0" rx="142.0" ry="11" fill="url(#ensemble-sol)"/>
+          <polygon points="46,104 62,95.2 312,95.2 296,104" fill="url(#ensemble-t-vert)"/>
+          <polygon points="296,104 312,95.2 312,275.2 296,290" fill="url(#ensemble-s-vert)"/>
+          <rect x="40" y="104" width="256" height="186" rx="8" fill="url(#ensemble-f-vert)" stroke="#3d9a75" stroke-opacity=".5"/>
+          <path d="M40 138 V112 a8 8 0 0 1 8 -8 H288 a8 8 0 0 1 8 8 V138 z" fill="url(#ensemble-h-vert)"/>
+          <g transform="translate(52.0 112.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="78.0" y="126.5" font-size="13" fill="#ffffff" font-weight="700">H1 · actif</text>
+          <text x="284.0" y="126.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">porte les époques</text>
+          <g transform="translate(54.0 147.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7z M10 10h4v4h-4z M9 4v3 M12 4v3 M15 4v3 M9 17v3 M12 17v3 M15 17v3 M4 9h3 M4 12h3 M4 15h3 M17 9h3 M17 12h3 M17 15h3"/></g>
+          <text x="76.0" y="159.0" font-size="10.5" fill="#1d302a">cœur : hub, moteur, mémoire</text>
+          <g transform="translate(54.0 171.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="76.0" y="183.0" font-size="10.5" fill="#1d302a">un rang s pour tout le critique</text>
+          <g transform="translate(54.0 195.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1-9 9 M3 12l-1.5-2.5 M3 12l2.5-1.5"/></g>
+          <text x="76.0" y="207.0" font-size="10.5" fill="#1d302a">file en mémoire : 10 000 sorties</text>
+          <g transform="translate(54.0 219.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z M3 7l9 6 9-6"/></g>
+          <text x="76.0" y="231.0" font-size="10.5" fill="#1d302a">courtier MQTT embarqué</text>
+          <g transform="translate(54.0 243.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="76.0" y="255.0" font-size="10.5" fill="#1d302a">pilotes, radios, clouds</text>
+          <g transform="translate(54.0 267.0) scale(0.5833)" fill="none" stroke="#195744" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z M10 3v4 M12.5 3v4 M15 3v4"/></g>
+          <text x="76.0" y="279.0" font-size="10.5" fill="#1d302a">disque : l'instantané seulement</text>
+          <ellipse cx="528.0" cy="297.0" rx="142.0" ry="11" fill="url(#ensemble-sol)"/>
+          <polygon points="398,104 414,95.2 664,95.2 648,104" fill="url(#ensemble-t-bleu)"/>
+          <polygon points="648,104 664,95.2 664,275.2 648,290" fill="url(#ensemble-s-bleu)"/>
+          <rect x="392" y="104" width="256" height="186" rx="8" fill="url(#ensemble-f-bleu)" stroke="#3b8db4" stroke-opacity=".5"/>
+          <path d="M392 138 V112 a8 8 0 0 1 8 -8 H640 a8 8 0 0 1 8 8 V138 z" fill="url(#ensemble-h-bleu)"/>
+          <g transform="translate(404.0 112.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="430.0" y="126.5" font-size="13" fill="#ffffff" font-weight="700">H2 · secours local</text>
+          <text x="636.0" y="126.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">passif, prêt</text>
+          <g transform="translate(406.0 147.0) scale(0.5833)" fill="none" stroke="#1b5873" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="428.0" y="159.0" font-size="10.5" fill="#1d302a">mémoire copiée, même rang s</text>
+          <g transform="translate(406.0 171.0) scale(0.5833)" fill="none" stroke="#1b5873" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="428.0" y="183.0" font-size="10.5" fill="#1d302a">moteur : applique, ne réveille rien</text>
+          <g transform="translate(406.0 195.0) scale(0.5833)" fill="none" stroke="#1b5873" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1-9 9 M3 12l-1.5-2.5 M3 12l2.5-1.5"/></g>
+          <text x="428.0" y="207.0" font-size="10.5" fill="#1d302a">file du secours, pour ses abonnés</text>
+          <g transform="translate(406.0 219.0) scale(0.5833)" fill="none" stroke="#1b5873" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12 M18 6L6 18"/></g>
+          <text x="428.0" y="231.0" font-size="10.5" fill="#1d302a">pilotes et radios arrêtés</text>
+          <g transform="translate(406.0 243.0) scale(0.5833)" fill="none" stroke="#1b5873" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="428.0" y="255.0" font-size="10.5" fill="#1d302a">API et écrans en lecture seule</text>
+          <g transform="translate(406.0 267.0) scale(0.5833)" fill="none" stroke="#1b5873" stroke-width="3.09" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z M10 3v4 M12.5 3v4 M15 3v4"/></g>
+          <text x="428.0" y="279.0" font-size="10.5" fill="#1d302a">disque : l'instantané seulement</text>
+          <path d="M314 158 L388 158" fill="none" stroke="#94660a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ensemble-m-ambre)"/>
+          <path class="hd-flux" d="M314 158 L388 158" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.4"/>
+          <path d="M314 186 L388 186" fill="none" stroke="#3b5676" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ensemble-m-ardoise)"/>
+          <path class="hd-lent" d="M314 186 L388 186" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M388 214 L316 214" fill="none" stroke="#4f5d57" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" marker-end="url(#ensemble-m-gris)"/>
+          <rect x="331.9" y="126.0" width="36.1" height="18.5" rx="9.2" fill="url(#ensemble-h-ambre)" stroke="#e0a12a" stroke-opacity="0"/>
+          <text x="339.9" y="138.7" font-size="9.5" fill="#ffffff" font-weight="700">pont</text>
+          <text x="351.0" y="236.0" font-size="9" fill="#52615a" text-anchor="middle">battement,</text>
+          <text x="351.0" y="247.0" font-size="9" fill="#52615a" text-anchor="middle">demandes</text>
+          <ellipse cx="839.0" cy="269.0" rx="137.0" ry="11" fill="url(#ensemble-sol)"/>
+          <polygon points="714,104 730,95.2 970,95.2 954,104" fill="url(#ensemble-t-violet)"/>
+          <polygon points="954,104 970,95.2 970,247.2 954,262" fill="url(#ensemble-s-violet)"/>
+          <rect x="708" y="104" width="246" height="158" rx="8" fill="url(#ensemble-f-violet)" stroke="#7e6cc2" stroke-opacity=".5"/>
+          <path d="M708 138 V112 a8 8 0 0 1 8 -8 H946 a8 8 0 0 1 8 8 V138 z" fill="url(#ensemble-h-violet)"/>
+          <g transform="translate(720.0 112.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 9.1A4.5 4.5 0 0 0 7 18z"/></g>
+          <text x="746.0" y="126.5" font-size="13" fill="#ffffff" font-weight="700">Secours distant</text>
+          <text x="942.0" y="126.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">copie, alerte, cloud</text>
+          <circle cx="725" cy="154" r="3" fill="#4b3d82"/>
+          <text x="736.0" y="158.0" font-size="10.5" fill="#1d302a">mémoire et historique copiés</text>
+          <circle cx="725" cy="178" r="3" fill="#4b3d82"/>
+          <text x="736.0" y="182.0" font-size="10.5" fill="#1d302a">alerte si la maison se tait</text>
+          <circle cx="725" cy="202" r="3" fill="#4b3d82"/>
+          <text x="736.0" y="206.0" font-size="10.5" fill="#1d302a">cloud : sur geste humain</text>
+          <circle cx="725" cy="226" r="3" fill="#4b3d82"/>
+          <text x="736.0" y="230.0" font-size="10.5" fill="#1d302a">jamais les radios ni le réseau local</text>
+          <rect x="708" y="300" width="266" height="74" rx="12" fill="url(#ensemble-f-violet)" stroke="#7e6cc2" stroke-opacity=".55" stroke-width="1.1" filter="url(#ensemble-o)"/>
+          <rect x="718" y="309" width="26" height="26" rx="8" fill="url(#ensemble-h-violet)"/>
+          <g transform="translate(723.0 314.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 9.1A4.5 4.5 0 0 0 7 18z"/></g>
+          <text x="752.0" y="327.0" font-size="12" fill="#4b3d82" font-weight="700">Clouds</text>
+          <text x="722.0" y="349.0" font-size="10.2" fill="#52615a">Netatmo, Voltalis, Ariston… : appelés par le</text>
+          <text x="722.0" y="364.0" font-size="10.2" fill="#52615a">seul porteur de l'époque cloud, H1 d'habitude</text>
+          <path d="M834 282 L834 298" fill="none" stroke="#4b3d82" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 3" marker-end="url(#ensemble-m-violet)"/>
+          <g filter="url(#ensemble-o)"><path d="M794.0 404.5 V443.5 A48.0 12.5 0 0 0 890.0 443.5 V404.5 z" fill="url(#ensemble-c-ardoise)"/></g>
+          <path d="M794.0 420.9 A48.0 12.5 0 0 0 890.0 420.9" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <path d="M794.0 431.8 A48.0 12.5 0 0 0 890.0 431.8" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <ellipse cx="842.0" cy="404.5" rx="48.0" ry="12.5" fill="url(#ensemble-t-ardoise)" stroke="#3b5676" stroke-opacity=".35"/>
+          <text x="842.0" y="472.0" font-size="11.5" fill="#3b5676" font-weight="700" text-anchor="middle">Archive (D13)</text>
+          <text x="842.0" y="487.0" font-size="10" fill="#52615a" text-anchor="middle">l'export du porteur</text>
+          <rect x="232" y="326" width="168" height="58" rx="12" fill="url(#ensemble-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#ensemble-o)"/>
+          <rect x="242" y="335" width="26" height="26" rx="8" fill="url(#ensemble-h-gris)"/>
+          <g transform="translate(247.0 340.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z M12 9a3 3 0 1 1 0 6a3 3 0 1 1 0-6z"/></g>
+          <text x="276.0" y="353.0" font-size="12" fill="#4f5d57" font-weight="700">Témoin</text>
+          <text x="246.0" y="375.0" font-size="10.2" fill="#52615a">vote le bail de l'époque</text>
+          <path d="M300 326 L230 296" fill="none" stroke="#4f5d57" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3"/>
+          <path d="M332 326 L420 296" fill="none" stroke="#4f5d57" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3"/>
+          <rect x="40.0" y="336.0" width="135.6" height="18.5" rx="9.2" fill="url(#ensemble-h-vert)" stroke="#3d9a75" stroke-opacity="0"/>
+          <text x="48.0" y="348.7" font-size="9.5" fill="#ffffff" font-weight="700">adresse virtuelle de l'actif</text>
+          <g filter="url(#ensemble-o)"><path d="M478.0 336.9 V371.1 A42.0 10.9 0 0 0 562.0 371.1 V336.9 z" fill="url(#ensemble-c-gris)"/></g>
+          <path d="M478.0 351.3 A42.0 10.9 0 0 0 562.0 351.3" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <path d="M478.0 360.8 A42.0 10.9 0 0 0 562.0 360.8" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.2"/>
+          <ellipse cx="520.0" cy="336.9" rx="42.0" ry="10.9" fill="url(#ensemble-t-gris)" stroke="#4f5d57" stroke-opacity=".35"/>
+          <text x="520.0" y="398.0" font-size="11.5" fill="#4f5d57" font-weight="700" text-anchor="middle">NAS</text>
+          <text x="520.0" y="413.0" font-size="10" fill="#52615a" text-anchor="middle">vidéo, documents</text>
+          <rect x="32" y="432" width="116" height="62" rx="12" fill="url(#ensemble-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#ensemble-o)"/>
+          <rect x="42" y="441" width="26" height="26" rx="8" fill="url(#ensemble-h-vert)"/>
+          <g transform="translate(47.0 446.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v11H3z M8 20h8 M12 16v4"/></g>
+          <text x="76.0" y="459.0" font-size="10.5" fill="#195744" font-weight="700">Écrans</text>
+          <text x="46.0" y="481.0" font-size="9.5" fill="#52615a">navigateur, appli</text>
+          <path d="M90 432 L90 418" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="156" y="432" width="116" height="62" rx="12" fill="url(#ensemble-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#ensemble-o)"/>
+          <rect x="166" y="441" width="26" height="26" rx="8" fill="url(#ensemble-h-vert)"/>
+          <g transform="translate(171.0 446.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5h8a1.5 1.5 0 0 1 1.5 1.5v16a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 20V4A1.5 1.5 0 0 1 8 2.5z M11 18.5h2"/></g>
+          <text x="200.0" y="459.0" font-size="10.5" fill="#195744" font-weight="700">Téléphones</text>
+          <text x="170.0" y="481.0" font-size="9.5" fill="#52615a">notifications</text>
+          <path d="M214 432 L214 418" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="280" y="432" width="116" height="62" rx="12" fill="url(#ensemble-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#ensemble-o)"/>
+          <rect x="290" y="441" width="26" height="26" rx="8" fill="url(#ensemble-h-vert)"/>
+          <g transform="translate(295.0 446.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="324.0" y="459.0" font-size="10.5" fill="#195744" font-weight="700">Appareils</text>
+          <text x="294.0" y="481.0" font-size="9.5" fill="#52615a">MQTT du réseau</text>
+          <path d="M338 432 L338 418" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="404" y="432" width="116" height="62" rx="12" fill="url(#ensemble-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#ensemble-o)"/>
+          <rect x="414" y="441" width="26" height="26" rx="8" fill="url(#ensemble-h-vert)"/>
+          <g transform="translate(419.0 446.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="448.0" y="459.0" font-size="10.5" fill="#195744" font-weight="700">Radios</text>
+          <text x="418.0" y="481.0" font-size="9.5" fill="#52615a">boîtiers A et B</text>
+          <path d="M462 432 L462 418" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="528" y="432" width="116" height="62" rx="12" fill="url(#ensemble-f-gris)" stroke="#97a39d" stroke-opacity=".55" stroke-width="1.1" filter="url(#ensemble-o)"/>
+          <rect x="538" y="441" width="26" height="26" rx="8" fill="url(#ensemble-h-gris)"/>
+          <g transform="translate(543.0 446.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h12v10H3z M15 10l6-3v10l-6-3z"/></g>
+          <text x="572.0" y="459.0" font-size="10.5" fill="#4f5d57" font-weight="700">Caméras</text>
+          <text x="542.0" y="481.0" font-size="9.5" fill="#52615a">vidéo : hors MQTT</text>
+          <path d="M90 418 L462 418" fill="none" stroke="#195744" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M110 418 L110 356" fill="none" stroke="#195744" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ensemble-m-vert)"/>
+          <path d="M110 336 L110 294" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ensemble-m-vert)"/>
+          <path class="hd-lent" d="M110 336 L110 294" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M590 432 L566 404" fill="none" stroke="#4f5d57" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4" marker-end="url(#ensemble-m-gris)"/>
+          <path class="hd-lent" d="M590 432 L566 404" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M28 534 L72 534" fill="none" stroke="#94660a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="hd-flux" d="M28 534 L72 534" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.4"/>
+          <text x="80.0" y="538.0" font-size="10.5" fill="#94660a" font-weight="700">critique : rang s, copie exacte</text>
+          <path d="M300 534 L344 534" fill="none" stroke="#3b5676" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="hd-lent" d="M300 534 L344 534" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="352.0" y="538.0" font-size="10.5" fill="#3b5676" font-weight="700">historique : rang seq, au mieux</text>
+          <path d="M580 534 L624 534" fill="none" stroke="#4f5d57" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
+          <text x="632.0" y="538.0" font-size="10.5" fill="#4f5d57" font-weight="700">hors MQTT : vidéo, gros fichiers</text>
+  <text x="18" y="581" font-size="12" fill="#52615a" font-style="italic">Une seule machine agit à la fois. Le pont maison porte tout ce qui est critique et l'historique ; la vidéo et les gros fichiers ont leur propre</text>
+  <text x="18" y="598" font-size="12" fill="#52615a" font-style="italic">chemin. Aucun journal sur disque.</text>
+</svg>

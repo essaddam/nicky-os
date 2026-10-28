@@ -1,0 +1,165 @@
+<p class="lead">Une valeur possède une forme de base, un sens, une échelle et des règles. Ses capacités de lecture et d’écriture s’y rattachent ; les actions sans état associé existent à côté.</p>
+<p>Question de conception : comment couvrir les mesures, réglages, composites et gestes existants avec un vocabulaire commun, sans faire passer un argument de commande pour un état observé ? Ce complément affine la proposition précédente. Tout champ présenté comme cible est proposé, non implémenté.</p>
+<h3>1. Partir des types de base et séparer les autres dimensions</h3>
+<div class="scroll"><table><thead><tr><th>Dimension</th><th>Contenu proposé</th><th>Exemple</th><th>Règle</th></tr></thead><tbody>
+<tr><td>Représentation scalaire</td><td>Bool, entier signé i64, réel fini f64, texte borné</td><td>Compteur entier ; température flottante</td><td>Enum et temporel ajoutent des contraintes à une forme de base. Null exprime ici l’absence de valeur connue, pas un zéro.</td></tr>
+<tr><td>Représentation décimale exacte, optionnelle</td><td>Entier + échelle décimale fixe</td><td>215 × 10⁻¹ °C = 21,5 °C</td><td>À introduire seulement pour les contrats qui exigent l’exactitude ; pas de conversion automatique de tout Float.</td></tr>
+<tr><td>Grandeur et rôle</td><td>Température, puissance, énergie… ; mesure, consigne, diagnostic, projection</td><td>21,5 °C ambiant ; 21,5 °C consigne</td><td>Une même forme et une même unité ne rendent pas les usages interchangeables.</td></tr>
+<tr><td>Unité et préfixe</td><td>Identifiant d’unité, dimension, facteur et éventuel offset</td><td>W / kW / MW ; Wh / kWh</td><td>Le préfixe n’est pas un type de valeur. Une unité source et une unité d’affichage peuvent différer.</td></tr>
+<tr><td>Domaine et résolution</td><td>Bornes distinctes pour observation et commande ; grille quantifiée</td><td>Consigne 16–30 °C, pas 0,5 °C</td><td>Le minimum accepté en écriture n’est pas forcément l’origine d’une échelle.</td></tr>
+<tr><td>Présentation</td><td>Décimales, suffixe, unité affichée, format local</td><td>21,50 °C ou 1,25 kW</td><td>La présentation ne doit ni modifier le brut ni promettre une précision de capteur.</td></tr>
+<tr><td>Capacités</td><td>Lire l’état connu, demander un rafraîchissement, affecter, invoquer</td><td>get température ; set consigne ; lancer impression</td><td>Chaque action décrit ses effets, arguments, droits et confirmation.</td></tr>
+</tbody></table></div>
+<p>Dans le code actuel, <code>Value</code> a cinq variantes : Null, Bool, Int, Float, Text. <code>Kind::Numeric</code> ne distingue pas un contrat entier d’un contrat réel et <code>validate</code> normalise ses nombres en Float ; les compteurs métier conservent un contrat Int spécifique. Un éventuel <code>NumericSpec</code> enrichi doit donc ajouter explicitement la représentation souhaitée, sans effacer les contrats compteur/minuteur.</p>
+<h3>2. Pourcentages : trois cas et une conversion réversible</h3>
+<p><b>Cas A — pourcentage natif.</b> Humidité, batterie, luminosité Hue déjà publiée en % : conserver la valeur. Une luminosité Hue dont le minimum réglable est 5 % reste à 5 %, pas à 0 %. Le minimum réglable et le zéro de l’échelle sont différents.</p>
+<p><b>Cas B — ratio.</b> Un ratio de 0 à 1 peut s’afficher en % par multiplication par 100 si ce sens est déclaré. Ne pas traiter tout nombre compris entre 0 et 1 comme un ratio.</p>
+<p><b>Cas C — position dans une plage linéaire.</b> Une commande native 0–254 peut exposer une projection en pourcentage. Il faut connaître les deux extrémités de référence et leur sens, pas seulement deux bornes de validation :</p>
+<pre>lo et hi : bornes numériques de référence, finies ; hi &gt; lo
+sens croissant : p = 100 × (x − lo) / (hi − lo)
+inverse        : x = lo + (p / 100) × (hi − lo)
+sens décroissant : p_inverse = 100 − p
+
+Exemple synthétique : échelle native 0–254
+x = 127 → 50 %
+p = 25 % → x idéal = 63,5 → x accepté = 64 si pas entier, arrondi choisi
+projection réelle de 64 → environ 25,20 %</pre>
+<p>La quantification se fait sur une grille déclarée <code>anchor + n × step</code>, avec règle d’arrondi, traitement des égalités et bornes. Le pas peut dépendre de la plage ou du mode ; il ne suffit pas toujours d’un scalaire constant. Contrôler la valeur quantifiée et renvoyer sa valeur effective. Un retour observé reste nécessaire pour confirmer le résultat physique.</p>
+<ul>
+<li><b>Bornes absentes ou égales :</b> pas de projection calculable. Ne pas inventer le maximum à partir de la plus grande valeur observée. Android TV peut publier un volume dont le maximum n’est pas encore connu.</li>
+<li><b>Observation hors plage :</b> conserver le fait ou le marquer invalide selon contrat, avec diagnostic ; ne pas le cacher par un clamp systématique. Une commande hors plage est refusée ou ajustée seulement par une règle explicite.</li>
+<li><b>Non-linéarité :</b> luminosité perçue, décibels et courbes de moteur peuvent demander une courbe ou une table. Min/max seuls ne décrivent pas la perception ni la physique.</li>
+<li><b>Arrêt et niveau :</b> 0 % ne doit pas remplacer automatiquement une commande off. Certains pilotes séparent marche et niveau ; certains appareils n’acceptent pas de consigne lumineuse à zéro.</li>
+<li><b>Référence et mode :</b> versionner une plage dynamique. Une commande calculée avec un ancien maximum doit être revalidée avant envoi ; pas d’inversion silencieuse d’un volet.</li>
+</ul>
+<p>Une consigne de 16–30 °C peut mathématiquement être normalisée à 50 %, mais cela signifie « milieu de la plage », jamais humidité ou rendement. Conserver la grandeur température et désigner cette vue comme position normalisée, distincte d’un pourcentage physique natif.</p>
+<p>Sources : <a href="../../../crates/moli-hue/src/model.rs">Hue : brightness en %, minimum réglable et maximum 100</a> ; <a href="../../../crates/moli-androidtv-driver/src/model.rs">Android TV : volume natif et maximum facultatif</a>.</p>
+<h3>3. Unités et kilo/méga : un catalogue, pas une devinette sur les lettres</h3>
+<div class="scroll"><table><thead><tr><th>Notion</th><th>Exemple</th><th>Décision proposée</th></tr></thead><tbody>
+<tr><td>Préfixe décimal</td><td>milli 10⁻³ ; kilo 10³ ; méga 10⁶</td><td>Conversion déclarée pour chaque unité autorisée. Les symboles sont sensibles à la casse : m et M diffèrent.</td></tr>
+<tr><td>Préfixe binaire</td><td>KiB = 1024 B ; MiB = 1024² B</td><td>Ne pas confondre MB et MiB. Distinguer bit et octet, débit et quantité.</td></tr>
+<tr><td>Unité composée</td><td>kWh, m³, km/h, µg/m³</td><td>Utiliser un identifiant d’unité connu ; ne pas découper aveuglément le symbole. kWh = 1000 Wh ; km/h a son propre facteur vers m/s.</td></tr>
+<tr><td>Masse</td><td>kg, g, mg</td><td>kg est l’unité de base SI de masse malgré son préfixe apparent. Le registre gère les facteurs, pas un parseur naïf des premières lettres.</td></tr>
+<tr><td>Conversion affine</td><td>Température absolue avec changement d’origine</td><td>Forme générale y = a × x + b ; distinguer température absolue et écart de température. Ne pas appliquer deux fois le facteur source.</td></tr>
+<tr><td>Conversion non linéaire</td><td>mired ↔ kelvin : K = 10⁶ / mired</td><td>Fonction de conversion dédiée, domaine positif et validation. Ce n’est ni un préfixe ni une simple multiplication.</td></tr>
+<tr><td>Unité non reconnue</td><td>Symbole conservé via Unit::Other</td><td>Conserver sans convertir ; égalité de symbole ne suffit pas toujours à prouver une grandeur commune.</td></tr>
+</tbody></table></div>
+<p><b>Actuel :</b> le cœur a 16 unités nommées plus Other. Les agrégats autorisent explicitement Wh/kWh, mV/V et s/min/h ; ils n’offrent pas un moteur universel kilo/méga. Les profils ont une liste de symboles autorisés, un <code>scale</code> de lecture et un <code>round</code>. Les unités et conversions supplémentaires de cette section sont une proposition, pas des capacités déjà livrées.</p>
+<pre>UnitDescriptor — proposition
+  unit_id, quantity_dimension, symbol
+  conversion_to_reference : identité | affine(a,b) | fonction autorisée
+  allowed_display_units   : liste bornée
+
+NumericDescriptor — proposition
+  storage : i64 | f64 | decimal_scaled(i64, échelle fixe)
+  unit_id ; role
+  source_codec : décodage natif → valeur de référence
+  command_codec : valeur de référence → commande native
+  command_domain ; observation_domain facultatif
+  normalization : aucune | ratio | plage linéaire | courbe autorisée
+  quantization : anchor, step, règle d’arrondi
+  presentation : unité affichée, décimales</pre>
+<p>Le stockage choisit une représentation et une unité de référence stables <em>par série versionnée</em> ; pas une conversion générale forcée vers toutes les unités SI. Un compteur fournisseur entier en Wh peut rester en Wh et s’afficher en kWh. Cela conserve son exactitude et évite les doublons de séries pour chaque présentation.</p>
+<p>Sources : <a href="../../../crates/moli-core/src/spec.rs">unités</a>, <a href="../../../crates/moli-core/src/aggregate.rs">unit_ratio et agrégats</a>, <a href="../../../crates/moli-profile/src/profile.rs">profils numériques</a>.</p>
+<h3>4. Les décimales : quatre contrats différents</h3>
+<div class="scroll"><table><thead><tr><th>Contrat</th><th>Effet</th><th>Exemple / piège</th></tr></thead><tbody>
+<tr><td>Précision de mesure</td><td>Incertitude ou résolution garantie par la source</td><td>Afficher 21,500 ne rend pas plus précis un capteur à ±0,5 °C. Une résolution de sortie n’est pas une incertitude.</td></tr>
+<tr><td>Grille de commande</td><td>Valeurs effectivement admises</td><td>Pas de 0,5 ou de 0,25 ; décimales=1 ne suffit pas à décrire ces deux grilles. Le step actuel sert notamment à proposer un pas UI ; validate(Numeric) ne vérifie pas une grille.</td></tr>
+<tr><td>Arrondi de stockage</td><td>Transformation avec perte éventuelle</td><td>round du profil arrondit déjà la lecture. Ce n’est pas un simple format d’affichage ; ne pas l’introduire globalement sans mesurer l’impact sur seuils et agrégats.</td></tr>
+<tr><td>Présentation / encodage</td><td>Nombre de chiffres visibles ou attendus par le protocole</td><td>display_decimals=2 n’altère pas la donnée ; decimals de CompiledWrite formate le nombre envoyé au fournisseur.</td></tr>
+</tbody></table></div>
+<p><code>f64</code> ne représente pas exactement tous les décimaux et sa précision ne se résume pas à « N décimales ». Garder i64 pour les compteurs exacts ; un décimal fixe peut servir aux montants si son échelle, ses bornes et ses débordements sont définis de bout en bout. Ne pas convertir un grand i64 en f64 pour l’affichage ou le transport si l’exactitude est requise. Le passage actuel par REAL dans l’historique et le contrat d’archive reste à traiter avant de promettre cette exactitude.</p>
+<p>Les conversions d’unité et les normalisations calculent avant l’arrondi final de commande. L’inverse de scale en lecture ne doit pas être supposé automatiquement en écriture : le profil actuel décrit ses writes séparément. Les textes formatés « 1,25 kW » restent une présentation, pas une nouvelle valeur numérique.</p>
+<h3>5. Composites : identifier ce qui doit rester ensemble</h3>
+<p>Une collection d’états sur un appareil n’est pas forcément une valeur composite. Température et batterie ont des cycles indépendants. En revanche, une coordonnée xy, un RGB ou une position géographique peuvent avoir un schéma commun, des contraintes croisées et une cohérence d’observation à préserver. Un paquet média à lancer est d’abord un argument structuré d’action, même s’il a aussi un schéma composite.</p>
+<div class="scroll"><table><thead><tr><th>Cas</th><th>Autorité / structure</th><th>Projection et écriture</th></tr></thead><tbody>
+<tr><td>Couleur xy</td><td>Record borné {x, y}, espace colorimétrique et contraintes de domaine</td><td>x/y lisibles ; affectation du couple si le pilote la permet. Ne pas donner automatiquement un set à chaque axe.</td></tr>
+<tr><td>Couleur RGB/hex</td><td>RGB 3 composantes ou hex validé ; représentation choisie selon source</td><td>Si xy est la source, RGB est une projection susceptible de perdre de l’information ; ne pas faire autorité avec les deux.</td></tr>
+<tr><td>Position</td><td>Latitude/longitude, précision et date si réellement fournies ; champs facultatifs explicites</td><td>Instantané cohérent ; données personnelles tenues hors dépôt. Une composante inconnue ne devient pas zéro.</td></tr>
+<tr><td>Paramètres climatiques</td><td>Plusieurs valeurs indépendantes ou un record selon le protocole</td><td>Daikin réémet plusieurs paramètres à l’écriture ; cela impose une coordination pilote, pas forcément un unique composite public pour toute la climatisation.</td></tr>
+<tr><td>Minuteur</td><td>État, génération et échéance possédés ensemble par le moteur</td><td>Restant calculé ; start/cancel autonomes. Ne pas transformer ce propriétaire durable en simple record affectable.</td></tr>
+<tr><td>Média / notification</td><td>Arguments bornés : cible exacte, titre, message…</td><td>Stocker le schéma commun ; invocation et reçu dans le journal, pas une dernière valeur artificielle.</td></tr>
+<tr><td>Liste / document</td><td>Collection bornée, pagination ou ressource externe selon usage</td><td>Ne pas ouvrir des tableaux arbitraires, récursion ou blobs dans chaque Sample sous prétexte de composite.</td></tr>
+</tbody></table></div>
+<p>Le code Hue illustre déjà une séparation utile : <code>color</code> est un texte hex commandable, <code>color.x</code> et <code>color.y</code> sont numériques en lecture seule pour l’historique ; l’envoi produit un couple xy. Le modèle Z2M aplatit les composites et ne rend pas leurs membres commandables seuls. La cible doit conserver ces limites tout en rendant le regroupement explicite.</p>
+<h3>6. Comment stocker les composites sans tout dupliquer</h3>
+<p>Trois approches : texte JSON opaque (simple mais difficile à valider et interroger), composants indépendants (économiques mais risque d’assemblage de dates différentes), ou record typé avec regroupement d’observation (cohérent, mais migration plus exigeante). Je recommande la troisième au niveau logique, avec réutilisation des scalaires au niveau physique.</p>
+<pre>CompositeSchema — définition enregistrée une fois, versionnée
+  schema_id, version, champs bornés et typés
+  champs requis / facultatifs, contraintes croisées
+  projections, politique d’absence, écriture complète ou patch autorisé
+
+CompositeObservation — une observation cohérente
+  composite_id, schema_version, observation_id, observed_at, qualité
+  composants typés + présence de chaque composant
+
+Action(arguments : CompositeSchema)
+  même vocabulaire de schéma ; instance d’argument distincte d’un état</pre>
+<p><b>Rangement physique proposé :</b> dictionnaire de schémas et de chemins de composants ; en-tête d’observation commun ; scalaires associés à cet en-tête, publiés dans la même transaction. Pour un record fixe très fréquent, des colonnes dédiées peuvent être plus efficaces ; le choix entre lignes de composants et colonnes se mesure sur le banc. L’archive peut utiliser un struct typé ou des colonnes cohérentes après évolution de son contrat : D13 n’accepte pas aujourd’hui un nouveau payload composite par simple ajout libre de champs.</p>
+<ul>
+<li><b>Autorité unique :</b> conserver une seule observation de référence. Les chemins scalaires publics sont des vues/projections ; ne pas conserver en plus un JSON complet et chaque vue historique sans besoin démontré.</li>
+<li><b>Atomicité :</b> même en-tête, transaction et publication pour les composantes liées. Un delta fournisseur se fusionne uniquement si sa base est connue et compatible ; sinon composite incomplet ou attente d’un instantané.</li>
+<li><b>Absence :</b> distinguer champ absent d’un patch, champ explicitement inconnu et champ non supporté. Aucun assemblage silencieux d’un nouveau x avec un ancien y périmé.</li>
+<li><b>Évolution :</b> une version de schéma détermine l’unité et le sens de chaque champ. Les lecteurs anciens refusent ou exposent une compatibilité déclarée ; les anciens échantillons restent interprétables.</li>
+<li><b>Écriture :</b> set du composite complet par défaut ; patch seulement si le contrat autorise la fusion et vérifie la révision attendue. Atomicité interne ne promet pas atomicité physique d’un appareil.</li>
+<li><b>Bornes :</b> nombre de champs, profondeur, taille, listes, cadence et budget définis avant livraison. Les clés privées et secrets restent exclus du modèle public, y compris dans les arguments.</li>
+</ul>
+<p>Un composite n’a généralement pas « une unité » ni « un nombre de décimales » : chacun de ses champs possède son propre descripteur. Le composite porte les contraintes communes et la cohérence, pas un formatage uniforme.</p>
+<h3>7. Rattacher get/set aux valeurs, garder les autres actions autonomes</h3>
+<p>Ta proposition peut se traduire par une fiche de valeur qui expose directement ses capacités : <code>get</code> pour consulter, <code>set</code> pour affecter si autorisé. Le contrat d’exécution d’un set reste référencé et partagé avec le catalogue d’actions : il ne devient pas un simple changement mémoire.</p>
+<pre>Resource / appareil
+  values[]
+    id, schema scalaire ou composite, rôle, unité, qualité
+    get : lecture de l’état connu
+    refresh : référence d’action facultative, si interrogation possible
+    set : référence d’action facultative, argument lié au schéma d’écriture
+  actions[]
+    id, nom d’opération, paramètres typés, résultat / reçu
+    target_value_id facultatif
+    effets, portée, droits, délai, idempotence, confirmation
+
+Une action peut cibler une valeur ; elle n’est pas obligée d’en avoir une.
+Un argument de type nombre/texte/record n’est pas une valeur d’état stockée.</pre>
+<div class="scroll"><table><thead><tr><th>Opération</th><th>Relation à une valeur</th><th>Effets et limites</th></tr></thead><tbody>
+<tr><td>get connu</td><td>Valeur obligatoire</td><td>Lecture du snapshot avec date/qualité ; pas de commande physique implicite.</td></tr>
+<tr><td>refresh</td><td>Valeur ou groupe de valeurs facultatif</td><td>Lecture du protocole si supportée, avec limites de charge ; aucun résultat frais garanti par une simple réponse 202. Un capteur endormi peut ne pas être interrogeable.</td></tr>
+<tr><td>set absolu</td><td>Référence de valeur, domaine d’écriture explicite</td><td>Garde, validation, mise en file et observation conservées. Ne pas écraser l’état observé par la consigne demandée.</td></tr>
+<tr><td>toggle, increment, reset</td><td>Valeur liée possible</td><td>Opérations métier distinctes : lire puis set n’est pas atomique. Les reçus et règles de rejeu restent propres à l’opération.</td></tr>
+<tr><td>invoke sans état</td><td>Aucune valeur exigée</td><td>Sans argument (ouvrir, pause) ou arguments (message, média, durée). Peut retourner un reçu ; « sans état » ne signifie pas « sans données ».</td></tr>
+<tr><td>observer une occurrence</td><td>Canal événementiel</td><td>Un fait publié n’est ni un get de dernière valeur ni nécessairement une action : deux appuis identiques restent deux événements.</td></tr>
+</tbody></table></div>
+<p>Le terme get désigne ici une capacité logique, pas une permission déduite du verbe HTTP. Certains protocoles utilisent une requête GET pour écrire ; seuls les contrats de lecture prouvés peuvent servir de refresh. Les profils possèdent déjà des restrictions spécifiques à ce sujet.</p>
+<p>Le schéma d’état et celui d’écriture sont liés, mais pas toujours identiques : la lecture peut être inconnue ou hors bornes de commande ; une consigne peut accepter moins de variantes que l’état fournisseur ; un composite peut exposer des champs lisibles sans pouvoir les écrire séparément. Réutiliser les définitions compatibles, puis ajouter les restrictions d’écriture.</p>
+<p>Ce choix conserve la séparation proposée dans <a href="../ordres-appareils-v3.md">Ordres appareils V3</a> : valeurs et ordres ont chacun leur existence ; get/set sont rattachés dans la fiche par référence, sans dupliquer les définitions ni supprimer les ordres autonomes. Cette proposition existante est une référence de conception, pas la preuve que son modèle est déjà livré.</p>
+<h3>8. Est-ce que les usages existants rentrent dedans ?</h3>
+<div class="scroll"><table><thead><tr><th>Usage existant</th><th>Valeurs et forme</th><th>Actions rattachées / autonomes</th><th>Verdict et réserve</th></tr></thead><tbody>
+<tr><td>Lumière Hue / Zigbee</td><td>Bool marche ; niveau numérique ; couleur et composantes</td><td>set marche/niveau/couleur ; refresh si supporté</td><td>Oui ; % natif ou normalisé selon pilote ; xy lié et gamuts, RGB projeté.</td></tr>
+<tr><td>Volume TV</td><td>Entier natif avec maximum potentiellement inconnu ; bool sourdine</td><td>set absolu ; touches autonomes</td><td>Oui ; pas de % tant que l’échelle n’est pas connue ; une séquence de touches peut produire un résultat partiel.</td></tr>
+<tr><td>Climatisation Daikin</td><td>Température, consigne, mode, ventilation</td><td>set par valeur ; réémission coordonnée des paramètres</td><td>Oui ; l’adaptateur conserve la logique multi-paramètres et l’état requis. Un set ne se réduit pas à une requête générique.</td></tr>
+<tr><td>Énergie et diagnostics</td><td>W, Wh/kWh, V/mV ; B et B/s ; rôles distincts</td><td>get ; refresh facultatif</td><td>Oui ; préfixes validés, entiers exacts à migrer si nécessaire, agrégations par grandeur.</td></tr>
+<tr><td>Volet à retour d’état</td><td>Position et état moteur quand disponibles</td><td>set position ; ouvrir/fermer/stop</td><td>Oui ; polarité explicite et opérations distinctes.</td></tr>
+<tr><td>Volet RTS sans retour</td><td>Aucune position observée exigée</td><td>ouvrir, fermer, stop, favori</td><td>Oui, grâce aux actions autonomes ; ne jamais inventer une position après l’ordre.</td></tr>
+<tr><td>Serrure et gâche</td><td>locked + état détaillé si disponibles</td><td>set locked pour compatibilité ; unlatch autonome</td><td>Oui ; la garde dépend de l’effet et reste conservée ; une intention d’ouverture ne prouve pas l’ouverture.</td></tr>
+<tr><td>Compteur, minuteur, planning</td><td>Entiers/bool/enum/temporel ; projections du propriétaire</td><td>increment/reset/start/cancel ; modification des définitions séparée</td><td>Oui si propriétaires et reçus restent explicites ; pas de set libre sur une projection métier.</td></tr>
+<tr><td>Notification, annonce, télécommande</td><td>Pas de valeur retenue obligatoire</td><td>invoke avec texte, touche ou record borné</td><td>Oui ; arguments typés, accord du propriétaire pour les envois, aucune pseudo-valeur de message courant.</td></tr>
+<tr><td>Caméra, catalogue média, impression</td><td>Scalaires de statut ; ressources volumineuses séparées</td><td>snapshot, recherche, play_media, imprimer : contrats propres</td><td>Partiellement : les schémas d’arguments rentrent ; flux vidéo, image, fichier et page de résultats restent des ressources dédiées, hors Sample.</td></tr>
+<tr><td>Scène et automatisme</td><td>Définitions versionnées, pas un simple nombre ou record assignable</td><td>activer, lancer, publier, approuver</td><td>Leurs entrées peuvent réutiliser les schémas ; versions, droits, moteur et effets partiels restent un domaine distinct.</td></tr>
+</tbody></table></div>
+<p>Cette matrice est une confrontation architecturale avec des usages repérés dans le dépôt, pas une preuve d’exhaustivité opérationnelle. Un audit de chaque point, ordre et modèle dynamique reste nécessaire. Les ressources volumineuses, les définitions exécutables et les secrets ne doivent pas être forcés dans une valeur universelle.</p>
+<h3>9. Convergence : un modèle partagé, deux objets distincts</h3>
+<p>Méthode : trois options comparées sur couverture, migration et coût attendu. Scores indicatifs de 1 à 5, poids égaux ; ils ne remplacent pas un benchmark.</p>
+<div class="scroll"><table><thead><tr><th>Option</th><th>Couverture</th><th>Migration</th><th>Sobriété</th><th>Total</th></tr></thead><tbody>
+<tr><td>Tout est une valeur, y compris chaque geste</td><td>2</td><td>4</td><td>3</td><td>9/15 : simple en façade, oblige à inventer des états pour les commandes.</td></tr>
+<tr><td>Valeurs et actions, schémas partagés, get/set liés par référence</td><td>5</td><td>4</td><td>4</td><td>13/15 : recommandé ; couvre les gestes autonomes et les composites sans multiplier les copies.</td></tr>
+<tr><td>Un modèle spécifique à chaque famille d’appareil</td><td>4</td><td>2</td><td>2</td><td>8/15 : spécialisations fortes mais migrations et duplication accrues.</td></tr>
+</tbody></table></div>
+<div class="recommend"><b>Proposition affinée :</b> un catalogue de schémas scalaires/composites partagé ; un registre de valeurs observées ou possédées ; un registre d’actions. Les fiches de valeurs exposent get, refresh et set via des liens vers leurs contrats. Unités, préfixes, normalisation et décimales sont des métadonnées explicites, sans changement automatique des données historiques.</div>
+<h3>10. Expériences à réaliser avant implémentation</h3>
+<ol>
+<li><b>Conversions :</b> 0–254, niveau Hue déjà en %, minimum réglable non nul, plage inversée, bornes manquantes, maximum dynamique ; aller-retour à une erreur de quantification bornée, sans double normalisation.</li>
+<li><b>Unités et précision :</b> Wh/kWh, mV/V, W/kW/MW proposés, B/MiB, kg/g, décimaux à pas 0,25, limites i64 ; aucune conversion non déclarée, aucune perte présentée comme exacte.</li>
+<li><b>Composites :</b> xy complet, delta sans base, champ inconnu, coordonnées de dates différentes, arrêt pendant transaction ; aucun instantané partiel publié comme cohérent.</li>
+<li><b>Actions :</b> get sans réseau, refresh supporté ou absent, set refusé, geste sans valeur, invocation répétée ; garde, idempotence, corrélation et confirmation inchangées.</li>
+<li><b>Stockage :</b> comparer texte JSON, composants avec en-tête commun et colonnes fixes ; mémoire anonyme, écritures, index, journal, archive, p95 et restauration, à information égale.</li>
+</ol>
+<p>Sources complémentaires : <a href="../../../docs/components/profils.md">profils et écritures</a>, <a href="../../../crates/moli-core/src/color.rs">conversion couleur et limites</a>, <a href="../../../crates/moli-z2m/src/catalog.rs">composites Z2M</a>, <a href="../../../crates/moli-overkiz/src/model.rs">volets et contrats de commande</a>, <a href="../../../docs/components/archive-protocol.md">contrat archive à faire évoluer explicitement</a>.</p>

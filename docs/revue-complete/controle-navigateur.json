@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-24T07:51:02.994Z",
+  "fichier": "index.html",
+  "sha256Html": "532590a91691d659feb7bb8383558fe908c15e9e0467c66c631f1574be091349",
+  "controles": [
+    {
+      "critere": "Ouverture locale et initialisation",
+      "resultat": "PASS",
+      "preuve": {
+        "idees": 220,
+        "titre": "Sarah Home · Revue complète et cible consolidée"
+      }
+    },
+    {
+      "critere": "Onglets et explications par thème",
+      "resultat": "PASS",
+      "preuve": "11 thèmes expliqués, un panneau actif, 31 sous-thèmes et 220 idées conservés ; Liste complète accessible."
+    },
+    {
+      "critere": "Navigation des onglets au clavier et historique",
+      "resultat": "PASS",
+      "preuve": "Flèches, début, fin et retour ne perdent ni contenu ni panneau actif."
+    },
+    {
+      "critere": "Recherche et accents",
+      "resultat": "PASS",
+      "preuve": {
+        "resultats": 23,
+        "equivalence": "generation = génération"
+      }
+    },
+    {
+      "critere": "Filtres combinés",
+      "resultat": "PASS",
+      "preuve": "Thème, avancement et recherche se croisent."
+    },
+    {
+      "critere": "Aucun résultat et réinitialisation",
+      "resultat": "PASS",
+      "preuve": "Message visible, puis retour de toutes les idées."
+    },
+    {
+      "critere": "Vue globale et détails",
+      "resultat": "PASS",
+      "preuve": "Les deux commandes ouvrent et réduisent toutes les idées affichées."
+    },
+    {
+      "critere": "Lien direct malgré un filtre",
+      "resultat": "PASS",
+      "preuve": "Le détail est révélé dans son onglet et le filtre incompatible est réinitialisé."
+    },
+    {
+      "critere": "Lecture des sources embarquées",
+      "resultat": "PASS",
+      "preuve": "Source documentaire ouverte, ligne indiquée surlignée, fermeture fonctionnelle."
+    },
+    {
+      "critere": "Lecture de la preuve dans le code",
+      "resultat": "PASS",
+      "preuve": "Source Rust accessible depuis un détail, avec fermeture au clavier."
+    },
+    {
+      "critere": "Figures et agrandissement",
+      "resultat": "PASS",
+      "preuve": {
+        "imagesInvalides": []
+      }
+    },
+    {
+      "critere": "Recherche dans les figures",
+      "resultat": "PASS",
+      "preuve": "Filtrage par texte, absence de résultat et retour à la galerie."
+    },
+    {
+      "critere": "Index du corpus",
+      "resultat": "PASS",
+      "preuve": "Filtrage des sources par chemin et titres de section."
+    },
+    {
+      "critere": "Navigation mobile et largeur",
+      "resultat": "PASS",
+      "preuve": {
+        "viewport": 390,
+        "content": 390
+      }
+    },
+    {
+      "critere": "Onglets mobiles et lien rechargé",
+      "resultat": "PASS",
+      "preuve": "Barre défilable sans débordement ; le rechargement rouvre le thème courant."
+    },
+    {
+      "critere": "Parcours et préparation à l’impression",
+      "resultat": "PASS",
+      "preuve": "Le parcours se déplie ; les détails sont ouverts pour l’impression puis leur état est restauré."
+    },
+    {
+      "critere": "Exécution autonome",
+      "resultat": "PASS",
+      "preuve": {
+        "erreursJavaScript": [],
+        "requetesReseau": []
+      }
+    }
+  ],
+  "erreurs": [],
+  "requetesExternes": [],
+  "captures": [
+    "preuves/vue-ensemble-bureau.png",
+    "preuves/onglet-architecture-bureau.png",
+    "preuves/detail-contrat.png",
+    "preuves/architecture-globale.png",
+    "preuves/schema-agrandi.png",
+    "preuves/vue-ensemble-mobile.png",
+    "preuves/onglet-stockage-mobile.png"
+  ],
+  "succes": true
+}

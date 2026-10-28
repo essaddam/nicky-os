@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 386" width="1000" height="386" role="img" aria-labelledby="disque-t disque-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="disque-t">Les écritures sur disque, par jour</title>
+  <desc id="disque-d">Deux graphiques en échelle logarithmique. Les fsync par jour : jusqu'à 165 000 pour le journal de la v1, 2 880 pour state.json aujourd'hui, 192 pour un instantané toutes les 15 minutes, 48 pour un instantané par heure. Les octets écrits par jour : au moins 0,68 Go pour la v1, 236 Mo pour state.json, 23 Mo et 5,7 Mo pour les instantanés.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="386" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="disque-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="disque-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="disque-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="disque-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="disque-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="disque-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="disque-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="disque-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="disque-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="disque-f-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ecf1f8"/></linearGradient>
+            <linearGradient id="disque-h-ardoise" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#3b5676"/></linearGradient>
+            <linearGradient id="disque-b-ardoise" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7494bb"/><stop offset="1" stop-color="#496687"/></linearGradient>
+            <linearGradient id="disque-t-ardoise" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a5b9d3"/><stop offset="1" stop-color="#ebf0f7"/></linearGradient>
+            <linearGradient id="disque-s-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b5676"/><stop offset="1" stop-color="#293c53"/></linearGradient>
+            <linearGradient id="disque-c-ardoise" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#354d6a"/><stop offset=".45" stop-color="#7494bb"/><stop offset="1" stop-color="#324964"/></linearGradient>
+            <marker id="disque-m-ardoise" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#3b5676"/></marker>
+            <linearGradient id="disque-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="disque-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="disque-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="disque-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="disque-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="disque-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="disque-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="disque-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="disque-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="disque-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="disque-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="disque-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="disque-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="disque-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">FSYNC PAR JOUR</text>
+          <text x="516.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">OCTETS ÉCRITS PAR JOUR</text>
+          <line x1="236.0" y1="40" x2="236.0" y2="236" stroke="#d4ddd4" stroke-dasharray="2 3"/>
+          <text x="236.0" y="250.0" font-size="9.5" fill="#52615a" text-anchor="middle">10</text>
+          <line x1="336.0" y1="40" x2="336.0" y2="236" stroke="#d4ddd4" stroke-dasharray="2 3"/>
+          <text x="336.0" y="250.0" font-size="9.5" fill="#52615a" text-anchor="middle">1 000</text>
+          <line x1="436.0" y1="40" x2="436.0" y2="236" stroke="#d4ddd4" stroke-dasharray="2 3"/>
+          <text x="436.0" y="250.0" font-size="9.5" fill="#52615a" text-anchor="middle">100 000</text>
+          <text x="486.0" y="264.0" font-size="9.5" fill="#52615a" text-anchor="end" font-style="italic">échelle logarithmique</text>
+          <line x1="626.0" y1="40" x2="626.0" y2="236" stroke="#d4ddd4" stroke-dasharray="2 3"/>
+          <text x="626.0" y="250.0" font-size="9.5" fill="#52615a" text-anchor="middle">1 Mo</text>
+          <line x1="698.5" y1="40" x2="698.5" y2="236" stroke="#d4ddd4" stroke-dasharray="2 3"/>
+          <text x="698.5" y="250.0" font-size="9.5" fill="#52615a" text-anchor="middle">10 Mo</text>
+          <line x1="771.0" y1="40" x2="771.0" y2="236" stroke="#d4ddd4" stroke-dasharray="2 3"/>
+          <text x="771.0" y="250.0" font-size="9.5" fill="#52615a" text-anchor="middle">100 Mo</text>
+          <line x1="843.5" y1="40" x2="843.5" y2="236" stroke="#d4ddd4" stroke-dasharray="2 3"/>
+          <text x="843.5" y="250.0" font-size="9.5" fill="#52615a" text-anchor="middle">1 Go</text>
+          <line x1="916.0" y1="40" x2="916.0" y2="236" stroke="#d4ddd4" stroke-dasharray="2 3"/>
+          <text x="916.0" y="250.0" font-size="9.5" fill="#52615a" text-anchor="middle">10 Go</text>
+          <text x="916.0" y="264.0" font-size="9.5" fill="#52615a" text-anchor="end" font-style="italic">échelle logarithmique</text>
+          <text x="16.0" y="65.0" font-size="10.5" fill="#1d302a" font-weight="700">v1 : journal de réplication</text>
+          <text x="16.0" y="80.0" font-size="9.5" fill="#52615a">validé toutes les 100 ms</text>
+          <rect x="236.0" y="58.0" width="210.9" height="18" rx="6" fill="url(#disque-b-rouge)"/>
+          <rect x="238.0" y="60.0" width="206.9" height="6.8" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="452.9" y="72.0" font-size="10.5" fill="#8b3b22" font-weight="700">165 000</text>
+          <text x="516.0" y="72.0" font-size="10.5" fill="#1d302a" font-weight="700">v1 : journal</text>
+          <rect x="626.0" y="58.0" width="205.2" height="18" rx="6" fill="url(#disque-b-rouge)"/>
+          <rect x="628.0" y="60.0" width="201.2" height="6.8" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="837.2" y="72.0" font-size="10.5" fill="#8b3b22" font-weight="700">≥ 676 Mo</text>
+          <text x="16.0" y="111.0" font-size="10.5" fill="#1d302a" font-weight="700">aujourd'hui : state.json</text>
+          <text x="16.0" y="126.0" font-size="9.5" fill="#52615a">réécrit chaque minute</text>
+          <rect x="236.0" y="104.0" width="123.0" height="18" rx="6" fill="url(#disque-b-ambre)"/>
+          <rect x="238.0" y="106.0" width="119.0" height="6.8" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="365.0" y="118.0" font-size="10.5" fill="#94660a" font-weight="700">2 880</text>
+          <text x="516.0" y="118.0" font-size="10.5" fill="#1d302a" font-weight="700">aujourd'hui</text>
+          <rect x="626.0" y="104.0" width="172.0" height="18" rx="6" fill="url(#disque-b-ambre)"/>
+          <rect x="628.0" y="106.0" width="168.0" height="6.8" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="804.0" y="118.0" font-size="10.5" fill="#94660a" font-weight="700">236 Mo</text>
+          <text x="16.0" y="157.0" font-size="10.5" fill="#1d302a" font-weight="700">v2 : instantané, toutes les 15 min</text>
+          <text x="16.0" y="172.0" font-size="9.5" fill="#52615a">sans secours vivant</text>
+          <rect x="236.0" y="150.0" width="64.2" height="18" rx="6" fill="url(#disque-b-ardoise)"/>
+          <rect x="238.0" y="152.0" width="60.2" height="6.8" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="306.2" y="164.0" font-size="10.5" fill="#3b5676" font-weight="700">192</text>
+          <text x="516.0" y="164.0" font-size="10.5" fill="#1d302a" font-weight="700">v2 : 15 min</text>
+          <rect x="626.0" y="150.0" width="98.6" height="18" rx="6" fill="url(#disque-b-ardoise)"/>
+          <rect x="628.0" y="152.0" width="94.6" height="6.8" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="730.6" y="164.0" font-size="10.5" fill="#3b5676" font-weight="700">23 Mo</text>
+          <text x="16.0" y="203.0" font-size="10.5" fill="#1d302a" font-weight="700">v2 : instantané, toutes les heures</text>
+          <text x="16.0" y="218.0" font-size="9.5" fill="#52615a">avec un secours</text>
+          <rect x="236.0" y="196.0" width="34.1" height="18" rx="6" fill="url(#disque-b-vert)"/>
+          <rect x="238.0" y="198.0" width="30.1" height="6.8" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="276.1" y="210.0" font-size="10.5" fill="#195744" font-weight="700">48</text>
+          <text x="516.0" y="210.0" font-size="10.5" fill="#1d302a" font-weight="700">v2 : 1 h</text>
+          <rect x="626.0" y="196.0" width="54.9" height="18" rx="6" fill="url(#disque-b-vert)"/>
+          <rect x="628.0" y="198.0" width="50.9" height="6.8" rx="5" fill="#ffffff" opacity=".2"/>
+          <text x="686.9" y="210.0" font-size="10.5" fill="#195744" font-weight="700">5,7 Mo</text>
+          <text x="16.0" y="290.0" font-size="10" fill="#52615a">v1 : une validation par lot de 100 ms où passe au moins une sortie, soit jusqu'à 165 000 par jour à la cadence de la maison (864 000 au plafond) ;</text>
+          <text x="16.0" y="305.0" font-size="10" fill="#52615a">chaque fsync écrit au moins un bloc de 4 Kio. Aujourd'hui : state.json (160 Kio à ×1) réécrit chaque minute avec fsync du fichier et du dossier.</text>
+          <text x="16.0" y="320.0" font-size="10" fill="#52615a">v2 : l'instantané (233 Kio), écrit de la même façon ; la copie elle-même n'écrit rien.</text>
+  <text x="18" y="363" font-size="12" fill="#52615a" font-style="italic">Calculé à partir des tailles mesurées (instantané et state.json à ×1) et du nombre de sorties d'une journée du banc. La copie de la v2 n'écrit rien ;</text>
+  <text x="18" y="380" font-size="12" fill="#52615a" font-style="italic">l'historique, qui existe déjà, n'est pas compté.</text>
+</svg>

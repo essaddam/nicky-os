@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-27T20:38:01.765824+00:00",
+  "base_commit": "077aebb6ca558897e954555a0ad4cf05912a4b23",
+  "scope": "real bidirectional loopback TCP relay faults between local Rust replica processes; local control and central witness remain reachable",
+  "command": "python3 tools/ha-multihome-poc/run-poc.py --network-loss",
+  "toolchain": "1.99.1",
+  "profile": "debug",
+  "platform": "darwin",
+  "inputs_sha256": "96db6dd27171cb3e486012d885faec83d6de2b4bcd0f5ef5f556f4bd29055993",
+  "binary_sha256": "a2b491fdd6399df82477e897ef9e83bde15c91d537cb79f14b4edd3a4cd52526",
+  "tests": {
+    "fmt": "PASS",
+    "clippy": "PASS -D warnings",
+    "rust": {
+      "passed": 59,
+      "failed": 0,
+      "ignored": 0,
+      "includes_reused_broker_tests": true
+    },
+    "default_runtime_compatibility": {
+      "default_direct_transport_preserved": true,
+      "houses": 2,
+      "status": "PASS"
+    },
+    "tcp_process_cases": {
+      "tcp_closed": {
+        "status": "PASS",
+        "fault_ms": 6190,
+        "local_steps_per_house": 6,
+        "forwarded_bytes_after_settling": 0,
+        "reconnect_ms": 215,
+        "recovery_ms": 2616,
+        "local_leases_valid": true,
+        "stale_promotion_refused": true,
+        "replicas_equal_after_recovery": true,
+        "expired_probe_applications": 0
+      },
+      "tcp_blackhole": {
+        "status": "PASS",
+        "fault_ms": 6445,
+        "local_steps_per_house": 7,
+        "forwarded_bytes_after_settling": 0,
+        "reconnect_ms": 324,
+        "recovery_ms": 3052,
+        "local_leases_valid": true,
+        "stale_promotion_refused": true,
+        "replicas_equal_after_recovery": true,
+        "expired_probe_applications": 0
+      }
+    },
+    "foreign_mutation_direct_bypass_refused": true,
+    "probe_positive_and_overflow_unit_tests": "PASS",
+    "read_only_live_health": {
+      "proxy_http_status": 200,
+      "configured": true,
+      "mode": "simulation",
+      "houses": [
+        {
+          "id": "house-a",
+          "owner": "node-a",
+          "lease_valid": true,
+          "copies_in_sync": true
+        },
+        {
+          "id": "house-b",
+          "owner": "node-b",
+          "lease_valid": true,
+          "copies_in_sync": true
+        }
+      ],
+      "services_restarted": false
+    },
+    "html_and_links": "PASS",
+    "json_consistency": "PASS",
+    "diff_check": "PASS",
+    "leak_check": "PASS generic patterns; private denylist unavailable"
+  },
+  "physical_commands": 0,
+  "limits": [
+    "Not a physical WAN/VPN partition between deployed HA hosts.",
+    "Local control and central coordinator/witness are reachable throughout.",
+    "Blackhole recovery deliberately closes old sockets and discards pending bytes; same-socket recovery is not qualified.",
+    "Fake workflow effects test admission only, with no production device executor.",
+    "The initial ten-case campaign and UI/gateway tests are historical, not rerun or relabelled for this receipt."
+  ],
+  "historical_receipt": {
+    "path": "ha-multimaison-preuves.json",
+    "date_utc": "2026-10-27T19:39:09.657871+00:00",
+    "archived_html": "ha-multimaison-avant-test-tcp.html",
+    "archived_html_sha256": "cfaf4b1fb44e17dcd0e789530ab4e8bc74b243f830304cf6551af7754377c353"
+  },
+  "source_sha256": {
+    "docs/proposition/analyse/v6/README.md": "f3d0e3910643b2938f1dd1cfb6bcc5a84065ace4ec2c0f49a9c954db9a0d0ecd",
+    "docs/proposition/analyse/v6/ha-multimaison-avant-test-tcp.html": "cfaf4b1fb44e17dcd0e789530ab4e8bc74b243f830304cf6551af7754377c353",
+    "docs/proposition/analyse/v6/ha-multimaison-preuves.json": "dde54e05b1d80a854d0065f9e9122fcd557b8a927deb956b7d399dba905ebfbc",
+    "docs/proposition/analyse/v6/ha-multimaison-tcp-protocole.md": "173fad3a7a4173a4710b9b2f71a964f78e471b5d7a5caccf18f6f9771234179e",
+    "docs/proposition/analyse/v6/ha-multimaison-tcp.json": "c1e6a83f3652bbe35d19230c7ff634bbb51ad60b12719849c8462b56a33194e2",
+    "docs/proposition/analyse/v6/ha-multimaison.html": "13028bba321512778437faa74d77c47cbcfd061ef2988c012c55d005f5f7d844",
+    "tools/ha-multihome-poc/Cargo.lock": "82d08ede78cd3117b78462c111c2d93435486bedf1eda5f149c0fc9f3907c2dc",
+    "tools/ha-multihome-poc/Cargo.toml": "53b442ca9852bcf2f332d4b58a92479be7d297ae89b754e1f6f5a237dd49a4b1",
+    "tools/ha-multihome-poc/README.md": "ca50cd378bbb8d308623a8dbd3fa98db01a9404ae4753991e5b7cf45fb94844b",
+    "tools/ha-multihome-poc/render-report.py": "9c552ce10869f5e6b0a949d1e2ed9a5f643e14f8bfae21e3cb2c5ffadd3746b8",
+    "tools/ha-multihome-poc/run-poc.py": "ea449cb01e48d097c3b496efc87525e86cf69df102caffc8a816a56ba760d02c",
+    "tools/ha-multihome-poc/src/authority.rs": "def1029e944f2c540576d6a50e0ebdee1a4cb65287731ba3ae9518a0f3a59b21",
+    "tools/ha-multihome-poc/src/config.rs": "cd33d06988c63747ab33b99585fcd7d7e321260887d8d26f517cdcee7f32619f",
+    "tools/ha-multihome-poc/src/engine.rs": "12bb301d8bbb649ed95c2f64834955993784b5ee12522d79b27cc7265e85ec76",
+    "tools/ha-multihome-poc/src/link_fault.rs": "62f43f4dd395956cd54f1253cbb6063da8d437f960aa6e1cd03cd1fe56451589",
+    "tools/ha-multihome-poc/src/main.rs": "895a30de8ecb4d965c371d9b4bc0af8fdb5b632cb51aca0c9285d9c82e1fa9db",
+    "tools/ha-multihome-poc/src/server.rs": "16be95c98ad727195483e067f90e82c800f620aa059e7db4efe4853245b7a2da",
+    "tools/ha-multihome-poc/src/tcp_loss.rs": "1ba9126f44f50fb81425dee4bc17296ce5571591f1a47ee11fbf3257b1e08ec3",
+    "tools/ha-multihome-poc/src/transport.rs": "5c810f9647e7a56216277030ccf814f3a8b70b6b7ff09864819f8c3bc46e4c6b",
+    "tools/moteur-integre-banc/src/memory.rs": "3f7062ab7277089a4787c4a0b12d65983170689b935a2c21a1d241fe432d1607",
+    "tools/mqtt-live-probe/src/gateway_runtime/broker.rs": "15a14147d6f164957463170075980436f7404e6c972ec373c8eafe0afc440e3e"
+  }
+}

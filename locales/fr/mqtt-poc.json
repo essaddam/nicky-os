@@ -184,5 +184,17 @@
   "mqtt-poc.enumWaiting": "Description attendue",
   "mqtt-poc.enumUnknown": "Choix inconnu dans cette description",
   "mqtt-poc.enumInactive": "Choix indisponible dans cette description",
-  "mqtt-poc.enumInvalid": "Référence de choix invalide"
+  "mqtt-poc.enumInvalid": "Référence de choix invalide",
+  "mqtt-poc.cover_open": "Ouvrir",
+  "mqtt-poc.cover_my": "Favori (My)",
+  "mqtt-poc.cover_stop": "Stop",
+  "mqtt-poc.cover_close": "Fermer",
+  "mqtt-poc.writeOnly": "Sans retour",
+  "mqtt-poc.portail": "Portail",
+  "mqtt-poc.coverNoFeedback": "Moteur RTS : la box ne donne pas la position. Regarde le volet pour confirmer.",
+  "mqtt-poc.homeSelector": "Maison affichée",
+  "mqtt-poc.allHomes": "Toutes les maisons",
+  "mqtt-poc.ha": "Continuité",
+  "mqtt-poc.haFrameTitle": "Simulation de continuité des deux maisons",
+  "mqtt-poc.homeWaiting": "Seules les maisons dont la projection a été reçue sont proposées."
 }

@@ -95,6 +95,78 @@ async fn switch(hub: &Hub, on: bool) -> Result<(), String> {
 }
 
 #[tokio::test]
+async fn revocation_during_connection_wait_prevents_the_order_from_reaching_the_box() {
+    use std::sync::atomic::AtomicBool;
+    let release = Arc::new(tokio::sync::Semaphore::new(0));
+    let (hub, fake) = start(Fake {
+        before_send: Some(release.clone()),
+        ..fake()
+    })
+    .await;
+    let allowed = Arc::new(AtomicBool::new(true));
+    let check = allowed.clone();
+    let caller = tokio::spawn(async move {
+        hub.command_with_permit(
+            &PointId::new(&light(), "on"),
+            Value::Bool(true),
+            Origin::Api,
+            None,
+            None,
+            moli_runtime::CommandPermit::new(move |_| check.load(SeqCst)),
+        )
+        .await
+    });
+    until(|| fake.applied.load(SeqCst) == 1).await;
+    allowed.store(false, SeqCst);
+    release.add_permits(1);
+    until(|| fake.checked_before_send.load(SeqCst) == 1).await;
+    assert!(caller.await.unwrap().is_err());
+    assert!(
+        fake.arrivals.lock().unwrap().is_empty(),
+        "revoked before HTTP handoff"
+    );
+    assert!(fake.news.lock().unwrap().is_empty());
+    allowed.store(true, SeqCst);
+    let fetched = fake.fetched.load(SeqCst);
+    until(|| fake.fetched.load(SeqCst) >= fetched + 2).await;
+    assert_eq!(
+        fake.applied.load(SeqCst),
+        1,
+        "restoring permission never requeues the order"
+    );
+    assert!(fake.arrivals.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn abandonment_during_connection_wait_prevents_the_order_from_reaching_the_box() {
+    let release = Arc::new(tokio::sync::Semaphore::new(0));
+    let (hub, fake) = start(Fake {
+        before_send: Some(release.clone()),
+        ..fake()
+    })
+    .await;
+    let caller = tokio::spawn(async move {
+        hub.command(
+            &PointId::new(&light(), "on"),
+            Value::Bool(true),
+            Origin::Api,
+            None,
+        )
+        .await
+    });
+    until(|| fake.applied.load(SeqCst) == 1).await;
+    caller.abort();
+    assert!(caller.await.unwrap_err().is_cancelled());
+    release.add_permits(1);
+    until(|| fake.checked_before_send.load(SeqCst) == 1).await;
+    assert!(
+        fake.arrivals.lock().unwrap().is_empty(),
+        "caller left before HTTP handoff"
+    );
+    assert!(fake.news.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
 async fn a_confirmed_order_is_done() {
     let (hub, fake) = start(Fake {
         ends: Some(("COMPLETED", None)),
@@ -333,11 +405,11 @@ async fn an_order_never_leaves_after_its_instant() {
     let past = Instant::now()
         .checked_sub(Duration::from_millis(100))
         .unwrap();
-    let e = emit(&api, &order, past).await.unwrap_err();
+    let e = emit(&api, &order, past, None).await.unwrap_err();
     assert!(e.is::<api::NotSent>(), "{e}");
     assert_eq!(fake.applied.load(SeqCst), 0, "nothing sent");
     let at = Instant::now();
-    let e = emit(&api, &order, at + Duration::from_millis(100))
+    let e = emit(&api, &order, at + Duration::from_millis(100), None)
         .await
         .unwrap_err();
     assert!(e.is::<NoAnswer>(), "{e}");
@@ -417,6 +489,18 @@ fn configurations() {
         config("transport = \"cloud\"\nhost = \"example.org\"").is_err(),
         "the cloud's address is never configurable"
     );
+    // The form Home Assistant stores: the port comes out of the host.
+    let copied = config("transport = \"local\"\nhost = \"192.168.1.2:8444\"").unwrap();
+    assert_eq!(
+        (copied.config.host.as_deref(), copied.config.port),
+        (Some("192.168.1.2"), 8444)
+    );
+    assert!(
+        config("transport = \"local\"\nhost = \"192.168.1.2:8444\"\nport = 9000").is_err(),
+        "two different ports"
+    );
+    let v6 = config("transport = \"local\"\nhost = \"fe80::1\"").unwrap();
+    assert_eq!(v6.config.host.as_deref(), Some("fe80::1"));
     assert!(config("transport = \"radio\"").is_err());
     assert!(config("transport = \"cloud\"\nurl = \"x\"").is_err());
 }

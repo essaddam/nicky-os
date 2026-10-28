@@ -1,0 +1,9 @@
+{
+  "experiment": "mqtt-canonicalisation-banc",
+  "source_sha256": "4ad85fc9f94608481d250a0b0c3f2f92be83460e9d17a3f62dcea051348dfc58",
+  "timestamp_utc": "2026-10-25T13:03:27Z",
+  "image_id": "sha256:40c4e2a8d249be4d12e160ccffe94df1642aeef82cc787a0a3db606f70abbc53",
+  "fixture_archive": null,
+  "fixture_archive_sha256": null,
+  "scope": "Sources et sorties publiques uniquement ; aucune conversation ni export HA brut."
+}

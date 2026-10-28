@@ -1,0 +1,19 @@
+mosquitto : version 2.1.2
+RESULTAT|mosquitto|1|file_defaut_file|1000|messages
+RESULTAT|mosquitto|1|file_defaut_publies|6000|messages
+RESULTAT|mosquitto|1|file_defaut_recus|5040|messages
+RESULTAT|mosquitto|1|file_defaut_perdus|960|messages
+RESULTAT|mosquitto|1|file_defaut_doublons|0|messages
+RESULTAT|mosquitto|1|file_defaut_alertes_courtier|1|lignes
+RESULTAT|mosquitto|1|grande_file_file|100000|messages
+RESULTAT|mosquitto|1|grande_file_publies|6000|messages
+RESULTAT|mosquitto|1|grande_file_recus|6000|messages
+RESULTAT|mosquitto|1|grande_file_perdus|0|messages
+RESULTAT|mosquitto|1|grande_file_doublons|0|messages
+RESULTAT|mosquitto|1|grande_file_alertes_courtier|0|lignes
+RESULTAT|mosquitto|1|redemarrage_file|100000|messages
+RESULTAT|mosquitto|1|redemarrage_publies|6000|messages
+RESULTAT|mosquitto|1|redemarrage_recus|4000|messages
+RESULTAT|mosquitto|1|redemarrage_perdus|2000|messages
+RESULTAT|mosquitto|1|redemarrage_doublons|0|messages
+RESULTAT|mosquitto|1|redemarrage_alertes_courtier|0|lignes

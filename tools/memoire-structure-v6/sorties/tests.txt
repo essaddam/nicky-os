@@ -1,0 +1,29 @@
+
+running 24 tests
+test tests::alias_shares_source_and_calculation_keeps_own_state ... ok
+test tests::aliases_issue_intentions_without_observation ... ok
+test tests::alternative_arenas_preserve_every_field_and_explicit_numeric_refs ... ok
+test tests::changed_composite_keeps_old_handle_readable ... ok
+test tests::composite_validates_before_atomic_versioned_replace ... ok
+test tests::demo_exposes_previous_and_exactly_two_timestamps ... ok
+test tests::direct_composite_observation_uses_the_same_distinct_value_contract ... ok
+test tests::exact_layouts_and_padding ... ok
+test tests::first_integer_zero_has_no_previous_and_sets_changed_at ... ok
+test tests::first_null_observation_is_present_even_with_zero_timestamps ... ok
+test tests::generation_and_epoch_never_wrap ... ok
+test tests::identical_composite_fields_ignore_version_and_wire_order ... ok
+test tests::insert_rejects_forged_observation_flags_without_mutation ... ok
+test tests::observation_errors_preserve_rows_pool_and_permissions ... ok
+test tests::overlapping_zones_use_edges_and_csr_both_directions ... ok
+test tests::pool_checks_bounds_kind_and_generation ... ok
+test tests::previous_tracks_distinct_values_and_is_shared_by_aliases ... ok
+test tests::removal_reuse_stale_generation_and_epoch ... ok
+test tests::rename_compaction_and_vector_reallocation_preserve_identity ... ok
+test tests::revision_and_pool_exhaustion_fail_before_publication ... ok
+test tests::source_id_checked_even_when_a_cache_has_valid_generation ... ok
+test tests::timestamps_null_zero_and_active_get_are_independent ... ok
+test tests::topology_rejects_dangling_cycles_and_wrong_owners ... ok
+test tests::type_changes_keep_null_and_composite_previous_types ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

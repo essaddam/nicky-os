@@ -1,0 +1,23 @@
+
+running 18 tests
+test tests::contracts_attach_to_family_or_house ... ok
+test tests::count_overflow_rejected ... ok
+test tests::cross_house_rejected ... ok
+test tests::dangling_source_rejected ... ok
+test tests::dangling_target_rejected ... ok
+test tests::duplicate_ids_rejected ... ok
+test tests::duplicate_membership_rejected ... ok
+test tests::empty_containers_return_no_members ... ok
+test tests::exact_edges_and_metadata_all_variants ... ok
+test tests::exact_layouts ... ok
+test tests::expected_counts ... ok
+test tests::invalid_parent_and_membership_kind_rejected ... ok
+test tests::no_values_or_actions_is_valid ... ok
+test tests::overlap_preserves_physical_parent_and_single_state ... ok
+test tests::query_checksums_identical ... ok
+test tests::replicated_identities_unique_and_parent_links_valid ... ok
+test tests::reverse_matches_forward_all_variants ... ok
+test tests::zero_devices_and_zero_scale_rejected ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

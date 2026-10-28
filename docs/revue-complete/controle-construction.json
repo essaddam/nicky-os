@@ -1,0 +1,20 @@
+{
+  "generated": "2026-10-24T07:48:44+00:00",
+  "commit": "a83589366f67d6b8273a10ad41658d688e498fda",
+  "corpus_files": 163,
+  "sections": 31,
+  "tabs": 11,
+  "ideas": 220,
+  "figures": 75,
+  "choices": 34,
+  "routes": 6,
+  "covered_markdown": 81,
+  "uncovered_markdown": [],
+  "changed_sources": [],
+  "references": 2977,
+  "unique_references": 2399,
+  "embedded_sources": 241,
+  "issues": [],
+  "html_bytes": 9900828,
+  "html_sha256": "532590a91691d659feb7bb8383558fe908c15e9e0467c66c631f1574be091349"
+}

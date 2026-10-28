@@ -1,0 +1,22 @@
+
+running 17 tests
+test tests::aliases_preserve_readonly_has_set_bounds_and_unknown_dates ... ok
+test tests::all_variant_checksums_agree_before_and_after_updates ... ok
+test tests::all_variants_share_one_source_and_mirrors_copy_full_state ... ok
+test tests::calculated_value_owns_independent_canonical_row ... ok
+test tests::frozen_pointer_addresses_survive_owner_moves_and_exclusive_updates ... ok
+test tests::full_row_alias_envelope_shares_canonical_state_without_copy ... ok
+test tests::generation_exhaustion_retires_without_wrapping_or_partial_mutation ... ok
+test tests::growing_source_vec_preserves_cached_slots_and_ids ... ok
+test tests::identity_registry_rejects_duplicates_across_every_kind ... ok
+test tests::layouts_96_32_128 ... ok
+test tests::parser_rejects_forward_parent_and_reserved_tombstone ... ok
+test tests::principal_states_only_and_deterministic_alias_identity ... ok
+test tests::shared_variants_do_not_own_duplicate_96_state ... ok
+test tests::signed_zero_and_equal_receptions_preserve_change_date ... ok
+test tests::stale_handles_rejected_after_removal_and_slot_reuse ... ok
+test tests::virtual_equipment_has_unknown_health_and_no_invented_permissions ... ok
+test tests::virtual_owner_does_not_move_physical_parent_or_alias_source_id ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

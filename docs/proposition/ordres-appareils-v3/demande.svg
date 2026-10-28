@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 426" width="1000" height="426" role="img" aria-labelledby="demande-t demande-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="demande-t">La demande : 72 octets</title>
+  <desc id="demande-d">Une fiche de 72 octets : le premier paramètre, la séquence de l'appelant, l'échéance monotone, l'heure d'arrivée, la demande mère, le numéro de l'ordre, qui demande, la génération, la forme d'admission, le principal, puis l'état, l'issue, l'origine, la raison, les compteurs d'un groupe, les drapeaux, la preuve qu'on a de la personne et l'époque ; enfin la personne pour qui elle est faite et le mandat d'un automatisme, dans les octets que la v2 réservait. Son numéro : 16 bits de case, 16 d'époque, 32 de génération. Une issue tardive de la génération 6, ou de l'ancien actif, arrive quand la génération 7 occupe la case : elle est écartée. Prendre une case et la rendre : 7,3 ns ; retrouver une demande : 0,81 ns.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="426" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="demande-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="demande-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="demande-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="demande-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="demande-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="demande-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="demande-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="demande-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="demande-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="demande-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="demande-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="demande-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="demande-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="demande-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="demande-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="demande-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="demande-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="demande-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="demande-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="demande-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="demande-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="demande-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="demande-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="demande-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="demande-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="demande-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="demande-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="demande-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="demande-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="demande-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="demande-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="demande-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="demande-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="demande-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="demande-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="demande-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="demande-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">UNE DEMANDE : 72 OCTETS, DANS UNE CASE RÉUTILISÉE, ET SON NUMÉRO DE 64 BITS</text>
+          <text x="32.0" y="54.0" font-size="11" fill="#1b5873" font-weight="700">Demande · 72 o</text>
+          <rect x="33.0" y="62.0" width="102.0" height="40" rx="5" fill="url(#demande-h-bleu)"/>
+          <text x="84.0" y="80.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">valeur</text>
+          <text x="84.0" y="92.0" font-size="8.5" fill="#ffffff" text-anchor="middle">8 o</text>
+          <rect x="137.0" y="62.0" width="102.0" height="40" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="188.0" y="80.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">séquence</text>
+          <text x="188.0" y="92.0" font-size="8.5" fill="#52615a" text-anchor="middle">8 o</text>
+          <rect x="241.0" y="62.0" width="102.0" height="40" rx="5" fill="url(#demande-h-bleu)"/>
+          <text x="292.0" y="80.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">échéance</text>
+          <text x="292.0" y="92.0" font-size="8.5" fill="#ffffff" text-anchor="middle">8 o</text>
+          <rect x="345.0" y="62.0" width="102.0" height="40" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="396.0" y="80.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">reçue</text>
+          <text x="396.0" y="92.0" font-size="8.5" fill="#52615a" text-anchor="middle">8 o</text>
+          <rect x="449.0" y="62.0" width="102.0" height="40" rx="5" fill="url(#demande-h-bleu)"/>
+          <text x="500.0" y="80.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">mère</text>
+          <text x="500.0" y="92.0" font-size="8.5" fill="#ffffff" text-anchor="middle">8 o</text>
+          <rect x="553.0" y="62.0" width="50.0" height="40" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="578.0" y="80.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">ordre</text>
+          <text x="578.0" y="92.0" font-size="8.5" fill="#52615a" text-anchor="middle">4 o</text>
+          <rect x="605.0" y="62.0" width="50.0" height="40" rx="5" fill="url(#demande-h-bleu)"/>
+          <text x="630.0" y="80.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">qui</text>
+          <text x="630.0" y="92.0" font-size="8.5" fill="#ffffff" text-anchor="middle">4 o</text>
+          <rect x="657.0" y="62.0" width="50.0" height="40" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="682.0" y="80.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">gén.</text>
+          <text x="682.0" y="92.0" font-size="8.5" fill="#52615a" text-anchor="middle">4 o</text>
+          <rect x="709.0" y="62.0" width="50.0" height="40" rx="5" fill="url(#demande-h-bleu)"/>
+          <text x="734.0" y="80.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">forme·de</text>
+          <text x="734.0" y="92.0" font-size="8.5" fill="#ffffff" text-anchor="middle">4 o</text>
+          <rect x="761.0" y="62.0" width="50.0" height="40" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="786.0" y="80.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">état…</text>
+          <text x="786.0" y="92.0" font-size="8.5" fill="#52615a" text-anchor="middle">4 o</text>
+          <rect x="813.0" y="62.0" width="50.0" height="40" rx="5" fill="url(#demande-h-bleu)"/>
+          <text x="838.0" y="80.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">groupe</text>
+          <text x="838.0" y="92.0" font-size="8.5" fill="#ffffff" text-anchor="middle">4 o</text>
+          <rect x="865.0" y="62.0" width="50.0" height="40" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="890.0" y="80.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">preuve</text>
+          <text x="890.0" y="92.0" font-size="8.5" fill="#52615a" text-anchor="middle">4 o</text>
+          <rect x="917.0" y="62.0" width="50.0" height="40" rx="5" fill="url(#demande-h-bleu)"/>
+          <text x="942.0" y="80.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">pour</text>
+          <text x="942.0" y="92.0" font-size="8.5" fill="#ffffff" text-anchor="middle">4 o</text>
+          <text x="32.0" y="128.0" font-size="10.5" fill="#52615a">état · issue · origine · raison ; un groupe ; drapeaux, preuve, époque ; v3 : la personne et le mandat, dans la réserve</text>
+          <rect x="32" y="150" width="456" height="160" rx="20" fill="#fbefd3" fill-opacity=".45" stroke="#e0a12a" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(48.0 161.0) scale(0.6667)" fill="none" stroke="#94660a" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11a4 4 0 1 1 0 8a4 4 0 1 1 0-8z M11 12l8-8 M16 7l2 2 M14 9l2 2"/></g>
+          <text x="70.0" y="174.0" font-size="11" fill="#94660a" font-weight="700" letter-spacing=".07em">SON NUMÉRO : CASE, ÉPOQUE, GÉNÉRATION</text>
+          <rect x="52.0" y="196.0" width="110.0" height="40" rx="5" fill="url(#demande-h-ambre)"/>
+          <text x="107.0" y="220.0" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">case · 16</text>
+          <rect x="166.0" y="196.0" width="120.0" height="40" rx="5" fill="#fbefd3" stroke="#e0a12a" stroke-opacity=".8"/>
+          <text x="226.0" y="220.0" font-size="11" fill="#94660a" font-weight="700" text-anchor="middle">époque · 16</text>
+          <rect x="290.0" y="196.0" width="176.0" height="40" rx="5" fill="url(#demande-h-ambre)"/>
+          <text x="378.0" y="220.0" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle">génération · 32</text>
+          <text x="52.0" y="262.0" font-size="10.5" fill="#52615a">l'époque sépare deux actifs : jamais un numéro redonné ;</text>
+          <text x="52.0" y="278.0" font-size="10.5" fill="#52615a">une case épuisée (quatre milliards de fois) est condamnée</text>
+          <rect x="512" y="150" width="456" height="160" rx="20" fill="#fae7dd" fill-opacity=".45" stroke="#d06a46" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(528.0 161.0) scale(0.6667)" fill="none" stroke="#8b3b22" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 1 0 18a9 9 0 1 1 0-18z M12 7v5l3 2"/></g>
+          <text x="550.0" y="174.0" font-size="11" fill="#8b3b22" font-weight="700" letter-spacing=".07em">UNE ISSUE TARDIVE</text>
+          <rect x="532.0" y="196.0" width="128.0" height="40" rx="5" fill="#eef0ec" stroke="#97a39d" stroke-opacity=".8"/>
+          <text x="596.0" y="219.6" font-size="10" fill="#4f5d57" font-weight="700" text-anchor="middle">12 · E7 · gén. 6</text>
+          <text x="670.0" y="220.0" font-size="14" fill="#52615a" font-weight="700">→</text>
+          <rect x="690.0" y="196.0" width="128.0" height="40" rx="5" fill="url(#demande-h-bleu)"/>
+          <text x="754.0" y="219.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">12 · E7 · gén. 7</text>
+          <text x="532.0" y="262.0" font-size="10.5" fill="#52615a">l'issue de la 6 arrive quand la 7 occupe la case,</text>
+          <text x="532.0" y="278.0" font-size="10.5" fill="#8b3b22" font-weight="700">ou celle de l'ancien actif (E6) : écartée</text>
+          <rect x="16" y="326" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 334.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="348.0" font-size="11" fill="#1d302a" font-weight="700">Prendre une case et la rendre : 7,3 ns. Retrouver une demande : 0,81 ns. Sa clé pour l'appelant : principal et séquence.</text>
+  <text x="18" y="403" font-size="12" fill="#52615a" font-style="italic">La v1 tenait en 64 octets, avec une génération de 16 bits qui faisait le tour, et sans époque (revue B4). La v3 range la personne, sa preuve et le</text>
+  <text x="18" y="420" font-size="12" fill="#52615a" font-style="italic">mandat dans la réserve : la fiche ne grandit pas.</text>
+</svg>

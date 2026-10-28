@@ -18,6 +18,11 @@ mod house_enums;
 pub(super) fn audit_exports(paths: &[std::path::PathBuf]) -> Result<Json> {
     audit::run(paths)
 }
+#[path = "ha_seed.rs"]
+mod ha_seed;
+pub(super) fn ha_seeds(paths: &[std::path::PathBuf]) -> Result<Json> {
+    ha_seed::run(paths)
+}
 #[path = "hub_projection.rs"]
 mod hub_projection;
 use crate::enum_catalogue::{CatalogRef, Pool};
@@ -199,7 +204,13 @@ impl House {
         let same_house = fresh.root == self.root;
         fresh.init_enums(self, same_house)?;
         fresh.temperature_unit = data["temperature_unit"].as_str().map(str::to_owned);
-        fresh.insert_node("maison".into(), "Maison".into(), "maison", None, "", "");
+        let house_name = data["house_name"]
+            .as_str()
+            .filter(|name| {
+                !name.is_empty() && name.len() <= 256 && !name.chars().any(char::is_control)
+            })
+            .unwrap_or("Maison");
+        fresh.insert_node("maison".into(), house_name.into(), "maison", None, "", "");
         fresh.insert_node(
             "sans-piece".into(),
             "Sans pièce attribuée".into(),
@@ -1446,7 +1457,15 @@ pub(super) async fn run(live: &super::Live, ctx: &mut moli_runtime::DriverCtx) -
                         }
                         received+=1;retained+=u64::from(p.retain);
                         if p.topic==registry_topic {
+                            let first_registry=!house.ready();
                             let started=Instant::now();house.registry(&p.payload)?;transform.record(started.elapsed());
+                            if first_registry {
+                                // A late registry must not depend on the bounded pre-schema buffer.
+                                // SUBSCRIBE replays source retained values without publishing a command.
+                                for filter in ["homeassistant/statestream/#","homeassistant/light/#","homeassistant/switch/#"] {
+                                    client.try_subscribe(filter,QoS::AtLeastOnce)?;
+                                }
+                            }
                             root=house.root.clone();
                             for (topic,(payload,retained)) in std::mem::take(&mut early) {
                                 let started=Instant::now();if !house.discovery(&topic,&payload){house.ingest(&topic,&payload,retained);}transform.record(started.elapsed());
@@ -2281,6 +2300,29 @@ mod tests {
         );
         assert_eq!(h.channels[&id("canal", "c1")].valeur, 23);
     }
+    #[test]
+    fn house_label_changes_without_changing_the_house_or_channel_identity() {
+        let mut h = house();
+        let original_root = h.root.clone();
+        let original_channels = h.channels.keys().cloned().collect::<Vec<_>>();
+        let mut registry = fixture();
+        registry["house_name"] = json!("Second test home");
+        h.registry(&serde_json::to_vec(&registry).unwrap()).unwrap();
+        assert_eq!(h.root, original_root);
+        assert_eq!(
+            h.channels.keys().cloned().collect::<Vec<_>>(),
+            original_channels
+        );
+        let cold = h.metadata.read().unwrap();
+        assert!(
+            cold["noeuds"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|n| n["genre"] == "maison" && n["nom"] == "Second test home")
+        );
+    }
+
     #[test]
     fn renaming_preserves_ids_topics_and_values() {
         let mut h = house();

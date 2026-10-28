@@ -1,0 +1,291 @@
+{
+  "version": 2,
+  "source": "formes des deux instantanés HA privés, données et horodatages remplacés",
+  "set_semantics": "HAS_SET est candidat par domaine+services, ACCESS_UNRESOLVED reste présent : aucune permission prouvée",
+  "numeric_semantics": "grilles synthétiques 0..100 pas1 ; réserves par forme numérique observée ou domaine number ; pas les bornes originales",
+  "datasets": [
+    {
+      "label": "a-principal",
+      "detail": false,
+      "rows": 1528,
+      "devices": 206,
+      "values": 986,
+      "actions": 336,
+      "numeric_rows": 142,
+      "possible_set_rows": 97,
+      "unresolved_access_rows": 986,
+      "payload_pool_bytes": 197184,
+      "row_kinds": {
+        "0": 206,
+        "1": 986,
+        "2": 336
+      },
+      "value_kinds": {
+        "bool": 275,
+        "text": 237,
+        "null": 878,
+        "int": 107,
+        "float": 31
+      },
+      "coverage": {
+        "source_entities": 986,
+        "missing_device_parent": 37,
+        "last_updated_present": 986,
+        "active_not_in_registry": 9,
+        "unreadable_service_contract": 1
+      },
+      "input_sha256": "575edcc7866a1b3b6001933715977db12cc765639e2ef3311ef69ba58a7c2bd7",
+      "source_hashes": [
+        "d84edc655bb7d063fcebcbb2f0b460fa2a12f80f6253f552538e33f2c07d78dc",
+        "a488e4f7a7eda6948eec6c4b94b4a95075e30299046ddced8e8c114949f098b5",
+        "bb53960ac1282683a8b42984c579011203b875ec0af65e1d0c9a979ab46cd6d0",
+        "4c88b08ba218022fa84a4eec1d66b34612f8198b50ca1dc571e225c40b6bcf1f"
+      ]
+    },
+    {
+      "label": "b-principal",
+      "detail": false,
+      "rows": 2150,
+      "devices": 290,
+      "values": 1278,
+      "actions": 582,
+      "numeric_rows": 296,
+      "possible_set_rows": 260,
+      "unresolved_access_rows": 1278,
+      "payload_pool_bytes": 330035,
+      "row_kinds": {
+        "0": 290,
+        "1": 1278,
+        "2": 582
+      },
+      "value_kinds": {
+        "bool": 448,
+        "text": 308,
+        "null": 1113,
+        "float": 100,
+        "int": 181
+      },
+      "coverage": {
+        "source_entities": 1278,
+        "missing_device_parent": 110,
+        "last_updated_present": 1278,
+        "active_not_in_registry": 4,
+        "unreadable_service_contract": 3
+      },
+      "input_sha256": "ec85c8a7e6c018315e6ed19cc4ef52bfa9fcca0a6948b9e958ddfd31eeabd0b7",
+      "source_hashes": [
+        "302f2a0c0160408e72dbda96f1362087f6f6f3b437467b5551fb7bc2e068f34a",
+        "c343439293650b16d2f2710520d7cd4ac5aa4111fa6addf33ed9918d8ec0c7ca",
+        "b05245ca4be8568f903a59b1594060a581eaf678f2beaabd77e9b5c417e99fb1",
+        "131b62da987222394d9f0d4885aa8f75fc53f7a7a578e1595326285b1ef4f74f"
+      ]
+    },
+    {
+      "label": "somme-principal",
+      "detail": false,
+      "rows": 3678,
+      "devices": 496,
+      "values": 2264,
+      "actions": 918,
+      "numeric_rows": 438,
+      "possible_set_rows": 357,
+      "unresolved_access_rows": 2264,
+      "payload_pool_bytes": 527219,
+      "row_kinds": {
+        "0": 496,
+        "1": 2264,
+        "2": 918
+      },
+      "value_kinds": {
+        "bool": 723,
+        "text": 545,
+        "null": 1991,
+        "int": 288,
+        "float": 131
+      },
+      "coverage": {
+        "source_entities": 2264,
+        "missing_device_parent": 147,
+        "last_updated_present": 2264,
+        "active_not_in_registry": 13,
+        "unreadable_service_contract": 4
+      },
+      "input_sha256": "991f7058eb51a5783d7913fb56f8c789b838bc81f4d0743752d2bf30506017f8",
+      "source_hashes": [
+        "d84edc655bb7d063fcebcbb2f0b460fa2a12f80f6253f552538e33f2c07d78dc",
+        "a488e4f7a7eda6948eec6c4b94b4a95075e30299046ddced8e8c114949f098b5",
+        "bb53960ac1282683a8b42984c579011203b875ec0af65e1d0c9a979ab46cd6d0",
+        "4c88b08ba218022fa84a4eec1d66b34612f8198b50ca1dc571e225c40b6bcf1f",
+        "302f2a0c0160408e72dbda96f1362087f6f6f3b437467b5551fb7bc2e068f34a",
+        "c343439293650b16d2f2710520d7cd4ac5aa4111fa6addf33ed9918d8ec0c7ca",
+        "b05245ca4be8568f903a59b1594060a581eaf678f2beaabd77e9b5c417e99fb1",
+        "131b62da987222394d9f0d4885aa8f75fc53f7a7a578e1595326285b1ef4f74f"
+      ]
+    },
+    {
+      "label": "a-detail",
+      "detail": true,
+      "rows": 5435,
+      "devices": 206,
+      "values": 4893,
+      "actions": 336,
+      "numeric_rows": 710,
+      "possible_set_rows": 97,
+      "unresolved_access_rows": 986,
+      "payload_pool_bytes": 309786,
+      "row_kinds": {
+        "0": 206,
+        "1": 4893,
+        "2": 336
+      },
+      "value_kinds": {
+        "bool": 678,
+        "text": 2114,
+        "record": 1059,
+        "int": 625,
+        "null": 878,
+        "float": 81
+      },
+      "coverage": {
+        "source_entities": 986,
+        "missing_device_parent": 37,
+        "last_updated_present": 986,
+        "active_not_in_registry": 9,
+        "unreadable_service_contract": 1
+      },
+      "input_sha256": "db94802436504498d12e986495d6982f954c8406aa7a1d90ad0ea17e7569ff2a",
+      "source_hashes": [
+        "d84edc655bb7d063fcebcbb2f0b460fa2a12f80f6253f552538e33f2c07d78dc",
+        "a488e4f7a7eda6948eec6c4b94b4a95075e30299046ddced8e8c114949f098b5",
+        "bb53960ac1282683a8b42984c579011203b875ec0af65e1d0c9a979ab46cd6d0",
+        "4c88b08ba218022fa84a4eec1d66b34612f8198b50ca1dc571e225c40b6bcf1f"
+      ]
+    },
+    {
+      "label": "b-detail",
+      "detail": true,
+      "rows": 6808,
+      "devices": 290,
+      "values": 5936,
+      "actions": 582,
+      "numeric_rows": 751,
+      "possible_set_rows": 260,
+      "unresolved_access_rows": 1278,
+      "payload_pool_bytes": 465329,
+      "row_kinds": {
+        "0": 290,
+        "1": 5936,
+        "2": 582
+      },
+      "value_kinds": {
+        "bool": 568,
+        "text": 3015,
+        "record": 1376,
+        "int": 562,
+        "null": 1113,
+        "float": 174
+      },
+      "coverage": {
+        "source_entities": 1278,
+        "missing_device_parent": 110,
+        "last_updated_present": 1278,
+        "active_not_in_registry": 4,
+        "unreadable_service_contract": 3
+      },
+      "input_sha256": "6f440132cda5f11cf749693d9f65463af83f4784f000ade3e31b9f086f70acf1",
+      "source_hashes": [
+        "302f2a0c0160408e72dbda96f1362087f6f6f3b437467b5551fb7bc2e068f34a",
+        "c343439293650b16d2f2710520d7cd4ac5aa4111fa6addf33ed9918d8ec0c7ca",
+        "b05245ca4be8568f903a59b1594060a581eaf678f2beaabd77e9b5c417e99fb1",
+        "131b62da987222394d9f0d4885aa8f75fc53f7a7a578e1595326285b1ef4f74f"
+      ]
+    },
+    {
+      "label": "somme-detail",
+      "detail": true,
+      "rows": 12243,
+      "devices": 496,
+      "values": 10829,
+      "actions": 918,
+      "numeric_rows": 1461,
+      "possible_set_rows": 357,
+      "unresolved_access_rows": 2264,
+      "payload_pool_bytes": 775115,
+      "row_kinds": {
+        "0": 496,
+        "1": 10829,
+        "2": 918
+      },
+      "value_kinds": {
+        "bool": 1246,
+        "text": 5129,
+        "record": 2435,
+        "int": 1187,
+        "null": 1991,
+        "float": 255
+      },
+      "coverage": {
+        "source_entities": 2264,
+        "missing_device_parent": 147,
+        "last_updated_present": 2264,
+        "active_not_in_registry": 13,
+        "unreadable_service_contract": 4
+      },
+      "input_sha256": "417ef1935fb5398994394f7fce79856d23a2435b191bbe9c8a5ca396f9e586e3",
+      "source_hashes": [
+        "d84edc655bb7d063fcebcbb2f0b460fa2a12f80f6253f552538e33f2c07d78dc",
+        "a488e4f7a7eda6948eec6c4b94b4a95075e30299046ddced8e8c114949f098b5",
+        "bb53960ac1282683a8b42984c579011203b875ec0af65e1d0c9a979ab46cd6d0",
+        "4c88b08ba218022fa84a4eec1d66b34612f8198b50ca1dc571e225c40b6bcf1f",
+        "302f2a0c0160408e72dbda96f1362087f6f6f3b437467b5551fb7bc2e068f34a",
+        "c343439293650b16d2f2710520d7cd4ac5aa4111fa6addf33ed9918d8ec0c7ca",
+        "b05245ca4be8568f903a59b1594060a581eaf678f2beaabd77e9b5c417e99fb1",
+        "131b62da987222394d9f0d4885aa8f75fc53f7a7a578e1595326285b1ef4f74f"
+      ]
+    },
+    {
+      "label": "somme-detail-liens4",
+      "detail": true,
+      "rows": 21299,
+      "devices": 496,
+      "values": 10829,
+      "actions": 9974,
+      "numeric_rows": 1461,
+      "possible_set_rows": 357,
+      "unresolved_access_rows": 2264,
+      "payload_pool_bytes": 775115,
+      "row_kinds": {
+        "0": 496,
+        "1": 10829,
+        "2": 918
+      },
+      "value_kinds": {
+        "bool": 1246,
+        "text": 5129,
+        "record": 2435,
+        "int": 1187,
+        "null": 1991,
+        "float": 255
+      },
+      "coverage": {
+        "source_entities": 2264,
+        "missing_device_parent": 147,
+        "last_updated_present": 2264,
+        "active_not_in_registry": 13,
+        "unreadable_service_contract": 4
+      },
+      "input_sha256": "3c5b3b7379b4f3d571fb1307ac53509d1e3d01d3c56672ac4642c29397564cda",
+      "source_hashes": [
+        "d84edc655bb7d063fcebcbb2f0b460fa2a12f80f6253f552538e33f2c07d78dc",
+        "a488e4f7a7eda6948eec6c4b94b4a95075e30299046ddced8e8c114949f098b5",
+        "bb53960ac1282683a8b42984c579011203b875ec0af65e1d0c9a979ab46cd6d0",
+        "4c88b08ba218022fa84a4eec1d66b34612f8198b50ca1dc571e225c40b6bcf1f",
+        "302f2a0c0160408e72dbda96f1362087f6f6f3b437467b5551fb7bc2e068f34a",
+        "c343439293650b16d2f2710520d7cd4ac5aa4111fa6addf33ed9918d8ec0c7ca",
+        "b05245ca4be8568f903a59b1594060a581eaf678f2beaabd77e9b5c417e99fb1",
+        "131b62da987222394d9f0d4885aa8f75fc53f7a7a578e1595326285b1ef4f74f"
+      ],
+      "synthetic_target_links": 9056
+    }
+  ]
+}

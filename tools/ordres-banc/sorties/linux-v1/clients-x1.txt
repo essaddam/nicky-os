@@ -1,0 +1,11 @@
+RESULTAT|clients|1|aujourdhui_api_snapshot_json_o|631321.000|o
+RESULTAT|clients|1|aujourdhui_api_snapshot_us|739.585|µs
+RESULTAT|clients|1|mqtt_etat_client_complet_o|117532.000|o
+RESULTAT|clients|1|mqtt_etat_client_morceaux_4kio|29.000|
+RESULTAT|clients|1|mqtt_etat_client_deux_pieces_o|20695.000|o
+RESULTAT|clients|1|mqtt_etat_client_complet_us|65.167|µs
+RESULTAT|clients|1|mqtt_etat_client_deux_pieces_us|14.291|µs
+RESULTAT|clients|1|rss_fin|720.000|Kio
+CONTENEUR|false|0
+CONTENEUR|false|0
+CONTENEUR|false|0

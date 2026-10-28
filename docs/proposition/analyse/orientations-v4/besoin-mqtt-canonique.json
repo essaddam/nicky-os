@@ -1,0 +1,31 @@
+{
+  "id": "MQTT-CANON-01",
+  "status": "besoin exprime, contrat propose, pas une integration livree",
+  "intent": "Associer les messages MQTT natifs, par exemple Zigbee2MQTT, aux equipements, valeurs et actions du catalogue Moli avec ses propres identifiants.",
+  "native_identity": "Identite native stable distincte du friendly_name et du topic modifiable.",
+  "canonical_identity": "DeviceId/PointId stables du domaine et IDs internes du catalogue resolus dans leur installation ; slots/generations/epoques restent des caches internes.",
+  "inbound": [
+    "Decoder un payload borne ; rejeter ou isoler les champs prives avec les protections partagees.",
+    "Resoudre appareil/propriete natifs vers equipement/point internes ; conserver type, unite, echelle, qualite et provenance.",
+    "Mettre a jour la source canonique ; distinguer renouvellement, changement de valeur et occurrence transitoire.",
+    "Ne pas creer implicitement un point commandable a partir d'une propriete inconnue."
+  ],
+  "outbound": [
+    "Recevoir une intention de commande sous le controle du hub, de la garde et des contrats d'action.",
+    "Encoder seulement une action connue vers le topic/payload natifs permis ; conserver origine, correlation, echeance et conditions de confirmation.",
+    "Ne pas transformer un etat observe ou un ancien message retenu en nouvelle commande."
+  ],
+  "lifecycle": [
+    "Recompiler les liaisons apres changement de schema, unite, codec, instance ou routage.",
+    "Un changement de friendly_name modifie le routage sans changer l'identite de l'equipement.",
+    "Rejeter un ancien cache de generation/epoque et les boucles d'echo de commandes."
+  ],
+  "placement": "Adaptateur ou profil a la frontiere d'integration. Le broker natif reste agnostique au payload ; ne pas renommer globalement des topics d'autres clients.",
+  "existing_code": [
+    "crates/moli-z2m/src/catalog.rs",
+    "crates/moli-z2m/src/lib.rs",
+    "crates/moli-core/src/privacy.rs",
+    "crates/moli-runtime/src/hub.rs"
+  ],
+  "benchmarks": "tools/mqtt-canonicalisation-banc : conversion/routage apres decodage, donnees synthetiques ; pas une preuve de cout MQTT/JSON complet ni d'autorisation."
+}

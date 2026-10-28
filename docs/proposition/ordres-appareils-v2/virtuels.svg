@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 514" width="1000" height="514" role="img" aria-labelledby="virtuels-t virtuels-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="virtuels-t">Appareils physiques et virtuels</title>
+  <desc id="virtuels-d">À gauche, des appareils physiques : quatre ampoules du séjour, dont une dans la chambre protégée, la serrure et la lampe du salon. Au centre, deux appareils virtuels. Le groupe lumieres:sejour possède un ordre de groupe, « on », auquel ses quatre cibles sont rattachées ; il compte les ampoules comme membres et montre leurs valeurs. L'entrée ne possède rien ; elle montre la serrure, deux ordres du volet RTS et la lampe. À droite : un ordre de groupe fait une mère, qui connaît ses cibles avant la première fille et n'a pas d'échéance à elle ; chaque fille est autorisée ; la mère prend la preuve la plus faible, et dit 3 sur 4 quand une ampoule ne répond pas. Approuvé, un groupe passe par le même répartiteur ; coupé par une bascule, il garde son compte. Dans la maison ×1 du banc, 29 appareils virtuels et 340 entrées.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="514" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="virtuels-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="virtuels-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <radialGradient id="virtuels-sol"><stop offset="0" stop-color="#1d302a" stop-opacity=".22"/><stop offset="1" stop-color="#1d302a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="virtuels-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="virtuels-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="virtuels-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="virtuels-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="virtuels-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="virtuels-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="virtuels-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="virtuels-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="virtuels-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="virtuels-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="virtuels-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="virtuels-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="virtuels-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="virtuels-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="virtuels-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="virtuels-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="virtuels-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="virtuels-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="virtuels-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="virtuels-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="virtuels-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="virtuels-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="virtuels-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="virtuels-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="virtuels-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="virtuels-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="virtuels-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="virtuels-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">PHYSIQUES ET VIRTUELS : POSSÉDER, MONTRER, COMMANDER</text>
+          <rect x="40" y="52" width="250" height="58" rx="12" fill="url(#virtuels-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#virtuels-o)"/>
+          <rect x="50" y="61" width="26" height="26" rx="8" fill="url(#virtuels-h-vert)"/>
+          <g transform="translate(55.0 66.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="84.0" y="79.0" font-size="11" fill="#195744" font-weight="700">hue:sejour_1</text>
+          <text x="54.0" y="101.0" font-size="9.8" fill="#52615a">valeur on · ordre on · Salon</text>
+          <rect x="40" y="122" width="250" height="58" rx="12" fill="url(#virtuels-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#virtuels-o)"/>
+          <rect x="50" y="131" width="26" height="26" rx="8" fill="url(#virtuels-h-vert)"/>
+          <g transform="translate(55.0 136.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="84.0" y="149.0" font-size="11" fill="#195744" font-weight="700">hue:sejour_2</text>
+          <text x="54.0" y="171.0" font-size="9.8" fill="#52615a">valeur on · ordre on · Salon</text>
+          <rect x="40" y="192" width="250" height="58" rx="12" fill="url(#virtuels-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#virtuels-o)"/>
+          <rect x="50" y="201" width="26" height="26" rx="8" fill="url(#virtuels-h-vert)"/>
+          <g transform="translate(55.0 206.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="84.0" y="219.0" font-size="11" fill="#195744" font-weight="700">hue:sejour_3</text>
+          <text x="54.0" y="241.0" font-size="9.8" fill="#52615a">valeur on · ordre on · Salon</text>
+          <rect x="40" y="262" width="250" height="58" rx="12" fill="url(#virtuels-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#virtuels-o)"/>
+          <rect x="50" y="271" width="26" height="26" rx="8" fill="url(#virtuels-h-rouge)"/>
+          <g transform="translate(55.0 276.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="84.0" y="289.0" font-size="11" fill="#8b3b22" font-weight="700">hue:sejour_4</text>
+          <text x="54.0" y="311.0" font-size="9.8" fill="#52615a">valeur on · ordre on · Chambre, protégée</text>
+          <rect x="40" y="344" width="250" height="58" rx="12" fill="url(#virtuels-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#virtuels-o)"/>
+          <rect x="50" y="353" width="26" height="26" rx="8" fill="url(#virtuels-h-vert)"/>
+          <g transform="translate(55.0 358.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v10H6z M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></g>
+          <text x="84.0" y="371.0" font-size="11" fill="#195744" font-weight="700">nuki:porte, z2m:salon_lampe</text>
+          <text x="54.0" y="393.0" font-size="9.8" fill="#52615a">leurs valeurs et leurs ordres</text>
+          <ellipse cx="548.0" cy="209.0" rx="134.0" ry="11" fill="url(#virtuels-sol)"/>
+          <polygon points="426,64 442,55.2 676,55.2 660,64" fill="url(#virtuels-t-bleu)"/>
+          <polygon points="660,64 676,55.2 676,187.2 660,202" fill="url(#virtuels-s-bleu)"/>
+          <rect x="420" y="64" width="240" height="138" rx="8" fill="url(#virtuels-f-bleu)" stroke="#3b8db4" stroke-opacity=".5"/>
+          <path d="M420 98 V72 a8 8 0 0 1 8 -8 H652 a8 8 0 0 1 8 8 V98 z" fill="url(#virtuels-h-bleu)"/>
+          <g transform="translate(432.0 72.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z M4 12l8 4 8-4 M4 17l8 4 8-4"/></g>
+          <text x="458.0" y="86.5" font-size="13" fill="#ffffff" font-weight="700">lumieres:sejour</text>
+          <text x="648.0" y="86.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">virtuel</text>
+          <text x="540.0" y="120.0" font-size="10.2" fill="#52615a" text-anchor="middle">un ordre de groupe : « on »</text>
+          <text x="540.0" y="136.0" font-size="10.2" fill="#52615a" text-anchor="middle">4 cibles rattachées à « on »</text>
+          <text x="540.0" y="152.0" font-size="10.2" fill="#52615a" text-anchor="middle">4 membres, 4 valeurs montrées</text>
+          <ellipse cx="548.0" cy="399.0" rx="134.0" ry="11" fill="url(#virtuels-sol)"/>
+          <polygon points="426,276 442,267.2 676,267.2 660,276" fill="url(#virtuels-t-ambre)"/>
+          <polygon points="660,276 676,267.2 676,377.2 660,392" fill="url(#virtuels-s-ambre)"/>
+          <rect x="420" y="276" width="240" height="116" rx="8" fill="url(#virtuels-f-ambre)" stroke="#e0a12a" stroke-opacity=".5"/>
+          <path d="M420 310 V284 a8 8 0 0 1 8 -8 H652 a8 8 0 0 1 8 8 V310 z" fill="url(#virtuels-h-ambre)"/>
+          <g transform="translate(432.0 284.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="458.0" y="298.5" font-size="13" fill="#ffffff" font-weight="700">virtuel:entree</text>
+          <text x="648.0" y="298.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">virtuel</text>
+          <text x="540.0" y="332.0" font-size="10.2" fill="#52615a" text-anchor="middle">rien à lui</text>
+          <text x="540.0" y="348.0" font-size="10.2" fill="#52615a" text-anchor="middle">montre : la serrure (valeur, ordre),</text>
+          <text x="540.0" y="364.0" font-size="10.2" fill="#52615a" text-anchor="middle">le volet RTS, la lampe</text>
+          <path d="M418 110 C360 110 340 80 292 80" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#virtuels-m-bleu)"/>
+          <path class="hd-lent" d="M418 110 C360 110 340 80 292 80" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <path d="M418 118 C360 118 340 150 292 150" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#virtuels-m-bleu)"/>
+          <path d="M418 126 C360 126 340 220 292 220" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#virtuels-m-bleu)"/>
+          <path d="M418 134 C360 134 340 290 292 290" fill="none" stroke="#1b5873" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#virtuels-m-bleu)"/>
+          <path d="M418 330 C360 330 340 372 292 372" fill="none" stroke="#94660a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#virtuels-m-ambre)"/>
+          <path class="hd-lent" d="M418 330 C360 330 340 372 292 372" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <rect x="714" y="52" width="270" height="150" rx="12" fill="url(#virtuels-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#virtuels-o)"/>
+          <rect x="724" y="61" width="26" height="26" rx="8" fill="url(#virtuels-h-bleu)"/>
+          <g transform="translate(729.0 66.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 14.5-3.5 M19 3v4h-4 M20 14a8 8 0 0 1-14.5 3.5 M5 21v-4h4"/></g>
+          <text x="758.0" y="79.0" font-size="11.5" fill="#1b5873" font-weight="700">Un ordre de groupe</text>
+          <text x="728.0" y="101.0" font-size="10" fill="#52615a">la mère connaît ses cibles d'abord,</text>
+          <text x="728.0" y="116.0" font-size="10" fill="#52615a">sans échéance à elle ; une fille par cible,</text>
+          <text x="728.0" y="131.0" font-size="10" fill="#52615a">autorisée ; la mère prend la preuve</text>
+          <text x="728.0" y="146.0" font-size="10" fill="#52615a">la plus faible : confirmé, exécuté, n/m</text>
+          <rect x="772.6" y="212.0" width="152.8" height="21.5" rx="10.8" fill="url(#virtuels-h-rouge)"/>
+          <text x="785.6" y="226.5" font-size="10.5" fill="#ffffff" font-weight="700">3 sur 4 : échec, partiel</text>
+          <rect x="714" y="250" width="270" height="150" rx="12" fill="url(#virtuels-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#virtuels-o)"/>
+          <rect x="724" y="259" width="26" height="26" rx="8" fill="url(#virtuels-h-ambre)"/>
+          <g transform="translate(729.0 264.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6z"/></g>
+          <text x="758.0" y="277.0" font-size="11.5" fill="#94660a" font-weight="700">Approuvé, ou coupé par une bascule</text>
+          <text x="728.0" y="299.0" font-size="10" fill="#52615a">approuvé : le même répartiteur,</text>
+          <text x="728.0" y="314.0" font-size="10" fill="#52615a">ses filles ne sont pas retenues ;</text>
+          <text x="728.0" y="329.0" font-size="10" fill="#52615a">coupé : la copie a rejoué son compte,</text>
+          <text x="728.0" y="344.0" font-size="10" fill="#52615a">le nouvel actif conclut 3 sur 4</text>
+          <rect x="16" y="414" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 422.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="436.0" font-size="11" fill="#1d302a" font-weight="700">Une valeur ou un ordre a un seul propriétaire ; une cible est l'ordre d'un appareil physique, rattachée à son ordre de groupe. 29 virtuels à ×1, 340 entrées.</text>
+  <text x="18" y="491" font-size="12" fill="#52615a" font-style="italic">Aujourd'hui, un luminaire répond « fait » dès qu'une ampoule a obéi. La v2 corrige quatre constats de la revue sur les groupes : un seul chemin</text>
+  <text x="18" y="508" font-size="12" fill="#52615a" font-style="italic">d'envoi, n/m par niveau de preuve, la mère sans échéance, les cibles rattachées (I7 à I10).</text>
+</svg>

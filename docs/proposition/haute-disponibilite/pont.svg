@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 377" width="1000" height="377" role="img" aria-labelledby="pont-t pont-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="pont-t">Le pont à reprise</title>
+  <desc id="pont-d">L'actif publie ses sorties ; le pont du secours les reçoit en direct, remet l'ordre par le rang s, demande les tronçons manquants au journal de l'actif, écrit chaque sortie dans la copie du journal, puis la publie sur le courtier du secours, où lisent les abonnés locaux. Les accusés de rang remontent vers l'actif.</desc>
+  <rect width="1000" height="377" fill="#fffdf8"/>
+          <defs>
+            <marker id="pont-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#195744"/></marker>
+            <marker id="pont-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b07d12"/></marker>
+            <marker id="pont-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#52615a"/></marker>
+            <marker id="pont-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b3b22"/></marker>
+          </defs>
+          <text x="16.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">ACTIF</text>
+          <text x="370.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">LE LIEN</text>
+          <text x="690.0" y="26.0" font-size="11.5" fill="#52615a" font-weight="700">SECOURS</text>
+          <rect x="16.0" y="40.0" width="280.0" height="52.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="28.0" y="59.0" font-size="11.5" fill="#1d302a" font-weight="700">Hub</text>
+          <text x="28.0" y="76.0" font-size="10" fill="#52615a">publie val/ vu/ avail/ meta/ evt/ (rang s)</text>
+          <rect x="16.0" y="110.0" width="280.0" height="52.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="28.0" y="129.0" font-size="11.5" fill="#1d302a" font-weight="700">Courtier de l'actif (rumqttd)</text>
+          <text x="28.0" y="146.0" font-size="10" fill="#52615a">un journal par filtre : l'ordre entre filtres se perd</text>
+          <rect x="16.0" y="180.0" width="280.0" height="66.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="28.0" y="199.0" font-size="11.5" fill="#1d302a" font-weight="700">Journal (disque, 7 jours)</text>
+          <text x="28.0" y="216.0" font-size="10" fill="#52615a">répond aux demandes de tronçons</text>
+          <text x="28.0" y="231.0" font-size="10" fill="#52615a">fenêtres de 32 × 64 sorties (≈ 94 Kio)</text>
+          <line x1="156.0" y1="92.0" x2="156.0" y2="108.0" stroke="#195744" stroke-width="2" marker-end="url(#pont-v)"/>
+          <line x1="156.0" y1="180.0" x2="156.0" y2="164.0" stroke="#b07d12" stroke-width="1.6" marker-end="url(#pont-a)"/>
+          <rect x="330.0" y="40.0" width="330.0" height="206.0" rx="8" fill="#f1f4ee" stroke="#d4ddd4" stroke-width="1" stroke-dasharray="5 4"/>
+          <text x="495.0" y="62.0" font-size="11" fill="#52615a" font-weight="700" text-anchor="middle">réseau local, ou NetBird (§ 10)</text>
+          <line x1="300.0" y1="92.0" x2="686.0" y2="92.0" stroke="#195744" stroke-width="2.2" marker-end="url(#pont-v)"/>
+          <text x="495.0" y="86.0" font-size="10.5" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">sorties, en direct</text>
+          <line x1="686.0" y1="124.0" x2="300.0" y2="124.0" stroke="#b07d12" stroke-width="1.4" marker-end="url(#pont-a)"/>
+          <text x="495.0" y="118.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">demande de tronçon, à la reconnexion</text>
+          <text x="495.0" y="150.0" font-size="10" fill="#b07d12" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">ou quand un rang manque après 200 ms</text>
+          <line x1="300.0" y1="190.0" x2="686.0" y2="190.0" stroke="#b07d12" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#pont-a)"/>
+          <text x="495.0" y="184.0" font-size="10.5" fill="#b07d12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">tronçons, en binaire (46 o par sortie)</text>
+          <line x1="686.0" y1="222.0" x2="300.0" y2="222.0" stroke="#52615a" stroke-width="1.4" marker-end="url(#pont-g)"/>
+          <text x="495.0" y="216.0" font-size="10.5" fill="#52615a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4">accusé de rang, toutes les 500 ms</text>
+          <rect x="690.0" y="40.0" width="294.0" height="66.0" rx="6" fill="#ffffff" stroke="#195744" stroke-width="1"/>
+          <text x="702.0" y="59.0" font-size="11.5" fill="#1d302a" font-weight="700">Pont à reprise</text>
+          <text x="702.0" y="76.0" font-size="10" fill="#52615a">remet l'ordre de s ; comble par le journal</text>
+          <text x="702.0" y="91.0" font-size="10" fill="#52615a">une boucle MQTT jamais interrompue</text>
+          <rect x="690.0" y="124.0" width="294.0" height="52.0" rx="6" fill="#ffffff" stroke="#b07d12" stroke-width="1"/>
+          <text x="702.0" y="143.0" font-size="11.5" fill="#1d302a" font-weight="700">Copie du journal</text>
+          <text x="702.0" y="160.0" font-size="10" fill="#52615a">écrite avant de publier ; journal du suivant</text>
+          <rect x="690.0" y="194.0" width="294.0" height="52.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="702.0" y="213.0" font-size="11.5" fill="#1d302a" font-weight="700">Courtier du secours</text>
+          <text x="702.0" y="230.0" font-size="10" fill="#52615a">les abonnés locaux lisent ici</text>
+          <line x1="837.0" y1="106.0" x2="837.0" y2="122.0" stroke="#195744" stroke-width="2" marker-end="url(#pont-v)"/>
+          <line x1="837.0" y1="176.0" x2="837.0" y2="192.0" stroke="#195744" stroke-width="2" marker-end="url(#pont-v)"/>
+          <rect x="690.0" y="266.0" width="294.0" height="66.0" rx="6" fill="#ffffff" stroke="#d4ddd4" stroke-width="1"/>
+          <text x="702.0" y="285.0" font-size="11.5" fill="#1d302a" font-weight="700">Hub de secours · base · écrans</text>
+          <text x="702.0" y="302.0" font-size="10" fill="#52615a">comblent leurs trous par la copie du journal</text>
+          <text x="702.0" y="317.0" font-size="10" fill="#52615a">répondent à Unschedule</text>
+          <line x1="837.0" y1="246.0" x2="837.0" y2="264.0" stroke="#195744" stroke-width="2" marker-end="url(#pont-v)"/>
+          <path d="M 690 300 C 640 300 640 150 688 150" fill="none" stroke="#b07d12" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#pont-a)"/>
+          <text x="16.0" y="290.0" font-size="11" fill="#52615a">Jamais in/, req/, cmd/, res/ : l'ACL du compte « secours » le tient.</text>
+          <text x="16.0" y="308.0" font-size="11" fill="#52615a">Le pont va toujours du porteur de l'époque vers les autres : aucune boucle.</text>
+  <text x="16" y="373" font-size="12" fill="#52615a" font-style="italic">Le tampon est le journal de l'actif, sur disque : le pont redemande exactement ce qui lui manque, à chaque reconnexion et à chaque rang qui tarde.</text>
+</svg>

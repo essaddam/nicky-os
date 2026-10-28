@@ -1,0 +1,21 @@
+
+running 16 tests
+test tests::all_equipment_channel_and_action_ids_are_unique ... ok
+test tests::command_contracts_return_intents_without_mutating_state ... ok
+test tests::contact_true_means_closed ... ok
+test tests::credential_namespace_is_excluded_even_under_composites ... ok
+test tests::exact_binary_words_and_unknown_are_distinct ... ok
+test tests::native_single_is_an_occurrence_only ... ok
+test tests::rename_rejects_old_epoch_even_when_slot_still_exists ... ok
+test tests::repeated_value_refreshes_received_without_changed ... ok
+test tests::retained_store_has_five_row96_and_no_action_state ... ok
+test tests::reused_slot_generation_mismatch_rejects_read ... ok
+test tests::scale_and_non_finite_values_are_checked ... ok
+test tests::strategies_produce_same_outcomes_and_store ... ok
+test tests::topic_rename_preserves_immutable_native_and_canonical_identities ... ok
+test tests::two_single_events_have_two_identities_and_no_retained_state ... ok
+test tests::units_and_integer_payload_are_preserved ... ok
+test tests::unknown_property_does_not_create_a_point_or_value ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

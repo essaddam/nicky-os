@@ -1,0 +1,212 @@
+code d'origine : tous les tests passent
+
+détectée        une issue tardive touche la demande qui occupe la case (génération ignorée)
+                → 2 test(s) en échec : une_case_reutilisee_change_de_generation, chaque_issue_tombe_sur_sa_demande
+détectée        le hub ne valide plus les arguments contre la forme
+                → 1 test(s) en échec : une_valeur_hors_de_sa_forme_n_atteint_aucun_module
+détectée        la voie fusionne aussi les appuis
+                → 1 test(s) en échec : les_consignes_se_fusionnent_les_appuis_jamais
+détectée        la voie fusionne une consigne par-dessus un autre ordre
+                → 1 test(s) en échec : les_consignes_se_fusionnent_les_appuis_jamais
+détectée        une décision tombe sur une autre carte que celle montrée
+                → 1 test(s) en échec : une_retenue_n_approuve_que_ce_qu_elle_montre
+détectée        la bascule renvoie ce qui était remis à un module
+                → 3 test(s) en échec : une_execution_reprend_sur_le_secours_entre_deux_etapes, aucun_ordre_n_est_rejoue, une_lecture_d_avant_la_reprise_ne_confirme_pas
+détectée        un module mort rend « non envoyé » au lieu d'« incertain »
+                → 1 test(s) en échec : aucun_ordre_n_est_rejoue
+détectée        la copie ne tient pas la dernière commande des ordres
+                → 5 test(s) en échec : ord_ne_dit_pas_qui, la_copie_et_l_etat_complet_finissent_identiques, la_derniere_commande_se_lit_partout_pareil, chacun_connait_l_appareil_l_ordre_et_sa_structure, un_bail_se_retablit_apres_la_bascule_et_le_redemarrage
+détectée        la copie ne tient pas les reçus
+                → 3 test(s) en échec : ord_ne_dit_pas_qui, la_copie_et_l_etat_complet_finissent_identiques, chacun_connait_l_appareil_l_ordre_et_sa_structure
+détectée        la copie garde l'échéance monotone de l'actif
+                → 3 test(s) en échec : aucun_ordre_n_est_rejoue, une_echeance_se_verifie_a_chaque_frontiere, une_retenue_n_approuve_que_ce_qu_elle_montre
+détectée        le lot ne remet pas à zéro la fiche d'un ordre libéré
+                → 1 test(s) en échec : un_appareil_retire_n_est_plus_commande_et_sa_place_ne_garde_rien
+détectée        un client à vieux cache commande le nouvel occupant de la place
+                → 1 test(s) en échec : un_appareil_retire_n_est_plus_commande_et_sa_place_ne_garde_rien
+détectée        la garde ne lit que la pièce de l'appareil virtuel, pas celles de ses cibles et membres
+                → 4 test(s) en échec : un_automatisme_ne_choisit_pas_de_sous_ensemble, un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble, une_ancienne_approbation_ne_vaut_pas_pour_la_carte_renouvelee, un_groupe_approuve_se_repartit
+détectée        un ordre de groupe se dit confirmé dès qu'une cible a obéi
+                → 3 test(s) en échec : un_appareil_virtuel_compose_sans_posseder, un_groupe_coupe_par_la_bascule_garde_son_compte, un_groupe_approuve_se_repartit
+détectée        le hub ne suit plus les demandes héritées d'une bascule ou d'un arrêt
+                → 1 test(s) en échec : aucun_ordre_n_est_rejoue
+détectée        une valeur en mouvement confirme en passant par la cible
+                → 1 test(s) en échec : aucun_ordre_n_est_rejoue
+détectée        un bail échu pendant un arrêt n'est plus rétabli
+                → 1 test(s) en échec : un_bail_se_retablit_apres_la_bascule_et_le_redemarrage
+détectée        un écran garde l'ancienne structure d'un ordre redéclaré
+                → 1 test(s) en échec : une_structure_qui_change_met_l_automatisme_a_revoir
+détectée        B1 · le canal commande hors de ses pièces
+                → 1 test(s) en échec : une_approbation_reverifie_le_permis
+détectée        B1 · la demande prend l'acteur que le client déclare
+                → 2 test(s) en échec : un_client_ne_declare_pas_son_autorite, un_invite_ne_commande_que_ses_pieces
+détectée        B2 · un appui part sans attendre l'accusé du secours
+                → 3 test(s) en échec : un_secours_qui_decroche_est_inscrit_avant_l_envoi, une_revocation_avant_la_remise_ne_laisse_rien_partir, un_appui_n_est_ni_perdu_ni_double_par_la_bascule
+détectée        B2 · une tentative ambiguë est refaite après une reprise non sûre
+                → 3 test(s) en échec : une_reprise_non_sure_refuse_une_tentative_ambigue, un_secours_qui_decroche_est_inscrit_avant_l_envoi, une_premiere_tentative_d_avant_la_reprise_reste_ambigue
+détectée        B2 · l'actif envoie sans inscrire le décrochage chez le témoin
+                → 2 test(s) en échec : un_secours_qui_decroche_est_inscrit_avant_l_envoi, une_revocation_attend_l_accuse_du_secours
+détectée        B3 · une clé plus ancienne que la fenêtre repart
+                → 1 test(s) en échec : un_appel_retente_retrouve_son_recu_et_un_vieux_rejeu_est_refuse
+détectée        B3 · la même clé pour un autre ordre passe pour la même demande
+                → 2 test(s) en échec : un_appel_retente_retrouve_son_recu_et_un_vieux_rejeu_est_refuse, des_arguments_differents_ne_passent_pas_pour_les_memes
+détectée        B4 · un numéro d'une autre époque désigne la demande de la case
+                → 1 test(s) en échec : un_numero_d_une_autre_epoque_ne_designe_rien
+détectée        B5 · un texte privé voyage en clair sur cmd/ et ord/
+                → 1 test(s) en échec : un_texte_prive_ne_sort_que_par_le_canal_prive
+détectée        B5 · un texte privé reste en mémoire après la conclusion
+                → 3 test(s) en échec : chacun_connait_l_appareil_l_ordre_et_sa_structure, la_copie_et_l_etat_complet_finissent_identiques, un_texte_prive_ne_sort_que_par_le_canal_prive
+détectée        I1 · l'approbation ne revérifie pas les droits du demandeur
+                → 1 test(s) en échec : une_approbation_reverifie_le_permis
+détectée        I1 · la fin d'un permis ne fait rien tomber
+                → 1 test(s) en échec : la_fin_d_une_invitation_reveille_le_hub
+détectée        I1 · une révocation laisse partir ce qui attend dans la voie
+                → 1 test(s) en échec : une_revocation_retire_ce_qui_n_est_pas_parti
+détectée        I2 · l'échéance de l'appelant est ignorée
+                → 1 test(s) en échec : une_echeance_se_verifie_a_chaque_frontiere
+détectée        I2 · une retenue échue s'approuve tant que le balayage n'est pas passé
+                → 2 test(s) en échec : une_echeance_se_verifie_a_chaque_frontiere, une_retenue_n_approuve_que_ce_qu_elle_montre
+détectée        I3 · une approbation vaut pour une forme qu'elle n'a pas montrée
+                → 4 test(s) en échec : un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble, une_ancienne_approbation_ne_vaut_pas_pour_la_carte_renouvelee, une_carte_ne_s_approuve_que_sous_sa_forme, une_retenue_n_approuve_que_ce_qu_elle_montre
+détectée        I4 · une lecture d'avant la reprise confirme une demande héritée
+                → 1 test(s) en échec : une_lecture_d_avant_la_reprise_ne_confirme_pas
+détectée        I4 · une lecture d'avant l'envoi prouve l'ordre en vol
+                → 1 test(s) en échec : une_lecture_commencee_avant_l_envoi_ne_prouve_rien
+détectée        I5 · une variation avant la preuve passe pour l'œuvre de l'ordre
+                → 1 test(s) en échec : les_workflows_interrogent_les_ordres
+détectée        I5 · une confirmation sans variation passe pour l'œuvre de l'ordre
+                → 1 test(s) en échec : les_workflows_interrogent_les_ordres
+détectée        I5 · un geste à la main après la preuve passe inaperçu
+                → 2 test(s) en échec : un_bail_ne_retablit_que_ce_qu_il_possede, les_workflows_interrogent_les_ordres
+détectée        I6 · une issue tardive remplace la dernière commande
+                → 1 test(s) en échec : la_derniere_commande_est_la_derniere_admise
+détectée        I7 · un groupe approuvé ne passe pas par le répartiteur
+                → 3 test(s) en échec : un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble, une_ancienne_approbation_ne_vaut_pas_pour_la_carte_renouvelee, un_groupe_approuve_se_repartit
+détectée        I8 · la copie ne rejoue pas la progression d'un groupe
+                → 3 test(s) en échec : la_copie_et_l_etat_complet_finissent_identiques, chacun_connait_l_appareil_l_ordre_et_sa_structure, un_groupe_coupe_par_la_bascule_garde_son_compte
+détectée        I8 · des exécutions font une confirmation
+                → 1 test(s) en échec : un_groupe_attend_toutes_ses_cibles_meme_conclues_aussitot
+détectée        I9 · la mère conclut dès sa première fille
+                → 5 test(s) en échec : une_mere_n_a_pas_d_echeance, un_groupe_attend_toutes_ses_cibles_meme_conclues_aussitot, un_appareil_virtuel_compose_sans_posseder, un_groupe_approuve_se_repartit, un_groupe_coupe_par_la_bascule_garde_son_compte
+détectée        I9 · la mère garde une échéance à elle
+                → 1 test(s) en échec : une_mere_n_a_pas_d_echeance
+détectée        I10 · un ordre de groupe commande les cibles des autres
+                → 1 test(s) en échec : deux_ordres_de_groupe_ont_chacun_leurs_cibles
+détectée        I10 · un groupe cible l'ordre d'un autre groupe
+                → 1 test(s) en échec : une_composition_invalide_est_refusee
+détectée        I11 · une clé qui n'est plus déclarée reste en service
+                → 1 test(s) en échec : une_redeclaration_garde_les_numeros_par_cle
+détectée        I12 · la 51e retenue est acceptée
+                → 1 test(s) en échec : les_plafonds_refusent_avant_de_muter
+détectée        I13 · une sortie ne fait pas avancer le rang de sa pièce
+                → 1 test(s) en échec : un_ecran_de_piece_voit_ses_trous
+détectée        I14 · un code hors du dictionnaire passe entre les bornes
+                → 1 test(s) en échec : la_validation_suit_la_forme_sur_un_corpus_fixe
+détectée        I14 · un objet hors de son schéma passe
+                → 1 test(s) en échec : la_validation_suit_la_forme_sur_un_corpus_fixe
+détectée        I20 · l'instantané du moteur oublie les baux
+                → 1 test(s) en échec : un_bail_se_retablit_apres_la_bascule_et_le_redemarrage
+détectée        D1 · un indice vaut une preuve : la voix reconnue a les droits de sa personne, même pour le sensible
+                → 2 test(s) en échec : les_decisions_suivent_le_corpus, une_voix_reconnue_ne_sert_que_le_confort
+détectée        D1 · une voix reconnue ne vaut rien pour le confort
+                → 1 test(s) en échec : une_voix_reconnue_vaut_sa_personne_pour_le_confort
+détectée        D1 · la voix reconnue vaut une preuve personnelle
+                → 1 test(s) en échec : une_voix_reconnue_ne_sert_que_le_confort
+détectée        D1 · une session personnelle échue garde sa personne
+                → 1 test(s) en échec : une_tablette_partagee_n_est_personne_sans_session
+détectée        D2 · la personne ne compte plus : le canal décide seul
+                → 8 test(s) en échec : une_voix_reconnue_vaut_sa_personne_pour_le_confort, les_decisions_suivent_le_corpus, la_fin_d_une_invitation_reveille_le_hub, un_agent_garde_les_plafonds_de_sa_personne_et_de_son_canal, un_invite_ne_fait_pas_tout_dans_sa_piece, une_tablette_partagee_n_est_personne_sans_session, une_voix_reconnue_ne_sert_que_le_confort, un_invite_ne_commande_que_ses_pieces
+détectée        D2 · une personne commande hors de ses pièces
+                → 8 test(s) en échec : les_decisions_suivent_le_corpus, un_automatisme_ne_choisit_pas_de_sous_ensemble, un_agent_garde_les_plafonds_de_sa_personne_et_de_son_canal, un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble, une_revocation_avant_la_remise_ne_laisse_rien_partir, une_voix_reconnue_ne_sert_que_le_confort, une_routine_lancee_garde_les_droits_de_qui_la_lance, une_tablette_partagee_n_est_personne_sans_session
+détectée        D2 · une chambre ne retient plus un canal gardé
+                → 3 test(s) en échec : les_decisions_suivent_le_corpus, un_agent_garde_les_plafonds_de_sa_personne_et_de_son_canal, un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble
+détectée        D3 · quiconque peut commander approuve
+                → 2 test(s) en échec : seul_un_habilite_approuve, un_invite_ne_fait_pas_tout_dans_sa_piece
+détectée        D3 · un agent ou un satellite approuve
+                → 1 test(s) en échec : seul_un_habilite_approuve
+détectée        D3 · une retenue se décide sans habilitation
+                → 4 test(s) en échec : seul_un_approbateur_habilite_decide, un_agent_garde_les_plafonds_de_sa_personne_et_de_son_canal, un_invite_ne_fait_pas_tout_dans_sa_piece, un_secours_aux_droits_incertains_retient_le_sensible
+détectée        D4 · une ancienne révision décide de la carte renouvelée
+                → 3 test(s) en échec : une_ancienne_approbation_ne_vaut_pas_pour_la_carte_renouvelee, un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble, une_carte_ne_s_approuve_que_sous_sa_forme
+détectée        W1 · un client déclare l'autorité d'une exécution
+                → 1 test(s) en échec : un_client_ne_declare_pas_son_autorite
+détectée        D5 · un client se dit fille d'une demande vivante et hérite de son autorité
+                → 1 test(s) en échec : un_client_ne_declare_pas_son_autorite
+détectée        D6 · la remise au module ne revérifie pas les droits
+                → 1 test(s) en échec : une_revocation_avant_la_remise_ne_laisse_rien_partir
+détectée        D6 · une personne révoquée laisse partir ce qui attend l'accusé du secours
+                → 1 test(s) en échec : une_revocation_avant_la_remise_ne_laisse_rien_partir
+détectée        D7 · la fin d'une personne ne réveille pas le hub
+                → 1 test(s) en échec : la_fin_d_une_invitation_reveille_le_hub
+détectée        D7 · la fin d'une personne ne fait rien tomber
+                → 2 test(s) en échec : la_fin_d_une_invitation_reveille_le_hub, une_retenue_ne_garde_pas_une_autorisation_echue
+détectée        D8 · ord/ porte la personne
+                → 1 test(s) en échec : ord_ne_dit_pas_qui
+détectée        D8 · le pair ne reçoit pas l'identité
+                → 4 test(s) en échec : seul_un_approbateur_habilite_decide, ord_ne_dit_pas_qui, la_copie_et_l_etat_complet_finissent_identiques, chacun_connait_l_appareil_l_ordre_et_sa_structure
+détectée        D9 · désarmer se retient et s'approuve par le chemin générique
+                → 1 test(s) en échec : desarmer_ne_passe_jamais_par_les_ordres
+détectée        D9 · une table ou un profil ouvre le désarmement
+                → 1 test(s) en échec : les_decisions_suivent_le_corpus
+détectée        M1 · l'instantané relit les comptes par position
+                → 1 test(s) en échec : les_comptes_se_relisent_par_leur_nom
+détectée        M1 · la copie garde ses positions
+                → 1 test(s) en échec : les_comptes_se_relisent_par_leur_nom
+détectée        M2 · la décision est journalisée au nom du demandeur
+                → 1 test(s) en échec : seul_un_approbateur_habilite_decide
+détectée        M3 · un secours promu sans reprise sûre croit ses droits frais
+                → 2 test(s) en échec : une_revocation_attend_l_accuse_du_secours, un_secours_aux_droits_incertains_retient_le_sensible
+détectée        M3 · un secours aux droits incertains laisse passer le sensible
+                → 3 test(s) en échec : les_decisions_suivent_le_corpus, un_secours_aux_droits_incertains_retient_le_sensible, une_revocation_attend_l_accuse_du_secours
+détectée        M3 · une révocation n'attend pas l'accusé du secours
+                → 1 test(s) en échec : une_revocation_attend_l_accuse_du_secours
+détectée        M3 · un adulte approuve le sensible sur un secours aux droits incertains
+                → 1 test(s) en échec : un_secours_aux_droits_incertains_retient_le_sensible
+détectée        M5 · le compteur d'un ordre sature à 255
+                → 1 test(s) en échec : en_cours_compte_au_dela_de_255
+détectée        M6 · l'empreinte concatène les textes
+                → 1 test(s) en échec : des_arguments_differents_ne_passent_pas_pour_les_memes
+détectée        M7 · une première tentative d'avant la reprise repart
+                → 1 test(s) en échec : une_premiere_tentative_d_avant_la_reprise_reste_ambigue
+détectée        M7 · une demande qui ne dit pas sa session passe pour neuve
+                → 1 test(s) en échec : une_premiere_tentative_d_avant_la_reprise_reste_ambigue
+détectée        M7 · une reprise sûre plus tard efface l'ambiguïté d'avant
+                → 1 test(s) en échec : une_premiere_tentative_d_avant_la_reprise_reste_ambigue
+détectée        M8 · deux textes privés dans une forme
+                → 1 test(s) en échec : une_declaration_hors_des_bornes_des_droits_est_refusee
+détectée        W1 · une routine lancée par une personne prend le mandat de son responsable
+                → 2 test(s) en échec : un_bail_ne_retablit_que_ce_qu_il_possede, une_routine_lancee_garde_les_droits_de_qui_la_lance
+détectée        W1 · un automatisme commande hors de son manifeste
+                → 1 test(s) en échec : un_mandat_ne_couvre_que_son_manifeste
+détectée        W1 · un déclencheur ouvert lance une action sensible sans décision
+                → 1 test(s) en échec : un_declencheur_ouvert_ne_lance_pas_le_sensible_sans_decision
+détectée        W2 · un responsable accorde un mandat qu'il n'approuverait pas
+                → 2 test(s) en échec : un_mandat_ne_depasse_pas_son_responsable, un_automatisme_ne_survit_pas_a_son_responsable_sauf_adopte
+détectée        W2 · un non-propriétaire fait adopter un automatisme par le foyer
+                → 1 test(s) en échec : un_automatisme_ne_survit_pas_a_son_responsable_sauf_adopte
+détectée        W2 · un mandat refusé à l'exécution ne met pas l'automatisme à revoir
+                → 2 test(s) en échec : un_automatisme_ne_choisit_pas_de_sous_ensemble, un_automatisme_ne_survit_pas_a_son_responsable_sauf_adopte
+détectée        W3 · un bail s'ouvre sur un ordre refusé
+                → 1 test(s) en échec : un_bail_ne_retablit_que_ce_qu_il_possede
+détectée        W3 · un bail rétablit par-dessus un humain
+                → 1 test(s) en échec : un_bail_ne_retablit_que_ce_qu_il_possede
+détectée        W4 · une exécution reprend dans un autre programme
+                → 1 test(s) en échec : une_execution_ne_change_pas_de_programme
+détectée        W5 · les exécutions ne passent pas au secours
+                → 1 test(s) en échec : une_execution_reprend_sur_le_secours_entre_deux_etapes
+détectée        W6 · pas de quota de départs
+                → 1 test(s) en échec : deux_automatismes_ne_se_relancent_pas_sans_fin
+détectée        W6 · une même transition relance l'automatisme
+                → 1 test(s) en échec : deux_automatismes_ne_se_relancent_pas_sans_fin
+détectée        choix · un groupe exécute d'office son sous-ensemble permis
+                → 1 test(s) en échec : un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble
+détectée        choix · un automatisme se voit annoncer un sous-ensemble au lieu d'être mis à revoir
+                → 1 test(s) en échec : un_automatisme_ne_choisit_pas_de_sous_ensemble
+détectée        choix · un autre que le demandeur confirme le sous-ensemble
+                → 1 test(s) en échec : un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble
+détectée        choix · confirmer le sous-ensemble vaut approbation
+                → 1 test(s) en échec : un_groupe_avec_une_cible_interdite_annonce_le_sous_ensemble
+détectée        choix · un automatisme adopté par le foyer meurt avec son auteur
+                → 2 test(s) en échec : un_automatisme_ne_survit_pas_a_son_responsable_sauf_adopte, une_urgence_est_un_mandat_du_foyer
+
+104 mutations détectées sur 104 ; code restauré

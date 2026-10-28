@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 492" width="1000" height="492" role="img" aria-labelledby="forme-t forme-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="forme-t">La forme d'un ordre</title>
+  <desc id="forme-d">Trois fiches, octet par octet. La forme, 24 octets partagés : début de ses paramètres et de ses valeurs attendues, la clé de la valeur qui confirme, le suivi, la tolérance, le schéma d'un objet court, leur nombre, l'effet, le retour, les drapeaux. Un paramètre, 20 octets : bornes d'ordre, pas, dictionnaire, la clé de la valeur qu'il règle, nature, échelle, unité. Une valeur attendue, 4 octets. Quatre exemples : la luminosité d'une lampe, ouvrir un volet RTS, démarrer un aspirateur, une annonce au texte privé.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="492" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="forme-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="forme-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="forme-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="forme-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="forme-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="forme-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="forme-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="forme-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="forme-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="forme-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="forme-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="forme-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="forme-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="forme-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="forme-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="forme-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="forme-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="forme-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="forme-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="forme-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="forme-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="forme-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="forme-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="forme-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="forme-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="forme-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="forme-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="forme-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="forme-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="forme-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LA STRUCTURE D'UN ORDRE, OCTET PAR OCTET</text>
+          <text x="40.0" y="52.0" font-size="11" fill="#195744" font-weight="700">Forme · 24 o, partagée</text>
+          <rect x="41.0" y="60.0" width="142.0" height="38" rx="5" fill="url(#forme-h-vert)"/>
+          <text x="112.0" y="77.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">params</text>
+          <text x="112.0" y="89.0" font-size="8.5" fill="#ffffff" text-anchor="middle">4 o</text>
+          <rect x="185.0" y="60.0" width="142.0" height="38" rx="5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".8"/>
+          <text x="256.0" y="77.0" font-size="9" fill="#195744" font-weight="700" text-anchor="middle">attendus</text>
+          <text x="256.0" y="89.0" font-size="8.5" fill="#52615a" text-anchor="middle">4 o</text>
+          <rect x="329.0" y="60.0" width="70.0" height="38" rx="5" fill="url(#forme-h-vert)"/>
+          <text x="364.0" y="77.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">confirme</text>
+          <text x="364.0" y="89.0" font-size="8.5" fill="#ffffff" text-anchor="middle">2 o</text>
+          <rect x="401.0" y="60.0" width="70.0" height="38" rx="5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".8"/>
+          <text x="436.0" y="77.0" font-size="9" fill="#195744" font-weight="700" text-anchor="middle">suivi_s</text>
+          <text x="436.0" y="89.0" font-size="8.5" fill="#52615a" text-anchor="middle">2 o</text>
+          <rect x="473.0" y="60.0" width="70.0" height="38" rx="5" fill="url(#forme-h-vert)"/>
+          <text x="508.0" y="77.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">tol.</text>
+          <text x="508.0" y="89.0" font-size="8.5" fill="#ffffff" text-anchor="middle">2 o</text>
+          <rect x="545.0" y="60.0" width="70.0" height="38" rx="5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".8"/>
+          <text x="580.0" y="77.0" font-size="9" fill="#195744" font-weight="700" text-anchor="middle">schéma</text>
+          <text x="580.0" y="89.0" font-size="8.5" fill="#52615a" text-anchor="middle">2 o</text>
+          <rect x="617.0" y="60.0" width="70.0" height="38" rx="5" fill="url(#forme-h-vert)"/>
+          <text x="652.0" y="77.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">nb</text>
+          <text x="652.0" y="89.0" font-size="8.5" fill="#ffffff" text-anchor="middle">2 o</text>
+          <rect x="689.0" y="60.0" width="34.0" height="38" rx="5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".8"/>
+          <text x="706.0" y="77.0" font-size="9" fill="#195744" font-weight="700" text-anchor="middle">effet</text>
+          <text x="706.0" y="89.0" font-size="8.5" fill="#52615a" text-anchor="middle">1 o</text>
+          <rect x="725.0" y="60.0" width="34.0" height="38" rx="5" fill="url(#forme-h-vert)"/>
+          <text x="742.0" y="77.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">retour</text>
+          <text x="742.0" y="89.0" font-size="8.5" fill="#ffffff" text-anchor="middle">1 o</text>
+          <rect x="761.0" y="60.0" width="34.0" height="38" rx="5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".8"/>
+          <text x="778.0" y="77.0" font-size="9" fill="#195744" font-weight="700" text-anchor="middle">drap.</text>
+          <text x="778.0" y="89.0" font-size="8.5" fill="#52615a" text-anchor="middle">1 o</text>
+          <rect x="797.0" y="60.0" width="106.0" height="38" rx="5" fill="url(#forme-h-vert)"/>
+          <text x="850.0" y="77.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">rés.</text>
+          <text x="850.0" y="89.0" font-size="8.5" fill="#ffffff" text-anchor="middle">3 o</text>
+          <text x="40.0" y="132.0" font-size="11" fill="#1b5873" font-weight="700">Param · 20 o, un par paramètre</text>
+          <rect x="41.0" y="140.0" width="142.0" height="38" rx="5" fill="url(#forme-h-bleu)"/>
+          <text x="112.0" y="157.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">min</text>
+          <text x="112.0" y="169.0" font-size="8.5" fill="#ffffff" text-anchor="middle">4 o</text>
+          <rect x="185.0" y="140.0" width="142.0" height="38" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="256.0" y="157.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">max</text>
+          <text x="256.0" y="169.0" font-size="8.5" fill="#52615a" text-anchor="middle">4 o</text>
+          <rect x="329.0" y="140.0" width="70.0" height="38" rx="5" fill="url(#forme-h-bleu)"/>
+          <text x="364.0" y="157.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">pas</text>
+          <text x="364.0" y="169.0" font-size="8.5" fill="#ffffff" text-anchor="middle">2 o</text>
+          <rect x="401.0" y="140.0" width="70.0" height="38" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="436.0" y="157.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">dico</text>
+          <text x="436.0" y="169.0" font-size="8.5" fill="#52615a" text-anchor="middle">2 o</text>
+          <rect x="473.0" y="140.0" width="70.0" height="38" rx="5" fill="url(#forme-h-bleu)"/>
+          <text x="508.0" y="157.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">règle</text>
+          <text x="508.0" y="169.0" font-size="8.5" fill="#ffffff" text-anchor="middle">2 o</text>
+          <rect x="545.0" y="140.0" width="34.0" height="38" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="562.0" y="157.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">nat.</text>
+          <text x="562.0" y="169.0" font-size="8.5" fill="#52615a" text-anchor="middle">1 o</text>
+          <rect x="581.0" y="140.0" width="34.0" height="38" rx="5" fill="url(#forme-h-bleu)"/>
+          <text x="598.0" y="157.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">éch.</text>
+          <text x="598.0" y="169.0" font-size="8.5" fill="#ffffff" text-anchor="middle">1 o</text>
+          <rect x="617.0" y="140.0" width="34.0" height="38" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="634.0" y="157.0" font-size="9" fill="#1b5873" font-weight="700" text-anchor="middle">unité</text>
+          <text x="634.0" y="169.0" font-size="8.5" fill="#52615a" text-anchor="middle">1 o</text>
+          <rect x="653.0" y="140.0" width="106.0" height="38" rx="5" fill="url(#forme-h-bleu)"/>
+          <text x="706.0" y="157.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">rés.</text>
+          <text x="706.0" y="169.0" font-size="8.5" fill="#ffffff" text-anchor="middle">3 o</text>
+          <text x="40.0" y="212.0" font-size="11" fill="#94660a" font-weight="700">Valeurs attendues · 4 o chacune</text>
+          <rect x="41.0" y="220.0" width="142.0" height="38" rx="5" fill="url(#forme-h-ambre)"/>
+          <text x="112.0" y="237.0" font-size="9" fill="#ffffff" font-weight="700" text-anchor="middle">attendu</text>
+          <text x="112.0" y="249.0" font-size="8.5" fill="#ffffff" text-anchor="middle">4 o</text>
+          <rect x="185.0" y="220.0" width="142.0" height="38" rx="5" fill="#fbefd3" stroke="#e0a12a" stroke-opacity=".8"/>
+          <text x="256.0" y="237.0" font-size="9" fill="#94660a" font-weight="700" text-anchor="middle">attendu</text>
+          <text x="256.0" y="249.0" font-size="8.5" fill="#52615a" text-anchor="middle">4 o</text>
+          <text x="500.0" y="248.0" font-size="10.5" fill="#1b5873" font-weight="700">« confirme » et « règle » : la clé d'une valeur, sur 16 bits</text>
+          <rect x="40" y="286" width="452" height="58" rx="12" fill="url(#forme-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#forme-o)"/>
+          <circle cx="55" cy="305" r="4.5" fill="url(#forme-h-vert)"/>
+          <text x="67.0" y="309.0" font-size="11.5" fill="#195744" font-weight="700">Luminosité d'une lampe</text>
+          <text x="54.0" y="327.0" font-size="10" fill="#52615a">consigne · retour état : la valeur « brightness », ± 2 · 1 paramètre 0–254</text>
+          <rect x="510" y="286" width="452" height="58" rx="12" fill="url(#forme-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#forme-o)"/>
+          <circle cx="525" cy="305" r="4.5" fill="url(#forme-h-bleu)"/>
+          <text x="537.0" y="309.0" font-size="11.5" fill="#1b5873" font-weight="700">Ouvrir un volet RTS</text>
+          <text x="524.0" y="327.0" font-size="10" fill="#52615a">appui · retour pont : « exécuté » au mieux · aucun paramètre, aucune valeur</text>
+          <rect x="40" y="356" width="452" height="58" rx="12" fill="url(#forme-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#forme-o)"/>
+          <circle cx="55" cy="375" r="4.5" fill="url(#forme-h-ambre)"/>
+          <text x="67.0" y="379.0" font-size="11.5" fill="#94660a" font-weight="700">Démarrer un aspirateur</text>
+          <text x="54.0" y="397.0" font-size="10" fill="#52615a">appui · accusé, puis l'état ∈ {1, 5} · suivi 60 s</text>
+          <rect x="510" y="356" width="452" height="58" rx="12" fill="url(#forme-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#forme-o)"/>
+          <circle cx="525" cy="375" r="4.5" fill="url(#forme-h-rouge)"/>
+          <text x="537.0" y="379.0" font-size="11.5" fill="#8b3b22" font-weight="700">Une annonce</text>
+          <text x="524.0" y="397.0" font-size="10" fill="#52615a">appui · texte privé : ni sur cmd/, ni sur ord/ ; par le canal privé</text>
+  <text x="18" y="469" font-size="12" fill="#52615a" font-style="italic">Ce que la V7 met dans meta/, rangé en fiches de taille fixe. La v2 cite les valeurs par leur clé, et vérifie le dictionnaire d'une énumération et le</text>
+  <text x="18" y="486" font-size="12" fill="#52615a" font-style="italic">schéma d'un objet (revue I11, I14).</text>
+</svg>

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 484" width="1000" height="484" role="img" aria-labelledby="separes-t separes-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="separes-t">Les valeurs et les ordres : deux registres</title>
+  <desc id="separes-d">Au centre, l'appareil : une fiche de 16 octets qui dit où commencent ses valeurs et ses ordres, sa pièce et sa composition. À gauche, le registre des valeurs, numéros 1 234 à 1 237 pour la lampe du salon ; le volet RTS n'en a aucune. À droite, le registre des ordres, numéros 87 à 89 pour la même lampe, et les quatre ordres du volet RTS. Deux liens par référence vont des ordres vers les valeurs : le retour (la valeur qui prouve l'ordre) et le paramètre (la valeur qu'il règle).</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="484" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="separes-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="separes-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <radialGradient id="separes-sol"><stop offset="0" stop-color="#1d302a" stop-opacity=".22"/><stop offset="1" stop-color="#1d302a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="separes-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="separes-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="separes-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="separes-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="separes-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="separes-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="separes-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="separes-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="separes-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="separes-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="separes-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="separes-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="separes-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="separes-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="separes-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="separes-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="separes-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="separes-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="separes-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="separes-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="separes-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LES VALEURS ET LES ORDRES : DEUX REGISTRES, UN LIEN PAR RÉFÉRENCE</text>
+          <ellipse cx="508.0" cy="191.0" rx="124.0" ry="11" fill="url(#separes-sol)"/>
+          <polygon points="396,64 412,55.2 626,55.2 610,64" fill="url(#separes-t-ambre)"/>
+          <polygon points="610,64 626,55.2 626,169.2 610,184" fill="url(#separes-s-ambre)"/>
+          <rect x="390" y="64" width="220" height="120" rx="8" fill="url(#separes-f-ambre)" stroke="#e0a12a" stroke-opacity=".5"/>
+          <path d="M390 98 V72 a8 8 0 0 1 8 -8 H602 a8 8 0 0 1 8 8 V98 z" fill="url(#separes-h-ambre)"/>
+          <g transform="translate(402.0 72.0) scale(0.7500)" fill="none" stroke="#ffffff" stroke-width="2.53" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="428.0" y="86.5" font-size="13" fill="#ffffff" font-weight="700">L'appareil</text>
+          <text x="598.0" y="86.5" font-size="10" fill="#ffffff" text-anchor="end" opacity=".9">16 o</text>
+          <text x="500.0" y="130.0" font-size="10.5" fill="#52615a" text-anchor="middle">ses valeurs : une plage</text>
+          <text x="500.0" y="146.0" font-size="10.5" fill="#52615a" text-anchor="middle">ses ordres : une plage</text>
+          <text x="500.0" y="162.0" font-size="10.5" fill="#52615a" text-anchor="middle">sa pièce, sa composition</text>
+          <rect x="16" y="40" width="330" height="330" rx="20" fill="#e3f1e9" fill-opacity=".45" stroke="#3d9a75" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(32.0 51.0) scale(0.6667)" fill="none" stroke="#195744" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z M12 9a3 3 0 1 1 0 6a3 3 0 1 1 0-6z"/></g>
+          <text x="54.0" y="64.0" font-size="11" fill="#195744" font-weight="700" letter-spacing=".07em">LES VALEURS : CE QUE L'APPAREIL EST</text>
+          <rect x="32.0" y="80.0" width="90.0" height="32" rx="5" fill="url(#separes-h-vert)"/>
+          <text x="77.0" y="99.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">1 234</text>
+          <text x="132.0" y="100.0" font-size="10.5" fill="#1d302a" font-weight="700">salon_lampe/on</text>
+          <rect x="32.0" y="124.0" width="90.0" height="32" rx="5" fill="url(#separes-h-vert)"/>
+          <text x="77.0" y="143.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">1 235</text>
+          <text x="132.0" y="144.0" font-size="10.5" fill="#1d302a" font-weight="700">salon_lampe/brightness</text>
+          <rect x="32.0" y="168.0" width="90.0" height="32" rx="5" fill="url(#separes-h-vert)"/>
+          <text x="77.0" y="187.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">1 236</text>
+          <text x="132.0" y="188.0" font-size="10.5" fill="#1d302a" font-weight="700">salon_lampe/color_temp</text>
+          <rect x="32.0" y="212.0" width="90.0" height="32" rx="5" fill="url(#separes-h-vert)"/>
+          <text x="77.0" y="231.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">1 237</text>
+          <text x="132.0" y="232.0" font-size="10.5" fill="#1d302a" font-weight="700">salon_lampe/linkquality</text>
+          <text x="32.0" y="280.0" font-size="10.5" fill="#52615a">Def 16 o · Vif 40 o · annuaire</text>
+          <text x="32.0" y="296.0" font-size="10.5" fill="#8b3b22" font-weight="700">le volet RTS : aucune valeur</text>
+          <rect x="654" y="40" width="330" height="330" rx="20" fill="#e1eef6" fill-opacity=".45" stroke="#3b8db4" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="7 5"/>
+          <g transform="translate(670.0 51.0) scale(0.6667)" fill="none" stroke="#1b5873" stroke-width="2.70" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="692.0" y="64.0" font-size="11" fill="#1b5873" font-weight="700" letter-spacing=".07em">LES ORDRES : CE QU'ON DEMANDE</text>
+          <rect x="670.0" y="80.0" width="70.0" height="32" rx="5" fill="url(#separes-h-bleu)"/>
+          <text x="705.0" y="99.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">87</text>
+          <text x="750.0" y="100.0" font-size="10.5" fill="#1d302a" font-weight="700">salon_lampe/on</text>
+          <rect x="670.0" y="124.0" width="70.0" height="32" rx="5" fill="url(#separes-h-bleu)"/>
+          <text x="705.0" y="143.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">88</text>
+          <text x="750.0" y="144.0" font-size="10.5" fill="#1d302a" font-weight="700">salon_lampe/brightness</text>
+          <rect x="670.0" y="168.0" width="70.0" height="32" rx="5" fill="url(#separes-h-bleu)"/>
+          <text x="705.0" y="187.6" font-size="10" fill="#ffffff" font-weight="700" text-anchor="middle">89</text>
+          <text x="750.0" y="188.0" font-size="10.5" fill="#1d302a" font-weight="700">salon_lampe/color_temp</text>
+          <rect x="670.0" y="222.0" width="70.0" height="24" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="750.0" y="238.0" font-size="10.5" fill="#52615a">volet_salon/ouvrir</text>
+          <rect x="670.0" y="252.0" width="70.0" height="24" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="750.0" y="268.0" font-size="10.5" fill="#52615a">volet_salon/fermer</text>
+          <rect x="670.0" y="282.0" width="70.0" height="24" rx="5" fill="#e1eef6" stroke="#3b8db4" stroke-opacity=".8"/>
+          <text x="750.0" y="298.0" font-size="10.5" fill="#52615a">…/stop, …/favori</text>
+          <text x="670.0" y="330.0" font-size="10.5" fill="#52615a">Fiche 32 o · forme partagée</text>
+          <path d="M612 108 C630 100 640 96 652 96" fill="none" stroke="#1b5873" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#separes-m-bleu)"/>
+          <path d="M388 108 C370 100 360 96 348 96" fill="none" stroke="#195744" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#separes-m-vert)"/>
+          <path d="M668 140 C600 252 400 252 300 140" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" marker-end="url(#separes-m-ambre)"/>
+          <path class="hd-flux" d="M668 140 C600 252 400 252 300 140" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="500.0" y="246.0" font-size="10.5" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">retour : la valeur qui le prouve</text>
+          <path d="M668 184 C600 312 400 312 300 184" fill="none" stroke="#94660a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" marker-end="url(#separes-m-ambre)"/>
+          <path class="hd-lent" d="M668 184 C600 312 400 312 300 184" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="500.0" y="304.0" font-size="10.5" fill="#94660a" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">paramètre : la valeur qu'il règle</text>
+          <rect x="16" y="384" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 392.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="406.0" font-size="11" fill="#1d302a" font-weight="700">Une valeur n'est jamais un ordre, un ordre n'a jamais de valeur : chacun son registre, ses numéros (place + génération), ses fiches.</text>
+  <text x="18" y="461" font-size="12" fill="#52615a" font-style="italic">Deux registres à génération, celui du nettoyage, deux fois. Le seul lien entre un ordre et une valeur est un rang dans l'appareil, porté par la forme</text>
+  <text x="18" y="478" font-size="12" fill="#52615a" font-style="italic">de l'ordre.</text>
+</svg>

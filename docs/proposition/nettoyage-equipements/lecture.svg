@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 358" width="1000" height="358" role="img" aria-labelledby="lecture-t lecture-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="lecture-t">Lire une valeur : ce que coûte la génération</title>
+  <desc id="lecture-d">Quatre façons de lire une valeur au hasard, à ×1, ×10 et ×100, en nanosecondes. Le numéro est l'adresse (la v2) : 0,36, 0,54, 0,59. La place tirée du numéro : 0,40, 0,54, 0,61. La place, génération vérifiée : 0,52, 0,66, 0,92. Un numéro fixe par une table : 0,44, 0,81, 0,97.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="358" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="lecture-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="lecture-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="lecture-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="lecture-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="lecture-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="lecture-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="lecture-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="lecture-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="lecture-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="lecture-f-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f2f4f1"/></linearGradient>
+            <linearGradient id="lecture-h-gris" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#4f5d57"/></linearGradient>
+            <linearGradient id="lecture-b-gris" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#97a39d"/><stop offset="1" stop-color="#616e68"/></linearGradient>
+            <linearGradient id="lecture-t-gris" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bbc3bf"/><stop offset="1" stop-color="#f1f3f0"/></linearGradient>
+            <linearGradient id="lecture-s-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f5d57"/><stop offset="1" stop-color="#37413d"/></linearGradient>
+            <linearGradient id="lecture-c-gris" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#47544e"/><stop offset=".45" stop-color="#97a39d"/><stop offset="1" stop-color="#434f4a"/></linearGradient>
+            <marker id="lecture-m-gris" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4f5d57"/></marker>
+            <linearGradient id="lecture-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="lecture-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="lecture-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="lecture-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="lecture-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="lecture-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="lecture-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LIRE UNE VALEUR AU HASARD, PAR SON NUMÉRO (NS)</text>
+          <text x="16.0" y="58.0" font-size="11" fill="#1d302a" font-weight="700">le numéro est l'adresse (v2)</text>
+          <text x="330.0" y="73.0" font-size="9" fill="#52615a" text-anchor="end">×1</text>
+          <rect x="338.0" y="64.0" width="166.6" height="10" rx="5.0" fill="url(#lecture-b-vert)"/>
+          <rect x="340.0" y="66.0" width="162.6" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="510.6" y="73.0" font-size="9.5" fill="#195744" font-weight="700">0,36</text>
+          <text x="330.0" y="86.0" font-size="9" fill="#52615a" text-anchor="end">×10</text>
+          <rect x="338.0" y="77.0" width="252.3" height="10" rx="5.0" fill="url(#lecture-b-vert)" opacity=".8"/>
+          <rect x="340.0" y="79.0" width="248.3" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="596.3" y="86.0" font-size="9.5" fill="#195744" font-weight="700">0,54</text>
+          <text x="330.0" y="99.0" font-size="9" fill="#52615a" text-anchor="end">×100</text>
+          <rect x="338.0" y="90.0" width="276.2" height="10" rx="5.0" fill="url(#lecture-b-vert)" opacity=".6"/>
+          <rect x="340.0" y="92.0" width="272.2" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="620.2" y="99.0" font-size="9.5" fill="#195744" font-weight="700">0,59</text>
+          <text x="16.0" y="122.0" font-size="11" fill="#1d302a" font-weight="700">la place, tirée du numéro</text>
+          <text x="330.0" y="137.0" font-size="9" fill="#52615a" text-anchor="end">×1</text>
+          <rect x="338.0" y="128.0" width="185.8" height="10" rx="5.0" fill="url(#lecture-b-vert)"/>
+          <rect x="340.0" y="130.0" width="181.8" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="529.8" y="137.0" font-size="9.5" fill="#195744" font-weight="700">0,40</text>
+          <text x="330.0" y="150.0" font-size="9" fill="#52615a" text-anchor="end">×10</text>
+          <rect x="338.0" y="141.0" width="252.3" height="10" rx="5.0" fill="url(#lecture-b-vert)" opacity=".8"/>
+          <rect x="340.0" y="143.0" width="248.3" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="596.3" y="150.0" font-size="9.5" fill="#195744" font-weight="700">0,54</text>
+          <text x="330.0" y="163.0" font-size="9" fill="#52615a" text-anchor="end">×100</text>
+          <rect x="338.0" y="154.0" width="285.5" height="10" rx="5.0" fill="url(#lecture-b-vert)" opacity=".6"/>
+          <rect x="340.0" y="156.0" width="281.5" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="629.5" y="163.0" font-size="9.5" fill="#195744" font-weight="700">0,61</text>
+          <text x="16.0" y="186.0" font-size="11" fill="#1d302a" font-weight="700">la place, génération vérifiée</text>
+          <text x="330.0" y="201.0" font-size="9" fill="#52615a" text-anchor="end">×1</text>
+          <rect x="338.0" y="192.0" width="242.9" height="10" rx="5.0" fill="url(#lecture-b-ambre)"/>
+          <rect x="340.0" y="194.0" width="238.9" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="586.9" y="201.0" font-size="9.5" fill="#94660a" font-weight="700">0,52</text>
+          <text x="330.0" y="214.0" font-size="9" fill="#52615a" text-anchor="end">×10</text>
+          <rect x="338.0" y="205.0" width="309.4" height="10" rx="5.0" fill="url(#lecture-b-ambre)" opacity=".8"/>
+          <rect x="340.0" y="207.0" width="305.4" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="653.4" y="214.0" font-size="9.5" fill="#94660a" font-weight="700">0,66</text>
+          <text x="330.0" y="227.0" font-size="9" fill="#52615a" text-anchor="end">×100</text>
+          <rect x="338.0" y="218.0" width="428.8" height="10" rx="5.0" fill="url(#lecture-b-ambre)" opacity=".6"/>
+          <rect x="340.0" y="220.0" width="424.8" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="772.8" y="227.0" font-size="9.5" fill="#94660a" font-weight="700">0,92</text>
+          <text x="16.0" y="250.0" font-size="11" fill="#1d302a" font-weight="700">O4 : un numéro fixe, par une table</text>
+          <text x="330.0" y="265.0" font-size="9" fill="#52615a" text-anchor="end">×1</text>
+          <rect x="338.0" y="256.0" width="205.0" height="10" rx="5.0" fill="url(#lecture-b-gris)"/>
+          <rect x="340.0" y="258.0" width="201.0" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="549.0" y="265.0" font-size="9.5" fill="#4f5d57" font-weight="700">0,44</text>
+          <text x="330.0" y="278.0" font-size="9" fill="#52615a" text-anchor="end">×10</text>
+          <rect x="338.0" y="269.0" width="381.0" height="10" rx="5.0" fill="url(#lecture-b-gris)" opacity=".8"/>
+          <rect x="340.0" y="271.0" width="377.0" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="725.0" y="278.0" font-size="9.5" fill="#4f5d57" font-weight="700">0,81</text>
+          <text x="330.0" y="291.0" font-size="9" fill="#52615a" text-anchor="end">×100</text>
+          <rect x="338.0" y="282.0" width="452.2" height="10" rx="5.0" fill="url(#lecture-b-gris)" opacity=".6"/>
+          <rect x="340.0" y="284.0" width="448.2" height="3.8" rx="4.0" fill="#ffffff" opacity=".2"/>
+          <text x="796.2" y="291.0" font-size="9.5" fill="#4f5d57" font-weight="700">0,97</text>
+  <text x="18" y="335" font-size="12" fill="#52615a" font-style="italic">La génération ne se vérifie qu'aux endroits qui gardent un numéro longtemps ; le programme, recompilé à chaque lot, lit par la place seule. Médiane de</text>
+  <text x="18" y="352" font-size="12" fill="#52615a" font-style="italic">trois essais, Linux musl.</text>
+</svg>

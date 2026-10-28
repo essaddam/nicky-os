@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="595" viewBox="0 0 1180 595" role="img" aria-labelledby="titre desc">
+<title id="titre">Le temps qui dure et le temps qui date</title>
+<desc id="desc">Les durées suivent le monotone ; les rendez-vous suivent le calendrier. Heure absente : au saut. Heure répétée : une seule occurrence. Une nuit du lundi 22 h à 6 h finit le mardi.</desc>
+<defs><marker id="fleche" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#974e2c" stroke-width="1.4"/></marker></defs>
+<rect width="1180" height="595" fill="#fbfaf6"/>
+<text x="36" y="53" fill="#161512" font-family="Georgia,serif" font-size="30">Le temps qui dure et le temps qui date</text>
+<text x="36" y="89" fill="#57534b" font-family="sans-serif" font-size="17">Les durées suivent le monotone ; les rendez-vous suivent le calendrier.</text>
+<rect x="36.0" y="125" width="354.6666666666667" height="125" rx="4" fill="#f2f0ea" stroke="#d9d5c9"/>
+<rect x="52.0" y="143" width="24" height="3" fill="#e8b931"/>
+<text x="52.0" y="175" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Durées monotones</text>
+<text x="52.0" y="205" fill="#57534b" font-family="sans-serif" font-size="16">Fraîcheur, santé, attentes</text>
+<text x="52.0" y="228" fill="#57534b" font-family="sans-serif" font-size="16">Insensibles aux sauts NTP</text>
+<rect x="412.6666666666667" y="125" width="354.6666666666667" height="125" rx="4" fill="#f2f0ea" stroke="#d9d5c9"/>
+<rect x="428.6666666666667" y="143" width="24" height="3" fill="#e8b931"/>
+<text x="428.6666666666667" y="175" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Calendrier mural</text>
+<text x="428.6666666666667" y="205" fill="#57534b" font-family="sans-serif" font-size="16">Heure locale, soleil, agenda</text>
+<text x="428.6666666666667" y="228" fill="#57534b" font-family="sans-serif" font-size="16">Heure sûre avant activité</text>
+<rect x="789.3333333333334" y="125" width="354.6666666666667" height="125" rx="4" fill="#f2f0ea" stroke="#d9d5c9"/>
+<rect x="805.3333333333334" y="143" width="24" height="3" fill="#e8b931"/>
+<text x="805.3333333333334" y="175" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Un échéancier</text>
+<text x="805.3333333333334" y="205" fill="#57534b" font-family="sans-serif" font-size="16">Réveil au plus proche</text>
+<text x="805.3333333333334" y="228" fill="#57534b" font-family="sans-serif" font-size="16">Revalidation au réveil</text>
+<rect x="36.0" y="285" width="354.6666666666667" height="125" rx="4" fill="#fffefa" stroke="#d9d5c9"/>
+<rect x="52.0" y="303" width="24" height="3" fill="#e8b931"/>
+<text x="52.0" y="335" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Même démarrage hôte</text>
+<text x="52.0" y="365" fill="#57534b" font-family="sans-serif" font-size="16">Le gardien transmet l’origine</text>
+<text x="52.0" y="388" fill="#57534b" font-family="sans-serif" font-size="16">Échéances monotones conservées</text>
+<rect x="412.6666666666667" y="285" width="354.6666666666667" height="125" rx="4" fill="#fffefa" stroke="#d9d5c9"/>
+<rect x="428.6666666666667" y="303" width="24" height="3" fill="#e8b931"/>
+<text x="428.6666666666667" y="335" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Nouveau démarrage hôte</text>
+<text x="428.6666666666667" y="365" fill="#57534b" font-family="sans-serif" font-size="16">Conversion depuis le mural sûr</text>
+<text x="428.6666666666667" y="388" fill="#57534b" font-family="sans-serif" font-size="16">Pas de durée inventée</text>
+<rect x="789.3333333333334" y="285" width="354.6666666666667" height="125" rx="4" fill="#fffefa" stroke="#d9d5c9"/>
+<rect x="805.3333333333334" y="303" width="24" height="3" fill="#e8b931"/>
+<text x="805.3333333333334" y="335" fill="#161512" font-family="sans-serif" font-size="19" font-weight="600">Utilité par étape</text>
+<text x="805.3333333333334" y="365" fill="#57534b" font-family="sans-serif" font-size="16">Horaire : 2 min par défaut</text>
+<text x="805.3333333333334" y="388" fill="#57534b" font-family="sans-serif" font-size="16">Agenda : avant début ; bail : rendre</text>
+<line x1="36" y1="501" x2="1144" y2="501" stroke="#d9d5c9"/>
+<text x="36" y="532" fill="#57534b" font-family="sans-serif" font-size="15">Heure absente : au saut. Heure répétée : une seule occurrence. Une nuit du lundi 22 h à 6 h finit le mardi.</text>
+</svg>

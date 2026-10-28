@@ -1,0 +1,191 @@
+{
+  "themes": [
+    {
+      "id": "coeur",
+      "label": "Cœur & MQTT",
+      "title": "Comment une information devient une décision de la maison",
+      "intro": "Vous pouvez suivre deux trajets complémentaires : les appareils rapportent des observations, puis les personnes et les automatismes demandent des actions. Le cœur reste l’autorité commune des deux trajets.",
+      "architecture": [
+        "Dans la cible V7, le hub possède le présent : valeurs, qualité, identités et autorisations. Le courtier MQTT embarqué transporte les messages entre modules, surfaces et consommateurs. Il ne décide pas quelle valeur est vraie. Les modules internes utilisent des liens en mémoire ; les clients extérieurs ont des comptes et des droits limités.",
+        "Le moteur possède la progression des automatismes et le stockage possède ses opérations historiques. Ces responsabilités restent distinctes. Les appareils publient leurs observations dans leur espace, jamais une valeur officielle ni une commande autorisée. Les secrets et les gros produits empruntent des services séparés et bornés. Le produit actuel utilise encore son bus local ; le courtier central est une cible à porter."
+      ],
+      "fonctionnement": [
+        "Un pilote traduit une observation, le hub la contrôle puis publie la valeur officielle. Un nouvel abonné raccorde un instantané numéroté au flux suivant. Il ne reconstruit pas le présent en supposant que le courtier a tout conservé.",
+        "Une demande d’action suit la garde, puis la voie du pilote propriétaire. Le permis est revérifié juste avant l’envoi. L’issue distingue refus, non-envoi et émission incertaine ; accepter une demande ne prouve jamais l’effet physique. Après une émission ambiguë, le système cherche un statut sans renvoyer aveuglément."
+      ],
+      "flux": ["Observer et traduire au bord", "Valider et publier dans le hub", "Autoriser la demande par la garde", "Émettre puis rendre une issue explicite"],
+      "exemple": {"title": "Allumer une lampe", "text": "Vous demandez l’allumage. Le hub vérifie cible et droits, le pilote envoie, puis un retour d’état peut confirmer la lumière. Une connexion perdue après l’envoi laisse une issue incertaine."},
+      "sections": ["cible-contrats", "runtime-mqtt", "runtime-sens"]
+    },
+    {
+      "id": "valeurs",
+      "label": "Valeurs & temps",
+      "title": "Ce qu’une valeur permet réellement de savoir",
+      "intro": "Un nombre seul ne suffit pas pour commander. Vous devez connaître son sens, sa source, son âge et l’équipement auquel il appartient ; le temps et l’identité font donc partie du modèle.",
+      "architecture": [
+        "Le pilote normalise unité et échelle avant publication. Le hub possède les valeurs vives et distingue observé, reçu et changé. La réception prouve un contact ; seule une observation source nouvelle rafraîchit les points concernés. Une température inchangée peut être fraîche, tandis qu’un cache récemment lu reste ancien.",
+        "La mémoire compacte projetée utilise une place, une génération et une incarnation de registre. Les noms métier restent stables dans les données durables. Les durées suivent une horloge monotone ; les rendez-vous suivent l’heure murale. La cause d’une exécution conserve la transition initiale, tandis qu’une condition après attente lit le présent. Ces contrats dépassent encore leur intégration actuelle."
+      ],
+      "fonctionnement": [
+        "À chaque rapport, le hub contrôle identité et qualité avant d’alimenter les consommateurs. Une échéance dépassée rend la qualité périmée : le dernier nombre reste visible avec son âge, sans devenir une mesure utilisable par défaut. Si l’heure murale est douteuse, le calendrier attend une heure sûre.",
+        "Retirer un appareil est un geste humain distinct d’une panne. Le retrait bloque ses usages ; le nettoyage libère ensuite sa place avec une génération nouvelle. Un remplaçant reçoit sa propre identité et son histoire. La succession validée réoriente les usages futurs sans réécrire les mesures anciennes."
+      ],
+      "flux": ["Identifier la source et normaliser", "Contrôler génération et fraîcheur", "Évaluer le présent ou une échéance", "Retirer ou remplacer avec validation"],
+      "exemple": {"title": "Deux rapports identiques", "text": "Deux températures égales ne produisent pas forcément deux changements. Le second rapport ne rafraîchit la mesure que s’il atteste une observation nouvelle ; une simple relecture de cache ne suffit pas."},
+      "sections": ["donnees-valeurs", "donnees-memoire", "donnees-temps", "donnees-nettoyage"]
+    },
+    {
+      "id": "automatismes",
+      "label": "Automatismes",
+      "title": "Du graphe validé à une exécution qui s’explique",
+      "intro": "Vous validez une logique précise, puis le moteur suit ses règles. Un réflexe agit sur la maison ; une démarche peut aussi attendre un service, un produit ou une réponse humaine.",
+      "architecture": [
+        "Le graphe livré relie déclencheurs, conditions, attentes et actions. Les minuteurs, compteurs, plannings et calculs fournissent des faits réutilisables ; un planning publie un contexte sans commander lui-même. Le programme décrit la logique, la fiche d’exécution conserve le curseur et le dossier de démarche porte les produits privés : ces trois mémoires ne se confondent pas.",
+        "La cible compile les champs disponibles et réserve les produits avant admission. Les dossiers actifs ou endormis restent bornés et sont conservés par le gardien et les pairs, sans journal de réplication disque. Le parallélisme projeté concerne des démarches indépendantes explicitement admises ; les modes de concurrence actuels restent le socle séquentiel."
+      ],
+      "fonctionnement": [
+        "Un agent prépare un brouillon. La validation humaine porte sur son contenu exact ; une modification périme cet accord. Lorsqu’un événement arrive, le moteur suit l’ordre enregistré, vérifie les conditions et transmet les actions à la garde. L’essai à blanc explique un parcours possible, sans prouver toutes les branches ni appeler réellement Sarah.",
+        "Une étape lente range son résultat dans une case typée, puis reprend au curseur prévu. Avant un engagement automatique irréversible ou auprès d’un tiers, l’intention doit être copiée au pair ; l’acte auprès d’un tiers exige aussi son Oui humain ponctuel. Une reprise ambiguë conserve l’incertitude au lieu de doubler l’effet."
+      ],
+      "flux": ["Préparer puis valider le graphe exact", "Admettre une exécution et ses produits", "Parcourir conditions, attentes et actions", "Conserver l’issue avant une reprise"],
+      "exemple": {"title": "Attendre une réponse", "text": "Une démarche prépare un récapitulatif puis attend votre choix. Son dossier garde le produit et son audience ; à votre réponse, le moteur revérifie sa validité avant la branche autorisée."},
+      "sections": ["usages-automatismes", "usages-primitives", "usages-demarches"]
+    },
+    {
+      "id": "sarah",
+      "label": "Sarah",
+      "title": "Ce que l’assistant comprend et ce que le moteur autorise",
+      "intro": "L’assistant vous aide à comprendre la maison, rédiger et préparer des automatismes. La cible lui confie aussi certains choix bornés, uniquement dans le contrat d’un workflow validé.",
+      "architecture": [
+        "La conversation existante utilise des outils sous la garde : une phrase du modèle ne crée aucun droit supplémentaire. Les réflexes restent entièrement déterministes. Dans une démarche projetée, Sarah peut choisir une branche ou une valeur parmi celles prévues ; le moteur valide la structure, les bornes et les capacités avant toute émission.",
+        "Les entrées nécessaires sont déclarées : météo, agenda ou consommation ne se déduisent pas d’une valeur sans rapport. Un texte extérieur conserve sa provenance et ne devient pas une instruction privilégiée. Le dossier de démarche hérite de l’audience des données lues ; il reste distinct de la mémoire personnelle de conversation. Images et localisation précise restent hors du modèle de conversation."
+      ],
+      "fonctionnement": [
+        "Le moteur rassemble les données autorisées et signale les manques. Sarah produit soit un texte pour vous, soit une fiche structurée attendue par le programme. Le moteur refuse une réponse hors schéma et prend le repli prévu ; une confiance déclarée par le modèle ne remplace pas une validation.",
+        "Si une décision humaine est nécessaire, la démarche pose une question dont la portée et l’expiration sont explicites. La réponse ne libère pas une action devenue périmée. Les plafonds d’appels et l’évaluation des modèles appartiennent à la cible de contrôle, pas à une garantie actuelle de justesse."
+      ],
+      "flux": ["Rassembler les entrées autorisées", "Demander un produit ou un choix borné", "Valider le résultat et son origine", "Appliquer la branche ou le repli prévu"],
+      "exemple": {"title": "Préparer un résumé", "text": "Sarah reçoit les données autorisées de la journée et rédige. Si une source manque, le résumé l’indique ; il n’invente ni consommation ni rendez-vous et n’envoie rien à un tiers sans l’accord requis."},
+      "sections": ["usages-assistant"]
+    },
+    {
+      "id": "modes",
+      "label": "Modes & présence",
+      "title": "Pourquoi la maison choisit une ambiance ou un contexte",
+      "intro": "Vous pouvez être chez vous, en soirée et en vigilance élevée simultanément. La cible sépare ces contextes et garde la raison de chaque consigne plutôt que multiplier les modes combinés.",
+      "architecture": [
+        "Un groupe de modes n’a qu’un état actif, mais plusieurs groupes coexistent. Chaque groupe définit ses sources autorisées, leur priorité et la durée d’une correction manuelle. Les profils réutilisent les scènes et leur chemin de commande ; ils ne constituent pas une seconde autorité sur les appareils.",
+        "Les raisons temporaires forment une pile bornée. Pour chaque point, la raison prioritaire admissible donne la valeur voulue. À son retrait, la suivante reprend sans restaurer aveuglément une ancienne capture. Cette conception des modes reste projetée ; les signaux et scènes déjà présents constituent ses fondations."
+      ],
+      "fonctionnement": [
+        "Un capteur, un planning ou un geste humain propose un changement. Le groupe arbitre selon ses règles, engage le nouvel état puis déroule les réactions de sortie, de passage et d’entrée. Le contexte de transition reste immuable pour expliquer ce parcours.",
+        "Les entrées distinguent changement d’état, occurrence et échéance : deux appuis identiques peuvent être deux événements. GPS, Bluetooth et calendrier apportent des indices avec leurs limites ; un téléphone oublié ne prouve pas la présence d’une personne. Une réservation décrit un séjour prévu, jamais un désarmement. Une information absente n’est pas transformée en départ certain."
+      ],
+      "flux": ["Recevoir un signal avec sa provenance", "Arbitrer dans le groupe concerné", "Appliquer les raisons prioritaires", "Retirer une raison sans écraser votre geste"],
+      "exemple": {"title": "Terminer une séance", "text": "Un profil Cinéma baisse la lumière. Si vous la réglez ensuite manuellement, sa fin retire seulement sa propre raison ; la cible préserve votre intervention selon la priorité et la durée définies."},
+      "sections": ["usages-modes", "usages-entrees"]
+    },
+    {
+      "id": "continuite",
+      "label": "Continuité",
+      "title": "Continuer sans créer deux maisons qui commandent",
+      "intro": "La continuité couvre plusieurs pannes différentes : un appareil lent, un cœur arrêté ou une machine perdue. La cible annonce pour chaque reprise le support qui a réellement conservé l’état.",
+      "architecture": [
+        "Les cloisons projetées isolent les pilotes sur leurs threads, répartissent les ordres par voies et limitent les passerelles partagées. Le gardien conserve en mémoire un relais cohérent et son suffixe critique ; les pairs recopient les sorties de l’actif avec leurs instants d’origine. Un instantané complète cette protection, sans journal de réplication disque.",
+        "Le témoin attribue une époque et un bail à l’autorité active. Chaque module contrôle ce droit juste avant émission ; une copie à jour reste passive. Secrets, sessions et radios suivent leurs propres règles de reprise. Le secours distant ne prend que les rôles cloud sur geste humain. Ces mécanismes restent une cible à intégrer et à qualifier."
+      ],
+      "fonctionnement": [
+        "Un appareil muet ouvre sa voie ou son disjoncteur sans immobiliser ses voisins. Si le cœur tombe, le gardien et les pairs permettent une reprise depuis le rang conservé. L’ancien actif consulte les copies avant de reprendre ; il ne leur impose pas un état ancien.",
+        "Sans pair survivant, une perte électrique peut ramener au dernier instantané : l’âge et les intervalles inconnus sont affichés. Les engagements automatiques exigeant l’accusé du pair attendent son retour. Une nouvelle image Docker remplace aussi le gardien et demande un arrêt figé puis une reprise à froid ; les connexions ne sont jamais restaurées comme des données métier."
+      ],
+      "flux": ["Contenir la panne dans sa voie", "Conserver sorties et relais cohérents", "Reprendre puis obtenir le droit actif", "Réconcilier les effets incertains"],
+      "exemple": {"title": "Un cloud ne répond plus", "text": "Les appareils dépendants deviennent indisponibles et les tentatives sont bornées. Les fonctions locales indépendantes continuent ; une consigne possiblement envoyée n’est pas répétée pour masquer la panne."},
+      "sections": ["runtime-cloisons", "runtime-redemarrage", "donnees-replication", "donnees-secrets-radios"]
+    },
+    {
+      "id": "stockage",
+      "label": "Stockage",
+      "title": "Garder le passé sans alourdir le présent",
+      "intro": "Le présent sert à décider maintenant ; l’historique sert à comprendre une période. Leur conservation ne suit donc ni le même propriétaire ni les mêmes garanties de reprise.",
+      "architecture": [
+        "La cible garde les décisions et définitions métier dans maison.db, le récent dans moli.db avec Turso, et le long terme dans une archive Parquet indépendante. Le présent appartient au hub, au gardien, aux pairs et à l’instantané complet. Aucun rédacteur point_state parallèle ne revient concurrencer cette autorité. Le produit consulté utilise encore SQLite pour le récent.",
+        "Un seul rédacteur numérote les opérations historiques ; les copies appliquent ses lots exacts. L’archive distingue réception durable et publication dans un manifeste cohérent. Son service existe, mais cela ne prouve pas un raccordement actif du cœur ni la livraison du format typé et des paliers proposés."
+      ],
+      "fonctionnement": [
+        "Une mesure rejoint le récent selon sa nature. L’export transmet des lots sans partager les fichiers du cœur. Une lecture choisit une frontière publiée, puis complète avec les opérations locales plus récentes sans compter deux fois la même donnée.",
+        "Le vieillissement écrit et vérifie le palier suivant avant de retirer l’ancien. Une moyenne respecte la durée et la couverture ; un index d’énergie produit des deltas, jamais une moyenne. Les trous restent inconnus. Raccourcir la conservation demande un plan précis et une validation humaine ; les données personnelles ont leurs propres durées et droits."
+      ],
+      "flux": ["Classer la donnée par nature", "Écrire les opérations récentes", "Exporter puis publier un manifeste", "Vérifier les paliers avant la purge"],
+      "exemple": {"title": "Une heure sans mesure", "text": "La courbe indique une couverture incomplète. Le résumé ne transforme pas la panne en consommation nulle et ne moyenne pas directement les relevés cumulés du compteur."},
+      "sections": ["donnees-stockage", "donnees-archive"]
+    },
+    {
+      "id": "integrations",
+      "label": "Intégrations",
+      "title": "Relier des appareils sans leur céder les règles de la maison",
+      "intro": "Chaque intégration traduit un protocole particulier vers le vocabulaire commun de Moli. Un appareil compatible, un pilote présent et un usage réellement qualifié restent trois niveaux de preuve distincts.",
+      "architecture": [
+        "Un pilote natif gère les protocoles exigeants ; un profil déclaratif décrit les requêtes, points et écritures que son moteur sait réellement exécuter. Le catalogue fixe les capacités et les limites par famille. Le moteur courant de profils couvre HTTP/HTTPS et les lectures Meross signées, sans promettre MQTT, BLE ou renouvellement OAuth déclaratifs.",
+        "L’instance possède ses appareils et accède seulement aux secrets nécessaires. Toute écriture rejoint le hub et la garde. Un profil externe exige l’approbation de son texte exact ; une nouvelle version change ce consentement. Un matériel déjà piloté ailleurs garde un propriétaire explicite : ajouter une découverte ne transfère pas sa radio ou ses sorties."
+      ],
+      "fonctionnement": [
+        "Vous choisissez une intégration et autorisez ses destinations, identités et capacités. Elle lit, traduit et publie qualité et instants sans inventer les retours absents du matériel. Les contrats simulés vérifient le protocole prévu ; la qualification réelle reste un jalon distinct avant de conclure à l’usage domestique.",
+        "Les familles encore à compléter gardent leur voie technique : pont EnOcean, proxy BLE, Music Assistant ou futur adaptateur Matter. Leur présence dans le concept ne livre pas leur raccordement. Si un transport ou un modèle n’est pas couvert, l’intégration reste indisponible au lieu d’utiliser un repli implicite."
+      ],
+      "flux": ["Vérifier modèle et contrat couvert", "Autoriser configuration et secrets", "Lire ou commander via le hub", "Qualifier l’usage et sa propriété"],
+      "exemple": {"title": "Un volet sans retour de position", "text": "Le pilote peut envoyer une commande si son contrat le permet. Il ne publie pas ensuite une position certaine calculée seulement depuis l’ordre : l’absence de retour reste visible."},
+      "sections": ["fondations-integrations", "fondations-profils", "fondations-integrations-a-completer"]
+    },
+    {
+      "id": "usages",
+      "label": "Usages & accès",
+      "title": "Utiliser la maison avec les bons droits et les bonnes confirmations",
+      "intro": "Les écrans, outils d’agents et accès invités rejoignent les mêmes propriétaires métier. L’interface doit vous montrer ce qui est demandé, permis, envoyé et réellement confirmé.",
+      "architecture": [
+        "Maison expose les pièces et gestes quotidiens ; Atelier montre valeurs, journal, graphes et approbations. REST, SSE, MCP et CLI partagent la garde du serveur. Le plan 2D et la vue 3D lisent une même géométrie. L’identité personnelle, la session PIN et les capacités d’un client remplissent des rôles différents ; les jetons individuels d’agents appartiennent encore à la cible.",
+        "Les domaines sensibles gardent leurs contrats. Un résultat de découverte média n’est pas une commande lançable. Une réservation restreint un invité déjà créé humainement, sans créer sa présence ni ouvrir une serrure. La centrale d’alarme possède son moteur pur et ses profils privés ; Alarmo reste opérationnel tant que la bascule n’est pas qualifiée."
+      ],
+      "fonctionnement": [
+        "À chaque demande, le serveur reconnaît l’origine, vérifie les droits puis applique la garde. Un HTTP 202 signifie une attente d’approbation. Les droits invités sont revérifiés jusque dans le flux et avant l’émission ; une fenêtre expirée ferme l’accès même si l’écran est resté ouvert.",
+        "Le SSE ressert un instantané après retard pour retrouver les états autorisés. Il ne peut pas inventer les occurrences perdues. Un code d’alarme passe par un canal privé ; le PIN du dashboard ne donne pas le droit de désarmer. Inconnu, indisponible et confirmé restent visibles séparément."
+      ],
+      "flux": ["Reconnaître la personne ou le client", "Filtrer les données et les cibles", "Appliquer droits et garde vivants", "Afficher l’issue et la confirmation"],
+      "exemple": {"title": "Un séjour se termine", "text": "La fenêtre invitée expire. Une session déjà ouverte ne conserve aucun droit à commander ; la réservation n’a jamais constitué une preuve de départ physique ou une instruction d’alarme."},
+      "sections": ["fondations-securite", "fondations-surfaces", "usages-interface", "usages-medias", "usages-alarme-sejours"]
+    },
+    {
+      "id": "exploitation",
+      "label": "Exploitation",
+      "title": "Installer, sauvegarder et mettre à jour sans perdre les autorités",
+      "intro": "Une maison exploitable doit pouvoir être restaurée, pas seulement démarrer. La cible relie chaque donnée durable à son propriétaire, son format et sa procédure de récupération.",
+      "architecture": [
+        "Le binaire autonome garde des services extérieurs explicitement inventoriés. Chaque artefact durable déclare confidentialité, propriétaire et récupération dans un registre commun. Une capture cohérente doit être produite avec le processus qui possède la donnée ; copier plusieurs fichiers à des instants différents ne prouve pas leur cohérence.",
+        "Le mécanisme actuel copie des bases SQLite et une liste de fichiers, avec contrôle de tailles. La cible ajoute un manifeste versionné, des empreintes de contenu et des preuves de restauration. La clé maître existante reste protégée séparément de la sauvegarde générale ; une erreur de coffre ne se répare jamais en la régénérant."
+      ],
+      "fonctionnement": [
+        "À la première installation, vous partez d’une configuration vide, choisissez le PIN et mettez la clé privée à l’abri. Les secrets rejoignent le coffre. Une plateforme compilée ne devient pas, par ce seul fait, une installation réellement qualifiée ; les services et usages nécessitent leurs contrôles propres.",
+        "Avant mise à jour, la cible conserve l’image précédente et une capture des données cohérente avec leurs formats. Le retour arrière considère ensemble logiciel, migration et restauration. Après redémarrage, un HTTP sain prouve seulement une réponse du processus : il faut aussi vérifier les usages repris et les dépendances dégradées. Les catalogues français et anglais et la langue durable accompagnent cette exploitation."
+      ],
+      "flux": ["Inventorier propriétaires et données durables", "Capturer et vérifier la cohérence", "Mettre à jour avec retour préparé", "Contrôler la reprise des usages"],
+      "exemple": {"title": "Restaurer une sauvegarde", "text": "Vous restaurez les formats compatibles avec l’image retenue et fournissez la même clé maître. Le contrôle porte sur les données et usages retrouvés, au-delà du seul démarrage du serveur."},
+      "sections": ["fondations-exploitation"]
+    },
+    {
+      "id": "diagnostic",
+      "label": "Performance",
+      "title": "Voir ce qui ralentit et ce que les mesures prouvent",
+      "intro": "Le diagnostic distingue l’appareil, le module et le processus. Vous pouvez ainsi comprendre une panne locale sans conclure que toute la maison est lente ou indisponible.",
+      "architecture": [
+        "La supervision actuelle capture les paniques ordinaires des pilotes, marque leurs appareils hors ligne et relance avec recul progressif. Elle ne préempte pas un calcul bloquant et ne protège pas contre toutes les fautes du processus. Les threads dédiés, la surveillance des briques métier et le courtier contrôlé décrivent les protections supplémentaires de la cible.",
+        "Le monitoring projeté sépare santé des équipements, activité des modules et coût du processus. Les limites de messages et d’octets s’appliquent ensemble ; les plafonds ne réservent pas automatiquement de mémoire. Une brique inactive reste dormante. Mémoire allouée, mémoire anonyme et mémoire totale du processus mesurent des objets différents."
+      ],
+      "fonctionnement": [
+        "Lorsqu’une file sature, l’admission refuse ou signale une perte visible. Une mesure remplaçable peut être fusionnée, mais une transition significative ou une occurrence conserve son identité et son ordre. Le consommateur critique se réconcilie après un trou ; un instantané final ne prouve pas toutes les transitions intermédiaires.",
+        "Pour évaluer un changement, vous rattachez les chiffres au banc, à la date, au matériel et au scénario mesurés. Les prototypes montrent l’intérêt d’un mécanisme sans prouver son coût dans le produit assemblé. Les budgets existants restent la référence ; cette revue ne transforme pas une projection en nouvelle mesure ni en garantie matérielle."
+      ],
+      "flux": ["Identifier le niveau réellement en défaut", "Observer files, latences et mémoire", "Rendre refus et pertes visibles", "Comparer aux preuves et budgets existants"],
+      "exemple": {"title": "Un pilote occupe le runtime", "text": "Une panique peut être récupérée, mais un calcul qui ne rend pas la main demande une autre protection. La cible le sépare du cœur ; le diagnostic doit encore signaler que ce module ne répond plus."},
+      "sections": ["runtime-monitoring", "runtime-cout", "runtime-existant"]
+    }
+  ]
+}

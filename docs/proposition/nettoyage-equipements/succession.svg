@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 415" width="1000" height="415" role="img" aria-labelledby="succession-t succession-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="succession-t">Remplacer un appareil : la succession</title>
+  <desc id="succession-d">À gauche, l'ancien capteur, retiré ; à droite, le nouveau, en service. Leurs points s'apparient par la clé (temperature, humidity, battery), nature et unité vérifiées. En dessous, ce qui passe au nouveau : les automatismes, récrits par les noms ; l'étiquette et la pièce ; le plan et l'accueil ; le compteur d'énergie. Une seule validation humaine vaut pour chaque automatisme récrit. L'ancien reste retiré pendant la grâce, avec « remplacé par … », puis le lot libère sa place ; l'historique garde deux courbes.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="415" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="succession-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="succession-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="succession-f-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient>
+            <linearGradient id="succession-h-bleu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#1b5873"/></linearGradient>
+            <linearGradient id="succession-b-bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8db4"/><stop offset="1" stop-color="#236583"/></linearGradient>
+            <linearGradient id="succession-t-bleu" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#80b5ce"/><stop offset="1" stop-color="#e7f1f8"/></linearGradient>
+            <linearGradient id="succession-s-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b5873"/><stop offset="1" stop-color="#133e50"/></linearGradient>
+            <linearGradient id="succession-c-bleu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#184f68"/><stop offset=".45" stop-color="#3b8db4"/><stop offset="1" stop-color="#174b62"/></linearGradient>
+            <marker id="succession-m-bleu" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#1b5873"/></marker>
+            <linearGradient id="succession-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="succession-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="succession-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="succession-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="succession-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="succession-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="succession-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="succession-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="succession-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="succession-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="succession-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="succession-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="succession-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="succession-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+            <linearGradient id="succession-f-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f0edf9"/></linearGradient>
+            <linearGradient id="succession-h-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#4b3d82"/></linearGradient>
+            <linearGradient id="succession-b-violet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e6cc2"/><stop offset="1" stop-color="#584992"/></linearGradient>
+            <linearGradient id="succession-t-violet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ab9fd7"/><stop offset="1" stop-color="#efecf9"/></linearGradient>
+            <linearGradient id="succession-s-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4b3d82"/><stop offset="1" stop-color="#342b5b"/></linearGradient>
+            <linearGradient id="succession-c-violet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#443775"/><stop offset=".45" stop-color="#7e6cc2"/><stop offset="1" stop-color="#40346e"/></linearGradient>
+            <marker id="succession-m-violet" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#4b3d82"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">REMPLACER UN APPAREIL : UN GESTE, UNE VALIDATION</text>
+          <rect x="16" y="44" width="300" height="150" rx="12" fill="url(#succession-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#succession-o)"/>
+          <rect x="26" y="53" width="26" height="26" rx="8" fill="url(#succession-h-rouge)"/>
+          <g transform="translate(31.0 58.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="60.0" y="71.0" font-size="12" fill="#8b3b22" font-weight="700">L'ancien capteur</text>
+          <text x="30.0" y="93.0" font-size="10.2" fill="#52615a">z2m:0x00158d00…a1</text>
+          <rect x="263.6" y="56.0" width="42.4" height="18.0" rx="9.0" fill="#fae7dd" stroke="#d06a46" stroke-opacity="0.7"/>
+          <text x="271.6" y="68.2" font-size="9" fill="#8b3b22" font-weight="700">retiré</text>
+          <rect x="684" y="44" width="300" height="150" rx="12" fill="url(#succession-f-vert)" stroke="#3d9a75" stroke-opacity=".55" stroke-width="1.1" filter="url(#succession-o)"/>
+          <rect x="694" y="53" width="26" height="26" rx="8" fill="url(#succession-h-vert)"/>
+          <g transform="translate(699.0 58.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8 M8 21h8 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8 M12 10.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 1 1 0-3.2z"/></g>
+          <text x="728.0" y="71.0" font-size="12" fill="#195744" font-weight="700">Le nouveau capteur</text>
+          <text x="698.0" y="93.0" font-size="10.2" fill="#52615a">z2m:0x00158d00…b2</text>
+          <rect x="914.8" y="56.0" width="59.2" height="18.0" rx="9.0" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity="0.7"/>
+          <text x="922.8" y="68.2" font-size="9" fill="#195744" font-weight="700">en service</text>
+          <rect x="32.0" y="106.0" width="77.2" height="19.0" rx="9.5" fill="#fae7dd" stroke="#d06a46" stroke-opacity="0.7"/>
+          <text x="40.0" y="119.1" font-size="10" fill="#8b3b22" font-weight="700">temperature</text>
+          <rect x="700.0" y="106.0" width="77.2" height="19.0" rx="9.5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity="0.7"/>
+          <text x="708.0" y="119.1" font-size="10" fill="#195744" font-weight="700">temperature</text>
+          <path d="M150 115 L692 115" fill="none" stroke="#195744" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#succession-m-vert)"/>
+          <path class="hd-lent" d="M150 115 L692 115" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <rect x="32.0" y="134.0" width="56.3" height="19.0" rx="9.5" fill="#fae7dd" stroke="#d06a46" stroke-opacity="0.7"/>
+          <text x="40.0" y="147.1" font-size="10" fill="#8b3b22" font-weight="700">humidity</text>
+          <rect x="700.0" y="134.0" width="56.3" height="19.0" rx="9.5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity="0.7"/>
+          <text x="708.0" y="147.1" font-size="10" fill="#195744" font-weight="700">humidity</text>
+          <path d="M150 143 L692 143" fill="none" stroke="#195744" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#succession-m-vert)"/>
+          <path class="hd-lent" d="M150 143 L692 143" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <rect x="32.0" y="162.0" width="53.1" height="19.0" rx="9.5" fill="#fae7dd" stroke="#d06a46" stroke-opacity="0.7"/>
+          <text x="40.0" y="175.1" font-size="10" fill="#8b3b22" font-weight="700">battery</text>
+          <rect x="700.0" y="162.0" width="53.1" height="19.0" rx="9.5" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity="0.7"/>
+          <text x="708.0" y="175.1" font-size="10" fill="#195744" font-weight="700">battery</text>
+          <path d="M150 171 L692 171" fill="none" stroke="#195744" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#succession-m-vert)"/>
+          <path class="hd-lent" d="M150 171 L692 171" fill="none" stroke="#ffffff" stroke-opacity=".95" stroke-width="1.3"/>
+          <text x="500.0" y="100.0" font-size="10" fill="#195744" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#fffdf8" stroke-width="4" stroke-linejoin="round">les points s'apparient par leur clé ; nature et unité vérifiées</text>
+          <rect x="16" y="226" width="228" height="62" rx="12" fill="url(#succession-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#succession-o)"/>
+          <rect x="26" y="235" width="26" height="26" rx="8" fill="url(#succession-h-bleu)"/>
+          <g transform="translate(31.0 240.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9L7 7 M17 17l2.1 2.1 M4.9 19.1L7 17 M17 7l2.1-2.1"/></g>
+          <text x="60.0" y="253.0" font-size="11.5" fill="#1b5873" font-weight="700">Automatismes</text>
+          <text x="30.0" y="275.0" font-size="10.2" fill="#52615a">récrits par les noms</text>
+          <rect x="260" y="226" width="228" height="62" rx="12" fill="url(#succession-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#succession-o)"/>
+          <rect x="270" y="235" width="26" height="26" rx="8" fill="url(#succession-h-bleu)"/>
+          <g transform="translate(275.0 240.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11a4 4 0 1 1 0 8a4 4 0 1 1 0-8z M11 12l8-8 M16 7l2 2 M14 9l2 2"/></g>
+          <text x="304.0" y="253.0" font-size="11.5" fill="#1b5873" font-weight="700">Étiquette, pièce</text>
+          <text x="274.0" y="275.0" font-size="10.2" fill="#52615a">passées au nouveau</text>
+          <rect x="504" y="226" width="228" height="62" rx="12" fill="url(#succession-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#succession-o)"/>
+          <rect x="514" y="235" width="26" height="26" rx="8" fill="url(#succession-h-bleu)"/>
+          <g transform="translate(519.0 240.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5"/></g>
+          <text x="548.0" y="253.0" font-size="11.5" fill="#1b5873" font-weight="700">Plan, accueil</text>
+          <text x="518.0" y="275.0" font-size="10.2" fill="#52615a">la même place</text>
+          <rect x="748" y="226" width="228" height="62" rx="12" fill="url(#succession-f-bleu)" stroke="#3b8db4" stroke-opacity=".55" stroke-width="1.1" filter="url(#succession-o)"/>
+          <rect x="758" y="235" width="26" height="26" rx="8" fill="url(#succession-h-bleu)"/>
+          <g transform="translate(763.0 240.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></g>
+          <text x="792.0" y="253.0" font-size="11.5" fill="#1b5873" font-weight="700">Compteur d'énergie</text>
+          <text x="762.0" y="275.0" font-size="10.2" fill="#52615a">il suit le nouveau</text>
+          <rect x="279.3" y="302.0" width="441.5" height="21.5" rx="10.8" fill="url(#succession-h-violet)"/>
+          <g transform="translate(289.3 306.2) scale(0.5417)" fill="none" stroke="#ffffff" stroke-width="3.69" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6z"/></g>
+          <text x="310.3" y="316.5" font-size="10.5" fill="#ffffff" font-weight="700">une seule validation humaine : elle vaut pour chaque automatisme récrit</text>
+          <text x="16.0" y="350.0" font-size="10.5" fill="#52615a">L'ancien est retiré : pendant la grâce, l'écran dit « remplacé par … » ; le lot libère sa place.</text>
+          <text x="16.0" y="366.0" font-size="10.5" fill="#52615a">L'historique garde deux courbes ; un lien « suite de » dans le catalogue de la base reste à décider (D13).</text>
+  <text x="18" y="409" font-size="12" fill="#52615a" font-style="italic">Au banc : 75 appareils remplacés ; les 25 automatismes qui les citaient commandent tous de nouveau, sur le nouvel appareil.</text>
+</svg>

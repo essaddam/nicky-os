@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 528" width="1000" height="528" role="img" aria-labelledby="revue-t revue-d" font-family="Avenir Next, Avenir, Segoe UI, sans-serif">
+  <title id="revue-t">Ce que la revue a trouvé, et ce que la v2 en fait</title>
+  <desc id="revue-d">Vingt-cinq cartes. En haut, les cinq constats bloquants : qui demande vient de la connexion ; un appui attend l'accusé du secours ; les reçus gardent la plus haute séquence ; le numéro d'une demande porte l'époque et une génération de 32 bits ; un texte privé ne passe que par le canal privé. En dessous, les vingt importants : le permis revérifié, l'échéance à chaque frontière, la forme d'admission, la lecture fraîche, les trois réponses de « vient de », la dernière commande admise, un seul chemin d'envoi, n/m par niveau de preuve, la mère sans échéance, les cibles rattachées, les numéros par clé, les plafonds, le rang de chaque pièce, le dictionnaire et le schéma, un témoin honnête, le même corpus, un contenu égal, des tailles vérifiées, toute la boucle chronométrée, l'instantané seul au redémarrage. Chacun est corrigé : ceux de conception sont testés et gardés par des fautes injectées, ceux de mesure sont refaits.</desc>
+  <style>.hd-flux{stroke-dasharray:1.5 11;stroke-linecap:round;animation:hd-flux 1.2s linear infinite}.hd-lent{stroke-dasharray:1.5 13;stroke-linecap:round;animation:hd-lent 2.6s linear infinite}.hd-pouls{animation:hd-pouls 1.6s ease-in-out infinite}@keyframes hd-flux{to{stroke-dashoffset:-12.5}}@keyframes hd-lent{to{stroke-dashoffset:-14.5}}@keyframes hd-pouls{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.hd-flux,.hd-lent,.hd-pouls{animation:none}}</style>
+  <rect width="1000" height="528" rx="16" fill="#fffdf8"/>
+          <defs>
+            <filter id="revue-o" x="-8%" y="-12%" width="116%" height="140%"><feDropShadow dx="0" dy="2.2" stdDeviation="2.6" flood-color="#1d302a" flood-opacity=".13"/></filter>
+            <filter id="revue-o2" x="-10%" y="-15%" width="120%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="4.5" flood-color="#1d302a" flood-opacity=".2"/></filter>
+            <linearGradient id="revue-f-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fcf3de"/></linearGradient>
+            <linearGradient id="revue-h-ambre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#94660a"/></linearGradient>
+            <linearGradient id="revue-b-ambre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a12a"/><stop offset="1" stop-color="#a77512"/></linearGradient>
+            <linearGradient id="revue-t-ambre" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ebc275"/><stop offset="1" stop-color="#fcf2dc"/></linearGradient>
+            <linearGradient id="revue-s-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#94660a"/><stop offset="1" stop-color="#684707"/></linearGradient>
+            <linearGradient id="revue-c-ambre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#855c09"/><stop offset=".45" stop-color="#e0a12a"/><stop offset="1" stop-color="#7e5708"/></linearGradient>
+            <marker id="revue-m-ambre" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#94660a"/></marker>
+            <linearGradient id="revue-f-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#fbede6"/></linearGradient>
+            <linearGradient id="revue-h-rouge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#8b3b22"/></linearGradient>
+            <linearGradient id="revue-b-rouge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d06a46"/><stop offset="1" stop-color="#9c472b"/></linearGradient>
+            <linearGradient id="revue-t-rouge" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e09e87"/><stop offset="1" stop-color="#fbece4"/></linearGradient>
+            <linearGradient id="revue-s-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b3b22"/><stop offset="1" stop-color="#612918"/></linearGradient>
+            <linearGradient id="revue-c-rouge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7d351f"/><stop offset=".45" stop-color="#d06a46"/><stop offset="1" stop-color="#76321d"/></linearGradient>
+            <marker id="revue-m-rouge" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#8b3b22"/></marker>
+            <linearGradient id="revue-f-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eaf4ee"/></linearGradient>
+            <linearGradient id="revue-h-vert" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#195744"/></linearGradient>
+            <linearGradient id="revue-b-vert" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9a75"/><stop offset="1" stop-color="#226850"/></linearGradient>
+            <linearGradient id="revue-t-vert" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#81bda5"/><stop offset="1" stop-color="#e9f4ed"/></linearGradient>
+            <linearGradient id="revue-s-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#195744"/><stop offset="1" stop-color="#123d30"/></linearGradient>
+            <linearGradient id="revue-c-vert" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#164e3d"/><stop offset=".45" stop-color="#3d9a75"/><stop offset="1" stop-color="#154a3a"/></linearGradient>
+            <marker id="revue-m-vert" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1.2 L9 5 L1 8.8 Q2.6 5 1 1.2z" fill="#195744"/></marker>
+          </defs>
+          <text x="16.0" y="24.0" font-size="11" fill="#52615a" font-weight="700" letter-spacing=".06em">LA REVUE CODEX : 25 CONSTATS, CHACUN CORRIGÉ, CHACUN PROUVÉ</text>
+          <text x="16.0" y="52.0" font-size="11" fill="#8b3b22" font-weight="700">Bloquants</text>
+          <rect x="16" y="60" width="184" height="60" rx="12" fill="url(#revue-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="26" y="69" width="26" height="26" rx="8" fill="url(#revue-h-rouge)"/>
+          <g transform="translate(31.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">B1</text>
+          <text x="30.0" y="109.0" font-size="9.8" fill="#52615a">Qui demande : la connexion</text>
+          <rect x="210" y="60" width="184" height="60" rx="12" fill="url(#revue-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="220" y="69" width="26" height="26" rx="8" fill="url(#revue-h-rouge)"/>
+          <g transform="translate(225.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">B2</text>
+          <text x="224.0" y="109.0" font-size="9.8" fill="#52615a">Un appui : l'accusé d'abord</text>
+          <rect x="404" y="60" width="184" height="60" rx="12" fill="url(#revue-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="414" y="69" width="26" height="26" rx="8" fill="url(#revue-h-rouge)"/>
+          <g transform="translate(419.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">B3</text>
+          <text x="418.0" y="109.0" font-size="9.8" fill="#52615a">Reçus : la plus haute séquence</text>
+          <rect x="598" y="60" width="184" height="60" rx="12" fill="url(#revue-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="608" y="69" width="26" height="26" rx="8" fill="url(#revue-h-rouge)"/>
+          <g transform="translate(613.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">B4</text>
+          <text x="612.0" y="109.0" font-size="9.8" fill="#52615a">Numéro : époque et 32 bits</text>
+          <rect x="792" y="60" width="184" height="60" rx="12" fill="url(#revue-f-rouge)" stroke="#d06a46" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="802" y="69" width="26" height="26" rx="8" fill="url(#revue-h-rouge)"/>
+          <g transform="translate(807.0 74.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="836.0" y="87.0" font-size="11.5" fill="#8b3b22" font-weight="700">B5</text>
+          <text x="806.0" y="109.0" font-size="9.8" fill="#52615a">Texte privé : canal privé</text>
+          <text x="16.0" y="144.0" font-size="11" fill="#94660a" font-weight="700">Importants</text>
+          <rect x="16" y="152" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="26" y="161" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(31.0 166.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="179.0" font-size="11.5" fill="#94660a" font-weight="700">I1</text>
+          <text x="30.0" y="201.0" font-size="9.8" fill="#52615a">Permis revérifié</text>
+          <rect x="210" y="152" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="220" y="161" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(225.0 166.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="179.0" font-size="11.5" fill="#94660a" font-weight="700">I2</text>
+          <text x="224.0" y="201.0" font-size="9.8" fill="#52615a">Échéance à chaque frontière</text>
+          <rect x="404" y="152" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="414" y="161" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(419.0 166.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="179.0" font-size="11.5" fill="#94660a" font-weight="700">I3</text>
+          <text x="418.0" y="201.0" font-size="9.8" fill="#52615a">Forme d'admission</text>
+          <rect x="598" y="152" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="608" y="161" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(613.0 166.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="179.0" font-size="11.5" fill="#94660a" font-weight="700">I4</text>
+          <text x="612.0" y="201.0" font-size="9.8" fill="#52615a">Lecture fraîche seule</text>
+          <rect x="792" y="152" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="802" y="161" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(807.0 166.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="836.0" y="179.0" font-size="11.5" fill="#94660a" font-weight="700">I5</text>
+          <text x="806.0" y="201.0" font-size="9.8" fill="#52615a">Oui, non, on ne sait pas</text>
+          <rect x="16" y="220" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="26" y="229" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(31.0 234.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="247.0" font-size="11.5" fill="#94660a" font-weight="700">I6</text>
+          <text x="30.0" y="269.0" font-size="9.8" fill="#52615a">La dernière admise</text>
+          <rect x="210" y="220" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="220" y="229" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(225.0 234.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="247.0" font-size="11.5" fill="#94660a" font-weight="700">I7</text>
+          <text x="224.0" y="269.0" font-size="9.8" fill="#52615a">Un seul chemin d'envoi</text>
+          <rect x="404" y="220" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="414" y="229" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(419.0 234.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="247.0" font-size="11.5" fill="#94660a" font-weight="700">I8</text>
+          <text x="418.0" y="269.0" font-size="9.8" fill="#52615a">n/m par niveau de preuve</text>
+          <rect x="598" y="220" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="608" y="229" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(613.0 234.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="247.0" font-size="11.5" fill="#94660a" font-weight="700">I9</text>
+          <text x="612.0" y="269.0" font-size="9.8" fill="#52615a">Mère sans échéance</text>
+          <rect x="792" y="220" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="802" y="229" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(807.0 234.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="836.0" y="247.0" font-size="11.5" fill="#94660a" font-weight="700">I10</text>
+          <text x="806.0" y="269.0" font-size="9.8" fill="#52615a">Cibles rattachées</text>
+          <rect x="16" y="288" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="26" y="297" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(31.0 302.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="315.0" font-size="11.5" fill="#94660a" font-weight="700">I11</text>
+          <text x="30.0" y="337.0" font-size="9.8" fill="#52615a">Numéros par clé</text>
+          <rect x="210" y="288" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="220" y="297" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(225.0 302.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="315.0" font-size="11.5" fill="#94660a" font-weight="700">I12</text>
+          <text x="224.0" y="337.0" font-size="9.8" fill="#52615a">Plafonds vérifiés</text>
+          <rect x="404" y="288" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="414" y="297" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(419.0 302.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="315.0" font-size="11.5" fill="#94660a" font-weight="700">I13</text>
+          <text x="418.0" y="337.0" font-size="9.8" fill="#52615a">Rang de chaque pièce</text>
+          <rect x="598" y="288" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="608" y="297" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(613.0 302.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="315.0" font-size="11.5" fill="#94660a" font-weight="700">I14</text>
+          <text x="612.0" y="337.0" font-size="9.8" fill="#52615a">Dictionnaire et schéma</text>
+          <rect x="792" y="288" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="802" y="297" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(807.0 302.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="836.0" y="315.0" font-size="11.5" fill="#94660a" font-weight="700">I15</text>
+          <text x="806.0" y="337.0" font-size="9.8" fill="#52615a">Témoin honnête</text>
+          <rect x="16" y="356" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="26" y="365" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(31.0 370.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="60.0" y="383.0" font-size="11.5" fill="#94660a" font-weight="700">I16</text>
+          <text x="30.0" y="405.0" font-size="9.8" fill="#52615a">Même corpus</text>
+          <rect x="210" y="356" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="220" y="365" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(225.0 370.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="254.0" y="383.0" font-size="11.5" fill="#94660a" font-weight="700">I17</text>
+          <text x="224.0" y="405.0" font-size="9.8" fill="#52615a">Contenu égal</text>
+          <rect x="404" y="356" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="414" y="365" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(419.0 370.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="448.0" y="383.0" font-size="11.5" fill="#94660a" font-weight="700">I18</text>
+          <text x="418.0" y="405.0" font-size="9.8" fill="#52615a">Tailles vérifiées</text>
+          <rect x="598" y="356" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="608" y="365" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(613.0 370.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="642.0" y="383.0" font-size="11.5" fill="#94660a" font-weight="700">I19</text>
+          <text x="612.0" y="405.0" font-size="9.8" fill="#52615a">Toute la boucle</text>
+          <rect x="792" y="356" width="184" height="60" rx="12" fill="url(#revue-f-ambre)" stroke="#e0a12a" stroke-opacity=".55" stroke-width="1.1" filter="url(#revue-o)"/>
+          <rect x="802" y="365" width="26" height="26" rx="8" fill="url(#revue-h-ambre)"/>
+          <g transform="translate(807.0 370.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="836.0" y="383.0" font-size="11.5" fill="#94660a" font-weight="700">I20</text>
+          <text x="806.0" y="405.0" font-size="9.8" fill="#52615a">Instantané seul</text>
+          <rect x="16" y="428" width="968" height="36" rx="12" fill="#e3f1e9" stroke="#3d9a75" stroke-opacity=".5"/>
+          <g transform="translate(28.0 436.0) scale(0.8333)" fill="none" stroke="#195744" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+          <text x="56.0" y="450.0" font-size="11" fill="#1d302a" font-weight="700">Chacun vérifié dans le code, puis corrigé : 20 corrections de conception gardées par 35 fautes injectées, 5 mesures refaites.</text>
+  <text x="18" y="505" font-size="12" fill="#52615a" font-style="italic">La revue a lu la v1, le banc et le code d'aujourd'hui ; aucun constat n'était faux. Le § 3 donne, pour chacun, la correction, le test et le nombre de</text>
+  <text x="18" y="522" font-size="12" fill="#52615a" font-style="italic">fautes injectées.</text>
+</svg>

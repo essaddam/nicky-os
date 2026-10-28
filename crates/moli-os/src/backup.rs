@@ -19,7 +19,7 @@ use anyhow::{Context as _, bail};
 /// SQLite databases: copied through SQLite itself.
 const DATABASES: [&str; 2] = ["history.db", "energy.db"];
 /// Everything else worth keeping (missing ones are skipped).
-const FILES: [&str; 23] = [
+const FILES: [&str; 24] = [
     "moli.toml",
     "plan.json",
     "phones.json",
@@ -35,6 +35,7 @@ const FILES: [&str; 23] = [
     "helper-datetimes.json",
     "helper-timers.json",
     "dependencies.json",
+    "migration.json",
     "durations.json",
     "journal.jsonl",
     "journal.jsonl.1",
@@ -178,6 +179,33 @@ fn known_name(name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn migration_registry_is_included_in_official_backup_and_restore() {
+        let root = std::env::temp_dir().join(format!(
+            "moli-migration-backup-{}-{}",
+            std::process::id(),
+            moli_core::now_ms()
+        ));
+        let data = root.join("data");
+        let saved = root.join("saved");
+        let restored = root.join("restored");
+        std::fs::create_dir_all(&data).unwrap();
+        let original = br#"{"schema":1,"bindings":[]}"#;
+        std::fs::write(data.join("migration.json"), original).unwrap();
+
+        backup(&data, &saved).unwrap();
+        assert_eq!(
+            std::fs::read(saved.join("migration.json")).unwrap(),
+            original
+        );
+        restore(&restored, &saved, false).unwrap();
+        assert_eq!(
+            std::fs::read(restored.join("migration.json")).unwrap(),
+            original
+        );
+        let _ = std::fs::remove_dir_all(root);
+    }
 
     #[test]
     fn auto_h3_backup_keeps_temporal_definitions_and_canonical_values() {

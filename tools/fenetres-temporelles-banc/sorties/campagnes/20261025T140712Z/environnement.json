@@ -1,0 +1,10 @@
+{
+  "timestamp_utc": "20261025T140712Z",
+  "image_id": "sha256:40c4e2a8d249be4d12e160ccffe94df1642aeef82cc787a0a3db606f70abbc53",
+  "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-musl\nrelease: 1.99.1\nLLVM version: 23.1.1\naarch64\n",
+  "runtime_environment": "Linux aarch64, Docker, réseau none, 1 CPU, plafond 512 Mio",
+  "production_source_sha256": "5c9bad8601bb4e7b4cb39c93c0e780467eee1f9662641128a77c8018cc2a996e",
+  "binary_sha256_before": "7334f57090f38837f8dcb4b2b9e86c01493a55c45ac935d8f1a7797c5a2efee5  /target/v5/moteur-counted\n93553ecde5deb48d600ac396517db5036dd02ba1eab3fe55ff2f3fe6c88f85ca  /target/v5/moteur-plain\n500a6b44a49bd2ba618b8047cf15529cc305766512633ff439334a1bf81203e4  /target/release/transformations-banc\n1ecf488d20088400d6959f242e547dfb10b1a333ded0ddd77b1a0ce9a6cf90db  /target/release/index-memory\na06d3e32eb1e464c4e8493c9ac65b8e4e50984d58e25bbaf50bba3ba0e519a71  /target/release/structures\nb4c9ab3f0205b4d7ff35531fe28dc638ca8b84f12ca5e2d184ba1bfb6494c702  /target/release/production\n",
+  "profile": "release opt-level=s lto=fat codegen-units=1",
+  "scope": "Chemins réels et modèles proposés distincts ; aucun appareil physique."
+}

@@ -31,6 +31,7 @@ moli-frigate = { path = "crates/moli-frigate" }
 moli-helpers = { path = "crates/moli-helpers" }
 moli-history = { path = "crates/moli-history" }
 moli-host = { path = "crates/moli-host" }
+moli-home-assistant = { path = "crates/moli-home-assistant" }
 moli-huawei-lte = { path = "crates/moli-huawei-lte" }
 moli-hue = { path = "crates/moli-hue" }
 moli-i18n = { path = "crates/moli-i18n" }
@@ -38,6 +39,7 @@ moli-igd = { path = "crates/moli-igd" }
 moli-ipp = { path = "crates/moli-ipp" }
 moli-landroid = { path = "crates/moli-landroid" }
 moli-lights = { path = "crates/moli-lights" }
+moli-migration = { path = "crates/moli-migration" }
 moli-moonraker = { path = "crates/moli-moonraker" }
 moli-net = { path = "crates/moli-net" }
 moli-netatmo = { path = "crates/moli-netatmo" }
